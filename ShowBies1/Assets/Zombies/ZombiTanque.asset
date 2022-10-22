@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c73a67d5640a430459b98a61f4d568b4, type: 3}
-  m_Name: ZombiRapido
+  m_Name: ZombiTanque
   m_EditorClassIdentifier: 
-  hp: 3
-  "da\xF1o": 2
-  velocidad: 9
+  hp: 25
+  "da\xF1o": 1
+  velocidad: 3
   "tama\xF1o": 0

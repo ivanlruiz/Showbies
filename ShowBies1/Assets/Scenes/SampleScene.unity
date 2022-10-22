@@ -172,7 +172,7 @@ Transform:
   - {fileID: 1835620515}
   - {fileID: 1446618625}
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &613834654
 GameObject:
@@ -238,7 +238,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
@@ -331,7 +331,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
 --- !u!1 &787277384
 GameObject:
@@ -374,7 +374,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &794286246
 GameObject:
@@ -504,7 +504,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 70, y: 0, z: 0}
 --- !u!114 &963194229
 MonoBehaviour:
@@ -843,7 +843,7 @@ Transform:
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1389471478
 GameObject:
@@ -874,10 +874,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78b9773504b0c0545898cedc2ef2f28f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Zombi: {fileID: 6420371903289334235, guid: 69f91a5ee7b7abd40bea94e8b386fc10, type: 3}
-  ZombiRapido: {fileID: 8201782228742357686, guid: 35ed0f47b6af16f478a2dea78d6c8975, type: 3}
+  Zombi: {fileID: 6952442577594072745, guid: 69f91a5ee7b7abd40bea94e8b386fc10, type: 3}
+  ZombiRapido: {fileID: 7536970143023020194, guid: 35ed0f47b6af16f478a2dea78d6c8975, type: 3}
+  ZombiTanque: {fileID: 5727603112678993193, guid: 0b95624e2613d5b40966701a0def174b, type: 3}
   intervaloZombi: 0.5
   intervaloZombiRapido: 1
+  intervaloZombiTanque: 5
 --- !u!4 &1389471480
 Transform:
   m_ObjectHideFlags: 0
@@ -890,7 +892,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1446618624
 GameObject:
@@ -1179,7 +1181,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919502, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919502, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: m_LocalPosition.x
