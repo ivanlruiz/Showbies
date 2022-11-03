@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Escenas/Menu.unity
+    guid: 096e9443addc7084f9d7ddb864382ad8
+  - enabled: 1
+    path: Assets/Escenas/ShowBies1.unity
+    guid: 3d8da282e57e17f4d977c51478fdb945
+  - enabled: 1
+    path: Assets/Escenas/Perdiste.unity
+    guid: 6a08405f3e649494f901d7fe29e91596
+  m_configObjects: {}
