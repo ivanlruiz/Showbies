@@ -8,20 +8,21 @@ public class PlayerHealth : MonoBehaviour
 
     public static PlayerHealth instance;
 
-
+    public AudioSource AudioSource;
 
     public int health;
     public int maxHealth = 10;
     // Start is called before the first frame update
     void Start()
     {
+        AudioSource = GetComponent<AudioSource>();
         health = maxHealth;
     }
 
     // Update is called once per frame
     void Update()
     {
-     
+
     }
 
     private void Awake()
@@ -34,7 +35,10 @@ public class PlayerHealth : MonoBehaviour
         health -= amount;
         if(health <= 0)
         {
+        AudioSource.Play();
+
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            
             Destroy(gameObject);
         }
     }
