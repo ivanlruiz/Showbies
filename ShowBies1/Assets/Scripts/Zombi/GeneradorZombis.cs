@@ -28,8 +28,8 @@ public class GeneradorZombis : MonoBehaviour
 
     private IEnumerator spawnEnemy(float interval, GameObject enemy)
     {
-        yield return new WaitForSeconds(interval);
-        GameObject newEnemy = Instantiate(enemy, new Vector3(Random.Range(-45f, 45), Random.Range(0.5f, 0.5f), -45), Quaternion.identity);
+        yield return new WaitForSeconds(interval);                      //distancia              //altura    //no sé
+        GameObject newEnemy = Instantiate(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), -45), Quaternion.identity);
         StartCoroutine(spawnEnemy(interval, enemy));
     }
 }

@@ -17,9 +17,14 @@ public class PlayerController : MonoBehaviour
 
     public GunController theGun;
 
+    public TMPro.TextMeshProUGUI textoContBalas;
+
+    int cantBalas = 0;
+
     // Start is called before the first frame update
     void Start()
     {
+        cantBalas = 100;
         myRigidbody = GetComponent<Rigidbody>();
         mainCamera = FindObjectOfType<Camera>();
     }
@@ -42,16 +47,22 @@ public class PlayerController : MonoBehaviour
             transform.LookAt(new Vector3(pointToLook.x, transform.position.y, pointToLook.z));
         }
 
-        
 
-        if (Input.GetMouseButtonDown(0))
         
-            theGun.isFiring = true;
+        if (Input.GetMouseButtonDown(0))
+        {
+            --cantBalas;
+            if (cantBalas > 0) theGun.isFiring = true;
+
+
+        }
 
         if (Input.GetMouseButtonUp(0))
             theGun.isFiring = false;
 
-        
+        //cantidad de balas
+        textoContBalas.text = cantBalas.ToString();  
+
     }
    
 
@@ -62,5 +73,12 @@ public class PlayerController : MonoBehaviour
     }
 
 
-
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Balas"))
+        {
+            Destroy(other.gameObject);
+            cantBalas += 100;
+        }
+    }
 }
