@@ -35,7 +35,8 @@ public class GunController : MonoBehaviour
                 BulletController newBullet = Instantiate(bala, firePoint.position, firePoint.rotation) as BulletController;
                 newBullet.velocidad = velocidadBala;
             }
-        } else
+        } 
+        else
         {
             contadorDisp = 0;
         }

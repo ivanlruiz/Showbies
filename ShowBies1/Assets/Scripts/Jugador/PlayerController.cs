@@ -51,8 +51,12 @@ public class PlayerController : MonoBehaviour
         
         if (Input.GetMouseButtonDown(0))
         {
-            --cantBalas;
-            if (cantBalas > 0) theGun.isFiring = true;
+
+            if (cantBalas > 0)
+            {
+                theGun.isFiring = true;
+                --cantBalas;
+            }
 
 
         }
@@ -62,6 +66,8 @@ public class PlayerController : MonoBehaviour
 
         //cantidad de balas
         textoContBalas.text = cantBalas.ToString();  
+
+        
 
     }
    
