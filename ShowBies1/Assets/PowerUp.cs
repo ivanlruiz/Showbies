@@ -18,7 +18,7 @@ public class PowerUp : MonoBehaviour
         private IEnumerator spawnPU(float interval, GameObject powerup)
         {
             yield return new WaitForSeconds(interval);                      //distanciaX              //altura     //distZ
-            GameObject newEnemy = Instantiate(powerup, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), -45), Quaternion.identity);
+            GameObject newEnemy = Instantiate(powerup, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f),Random.Range(-45, 45)), Quaternion.identity);
             StartCoroutine(spawnPU(interval, powerup));
         }
     

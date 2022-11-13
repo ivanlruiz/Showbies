@@ -196,12 +196,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919503, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: maxHealth
-      value: 100
+      value: 100000000
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919503, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: AudioSource
       value: 
       objectReference: {fileID: 900532088}
+    - target: {fileID: 3275518440567225712, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
+      propertyPath: m_Name
+      value: spawner de la bala
+      objectReference: {fileID: 0}
     - target: {fileID: 3275518440567225712, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: m_Layer
       value: 6
@@ -323,7 +327,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 252936527}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &115646124
 MonoBehaviour:
@@ -564,7 +568,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 691945976}
-  - {fileID: 1293256918}
   - {fileID: 115646123}
   m_Father: {fileID: 0}
   m_RootOrder: 7
@@ -1047,9 +1050,13 @@ MonoBehaviour:
   Zombi: {fileID: 6952442577594072745, guid: 69f91a5ee7b7abd40bea94e8b386fc10, type: 3}
   ZombiRapido: {fileID: 7536970143023020194, guid: 35ed0f47b6af16f478a2dea78d6c8975, type: 3}
   ZombiTanque: {fileID: 5727603112678993193, guid: 0b95624e2613d5b40966701a0def174b, type: 3}
-  intervaloZombi: 0.5
-  intervaloZombiRapido: 2
-  intervaloZombiTanque: 6
+  ZombiBOSS: {fileID: 208933554839980591, guid: be2b0c9c0c14cd041a980759b79e2433, type: 3}
+  ZombiFASTER: {fileID: 3558220430278878339, guid: dcac29e5e6a306e418895ab3ac732986, type: 3}
+  intervaloZombi: 0.25
+  intervaloZombiRapido: 1
+  intervaloZombiTanque: 3
+  intervaloZombiBOSS: 30
+  intervaloZombiFASTER: 2
 --- !u!4 &691945976
 Transform:
   m_ObjectHideFlags: 0
@@ -1386,55 +1393,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1961040052}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1293256916
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1293256918}
-  - component: {fileID: 1293256917}
-  m_Layer: 0
-  m_Name: GeneradorZombis1
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1293256917
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1293256916}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19b69a62ec5cba94182e08c1d71a5177, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Zombi: {fileID: 6952442577594072745, guid: 69f91a5ee7b7abd40bea94e8b386fc10, type: 3}
-  ZombiRapido: {fileID: 7536970143023020194, guid: 35ed0f47b6af16f478a2dea78d6c8975, type: 3}
-  ZombiTanque: {fileID: 5727603112678993193, guid: 0b95624e2613d5b40966701a0def174b, type: 3}
-  intervaloZombi: 0.5
-  intervaloZombiRapido: 2
-  intervaloZombiTanque: 6
---- !u!4 &1293256918
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1293256916}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 11.9198065, y: -39.238407, z: 7.4220266}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 252936527}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1394740380
 GameObject:
