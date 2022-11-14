@@ -7,8 +7,8 @@ public class PlayerController : MonoBehaviour
 
     public float moveSpeed;
     private Rigidbody myRigidbody;
-    
-    
+
+
 
     private Vector3 moveInput;
     private Vector3 moveVelocity;
@@ -24,7 +24,7 @@ public class PlayerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        cantBalas = 100;
+        cantBalas = 500;
         myRigidbody = GetComponent<Rigidbody>();
         mainCamera = FindObjectOfType<Camera>();
     }
@@ -48,43 +48,58 @@ public class PlayerController : MonoBehaviour
         }
 
 
-        
+
         if (Input.GetMouseButtonDown(0))
         {
 
             if (cantBalas > 0)
             {
+
                 theGun.isFiring = true;
-                --cantBalas;
+
             }
 
 
         }
 
         if (Input.GetMouseButtonUp(0))
+        {
             theGun.isFiring = false;
+        }
+
+
 
         //cantidad de balas
-        textoContBalas.text = cantBalas.ToString();  
+        textoContBalas.text = cantBalas.ToString();
 
-        
+
 
     }
-   
+
 
     void FixedUpdate()
     {
-        
+        if (cantBalas > 0)
+        {
+            if (theGun.isFiring == true)
+            {
+
+                cantBalas--;
+                
+            }
+        }
+        else { theGun.isFiring = false; }
         myRigidbody.velocity = moveVelocity;
     }
 
+   
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Balas"))
         {
             Destroy(other.gameObject);
-            cantBalas += 100;
+            cantBalas += 500;
         }
     }
 }

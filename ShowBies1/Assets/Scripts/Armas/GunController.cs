@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GunController : MonoBehaviour
 {
+    
+
     public bool isFiring;
 
     public BulletController bala;
@@ -19,6 +21,7 @@ public class GunController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        
         AudioSource = GetComponent<AudioSource>();
     }
 
@@ -27,9 +30,11 @@ public class GunController : MonoBehaviour
     {
         if(isFiring)
         {
+            
             contadorDisp -= Time.deltaTime;
             if(contadorDisp <= 0)
             {
+                
                 AudioSource.Play();
                 contadorDisp = tiempoDisparo;
                 BulletController newBullet = Instantiate(bala, firePoint.position, firePoint.rotation) as BulletController;
@@ -41,7 +46,10 @@ public class GunController : MonoBehaviour
             contadorDisp = 0;
         }
 
+        
     }
 
     
+
+
 }

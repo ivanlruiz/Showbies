@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c73a67d5640a430459b98a61f4d568b4, type: 3}
   m_Name: ZombiBOSS
   m_EditorClassIdentifier: 
-  hp: 150
+  hp: 500
   "da\xF1o": 10
   velocidad: 2

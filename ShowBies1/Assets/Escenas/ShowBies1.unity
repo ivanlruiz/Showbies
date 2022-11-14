@@ -196,7 +196,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919503, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: maxHealth
-      value: 100000000
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919503, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: AudioSource
@@ -212,7 +212,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440567225713, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.133
+      value: 0.414
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440651567677, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: m_Layer
@@ -224,12 +224,16 @@ PrefabInstance:
       objectReference: {fileID: 9163975146665093032, guid: d77b2b80f5ac757479d2ae340557d725, type: 3}
     - target: {fileID: 3275518440651567679, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: tiempoDisparo
-      value: 0.05
+      value: 0.025
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440651567679, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: velocidadBala
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 3275518440651567679, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
+      propertyPath: textoContBalas
+      value: 
+      objectReference: {fileID: 266837605}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
 --- !u!1 &113065273
@@ -342,7 +346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PUBalas: {fileID: 1329454221328681177, guid: 8a34797e9ebb61149b7868347ffee628, type: 3}
-  IntervaloPUBalas: 0.1
+  IntervaloPUBalas: 4
 --- !u!1 &139152071
 GameObject:
   m_ObjectHideFlags: 0
@@ -630,7 +634,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 100
+  m_text: 500
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -809,7 +813,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: /100
+  m_text: /500
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -836,10 +840,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
+  m_fontSize: 44.75
   m_fontSizeBase: 32
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
