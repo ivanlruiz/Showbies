@@ -100,6 +100,11 @@ public class PlayerController : MonoBehaviour
         {
             Destroy(other.gameObject);
             cantBalas += 500;
+
+            if(cantBalas > 500)
+            {
+                cantBalas = 500;
+            }
         }
     }
 }
