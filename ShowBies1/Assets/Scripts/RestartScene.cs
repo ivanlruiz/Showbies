@@ -15,5 +15,10 @@ public class RestartScene : MonoBehaviour
     void Update()
     {
         if (Input.GetKey(KeyCode.R)) SceneManager.LoadScene(1);
+
+        if (Input.GetKeyUp(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 }
