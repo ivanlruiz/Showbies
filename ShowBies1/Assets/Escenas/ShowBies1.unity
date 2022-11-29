@@ -350,7 +350,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PUBalas: {fileID: 1329454221328681177, guid: 8a34797e9ebb61149b7868347ffee628, type: 3}
-  IntervaloPUBalas: 4
+  IntervaloPUBalas: 2
 --- !u!1 &139152071
 GameObject:
   m_ObjectHideFlags: 0
