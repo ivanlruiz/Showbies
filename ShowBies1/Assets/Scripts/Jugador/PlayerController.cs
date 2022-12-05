@@ -21,11 +21,11 @@ public class PlayerController : MonoBehaviour
     public TMPro.TextMeshProUGUI textoContBalas;
 
     int cantBalas = 0;
-    int vida = 0;
+    
     // Start is called before the first frame update
     void Start()
     {
-        vida = 200;
+       
         cantBalas = 500;
         myRigidbody = GetComponent<Rigidbody>();
         mainCamera = FindObjectOfType<Camera>();
@@ -109,5 +109,6 @@ public class PlayerController : MonoBehaviour
             }
         }
        
+
     }
 }
