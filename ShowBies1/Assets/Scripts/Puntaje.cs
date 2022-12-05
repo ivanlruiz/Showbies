@@ -9,12 +9,11 @@ public class Puntaje : MonoBehaviour
     public static Puntaje instance;
     [SerializeField]
     TextMeshProUGUI contadorKill_TMP; 
-    [SerializeField]
-    TextMeshProUGUI vida_TMP;
+   
     [HideInInspector]
 
     public int contadorKill;
-    public int vida;
+   
 
 
     private void Awake()
@@ -36,8 +35,5 @@ public class Puntaje : MonoBehaviour
         
     }
 
-    public void Vida()
-    {
-        vida_TMP.text = vida.ToString();
-    }
+    
 }

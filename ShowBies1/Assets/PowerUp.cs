@@ -6,12 +6,17 @@ public class PowerUp : MonoBehaviour
 {
     [SerializeField]
     private GameObject PUBalas;
+    [SerializeField]
+    private GameObject PUVida;
 
     [SerializeField]
     private float IntervaloPUBalas = 3.5f;
+    [SerializeField]
+    private float IntervaloPUVida = 3.5f;
     void Start()
     {
         StartCoroutine(spawnPU(IntervaloPUBalas, PUBalas));
+        StartCoroutine(spawnPU(IntervaloPUVida, PUVida));
     }
 
     

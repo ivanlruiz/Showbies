@@ -68,8 +68,7 @@ public class EnemyController : MonoBehaviour
         if (collision.gameObject.tag == "Player")
         {
             PlayerHealth.instance.TakeDamage(enemyType.daño);
-            Puntaje.instance.vida -= 1;
-            Puntaje.instance.Vida();
+            
         }
     }
 
