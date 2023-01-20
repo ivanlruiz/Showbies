@@ -10,7 +10,9 @@ public class EnemyController : MonoBehaviour
     private int vidaActual;
     
     private Rigidbody rb;
-   
+
+    [Header("Unity Setup")]
+    public ParticleSystem deathParticles;
 
     public Enemy enemyType;
 
@@ -52,8 +54,9 @@ public class EnemyController : MonoBehaviour
        
         
         {
+            Instantiate(deathParticles, transform.position, Quaternion.identity);
             Destroy(gameObject);
-
+            
             Puntaje.instance.contadorKill++;
             Puntaje.instance.UpdateKillCounterUI();
 

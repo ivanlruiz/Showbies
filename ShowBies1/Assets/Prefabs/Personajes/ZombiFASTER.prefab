@@ -112,6 +112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b63e8df748807d347a927fe988194440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deathParticles: {fileID: 2253243939827530373, guid: a34d8bd15ce6ef44599f10be17834483, type: 3}
   enemyType: {fileID: 11400000, guid: 8ab07b6a64fde894089c43e6464ecf3e, type: 2}
   thePlayer: {fileID: 0}
 --- !u!54 &3442675162900010491

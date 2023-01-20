@@ -49,7 +49,7 @@ public class PlayerHealth : MonoBehaviour
         if (other.gameObject.CompareTag("Vida"))
         {
             Destroy(other.gameObject);
-            health= 200;    
+            health = health+100;    
             if (health > 200)
             {
                 health = 200;

@@ -34,6 +34,8 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
+
         moveInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
         moveVelocity = moveInput * moveSpeed;
 
@@ -86,11 +88,14 @@ public class PlayerController : MonoBehaviour
             if (theGun.isFiring == true)
             {
 
-                cantBalas--;
-                
+                cantBalas -= 1;
+
             }
         }
-        else { theGun.isFiring = false; }
+        else
+        {
+            theGun.isFiring = false;
+        }
         myRigidbody.velocity = moveVelocity;
     }
 
@@ -111,4 +116,5 @@ public class PlayerController : MonoBehaviour
        
 
     }
+
 }
