@@ -7,7 +7,7 @@ public class GunController : MonoBehaviour
     
 
     public bool isFiring;
-
+    public PlayerController player;
     public BulletController bala;
     public int velocidadBala;
 
@@ -28,13 +28,13 @@ public class GunController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(isFiring)
+        if(isFiring && player.cantBalas>0) 
         {
             
             contadorDisp -= Time.deltaTime;
             if(contadorDisp <= 0)
             {
-                
+                player.cantBalas--;
                 AudioSource.Play();
                 contadorDisp = tiempoDisparo;
                 BulletController newBullet = Instantiate(bala, firePoint.position, firePoint.rotation) as BulletController;

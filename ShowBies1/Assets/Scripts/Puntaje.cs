@@ -18,6 +18,7 @@ public class Puntaje : MonoBehaviour
 
     private void Awake()
     {
+
         if (instance == null)
         {
             instance = this;
@@ -26,12 +27,14 @@ public class Puntaje : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        UpdateKillCounterUI();
     }
 
 
     public void UpdateKillCounterUI()
     {
-        contadorKill_TMP.text = contadorKill.ToString();
+
+        contadorKill_TMP.text = "Puntos: " + contadorKill.ToString();
         
     }
 

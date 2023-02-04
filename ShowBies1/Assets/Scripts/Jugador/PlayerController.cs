@@ -6,10 +6,11 @@ using UnityEngine.Video;
 public class PlayerController : MonoBehaviour
 {
 
-    public float moveSpeed;
+    //public float moveSpeed;
     private Rigidbody myRigidbody;
 
-
+    public float moveSpeed = 8f;
+    
 
     private Vector3 moveInput;
     private Vector3 moveVelocity;
@@ -20,13 +21,15 @@ public class PlayerController : MonoBehaviour
 
     public TMPro.TextMeshProUGUI textoContBalas;
 
-    int cantBalas = 0;
-    
+    public int cantBalas = 0;
+    public int maxBalas = 500;
+    public void Move(Vector2 direction)
+    {
+        transform.Translate(new Vector3(direction.x, 0, direction.y) * Time.deltaTime * moveSpeed);
+    }
     // Start is called before the first frame update
     void Start()
-    {
-       
-        cantBalas = 500;
+    {            
         myRigidbody = GetComponent<Rigidbody>();
         mainCamera = FindObjectOfType<Camera>();
     }
@@ -34,8 +37,11 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
 
+
+
+        // MOVIMIENTO Y CAMARA
+#if UNITY_STANDALONE
         moveInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
         moveVelocity = moveInput * moveSpeed;
 
@@ -73,29 +79,18 @@ public class PlayerController : MonoBehaviour
 
 
 
-        //cantidad de balas
-        textoContBalas.text = cantBalas.ToString();
-
-
-
+#endif
     }
 
-
+   
     void FixedUpdate()
     {
-        if (cantBalas > 0)
-        {
-            if (theGun.isFiring == true)
-            {
-
-                cantBalas -= 1;
-
-            }
-        }
-        else
+        if (cantBalas <= 0)
         {
             theGun.isFiring = false;
+            
         }
+        
         myRigidbody.velocity = moveVelocity;
     }
 
@@ -106,15 +101,8 @@ public class PlayerController : MonoBehaviour
         if (other.gameObject.CompareTag("Balas"))
         {
             Destroy(other.gameObject);
-            cantBalas += 500;
-
-            if(cantBalas > 500)
-            {
-                cantBalas = 500;
-            }
+            cantBalas = maxBalas;
         }
-       
-
     }
 
 }
