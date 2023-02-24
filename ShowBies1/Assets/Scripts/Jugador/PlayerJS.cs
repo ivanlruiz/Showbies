@@ -35,8 +35,9 @@ public class PlayerJS : MonoBehaviour
         float ver = lookJoystick.Vertical;         
        
         Vector3 lookAtPosition = transform.position + new Vector3 (hoz, 0, ver);
-        Debug.DrawLine(player.transform.position, lookAtPosition, Color.red, 500);
-        
+        //Debug.LogFormat("hoz : {0} ver : {1}", hoz, ver);                             04:31 24/2/2023
+        //Debug.DrawLine(player.transform.position, lookAtPosition, Color.blue, 500);   04:31 24/2/2023
+
         if (hoz == 0 && ver == 0)
         {
             thegun.isFiring = false;

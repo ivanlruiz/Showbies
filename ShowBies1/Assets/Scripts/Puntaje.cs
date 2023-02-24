@@ -8,10 +8,10 @@ public class Puntaje : MonoBehaviour
 {   
     public static Puntaje instance;
     [SerializeField]
-    TextMeshProUGUI contadorKill_TMP; 
-   
-    [HideInInspector]
+    TextMeshProUGUI contadorKill_TMP;
 
+    public Enemy enemy;
+    [HideInInspector]
     public int contadorKill;
    
 

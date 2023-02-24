@@ -16,15 +16,15 @@ public class GeneradorZombis : MonoBehaviour
     private GameObject ZombiFASTER;
 
     [SerializeField]
-    private float intervaloZombi = 3.5f;
+    public float intervaloZombi; //0.25
     [SerializeField]
-    private float intervaloZombiRapido = 10f;
+    public float intervaloZombiRapido; //1
     [SerializeField]
-    private float intervaloZombiTanque = 10f;
+    public float intervaloZombiTanque; //3
     [SerializeField]
-    private float intervaloZombiBOSS = 10f;
+    public float intervaloZombiBOSS; //30
     [SerializeField]
-    private float intervaloZombiFASTER = 10f;
+    public float intervaloZombiFASTER; //2
 
     // Start is called before the first frame update
     void Start()

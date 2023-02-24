@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
 
+
 public class PlayerController : MonoBehaviour
 {
 
+    public GeneradorZombis GeneradorZombis;
+    
     //public float moveSpeed;
     private Rigidbody myRigidbody;
 
@@ -37,7 +40,9 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        
+        
+    
 
 
         // MOVIMIENTO Y CAMARA
@@ -88,13 +93,12 @@ public class PlayerController : MonoBehaviour
         if (cantBalas <= 0)
         {
             theGun.isFiring = false;
-            
-        }
         
+        }
         myRigidbody.velocity = moveVelocity;
     }
 
-   
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -102,6 +106,14 @@ public class PlayerController : MonoBehaviour
         {
             Destroy(other.gameObject);
             cantBalas = maxBalas;
+            theGun.tiempoDisparo = 0.03f;
+        }
+
+        if (other.gameObject.CompareTag("pwBalas"))
+        {
+            Destroy(other.gameObject);
+            cantBalas = 1000;
+            theGun.tiempoDisparo = 0.01f;
         }
     }
 

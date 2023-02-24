@@ -8,6 +8,12 @@ TagManager:
   - Terreno
   - Balas
   - Vida
+  - pwBalas
+  - ZombiNormal
+  - ZombiRapido
+  - ZombiFaster
+  - ZombiTanque
+  - ZombiBoss
   layers:
   - Default
   - TransparentFX
