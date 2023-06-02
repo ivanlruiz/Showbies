@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class RestartScene : MonoBehaviour
 {
-    // Start is called before the first frame update
+#if UNITY_STANDALONE
     void Start()
     {
         
@@ -21,4 +21,5 @@ public class RestartScene : MonoBehaviour
             Application.Quit();
         }
     }
+#endif
 }

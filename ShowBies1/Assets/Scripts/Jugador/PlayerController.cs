@@ -6,6 +6,7 @@ using UnityEngine.Video;
 
 public class PlayerController : MonoBehaviour
 {
+    public Transitions trans;
 
     public GeneradorZombis GeneradorZombis;
     
@@ -32,7 +33,8 @@ public class PlayerController : MonoBehaviour
     }
     // Start is called before the first frame update
     void Start()
-    {            
+    {
+        
         myRigidbody = GetComponent<Rigidbody>();
         mainCamera = FindObjectOfType<Camera>();
     }
@@ -49,6 +51,17 @@ public class PlayerController : MonoBehaviour
 #if UNITY_STANDALONE
         moveInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
         moveVelocity = moveInput * moveSpeed;
+
+        if (moveInput.magnitude > 0.1f)
+        {
+            trans.anim.SetBool("run", true);
+        }
+        else if (moveInput.magnitude < 0.1f)
+        {
+            trans.anim.SetBool("run", false);
+        }
+
+        
 
         Ray cameraRay = mainCamera.ScreenPointToRay(Input.mousePosition);
         Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
@@ -69,7 +82,8 @@ public class PlayerController : MonoBehaviour
 
             if (cantBalas > 0)
             {
-
+                trans.anim.SetBool("shoot", true);
+               
                 theGun.isFiring = true;
 
             }
@@ -79,6 +93,7 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetMouseButtonUp(0))
         {
+            trans.anim.SetBool("shoot", false);
             theGun.isFiring = false;
         }
 
@@ -93,7 +108,7 @@ public class PlayerController : MonoBehaviour
         if (cantBalas <= 0)
         {
             theGun.isFiring = false;
-        
+            trans.anim.SetBool("shoot", false);
         }
         myRigidbody.velocity = moveVelocity;
     }

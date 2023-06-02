@@ -7,6 +7,7 @@ MonoImporter:
   - deathParticles: {fileID: 2253243939827530373, guid: 9b067d8fc5e0bfc46b9125fabe2d00aa, type: 3}
   - enemyType: {instanceID: 0}
   - thePlayer: {instanceID: 0}
+  - bloodstainPrefab: {fileID: 4116096105538093494, guid: b72bc2d3316ba78479a1241d7719fe4e, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

@@ -7,19 +7,19 @@ using TMPro;
 
 public class PlayerHealth : MonoBehaviour
 {
-
+    
     public static PlayerHealth instance;
 
-    public AudioSource AudioSource;
+    
 
     public int health;
     public int maxHealth = 10;
     public TMP_Text healthTMP;
-    // Start is called before the first frame update
+    
+    BulletController bulletController;
     void Start()
     {
-        AudioSource = GetComponent<AudioSource>();
-        health = maxHealth;
+        
         
     }
 
@@ -39,9 +39,19 @@ public class PlayerHealth : MonoBehaviour
         health -= amount;
         if(health <= 0)
         {
-            AudioSource.Play();
+            int score = PlayerPrefs.GetInt("Score");
+            int highScore = PlayerPrefs.GetInt("HighScore");
+
+            PlayerPrefs.SetInt("Score", Puntaje.instance.contadorKill);
+
+            if (Puntaje.instance.contadorKill > highScore)
+            {
+                
+                PlayerPrefs.SetInt("HighScore", Puntaje.instance.contadorKill);
+            }
             SceneManager.LoadScene(2);
             Destroy(gameObject);
+            
         }
     }
     private void OnTriggerEnter(Collider other)

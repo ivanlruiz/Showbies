@@ -10,7 +10,7 @@ public class Puntaje : MonoBehaviour
     [SerializeField]
     TextMeshProUGUI contadorKill_TMP;
 
-    public Enemy enemy;
+    private Enemy enemy;
     [HideInInspector]
     public int contadorKill;
    

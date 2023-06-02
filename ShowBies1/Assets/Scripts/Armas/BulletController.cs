@@ -11,11 +11,13 @@ public class BulletController : MonoBehaviour
     public static Puntaje instance;
     public int Score;
 
+   
+
     
     void Start()
     {
         Physics.IgnoreLayerCollision(6, 7);
-            
+        
     }
 
     // Update is called once per frame

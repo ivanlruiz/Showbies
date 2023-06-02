@@ -7,11 +7,11 @@ public class MenuPerdiste : MonoBehaviour
 {
     public void Retry ()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+        SceneManager.LoadScene(1);
     }
 
-    public void Quit()
+    public void Menu()
     {
-        Application.Quit();
+        SceneManager.LoadScene(0);
     }
 }
