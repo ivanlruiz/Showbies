@@ -76,6 +76,4 @@ public class EnemyController : MonoBehaviour
             PlayerHealth.instance.TakeDamage(enemyType.daño);
         }
     }
-
-
 }

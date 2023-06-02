@@ -2,53 +2,73 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
-
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
     public Transitions trans;
-
     public GeneradorZombis GeneradorZombis;
-    
-    //public float moveSpeed;
+
+    [Header("Movement Settings")]
+    public float moveSpeed = 8f;
     private Rigidbody myRigidbody;
 
-    public float moveSpeed = 8f;
-    
-
+    [Header("Input Settings")]
     private Vector3 moveInput;
     private Vector3 moveVelocity;
 
+    [Header("Camera Settings")]
     private Camera mainCamera;
 
+    [Header("Gun Settings")]
     public GunController theGun;
+    public Granade granadaPrefab;
 
-    public TMPro.TextMeshProUGUI textoContBalas;
+    [Header("UI Settings")]
+    public TextMeshProUGUI textoContBalas;
 
+    [Header("Ammo Settings")]
     public int cantBalas = 0;
     public int maxBalas = 500;
-    public void Move(Vector2 direction)
+
+    private bool isThrowingGranade = false;
+
+    private void Start()
     {
-        transform.Translate(new Vector3(direction.x, 0, direction.y) * Time.deltaTime * moveSpeed);
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
         myRigidbody = GetComponent<Rigidbody>();
         mainCamera = FindObjectOfType<Camera>();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        
-        
-    
+        HandleMovement();
+        HandleCamera();
+        HandleShooting();
+    }
 
+    private void FixedUpdate()
+    {
+        myRigidbody.velocity = moveVelocity;
+    }
 
-        // MOVIMIENTO Y CAMARA
-#if UNITY_STANDALONE
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Balas"))
+        {
+            Destroy(other.gameObject);
+            cantBalas = maxBalas;
+            theGun.tiempoDisparo = 0.03f;
+        }
+        else if (other.gameObject.CompareTag("pwBalas"))
+        {
+            Destroy(other.gameObject);
+            cantBalas = 1000;
+            theGun.tiempoDisparo = 0.01f;
+        }
+    }
+
+    private void HandleMovement()
+    {
         moveInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
         moveVelocity = moveInput * moveSpeed;
 
@@ -60,9 +80,10 @@ public class PlayerController : MonoBehaviour
         {
             trans.anim.SetBool("run", false);
         }
+    }
 
-        
-
+    private void HandleCamera()
+    {
         Ray cameraRay = mainCamera.ScreenPointToRay(Input.mousePosition);
         Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
         float rayLength;
@@ -74,62 +95,49 @@ public class PlayerController : MonoBehaviour
 
             transform.LookAt(new Vector3(pointToLook.x, transform.position.y, pointToLook.z));
         }
+    }
 
-
+    private void HandleShooting()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ThrowGranade();
+        }
 
         if (Input.GetMouseButtonDown(0))
         {
-
             if (cantBalas > 0)
             {
                 trans.anim.SetBool("shoot", true);
-               
                 theGun.isFiring = true;
-
             }
-
-
         }
-
-        if (Input.GetMouseButtonUp(0))
+        else if (Input.GetMouseButtonUp(0))
         {
             trans.anim.SetBool("shoot", false);
             theGun.isFiring = false;
         }
-
-
-
-#endif
     }
 
-   
-    void FixedUpdate()
+    private void ThrowGranade()
     {
-        if (cantBalas <= 0)
+        if (!isThrowingGranade && granadaPrefab != null)
         {
-            theGun.isFiring = false;
-            trans.anim.SetBool("shoot", false);
+            isThrowingGranade = true;
+            StartCoroutine(ThrowGranadeWithDelay());
         }
-        myRigidbody.velocity = moveVelocity;
     }
 
-
-
-    private void OnTriggerEnter(Collider other)
+    private IEnumerator ThrowGranadeWithDelay()
     {
-        if (other.gameObject.CompareTag("Balas"))
-        {
-            Destroy(other.gameObject);
-            cantBalas = maxBalas;
-            theGun.tiempoDisparo = 0.03f;
-        }
+        // Deja pasar 3 segundos
+        yield return new WaitForSeconds(0f);
 
-        if (other.gameObject.CompareTag("pwBalas"))
-        {
-            Destroy(other.gameObject);
-            cantBalas = 1000;
-            theGun.tiempoDisparo = 0.01f;
-        }
+        // Suelta la granada en el suelo
+        Granade granadaInstance = Instantiate(granadaPrefab, transform.position, transform.rotation);
+
+        // Llama al método Explode() después de 3 segundos
+        granadaInstance.Invoke("Explode", 3f);
+        isThrowingGranade = false;
     }
-
 }
