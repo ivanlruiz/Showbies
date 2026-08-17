@@ -1,21 +1,46 @@
+using System.Collections;
 using UnityEngine;
 
 public class Granade : MonoBehaviour
 {
     public float radioExplosion = 5f;
     public int damage = 10;
-    
+    public ParticleSystem explosion;
+
+    private bool canExplode = true;
 
     private void Start()
     {
         Physics.IgnoreLayerCollision(6, 7);
-        // Iniciar una cuenta atrás para la explosión
     }
 
-    public void Explode()
+    private void Update()
     {
-        Invoke("Explode", 3f);
-        // Obtener todos los colliders en el radio de explosión
+        // Verificar si se puede lanzar la granada y si se presionó el botón de lanzar
+        if (canExplode && Input.GetKeyDown(KeyCode.Space))
+        {
+            // Lanzar la granada
+            Explode();
+
+            // Aplicar el cooldown
+            StartCoroutine(Cooldown(5f));
+        }
+    }
+
+    private IEnumeratorsd   Cooldown(float cooldownTime)
+    {
+        // Desactivar la capacidad de lanzar granadas durante el cooldown
+        canExplode = false;
+
+        // Esperar el tiempo del cooldown
+        yield return new WaitForSeconds(cooldownTime);
+
+        // Activar la capacidad de lanzar granadas después del cooldown
+        canExplode = true;
+    }
+
+    private void Explode()
+    {
         Collider[] colliders = Physics.OverlapSphere(transform.position, radioExplosion);
         foreach (Collider nearbyObject in colliders)
         {
@@ -36,8 +61,7 @@ public class Granade : MonoBehaviour
                 }
             }
         }
-
-        // Destruir la granada después de la explosión
-        Destroy(gameObject);
+        explosion.Play();
+        // No destruir la granada aquí, para que pueda continuar su vida útil y permitir que la corrutina de cooldown termine
     }
 }

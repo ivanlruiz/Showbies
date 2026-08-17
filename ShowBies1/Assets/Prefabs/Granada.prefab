@@ -138,6 +138,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 5016567113403400779}
     m_Modifications:
     - target: {fileID: 2253243939827530373, guid: fd6303f6af0a3cd4eaa6fa246a78bbf8, type: 3}
+      propertyPath: playOnAwake
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2253243939827530373, guid: fd6303f6af0a3cd4eaa6fa246a78bbf8, type: 3}
       propertyPath: InitialModule.startColor.maxColor.b
       value: 0
       objectReference: {fileID: 0}
