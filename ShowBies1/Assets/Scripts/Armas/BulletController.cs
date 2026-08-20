@@ -8,12 +8,6 @@ public class BulletController : MonoBehaviour
     public float lifeTime;
     public int dañoDar;
 
-    void Start()
-    {
-        Physics.IgnoreLayerCollision(6, 7);
-
-    }
-
     // Update is called once per frame
     void Update()
     {

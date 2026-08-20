@@ -13,8 +13,6 @@ public class Granade : MonoBehaviour
 
     private void Start()
     {
-        Physics.IgnoreLayerCollision(6, 7);
-
         // La granada enciende su propia mecha al nacer. Antes el jugador la
         // instanciaba y le hacia Invoke("Explode", 3f) mientras este script
         // ademas escuchaba Espacio en Update, asi que la misma granada explotaba
