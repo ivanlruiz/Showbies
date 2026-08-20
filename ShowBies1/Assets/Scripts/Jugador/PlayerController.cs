@@ -44,9 +44,30 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        // En móvil el input lo maneja PlayerJS con los joysticks. Si además
+        // corriera esto, los dos se pelearían por moveVelocity y por isFiring.
+        if (Application.isMobilePlatform) return;
+
         HandleMovement();
         HandleCamera();
         HandleShooting();
+    }
+
+    // La entrada del joystick de movimiento. La llama PlayerJS.
+    public void Move(Vector2 input)
+    {
+        moveInput = new Vector3(input.x, 0f, input.y);
+        moveVelocity = moveInput * moveSpeed;
+
+        if (trans != null && trans.anim != null)
+        {
+            trans.anim.SetBool("run", moveInput.magnitude > 0.1f);
+        }
+
+        if (moveInput.magnitude > 0.1f)
+        {
+            transform.rotation = Quaternion.LookRotation(moveInput);
+        }
     }
 
     private void FixedUpdate()

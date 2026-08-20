@@ -3,40 +3,46 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// OJO: nada de este archivo va adentro de un #if UNITY_ANDROID.
+//
+// Antes la clase entera estaba envuelta en uno, asi que en un editor con target
+// Windows compilaba VACIA. Unity guarda las escenas segun los campos que el
+// script tiene en ese momento, y al no tener ninguno los borraba: cada vez que
+// se guardaba una escena desde Windows se perdia el cableado de los joysticks.
+// Ya paso, por eso hubo que volver a asignar las referencias a mano.
+//
+// Ahora el codigo compila igual en las dos plataformas y quien decide es
+// Application.isMobilePlatform en runtime. Ademas de arreglar el guardado, eso
+// hace que compilar en Windows valide tambien la build de Android.
 public class PlayerJS : MonoBehaviour
 {
-#if UNITY_ANDROID
     public PlayerController player;
     public GunController thegun;
-    //Move
-    public RectTransform handle;
-    public RectTransform background;
-    public FixedJoystick moveJoystick;
 
+    public FixedJoystick moveJoystick;
     public FixedJoystick lookJoystick;
 
-    
-
-    
     void Update()
     {
-#if UNITY_ANDROID
+        if (!Application.isMobilePlatform) return;
+
         UpdateMoveJoystick();
         UpdateShootJoystick();
-#endif
     }
+
     void UpdateMoveJoystick()
     {
-        player.Move(new Vector2(moveJoystick.Horizontal,moveJoystick.Vertical));       
+        if (player == null || moveJoystick == null) return;
+
+        player.Move(new Vector2(moveJoystick.Horizontal, moveJoystick.Vertical));
     }
+
     void UpdateShootJoystick()
     {
+        if (player == null || thegun == null || lookJoystick == null) return;
+
         float hoz = lookJoystick.Horizontal;
-        float ver = lookJoystick.Vertical;         
-       
-        Vector3 lookAtPosition = transform.position + new Vector3 (hoz, 0, ver);
-        //Debug.LogFormat("hoz : {0} ver : {1}", hoz, ver);                             04:31 24/2/2023
-        //Debug.DrawLine(player.transform.position, lookAtPosition, Color.blue, 500);   04:31 24/2/2023
+        float ver = lookJoystick.Vertical;
 
         if (hoz == 0 && ver == 0)
         {
@@ -44,17 +50,9 @@ public class PlayerJS : MonoBehaviour
             return;
         }
 
+        Vector3 lookAtPosition = transform.position + new Vector3(hoz, 0, ver);
         thegun.transform.LookAt(lookAtPosition);
 
-            if (player.cantBalas > 0)
-            {
-
-                thegun.isFiring = true;
-
-            }
-            
+        thegun.isFiring = player.cantBalas > 0;
     }
-
-   
-#endif
 }
