@@ -6,7 +6,7 @@ public class BulletController : MonoBehaviour
 {
     public int velocidad;
     public float lifeTime;
-    public int dañoDar;
+    public int daÃ±oDar;
 
     public static Puntaje instance;
     public int Score;
@@ -36,35 +36,35 @@ public class BulletController : MonoBehaviour
     {
         if(other.gameObject.tag == "ZombiNormal")
         {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
+            other.gameObject.GetComponent<EnemyController>().DanoZombi(daÃ±oDar);
             Destroy(gameObject);
             
         }
 
         if(other.gameObject.tag == "ZombiBoss")
         {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
+            other.gameObject.GetComponent<EnemyController>().DanoZombi(daÃ±oDar);
             Destroy(gameObject);
             Puntaje.instance.contadorKill += 100;
         }
 
         if(other.gameObject.tag == "ZombiFaster")
         {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
+            other.gameObject.GetComponent<EnemyController>().DanoZombi(daÃ±oDar);
             Destroy(gameObject);
             Puntaje.instance.contadorKill += 5;
         }
 
         if(other.gameObject.tag == "ZombiRapido")
         {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
+            other.gameObject.GetComponent<EnemyController>().DanoZombi(daÃ±oDar);
             Destroy(gameObject);
             Puntaje.instance.contadorKill += 2;
         }
 
         if(other.gameObject.tag == "ZombiTanque")
         {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
+            other.gameObject.GetComponent<EnemyController>().DanoZombi(daÃ±oDar);
             Destroy(gameObject);
             Puntaje.instance.contadorKill += 20;
         }

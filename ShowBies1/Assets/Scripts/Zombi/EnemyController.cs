@@ -34,9 +34,9 @@ public class EnemyController : MonoBehaviour
 
     void Update()
     { }
-    public void DanoZombi(int daño)
+    public void DanoZombi(int daÃ±o)
     {
-        vidaActual -= daño;
+        vidaActual -= daÃ±o;
 
         if (vidaActual <= 0)        
         {
@@ -73,7 +73,7 @@ public class EnemyController : MonoBehaviour
     {
         if (collision.gameObject.tag == "Player")
         {
-            PlayerHealth.instance.TakeDamage(enemyType.daño);
+            PlayerHealth.instance.TakeDamage(enemyType.daÃ±o);
         }
     }
 }

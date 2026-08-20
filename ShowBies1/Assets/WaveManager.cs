@@ -4,10 +4,10 @@ using UnityEngine;
 public class WaveManager : MonoBehaviour
 {
     public GameObject[] enemyPrefabs; // Lista de enemigos prefabricados
-    public Transform spawnPoint; // Punto de aparición de enemigos
+    public Transform spawnPoint; // Punto de apariciÃ³n de enemigos
     public float timeBetweenWaves = 10f; // Tiempo entre oleadas
-    public int enemiesPerWave = 10; // Número de enemigos por oleada
-    public int wavesBeforeNewEnemy = 5; // Cada cuántas oleadas aparece un nuevo tipo de enemigo
+    public int enemiesPerWave = 10; // NÃºmero de enemigos por oleada
+    public int wavesBeforeNewEnemy = 5; // Cada cuÃ¡ntas oleadas aparece un nuevo tipo de enemigo
 
     private int currentWave = 0;
     private int enemiesSpawned = 0;
@@ -36,12 +36,12 @@ public class WaveManager : MonoBehaviour
         // Determina si es hora de introducir un nuevo tipo de enemigo
         if (currentWave % wavesBeforeNewEnemy == 0)
         {
-            currentEnemyIndex++; // Incrementa el índice del enemigo actual
-            currentEnemyIndex = Mathf.Clamp(currentEnemyIndex, 0, enemyPrefabs.Length - 1); // Asegura que no se exceda el número de tipos de enemigos
+            currentEnemyIndex++; // Incrementa el Ã­ndice del enemigo actual
+            currentEnemyIndex = Mathf.Clamp(currentEnemyIndex, 0, enemyPrefabs.Length - 1); // Asegura que no se exceda el nÃºmero de tipos de enemigos
 
-            // Opcional: aquí puedes agregar código para mostrar un mensaje o efecto de transición al introducir un nuevo tipo de enemigo
+            // Opcional: aquÃ­ puedes agregar cÃ³digo para mostrar un mensaje o efecto de transiciÃ³n al introducir un nuevo tipo de enemigo
 
-            // Ejemplo: Debug.Log("¡Nuevos enemigos aparecerán en esta oleada!");
+            // Ejemplo: Debug.Log("Â¡Nuevos enemigos aparecerÃ¡n en esta oleada!");
         }
 
         // Genera los enemigos de la oleada actual
@@ -54,10 +54,10 @@ public class WaveManager : MonoBehaviour
 
     void SpawnEnemy()
     {
-        // Selecciona un enemigo del array de acuerdo al índice actual
+        // Selecciona un enemigo del array de acuerdo al Ã­ndice actual
         GameObject enemyPrefab = enemyPrefabs[currentEnemyIndex];
 
-        // Instancia el enemigo en el punto de aparición
+        // Instancia el enemigo en el punto de apariciÃ³n
         Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
 
         enemiesSpawned++;

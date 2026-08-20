@@ -16,7 +16,7 @@ public class Granade : MonoBehaviour
 
     private void Update()
     {
-        // Verificar si se puede lanzar la granada y si se presionó el botón de lanzar
+        // Verificar si se puede lanzar la granada y si se presionÃ³ el botÃ³n de lanzar
         if (canExplode && Input.GetKeyDown(KeyCode.Space))
         {
             // Lanzar la granada
@@ -27,7 +27,7 @@ public class Granade : MonoBehaviour
         }
     }
 
-    private IEnumeratorsd   Cooldown(float cooldownTime)
+    private IEnumerator Cooldown(float cooldownTime)
     {
         // Desactivar la capacidad de lanzar granadas durante el cooldown
         canExplode = false;
@@ -35,7 +35,7 @@ public class Granade : MonoBehaviour
         // Esperar el tiempo del cooldown
         yield return new WaitForSeconds(cooldownTime);
 
-        // Activar la capacidad de lanzar granadas después del cooldown
+        // Activar la capacidad de lanzar granadas despuÃ©s del cooldown
         canExplode = true;
     }
 
@@ -56,12 +56,12 @@ public class Granade : MonoBehaviour
 
                 if (enemyController != null)
                 {
-                    // Aplicar daño al zombi
+                    // Aplicar daÃ±o al zombi
                     enemyController.DanoZombi(damage);
                 }
             }
         }
         explosion.Play();
-        // No destruir la granada aquí, para que pueda continuar su vida útil y permitir que la corrutina de cooldown termine
+        // No destruir la granada aquÃ­, para que pueda continuar su vida Ãºtil y permitir que la corrutina de cooldown termine
     }
 }

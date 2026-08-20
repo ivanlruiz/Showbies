@@ -18,7 +18,7 @@ public class Transitions : MonoBehaviour
 
         /*if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0.1f || Mathf.Abs(Input.GetAxis("Vertical")) > 0.1f)
         {
-            Debug.Log("La condición es verdadera");
+            Debug.Log("La condiciÃ³n es verdadera");
             anim.SetBool("run", true);
         }
         else anim.SetBool("run", false);*/

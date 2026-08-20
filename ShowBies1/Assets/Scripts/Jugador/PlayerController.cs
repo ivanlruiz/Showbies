@@ -136,7 +136,7 @@ public class PlayerController : MonoBehaviour
         // Suelta la granada en el suelo
         Granade granadaInstance = Instantiate(granadaPrefab, transform.position, transform.rotation);
 
-        // Llama al método Explode() después de 3 segundos
+        // Llama al mÃ©todo Explode() despuÃ©s de 3 segundos
         granadaInstance.Invoke("Explode", 3f);
         isThrowingGranade = false;
     }
