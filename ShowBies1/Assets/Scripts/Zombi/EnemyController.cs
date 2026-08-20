@@ -30,6 +30,7 @@ public class EnemyController : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         ZombisVivos = 0;
+        jugadorCache = null;
         spritesDeSangre.Clear();
     }
 
@@ -47,7 +48,22 @@ public class EnemyController : MonoBehaviour
     {
         vidaActual = enemyType.hp;
         rb = GetComponent<Rigidbody>();
-        thePlayer = FindObjectOfType<PlayerController>();
+        thePlayer = ObtenerJugador();
+    }
+
+    // Esto era un FindObjectOfType por zombi spawneado, o sea un barrido completo
+    // de la escena cada vez. Y como los zombis son objetos de la escena, cuantos
+    // mas habia mas caro salia buscar: costo cuadratico. El jugador es uno solo y
+    // no cambia, asi que se busca una vez.
+    private static PlayerController jugadorCache;
+
+    private static PlayerController ObtenerJugador()
+    {
+        if (jugadorCache == null)
+        {
+            jugadorCache = FindFirstObjectByType<PlayerController>();
+        }
+        return jugadorCache;
     }
 
     private void FixedUpdate()

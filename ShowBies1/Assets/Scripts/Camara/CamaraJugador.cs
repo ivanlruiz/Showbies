@@ -28,10 +28,12 @@ public class CamaraJugador : MonoBehaviour
 
     private void Update()
     {
-        
-        transform.position = personaje.transform.position + posicionRelativa;
+        // Al morir, PlayerHealth destruye al jugador y recien despues carga la
+        // escena de Perdiste. En ese hueco esto seguia leyendo un objeto muerto y
+        // tiraba MissingReferenceException en cada frame.
+        if (personaje == null) return;
 
-        
+        transform.position = personaje.transform.position + posicionRelativa;
     }
 }
             
