@@ -48,7 +48,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        myRigidbody.velocity = moveVelocity;
+        myRigidbody.linearVelocity = moveVelocity;
     }
 
     private void OnTriggerEnter(Collider other)

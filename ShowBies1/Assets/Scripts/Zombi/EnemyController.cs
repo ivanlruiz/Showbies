@@ -29,7 +29,7 @@ public class EnemyController : MonoBehaviour
     {
        if (thePlayer == null) return;
        transform.LookAt(thePlayer.transform.position);
-       rb.velocity = (transform.forward * enemyType.velocidad);
+       rb.linearVelocity = (transform.forward * enemyType.velocidad);
 }
 
     void Update()

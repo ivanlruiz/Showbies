@@ -13,11 +13,11 @@ public class PlayerControllerJ : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _rigidbody.velocity = new Vector3(_joystick.Horizontal * _moveSpeed, _rigidbody.velocity.y, _joystick.Vertical * _moveSpeed);
+        _rigidbody.linearVelocity = new Vector3(_joystick.Horizontal * _moveSpeed, _rigidbody.linearVelocity.y, _joystick.Vertical * _moveSpeed);
 
         if (_joystick.Horizontal != 0 || _joystick.Vertical != 0)
         {
-            transform.rotation = Quaternion.LookRotation(_rigidbody.velocity);
+            transform.rotation = Quaternion.LookRotation(_rigidbody.linearVelocity);
         }
     }
 }
