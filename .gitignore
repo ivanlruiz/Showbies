@@ -36,3 +36,8 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+# Ejemplos de TextMesh Pro: 284 archivos / 6.2 MB de escenas de muestra que
+# trajo el reimport de Unity 6. No son contenido del juego y el paquete los
+# vuelve a ofrecer cuando hagan falta.
+ShowBies1/Assets/TextMesh Pro/Examples & Extras/
+ShowBies1/Assets/TextMesh Pro/Examples & Extras.meta
