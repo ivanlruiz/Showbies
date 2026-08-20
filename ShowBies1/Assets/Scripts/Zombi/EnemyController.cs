@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    public TransitionsZM transZM;
-
     private int vidaActual;
     private Rigidbody rb;
     [Header("Unity Setup")]

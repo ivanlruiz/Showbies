@@ -7,7 +7,6 @@ using TMPro;
 public class PlayerController : MonoBehaviour
 {
     public Transitions trans;
-    public GeneradorZombis GeneradorZombis;
 
     [Header("Movement Settings")]
     public float moveSpeed = 8f;
