@@ -13,15 +13,9 @@ public class PlayerHealth : MonoBehaviour
     
 
     public int health;
-    public int maxHealth = 10;
+    public int maxHealth = 200;
+    public int curaPorPickup = 100;
     public TMP_Text healthTMP;
-    
-    BulletController bulletController;
-    void Start()
-    {
-        
-        
-    }
 
     // Update is called once per frame
     void Update()
@@ -66,11 +60,11 @@ public class PlayerHealth : MonoBehaviour
         if (other.gameObject.CompareTag("Vida"))
         {
             Destroy(other.gameObject);
-            health = health+100;    
-            if (health > 200)
-            {
-                health = 200;
-            }
+
+            // El tope estaba hardcodeado en 200 y maxHealth no lo leia nadie: el
+            // campo decia 10 en el codigo y 200 en las escenas. Ahora el que manda
+            // es maxHealth, que en las dos escenas ya vale 200 (mismo resultado).
+            health = Mathf.Min(health + curaPorPickup, maxHealth);
         }
     }
 }
