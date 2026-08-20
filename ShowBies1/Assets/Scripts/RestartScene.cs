@@ -5,21 +5,23 @@ using UnityEngine.SceneManagement;
 
 public class RestartScene : MonoBehaviour
 {
-#if UNITY_STANDALONE
-    void Start()
-    {
-        
-    }
+    // Sin #if: asi el codigo compila igual en Windows y en Android y una
+    // compilacion aca valida las dos. En movil no hay teclado, con lo cual
+    // GetKey no dispara nunca y no hace falta apagar nada.
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.R)) SceneManager.LoadScene(1);
+        // Reinicia el modo que se esta jugando. Antes cargaba la escena 1 fija,
+        // asi que apretar R en WaveMode te sacaba al otro modo.
+        if (Input.GetKey(KeyCode.R))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
 
         if (Input.GetKeyUp(KeyCode.Escape))
         {
             Application.Quit();
         }
     }
-#endif
 }
