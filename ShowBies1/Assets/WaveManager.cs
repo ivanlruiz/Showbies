@@ -4,7 +4,7 @@ using UnityEngine;
 public class WaveManager : MonoBehaviour
 {
     public GameObject[] enemyPrefabs; // Lista de enemigos prefabricados
-    public Transform spawnPoint; // Punto de aparición de enemigos
+    public Transform[] spawnPoints; // Puntos de aparición: se elige uno al azar por enemigo
     public float timeBetweenWaves = 10f; // Tiempo entre oleadas
     public int enemiesPerWave = 10; // Número de enemigos por oleada
     public int wavesBeforeNewEnemy = 5; // Cada cuántas oleadas aparece un nuevo tipo de enemigo
@@ -55,12 +55,15 @@ public class WaveManager : MonoBehaviour
 
     void SpawnEnemy()
     {
-        if (enemyPrefabs.Length == 0 || spawnPoint == null) return;
+        if (enemyPrefabs.Length == 0 || spawnPoints.Length == 0) return;
 
         // Selecciona un enemigo del array de acuerdo al índice actual
         GameObject enemyPrefab = enemyPrefabs[currentEnemyIndex];
 
-        // Instancia el enemigo en el punto de aparición
-        Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
+        // Antes había un solo punto y toda la oleada salía del mismo lugar
+        Transform punto = spawnPoints[Random.Range(0, spawnPoints.Length)];
+        if (punto == null) return;
+
+        Instantiate(enemyPrefab, punto.position, Quaternion.identity);
     }
 }
