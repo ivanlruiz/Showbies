@@ -69,7 +69,11 @@ public class EnemyController : MonoBehaviour
 
             Instantiate(deathParticles, transform.position, Quaternion.identity);
             Destroy(gameObject);
-            Puntaje.instance.contadorKill++;
+
+            // Unico lugar donde se suman puntos. Antes tambien sumaba
+            // BulletController por cada impacto, asi que matar con granada valia
+            // 1 punto y matar a tiros valia cien veces mas.
+            Puntaje.instance.contadorKill += enemyType.puntos;
             Puntaje.instance.UpdateKillCounterUI();
         }
     }

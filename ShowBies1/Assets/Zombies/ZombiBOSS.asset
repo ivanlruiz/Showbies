@@ -15,3 +15,4 @@ MonoBehaviour:
   hp: 500
   "da\xF1o": 10
   velocidad: 2
+  puntos: 100

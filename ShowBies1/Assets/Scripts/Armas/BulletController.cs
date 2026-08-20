@@ -8,16 +8,10 @@ public class BulletController : MonoBehaviour
     public float lifeTime;
     public int dañoDar;
 
-    public static Puntaje instance;
-    public int Score;
-
-   
-
-    
     void Start()
     {
         Physics.IgnoreLayerCollision(6, 7);
-        
+
     }
 
     // Update is called once per frame
@@ -34,41 +28,14 @@ public class BulletController : MonoBehaviour
 
     void OnCollisionEnter(Collision other)
     {
-        if(other.gameObject.tag == "ZombiNormal")
-        {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
-            Destroy(gameObject);
-            
-        }
+        // Antes habia cinco if identicos, uno por tag de zombi, y cada uno sumaba
+        // puntos ACA: o sea por bala que pegaba, no por zombi muerto. El BOSS
+        // tiene 500 de vida y la bala hace 5, asi que daba 100 impactos x 100
+        // puntos = 10000. Ahora los puntos los da EnemyController al morir.
+        EnemyController zombi = other.gameObject.GetComponent<EnemyController>();
+        if (zombi == null) return;
 
-        if(other.gameObject.tag == "ZombiBoss")
-        {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
-            Destroy(gameObject);
-            Puntaje.instance.contadorKill += 100;
-        }
-
-        if(other.gameObject.tag == "ZombiFaster")
-        {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
-            Destroy(gameObject);
-            Puntaje.instance.contadorKill += 5;
-        }
-
-        if(other.gameObject.tag == "ZombiRapido")
-        {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
-            Destroy(gameObject);
-            Puntaje.instance.contadorKill += 2;
-        }
-
-        if(other.gameObject.tag == "ZombiTanque")
-        {
-            other.gameObject.GetComponent<EnemyController>().DanoZombi(dañoDar);
-            Destroy(gameObject);
-            Puntaje.instance.contadorKill += 20;
-        }
-
-        
+        zombi.DanoZombi(dañoDar);
+        Destroy(gameObject);
     }
 }
