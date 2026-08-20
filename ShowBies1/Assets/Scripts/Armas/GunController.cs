@@ -37,7 +37,8 @@ public class GunController : MonoBehaviour
                 player.cantBalas--;
                 AudioSource.Play();
                 contadorDisp = tiempoDisparo;
-                BulletController newBullet = Instantiate(bala, firePoint.position, firePoint.rotation) as BulletController;
+                // Antes era un Instantiate por disparo. Ahora las balas se reusan.
+                BulletController newBullet = BulletController.Obtener(bala, firePoint.position, firePoint.rotation);
                 newBullet.velocidad = velocidadBala;
             }
         } 
