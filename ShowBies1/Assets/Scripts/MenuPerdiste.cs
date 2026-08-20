@@ -7,7 +7,9 @@ public class MenuPerdiste : MonoBehaviour
 {
     public void Retry ()
     {
-        SceneManager.LoadScene(1);
+        // Vuelve al modo que se estaba jugando, no siempre al primero.
+        // PlayerHealth lo guarda al morir; si no hay nada, cae en ShowBies1.
+        SceneManager.LoadScene(PlayerPrefs.GetInt("UltimoModo", 1));
     }
 
     public void Menu()

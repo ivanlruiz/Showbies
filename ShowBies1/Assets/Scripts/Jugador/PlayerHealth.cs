@@ -39,16 +39,23 @@ public class PlayerHealth : MonoBehaviour
         health -= amount;
         if(health <= 0)
         {
-            int score = PlayerPrefs.GetInt("Score");
             int highScore = PlayerPrefs.GetInt("HighScore");
 
             PlayerPrefs.SetInt("Score", Puntaje.instance.contadorKill);
 
             if (Puntaje.instance.contadorKill > highScore)
             {
-                
+
                 PlayerPrefs.SetInt("HighScore", Puntaje.instance.contadorKill);
             }
+
+            // Para que "Retry" vuelva al modo que se estaba jugando y no siempre
+            // al primero. Sin esto, morir en WaveMode te reiniciaba en ShowBies1.
+            PlayerPrefs.SetInt("UltimoModo", SceneManager.GetActiveScene().buildIndex);
+
+            // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
+            PlayerPrefs.Save();
+
             SceneManager.LoadScene(2);
             Destroy(gameObject);
             
