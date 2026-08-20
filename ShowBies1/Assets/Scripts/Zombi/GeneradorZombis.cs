@@ -26,6 +26,11 @@ public class GeneradorZombis : MonoBehaviour
     [SerializeField]
     public float intervaloZombiFASTER; //2
 
+    // Techo de poblacion. Los cinco generadores corren en paralelo y para siempre,
+    // asi que sin esto son ~350 zombis en el primer minuto y sigue creciendo.
+    [SerializeField]
+    public int maxZombisVivos = 60;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -38,8 +43,15 @@ public class GeneradorZombis : MonoBehaviour
 
     private IEnumerator spawnEnemy(float interval, GameObject enemy)
     {
-        yield return new WaitForSeconds(interval);                      //X                         //Y                     //Z
-        GameObject newEnemy = Instantiate(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)), Quaternion.identity);
-        StartCoroutine(spawnEnemy(interval, enemy));
+        // Antes esto se rellamaba a si mismo con un StartCoroutine al final, lo que
+        // creaba una corrutina nueva por spawn. Un while hace lo mismo sin alocar.
+        while (true)
+        {
+            yield return new WaitForSeconds(interval);                   //X                         //Y                     //Z
+
+            if (EnemyController.ZombisVivos >= maxZombisVivos) continue;
+
+            Instantiate(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)), Quaternion.identity);
+        }
     }
 }

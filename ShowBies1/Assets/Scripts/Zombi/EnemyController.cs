@@ -18,6 +18,10 @@ public class EnemyController : MonoBehaviour
     [Header("Manchas de sangre")]
     [SerializeField] private float duracionMancha = 2f;
 
+    // Cuántos zombis hay vivos ahora mismo. Los generadores lo miran para no
+    // pasarse del techo de población: sin esto spawnean para siempre.
+    public static int ZombisVivos { get; private set; }
+
     // Sprite.Create aloca un Sprite nuevo cada vez, y antes se llamaba una vez por
     // muerte. Son 8 texturas fijas: se crean una sola vez y se reusan.
     private static readonly Dictionary<Texture2D, Sprite> spritesDeSangre = new Dictionary<Texture2D, Sprite>();
@@ -27,7 +31,18 @@ public class EnemyController : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
+        ZombisVivos = 0;
         spritesDeSangre.Clear();
+    }
+
+    private void Awake()
+    {
+        ZombisVivos++;
+    }
+
+    private void OnDestroy()
+    {
+        ZombisVivos--;
     }
 
     void Start()

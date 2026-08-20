@@ -8,58 +8,59 @@ public class WaveManager : MonoBehaviour
     public float timeBetweenWaves = 10f; // Tiempo entre oleadas
     public int enemiesPerWave = 10; // Número de enemigos por oleada
     public int wavesBeforeNewEnemy = 5; // Cada cuántas oleadas aparece un nuevo tipo de enemigo
+    public int maxZombisVivos = 60; // Techo de población: si está lleno, la oleada espera
 
     private int currentWave = 0;
-    private int enemiesSpawned = 0;
     private int currentEnemyIndex = 0;
 
     private void Start()
     {
-        StartCoroutine(SpawnWave());
+        StartCoroutine(SpawnWaves());
     }
 
-    private void Update()
+    // Una sola corrutina para toda la partida.
+    //
+    // Antes era una corrutina por oleada, relanzada desde Update mientras
+    // enemiesSpawned >= enemiesPerWave. Como enemiesSpawned recién se reseteaba
+    // después del WaitForSeconds inicial, Update arrancaba una corrutina nueva
+    // en CADA frame de esa espera: con timeBetweenWaves = 2 y 60fps son ~120
+    // oleadas simultáneas, o sea 1200 enemigos.
+    private IEnumerator SpawnWaves()
     {
-        // Comprueba si se han derrotado a todos los enemigos de la oleada actual
-        if (enemiesSpawned >= enemiesPerWave)
+        while (true)
         {
-            StartCoroutine(SpawnWave());
-        }
-    }
+            yield return new WaitForSeconds(timeBetweenWaves);
+            currentWave++;
 
-    IEnumerator SpawnWave()
-    {
-        yield return new WaitForSeconds(timeBetweenWaves);
-        currentWave++;
-        enemiesSpawned = 0;
+            // Determina si es hora de introducir un nuevo tipo de enemigo
+            if (currentWave % wavesBeforeNewEnemy == 0)
+            {
+                currentEnemyIndex++; // Incrementa el índice del enemigo actual
+                currentEnemyIndex = Mathf.Clamp(currentEnemyIndex, 0, enemyPrefabs.Length - 1); // Asegura que no se exceda el número de tipos de enemigos
+            }
 
-        // Determina si es hora de introducir un nuevo tipo de enemigo
-        if (currentWave % wavesBeforeNewEnemy == 0)
-        {
-            currentEnemyIndex++; // Incrementa el índice del enemigo actual
-            currentEnemyIndex = Mathf.Clamp(currentEnemyIndex, 0, enemyPrefabs.Length - 1); // Asegura que no se exceda el número de tipos de enemigos
+            // Genera los enemigos de la oleada actual
+            for (int i = 0; i < enemiesPerWave; i++)
+            {
+                while (EnemyController.ZombisVivos >= maxZombisVivos)
+                {
+                    yield return null;
+                }
 
-            // Opcional: aquí puedes agregar código para mostrar un mensaje o efecto de transición al introducir un nuevo tipo de enemigo
-
-            // Ejemplo: Debug.Log("¡Nuevos enemigos aparecerán en esta oleada!");
-        }
-
-        // Genera los enemigos de la oleada actual
-        for (int i = 0; i < enemiesPerWave; i++)
-        {
-            SpawnEnemy();
-            yield return new WaitForSeconds(1f); // Intervalo entre apariciones de enemigos
+                SpawnEnemy();
+                yield return new WaitForSeconds(1f); // Intervalo entre apariciones de enemigos
+            }
         }
     }
 
     void SpawnEnemy()
     {
+        if (enemyPrefabs.Length == 0 || spawnPoint == null) return;
+
         // Selecciona un enemigo del array de acuerdo al índice actual
         GameObject enemyPrefab = enemyPrefabs[currentEnemyIndex];
 
         // Instancia el enemigo en el punto de aparición
         Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
-
-        enemiesSpawned++;
     }
 }
