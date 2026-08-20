@@ -31,7 +31,10 @@ public class PlayerController : MonoBehaviour
     public int cantBalas = 0;
     public int maxBalas = 500;
 
-    private bool isThrowingGranade = false;
+    [Header("Granade Settings")]
+    public float granadaCooldown = 5f;
+
+    private float granadaDisponibleEn;
 
     private void Start()
     {
@@ -121,23 +124,14 @@ public class PlayerController : MonoBehaviour
 
     private void ThrowGranade()
     {
-        if (!isThrowingGranade && granadaPrefab != null)
-        {
-            isThrowingGranade = true;
-            StartCoroutine(ThrowGranadeWithDelay());
-        }
-    }
+        // El cooldown de 5 segundos vivía en Granade, sobre la instancia recién
+        // creada, así que no limitaba nada: se podían tirar granadas por frame.
+        // Va acá, que es donde está el input.
+        if (granadaPrefab == null || Time.time < granadaDisponibleEn) return;
 
-    private IEnumerator ThrowGranadeWithDelay()
-    {
-        // Deja pasar 3 segundos
-        yield return new WaitForSeconds(0f);
+        granadaDisponibleEn = Time.time + granadaCooldown;
 
-        // Suelta la granada en el suelo
-        Granade granadaInstance = Instantiate(granadaPrefab, transform.position, transform.rotation);
-
-        // Llama al método Explode() después de 3 segundos
-        granadaInstance.Invoke("Explode", 3f);
-        isThrowingGranade = false;
+        // La granada se encarga sola de su mecha y de destruirse al explotar.
+        Instantiate(granadaPrefab, transform.position, transform.rotation);
     }
 }

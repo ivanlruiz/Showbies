@@ -7,40 +7,32 @@ public class Granade : MonoBehaviour
     public int damage = 10;
     public ParticleSystem explosion;
 
-    private bool canExplode = true;
+    [SerializeField] private float tiempoDeMecha = 3f;
+
+    private bool yaExploto;
 
     private void Start()
     {
         Physics.IgnoreLayerCollision(6, 7);
+
+        // La granada enciende su propia mecha al nacer. Antes el jugador la
+        // instanciaba y le hacia Invoke("Explode", 3f) mientras este script
+        // ademas escuchaba Espacio en Update, asi que la misma granada explotaba
+        // dos veces: una por el Invoke y otra en el frame en que se creo.
+        StartCoroutine(Mecha());
     }
 
-    private void Update()
+    private IEnumerator Mecha()
     {
-        // Verificar si se puede lanzar la granada y si se presionó el botón de lanzar
-        if (canExplode && Input.GetKeyDown(KeyCode.Space))
-        {
-            // Lanzar la granada
-            Explode();
-
-            // Aplicar el cooldown
-            StartCoroutine(Cooldown(5f));
-        }
-    }
-
-    private IEnumerator Cooldown(float cooldownTime)
-    {
-        // Desactivar la capacidad de lanzar granadas durante el cooldown
-        canExplode = false;
-
-        // Esperar el tiempo del cooldown
-        yield return new WaitForSeconds(cooldownTime);
-
-        // Activar la capacidad de lanzar granadas después del cooldown
-        canExplode = true;
+        yield return new WaitForSeconds(tiempoDeMecha);
+        Explode();
     }
 
     private void Explode()
     {
+        if (yaExploto) return;
+        yaExploto = true;
+
         Collider[] colliders = Physics.OverlapSphere(transform.position, radioExplosion);
         foreach (Collider nearbyObject in colliders)
         {
@@ -61,7 +53,16 @@ public class Granade : MonoBehaviour
                 }
             }
         }
-        explosion.Play();
-        // No destruir la granada aquí, para que pueda continuar su vida útil y permitir que la corrutina de cooldown termine
+
+        if (explosion != null)
+        {
+            // La particula es hija de la granada y tiene stopAction = Destroy, asi
+            // que hay que despegarla antes de destruir la granada: si no, se corta
+            // apenas empieza. Despegada se limpia sola cuando termina.
+            explosion.transform.SetParent(null, true);
+            explosion.Play();
+        }
+
+        Destroy(gameObject);
     }
 }
