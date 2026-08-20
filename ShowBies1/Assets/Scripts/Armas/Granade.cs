@@ -36,21 +36,14 @@ public class Granade : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(transform.position, radioExplosion);
         foreach (Collider nearbyObject in colliders)
         {
-            // Verificar si el objeto colisionado es un zombi
-            if (nearbyObject.CompareTag("ZombiNormal") ||
-                nearbyObject.CompareTag("ZombiBoss") ||
-                nearbyObject.CompareTag("ZombiFaster") ||
-                nearbyObject.CompareTag("ZombiRapido") ||
-                nearbyObject.CompareTag("ZombiTanque"))
-            {
-                // Obtener el componente EnemyController del zombi
-                EnemyController enemyController = nearbyObject.GetComponent<EnemyController>();
+            // Tener el componente ya es ser un zombi: la lista de cinco tags no
+            // agregaba nada y habia que acordarse de tocarla al sumar un tipo.
+            EnemyController enemyController = nearbyObject.GetComponent<EnemyController>();
 
-                if (enemyController != null)
-                {
-                    // Aplicar daño al zombi
-                    enemyController.DanoZombi(damage);
-                }
+            if (enemyController != null)
+            {
+                // Aplicar daño al zombi
+                enemyController.DanoZombi(damage);
             }
         }
 
