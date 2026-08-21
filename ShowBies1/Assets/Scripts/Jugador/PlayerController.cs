@@ -74,13 +74,16 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Balas"))
+        // Las tags coinciden con los nombres de los prefabs. Antes el pickup de
+        // municion llevaba la tag "Balas" (que sonaba a las balas del arma) y el
+        // de arma llevaba "pwBalas": estaban cruzadas con lo que hacian.
+        if (other.gameObject.CompareTag("PUBalas"))
         {
             Destroy(other.gameObject);
             cantBalas = maxBalas;
             theGun.tiempoDisparo = 0.03f;
         }
-        else if (other.gameObject.CompareTag("pwBalas"))
+        else if (other.gameObject.CompareTag("PUArma"))
         {
             Destroy(other.gameObject);
             cantBalas = 1000;

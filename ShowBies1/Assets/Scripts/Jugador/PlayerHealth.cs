@@ -78,7 +78,7 @@ public class PlayerHealth : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Vida"))
+        if (other.gameObject.CompareTag("PUVida"))
         {
             Destroy(other.gameObject);
 

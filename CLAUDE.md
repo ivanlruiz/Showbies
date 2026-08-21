@@ -228,7 +228,8 @@ deliberado: no hay ningún `#if UNITY_ANDROID` en el código del juego. Quien de
 - **Las tags `ZombiNormal`, `ZombiBoss`, `ZombiFaster`, `ZombiRapido` y `ZombiTanque` siguen en el
   `TagManager` y en los prefabs, pero ya no las usa nadie.** Para detectar un zombi se pide el
   `EnemyController`: tener el componente es ser un zombi. No vuelvas a ramificar por tag. Las tags que
-  sí se usan son `Balas`, `pwBalas` y `Vida` (los power-ups) y `Player`.
+  sí se usan son las de los pickups —`PUBalas`, `PUVida`, `PUArma`, iguales al nombre de su prefab— y
+  `Player`. (Antes eran `Balas`, `Vida` y `pwBalas`, cruzadas con lo que hacían; ya no existen.)
 
 - **Los zombis tienen TRES colliders**: el capsule de la raíz y dos hitboxes hijas ("Cube"). Todo lo
   que resuelva un zombi desde un collider tiene que usar `GetComponentInParent`, no `GetComponent`
