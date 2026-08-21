@@ -14,7 +14,9 @@ public class RestartScene : MonoBehaviour
     {
         // Reinicia el modo que se esta jugando. Antes cargaba la escena 1 fija,
         // asi que apretar R en WaveMode te sacaba al otro modo.
-        if (Input.GetKey(KeyCode.R))
+        // GetKeyDown y no GetKey: con GetKey, mantener la R apretada recargaba
+        // la escena en loop, una vez por frame hasta soltarla.
+        if (Input.GetKeyDown(KeyCode.R))
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }

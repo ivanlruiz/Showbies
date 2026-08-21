@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Video;
-using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
@@ -23,9 +21,6 @@ public class PlayerController : MonoBehaviour
     public GunController theGun;
     public Granade granadaPrefab;
 
-    [Header("UI Settings")]
-    public TextMeshProUGUI textoContBalas;
-
     [Header("Ammo Settings")]
     public int cantBalas = 0;
     public int maxBalas = 500;
@@ -38,7 +33,10 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         myRigidbody = GetComponent<Rigidbody>();
-        mainCamera = FindObjectOfType<Camera>();
+
+        // Camera.main y no FindObjectOfType: FindObjectOfType esta deprecado en
+        // Unity 6 y Camera.main esta cacheado por el engine desde 2020.2.
+        mainCamera = Camera.main;
     }
 
     private void Update()

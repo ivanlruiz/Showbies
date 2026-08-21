@@ -5,6 +5,9 @@ public class CanvasHelper : MonoBehaviour
     public Canvas rootCanvas;
     public RectTransform rect;
 
+    private Rect ultimoSafeArea;
+    private Rect ultimoPixelRect;
+
     void Awake()
     {
         DoRunLogic();
@@ -27,6 +30,12 @@ public class CanvasHelper : MonoBehaviour
 
     void Update()
     {
+        // Recalcular las anclas por frame fuerza layout al pedo. El safe area
+        // solo cambia al rotar o redimensionar: con mirar eso alcanza.
+        if (Screen.safeArea == ultimoSafeArea && rootCanvas.pixelRect == ultimoPixelRect) return;
+
+        ultimoSafeArea = Screen.safeArea;
+        ultimoPixelRect = rootCanvas.pixelRect;
         DoRunLogic();
     }
 }

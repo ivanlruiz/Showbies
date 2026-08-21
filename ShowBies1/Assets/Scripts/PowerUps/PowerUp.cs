@@ -24,12 +24,15 @@ public class PowerUp : MonoBehaviour
         StartCoroutine(spawnPU(IntervaloPUArma, PUArma));
     }
 
-    
-        private IEnumerator spawnPU(float interval, GameObject powerup)
+    private IEnumerator spawnPU(float interval, GameObject powerup)
+    {
+        // Antes se rellamaba a si mismo con un StartCoroutine al final, creando
+        // una corrutina nueva por spawn: el mismo patron que se saco del
+        // generador de zombis. Un while hace lo mismo sin alocar.
+        while (true)
         {
             yield return new WaitForSeconds(interval);                      //distanciaX              //altura     //distZ
-            GameObject newEnemy = Instantiate(powerup, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f),Random.Range(-45, 45)), Quaternion.identity);
-            StartCoroutine(spawnPU(interval, powerup));
+            Instantiate(powerup, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)), Quaternion.identity);
         }
-    
+    }
 }
