@@ -188,6 +188,23 @@ deliberado: no hay ningún `#if UNITY_ANDROID` en el código del juego. Quien de
 
 **No vuelvas a meter un `#if UNITY_ANDROID` alrededor de una clase entera.** Ver la trampa de abajo.
 
+### Build de Android
+
+**Build > Android APK** (menú de `Assets/Editor/ConstructorAndroid.cs`) compila las escenas
+habilitadas a `Builds/ShowBies.apk` en la raíz del repo (gitignoreada) y escribe el veredicto en
+`Builds/build_result.txt`. También sirve por CLI con `-executeMethod ConstructorAndroid.BuildApk`.
+
+- Configuración: package `com.ivru.showbies` (cambiable hasta publicar, después queda fijo),
+  IL2CPP + ARM64, minSdk 25, targetSdk automático.
+- El `user.keystore` de la raíz está configurado pero **apagado** (`useCustomKeystore = 0`): las
+  builds de prueba firman con el debug keystore sin pedir nada. Para Play Store se reactiva con su
+  contraseña, o mejor, Play App Signing.
+- El `totalSize` del BuildReport miente: cuenta símbolos e intermedios (~430 MB); el APK real son
+  ~32 MB. La carpeta `*_BurstDebugInformation_DoNotShip` que aparece al lado del APK no se
+  distribuye.
+- El primer switch de plataforma reimporta todos los assets (~10+ min con el proyecto en disco
+  mecánico); después queda cacheado en `Library/`.
+
 ## Convenciones
 
 - Los comentarios y los mensajes de commit van en **español**. Los commits: infinitivo imperativo, sin
