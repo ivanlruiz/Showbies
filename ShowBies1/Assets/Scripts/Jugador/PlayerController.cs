@@ -74,17 +74,24 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // El jugador tiene dos colliders: el mismo pickup dispara este evento dos
+        // veces en el mismo paso de fisica. Aca los efectos son absolutos y no se
+        // notaba, pero es el mismo agujero que la cura doble de PlayerHealth.
+        if (!other.gameObject.activeSelf) return;
+
         // Las tags coinciden con los nombres de los prefabs. Antes el pickup de
         // municion llevaba la tag "Balas" (que sonaba a las balas del arma) y el
         // de arma llevaba "pwBalas": estaban cruzadas con lo que hacian.
         if (other.gameObject.CompareTag("PUBalas"))
         {
+            other.gameObject.SetActive(false);
             Destroy(other.gameObject);
             cantBalas = maxBalas;
             theGun.tiempoDisparo = 0.03f;
         }
         else if (other.gameObject.CompareTag("PUArma"))
         {
+            other.gameObject.SetActive(false);
             Destroy(other.gameObject);
             cantBalas = 1000;
             theGun.tiempoDisparo = 0.01f;

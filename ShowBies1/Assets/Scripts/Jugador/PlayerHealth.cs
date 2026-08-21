@@ -78,8 +78,15 @@ public class PlayerHealth : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
+        // El jugador tiene dos colliders, asi que el mismo pickup dispara este
+        // evento dos veces en el mismo paso de fisica, y Destroy es diferido: la
+        // cura se aplicaba doble (50+100+100 clampeado a 200 en vez de 150). El
+        // SetActive(false) inmediato marca el pickup como ya consumido.
+        if (!other.gameObject.activeSelf) return;
+
         if (other.gameObject.CompareTag("PUVida"))
         {
+            other.gameObject.SetActive(false);
             Destroy(other.gameObject);
 
             // El tope estaba hardcodeado en 200 y maxHealth no lo leia nadie: el
