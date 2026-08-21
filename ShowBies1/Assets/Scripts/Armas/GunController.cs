@@ -46,6 +46,10 @@ public class GunController : MonoBehaviour
         mejoraVenceEn = Time.time + duracionMejora;
     }
 
+    // Para el indicador del HUD.
+    public bool MejoraActiva { get { return mejoraActiva; } }
+    public float MejoraRestante { get { return mejoraActiva ? Mathf.Max(0f, mejoraVenceEn - Time.time) : 0f; } }
+
     // Update is called once per frame
     void Update()
     {
