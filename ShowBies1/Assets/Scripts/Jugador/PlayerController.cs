@@ -87,14 +87,14 @@ public class PlayerController : MonoBehaviour
             other.gameObject.SetActive(false);
             Destroy(other.gameObject);
             cantBalas = maxBalas;
-            theGun.tiempoDisparo = 0.03f;
+            theGun.MejorarCadencia(0.03f);
         }
         else if (other.gameObject.CompareTag("PUArma"))
         {
             other.gameObject.SetActive(false);
             Destroy(other.gameObject);
             cantBalas = 1000;
-            theGun.tiempoDisparo = 0.01f;
+            theGun.MejorarCadencia(0.01f);
         }
     }
 

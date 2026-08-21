@@ -130,8 +130,13 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
 4. Al vencer el tiempo o al chocar, la bala **se apaga y vuelve al pool**, no se destruye.
 
 **Nunca hagas `Instantiate`/`Destroy` de balas directo.** Con `tiempoDisparo = 0.04` son 25 balas por
-segundo, y el power-up de balas lo baja a 0.01 (100 por segundo). El pool convierte 500 disparos en
+segundo, y el power-up de arma lo baja a 0.01 (100 por segundo). El pool convierte 500 disparos en
 49 objetos.
+
+**La cadencia mejorada es temporal.** Los pickups no tocan `tiempoDisparo` directo: pasan por
+`GunController.MejorarCadencia(valor)`, que aplica la mejora por `duracionMejora` segundos (10 por
+defecto, editable en el inspector) y después vuelve a la cadencia con la que arrancó la escena. Un
+pickup nuevo pisa al vigente y reinicia el reloj; la munición que dio el pickup no expira.
 
 La bala **no tiene Rigidbody**, sólo un `BoxCollider`: los eventos de colisión llegan porque el zombi
 sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
