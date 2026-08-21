@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1329454221328681183}
   - component: {fileID: 3952536358953460128}
   - component: {fileID: 3369886559091101946}
+  - component: {fileID: 8627488408920948129}
   m_Layer: 0
   m_Name: PUVida
   m_TagString: PUVida
@@ -4917,3 +4918,18 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
+--- !u!114 &8627488408920948129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1329454221328681177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c13531b9619956448d28626dbe53804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupCaducidad
+  vida: 30
+  parpadeoFinal: 3
+  frecuenciaParpadeo: 8

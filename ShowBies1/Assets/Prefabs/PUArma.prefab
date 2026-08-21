@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4638410047729973174}
   - component: {fileID: 4638410047729973175}
   - component: {fileID: 4638410047729973168}
+  - component: {fileID: 9019199833472116777}
   m_Layer: 0
   m_Name: PUArma
   m_TagString: PUArma
@@ -112,3 +113,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 3, y: 3, z: 3}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &9019199833472116777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4638410047729973169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c13531b9619956448d28626dbe53804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupCaducidad
+  vida: 30
+  parpadeoFinal: 3
+  frecuenciaParpadeo: 8
