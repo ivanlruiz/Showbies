@@ -41,3 +41,6 @@ sysinfo.txt
 # vuelve a ofrecer cuando hagan falta.
 ShowBies1/Assets/TextMesh Pro/Examples & Extras/
 ShowBies1/Assets/TextMesh Pro/Examples & Extras.meta
+
+# Temporal de builds de Unity 6 (aparece junto a Temp/ durante la build de Android)
+.utmp/
