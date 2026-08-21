@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     [Header("Ammo Settings")]
     public int cantBalas = 0;
     public int maxBalas = 500;
+    public int cargadorMejorado = 1000;   // a lo que sube maxBalas al agarrar un PUArma
 
     [Header("Granade Settings")]
     public float granadaCooldown = 5f;
@@ -93,7 +94,12 @@ public class PlayerController : MonoBehaviour
         {
             other.gameObject.SetActive(false);
             Destroy(other.gameObject);
-            cantBalas = 1000;
+
+            // El pickup de arma mejora el arma de verdad: agranda el cargador en
+            // forma PERMANENTE y lo llena. Antes cargaba 1000 sin tocar maxBalas
+            // y el contador quedaba mostrando "1000/500". La cadencia si expira.
+            maxBalas = Mathf.Max(maxBalas, cargadorMejorado);
+            cantBalas = maxBalas;
             theGun.MejorarCadencia(0.01f);
         }
     }
