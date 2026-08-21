@@ -182,7 +182,9 @@ deliberado: no hay ningún `#if UNITY_ANDROID` en el código del juego. Quien de
 - `PlayerController.Update` **se corta enseguida en móvil** para no pelearse con el joystick por
   `moveVelocity` y por `isFiring`.
 - `ConditionalShow` prende y apaga objetos por plataforma (`showOnAndroid` / `showOnPC`). Los joysticks
-  ya están puestos en el Canvas de las dos escenas de juego con eso.
+  ya están puestos en el Canvas de las dos escenas de juego con eso, igual que el **botón de granada**
+  (`BotonGranada`, sólo Android), cuyo `onClick` llama a `PlayerController.ThrowGranade` — público
+  justamente por eso, y con el cooldown adentro, así que el botón no puede spamear.
 
 **No vuelvas a meter un `#if UNITY_ANDROID` alrededor de una clase entera.** Ver la trampa de abajo.
 

@@ -156,7 +156,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void ThrowGranade()
+    // Publico porque en movil lo llama el boton de granada del Canvas (Espacio no
+    // existe ahi). El cooldown vive aca adentro, asi que el boton no puede spamear.
+    public void ThrowGranade()
     {
         // El cooldown de 5 segundos vivía en Granade, sobre la instancia recién
         // creada, así que no limitaba nada: se podían tirar granadas por frame.
