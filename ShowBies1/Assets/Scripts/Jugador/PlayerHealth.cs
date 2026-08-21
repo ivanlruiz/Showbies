@@ -23,6 +23,13 @@ public class PlayerHealth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Kill-Z. Si los zombis empujan al jugador fuera del mapa, cae al vacio
+        // para siempre sin morir: softlock. Cuenta como muerte normal.
+        if (!estaMuerto && transform.position.y < -20f)
+        {
+            TakeDamage(Mathf.Max(health, 1));
+        }
+
         // Solo al cambiar: el ToString por frame es una alocacion por frame.
         if (health != ultimaVidaMostrada)
         {

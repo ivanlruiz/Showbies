@@ -68,6 +68,16 @@ public class EnemyController : MonoBehaviour
 
     private void FixedUpdate()
     {
+       // Kill-Z. Un zombi que se cae del mapa (empujado por otros en el borde, o
+       // spawneado mal) cae para siempre y SIGUE contando en ZombisVivos: con el
+       // techo de poblacion, cada caido es un lugar menos que no se recupera
+       // nunca, hasta que el generador queda tapado y la partida se vacia.
+       if (transform.position.y < -20f)
+       {
+           Destroy(gameObject);   // sin puntos ni mancha: nadie lo mato
+           return;
+       }
+
        if (thePlayer == null) return;
        transform.LookAt(thePlayer.transform.position);
        rb.linearVelocity = (transform.forward * enemyType.velocidad);
