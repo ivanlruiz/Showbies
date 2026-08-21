@@ -230,6 +230,22 @@ deliberado: no hay ningún `#if UNITY_ANDROID` en el código del juego. Quien de
   `EnemyController`: tener el componente es ser un zombi. No vuelvas a ramificar por tag. Las tags que
   sí se usan son `Balas`, `pwBalas` y `Vida` (los power-ups) y `Player`.
 
+- **Los zombis tienen TRES colliders**: el capsule de la raíz y dos hitboxes hijas ("Cube"). Todo lo
+  que resuelva un zombi desde un collider tiene que usar `GetComponentInParent`, no `GetComponent`
+  (una bala que tocaba una hitbox hija rebotaba sin dañar). Y todo lo que dañe por área
+  (`OverlapSphere`) tiene que deduplicar por componente, porque los tres colliders resuelven al mismo
+  `EnemyController` y sin dedup el daño se multiplica por tres.
+
+- **La muerte necesita guarda.** `Destroy` es diferido: dos golpes letales en el mismo paso de física
+  llaman a `DanoZombi` (o `TakeDamage`) dos veces con la vida ya en cero, y sin el flag `estaMuerto`
+  el bloque de muerte corre entero de nuevo — puntos dobles, dos manchas. Si agregás otra fuente de
+  daño, no repitas la lógica de muerte: llamá a esos métodos, que ya están guardados.
+
+- **Hay un kill-Z en Y = -20** para zombis y jugador, y no es decorativo: el mapa tiene bordes por los
+  que la física empuja cosas, y un zombi caído seguía contando en `ZombisVivos` — cada caído era un
+  cupo del techo de población perdido para siempre. Si agregás entidades con Rigidbody que importen,
+  dales su propio kill-Z.
+
 - **Player (capa 6) y Bala (capa 7) no colisionan, y eso está en la matriz del proyecto.** Antes se
   seteaba con `Physics.IgnoreLayerCollision(6, 7)` en el `Start` de cada bala. No lo hagas por código.
 
