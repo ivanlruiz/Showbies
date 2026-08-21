@@ -74,11 +74,19 @@ public class BulletController : MonoBehaviour
 
     void OnCollisionEnter(Collision other)
     {
-        // Antes habia cinco if identicos, uno por tag de zombi, y cada uno sumaba
-        // puntos ACA: o sea por bala que pegaba, no por zombi muerto. El BOSS
-        // tiene 500 de vida y la bala hace 5, asi que daba 100 impactos x 100
-        // puntos = 10000. Ahora los puntos los da EnemyController al morir.
-        EnemyController zombi = other.gameObject.GetComponent<EnemyController>();
+        // Los eventos de un mismo paso de fisica se despachan todos aunque el
+        // primero apague la bala: sin esta guarda, una bala que toca a dos
+        // zombis superpuestos daña a los dos.
+        if (!enUso) return;
+
+        // GetComponentInParent y no GetComponent: los zombis tienen dos hitboxes
+        // hijas ("Cube") ademas del capsule de la raiz, y el componente vive en
+        // la raiz. Con GetComponent, una bala que pegaba en la hitbox hija
+        // rebotaba sin hacer daño.
+        //
+        // Antes ademas habia cinco if identicos por tag que sumaban puntos ACA,
+        // o sea por impacto y no por muerte. Los puntos los da EnemyController.
+        EnemyController zombi = other.gameObject.GetComponentInParent<EnemyController>();
         if (zombi == null) return;
 
         zombi.DanoZombi(dañoDar);

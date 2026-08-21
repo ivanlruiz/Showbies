@@ -17,10 +17,18 @@ public class PlayerHealth : MonoBehaviour
     public int curaPorPickup = 100;
     public TMP_Text healthTMP;
 
+    private bool estaMuerto;
+    private int ultimaVidaMostrada = int.MinValue;
+
     // Update is called once per frame
     void Update()
     {
-        healthTMP.text = health.ToString();
+        // Solo al cambiar: el ToString por frame es una alocacion por frame.
+        if (health != ultimaVidaMostrada)
+        {
+            ultimaVidaMostrada = health;
+            healthTMP.text = health.ToString();
+        }
     }
 
     private void Awake()
@@ -30,9 +38,15 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
+        // veces con la vida ya en cero, y el bloque de muerte corria de nuevo.
+        if (estaMuerto) return;
+
         health -= amount;
         if(health <= 0)
         {
+            estaMuerto = true;
+
             int highScore = PlayerPrefs.GetInt("HighScore");
 
             PlayerPrefs.SetInt("Score", Puntaje.instance.contadorKill);

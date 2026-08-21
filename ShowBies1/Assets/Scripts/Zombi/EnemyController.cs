@@ -73,12 +73,21 @@ public class EnemyController : MonoBehaviour
        rb.linearVelocity = (transform.forward * enemyType.velocidad);
     }
 
+    private bool estaMuerto;
+
     public void DanoZombi(int daño)
     {
+        // Destroy es diferido: dos golpes en el mismo paso de fisica llamaban a
+        // esto dos veces con la vida ya en cero, y el bloque de muerte corria de
+        // nuevo entero: puntos dobles, dos manchas, dos explosiones.
+        if (estaMuerto) return;
+
         vidaActual -= daño;
 
         if (vidaActual <= 0)
         {
+            estaMuerto = true;
+
             DejarManchaDeSangre();
 
             Instantiate(deathParticles, transform.position, Quaternion.identity);

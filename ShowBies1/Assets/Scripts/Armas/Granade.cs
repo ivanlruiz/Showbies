@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Granade : MonoBehaviour
@@ -32,13 +33,16 @@ public class Granade : MonoBehaviour
         yaExploto = true;
 
         Collider[] colliders = Physics.OverlapSphere(transform.position, radioExplosion);
+
+        // GetComponentInParent porque los zombis tienen hitboxes hijas, y el
+        // HashSet porque entonces los tres colliders del mismo zombi resuelven
+        // al mismo componente: sin dedup la explosion lo dañaria tres veces.
+        var yaDanados = new HashSet<EnemyController>();
         foreach (Collider nearbyObject in colliders)
         {
-            // Tener el componente ya es ser un zombi: la lista de cinco tags no
-            // agregaba nada y habia que acordarse de tocarla al sumar un tipo.
-            EnemyController enemyController = nearbyObject.GetComponent<EnemyController>();
+            EnemyController enemyController = nearbyObject.GetComponentInParent<EnemyController>();
 
-            if (enemyController != null)
+            if (enemyController != null && yaDanados.Add(enemyController))
             {
                 // Aplicar daño al zombi
                 enemyController.DanoZombi(damage);
