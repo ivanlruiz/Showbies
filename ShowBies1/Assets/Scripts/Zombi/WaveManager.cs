@@ -9,12 +9,14 @@ public class WaveManager : MonoBehaviour
     public int enemiesPerWave = 10; // Número de enemigos por oleada
     public int wavesBeforeNewEnemy = 5; // Cada cuántas oleadas aparece un nuevo tipo de enemigo
     public int maxZombisVivos = 60; // Techo de población: si está lleno, la oleada espera
+    public int maxZombisVivosMovil = 35; // En móvil cada zombi cuesta más; ver GeneradorZombis
 
     private int currentWave = 0;
     private int currentEnemyIndex = 0;
 
     private void Start()
     {
+        if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
         StartCoroutine(SpawnWaves());
     }
 

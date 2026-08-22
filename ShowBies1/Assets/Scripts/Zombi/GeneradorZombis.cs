@@ -31,9 +31,17 @@ public class GeneradorZombis : MonoBehaviour
     [SerializeField]
     public int maxZombisVivos = 60;
 
+    // En movil cada zombi cuesta mas (animador, fisica y sombra en una CPU y GPU
+    // chicas), asi que el techo es mas bajo. Salio de la primera prueba en un
+    // telefono, con bajos FPS.
+    [SerializeField]
+    public int maxZombisVivosMovil = 35;
+
     // Start is called before the first frame update
     void Start()
     {
+        if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
+
         StartCoroutine(spawnEnemy(intervaloZombi, Zombi));
         StartCoroutine(spawnEnemy(intervaloZombiRapido, ZombiRapido));
         StartCoroutine(spawnEnemy(intervaloZombiTanque, ZombiTanque));

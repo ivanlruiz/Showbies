@@ -207,6 +207,23 @@ en el editor con target Android los joysticks se veían pero no respondían.
 
 **No vuelvas a meter un `#if UNITY_ANDROID` alrededor de una clase entera.** Ver la trampa de abajo.
 
+### Rendimiento en móvil
+
+La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
+
+- `ConfiguracionRendimiento` (`Assets/Scripts/`) corre antes de la primera escena: pone
+  `Application.targetFrameRate = 60` — **Unity en Android limita a 30 FPS por defecto** si nadie lo
+  sube — y en móvil renderiza a `EscalaResolucionMovil` (0.75) de la resolución nativa. La UI no se
+  entera porque los canvas escalan con la pantalla.
+- Android usa el nivel de calidad **Medium**: sombras duras, 20 m, 1 cascada, resolución baja, sin
+  AA ni anisotrópico, texturas a mitad de resolución (`globalTextureMipmapLimit = 1`; las del piso
+  son 4K). El editor corre en Ultra, así que **lo que ves en el editor no es lo que ve el teléfono**.
+- Las cámaras de las escenas de juego tienen HDR y MSAA apagados (sin post-proceso no aportan nada),
+  y todo lo estático está marcado `BatchingStatic` (las 80 calles de WaveMode eran 80 draw calls).
+- Los generadores usan `maxZombisVivosMovil` (35) en vez de 60 cuando `Plataforma.EsMovil`.
+- `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
+  Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí.
+
 ### Build de Android
 
 **Build > Android APK** (menú de `Assets/Editor/ConstructorAndroid.cs`) compila las escenas
