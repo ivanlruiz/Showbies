@@ -44,7 +44,7 @@ public class PlayerController : MonoBehaviour
     {
         // En móvil el input lo maneja PlayerJS con los joysticks. Si además
         // corriera esto, los dos se pelearían por moveVelocity y por isFiring.
-        if (Application.isMobilePlatform) return;
+        if (Plataforma.EsMovil) return;
 
         HandleMovement();
         HandleCamera();

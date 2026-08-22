@@ -176,7 +176,13 @@ La tecla R hace lo mismo por otro camino: recarga la escena activa.
 
 El puerto a Android está a medias pero **el código compila para las dos plataformas**, y eso es
 deliberado: no hay ningún `#if UNITY_ANDROID` en el código del juego. Quien decide es
-`Application.isMobilePlatform` **en runtime**.
+**`Plataforma.EsMovil`** (`Assets/Scripts/Plataforma.cs`), el único criterio de "estamos en móvil"
+que usan `PlayerJS`, `PlayerController` y `ConditionalShow`: en una build es la plataforma real; en
+el editor es el **build target activo**. Consecuencia útil: con el target en Android, el editor se
+comporta como un teléfono — los joysticks responden al mouse y el teclado se apaga — así que el
+control táctil se prueba sin dispositivo. Con target Windows, jugás con teclado como siempre.
+Antes había dos criterios distintos (defines de compilación vs. `Application.isMobilePlatform`) y
+en el editor con target Android los joysticks se veían pero no respondían.
 
 - `PlayerJS` lee los dos `FixedJoystick` del Canvas y llama a `PlayerController.Move(Vector2)`.
 - `PlayerController.Update` **se corta enseguida en móvil** para no pelearse con el joystick por

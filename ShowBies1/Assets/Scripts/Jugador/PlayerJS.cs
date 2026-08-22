@@ -24,7 +24,7 @@ public class PlayerJS : MonoBehaviour
 
     void Update()
     {
-        if (!Application.isMobilePlatform) return;
+        if (!Plataforma.EsMovil) return;
 
         UpdateMoveJoystick();
         UpdateShootJoystick();
