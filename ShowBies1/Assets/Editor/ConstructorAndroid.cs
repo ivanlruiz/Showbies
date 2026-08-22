@@ -40,6 +40,8 @@ public static class ConstructorAndroid
         var datos = LeerKeystoreLocal();
         if (datos == null) return;
 
+        var keystoreAnterior = PlayerSettings.Android.keystoreName;
+        var aliasAnterior = PlayerSettings.Android.keyaliasName;
         EditorUserBuildSettings.buildAppBundle = true;
         PlayerSettings.Android.useCustomKeystore = true;
         PlayerSettings.Android.keystoreName = Path.GetFullPath(datos["keystore"]);
@@ -53,9 +55,12 @@ public static class ConstructorAndroid
         finally
         {
             // Que no queden los passwords en memoria ni el keystore de release
-            // como default: la build de APK sigue saliendo con el de debug.
+            // en ProjectSettings (la ruta se serializa y ensuciaria el repo con
+            // una ruta local): la build de APK sigue saliendo con el de debug.
             PlayerSettings.Android.keystorePass = "";
             PlayerSettings.Android.keyaliasPass = "";
+            PlayerSettings.Android.keystoreName = keystoreAnterior;
+            PlayerSettings.Android.keyaliasName = aliasAnterior;
             PlayerSettings.Android.useCustomKeystore = false;
             EditorUserBuildSettings.buildAppBundle = false;
         }
