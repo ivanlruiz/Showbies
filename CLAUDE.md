@@ -45,7 +45,7 @@ Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode (+ SampleSce
 Assets/Prefabs/             ← Bullet, Gun, Granada, power-ups, Particulas/, Personajes/
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/otros/               ← los 4 audios del juego
-Assets/Editor/              ← MediationAdapterDependencies.xml (resto del intento de ads en Android)
+Assets/Editor/              ← ConstructorAndroid.cs (builds de Android: APK de prueba y AAB de release)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -226,15 +226,27 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
 
 ### Build de Android
 
-**Build > Android APK** (menú de `Assets/Editor/ConstructorAndroid.cs`) compila las escenas
-habilitadas a `Builds/ShowBies.apk` en la raíz del repo (gitignoreada) y escribe el veredicto en
-`Builds/build_result.txt`. También sirve por CLI con `-executeMethod ConstructorAndroid.BuildApk`.
+Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben el veredicto en
+`Builds/build_result.txt` (raíz del repo, gitignoreada) y sirven por CLI con `-executeMethod`:
+
+- **Build > Android APK** (`ConstructorAndroid.BuildApk`): `Builds/ShowBies.apk` firmado con el
+  debug keystore, para probar en el teléfono. No pide nada.
+- **Build > Android AAB (release)** (`ConstructorAndroid.BuildAab`): `Builds/ShowBies.aab` firmado
+  con el keystore de release, que es lo que se sube a la Play Store. Lee ruta, alias y passwords
+  de `ShowBies1/keystore.local` (gitignoreado; plantilla en `keystore.local.example`) y los limpia
+  de `PlayerSettings` al terminar, así el keystore nunca queda configurado en `ProjectSettings` ni
+  la build de APK se rompe por falta de password.
 
 - Configuración: package `com.ivru.showbies` (cambiable hasta publicar, después queda fijo),
-  IL2CPP + ARM64, minSdk 25, targetSdk automático.
-- El `user.keystore` de la raíz está configurado pero **apagado** (`useCustomKeystore = 0`): las
-  builds de prueba firman con el debug keystore sin pedir nada. Para Play Store se reactiva con su
-  contraseña, o mejor, Play App Signing.
+  IL2CPP + ARM64, minSdk 25, targetSdk automático, `bundleVersion` / `AndroidBundleVersionCode`
+  en `ProjectSettings.asset` (el versionCode tiene que subir en cada subida a la Play Store).
+- **Keystores: `*.keystore`, `*.jks` y `keystore.local` están gitignoreados.** Había un
+  `ShowBies1/user.keystore` de 2023 versionado, con password desconocida; se sacó del repo (queda
+  en disco por si aparece la password). El de release se genera con `keytool` y se guarda con
+  backup fuera del repo: si se pierde, no se puede actualizar la app publicada (salvo con Play App
+  Signing, que conviene activar al subirla por primera vez).
+- Los restos de Unity Mediation (discontinuado por Unity) ya se borraron; el paquete nunca estuvo
+  en `manifest.json`. Los ads van a entrar con LevelPlay o AdMob, desde cero.
 - El `totalSize` del BuildReport miente: cuenta símbolos e intermedios (~430 MB); el APK real son
   ~32 MB. La carpeta `*_BurstDebugInformation_DoNotShip` que aparece al lado del APK no se
   distribuye.

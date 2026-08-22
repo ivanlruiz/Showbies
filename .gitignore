@@ -44,3 +44,9 @@ ShowBies1/Assets/TextMesh Pro/Examples & Extras.meta
 
 # Temporal de builds de Unity 6 (aparece junto a Temp/ durante la build de Android)
 .utmp/
+
+# Keystores y sus passwords: nunca al repo. El de release se genera con keytool
+# (ver CLAUDE.md, "Build de Android") y se guarda con backup fuera del repo.
+*.keystore
+*.jks
+keystore.local
