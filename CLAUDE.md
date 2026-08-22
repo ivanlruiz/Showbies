@@ -58,9 +58,22 @@ Assets/Editor/              ← MediationAdapterDependencies.xml (resto del inte
 | 1 | `ShowBies1.unity` | free mode |
 | 2 | `Perdiste.unity` | pantalla de derrota |
 | 3 | `WaveMode.unity` | wave mode |
+| 4 | `Tutorial.unity` | tutorial jugable (opcional, desde el menú) |
 
 **Los índices están hardcodeados en el código** (`MainMenu.PlayGame` → 1, `MainMenu.GameModes` → 3,
-`PlayerHealth` → 2, `MenuPerdiste.Menu` → 0). Reordenar Build Settings rompe la navegación en silencio.
+`MainMenu.Tutorial` → 4, `PlayerHealth` → 2, `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1).
+Reordenar Build Settings rompe la navegación en silencio.
+
+### Tutorial
+
+`Tutorial.unity` es una copia de ShowBies1 con `Spawners` apagados: los zombis y las cajas los pone
+`TutorialManager` (`Assets/Scripts/Tutorial/`) cuando el paso los pide. Seis pasos — moverse,
+disparar, granada, cajas de balas/vida, caja de arma (con su reloj de cadencia), fin — y **cada uno
+se completa haciendo la acción**, no apretando "siguiente". Los textos salen de `Plataforma.EsMovil`
+(teclado o joystick), el jugador es inmortal mientras dura, los pickups del tutorial no caducan, y al
+terminar guarda `PlayerPrefs["TutorialCompletado"] = 1` por si algún día se quiere sugerir en la
+primera partida. Para agregar un paso: un valor en el enum `Paso`, su texto en `Entrar` y su
+condición de salida en `Update`.
 
 `SampleScene.unity` no está en el build y no se usa. Es el único lugar donde queda `AudioArma`.
 
