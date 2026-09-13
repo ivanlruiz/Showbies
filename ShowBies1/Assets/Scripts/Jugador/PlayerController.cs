@@ -42,6 +42,14 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (MenuPausa.Pausado)
+        {
+            // Lo que se suelte durante la pausa no llega como GetMouseButtonUp:
+            // sin esto el arma quedaria disparando sola al reanudar.
+            theGun.isFiring = false;
+            return;
+        }
+
         // En móvil el input lo maneja PlayerJS con los joysticks. Si además
         // corriera esto, los dos se pelearían por moveVelocity y por isFiring.
         if (Plataforma.EsMovil) return;

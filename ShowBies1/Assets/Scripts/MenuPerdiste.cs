@@ -16,4 +16,10 @@ public class MenuPerdiste : MonoBehaviour
     {
         SceneManager.LoadScene(0);
     }
+
+    // El boton atras de Android llega como Escape.
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape)) Menu();
+    }
 }

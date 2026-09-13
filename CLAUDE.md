@@ -6,7 +6,7 @@ Guía de arquitectura de **ShowBies** para agentes que trabajen en este repo.
 
 ShowBies es un twin-stick shooter 3D de zombis, top-down, para Windows. El jugador se mueve con WASD,
 apunta con el mouse (raycast contra un plano en Y=0), dispara manteniendo click y tira granadas con
-Espacio. Los zombis aparecen solos, van derecho hacia el jugador y le pegan por colisión. Matar suma
+Espacio; Escape pausa. Los zombis aparecen solos, van derecho hacia el jugador y le pegan por colisión. Matar suma
 puntos, morir guarda el highscore y lleva a la pantalla de derrota.
 
 Hay **dos modos**, los dos jugables desde el menú:
@@ -38,11 +38,11 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, MenuPausa, BotonAtrasMenu
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner)
 Assets/Scripts/*.cs         ← CanvasHelper, MainMenu, MenuPerdiste, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode (+ SampleScene, sin usar)
-Assets/Prefabs/             ← Bullet, Gun, Granada, power-ups, Particulas/, Personajes/
+Assets/Prefabs/             ← Bullet, Gun, Granada, power-ups, Particulas/, Personajes/, UI/ (MenuPausa)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/otros/               ← los 4 audios del juego
 Assets/Editor/              ← ConstructorAndroid.cs (builds de Android: APK de prueba y AAB de release)
@@ -89,6 +89,7 @@ Lo que se comunica sin inspector usa búsquedas cacheadas:
   `FindObjectOfType` por zombi spawneado, que con zombis en escena era costo cuadrático.
 - `EnemyController.ZombisVivos` — contador `static`, `Awake`/`OnDestroy`. Lo miran los dos generadores.
 - `BulletController.pool` — la pila de balas dormidas.
+- `MenuPausa.Pausado` — si el juego está en pausa. Lo miran los que leen input.
 
 **Todo lo `static` se resetea en un `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`**, porque
 sobrevive al cambio de escena y al "enter play mode" sin domain reload. Si agregás estado `static`,
@@ -184,6 +185,31 @@ en ese mismo bloque o se pierde cuando el juego no cierra bien.
 
 `"UltimoModo"` es lo que hace que "Retry" vuelva al modo que estabas jugando y no siempre al primero.
 La tecla R hace lo mismo por otro camino: recarga la escena activa.
+
+## Pausa y botón atrás
+
+`MenuPausa` (`Assets/Scripts/UI/`) vive en el prefab `Assets/Prefabs/UI/MenuPausa.prefab`, puesto en
+ShowBies1, WaveMode y Tutorial: un canvas propio por encima del HUD (`sortingOrder` 10) con el botón de
+pausa (sólo móvil, arriba al centro y dentro del safe area) y el panel Continuar / Reiniciar / Menú
+principal. Se abre con ese botón, con Escape y **sola cuando la app pierde el foco** (una llamada, la
+cortina de notificaciones, alt-tab). Esto último no corre en el editor, que pierde el foco con cada
+click en otra ventana.
+
+- Pausar es `Time.timeScale = 0` más `AudioListener.pause`. Todo el juego usa tiempo escalado (física,
+  `WaitForSeconds`, los `Time.time` de la mejora de cadencia y de los pickups), así que se congela sin
+  tocar nada más. **El input no se congela**: `PlayerController` y `PlayerJS` miran
+  `MenuPausa.Pausado` antes de leerlo. Lo que agregues que lea input tiene que hacer lo mismo.
+- `timeScale` y `AudioListener.pause` son globales y cruzan escenas. Los botones del panel los
+  restauran antes de cargar otra escena, y `OnDestroy` también, por si la escena se descarga en pausa
+  por otro camino (la R de `RestartScene`).
+- **El botón atrás de Android llega como `KeyCode.Escape`**, también con el back predictivo activado
+  (`androidPredictiveBackSupport: 1`, targetSdk 36): el player de Unity registra su propio
+  `OnBackInvokedCallback` y reinyecta `KEYCODE_BACK` a la actividad. Deja de llegar si alguien pone
+  `Input.backButtonLeavesApp = true`.
+- Cada pantalla decide qué hace Escape: en juego pausa y reanuda (`MenuPausa`), en la derrota vuelve al
+  menú (`MenuPerdiste`), y en el menú principal cierra el panel de modos o, en el principal, sale del
+  juego sólo en móvil (`BotonAtrasMenu`, en el canvas "Main Menu"). `RestartScene` ya no cierra el
+  juego con Escape: en PC, para salir está Quit.
 
 ## Móvil
 
@@ -343,3 +369,4 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
    agrega un `SceneRoots` (`--- !u!1660057539`) a cada escena. Lo que hay que confirmar es que no
    desaparezca ningún objeto, comparando los `--- !u!` contra HEAD.
 8. Archivo nuevo en `Assets/Scripts/<Subsistema>/`.
+9. ¿Lee input? Cortalo con `MenuPausa.Pausado`: la pausa congela el tiempo escalado, no el input.

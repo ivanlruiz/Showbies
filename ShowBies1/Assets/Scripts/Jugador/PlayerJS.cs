@@ -24,7 +24,7 @@ public class PlayerJS : MonoBehaviour
 
     void Update()
     {
-        if (!Plataforma.EsMovil) return;
+        if (!Plataforma.EsMovil || MenuPausa.Pausado) return;
 
         UpdateMoveJoystick();
         UpdateShootJoystick();
