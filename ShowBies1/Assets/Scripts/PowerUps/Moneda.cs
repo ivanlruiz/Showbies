@@ -42,7 +42,22 @@ public class Moneda : MonoBehaviour
     public AudioClip sonido;
     [Range(0f, 1f)] public float volumen = 0.6f;
     public float afinacion = 0f;                                 // semitonos que llevan la nota del sonido a la bemol
-    public float ventanaCombo = 0.6f;                            // agarrada antes de esto, suena la nota siguiente
+
+    // Cada moneda agarrada toca una nota de la escala de la bemol mayor, sorteada
+    // con estos pesos (la probabilidad de cada una es su peso sobre la suma). Las
+    // del acorde salen mas seguido, asi una lluvia de monedas suena consonante.
+    public Nota[] notas =
+    {
+        new Nota("La bemol", 0, 3f),
+        new Nota("Si bemol", 2, 1f),
+        new Nota("Do", 4, 2f),
+        new Nota("Re bemol", 5, 1f),
+        new Nota("Mi bemol", 7, 2f),
+        new Nota("Fa", 9, 1f),
+        new Nota("Sol", 11, 0.5f),
+        new Nota("La bemol agudo", 12, 1.5f),
+    };
+
     public ParticleSystem brilloPrefab;
     public int particulasPorCobro = 8;
 
@@ -50,10 +65,6 @@ public class Moneda : MonoBehaviour
     public int maxMonedasEnEscena = 150;
     public int maxMonedasEnEscenaMovil = 80;
 
-    // Notas que suenan al juntar monedas seguidas, en semitonos sobre la tonica:
-    // la escala mayor. El sonido esta en la bemol (si se cambia, ver afinacion),
-    // asi que juntar una fuente entera sube por la escala de la bemol mayor.
-    private static readonly int[] escala = { 0, 2, 4, 5, 7, 9, 11, 12 };
     private const int CantidadDeFuentes = 8;
     private const float SeparacionEntreSonidos = 0.05f;
 
@@ -67,7 +78,6 @@ public class Moneda : MonoBehaviour
     private static AudioSource[] fuentes;
     private static int proximaFuente;
     private static float ultimoSonido = float.NegativeInfinity;
-    private static int combo;
 
     // Los static sobreviven al cambio de escena y al "enter play mode" sin domain
     // reload. Lo que es de la escena (jugador, camara, brillo, fuentes y las
@@ -85,7 +95,6 @@ public class Moneda : MonoBehaviour
         fuentes = null;
         proximaFuente = 0;
         ultimoSonido = float.NegativeInfinity;
-        combo = 0;
     }
 
     private double valor;
@@ -279,21 +288,58 @@ public class Moneda : MonoBehaviour
     }
 
     // Una fuente de audio por cobro sonaria una encima de otra con monedas que
-    // llegan en el mismo frame: se deja pasar un sonido cada 50 ms, y cada uno que
-    // sigue al anterior dentro de la ventana toca la nota siguiente de la escala.
+    // llegan en el mismo frame: se deja pasar un sonido cada 50 ms.
     private void Sonar()
     {
         if (sonido == null) return;
 
         float ahora = Time.time;
         if (ahora - ultimoSonido < SeparacionEntreSonidos) return;
-
-        combo = ahora - ultimoSonido <= ventanaCombo ? combo + 1 : 0;
         ultimoSonido = ahora;
 
         AudioSource fuente = Fuente();
-        fuente.pitch = Mathf.Pow(2f, (escala[Mathf.Min(combo, escala.Length - 1)] + afinacion) / 12f);
+        fuente.pitch = Mathf.Pow(2f, (SortearSemitonos(notas) + afinacion) / 12f);
         fuente.PlayOneShot(sonido, volumen);
+    }
+
+    [System.Serializable]
+    public class Nota
+    {
+        public string nombre;
+        public int semitonos;       // sobre la bemol del sonido
+        public float peso = 1f;     // relativo a los de las otras notas; 0 no sale nunca
+
+        public Nota() { }
+
+        public Nota(string nombre, int semitonos, float peso)
+        {
+            this.nombre = nombre;
+            this.semitonos = semitonos;
+            this.peso = peso;
+        }
+    }
+
+    // Elige una nota con probabilidad proporcional a su peso. Sin ninguna con peso,
+    // suena la nota del sonido tal cual.
+    public static int SortearSemitonos(Nota[] notas)
+    {
+        float total = 0f;
+        foreach (var nota in notas) total += Mathf.Max(0f, nota.peso);
+        if (total <= 0f) return 0;
+
+        float sorteo = Random.value * total;
+        int ultimaConPeso = 0;
+        foreach (var nota in notas)
+        {
+            if (nota.peso <= 0f) continue;
+            ultimaConPeso = nota.semitonos;
+            sorteo -= nota.peso;
+            if (sorteo <= 0f) return nota.semitonos;
+        }
+
+        // Random.value puede dar 1 justo, y con el redondeo el sorteo queda apenas
+        // por encima de cero despues de la ultima.
+        return ultimaConPeso;
     }
 
     // PlayOneShot usa el pitch de la fuente, asi que cada tono necesita su propia

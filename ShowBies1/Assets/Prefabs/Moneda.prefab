@@ -64,7 +64,32 @@ MonoBehaviour:
   distanciaDeCobro: 0.8
   sonido: {fileID: 8300000, guid: 7b67e640e9f07a845ae7a048cf7600c4, type: 3}
   volumen: 0.6
-  ventanaCombo: 0.6
+  afinacion: 0
+  notas:
+  - nombre: La bemol
+    semitonos: 0
+    peso: 3
+  - nombre: Si bemol
+    semitonos: 2
+    peso: 1
+  - nombre: Do
+    semitonos: 4
+    peso: 2
+  - nombre: Re bemol
+    semitonos: 5
+    peso: 1
+  - nombre: Mi bemol
+    semitonos: 7
+    peso: 2
+  - nombre: Fa
+    semitonos: 9
+    peso: 1
+  - nombre: Sol
+    semitonos: 11
+    peso: 0.5
+  - nombre: La bemol agudo
+    semitonos: 12
+    peso: 1.5
   brilloPrefab: {fileID: 8596500141958382843, guid: 1ea5dba3faa236747b5fcd2328ddd24f, type: 3}
   particulasPorCobro: 8
   maxMonedasEnEscena: 150

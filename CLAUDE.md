@@ -229,8 +229,9 @@ PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
   que valen `multiplicadorMonedas` cada una. Salen volando para los costados, caen despacio con un rebote y
   quedan girando en el piso; al acercarse el jugador (`radioIman`, 4 m) vuelan solas hacia él y recién ahí se
-  suman a `Progreso`, con un brillo y un sonido que sube por la escala de la bemol mayor con cada moneda
-  agarrada al hilo de la anterior. Las que nadie agarra desaparecen a los 20 s, parpadeando los últimos 3.
+  suman a `Progreso`, con un brillo y una nota de la escala de la bemol mayor sorteada con los pesos de
+  `notas` (editables en el prefab; las del acorde, la bemol, do y mi bemol, salen más seguido). Las que nadie
+  agarra desaparecen a los 20 s, parpadeando los últimos 3.
 - **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se anuncia
   en el cartel de la oleada siguiente). Al terminar cada oleada, `Moneda.AtraerTodas` hace volar al jugador
   las monedas que quedaron en el piso.
@@ -244,9 +245,9 @@ PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles
 - **El modelo es el hijo `Modelo` del prefab** (hoy un cilindro dorado provisorio). Lo que gira es la raíz, de
   frente a la cámara: para cambiar el modelo se reemplaza el hijo, con la cara de la moneda mirando a +Z. El
   sonido es `Assets/otros/moneda.wav`, también provisorio: la bemol 5 y la bemol 6, la misma nota a una octava
-  para que al subirle el pitch por los grados de la escala las dos queden en la bemol mayor. Si se cambia por
-  otro sonido, `afinacion` (en semitonos) lleva su nota a la bemol; con dos notas distintas, alguna se va a
-  salir de la escala al subir.
+  para que al llevarlo con el pitch a cualquier grado de la escala las dos queden en la bemol mayor. Si se
+  cambia por otro sonido, `afinacion` (en semitonos) lleva su nota a la bemol; con dos notas distintas, en
+  algún grado una de las dos se sale de la escala.
 - **Se suman en memoria al agarrarlas y se guardan en disco en puntos seguros:** al completar cada oleada, al
   pausar (también pasa cuando la app pierde el foco, antes de que Android pueda matarla), al morir y al
   cerrar. Se escribe un `.tmp` y después se copia; al cargar, si el principal falta o está roto, se prueba el
