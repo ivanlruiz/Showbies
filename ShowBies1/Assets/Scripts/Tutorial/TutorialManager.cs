@@ -112,8 +112,8 @@ public class TutorialManager : MonoBehaviour
 
             case Paso.Granada:
                 textoInstruccion.text = Texto(
-                    "Cuando vengan varios juntos, tirá una granada con ESPACIO.",
-                    "Cuando vengan varios juntos, tirá una granada con el botón G.");
+                    "Cuando vengan varios juntos, mantené ESPACIO para ver dónde cae la granada (apuntás con el mouse) y soltalo para tirarla.",
+                    "Cuando vengan varios juntos, arrastrá el botón G para apuntar la granada y soltalo para tirarla.");
                 var centro = DireccionAlAzar() * distanciaSpawnZombi;
                 Spawnear(zombiPrefab, centro);
                 Spawnear(zombiPrefab, centro + new Vector3(1.5f, 0f, 0f));
