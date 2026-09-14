@@ -1,71 +1,141 @@
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
+// Un tipo de zombi dentro de las oleadas: desde que oleada entra en la mezcla y
+// cuanto pesa en ella. Los pesos son relativos entre los tipos ya activos.
+[System.Serializable]
+public class TipoEnOleada
+{
+    public GameObject prefab;
+    public int desdeOleada = 1;
+    public float peso = 1f;
+}
+
+// Oleadas de verdad: cada una termina cuando mueren todos sus zombis, y antes de
+// cada una hay un descanso con el cartel "Oleada N". La cantidad crece con la
+// oleada, los tipos se suman a la mezcla a medida que se avanza y cada tantas
+// oleadas sale un jefe ademas de los demas.
+//
+// Antes las oleadas eran por tiempo (la siguiente salia aunque quedaran zombis
+// vivos) y cada 5 oleadas el tipo de zombi se reemplazaba en vez de sumarse:
+// desde la oleada 20 solo salian jefes.
 public class WaveManager : MonoBehaviour
 {
-    public GameObject[] enemyPrefabs; // Lista de enemigos prefabricados
-    public Transform[] spawnPoints; // Puntos de aparición: se elige uno al azar por enemigo
-    public float timeBetweenWaves = 10f; // Tiempo entre oleadas
-    public int enemiesPerWave = 10; // Número de enemigos por oleada
-    public int wavesBeforeNewEnemy = 5; // Cada cuántas oleadas aparece un nuevo tipo de enemigo
-    public int maxZombisVivos = 60; // Techo de población: si está lleno, la oleada espera
-    public int maxZombisVivosMovil = 35; // En móvil cada zombi cuesta más; ver GeneradorZombis
+    [Header("Zombis")]
+    public TipoEnOleada[] tipos;
+    public GameObject jefe;
+    public int jefeCadaOleadas = 10;
+    public Transform[] spawnPoints;          // se elige uno al azar por zombi
 
-    private int currentWave = 0;
-    private int currentEnemyIndex = 0;
+    [Header("Ritmo")]
+    public int zombisBase = 6;               // zombis por oleada = zombisBase + zombisPorOleada * oleada
+    public int zombisPorOleada = 2;
+    public float intervaloEntreApariciones = 0.8f;
+    public float descansoEntreOleadas = 3f;
+    public int maxZombisVivos = 60;          // techo de poblacion: si esta lleno, la oleada espera
+    public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
+
+    [Header("HUD")]
+    public TMP_Text textoOleada;             // "Oleada N" fijo en el HUD
+    public TMP_Text cartelOleada;            // cartel grande que se prende durante el descanso
+
+    public int OleadaActual { get; private set; }
+
+    private readonly List<GameObject> zombisDeLaOleada = new List<GameObject>();
 
     private void Start()
     {
         if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
-        StartCoroutine(SpawnWaves());
+        if (cartelOleada != null) cartelOleada.gameObject.SetActive(false);
+        StartCoroutine(Jugar());
     }
 
-    // Una sola corrutina para toda la partida.
-    //
-    // Antes era una corrutina por oleada, relanzada desde Update mientras
-    // enemiesSpawned >= enemiesPerWave. Como enemiesSpawned recién se reseteaba
-    // después del WaitForSeconds inicial, Update arrancaba una corrutina nueva
-    // en CADA frame de esa espera: con timeBetweenWaves = 2 y 60fps son ~120
-    // oleadas simultáneas, o sea 1200 enemigos.
-    private IEnumerator SpawnWaves()
+    // Una sola corrutina para toda la partida. Relanzar una por oleada desde
+    // Update ya salio mal: se arrancaba una nueva en cada frame de la espera.
+    private IEnumerator Jugar()
     {
         while (true)
         {
-            yield return new WaitForSeconds(timeBetweenWaves);
-            currentWave++;
+            OleadaActual++;
+            if (textoOleada != null) textoOleada.text = "Oleada " + OleadaActual;
+            yield return Descanso();
 
-            // Determina si es hora de introducir un nuevo tipo de enemigo
-            if (currentWave % wavesBeforeNewEnemy == 0)
+            zombisDeLaOleada.Clear();
+            if (jefe != null && jefeCadaOleadas > 0 && OleadaActual % jefeCadaOleadas == 0)
             {
-                currentEnemyIndex++; // Incrementa el índice del enemigo actual
-                currentEnemyIndex = Mathf.Clamp(currentEnemyIndex, 0, enemyPrefabs.Length - 1); // Asegura que no se exceda el número de tipos de enemigos
+                Aparecer(jefe);
             }
 
-            // Genera los enemigos de la oleada actual
-            for (int i = 0; i < enemiesPerWave; i++)
+            int cantidad = zombisBase + zombisPorOleada * OleadaActual;
+            for (int i = 0; i < cantidad; i++)
             {
                 while (EnemyController.ZombisVivos >= maxZombisVivos)
                 {
                     yield return null;
                 }
 
-                SpawnEnemy();
-                yield return new WaitForSeconds(1f); // Intervalo entre apariciones de enemigos
+                Aparecer(ElegirTipo());
+                yield return new WaitForSeconds(intervaloEntreApariciones);
+            }
+
+            while (QuedanZombisDeLaOleada())
+            {
+                yield return null;
             }
         }
     }
 
-    void SpawnEnemy()
+    private IEnumerator Descanso()
     {
-        if (enemyPrefabs.Length == 0 || spawnPoints.Length == 0) return;
+        if (cartelOleada != null)
+        {
+            cartelOleada.text = "Oleada " + OleadaActual;
+            cartelOleada.gameObject.SetActive(true);
+        }
 
-        // Selecciona un enemigo del array de acuerdo al índice actual
-        GameObject enemyPrefab = enemyPrefabs[currentEnemyIndex];
+        yield return new WaitForSeconds(descansoEntreOleadas);
 
-        // Antes había un solo punto y toda la oleada salía del mismo lugar
+        if (cartelOleada != null) cartelOleada.gameObject.SetActive(false);
+    }
+
+    private GameObject ElegirTipo()
+    {
+        float total = 0f;
+        foreach (var tipo in tipos)
+        {
+            if (tipo.prefab != null && OleadaActual >= tipo.desdeOleada) total += tipo.peso;
+        }
+        if (total <= 0f) return null;
+
+        float sorteo = Random.value * total;
+        foreach (var tipo in tipos)
+        {
+            if (tipo.prefab == null || OleadaActual < tipo.desdeOleada) continue;
+            sorteo -= tipo.peso;
+            if (sorteo <= 0f) return tipo.prefab;
+        }
+        return null;
+    }
+
+    private void Aparecer(GameObject prefab)
+    {
+        if (prefab == null || spawnPoints.Length == 0) return;
+
         Transform punto = spawnPoints[Random.Range(0, spawnPoints.Length)];
         if (punto == null) return;
 
-        Instantiate(enemyPrefab, punto.position, Quaternion.identity);
+        zombisDeLaOleada.Add(Instantiate(prefab, punto.position, Quaternion.identity));
+    }
+
+    // Los zombis muertos, o caidos por el kill-Z, quedan en la lista como null.
+    private bool QuedanZombisDeLaOleada()
+    {
+        for (int i = 0; i < zombisDeLaOleada.Count; i++)
+        {
+            if (zombisDeLaOleada[i] != null) return true;
+        }
+        return false;
     }
 }

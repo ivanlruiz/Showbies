@@ -16,6 +16,11 @@ public class EnemyController : MonoBehaviour
     [Header("Manchas de sangre")]
     [SerializeField] private float duracionMancha = 2f;
 
+    [Header("Golpe")]
+    [SerializeField] private float intervaloDeGolpe = 0.8f;   // segundos entre golpes mientras toca al jugador
+
+    private float proximoGolpe;
+
     // Cuántos zombis hay vivos ahora mismo. Los generadores lo miran para no
     // pasarse del techo de población: sin esto spawnean para siempre.
     public static int ZombisVivos { get; private set; }
@@ -140,11 +145,27 @@ public class EnemyController : MonoBehaviour
         return sprite;
     }
 
+    // Pega al tocar al jugador y despues cada intervaloDeGolpe mientras lo siga
+    // tocando. Antes pegaba solo en OnCollisionEnter: un zombi pegado al jugador
+    // no volvia a dañar hasta separarse, y el daño dependia de cuanto temblara la
+    // fisica. El intervalo ademas evita que los varios colliders del zombi y del
+    // jugador cuenten el mismo toque mas de una vez.
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag == "Player")
-        {
-            PlayerHealth.instance.TakeDamage(enemyType.daño);
-        }
+        Golpear(collision);
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        Golpear(collision);
+    }
+
+    private void Golpear(Collision collision)
+    {
+        if (Time.time < proximoGolpe || !collision.gameObject.CompareTag("Player")) return;
+        if (PlayerHealth.instance == null) return;
+
+        proximoGolpe = Time.time + intervaloDeGolpe;
+        PlayerHealth.instance.TakeDamage(enemyType.daño);
     }
 }

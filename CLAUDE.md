@@ -13,8 +13,8 @@ Hay **dos modos**, los dos jugables desde el menú:
 
 - **Free mode** (`ShowBies1.unity`) — generación continua: cinco corrutinas paralelas, una por tipo de
   zombi, cada una con su intervalo. Sin final.
-- **Wave mode** (`WaveMode.unity`) — oleadas de 10 enemigos cada 2 s, con un tipo nuevo cada 5 oleadas.
-  Mismo mapa pero con las calles (`Ciudad`) encendidas.
+- **Wave mode** (`WaveMode.unity`) — oleadas que terminan al matar a todos sus zombis, cada una más grande
+  y con más tipos mezclados, y un jefe cada 10. Mismo mapa pero con las calles (`Ciudad`) encendidas.
 
 ## Entorno
 
@@ -101,7 +101,7 @@ sumalo a ese reset o vas a arrastrar basura entre partidas.
 [CreateAssetMenu]                     // Assets/Scripts/Zombi/Enemy.cs
 class Enemy : ScriptableObject {
     public int hp;                    // vida
-    public int daño;                  // lo que le saca al jugador por colisión
+    public int daño;                  // lo que le saca al jugador en cada golpe
     public int velocidad;
     public int puntos;                // cuánto suma MATARLO
 }
@@ -166,13 +166,23 @@ consultando `EnemyController.ZombisVivos`:
 
 - **`GeneradorZombis`** (free mode) — cinco corrutinas paralelas, una por tipo, cada una con un `while`
   infinito y su `WaitForSeconds`. Si se llegó al techo, saltea el spawn y sigue esperando.
-- **`WaveManager`** (wave mode) — **una sola** corrutina que corre toda la partida. Elige el punto de
-  spawn al azar entre `spawnPoints`. Si se llegó al techo, la oleada espera.
+- **`WaveManager`** (wave mode) — **una sola** corrutina que corre toda la partida. Cada oleada:
+  1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s) y actualiza
+     `textoOleada` en el HUD.
+  2. Si la oleada es múltiplo de `jefeCadaOleadas` (10), saca un `jefe`.
+  3. Saca `zombisBase + zombisPorOleada × oleada` zombis (6 + 2n), de a uno cada
+     `intervaloEntreApariciones` (0,8 s), en un punto al azar de `spawnPoints`. El tipo sale por sorteo
+     entre los `tipos` ya habilitados (`desdeOleada`), con `peso` relativo: normal desde la 1, rápido desde
+     la 3, tanque desde la 6 y FASTER desde la 9. Si se llegó al techo, espera.
+  4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos.
+
+  La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
+  `OleadaActual` para lo que escale con la oleada.
 
 Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
 
-**El `WaveManager` no espera a que mates la oleada anterior**: las oleadas son por tiempo. El comentario
-original decía lo contrario y el código nunca lo hizo. Cambiarlo es decisión de diseño.
+Antes las oleadas eran por tiempo (salía la siguiente aunque quedaran zombis) y cada 5 oleadas el tipo de
+zombi se reemplazaba en vez de sumarse: desde la oleada 20 sólo salían jefes.
 
 ## Persistencia
 
@@ -349,6 +359,12 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   (una bala que tocaba una hitbox hija rebotaba sin dañar). Y todo lo que dañe por área
   (`OverlapSphere`) tiene que deduplicar por componente, porque los tres colliders resuelven al mismo
   `EnemyController` y sin dedup el daño se multiplica por tres.
+
+- **Los zombis pegan por intervalo, no por choque.** `EnemyController` pega al tocar al jugador y después
+  cada `intervaloDeGolpe` (0,8 s) mientras siga en contacto (`OnCollisionEnter` y `OnCollisionStay` con un
+  reloj por zombi). Antes pegaba sólo en `OnCollisionEnter`: un zombi pegado no volvía a dañar hasta
+  separarse, y el daño dependía de cuánto temblara la física. El reloj también hace que los varios colliders
+  del zombi y del jugador no cuenten el mismo toque más de una vez.
 
 - **La muerte necesita guarda.** `Destroy` es diferido: dos golpes letales en el mismo paso de física
   llaman a `DanoZombi` (o `TakeDamage`) dos veces con la vida ya en cero, y sin el flag `estaMuerto`
