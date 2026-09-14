@@ -28,8 +28,14 @@ public class PlayerController : MonoBehaviour
 
     [Header("Granade Settings")]
     public float granadaCooldown = 5f;
+    public float distanciaMinimaGranada = 3f;    // para que no caiga a los pies del jugador
+    public float distanciaMaximaGranada = 12f;
+    public float distanciaGranadaMovil = 8f;     // en movil no hay un punto al que apuntar: sale a distancia fija
 
     private float granadaDisponibleEn;
+
+    // Segundos que faltan para poder tirar otra granada. Lo muestra el boton de granada.
+    public float GranadaRestante { get { return Mathf.Max(0f, granadaDisponibleEn - Time.time); } }
 
     private void Start()
     {
@@ -171,11 +177,55 @@ public class PlayerController : MonoBehaviour
         // El cooldown de 5 segundos vivía en Granade, sobre la instancia recién
         // creada, así que no limitaba nada: se podían tirar granadas por frame.
         // Va acá, que es donde está el input.
-        if (granadaPrefab == null || Time.time < granadaDisponibleEn) return;
+        if (granadaPrefab == null || MenuPausa.Pausado || Time.time < granadaDisponibleEn) return;
 
         granadaDisponibleEn = Time.time + granadaCooldown;
 
-        // La granada se encarga sola de su mecha y de destruirse al explotar.
-        Instantiate(granadaPrefab, transform.position, transform.rotation);
+        // La granada se encarga sola del vuelo, de explotar y de destruirse.
+        Granade granada = Instantiate(granadaPrefab, transform.position, transform.rotation);
+        granada.Lanzar(DestinoGranada());
+    }
+
+    // En PC, donde esta el mouse. En movil no hay puntero: hacia donde se venia
+    // apuntando con el joystick de disparo (apretar G obliga a soltarlo), y si no
+    // se apunto hace poco, hacia donde mira el jugador.
+    private Vector3 DestinoGranada()
+    {
+        if (Plataforma.EsMovil)
+        {
+            Vector3 direccion = transform.forward;
+            PlayerJS joysticks = GetComponent<PlayerJS>();
+            if (joysticks != null && joysticks.ApuntoHaceMenosDe(1f)) direccion = joysticks.UltimaDireccionApuntada;
+            return PuntoEnElPiso(transform.position, transform.position + direccion, transform.forward,
+                distanciaGranadaMovil, distanciaGranadaMovil);
+        }
+
+        Ray rayo = mainCamera.ScreenPointToRay(Input.mousePosition);
+        Plane piso = new Plane(Vector3.up, Vector3.zero);
+        float largo;
+        Vector3 apuntado = piso.Raycast(rayo, out largo) ? rayo.GetPoint(largo) : transform.position + transform.forward;
+        return PuntoEnElPiso(transform.position, apuntado, transform.forward, distanciaMinimaGranada, distanciaMaximaGranada);
+    }
+
+    // El punto del piso en la direccion de "apuntado", a una distancia del origen
+    // entre minima y maxima. Si "apuntado" cae sobre el origen, usa "adelante".
+    public static Vector3 PuntoEnElPiso(Vector3 origen, Vector3 apuntado, Vector3 adelante, float minima, float maxima)
+    {
+        Vector3 plano = apuntado - origen;
+        plano.y = 0f;
+        float distancia = plano.magnitude;
+
+        Vector3 direccion;
+        if (distancia > 0.001f)
+        {
+            direccion = plano / distancia;
+        }
+        else
+        {
+            direccion = new Vector3(adelante.x, 0f, adelante.z).normalized;
+        }
+
+        distancia = Mathf.Clamp(distancia, minima, maxima);
+        return new Vector3(origen.x, 0f, origen.z) + direccion * distancia;
     }
 }

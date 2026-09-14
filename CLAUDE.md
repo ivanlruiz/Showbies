@@ -38,7 +38,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, MenuPausa, BotonAtrasMenu
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, MenuPausa, BotonAtrasMenu
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner)
 Assets/Scripts/*.cs         ← CanvasHelper, MainMenu, MenuPerdiste, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode (+ SampleScene, sin usar)
@@ -158,6 +158,25 @@ con la cadencia mejorada, no llegaba a oírse.
 
 La bala **no tiene Rigidbody**, sólo un `BoxCollider`: los eventos de colisión llegan porque el zombi
 sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
+
+## Granada
+
+`PlayerController.ThrowGranade` (Espacio en PC, botón G en móvil, con `granadaCooldown` de 5 s) instancia
+`Granada.prefab` y llama a `Granade.Lanzar(destino)`.
+
+- **Destino.** En PC, el punto del piso bajo el mouse, entre `distanciaMinimaGranada` (3 m) y
+  `distanciaMaximaGranada` (12 m). En móvil no hay puntero: sale a `distanciaGranadaMovil` (8 m) hacia donde se
+  venía apuntando con el joystick de disparo en el último segundo (`PlayerJS.ApuntoHaceMenosDe`; apretar G obliga a
+  soltarlo), y si no, hacia donde mira el jugador. La cuenta es `PlayerController.PuntoEnElPiso`, estática para
+  poder probarla sin input.
+- **Vuelo por trayectoria calculada, no por física.** Al lanzarla, el Rigidbody pasa a kinematic y el collider se
+  apaga; `Update` la mueve en un arco de `alturaDelArco` durante `tiempoDeVuelo`. Así cae exacta sobre el anillo y
+  no choca con el jugador del que sale ni con las balas que van en la misma dirección.
+- **Explota** al pasar a `radioDeContacto` de un zombi en el aire, o `demoraAlCaer` (0,3 s) después de caer. Una
+  granada instanciada sin `Lanzar` se comporta como antes: cae donde nace y explota con la mecha de 3 s.
+- Mientras vuela, el hijo "Indicador" del prefab (un `LineRenderer`) se suelta y dibuja en el piso el radio de la
+  explosión; se destruye con ella.
+- El botón G muestra la recarga con `IndicadorRecargaGranada` y su hijo "Recarga" (Image Filled Radial360).
 
 ## Generación de enemigos
 

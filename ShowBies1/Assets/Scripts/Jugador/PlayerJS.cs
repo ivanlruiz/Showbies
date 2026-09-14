@@ -22,6 +22,15 @@ public class PlayerJS : MonoBehaviour
     public FixedJoystick moveJoystick;
     public FixedJoystick lookJoystick;
 
+    // Para la granada, que en movil sale hacia donde se venia apuntando.
+    public Vector3 UltimaDireccionApuntada { get; private set; }
+    private float ultimoApuntadoEn = float.NegativeInfinity;
+
+    public bool ApuntoHaceMenosDe(float segundos)
+    {
+        return Time.time - ultimoApuntadoEn <= segundos;
+    }
+
     void Update()
     {
         if (!Plataforma.EsMovil || MenuPausa.Pausado) return;
@@ -49,6 +58,9 @@ public class PlayerJS : MonoBehaviour
             thegun.isFiring = false;
             return;
         }
+
+        UltimaDireccionApuntada = new Vector3(hoz, 0f, ver).normalized;
+        ultimoApuntadoEn = Time.time;
 
         Vector3 lookAtPosition = transform.position + new Vector3(hoz, 0, ver);
         thegun.transform.LookAt(lookAtPosition);
