@@ -1,0 +1,1171 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
+
+// Pruebas de las mejoras sin Test Runner y sin escena, desde el menu
+// ShowBies/Pruebas o por RunCommand / -executeMethod:
+//
+//  - CorrerTodas: la logica pura (catalogo, precios, valores, escalado por
+//    oleada, acumulador de disparo, daño al jugador, guardado, compras). Corre
+//    en modo edicion y deja el veredicto en Builds/pruebas_mejoras.txt.
+//  - MedirPartida: en modo play, dispara sin parar y mata a cada zombi al
+//    aparecer para comparar lo que pasa en la partida con lo que dicen las
+//    formulas. Deja el veredicto en Builds/medicion_mejoras.txt.
+//
+// Los dos escriben un archivo ademas de loguear, como ConstructorAndroid, para
+// poder saber como termino una corrida lanzada sin supervision. Sin dialogos:
+// se llaman desde afuera y un dialogo modal los colgaria.
+public static class PruebasMejoras
+{
+    // El directorio de trabajo del editor es ShowBies1: ../Builds cae en la raiz
+    // del repo, que esta gitignoreada.
+    const string CarpetaSalida = "../Builds";
+    const string RutaPruebas = CarpetaSalida + "/pruebas_mejoras.txt";
+    const string RutaMedicion = CarpetaSalida + "/medicion_mejoras.txt";
+
+    const double Tolerancia = 1e-4;
+
+    static readonly CultureInfo Invariante = CultureInfo.InvariantCulture;
+
+    [MenuItem("ShowBies/Pruebas/Logica de mejoras")]
+    static void CorrerTodasDesdeMenu()
+    {
+        CorrerTodas();
+    }
+
+    [MenuItem("ShowBies/Pruebas/Medir partida (10 s)")]
+    static void MedirDiezSegundos()
+    {
+        MedirPartida(10f);
+    }
+
+    // ------------------------------------------------------------------------
+    // Informe: una linea "OK caso" o "FALLA: caso esperado X obtenido Y" por
+    // chequeo y al final "RESULTADO: ...". Las fallas tambien van a la consola.
+    // ------------------------------------------------------------------------
+    private class Informe
+    {
+        private readonly StringBuilder texto = new StringBuilder();
+        private readonly string prefijoLog;
+
+        public int Fallas { get; private set; }
+
+        public Informe(string titulo, string prefijoLog)
+        {
+            this.prefijoLog = prefijoLog;
+            texto.AppendLine(titulo);
+        }
+
+        public void Linea(string linea)
+        {
+            texto.AppendLine(linea);
+        }
+
+        public void Ok(string caso)
+        {
+            texto.AppendLine("OK " + caso);
+        }
+
+        public void Falla(string motivo)
+        {
+            Fallas++;
+            texto.AppendLine("FALLA: " + motivo);
+            Debug.LogError(prefijoLog + "FALLA: " + motivo);
+        }
+
+        public void Falla(string caso, string esperado, string obtenido)
+        {
+            Falla(caso + " esperado " + esperado + " obtenido " + obtenido);
+        }
+
+        public bool Verdadero(string caso, bool condicion)
+        {
+            if (condicion) Ok(caso);
+            else Falla(caso, "verdadero", "falso");
+            return condicion;
+        }
+
+        public bool Igual(string caso, long esperado, long obtenido)
+        {
+            bool ok = esperado == obtenido;
+            if (ok) Ok(caso);
+            else Falla(caso, esperado.ToString(Invariante), obtenido.ToString(Invariante));
+            return ok;
+        }
+
+        public bool Igual(string caso, string esperado, string obtenido)
+        {
+            bool ok = esperado == obtenido;
+            if (ok) Ok(caso);
+            else Falla(caso, Mostrar(esperado), Mostrar(obtenido));
+            return ok;
+        }
+
+        // Con NaN la resta da NaN y la comparacion falso: cuenta como falla.
+        public bool Cerca(string caso, double esperado, double obtenido, double tolerancia)
+        {
+            bool ok = Math.Abs(obtenido - esperado) <= tolerancia;
+            if (ok) Ok(caso);
+            else Falla(caso, Numero(esperado), Numero(obtenido));
+            return ok;
+        }
+
+        public string Resultado(string sinFallas)
+        {
+            return Fallas == 0 ? sinFallas : Fallas + " FALLAS";
+        }
+
+        public bool Escribir(string ruta, string resultado)
+        {
+            texto.AppendLine("RESULTADO: " + resultado);
+            try
+            {
+                Directory.CreateDirectory(CarpetaSalida);
+                File.WriteAllText(ruta, texto.ToString());
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(prefijoLog + "no se pudo escribir " + ruta + ": " + e.Message);
+            }
+
+            string resumen = prefijoLog + "RESULTADO: " + resultado + " (" + Path.GetFullPath(ruta) + ")";
+            if (Fallas == 0) Debug.Log(resumen);
+            else Debug.LogError(resumen);
+            return Fallas == 0;
+        }
+
+        private static string Mostrar(string s)
+        {
+            return s == null ? "(null)" : "\"" + s + "\"";
+        }
+    }
+
+    static string Numero(double valor)
+    {
+        return valor.ToString("R", Invariante);
+    }
+
+    static string Numero(double valor, string formato)
+    {
+        return valor.ToString(formato, Invariante);
+    }
+
+    // ========================================================================
+    // Logica
+    // ========================================================================
+
+    public static bool CorrerTodas()
+    {
+        var informe = new Informe("PRUEBAS DE LOGICA DE MEJORAS", "PruebasMejoras: ");
+
+        // En play el progreso cargado es el de la partida en curso: cambiarle la
+        // carpeta a mitad de juego mezclaria lo de la prueba con lo jugado.
+        if (EditorApplication.isPlaying)
+        {
+            informe.Falla("no se corre en modo play");
+            informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
+            return false;
+        }
+
+        var temporales = new List<Mejora>();
+        try
+        {
+            var catalogo = CatalogoMejoras.Instancia;
+            bool completo = ProbarCatalogo(informe, catalogo);
+            if (!completo) informe.Linea("(catalogo incompleto: se saltean las pruebas que dependen de los assets)");
+
+            ProbarFormulaDePrecio(informe, temporales);
+            if (completo)
+            {
+                ProbarPreciosDelCatalogo(informe, catalogo);
+                ProbarValores(informe, catalogo);
+            }
+            ProbarFormatoNumeros(informe);
+            ProbarEscalado(informe, completo ? catalogo : null);
+            ProbarAcumuladorDeDisparo(informe);
+            ProbarDanoAlJugador(informe);
+
+            // Todo lo que toca Progreso va contra una carpeta temporal, y el
+            // finally devuelve el progreso a persistentDataPath pase lo que pase.
+            try
+            {
+                if (UsaLaCarpetaDePruebas(informe))
+                {
+                    ProbarGuardado(informe);
+                    if (completo)
+                    {
+                        ProbarGetters(informe, catalogo);
+                        ProbarCompras(informe, catalogo, temporales);
+                        ProbarComprasPosibles(informe);
+                    }
+                }
+            }
+            finally
+            {
+                Progreso.UsarCarpetaDePruebas(null);
+            }
+        }
+        catch (Exception e)
+        {
+            informe.Falla("excepcion " + e.GetType().Name + ": " + e.Message + "\n" + e.StackTrace);
+        }
+        finally
+        {
+            foreach (var m in temporales)
+            {
+                if (m != null) Object.DestroyImmediate(m);
+            }
+        }
+
+        return informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
+    }
+
+    // 1. El catalogo existe, valida y tiene las cuatro mejoras en orden.
+    static bool ProbarCatalogo(Informe inf, CatalogoMejoras catalogo)
+    {
+        if (!inf.Verdadero("catalogo: existe en Resources/" + CatalogoMejoras.RutaEnResources, catalogo != null)) return false;
+
+        var problemas = catalogo.Validar();
+        inf.Igual("catalogo: Validar() sin problemas", "",
+                  problemas == null ? "(null)" : string.Join(" | ", problemas));
+
+        bool completo = true;
+        completo &= ProbarId(inf, "danoBala", catalogo.danoBala, "dano_bala");
+        completo &= ProbarId(inf, "cadencia", catalogo.cadencia, "cadencia");
+        completo &= ProbarId(inf, "vidaMaxima", catalogo.vidaMaxima, "vida_maxima");
+        completo &= ProbarId(inf, "botin", catalogo.botin, "botin");
+
+        string[] orden = { "dano_bala", "cadencia", "vida_maxima", "botin" };
+        int largo = catalogo.enTienda == null ? -1 : catalogo.enTienda.Length;
+        inf.Igual("catalogo: enTienda tiene 4 mejoras", 4, largo);
+        for (int i = 0; i < orden.Length; i++)
+        {
+            string obtenido = i < largo ? Id(catalogo.enTienda[i]) : "(falta)";
+            inf.Igual("catalogo: enTienda[" + i + "]", orden[i], obtenido);
+        }
+        return completo;
+    }
+
+    static bool ProbarId(Informe inf, string campo, Mejora mejora, string id)
+    {
+        return inf.Igual("catalogo: id de " + campo, id, Id(mejora));
+    }
+
+    static string Id(Mejora mejora)
+    {
+        return mejora == null ? "(null)" : mejora.id;
+    }
+
+    // 2a. La formula de precio con mejoras temporales, para no depender de los
+    // precios que tengan los assets.
+    static void ProbarFormulaDePrecio(Informe inf, List<Mejora> temporales)
+    {
+        var m45 = CrearTemporal(temporales, "prueba_45", 45, 1.45, 0, CrecimientoEfecto.Aditivo, 0.15, 1, FormatoValor.UnDecimal);
+        ChequearPrecios(inf, "formula de precio 45 x1,45", m45,
+                        new double[] { 45, 65, 95, 137, 199, 288, 418, 606, 879, 1275, 1849 });
+        inf.Cerca("formula de precio 45 x1,45: nivel negativo cuesta lo inicial", 45, m45.Precio(-1), 0);
+
+        // 130,5 redondea para arriba: sin el +1e-9 un error de coma flotante lo
+        // dejaba en 130.
+        var m90 = CrearTemporal(temporales, "prueba_90", 90, 1.45, 0, CrecimientoEfecto.Aditivo, 0.15, 1, FormatoValor.UnDecimal);
+        inf.Cerca("formula de precio 90 x1,45: Precio(1)", 131, m90.Precio(1), 0);
+
+        var enorme = CrearTemporal(temporales, "prueba_enorme", 1e15, 10, 0, CrecimientoEfecto.Aditivo, 0.15, 1, FormatoValor.UnDecimal);
+        inf.Cerca("formula de precio: topeado en PrecioMaximo", Mejora.PrecioMaximo, enorme.Precio(5), 0);
+    }
+
+    // 2b. Los precios de los assets (x2 del plan original) y sus topes.
+    static void ProbarPreciosDelCatalogo(Informe inf, CatalogoMejoras c)
+    {
+        ChequearPrecios(inf, "precio dano_bala", c.danoBala,
+                        new double[] { 90, 131, 189, 274, 398, 577, 836, 1213, 1759, 2550, 3698 });
+        ChequearPrecios(inf, "precio cadencia", c.cadencia,
+                        new double[] { 150, 240, 384, 614, 983, 1573, 2517, 4027, 6442, 10308 });
+        ChequearPrecios(inf, "precio vida_maxima", c.vidaMaxima,
+                        new double[] { 120, 174, 252, 366, 530, 769, 1115, 1617, 2345, 3400, 4930 });
+        ChequearPrecios(inf, "precio botin", c.botin,
+                        new double[] { 240, 372, 577, 894, 1385, 2147, 3328, 5159, 7996, 12394, 19210 });
+
+        inf.Verdadero("tope cadencia: EnTope(9) es falso", !c.cadencia.EnTope(9));
+        inf.Verdadero("tope cadencia: EnTope(10) es verdadero", c.cadencia.EnTope(10));
+        inf.Verdadero("tope botin: EnTope(14) es falso", !c.botin.EnTope(14));
+        inf.Verdadero("tope botin: EnTope(15) es verdadero", c.botin.EnTope(15));
+        inf.Verdadero("tope dano_bala: sin tope", !c.danoBala.TieneTope && !c.danoBala.EnTope(1000));
+        inf.Verdadero("tope vida_maxima: sin tope", !c.vidaMaxima.TieneTope && !c.vidaMaxima.EnTope(1000));
+    }
+
+    static void ChequearPrecios(Informe inf, string nombre, Mejora mejora, double[] esperados)
+    {
+        for (int n = 0; n < esperados.Length; n++)
+        {
+            inf.Cerca(nombre + " nivel " + n, esperados[n], mejora.Precio(n), 0);
+        }
+    }
+
+    // 3. Valores y textos de las mejoras de los assets.
+    static void ProbarValores(Informe inf, CatalogoMejoras c)
+    {
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 0, 5);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 1, 5.75);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 2, 6.6125);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 5, 10.0568);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 9, 17.5894);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 10, 20.2278);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 0, 20);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 1, 21.6);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 5, 28);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 10, 36);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 11, 36);
+        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 1, 230);
+        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 5, 350);
+        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 10, 500);
+        ChequearValor(inf, "valor botin", c.botin, 1, 1.1);
+        ChequearValor(inf, "valor botin", c.botin, 15, 2.5);
+        ChequearValor(inf, "valor botin", c.botin, 16, 2.5);
+
+        inf.Igual("texto dano_bala nivel 0", "5", c.danoBala.TextoValor(0));
+        inf.Igual("texto dano_bala nivel 1", "5,8", c.danoBala.TextoValor(1));
+        inf.Igual("texto dano_bala nivel 4", "8,7", c.danoBala.TextoValor(4));
+        inf.Igual("texto dano_bala nivel 5", "10,1", c.danoBala.TextoValor(5));
+        inf.Igual("texto dano_bala nivel 10", "20,2", c.danoBala.TextoValor(10));
+        inf.Igual("texto cadencia nivel 1", "21,6", c.cadencia.TextoValor(1));
+        inf.Igual("texto cadencia nivel 10", "36", c.cadencia.TextoValor(10));
+        inf.Igual("texto vida_maxima nivel 0", "200", c.vidaMaxima.TextoValor(0));
+        inf.Igual("texto botin nivel 0", "×1", c.botin.TextoValor(0));
+        inf.Igual("texto botin nivel 15", "×2,5", c.botin.TextoValor(15));
+    }
+
+    static void ChequearValor(Informe inf, string nombre, Mejora mejora, int nivel, double esperado)
+    {
+        inf.Cerca(nombre + " nivel " + nivel, esperado, mejora.Valor(nivel), Tolerancia);
+    }
+
+    static void ProbarFormatoNumeros(Informe inf)
+    {
+        inf.Igual("ConDecimales(5,75; 1)", "5,8", FormatoNumeros.ConDecimales(5.75, 1));
+        inf.Igual("ConDecimales(20; 1)", "20", FormatoNumeros.ConDecimales(20, 1));
+        inf.Igual("ConDecimales(21,6; 1)", "21,6", FormatoNumeros.ConDecimales(21.6, 1));
+        inf.Igual("ConDecimales(8,745; 1)", "8,7", FormatoNumeros.ConDecimales(8.745, 1));
+        inf.Igual("ConDecimales(229,99; 0)", "230", FormatoNumeros.ConDecimales(229.99, 0));
+        inf.Igual("ConDecimales(1234,56; 1)", "1.235", FormatoNumeros.ConDecimales(1234.56, 1));
+    }
+
+    // 4. Escalado por oleada. La vida de los zombis crece a 1,15 por oleada, lo
+    // mismo que el daño de bala por nivel: una mejora por oleada empata.
+    static void ProbarEscalado(Informe inf, CatalogoMejoras c)
+    {
+        inf.Cerca("escalado: PorOleada(1,15; 1)", 1, Escalado.PorOleada(1.15f, 1), 1e-6);
+        inf.Cerca("escalado: PorOleada(1,15; 0)", 1, Escalado.PorOleada(1.15f, 0), 1e-6);
+        inf.Cerca("escalado: PorOleada(0; 5)", 1, Escalado.PorOleada(0f, 5), 1e-6);
+        inf.Cerca("escalado: PorOleada(1,15; 10)", 3.5179, Escalado.PorOleada(1.15f, 10), 1e-3);
+        inf.Cerca("escalado: PorOleada(1,07; 10)", 1.8385, Escalado.PorOleada(1.07f, 10), 1e-3);
+        inf.Cerca("escalado: PorOleada(1,05; 10)", 1.5513, Escalado.PorOleada(1.05f, 10), 1e-3);
+
+        if (c == null) return;
+
+        // Un chequeo para las 30 oleadas: la peor diferencia.
+        double peor = 0;
+        int oleadaPeor = 1;
+        for (int o = 1; o <= 30; o++)
+        {
+            double diferencia = Math.Abs(5f * Escalado.PorOleada(1.15f, o) - (float)c.danoBala.Valor(o - 1));
+            if (!(diferencia <= peor)) { peor = diferencia; oleadaPeor = o; }
+        }
+        inf.Cerca("escalado: 5 x PorOleada(1,15; o) sigue a dano_bala.Valor(o - 1) en las oleadas 1 a 30 (peor: oleada " + oleadaPeor + ")",
+                  0, peor, 0.01);
+    }
+
+    // 5. El acumulador de disparo: la cadencia promedio no depende de los FPS
+    // (antes salia una bala por frame como mucho) y un frame largo no suelta
+    // mas de maxTirosPorFrame.
+    static void ProbarAcumuladorDeDisparo(Informe inf)
+    {
+        float[] cadencias = { 20f, 21.6f, 28f, 36f, 54f, 108f };
+        int[] fps = { 60, 30, 24 };
+        foreach (float cadencia in cadencias)
+        {
+            foreach (int f in fps)
+            {
+                double medido = SimularTiros(cadencia, 1f / f, 10f, 8);
+                inf.Cerca("disparo: " + Numero(cadencia, "0.#") + " tiros/s a " + f + " FPS durante 10 s", cadencia, medido, 0.5);
+            }
+        }
+
+        float contador = 0f;
+        float intervalo = 1f / 20f;
+        float atraso;
+        for (int i = 0; i < 60; i++)
+        {
+            GunController.TirosDelFrame(ref contador, 1f / 60f, intervalo, 8, out atraso);
+        }
+        GunController.TirosDelFrame(ref contador, 0.5f, intervalo, 8, out atraso);
+        int despuesDelFrameLargo = GunController.TirosDelFrame(ref contador, 1f / 60f, intervalo, 8, out atraso);
+        inf.Igual("disparo: despues de un frame de 0,5 s salen 8 (el tope)", 8, despuesDelFrameLargo);
+        // Salen los ultimos 8 tiros de la deuda, no los mas viejos: el primero va
+        // atrasado entre 7 y 8 intervalos (0,35 a 0,40 s).
+        inf.Cerca("disparo: el primero de ese frame va atrasado lo de los ultimos 8 tiros", 0.375, atraso, 0.03);
+
+        // Sin tope el atraso conserva la fraccion: es lo que espacia parejo las
+        // balas entre frames.
+        contador = -0.005f;
+        int sinTope = GunController.TirosDelFrame(ref contador, 1f / 60f, intervalo, 8, out atraso);
+        inf.Igual("disparo: con contador -0,005 y sin tope tira 1", 1, sinTope);
+        inf.Cerca("disparo: con contador -0,005 y sin tope va atrasado 0,005 s", 0.005, atraso, 1e-4);
+
+        contador = 0f;
+        int primero = GunController.TirosDelFrame(ref contador, 1f / 60f, intervalo, 8, out atraso);
+        inf.Igual("disparo: primer llamado con contador 0 tira 1", 1, primero);
+        inf.Cerca("disparo: primer llamado sin atraso", 0, atraso, 1e-6);
+    }
+
+    static double SimularTiros(float tirosPorSegundo, float dt, float segundos, int maximo)
+    {
+        float contador = 0f;
+        float intervalo = 1f / tirosPorSegundo;
+        int frames = Mathf.RoundToInt(segundos / dt);
+        long total = 0;
+        float atraso;
+        for (int i = 0; i < frames; i++)
+        {
+            total += GunController.TirosDelFrame(ref contador, dt, intervalo, maximo, out atraso);
+        }
+        return total / (frames * (double)dt);
+    }
+
+    // 6. El daño con decimales de los zombis escalados se acumula y sale entero.
+    static void ProbarDanoAlJugador(Informe inf)
+    {
+        int total;
+        inf.Igual("dano al jugador: 10 golpes de 1,3108", "1,1,1,2,1,1,2,1,1,2", SecuenciaDeDano(1.3108f, 10, out total));
+        inf.Igual("dano al jugador: 10 golpes de 1,3108 suman 13", 13, total);
+        inf.Igual("dano al jugador: 6 golpes de 2,2898", "2,2,2,3,2,2", SecuenciaDeDano(2.2898f, 6, out total));
+        SecuenciaDeDano(18.3846f, 5, out total);
+        inf.Igual("dano al jugador: 5 golpes de 18,3846 suman 91", 91, total);
+
+        float pendiente = 0f;
+        inf.Igual("dano al jugador: cantidad 0", 0, PlayerHealth.AcumularDano(ref pendiente, 0f));
+        inf.Igual("dano al jugador: cantidad negativa", 0, PlayerHealth.AcumularDano(ref pendiente, -3f));
+        inf.Cerca("dano al jugador: sin daño no queda pendiente", 0, pendiente, 1e-6);
+    }
+
+    static string SecuenciaDeDano(float golpe, int veces, out int total)
+    {
+        float pendiente = 0f;
+        total = 0;
+        var partes = new string[veces];
+        for (int i = 0; i < veces; i++)
+        {
+            int entero = PlayerHealth.AcumularDano(ref pendiente, golpe);
+            total += entero;
+            partes[i] = entero.ToString(Invariante);
+        }
+        return string.Join(",", partes);
+    }
+
+    // ------------------------------------------------------------------------
+    // Progreso en una carpeta temporal
+    // ------------------------------------------------------------------------
+
+    [Serializable]
+    private class NivelGuardado
+    {
+        public string id;
+        public int nivel;
+    }
+
+    [Serializable]
+    private class JsonGuardado
+    {
+        public int version;
+        public double monedas;
+        public int mejorOleada;
+        public List<NivelGuardado> mejoras;
+    }
+
+    static string CarpetaProgreso
+    {
+        get { return Path.Combine(Application.temporaryCachePath, "pruebas_progreso"); }
+    }
+
+    // Cada caso arranca de cero: primero se apunta Progreso a la carpeta (que
+    // guarda lo del caso anterior ahi mismo), despues se borra y se escriben los
+    // archivos del caso. Devuelve la ruta del progreso.json de la prueba.
+    static string EmpezarCaso(string principal, string temporal)
+    {
+        string carpeta = CarpetaProgreso;
+        Progreso.UsarCarpetaDePruebas(carpeta);
+        if (Directory.Exists(carpeta)) Directory.Delete(carpeta, true);
+        Directory.CreateDirectory(carpeta);
+
+        string ruta = Path.Combine(carpeta, "progreso.json");
+        if (principal != null) File.WriteAllText(ruta, principal);
+        if (temporal != null) File.WriteAllText(ruta + ".tmp", temporal);
+        return ruta;
+    }
+
+    // Leer Monedas fuerza la carga: la Revision inicial se lee recien despues.
+    static void EmpezarConMonedas(double monedas)
+    {
+        EmpezarCaso("{\"version\":2,\"monedas\":" + Numero(monedas) + "}", null);
+        _ = Progreso.Monedas;
+    }
+
+    // Si Progreso no escribiera en la carpeta de pruebas, lo que sigue pisaria el
+    // progreso real del editor: sin esto no se corre nada.
+    static bool UsaLaCarpetaDePruebas(Informe inf)
+    {
+        string ruta = EmpezarCaso(null, null);
+        return inf.Igual("guardado: Progreso escribe en la carpeta de pruebas",
+                         Path.GetFullPath(ruta), Path.GetFullPath(Progreso.RutaArchivo));
+    }
+
+    static string LeerSiExiste(string ruta)
+    {
+        return File.Exists(ruta) ? File.ReadAllText(ruta) : null;
+    }
+
+    static JsonGuardado LeerGuardado(string ruta)
+    {
+        try
+        {
+            return File.Exists(ruta) ? JsonUtility.FromJson<JsonGuardado>(File.ReadAllText(ruta)) : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    static int NivelGuardadoDe(JsonGuardado json, string id)
+    {
+        if (json == null || json.mejoras == null) return -1;
+        foreach (var m in json.mejoras)
+        {
+            if (m != null && m.id == id) return m.nivel;
+        }
+        return -1;
+    }
+
+    // 7. Migracion desde v1, archivos rotos y normalizacion.
+    static void ProbarGuardado(Informe inf)
+    {
+        // v1: se lee, se respalda tal cual y se guarda como v2.
+        string v1 = "{\"version\":1,\"monedas\":123.5,\"mejorOleada\":7}";
+        string ruta = EmpezarCaso(v1, null);
+        inf.Cerca("guardado v1: monedas", 123.5, Progreso.Monedas, 1e-9);
+        inf.Igual("guardado v1: mejor oleada", 7, Progreso.MejorOleada);
+        inf.Igual("guardado v1: nivel de dano_bala", 0, Progreso.Nivel("dano_bala"));
+        inf.Igual("guardado v1: progreso.json.v1.bak igual al original", v1, LeerSiExiste(ruta + ".v1.bak"));
+        Progreso.Guardar();
+        string guardado = LeerSiExiste(ruta);
+        inf.Verdadero("guardado v1: el JSON guardado dice \"version\": 2", guardado != null && guardado.Contains("\"version\": 2"));
+        inf.Verdadero("guardado v1: el JSON guardado tiene \"mejoras\"", guardado != null && guardado.Contains("\"mejoras\""));
+
+        // Sin version: vale 0 y se respalda como v0.
+        ruta = EmpezarCaso("{\"monedas\":10}", null);
+        inf.Cerca("guardado sin version: monedas", 10, Progreso.Monedas, 1e-9);
+        inf.Verdadero("guardado sin version: existe progreso.json.v0.bak", File.Exists(ruta + ".v0.bak"));
+
+        // Principal roto con .tmp sano: se carga el .tmp, el roto queda aparte y
+        // el respaldo de version es del archivo que se leyo.
+        string roto = "{\"monedas\": 5";
+        string tmp = "{\"version\":1,\"monedas\":42}";
+        ruta = EmpezarCaso(roto, tmp);
+        inf.Cerca("guardado roto con .tmp: carga el .tmp", 42, Progreso.Monedas, 1e-9);
+        inf.Igual("guardado roto con .tmp: progreso.json.roto es el principal roto", roto, LeerSiExiste(ruta + ".roto"));
+        inf.Igual("guardado roto con .tmp: progreso.json.v1.bak es el .tmp", tmp, LeerSiExiste(ruta + ".v1.bak"));
+
+        // Principal roto sin .tmp: arranca de cero y el roto no se pierde al guardar.
+        ruta = EmpezarCaso(roto, null);
+        inf.Cerca("guardado roto sin .tmp: arranca en 0", 0, Progreso.Monedas, 1e-9);
+        inf.Igual("guardado roto sin .tmp: sin .bak", 0, Directory.GetFiles(CarpetaProgreso, "*.bak").Length);
+        Progreso.Guardar();
+        inf.Igual("guardado roto sin .tmp: el .roto sigue despues de Guardar", roto, LeerSiExiste(ruta + ".roto"));
+
+        // Normalizacion: monedas negativas, ids repetidos, vacios y desconocidos.
+        string sucio = "{\"version\":2,\"monedas\":-5,\"mejorOleada\":3,\"mejoras\":[" +
+                       "{\"id\":\"dano_bala\",\"nivel\":2},{\"id\":\"dano_bala\",\"nivel\":4}," +
+                       "{\"id\":\"\",\"nivel\":3},{\"id\":\"viejo\",\"nivel\":7},{\"id\":\"cadencia\",\"nivel\":-1}]}";
+        ruta = EmpezarCaso(sucio, null);
+        inf.Cerca("normalizacion: monedas negativas pasan a 0", 0, Progreso.Monedas, 1e-9);
+        inf.Igual("normalizacion: dano_bala repetido se queda con el mayor", 4, Progreso.Nivel("dano_bala"));
+        inf.Igual("normalizacion: nivel negativo pasa a 0", 0, Progreso.Nivel("cadencia"));
+        inf.Igual("normalizacion: id desconocido se conserva", 7, Progreso.Nivel("viejo"));
+        Progreso.Guardar();
+
+        var json = LeerGuardado(ruta);
+        inf.Verdadero("normalizacion: el JSON guardado se puede leer", json != null && json.mejoras != null);
+        if (json == null || json.mejoras == null) return;
+
+        int vacios = 0;
+        int repetidos = 0;
+        var vistos = new List<string>();
+        foreach (var m in json.mejoras)
+        {
+            if (m == null || string.IsNullOrEmpty(m.id)) { vacios++; continue; }
+            if (vistos.Contains(m.id)) repetidos++;
+            else vistos.Add(m.id);
+        }
+        inf.Igual("normalizacion: el JSON guardado no tiene ids vacios", 0, vacios);
+        inf.Igual("normalizacion: el JSON guardado no tiene ids repetidos", 0, repetidos);
+        inf.Igual("normalizacion: el JSON guardado conserva viejo", 7, NivelGuardadoDe(json, "viejo"));
+    }
+
+    // Los getters que usa AplicarMejoras, sin mejoras y con los niveles de prueba.
+    static void ProbarGetters(Informe inf, CatalogoMejoras c)
+    {
+        EmpezarCaso(null, null);
+        inf.Cerca("getters nivel 0: DanoPorBala", 5, CatalogoMejoras.DanoPorBala, Tolerancia);
+        inf.Cerca("getters nivel 0: TirosPorSegundo", 20, CatalogoMejoras.TirosPorSegundo, Tolerancia);
+        inf.Igual("getters nivel 0: VidaMaxima", 200, CatalogoMejoras.VidaMaxima);
+        inf.Cerca("getters nivel 0: MultiplicadorVida", 1, CatalogoMejoras.MultiplicadorVida, Tolerancia);
+        inf.Cerca("getters nivel 0: MultiplicadorBotin", 1, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
+
+        Progreso.DepurarFijarNivel(c.danoBala.id, 5);
+        Progreso.DepurarFijarNivel(c.cadencia.id, 10);
+        Progreso.DepurarFijarNivel(c.vidaMaxima.id, 5);
+        Progreso.DepurarFijarNivel(c.botin.id, 15);
+        inf.Cerca("getters 5/10/5/15: DanoPorBala", 10.0568, CatalogoMejoras.DanoPorBala, Tolerancia);
+        inf.Cerca("getters 5/10/5/15: TirosPorSegundo", 36, CatalogoMejoras.TirosPorSegundo, Tolerancia);
+        inf.Igual("getters 5/10/5/15: VidaMaxima", 350, CatalogoMejoras.VidaMaxima);
+        inf.Cerca("getters 5/10/5/15: MultiplicadorVida", 1.75, CatalogoMejoras.MultiplicadorVida, Tolerancia);
+        inf.Cerca("getters 5/10/5/15: MultiplicadorBotin", 2.5, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
+    }
+
+    // 8. Compras, con el daño de bala del catalogo (90 el nivel 0, 131 el 1).
+    static void ProbarCompras(Informe inf, CatalogoMejoras c, List<Mejora> temporales)
+    {
+        Mejora dano = c.danoBala;
+        const string Comprada = "Comprada";
+        const string SinMonedas = "SinMonedas";
+
+        // Justas.
+        EmpezarConMonedas(90);
+        int revision = Progreso.Revision;
+        inf.Igual("compras con 90: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 90: quedan 0", 0, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 90: nivel 1", 1, Progreso.Nivel(dano.id));
+        inf.Igual("compras con 90: la compra sube la Revision en 1", revision + 1, Progreso.Revision);
+        inf.Igual("compras con 90: segunda", SinMonedas, Progreso.Comprar(dano).ToString());
+        inf.Igual("compras con 90: el rechazo no sube la Revision", revision + 1, Progreso.Revision);
+
+        // Un pelo abajo por coma flotante: alcanza y nunca queda negativo.
+        EmpezarConMonedas(89.9999999);
+        revision = Progreso.Revision;
+        inf.Igual("compras con 89,9999999: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 89,9999999: quedan 0", 0, Progreso.Monedas, 1e-9);
+        inf.Verdadero("compras con 89,9999999: nunca negativo", Progreso.Monedas >= 0);
+        inf.Igual("compras con 89,9999999: la compra sube la Revision en 1", revision + 1, Progreso.Revision);
+
+        // Un centavo abajo: no alcanza.
+        EmpezarConMonedas(89.99);
+        revision = Progreso.Revision;
+        inf.Igual("compras con 89,99: MonedasEnteras", 89, Progreso.MonedasEnteras);
+        inf.Igual("compras con 89,99: primera", SinMonedas, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 89,99: no descuenta", 89.99, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 89,99: nivel 0", 0, Progreso.Nivel(dano.id));
+        inf.Igual("compras con 89,99: el rechazo no sube la Revision", revision, Progreso.Revision);
+
+        // Con resto, y la compra queda en disco en el acto.
+        string ruta = Path.Combine(CarpetaProgreso, "progreso.json");
+        EmpezarConMonedas(200.7);
+        revision = Progreso.Revision;
+        inf.Igual("compras con 200,7: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 200,7: quedan 110,7", 110.7, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 200,7: segunda (cuesta 131)", SinMonedas, Progreso.Comprar(dano).ToString());
+        inf.Igual("compras con 200,7: Revision sube 1 en total", revision + 1, Progreso.Revision);
+        var enDisco = LeerGuardado(ruta);
+        inf.Igual("compras con 200,7: Comprar guarda el nivel en disco", 1, NivelGuardadoDe(enDisco, dano.id));
+        inf.Cerca("compras con 200,7: Comprar guarda las monedas en disco", 110.7, enDisco != null ? enDisco.monedas : double.NaN, 1e-9);
+
+        // Persistencia: volver a cargar la misma carpeta sin borrarla.
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("compras persistencia: el nivel sigue al recargar", 1, Progreso.Nivel(dano.id));
+        inf.Cerca("compras persistencia: las monedas siguen al recargar", 110.7, Progreso.Monedas, 1e-9);
+
+        // Dos seguidas que dejan en cero.
+        EmpezarConMonedas(221);
+        revision = Progreso.Revision;
+        inf.Igual("compras con 221: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Igual("compras con 221: segunda", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 221: quedan 0", 0, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 221: nivel 2", 2, Progreso.Nivel(dano.id));
+        inf.Igual("compras con 221: dos compras suben la Revision en 2", revision + 2, Progreso.Revision);
+
+        // Al tope no se cobra aunque sobren monedas.
+        EmpezarConMonedas(1e6);
+        Progreso.DepurarFijarNivel(c.cadencia.id, 10);
+        revision = Progreso.Revision;
+        inf.Igual("compras cadencia al tope: Estado", "EnTope", Progreso.Estado(c.cadencia).ToString());
+        inf.Igual("compras cadencia al tope: Comprar", "EnTope", Progreso.Comprar(c.cadencia).ToString());
+        inf.Cerca("compras cadencia al tope: no descuenta", 1e6, Progreso.Monedas, 1e-9);
+        inf.Igual("compras cadencia al tope: nivel sigue en 10", 10, Progreso.Nivel(c.cadencia.id));
+        inf.Igual("compras cadencia al tope: el rechazo no sube la Revision", revision, Progreso.Revision);
+
+        // Un nivel guardado por encima del tope (un tope que bajo en un update)
+        // cuenta como tope y el efecto no pasa del maximo.
+        var conTope = CrearTemporal(temporales, "prueba_tope", 45, 1.45, 10, CrecimientoEfecto.Aditivo, 0.08, 1, FormatoValor.UnDecimal);
+        EmpezarConMonedas(1e6);
+        Progreso.DepurarFijarNivel(conTope.id, 15);
+        inf.Igual("compras tope 10 con nivel 15: Estado", "EnTope", Progreso.Estado(conTope).ToString());
+        inf.Igual("compras tope 10 con nivel 15: Comprar", "EnTope", Progreso.Comprar(conTope).ToString());
+        inf.Cerca("compras tope 10 con nivel 15: Multiplicador(15)", 1.8, conTope.Multiplicador(15), 1e-9);
+
+        // Invalidas.
+        var sinId = CrearTemporal(temporales, "", 45, 1.45, 0, CrecimientoEfecto.Aditivo, 0.15, 1, FormatoValor.UnDecimal);
+        EmpezarConMonedas(1e6);
+        revision = Progreso.Revision;
+        inf.Igual("compras invalidas: Estado(null)", "Invalida", Progreso.Estado(null).ToString());
+        inf.Igual("compras invalidas: Comprar(null)", "Invalida", Progreso.Comprar(null).ToString());
+        inf.Igual("compras invalidas: Estado sin id", "Invalida", Progreso.Estado(sinId).ToString());
+        inf.Igual("compras invalidas: Comprar sin id", "Invalida", Progreso.Comprar(sinId).ToString());
+        inf.Igual("compras invalidas: no suben la Revision", revision, Progreso.Revision);
+        inf.Cerca("compras invalidas: no descuentan", 1e6, Progreso.Monedas, 1e-9);
+    }
+
+    // 9. Compras posibles encadenadas desde nivel 0: 90 + 120 + 131 + 150 + 174.
+    static void ProbarComprasPosibles(Informe inf)
+    {
+        double[] monedas = { 0, 89, 90, 209, 210, 340, 341, 490, 491, 664, 665 };
+        int[] esperadas = { 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5 };
+        for (int i = 0; i < monedas.Length; i++)
+        {
+            EmpezarConMonedas(monedas[i]);
+            inf.Igual("ComprasPosibles con " + Numero(monedas[i]) + " monedas", esperadas[i], CatalogoMejoras.ComprasPosibles());
+        }
+    }
+
+    static Mejora CrearTemporal(List<Mejora> temporales, string id, double precioInicial, double crecimientoPrecio,
+                                int nivelMaximo, CrecimientoEfecto crecimiento, double efectoPorNivel,
+                                double valorBase, FormatoValor formato)
+    {
+        var mejora = ScriptableObject.CreateInstance<Mejora>();
+        mejora.hideFlags = HideFlags.DontSave;
+        mejora.name = "PruebaTemporal " + id;
+        mejora.id = id;
+        mejora.precioInicial = precioInicial;
+        mejora.crecimientoPrecio = crecimientoPrecio;
+        mejora.nivelMaximo = nivelMaximo;
+        mejora.crecimiento = crecimiento;
+        mejora.efectoPorNivel = efectoPorNivel;
+        mejora.valorBase = valorBase;
+        mejora.formato = formato;
+        temporales.Add(mejora);
+        return mejora;
+    }
+
+    // ========================================================================
+    // Medicion en modo play
+    // ========================================================================
+
+    // Un tramo de la partida con la misma cadencia esperada: sin caja, con caja,
+    // y cada nivel de cadencia. Se compara por tramo porque al vencer la caja la
+    // cadencia cambia a mitad de la medicion.
+    private class Regimen
+    {
+        public bool conCaja;
+        public float decimos;       // Mathf.Round(TirosPorSegundo * 10): la clave
+        public float esperado;      // TirosPorSegundo del arma al entrar al tramo
+        public double duracion;
+        public long tiros;
+    }
+
+    // Lo que tenia un tipo de zombi en una oleada (o nivel del modo libre).
+    private class Par
+    {
+        public string tipo;
+        public int oleada;
+        public float vida, dano, monedas;
+        public bool conEsperado;
+        public double vidaEsperada, danoEsperado, monedasEsperadas;
+    }
+
+    private class Medicion
+    {
+        public Informe informe;
+        public float segundos;
+        public float inicio;
+        public int escena;
+
+        public PlayerController jugador;
+        public GunController arma;
+        public PlayerHealth vida;
+        public WaveManager oleadas;
+        public GeneradorZombis generador;
+        public PlayerJS joysticks;
+        public bool joysticksHabilitados;
+        public int balasAntes;
+
+        public float botin;
+        public int muertesAlEmpezar;
+        public double esperadasAlEmpezar;
+        public double soltadasAlEmpezar;
+
+        public readonly HashSet<EnemyController> procesados = new HashSet<EnemyController>();
+        public readonly List<Par> pares = new List<Par>();
+        public readonly List<Regimen> regimenes = new List<Regimen>();
+
+        public bool hayAnterior;
+        public bool cajaAnterior;
+        public float decimosAnterior;
+        public int tirosAnterior;
+        public float tiempoAnterior;
+    }
+
+    private static Medicion medicion;
+
+    // El reset de siempre para los static. Al entrar a play no hay medicion
+    // posible todavia; esto evita arrastrar una colgada si no hay domain reload.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        EditorApplication.update -= Tick;
+        medicion = null;
+    }
+
+    // Dispara sin parar, mantiene al jugador con vida y mata a cada zombi en el
+    // tick en que aparece (asi las oleadas avanzan solas), y al cumplir los
+    // segundos de juego escribe Builds/medicion_mejoras.txt.
+    //
+    // OJO: las monedas que sueltan los zombis vuelan al jugador al terminar cada
+    // oleada y se suman al progreso real del editor.
+    public static void MedirPartida(float segundos)
+    {
+        var informe = new Informe("MEDICION DE MEJORAS", "PruebasMejoras.MedirPartida: ");
+
+        if (!EditorApplication.isPlaying)
+        {
+            informe.Falla("MedirPartida solo corre en modo play");
+            informe.Escribir(RutaMedicion, informe.Resultado("OK"));
+            return;
+        }
+        if (medicion != null)
+        {
+            Debug.LogWarning("PruebasMejoras.MedirPartida: ya hay una medicion en curso");
+            return;
+        }
+
+        var m = new Medicion();
+        m.informe = informe;
+        m.segundos = Mathf.Max(1f, segundos);
+        m.jugador = Object.FindFirstObjectByType<PlayerController>();
+        m.arma = m.jugador != null ? m.jugador.theGun : null;
+        m.vida = PlayerHealth.instance;
+        if (m.jugador == null || m.arma == null || m.vida == null)
+        {
+            informe.Falla("no hay jugador, arma o PlayerHealth en la escena");
+            informe.Escribir(RutaMedicion, informe.Resultado("OK"));
+            return;
+        }
+
+        // En WaveMode el generador libre puede estar en la escena apagado: manda
+        // el que esta andando.
+        var oleadas = Object.FindFirstObjectByType<WaveManager>();
+        var generador = Object.FindFirstObjectByType<GeneradorZombis>();
+        m.oleadas = oleadas != null && oleadas.isActiveAndEnabled ? oleadas : null;
+        m.generador = m.oleadas == null && generador != null && generador.isActiveAndEnabled ? generador : null;
+        m.joysticks = Object.FindFirstObjectByType<PlayerJS>();
+        m.joysticksHabilitados = m.joysticks != null && m.joysticks.enabled;
+        // Tick le pone cien mil balas: al terminar se le devuelven las que tenia.
+        m.balasAntes = m.jugador.cantBalas;
+
+        var escena = SceneManager.GetActiveScene();
+        m.escena = escena.handle;
+        m.inicio = Time.time;
+        m.botin = CatalogoMejoras.MultiplicadorBotin;
+        m.muertesAlEmpezar = EnemyController.MuertesConBotin;
+        m.esperadasAlEmpezar = EnemyController.MonedasEsperadas;
+        m.soltadasAlEmpezar = EnemyController.MonedasSoltadas;
+
+        informe.Linea("escena: " + escena.name + " (build " + escena.buildIndex + "), " +
+                      (m.oleadas != null ? "oleadas" : m.generador != null ? "modo libre" : "sin generador de zombis"));
+        informe.Linea("segundos pedidos: " + Numero(m.segundos, "0.##"));
+        FotoDeLoAplicado(m);
+
+        medicion = m;
+        EditorApplication.update -= Tick;
+        EditorApplication.update += Tick;
+        Debug.Log("PruebasMejoras.MedirPartida: midiendo " + Numero(m.segundos, "0.##") + " s en " + escena.name);
+    }
+
+    static void FotoDeLoAplicado(Medicion m)
+    {
+        var inf = m.informe;
+        var catalogo = CatalogoMejoras.Instancia;
+
+        var niveles = new StringBuilder("niveles:");
+        if (catalogo != null && catalogo.enTienda != null)
+        {
+            foreach (var mejora in catalogo.enTienda)
+            {
+                if (mejora == null) continue;
+                niveles.Append(' ').Append(mejora.id).Append(' ').Append(Progreso.Nivel(mejora.id));
+            }
+        }
+        else
+        {
+            niveles.Append(" (sin catalogo)");
+        }
+        inf.Linea(niveles.ToString());
+
+        float dano = CatalogoMejoras.DanoPorBala;
+        float tiros = CatalogoMejoras.TirosPorSegundo;
+        int vidaMaxima = CatalogoMejoras.VidaMaxima;
+        float multiplicadorVida = CatalogoMejoras.MultiplicadorVida;
+
+        inf.Linea("catalogo: daño/bala " + Numero(dano, "0.0###") + ", tiros/s " + Numero(tiros, "0.0##") +
+                  ", vida " + vidaMaxima + ", multiplicador de vida " + Numero(multiplicadorVida, "0.0##") +
+                  ", botin x" + Numero(m.botin, "0.0##"));
+        inf.Linea("aplicado: daño/bala " + Numero(m.arma.DanoPorBala, "0.0###") +
+                  ", tiros/s base " + Numero(m.arma.TirosPorSegundoBase, "0.0##") +
+                  ", vida " + m.vida.health + "/" + m.vida.maxHealth +
+                  ", cura por caja " + m.vida.CuraPorCaja +
+                  ", botin x" + Numero(m.botin, "0.0##"));
+
+        var aplicar = Object.FindFirstObjectByType<AplicarMejoras>();
+        if (aplicar != null)
+        {
+            inf.Linea("AplicarMejoras: daño/bala " + Numero(aplicar.DanoPorBala, "0.0###") +
+                      ", tiros/s " + Numero(aplicar.TirosPorSegundo, "0.0##") +
+                      ", vida " + aplicar.VidaMaxima + ", multiplicador de cura " + Numero(aplicar.MultiplicadorCura, "0.0##"));
+            inf.Cerca("aplicado: AplicarMejoras.DanoPorBala", dano, aplicar.DanoPorBala, 1e-3);
+            inf.Cerca("aplicado: AplicarMejoras.TirosPorSegundo", tiros, aplicar.TirosPorSegundo, 1e-3);
+            inf.Igual("aplicado: AplicarMejoras.VidaMaxima", vidaMaxima, aplicar.VidaMaxima);
+            inf.Cerca("aplicado: AplicarMejoras.MultiplicadorCura", multiplicadorVida, aplicar.MultiplicadorCura, 1e-3);
+        }
+        else
+        {
+            inf.Falla("no hay AplicarMejoras en la escena (va en Jugador.prefab)");
+        }
+
+        // Lo que de verdad quedo en el arma y en la vida, por si algo lo piso
+        // despues de AplicarMejoras.
+        inf.Cerca("aplicado: GunController.DanoPorBala", dano, m.arma.DanoPorBala, 1e-3);
+        inf.Cerca("aplicado: GunController.TirosPorSegundoBase", tiros, m.arma.TirosPorSegundoBase, 1e-3);
+        inf.Igual("aplicado: PlayerHealth.maxHealth", vidaMaxima, m.vida.maxHealth);
+        inf.Cerca("aplicado: PlayerHealth.MultiplicadorCura", multiplicadorVida, m.vida.MultiplicadorCura, 1e-3);
+    }
+
+    static void Tick()
+    {
+        var m = medicion;
+        if (m == null)
+        {
+            EditorApplication.update -= Tick;
+            return;
+        }
+
+        if (!EditorApplication.isPlaying)
+        {
+            Abortar(m, "se salio de modo play");
+            return;
+        }
+        if (EditorApplication.isPaused) return;
+        if (SceneManager.GetActiveScene().handle != m.escena)
+        {
+            Abortar(m, "cambio la escena (¿murio el jugador?)");
+            return;
+        }
+        if (m.jugador == null || m.arma == null || m.vida == null)
+        {
+            Abortar(m, "se destruyo el jugador");
+            return;
+        }
+
+        // 1. Disparar sin parar y no morir. PlayerJS se apaga porque con el target
+        // en Android pondria isFiring en falso con el joystick suelto.
+        if (m.joysticks != null) m.joysticks.enabled = false;
+        m.arma.isFiring = true;
+        m.jugador.cantBalas = 100000;
+        m.vida.health = m.vida.maxHealth;
+
+        // 2. Anotar y matar a los zombis nuevos.
+        var zombis = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        foreach (var zombi in zombis)
+        {
+            if (zombi == null || zombi.enemyType == null || !m.procesados.Add(zombi)) continue;
+            RegistrarPar(m, zombi);
+            zombi.DanoZombi(zombi.VidaActual + 1f);
+        }
+
+        // 3. Tiros por tramo: solo cuenta el intervalo entre dos ticks con la misma
+        // cadencia, asi el tick en que vence una caja no mezcla los dos tramos.
+        bool caja = m.arma.MejoraActiva;
+        float decimos = Mathf.Round(m.arma.TirosPorSegundo * 10f);
+        int tiros = m.arma.TirosDisparados;
+        float ahora = Time.time;
+        if (m.hayAnterior && caja == m.cajaAnterior && decimos == m.decimosAnterior)
+        {
+            var regimen = BuscarRegimen(m, caja, decimos);
+            regimen.duracion += ahora - m.tiempoAnterior;
+            regimen.tiros += tiros - m.tirosAnterior;
+        }
+        m.hayAnterior = true;
+        m.cajaAnterior = caja;
+        m.decimosAnterior = decimos;
+        m.tirosAnterior = tiros;
+        m.tiempoAnterior = ahora;
+
+        if (ahora - m.inicio >= m.segundos) Terminar(m);
+    }
+
+    static Regimen BuscarRegimen(Medicion m, bool caja, float decimos)
+    {
+        foreach (var r in m.regimenes)
+        {
+            if (r.conCaja == caja && r.decimos == decimos) return r;
+        }
+        var nuevo = new Regimen { conCaja = caja, decimos = decimos, esperado = m.arma.TirosPorSegundo };
+        m.regimenes.Add(nuevo);
+        return nuevo;
+    }
+
+    // La oleada del par es la vigente en el tick en que se lo ve: el zombi
+    // aparecio en este mismo frame, antes de su Start.
+    static void RegistrarPar(Medicion m, EnemyController zombi)
+    {
+        int oleada = m.oleadas != null ? m.oleadas.OleadaActual
+                   : m.generador != null ? m.generador.NivelActual
+                   : 0;
+        string tipo = zombi.enemyType.name;
+        foreach (var p in m.pares)
+        {
+            if (p.tipo == tipo && p.oleada == oleada) return;
+        }
+
+        var par = new Par
+        {
+            tipo = tipo,
+            oleada = oleada,
+            vida = zombi.VidaMaxima,
+            dano = zombi.DanoPorGolpe,
+            monedas = zombi.multiplicadorMonedas,
+        };
+
+        if (m.oleadas != null)
+        {
+            par.conEsperado = true;
+            par.vidaEsperada = zombi.enemyType.hp * Escalado.PorOleada(m.oleadas.crecimientoVida, oleada);
+            par.danoEsperado = zombi.enemyType.daño * Escalado.PorOleada(m.oleadas.crecimientoDano, oleada);
+            par.monedasEsperadas = Escalado.PorOleada(m.oleadas.crecimientoMonedas, oleada) * m.botin;
+        }
+        else if (m.generador != null)
+        {
+            par.conEsperado = true;
+            par.vidaEsperada = zombi.enemyType.hp * Escalado.PorOleada(m.generador.crecimientoVida, oleada);
+            par.danoEsperado = zombi.enemyType.daño * Escalado.PorOleada(m.generador.crecimientoDano, oleada);
+            par.monedasEsperadas = m.generador.multiplicadorMonedas * Escalado.PorOleada(m.generador.crecimientoMonedas, oleada) * m.botin;
+        }
+
+        m.pares.Add(par);
+    }
+
+    static void Restaurar(Medicion m)
+    {
+        EditorApplication.update -= Tick;
+        if (medicion == m) medicion = null;
+
+        if (m.joysticks != null) m.joysticks.enabled = m.joysticksHabilitados;
+        if (m.arma != null) m.arma.isFiring = false;
+        // Con Min: si durante la medicion agarro una caja de arma, maxBalas cambio.
+        if (m.jugador != null) m.jugador.cantBalas = Mathf.Min(m.balasAntes, m.jugador.maxBalas);
+    }
+
+    static void Abortar(Medicion m, string motivo)
+    {
+        Restaurar(m);
+        EscribirMediciones(m);
+        m.informe.Linea("ABORTADA: " + motivo);
+        m.informe.Escribir(RutaMedicion, "ABORTADA");
+    }
+
+    static void Terminar(Medicion m)
+    {
+        Restaurar(m);
+        m.informe.Linea("duracion: " + Numero(Time.time - m.inicio, "0.00") + " s de juego");
+        EscribirMediciones(m);
+        ChequearRegimenes(m);
+        ChequearPares(m);
+        m.informe.Escribir(RutaMedicion, m.informe.Resultado("OK"));
+    }
+
+    static void EscribirMediciones(Medicion m)
+    {
+        var inf = m.informe;
+
+        inf.Linea("regimenes:");
+        if (m.regimenes.Count == 0) inf.Linea("  (ninguno)");
+        foreach (var r in m.regimenes)
+        {
+            double medido = r.duracion > 0 ? r.tiros / r.duracion : 0;
+            inf.Linea("  " + NombreRegimen(r) + ": " + Numero(r.duracion, "0.00") + " s, " + r.tiros +
+                      " tiros, medido " + Numero(medido, "0.00") + " | esperado " + Numero(r.esperado, "0.00"));
+        }
+
+        inf.Linea("zombis vistos:");
+        if (m.pares.Count == 0) inf.Linea("  (ninguno)");
+        foreach (var p in m.pares)
+        {
+            string linea = "  " + p.tipo + " " + (m.generador != null ? "nivel " : "oleada ") + p.oleada +
+                           ": vida " + Numero(p.vida, "0.0###") + ", daño " + Numero(p.dano, "0.0###") +
+                           ", monedas x" + Numero(p.monedas, "0.0###");
+            if (p.conEsperado)
+            {
+                linea += "  (esperado vida " + Numero(p.vidaEsperada, "0.0###") + ", daño " + Numero(p.danoEsperado, "0.0###") +
+                         ", monedas x" + Numero(p.monedasEsperadas, "0.0###") + ")";
+            }
+            inf.Linea(linea);
+        }
+
+        int muertes = EnemyController.MuertesConBotin - m.muertesAlEmpezar;
+        double soltadas = EnemyController.MonedasSoltadas - m.soltadasAlEmpezar;
+        double esperadas = EnemyController.MonedasEsperadas - m.esperadasAlEmpezar;
+        string porZombi = muertes > 0
+            ? " (por zombi: real " + Numero(soltadas / muertes, "0.000") + " | esperado " + Numero(esperadas / muertes, "0.000") + ")"
+            : "";
+        inf.Linea("monedas: soltadas " + Numero(soltadas, "0.##") + ", esperadas " + Numero(esperadas, "0.##") +
+                  ", muertes con botin " + muertes + porZombi);
+    }
+
+    static string NombreRegimen(Regimen r)
+    {
+        return (r.conCaja ? "con caja" : "sin caja") + " a " + Numero(r.decimos / 10f, "0.0") + " tiros/s";
+    }
+
+    // Un tramo largo se mide bien; uno de 2 a 5 s tiene mas ruido por los ticks
+    // del editor, y uno de menos de 2 s no dice nada.
+    static void ChequearRegimenes(Medicion m)
+    {
+        foreach (var r in m.regimenes)
+        {
+            double medido = r.duracion > 0 ? r.tiros / r.duracion : 0;
+            string caso = "regimen " + NombreRegimen(r) + " (" + Numero(r.duracion, "0.0") + " s)";
+            if (r.duracion >= 5) m.informe.Cerca(caso, r.esperado, medido, 0.5);
+            else if (r.duracion >= 2) m.informe.Cerca(caso, r.esperado, medido, 1.0);
+            else m.informe.Linea("(" + caso + ": muy corto para comparar)");
+        }
+    }
+
+    static void ChequearPares(Medicion m)
+    {
+        foreach (var p in m.pares)
+        {
+            if (!p.conEsperado) continue;
+            string caso = "zombi " + p.tipo + " " + (m.generador != null ? "nivel " : "oleada ") + p.oleada;
+            m.informe.Cerca(caso + ": VidaMaxima", p.vidaEsperada, p.vida, ToleranciaRelativa(p.vidaEsperada));
+            m.informe.Cerca(caso + ": DanoPorGolpe", p.danoEsperado, p.dano, ToleranciaRelativa(p.danoEsperado));
+            m.informe.Cerca(caso + ": multiplicadorMonedas", p.monedasEsperadas, p.monedas, ToleranciaRelativa(p.monedasEsperadas));
+        }
+    }
+
+    static double ToleranciaRelativa(double valor)
+    {
+        return 1e-3 * Math.Max(1, Math.Abs(valor));
+    }
+}

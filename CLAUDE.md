@@ -13,9 +13,13 @@ puntos y suelta monedas; morir guarda el récord y lleva a la pantalla de derrot
 Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
 
 - **Free mode** (`ShowBies1.unity`) — generación continua: cinco corrutinas paralelas, una por tipo de
-  zombi, cada una con su intervalo. Sin final.
+  zombi, cada una con su intervalo. Sin final, pero se pone más difícil con el tiempo ("Nivel N" en el HUD).
 - **Wave mode** (`WaveMode.unity`) — oleadas que terminan al matar a todos sus zombis, cada una más grande
   y con más tipos mezclados, y un jefe cada 10. Mismo mapa pero con las calles (`Ciudad`) encendidas.
+
+Es un **incremental**: las monedas que se juntan en las partidas se gastan en la **tienda de mejoras** del menú
+(daño de bala, cadencia, vida máxima y botín), y las mejoras se aplican al empezar cada partida. Del otro lado,
+los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos.
 
 ## Entorno
 
@@ -38,19 +42,21 @@ Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
-Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida
+Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas y mejor oleada, en un JSON)
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
+Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante
 Assets/Scripts/Tutorial/    ← TutorialManager
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
-Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa)
+Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
+Assets/Mejoras/             ← las cuatro Mejora (.asset) y Resources/CatalogoMejoras
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
-Assets/Editor/              ← ConstructorAndroid.cs (builds de Android: APK de prueba y AAB de release)
+Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras y HerramientasProgreso (menú ShowBies)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -59,14 +65,16 @@ Assets/Editor/              ← ConstructorAndroid.cs (builds de Android: APK de
 
 | índice | escena | qué es |
 |---|---|---|
-| 0 | `Menu.unity` | menú principal + panel de modos |
+| 0 | `Menu.unity` | menú principal + panel de modos + tienda de mejoras (prefab `Tienda`) |
 | 1 | `ShowBies1.unity` | free mode |
 | 2 | `Perdiste.unity` | pantalla de derrota |
 | 3 | `WaveMode.unity` | wave mode |
 | 4 | `Tutorial.unity` | tutorial jugable (opcional, desde el menú) |
 
 **Los índices están hardcodeados en el código** (`MainMenu.PlayGame` → 1, `MainMenu.GameModes` → 3,
-`MainMenu.Tutorial` → 4, `PlayerHealth` → 2, `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1).
+`MainMenu.Tutorial` → 4, `PlayerHealth` → 2, `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1,
+`TiendaMejoras.Jugar` → 1 o 3 y `TiendaMejoras.AbrirEnMenu` → 0, estos dos con las constantes `EscenaMenu`,
+`EscenaModoLibre` y `EscenaOleadas`).
 Reordenar Build Settings rompe la navegación en silencio.
 
 ### Tutorial
@@ -95,6 +103,11 @@ Lo que se comunica sin inspector usa búsquedas cacheadas:
 - `EnemyController.ZombisVivos` — contador `static`, `Awake`/`OnDestroy`. Lo miran los dos generadores.
 - `BulletController.pool` — la pila de balas dormidas.
 - `MenuPausa.Pausado` — si el juego está en pausa. Lo miran los que leen input.
+- `CatalogoMejoras.Instancia` — sale de `Resources` (no se cablea en ninguna escena); si falta, las mejoras
+  quedan neutras con un LogError.
+- `Progreso.Revision` — un contador que sube con cada cambio del progreso. La tienda y los botones MEJORAS lo
+  consultan en `Update` y se refrescan cuando cambia, en vez de suscribirse a un evento.
+- `TiendaMejoras.AbrirAlCargarMenu` — la derrota lo prende para que el menú cargue con la tienda abierta.
 
 **Todo lo `static` se resetea en un `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`**, porque
 sobrevive al cambio de escena y al "enter play mode" sin domain reload. Si agregás estado `static`,
@@ -124,6 +137,11 @@ Los cinco assets viven en `Assets/Zombies/`. Balance actual:
 | ZombiTanque | 25 | 1 | 3 | 20 | 5–8 | 5 |
 | ZombiBOSS | 500 | 10 | 2 | 100 | 30–40 | 100 |
 
+La vida y el daño **de cada zombi** se calculan como float en `EnemyController`: el valor del `.asset` por
+`multiplicadorVida` y `multiplicadorDano`, que pone quien lo hace aparecer antes de su `Start` (ver Generación de
+enemigos). Los `.asset` no cambian con la oleada, y la columna "balas para matarlo" vale para la oleada 1 sin
+mejoras.
+
 **Tocar el balance no requiere recompilar**: son valores de los `.asset`. Ojo que en puntos por bala el
 BOSS es hoy el peor negocio del juego (100 puntos por 100 balas); está así a propósito hasta que se
 decida el balance.
@@ -145,21 +163,26 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
 ## Pipeline de disparo
 
 1. `PlayerController.HandleShooting` prende `theGun.isFiring` con el click, si `cantBalas > 0`.
-2. `GunController.Update` cuenta `tiempoDisparo` y por cada disparo pide una bala al pool:
-   `BulletController.Obtener(bala, firePoint.position, firePoint.rotation)`.
+2. `GunController.Update` calcula cuántos tiros tocan en el frame con `TirosDelFrame` y por cada uno pide una
+   bala al pool: `BulletController.Obtener(bala, firePoint.position, firePoint.rotation)`.
 3. `BulletController.Update` se mueve con `transform.Translate` y descuenta `lifeTime`.
 4. Al vencer el tiempo o al chocar, la bala **se apaga y vuelve al pool**, no se destruye.
 
 **Nunca hagas `Instantiate`/`Destroy` de balas directo.** El pool convierte 500 disparos en 49 objetos.
 
-**El arma tira como mucho una bala por frame.** `GunController.Update` dispara una sola vez por frame aunque
-haya pasado más de `tiempoDisparo`: con 0,04 s salen 20 balas por segundo a 60 FPS (no 25) y 15 a 30 FPS, y
-las cajas, que bajan la cadencia a 0,03 s (`PUBalas`) y a 0,01 s (`PUArma`), no pasan de 60 por segundo a 60 FPS.
+**Varias balas por frame.** `TirosDelFrame` es un acumulador (y es la misma función que usan las pruebas): tira
+mientras el contador esté vencido, hasta `maxTirosPorFrame` (8), con un techo de `maxTirosPorSegundo` (120), y
+cada bala se adelanta según su atraso para que el chorro salga escalonado. Antes el arma tiraba una bala por frame
+como mucho: 20 por segundo a 60 FPS y 15 a 30 FPS, así que la cadencia dependía del teléfono.
 
-**La cadencia mejorada es temporal.** Los pickups no tocan `tiempoDisparo` directo: pasan por
-`GunController.MejorarCadencia(valor)`, que aplica la mejora por `duracionMejora` segundos (10 por
-defecto, editable en el inspector) y después vuelve a la cadencia con la que arrancó la escena. Un
-pickup nuevo pisa al vigente y reinicia el reloj; la munición que dio el pickup no expira.
+**La cadencia y el daño los fija la mejora, en tiros por segundo.** `AplicarMejoras` llama a
+`FijarTirosPorSegundo` (20 de base, +8 % por nivel) y `FijarDanoPorBala` (5 × 1,15^nivel). Cada bala lleva su
+`danoAplicado`; el `dañoDar` del prefab y el override `tiempoDisparo` de las escenas quedan como respaldo para una
+escena sin `AplicarMejoras`. **Nunca escribas sobre `gun.bala`**: es el prefab, no una bala.
+
+**Las cajas multiplican la cadencia por un rato.** `PotenciarCadencia(multiplicador)`: `PUBalas` ×1,5 y `PUArma` ×3
+durante `duracionMejora` (10 s); la última pisa a la anterior y al vencer vuelve a la cadencia mejorada. Antes
+fijaban un intervalo, y con la cadencia al tope una caja de balas empeoraba el arma. La munición no expira.
 
 **El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
 `intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,
@@ -186,6 +209,8 @@ sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
   no choca con el jugador del que sale ni con las balas que van en la misma dirección.
 - **Explota** al pasar a `radioDeContacto` de un zombi en el aire, o `demoraAlCaer` (0,3 s) después de caer. Una
   granada instanciada sin `Lanzar` se comporta como antes: cae donde nace y explota con la mecha de 3 s.
+- **Daño:** `damage` (10) × `multiplicadorVida` del zombi al que le pega, así escala con la oleada y no con la
+  mejora de daño. Con 10 fijos, desde la oleada 6 ya no mataba ni a un normal.
 - Mientras vuela, el hijo "Indicador" del prefab (un `LineRenderer`) se suelta y dibuja en el piso el radio de la
   explosión; se destruye con ella.
 - El botón G muestra la recarga con `IndicadorRecargaGranada` y su hijo "Recarga" (Image Filled Radial360).
@@ -197,7 +222,11 @@ Los dos generadores respetan el mismo techo, `maxZombisVivos` (60 por defecto, e
 consultando `EnemyController.ZombisVivos`:
 
 - **`GeneradorZombis`** (free mode) — cinco corrutinas paralelas, una por tipo, cada una con un `while`
-  infinito y su `WaitForSeconds`. Si se llegó al techo, saltea el spawn y sigue esperando.
+  infinito y su `WaitForSeconds`. Si se llegó al techo, saltea el spawn y sigue esperando. **Escala con el
+  tiempo:** `NivelActual` sube uno cada `segundosPorNivel` (45 s de tiempo escalado, así la pausa lo congela) y
+  cada zombi aparece con vida × `crecimientoVida`^(nivel−1), daño × `crecimientoDano`^(nivel−1) y monedas ×
+  `crecimientoMonedas`^(nivel−1), los mismos crecimientos que las oleadas. `textoNivel` muestra "Nivel N" en el
+  HUD y, al subir, rebota y suena el jingle del cartel. Sin esto el modo libre era una granja de monedas.
 - **`WaveManager`** (wave mode) — **una sola** corrutina que corre toda la partida. Cada oleada:
   1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s). El HUD
      (`textoOleada`) muestra "Oleada N" y abajo "Zombis muertos/total" de esa oleada, jefe incluido; se
@@ -211,7 +240,13 @@ consultando `EnemyController.ZombisVivos`:
   4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos.
 
   La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
-  `OleadaActual` para lo que escale con la oleada.
+  `OleadaActual` y los multiplicadores de la oleada actual.
+
+**Los zombis escalan con la oleada.** `WaveManager.Aparecer` pone `multiplicadorVida` = `crecimientoVida`^(o−1)
+(1,15) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) antes del `Start` del zombi, jefe incluido. La vida
+crece más rápido que el daño a propósito: lo que frena es no llegar a matarlos, no que dos golpes liquiden al
+jugador. `EnemyController` inicializa la vida perezosa (en `Start` o en el primer golpe) y muere con vida ≤ 0,01;
+el daño al jugador acumula las fracciones (`PlayerHealth.AcumularDano`) y resta enteros.
 
 Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
 
@@ -228,8 +263,9 @@ por oleada no la rompe mientras se aplique antes del primer golpe.
 ## Monedas y progreso
 
 Lo que el jugador conserva entre partidas vive en `Progreso` (`Assets/Scripts/Progreso/`): un JSON en
-`Application.persistentDataPath/progreso.json` con las monedas y la mejor oleada completada. No usa
-PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles de las mejoras.
+`Application.persistentDataPath/progreso.json` con las monedas, la mejor oleada completada y el nivel de cada
+mejora (versión 2: `mejoras` es una lista `{id, nivel}`, porque `JsonUtility` no guarda diccionarios). No usa
+PlayerPrefs a propósito: es estado estructurado.
 
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
@@ -239,11 +275,12 @@ PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles
   `notas` (editables en el prefab; las del acorde, la bemol, do y mi bemol, salen más seguido). Las que nadie
   agarra desaparecen a los 20 s, parpadeando los últimos 3.
 - **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se anuncia
-  en el cartel de la oleada siguiente). Al terminar cada oleada, `Moneda.AtraerTodas` hace volar al jugador
+  en el cartel de la oleada siguiente). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
+  que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. Al terminar cada oleada, `Moneda.AtraerTodas` hace volar al jugador
   las monedas que quedaron en el piso.
 - **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
-  `crecimientoMonedas^(oleada − 1)` (1,05) y `GeneradorZombis` 0,5 (el modo libre da la mitad y no tiene
-  bono): con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
+  `crecimientoMonedas^(oleada − 1)` (1,05) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
+  la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
   0,5 no mueve el contador al agarrarla. Un zombi sin `monedaPrefab`, como los del tutorial, no suelta nada.
 - **Las monedas no tienen Rigidbody ni collider** y salen de un pool, con un techo de 150 en escena (80 en
   móvil): el vuelo es una parábola a mano y el cobro, una distancia al jugador. Si el techo no deja soltar
@@ -256,11 +293,50 @@ PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles
   algún grado una de las dos se sale de la escala.
 - **Se suman en memoria al agarrarlas y se guardan en disco en puntos seguros:** al completar cada oleada, al
   pausar (también pasa cuando la app pierde el foco, antes de que Android pueda matarla), al morir y al
-  cerrar. Se escribe un `.tmp` y después se copia; al cargar, si el principal falta o está roto, se prueba el
-  `.tmp`.
+  cerrar, y **cada compra guarda en el acto**. Se escribe un `.tmp` y después se copia; al cargar, si el
+  principal falta o está roto, se prueba el `.tmp`. Un principal ilegible se copia a `progreso.json.roto`, y un
+  JSON de versión menor se respalda (el archivo que se leyó) como `progreso.json.v<N>.bak` antes de migrarlo;
+  ningún respaldo pisa uno anterior.
+- `MonedasEnteras` (floor con 1e-6) es lo que se muestra y lo que se puede pagar. `Sumar`, `Comprar` y las
+  funciones de depuración incrementan `Revision`.
 - `MonedasDeLaPartida` vuelve a cero al empezar cada partida (`PlayerHealth.Awake`) y lo muestra la pantalla
   de derrota (`TextoMonedasPartida`). El HUD de las escenas de juego muestra el total con `ContadorMonedas`.
   Los números para pantalla pasan por `FormatoNumeros.Compacto` (1.234, 123 K, 4,5 M).
+
+## Mejoras y tienda
+
+Cada mejora es un ScriptableObject `Mejora` en `Assets/Mejoras/`, y `Assets/Mejoras/Resources/CatalogoMejoras`
+las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). **El catálogo tiene que quedar en
+`Resources`**, y **un `id` no se renombra nunca**: es la clave de los niveles guardados.
+
+| mejora | id | precio inicial | crecimiento | tope | efecto |
+|---|---|---|---|---|---|
+| Daño de bala | `dano_bala` | 90 | ×1,45 | — | 5 × 1,15^nivel |
+| Cadencia | `cadencia` | 150 | ×1,6 | 10 | 20 × (1 + 0,08 × nivel) tiros/s |
+| Vida máxima | `vida_maxima` | 120 | ×1,45 | — | 200 × (1 + 0,15 × nivel) |
+| Botín | `botin` | 240 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
+
+- **Precio** = `floor(precioInicial × crecimiento^nivel + 0,5 + 1e-9)`. El `+1e-9` no es decorativo: en double
+  90 × 1,45 da 130,4999…, y el precio correcto es 131. Los textos redondean igual (`FormatoNumeros.ConDecimales`).
+  Los precios son el doble de los del plan por las monedas que caen de más; se balancean tocando los assets.
+- **Se aplican al empezar la partida, no al comprar.** `AplicarMejoras` está en la raíz de `Jugador.prefab` y en
+  su `Awake` fija daño por bala, tiros por segundo, vida máxima (con la vida llena) y el multiplicador de cura:
+  fija valores, nunca multiplica los actuales, así reintentar no aplica dos veces. La caja de vida cura
+  `curaPorPickup × multiplicador de vida` (sigue siendo la mitad de la vida máxima). El botín lo leen los dos
+  generadores en su `Start`.
+- **La tienda es un panel del menú**, no una escena: `Prefabs/UI/Tienda.prefab` instanciado en `Menu.unity`, con
+  canvas propio (1920x1080, match 0,5, `sortingOrder` 5, área segura). Las tarjetas (`Prefabs/UI/TarjetaMejora`)
+  se generan desde `enTienda`, con tres estados: comprable (verde, respira), sin monedas (gris, "faltan N", tocable
+  para que tiemble) y en tope (dorada, "MÁX" y estampa). Comprar: monedas que vuelan al botón, arpegio en la bemol
+  programado con `Sonidos.Programar`, estallido y temblor; compras seguidas suben el arpegio por I-IV-V-I'.
+- **Navegación:** MEJORAS en el menú abre la tienda; VOLVER, Escape o el atrás de Android la cierran; ¡A JUGAR!
+  carga `UltimoModo` (1 o 3; si no, 3). En la derrota, MEJORAS llama a `TiendaMejoras.AbrirEnMenu`, que carga el
+  menú con la tienda abierta. Los botones MEJORAS (`BotonMejoras`) muestran una insignia con
+  `CatalogoMejoras.ComprasPosibles()`: cuántas compras seguidas alcanzan de verdad, eligiendo siempre la más barata
+  (con 200 monedas hay tres tarjetas verdes pero alcanza para una sola), y en la derrota "¡Te alcanza para N
+  mejoras!".
+- **Para agregar una mejora:** un asset `Mejora` con id nuevo → su campo y getter en `CatalogoMejoras` → aplicarla
+  en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → casos en `PruebasMejoras`.
 
 ## Jugo
 
@@ -283,8 +359,13 @@ un método static (`Efectos.Golpe`, `Muerte`, `Explosion`, `DanioJugador`, `Caja
 - **Temblor de cámara**: `CamaraJugador.Temblar(trauma)`. El trauma (0 a 1) se descarga solo y la sacudida crece
   con su cuadrado, así los golpes chicos casi no se notan. Usa tiempo sin escalar y se frena en la pausa del menú.
 - **Sonidos**: `Sonidos.Tocar(clip, volumen, pitch, variación, separación mínima)`, un solo objeto con fuentes 2D
-  que también usan las monedas. Los sonidos con el tono cambiado rotan entre 12 fuentes; los de pitch 1 van a
-  una fuente que nunca cambia de tono, para que un golpe no desafine una explosión que está sonando.
+  que también usan las monedas y la tienda. Los de pitch 1 van a una fuente que nunca cambia de tono; los demás
+  eligen una fuente libre según cuándo termina lo último que puso cada una (guardado con `dspTime`, porque
+  `isPlaying` no sirve con `PlayOneShot`): reusar una que suena le cambia el tono a esa nota. `Sonidos.Programar`
+  hace lo mismo con `PlayScheduled`, para los arpegios de la tienda.
+- **UI**: `BotonJugoso` anima un hijo `Visual` del botón (apretar, rebotar, respirar, temblar), nunca la raíz, así
+  el layout no se entera. `EfectosUI` (monedas que vuelan, estallidos, textos flotantes) va en un sub-Canvas con
+  pools propios. Todo con tiempo sin escalar y delta topeado.
 - **Chispas**: un solo `ParticleSystem` por escena (`Particulas/Chispas.prefab`) usado con `Emit`, como el brillo
   de las monedas.
 - **Música de partida**: un loop de 32 s en la bemol mayor en el `AudioSource` del prefab (Vorbis, comprimida en
@@ -299,7 +380,7 @@ progreso):
 |---|---|---|
 | `"Score"` | `PlayerHealth` al morir | `Score` (pantalla de derrota) |
 | `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"` |
-| `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext` |
+| `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext`, `TiendaMejoras.Jugar` |
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
@@ -332,8 +413,9 @@ click en otra ventana.
   `OnBackInvokedCallback` y reinyecta `KEYCODE_BACK` a la actividad. Deja de llegar si alguien pone
   `Input.backButtonLeavesApp = true`.
 - Cada pantalla decide qué hace Escape: en juego pausa y reanuda (`MenuPausa`), en la derrota vuelve al
-  menú (`MenuPerdiste`), y en el menú principal cierra el panel de modos o, en el principal, sale del
-  juego sólo en móvil (`BotonAtrasMenu`, en el canvas "Main Menu"). `RestartScene` ya no cierra el
+  menú (`MenuPerdiste`), y en el menú principal cierra primero la tienda, después el panel de modos o, en el
+  principal, sale del juego sólo en móvil (`BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del
+  menú). `RestartScene` ya no cierra el
   juego con Escape: en PC, para salir está Quit.
 
 ## Móvil
@@ -496,6 +578,35 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   impacto (UI, temblor, sonidos) tiene que usar tiempo sin escalar. Para animaciones que arrancan al cargar una
   escena, topeá el delta: el primer frame dura mucho y se come la animación.
 
+- **`CatalogoMejoras.asset` tiene que estar en `Resources`.** Si se mueve o pierde referencias, todas las mejoras
+  quedan neutras (5, 20, 200, ×1) y en la build no se ve ningún aviso: sólo un LogError y la prueba de lógica.
+
+- **Menu y Perdiste tienen el canvas en match 0; la tienda y la pausa, en 0,5.** En 20:9 el menú mide 864 u de
+  alto y en 21:9, 823: una fila de tarjetas de 560 u no entraba en el canvas del menú, por eso la tienda tiene el
+  suyo.
+
+- **Construir UI en el editor ensucia el atlas dinámico de Bangers** (`Bangers SDF.asset`) y el fallback de
+  LiberationSans. Si aparecen modificados en git sin haber tocado fuentes, se restauran. Bangers no tiene `→`: la
+  flecha de las tarjetas es un sprite.
+
+- **Al duplicar un botón del menú, no le cambies la transición a None.** Los botones del menú tienen un Image negro
+  que la transición ColorTint deja invisible; con None aparece.
+
+## Pruebas y medición
+
+- **ShowBies > Pruebas > Logica de mejoras** (`PruebasMejoras.CorrerTodas`): precios, efectos, textos, escalado,
+  acumuladores, guardado y migración (en una carpeta temporal) y compras. No corre en play. Escribe
+  `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+- **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata
+  a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
+  aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe
+  `Builds/medicion_mejoras.txt`.
+- **ShowBies > Progreso > …** (`HerramientasProgreso`): sumar monedas, niveles de prueba (5, 10, 5, 15), niveles
+  en cero, reiniciar. **Escriben el `progreso.json` real del editor**, igual que `MedirPartida`.
+- **`MedidorBalance`**: F1 (o tres dedos) en partida muestra daño, tiros por segundo medidos contra esperados, vida,
+  botín, multiplicadores de la oleada o del nivel y monedas por zombi. Existe sólo en el editor y en builds de
+  desarrollo; la APK de `ConstructorAndroid` no lo es.
+
 ## Para agregar una mecánica nueva
 
 1. ¿Es un tipo de enemigo? Creá un `Enemy` nuevo en `Assets/Zombies/` (**con `puntos`, `monedasMin` y
@@ -517,3 +628,4 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 9. ¿Lee input? Cortalo con `MenuPausa.Pausado`: la pausa congela el tiempo escalado, no el input.
 10. ¿Pasa algo que el jugador tiene que sentir? Sumale su método a `Efectos` (sonido, chispas, temblor) en vez de
     poner sonidos y partículas sueltos: el juego tiene que ser llamativo en cada acción.
+11. ¿Se compra? Es una `Mejora` (ver Mejoras y tienda).
