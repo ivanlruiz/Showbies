@@ -454,7 +454,8 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   y todo lo estático está marcado `BatchingStatic` (las 80 calles de WaveMode eran 80 draw calls).
 - Los generadores usan `maxZombisVivosMovil` (35) en vez de 60 cuando `Plataforma.EsMovil`.
 - Los Animators del zombi normal y del rápido están en **Cull Update Transforms**: fuera de pantalla no
-  mueven huesos. El rápido tiene **dos** Animators (uno con root motion), sin revisar si hacen falta los dos.
+  mueven huesos. El rápido tiene **dos** Animators: el que tiene el esqueleto usa el controller y el avatar del
+  normal, sin root motion; el otro no tiene controller y no hace nada (ver la trampa del zombi invisible).
 - El tanque, el jefe y el FASTER no tienen Animator: son una cápsula con dos cubos, y **esos cubos son a la
   vez los brazos visibles y las hitboxes**. No apagues sus renderers pensando que son colliders sueltos
   (en el normal y el rápido sí están apagados, porque el modelo es el de ToonyTiny).
@@ -561,10 +562,22 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   el bloque de muerte corre entero de nuevo — puntos dobles, dos manchas. Si agregás otra fuente de
   daño, no repitas la lógica de muerte: llamá a esos métodos, que ya están guardados.
 
-- **Hay un kill-Z en Y = -20** para zombis y jugador, y no es decorativo: el mapa tiene bordes por los
-  que la física empuja cosas, y un zombi caído seguía contando en `ZombisVivos` — cada caído era un
-  cupo del techo de población perdido para siempre. Si agregás entidades con Rigidbody que importen,
-  dales su propio kill-Z.
+- **Hay un kill-Z en Y = -20 para el jugador y en Y = -2 para los zombis**, y no es decorativo: el mapa tiene
+  bordes por los que la física empuja cosas, y un zombi caído seguía contando en `ZombisVivos` — cada caído era un
+  cupo del techo de población perdido para siempre. El de los zombis es más alto porque bajo el piso ya no se ven
+  ni se les puede disparar. Si agregás entidades con Rigidbody que importen, dales su propio kill-Z.
+
+- **Los zombis caminan en horizontal y la gravedad es de la física.** `EnemyController` mira al jugador a su propia
+  altura y sólo pisa la velocidad horizontal. Antes miraba al centro del jugador y pisaba la velocidad entera en cada
+  paso: la gravedad nunca actuaba, y un zombi que terminaba bajo el piso (que es un plano sin espesor) se quedaba
+  ahí persiguiendo al jugador. Además los puntos de aparición de WaveMode están en Y = 0 y el pivote del zombi es el
+  centro de su cápsula: `SubirSobreElPiso` lo levanta en su `Awake` para que no nazca medio enterrado.
+
+- **El "zombi invisible" era el rápido, que no tenía malla.** `ToonyTinyPeople/TT_demo/models/zombiRapido.FBX` es en
+  realidad un glTF binario con extensión `.FBX`: Unity no le encuentra mallas y el prefab quedaba con el
+  `SkinnedMeshRenderer` y la cabeza sin malla, y sin controller. Pegaba y chocaba (la cápsula está) pero no se veía.
+  `Prefabs/Personajes/ZombiRapido.prefab` ahora pisa la malla, la cabeza, el avatar y el controller con los de
+  `TT_demo_zombie.FBX` (mismos 15 huesos en el mismo orden). No uses ese FBX para nada nuevo.
 
 - **Player (capa 6) y Bala (capa 7) no colisionan, y eso está en la matriz del proyecto.** Antes se
   seteaba con `Physics.IgnoreLayerCollision(6, 7)` en el `Start` de cada bala. No lo hagas por código.

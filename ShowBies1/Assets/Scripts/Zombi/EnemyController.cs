@@ -17,6 +17,14 @@ public class EnemyController : MonoBehaviour
     // hacia falta una sexta bala para una vida que no se ve.
     private const float VidaResidual = 0.01f;
 
+    private const float AlturaDelPiso = 0f;
+    private const float MargenSobreElPiso = 0.02f;
+
+    // Por debajo de esto el zombi se cayo del mapa o quedo bajo el piso. No es el
+    // -20 del jugador: bajo el piso ya no se ve ni se le puede disparar, y no hay
+    // por que esperar a que caiga 20 m.
+    private const float AlturaKillZ = -2f;
+
     // Los multiplicadores los pone quien hace aparecer al zombi, despues del
     // Instantiate y antes de su Start: WaveManager (con los de la oleada y el
     // botin) y GeneradorZombis (con los del nivel del modo libre). Un zombi sin
@@ -100,6 +108,26 @@ public class EnemyController : MonoBehaviour
     private void Awake()
     {
         ZombisVivos++;
+        SubirSobreElPiso();
+    }
+
+    // El piso de las escenas de juego esta en Y = 0 y el pivote del zombi es el
+    // centro de su capsula. Los puntos de aparicion de WaveMode estan en el piso,
+    // asi que cada zombi nacia con media capsula enterrada en un piso sin espesor
+    // (un plano), y dependia de la fisica que lo sacara para arriba y no para
+    // abajo. Se lo sube antes del primer paso de fisica, lo haga aparecer quien lo
+    // haga aparecer.
+    private void SubirSobreElPiso()
+    {
+        var capsula = GetComponent<CapsuleCollider>();
+        if (capsula == null) return;
+
+        float alto = capsula.direction == 1 ? Mathf.Max(capsula.height * 0.5f, capsula.radius) : capsula.radius;
+        float fondo = transform.TransformPoint(capsula.center).y - alto * Mathf.Abs(transform.lossyScale.y);
+        if (fondo < AlturaDelPiso)
+        {
+            transform.position += Vector3.up * (AlturaDelPiso - fondo + MargenSobreElPiso);
+        }
     }
 
     private void OnDestroy()
@@ -112,6 +140,9 @@ public class EnemyController : MonoBehaviour
     {
         IniciarVida();
         rb = GetComponent<Rigidbody>();
+        // La rotacion la pone FixedUpdate, mirando al jugador: que los choques no
+        // lo inclinen entre un paso y otro.
+        rb.freezeRotation = true;
         thePlayer = ObtenerJugador();
         escalaBase = transform.localScale;
         PrepararDestello();
@@ -151,7 +182,7 @@ public class EnemyController : MonoBehaviour
        // spawneado mal) cae para siempre y SIGUE contando en ZombisVivos: con el
        // techo de poblacion, cada caido es un lugar menos que no se recupera
        // nunca, hasta que el generador queda tapado y la partida se vacia.
-       if (transform.position.y < -20f)
+       if (transform.position.y < AlturaKillZ)
        {
            Destroy(gameObject);   // sin puntos ni mancha: nadie lo mato
            return;
@@ -160,8 +191,18 @@ public class EnemyController : MonoBehaviour
        ActualizarGolpeVisual();
 
        if (thePlayer == null) return;
-       transform.LookAt(thePlayer.transform.position);
-       rb.linearVelocity = (transform.forward * enemyType.velocidad);
+
+       // Mira y camina en horizontal, y la velocidad vertical queda en manos de la
+       // fisica. Antes miraba al centro del jugador y pisaba la velocidad entera en
+       // cada paso: la gravedad nunca actuaba, y un zombi que terminaba debajo del
+       // piso se quedaba ahi, invisible, persiguiendo al jugador y pegandole desde
+       // abajo. Ahora cae y lo saca el kill-Z.
+       Vector3 objetivo = thePlayer.transform.position;
+       objetivo.y = transform.position.y;
+       if ((objetivo - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(objetivo);
+       Vector3 velocidad = transform.forward * enemyType.velocidad;
+       velocidad.y = rb.linearVelocity.y;
+       rb.linearVelocity = velocidad;
     }
 
     private bool estaMuerto;
