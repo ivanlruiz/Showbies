@@ -49,6 +49,10 @@ public class MenuPausa : MonoBehaviour
         Time.timeScale = 0f;
         AudioListener.pause = true;
         panel.SetActive(true);
+
+        // Pausar tambien pasa cuando la app pierde el foco, y despues Android la
+        // puede matar sin avisar: es el ultimo momento seguro para guardar.
+        Progreso.Guardar();
     }
 
     public void Reanudar()

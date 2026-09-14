@@ -38,11 +38,12 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu
-Assets/Scripts/PowerUps/    ← PowerUp (el spawner)
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros
+Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
+Assets/Scripts/Progreso/    ← Progreso (monedas y mejor oleada, en un JSON)
 Assets/Scripts/*.cs         ← CanvasHelper, MainMenu, MenuPerdiste, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode (+ SampleScene, sin usar)
-Assets/Prefabs/             ← Bullet, Gun, Granada, power-ups, Particulas/, Personajes/, UI/ (MenuPausa)
+Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Particulas/ (BrilloMoneda), Personajes/, UI/ (MenuPausa)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/otros/               ← los 4 audios del juego
 Assets/Editor/              ← ConstructorAndroid.cs (builds de Android: APK de prueba y AAB de release)
@@ -104,18 +105,20 @@ class Enemy : ScriptableObject {
     public int daño;                  // lo que le saca al jugador en cada golpe
     public int velocidad;
     public int puntos;                // cuánto suma MATARLO
+    public int monedasMin;            // cuántas monedas suelta al morir: al azar entre min y max
+    public int monedasMax;
 }
 ```
 
 Los cinco assets viven en `Assets/Zombies/`. Balance actual:
 
-| zombi | hp | daño | velocidad | puntos | balas para matarlo |
-|---|---|---|---|---|---|
-| ZombiNormal | 5 | 1 | 5 | 1 | 1 |
-| ZombiRapido | 3 | 2 | 9 | 2 | 1 |
-| ZombiFASTER | 3 | 1 | 12 | 5 | 1 |
-| ZombiTanque | 25 | 1 | 3 | 20 | 5 |
-| ZombiBOSS | 500 | 10 | 2 | 100 | 100 |
+| zombi | hp | daño | velocidad | puntos | monedas | balas para matarlo |
+|---|---|---|---|---|---|---|
+| ZombiNormal | 5 | 1 | 5 | 1 | 1–3 | 1 |
+| ZombiRapido | 3 | 2 | 9 | 2 | 1–3 | 1 |
+| ZombiFASTER | 3 | 1 | 12 | 5 | 2–4 | 1 |
+| ZombiTanque | 25 | 1 | 3 | 20 | 5–8 | 5 |
+| ZombiBOSS | 500 | 10 | 2 | 100 | 30–40 | 100 |
 
 **Tocar el balance no requiere recompilar**: son valores de los `.asset`. Ojo que en puntos por bala el
 BOSS es hoy el peor negocio del juego (100 puntos por 100 balas); está así a propósito hasta que se
@@ -215,6 +218,39 @@ un hijo: los zombis rotan hacia el jugador y tienen escalas distintas, y una bar
 cosas. Son dos `SpriteRenderer` sobre un sprite blanco hecho en código (estático, con su reset), no un Canvas
 por zombi. La fracción sale de la vida con la que apareció el zombi (`vidaMaxima`), así que un escalado de vida
 por oleada no la rompe mientras se aplique antes del primer golpe.
+
+## Monedas y progreso
+
+Lo que el jugador conserva entre partidas vive en `Progreso` (`Assets/Scripts/Progreso/`): un JSON en
+`Application.persistentDataPath/progreso.json` con las monedas y la mejor oleada completada. No usa
+PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles de las mejoras.
+
+- **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
+  suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
+  que valen `multiplicadorMonedas` cada una. Salen volando para los costados, caen despacio con un rebote y
+  quedan girando en el piso; al acercarse el jugador (`radioIman`, 4 m) vuelan solas hacia él y recién ahí se
+  suman a `Progreso`, con un brillo y un sonido que sube un tono por cada moneda agarrada al hilo de la
+  anterior. Las que nadie agarra desaparecen a los 20 s, parpadeando los últimos 3.
+- **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se anuncia
+  en el cartel de la oleada siguiente). Al terminar cada oleada, `Moneda.AtraerTodas` hace volar al jugador
+  las monedas que quedaron en el piso.
+- **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
+  `crecimientoMonedas^(oleada − 1)` (1,05) y `GeneradorZombis` 0,5 (el modo libre da la mitad y no tiene
+  bono): con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
+  0,5 no mueve el contador al agarrarla. Un zombi sin `monedaPrefab`, como los del tutorial, no suelta nada.
+- **Las monedas no tienen Rigidbody ni collider** y salen de un pool, con un techo de 150 en escena (80 en
+  móvil): el vuelo es una parábola a mano y el cobro, una distancia al jugador. Si el techo no deja soltar
+  todas, las que salen se reparten el valor de las que no.
+- **El modelo es el hijo `Modelo` del prefab** (hoy un cilindro dorado provisorio). Lo que gira es la raíz, de
+  frente a la cámara: para cambiar el modelo se reemplaza el hijo, con la cara de la moneda mirando a +Z. El
+  sonido es `Assets/otros/moneda.wav`, también provisorio.
+- **Se suman en memoria al agarrarlas y se guardan en disco en puntos seguros:** al completar cada oleada, al
+  pausar (también pasa cuando la app pierde el foco, antes de que Android pueda matarla), al morir y al
+  cerrar. Se escribe un `.tmp` y después se copia; al cargar, si el principal falta o está roto, se prueba el
+  `.tmp`.
+- `MonedasDeLaPartida` vuelve a cero al empezar cada partida (`PlayerHealth.Awake`) y lo muestra la pantalla
+  de derrota (`TextoMonedasPartida`). El HUD de las escenas de juego muestra el total con `ContadorMonedas`.
+  Los números para pantalla pasan por `FormatoNumeros.Compacto` (1.234, 123 K, 4,5 M).
 
 ## Persistencia
 
@@ -422,8 +458,10 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
    vale 1), un prefab con `EnemyController`, y sumalo al generador. No hace falta tag ni tocar código.
 2. ¿Spawnea objetos seguido? Pooleá desde el principio: mirá `BulletController.Obtener` / `Devolver`.
 3. ¿Necesita estado global? `static` + reset en `SubsystemRegistration`.
-4. ¿Suma puntos? Que salga de `enemyType.puntos` en `DanoZombi`, no de donde se produce el daño.
-5. ¿Guarda algo? `PlayerPrefs` en el bloque de `PlayerHealth.TakeDamage`, que ya llama a `Save()`.
+4. ¿Suma puntos o monedas? Que salga de `DanoZombi` (`enemyType.puntos`, y las monedas que suelta), no de
+   donde se produce el daño.
+5. ¿Guarda algo entre partidas? Si es progreso (monedas, mejoras), va en `Progreso` y su JSON. Los
+   `PlayerPrefs` quedan para el récord y el último modo, en el bloque de `PlayerHealth.TakeDamage`.
 6. ¿Tiene UI? Los cuatro canvas usan `ScaleWithScreenSize`. Las escenas de juego tienen la referencia
    en 1080x1920 (vertical, herencia de móvil): parece un error pero con `match = 0.5` la escala sale de
    la raíz del producto ancho × alto, así que da lo mismo que 1920x1080.

@@ -37,6 +37,13 @@ public class GeneradorZombis : MonoBehaviour
     [SerializeField]
     public int maxZombisVivosMovil = 35;
 
+    // El modo libre da la mitad de monedas y no tiene bono de oleada: sin
+    // oleadas que se pongan dificiles, juntar monedas ahi es mas facil.
+    [SerializeField]
+    public float multiplicadorMonedas = 0.5f;
+    [SerializeField]
+    public Moneda monedaPrefab;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -59,7 +66,13 @@ public class GeneradorZombis : MonoBehaviour
 
             if (EnemyController.ZombisVivos >= maxZombisVivos) continue;
 
-            Instantiate(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)), Quaternion.identity);
+            var zombi = Instantiate(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)), Quaternion.identity);
+            var enemigo = zombi.GetComponent<EnemyController>();
+            if (enemigo != null)
+            {
+                enemigo.multiplicadorMonedas = multiplicadorMonedas;
+                enemigo.monedaPrefab = monedaPrefab;
+            }
         }
     }
 }

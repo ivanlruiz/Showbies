@@ -16,3 +16,5 @@ MonoBehaviour:
   "da\xF1o": 1
   velocidad: 12
   puntos: 5
+  monedasMin: 2
+  monedasMax: 4

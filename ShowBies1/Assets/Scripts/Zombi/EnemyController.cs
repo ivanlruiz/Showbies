@@ -7,6 +7,12 @@ public class EnemyController : MonoBehaviour
     private int vidaActual;
     private int vidaMaxima;
     private BarraDeVida barraDeVida;
+
+    // Los pone quien hace aparecer al zombi: WaveManager (con el multiplicador de
+    // la oleada) y GeneradorZombis (con la mitad). Un zombi sin moneda, como los
+    // del tutorial, no suelta nada.
+    [System.NonSerialized] public float multiplicadorMonedas = 1f;
+    [System.NonSerialized] public Moneda monedaPrefab;
     private Rigidbody rb;
     [Header("Unity Setup")]
     public ParticleSystem deathParticles;
@@ -120,7 +126,36 @@ public class EnemyController : MonoBehaviour
             // 1 punto y matar a tiros valia cien veces mas.
             Puntaje.instance.contadorKill += enemyType.puntos;
             Puntaje.instance.UpdateKillCounterUI();
+
+            SoltarMonedas();
         }
+    }
+
+    // Salen en el mismo bloque que los puntos, y por lo mismo: es el unico lugar
+    // donde el zombi muere de verdad una sola vez. Se cobran recien cuando el
+    // jugador las agarra (ver Moneda).
+    private void SoltarMonedas()
+    {
+        if (monedaPrefab == null) return;
+
+        int cantidad = Random.Range(enemyType.monedasMin, enemyType.monedasMax + 1);
+        double valor = multiplicadorMonedas;
+
+        // Con un multiplicador menor a 1 (el modo libre) cada moneda sale con esa
+        // probabilidad y vale 1, en vez de salir todas valiendo 0,5: una moneda
+        // que no mueve el contador al agarrarla no se siente como una moneda.
+        if (multiplicadorMonedas < 1f)
+        {
+            int salen = 0;
+            for (int i = 0; i < cantidad; i++)
+            {
+                if (Random.value < multiplicadorMonedas) salen++;
+            }
+            cantidad = salen;
+            valor = 1;
+        }
+
+        Moneda.Soltar(monedaPrefab, transform.position, cantidad, valor);
     }
 
     private void MostrarBarraDeVida()

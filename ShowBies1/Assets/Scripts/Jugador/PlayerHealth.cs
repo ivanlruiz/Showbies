@@ -41,6 +41,7 @@ public class PlayerHealth : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        Progreso.EmpezarPartida();
     }
 
     // La clave del record de un modo, por el buildIndex de su escena. La pantalla
@@ -82,6 +83,7 @@ public class PlayerHealth : MonoBehaviour
 
             // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
             PlayerPrefs.Save();
+            Progreso.Guardar();
 
             SceneManager.LoadScene(2);
             Destroy(gameObject);

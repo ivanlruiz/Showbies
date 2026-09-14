@@ -37,6 +37,11 @@ public class WaveManager : MonoBehaviour
     public int maxZombisVivos = 60;          // techo de poblacion: si esta lleno, la oleada espera
     public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
 
+    [Header("Monedas")]
+    public Moneda monedaPrefab;              // la que sueltan los zombis al morir
+    public float crecimientoMonedas = 1.05f; // cada moneda vale crecimientoMonedas^(oleada - 1)
+    public int bonoPorOleada = 2;            // al completar la oleada N se cobran bonoPorOleada * N
+
     [Header("HUD")]
     public TMP_Text textoOleada;             // "Oleada N" y "Zombis muertos/total" en el HUD
     public TMP_Text cartelOleada;            // cartel grande que se prende durante el descanso
@@ -47,6 +52,7 @@ public class WaveManager : MonoBehaviour
     private int zombisEnLaOleada;
     private int muertosMostrados = -1;
     private int oleadaMostrada = -1;
+    private int bonoDeLaOleadaAnterior;
 
     private void Start()
     {
@@ -89,6 +95,15 @@ public class WaveManager : MonoBehaviour
             {
                 yield return null;
             }
+
+            // Las monedas que quedaron en el piso vuelan solas al jugador: la
+            // oleada termino y no tiene sentido obligarlo a recorrer el mapa.
+            Moneda.AtraerTodas();
+
+            bonoDeLaOleadaAnterior = bonoPorOleada * OleadaActual;
+            Progreso.Sumar(bonoDeLaOleadaAnterior);
+            Progreso.RegistrarOleadaCompletada(OleadaActual);
+            Progreso.Guardar();
         }
     }
 
@@ -122,6 +137,10 @@ public class WaveManager : MonoBehaviour
         if (cartelOleada != null)
         {
             cartelOleada.text = "Oleada " + OleadaActual;
+            if (bonoDeLaOleadaAnterior > 0)
+            {
+                cartelOleada.text += "\n<size=45%>+" + bonoDeLaOleadaAnterior + " monedas por la oleada " + (OleadaActual - 1) + "</size>";
+            }
             cartelOleada.gameObject.SetActive(true);
         }
 
@@ -156,7 +175,14 @@ public class WaveManager : MonoBehaviour
         Transform punto = spawnPoints[Random.Range(0, spawnPoints.Length)];
         if (punto == null) return;
 
-        zombisDeLaOleada.Add(Instantiate(prefab, punto.position, Quaternion.identity));
+        var zombi = Instantiate(prefab, punto.position, Quaternion.identity);
+        var enemigo = zombi.GetComponent<EnemyController>();
+        if (enemigo != null)
+        {
+            enemigo.multiplicadorMonedas = Mathf.Pow(crecimientoMonedas, OleadaActual - 1);
+            enemigo.monedaPrefab = monedaPrefab;
+        }
+        zombisDeLaOleada.Add(zombi);
     }
 
     // Los zombis muertos, o caidos por el kill-Z, quedan en la lista como null.
