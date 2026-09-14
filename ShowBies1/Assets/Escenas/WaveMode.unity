@@ -6248,9 +6248,11 @@ MonoBehaviour:
   descansoEntreOleadas: 3
   maxZombisVivos: 60
   maxZombisVivosMovil: 35
+  crecimientoVida: 1.15
+  crecimientoDano: 1.07
   monedaPrefab: {fileID: 209914667697901589, guid: 2a7ca24049b93874db76077fb4e20d20, type: 3}
   crecimientoMonedas: 1.05
-  bonoPorOleada: 2
+  bonoPorOleada: 4
   textoOleada: {fileID: 794040599}
   cartelOleada: {fileID: 1290508352}
 --- !u!1 &1043808218
@@ -6423,6 +6425,11 @@ MonoBehaviour:
   maxZombisVivosMovil: 35
   multiplicadorMonedas: 0.5
   monedaPrefab: {fileID: 0}
+  segundosPorNivel: 45
+  crecimientoVida: 1.15
+  crecimientoDano: 1.07
+  crecimientoMonedas: 1.05
+  textoNivel: {fileID: 0}
 --- !u!1 &1070716537
 GameObject:
   m_ObjectHideFlags: 0
@@ -9891,9 +9898,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ContadorMonedas
   texto: {fileID: 1609428529}
+  prefijo: 'Monedas: '
   escalaDelSalto: 1.4
   duracionDelSalto: 0.2
   colorDelSalto: {r: 1, g: 1, b: 1, a: 1}
+  duracionRodado: 0
+  colorAlBajar: {r: 1, g: 0.45, b: 0.4, a: 1}
 --- !u!114 &1609428529
 MonoBehaviour:
   m_ObjectHideFlags: 0

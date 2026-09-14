@@ -20,6 +20,17 @@ public class PlayerHealth : MonoBehaviour
     private bool estaMuerto;
     private int ultimaVidaMostrada = int.MinValue;
 
+    // La cura de las cajas escala con la mejora de vida, así una caja sigue
+    // valiendo la misma fracción de la barra. Lo fija AplicarMejoras.
+    private float multiplicadorCura = 1f;
+
+    // El daño de los zombis es float (escala por oleada) y la vida es int: lo que
+    // no llega a un punto entero queda acá y se suma al golpe siguiente.
+    private float danoPendiente;
+
+    public float MultiplicadorCura { get { return multiplicadorCura; } }
+    public int CuraPorCaja { get { return Mathf.RoundToInt(curaPorPickup * multiplicadorCura); } }
+
     // Update is called once per frame
     void Update()
     {
@@ -52,13 +63,44 @@ public class PlayerHealth : MonoBehaviour
         return "HighScore_" + modo;
     }
 
-    public void TakeDamage(int amount)
+    // Lo llama AplicarMejoras al empezar la partida: la vida arranca llena con el
+    // máximo mejorado.
+    public void FijarVidaMaxima(int vidaMaxima, float multiplicadorCura)
+    {
+        maxHealth = Mathf.Max(1, vidaMaxima);
+        health = maxHealth;
+        this.multiplicadorCura = Mathf.Max(0f, multiplicadorCura);
+        danoPendiente = 0f;
+    }
+
+    // Suma "cantidad" a lo pendiente y devuelve la parte entera, que es lo que se
+    // descuenta de la vida; el resto queda para el golpe siguiente. Redondear
+    // cada golpe por separado haría que un daño de 1,3 fuera siempre 1 y el
+    // escalado del daño por oleada no se notara hasta el 1,5. Estático para
+    // probarlo sin escena.
+    public static int AcumularDano(ref float pendiente, float cantidad)
+    {
+        if (!(cantidad > 0f)) return 0;
+
+        pendiente += cantidad;
+        // El 0,0001 absorbe el error de float: que 0,3 + 0,7 dé 0,9999 y no 1.
+        int entero = Mathf.FloorToInt(pendiente + 0.0001f);
+        if (entero <= 0) return 0;
+
+        pendiente = Mathf.Max(0f, pendiente - entero);
+        return entero;
+    }
+
+    public void TakeDamage(float amount)
     {
         // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
         // veces con la vida ya en cero, y el bloque de muerte corria de nuevo.
         if (estaMuerto) return;
 
-        health -= amount;
+        int dano = AcumularDano(ref danoPendiente, amount);
+        if (dano <= 0) return;
+
+        health -= dano;
         if (health > 0) Efectos.DanioJugador();
         if(health <= 0)
         {
@@ -107,7 +149,8 @@ public class PlayerHealth : MonoBehaviour
             // El tope estaba hardcodeado en 200 y maxHealth no lo leia nadie: el
             // campo decia 10 en el codigo y 200 en las escenas. Ahora el que manda
             // es maxHealth, que en las dos escenas ya vale 200 (mismo resultado).
-            health = Mathf.Min(health + curaPorPickup, maxHealth);
+            // La cura escala con la mejora de vida: 100 sin mejora, 250 con 500.
+            health = Mathf.Min(health + CuraPorCaja, maxHealth);
             Efectos.Caja(other.transform.position);
         }
     }

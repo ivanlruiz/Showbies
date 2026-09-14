@@ -6,12 +6,17 @@ public class BulletController : MonoBehaviour
 {
     public int velocidad;
     public float lifeTime;
-    public int dañoDar;
+    public int dañoDar;   // respaldo del prefab: el daño de verdad lo pone el arma en cada tiro
+
+    // El daño de esta bala, puesto en cada tiro por GunController desde la mejora
+    // de daño. No se serializa: si se guardara en el prefab, el primer tiro de la
+    // partida siguiente arrancaría con el daño de la anterior.
+    [System.NonSerialized] public float danoAplicado;
 
     // Pool de balas.
     //
-    // Con tiempoDisparo = 0.04 son 25 balas por segundo, y el power-up de balas
-    // lo baja a 0.01, o sea 100 por segundo. Cada una era un Instantiate y un
+    // Son 20 tiros por segundo de base, hasta 108 con la cadencia al tope y la
+    // caja de arma, con un techo de 120. Cada una era un Instantiate y un
     // Destroy: de lejos la mayor fuente de basura del juego.
     private static readonly Stack<BulletController> pool = new Stack<BulletController>();
 
@@ -45,8 +50,21 @@ public class BulletController : MonoBehaviour
         }
 
         bala.lifeTime = bala.lifeTimeInicial;
+        // El del prefab por si quien la pide no pone otro; GunController lo pisa.
+        bala.danoAplicado = prefab.dañoDar;
         bala.enUso = true;
         return bala;
+    }
+
+    // Mueve la bala lo que habría recorrido si hubiera salido "segundos" antes.
+    // Con varios tiros en el mismo frame, cada uno sale adelantado según su atraso
+    // y el chorro queda parejo en vez de amontonado en la boca del arma.
+    public void Adelantar(float segundos)
+    {
+        if (!(segundos > 0f)) return;
+
+        transform.Translate(Vector3.forward * velocidad * segundos);
+        lifeTime -= segundos;
     }
 
     private void Devolver()
@@ -89,7 +107,7 @@ public class BulletController : MonoBehaviour
         EnemyController zombi = other.gameObject.GetComponentInParent<EnemyController>();
         if (zombi == null) return;
 
-        zombi.DanoZombi(dañoDar);
+        zombi.DanoZombi(danoAplicado);
         Devolver();
     }
 }

@@ -44,6 +44,45 @@ public class GeneradorZombis : MonoBehaviour
     [SerializeField]
     public Moneda monedaPrefab;
 
+    // Sin esto el modo libre era una granja de monedas sin dificultad: ~445
+    // monedas por minuto fijas, mas que las oleadas hasta la 20, con los zombis
+    // cada vez mas faciles a medida que el jugador compra mejoras. Ahora cada
+    // segundosPorNivel sube un nivel y los zombis nuevos salen con la vida, el
+    // daño y las monedas de esa "oleada", con los mismos crecimientos que el
+    // modo de oleadas. Los que ya estan en la escena no cambian.
+    [Header("Dificultad con el tiempo")]
+    public float segundosPorNivel = 45f;     // cada cuánto sube un nivel (tiempo escalado: la pausa lo congela)
+    public float crecimientoVida = 1.15f;    // mismos crecimientos que las oleadas
+    public float crecimientoDano = 1.07f;
+    public float crecimientoMonedas = 1.05f;
+    public TMPro.TMP_Text textoNivel;        // "Nivel N" en el HUD; opcional
+
+    // La mejora de botin se lee una vez al empezar: no se puede comprar en medio
+    // de la partida.
+    private float botin = 1f;
+    private float inicio;
+    private int nivelMostrado;
+
+    // Con Time.time y no con un contador propio: la pausa (timeScale 0) y la
+    // pausa de impacto lo frenan solas.
+    public int NivelActual => 1 + Mathf.FloorToInt((Time.time - inicio) / Mathf.Max(1f, segundosPorNivel));
+
+    public float MultiplicadorVidaActual => Escalado.PorOleada(crecimientoVida, NivelActual);
+    public float MultiplicadorDanoActual => Escalado.PorOleada(crecimientoDano, NivelActual);
+
+    // Incluye el botin: es lo que vale cada moneda de un zombi que salga ahora.
+    public float MultiplicadorMonedasActual => multiplicadorMonedas * Escalado.PorOleada(crecimientoMonedas, NivelActual) * botin;
+
+    // En Awake y no en Start: MedidorBalance se crea al cargar la escena, despues
+    // de los Awake y antes de los Start, y lee NivelActual y los multiplicadores
+    // enseguida. Con inicio en 0 daba el nivel del tiempo de sesion (3 minutos
+    // jugados eran "nivel 5") y el botin en 1.
+    private void Awake()
+    {
+        botin = CatalogoMejoras.MultiplicadorBotin;
+        inicio = Time.time;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -54,6 +93,31 @@ public class GeneradorZombis : MonoBehaviour
         StartCoroutine(spawnEnemy(intervaloZombiTanque, ZombiTanque));
         StartCoroutine(spawnEnemy(intervaloZombiBOSS, ZombiBOSS));
         StartCoroutine(spawnEnemy(intervaloZombiFASTER, ZombiFASTER));
+    }
+
+    private void Update()
+    {
+        int nivel = NivelActual;
+        if (nivel == nivelMostrado) return;
+
+        // Solo al cambiar: armar el texto por frame aloca por frame.
+        nivelMostrado = nivel;
+        if (textoNivel != null) textoNivel.SetText("Nivel {0}", nivel);
+
+        // El nivel 1 es el de arranque y no se festeja. Los siguientes apagan y
+        // prenden el texto para que su AparecerConRebote, si lo tiene, rebote, y
+        // suenan como el cartel de oleada: el jugador tiene que notar que subio.
+        // El jingle suena aunque la escena no tenga el texto, que es opcional: sin
+        // el, el modo libre se pondria mas dificil sin ningun aviso.
+        if (nivel > 1)
+        {
+            if (textoNivel != null)
+            {
+                textoNivel.gameObject.SetActive(false);
+                textoNivel.gameObject.SetActive(true);
+            }
+            Efectos.CartelOleada();
+        }
     }
 
     private IEnumerator spawnEnemy(float interval, GameObject enemy)
@@ -70,7 +134,11 @@ public class GeneradorZombis : MonoBehaviour
             var enemigo = zombi.GetComponent<EnemyController>();
             if (enemigo != null)
             {
-                enemigo.multiplicadorMonedas = multiplicadorMonedas;
+                // Antes de su Start: la vida se calcula con el multiplicador que
+                // tenga en ese momento.
+                enemigo.multiplicadorVida = MultiplicadorVidaActual;
+                enemigo.multiplicadorDano = MultiplicadorDanoActual;
+                enemigo.multiplicadorMonedas = MultiplicadorMonedasActual;
                 enemigo.monedaPrefab = monedaPrefab;
             }
         }

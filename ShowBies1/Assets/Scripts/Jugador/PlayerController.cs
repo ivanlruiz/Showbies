@@ -26,6 +26,10 @@ public class PlayerController : MonoBehaviour
     public int maxBalas = 500;
     public int cargadorMejorado = 1000;   // a lo que sube maxBalas al agarrar un PUArma
 
+    [Header("Cajas de cadencia")]
+    public float multiplicadorCadenciaPUBalas = 1.5f;   // 20 tiros/s de base pasan a 30
+    public float multiplicadorCadenciaPUArma = 3f;      // 20 pasan a 60; con la cadencia al tope, 108
+
     [Header("Granade Settings")]
     public float granadaCooldown = 5f;
     public float distanciaMinimaGranada = 3f;    // para que no caiga a los pies del jugador
@@ -115,7 +119,9 @@ public class PlayerController : MonoBehaviour
             other.gameObject.SetActive(false);
             Destroy(other.gameObject);
             cantBalas = maxBalas;
-            theGun.MejorarCadencia(0.03f);
+            // Multiplica la cadencia de la mejora en vez de fijar un tiempo entre
+            // tiros: con la cadencia comprada, una caja nunca te deja más lento.
+            theGun.PotenciarCadencia(multiplicadorCadenciaPUBalas);
             Efectos.Caja(other.transform.position);
         }
         else if (other.gameObject.CompareTag("PUArma"))
@@ -128,7 +134,7 @@ public class PlayerController : MonoBehaviour
             // y el contador quedaba mostrando "1000/500". La cadencia si expira.
             maxBalas = Mathf.Max(maxBalas, cargadorMejorado);
             cantBalas = maxBalas;
-            theGun.MejorarCadencia(0.01f);
+            theGun.PotenciarCadencia(multiplicadorCadenciaPUArma);
             Efectos.Caja(other.transform.position);
         }
     }

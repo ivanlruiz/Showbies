@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bc06c6ef5c975c49949e6f69a5c4b6f, type: 3}
+  m_Name: Cadencia
+  m_EditorClassIdentifier: Assembly-CSharp::Mejora
+  id: cadencia
+  nombre: CADENCIA
+  unidad: tiros por segundo
+  color: {r: 0.3, g: 0.75, b: 1, a: 1}
+  icono: {fileID: 0}
+  simbolo: C
+  precioInicial: 150
+  crecimientoPrecio: 1.6
+  nivelMaximo: 10
+  crecimiento: 0
+  efectoPorNivel: 0.08
+  valorBase: 20
+  formato: 1

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3275518440274919474}
   - component: {fileID: 3275518440274919473}
   - component: {fileID: 3275518440274919503}
+  - component: {fileID: 5501336992948043566}
   m_Layer: 0
   m_Name: Jugador
   m_TagString: Player
@@ -161,10 +162,16 @@ MonoBehaviour:
   moveSpeed: 10
   theGun: {fileID: 3275518440651567679}
   granadaPrefab: {fileID: 0}
-  textoContBalas: {fileID: 0}
   cantBalas: 0
   maxBalas: 500
+  cargadorMejorado: 1000
+  multiplicadorCadenciaPUBalas: 1.5
+  multiplicadorCadenciaPUArma: 3
   granadaCooldown: 5
+  distanciaMinimaGranada: 3
+  distanciaMaximaGranada: 12
+  distanciaGranadaMovil: 8
+  colorPunteroGranada: {r: 1, g: 1, b: 1, a: 0.6}
 --- !u!114 &3275518440274919503
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,6 +188,20 @@ MonoBehaviour:
   maxHealth: 200
   curaPorPickup: 100
   healthTMP: {fileID: 0}
+--- !u!114 &5501336992948043566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3275518440274919472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f7b61ae42b800a49bcf5b75eb678216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AplicarMejoras
+  jugador: {fileID: 3275518440274919473}
+  vida: {fileID: 3275518440274919503}
 --- !u!1001 &2889558694542059521
 PrefabInstance:
   m_ObjectHideFlags: 0

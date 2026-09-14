@@ -37,6 +37,14 @@ public class WaveManager : MonoBehaviour
     public int maxZombisVivos = 60;          // techo de poblacion: si esta lleno, la oleada espera
     public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
 
+    // Con las mejoras compradas el jugador pega mas y aguanta mas: sin esto, a las
+    // pocas compras las oleadas dejaban de ser un desafio. La vida crece al mismo
+    // ritmo que la mejora de daño (15 % por nivel, compuesto), asi que un jugador
+    // que compra una mejora de daño por oleada mata con las mismas balas.
+    [Header("Dificultad")]
+    public float crecimientoVida = 1.15f;    // la vida de cada zombi es hp * crecimientoVida^(oleada - 1)
+    public float crecimientoDano = 1.07f;    // su golpe es daño * crecimientoDano^(oleada - 1)
+
     [Header("Monedas")]
     public Moneda monedaPrefab;              // la que sueltan los zombis al morir
     public float crecimientoMonedas = 1.05f; // cada moneda vale crecimientoMonedas^(oleada - 1)
@@ -48,6 +56,16 @@ public class WaveManager : MonoBehaviour
 
     public int OleadaActual { get; private set; }
 
+    public float MultiplicadorVidaActual => Escalado.PorOleada(crecimientoVida, OleadaActual);
+    public float MultiplicadorDanoActual => Escalado.PorOleada(crecimientoDano, OleadaActual);
+
+    // Incluye el botin: es lo que vale cada moneda de un zombi de la oleada actual.
+    public float MultiplicadorMonedasActual => Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
+
+    // La mejora de botin se lee una vez al empezar: no se puede comprar en medio
+    // de la partida. El bono de la oleada no la usa.
+    private float botin = 1f;
+
     private readonly List<GameObject> zombisDeLaOleada = new List<GameObject>();
     private int zombisEnLaOleada;
     private int muertosMostrados = -1;
@@ -58,6 +76,7 @@ public class WaveManager : MonoBehaviour
     {
         if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
         if (cartelOleada != null) cartelOleada.gameObject.SetActive(false);
+        botin = CatalogoMejoras.MultiplicadorBotin;
         StartCoroutine(Jugar());
     }
 
@@ -180,7 +199,11 @@ public class WaveManager : MonoBehaviour
         var enemigo = zombi.GetComponent<EnemyController>();
         if (enemigo != null)
         {
-            enemigo.multiplicadorMonedas = Mathf.Pow(crecimientoMonedas, OleadaActual - 1);
+            // Antes de su Start, que es cuando calcula la vida. Los .asset no se
+            // tocan: son los stats de la oleada 1.
+            enemigo.multiplicadorVida = Escalado.PorOleada(crecimientoVida, OleadaActual);
+            enemigo.multiplicadorDano = Escalado.PorOleada(crecimientoDano, OleadaActual);
+            enemigo.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
             enemigo.monedaPrefab = monedaPrefab;
         }
         zombisDeLaOleada.Add(zombi);

@@ -4,15 +4,28 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    private int vidaActual;
-    private int vidaMaxima;
+    // En float: con la vida escalada por oleada y el daño por bala mejorado, los
+    // dos dejan de ser enteros. Con int, 1,15^n redondeado cambiaba cuantas balas
+    // hacian falta de una oleada a la otra a los saltos.
+    private float vidaActual;
+    private float vidaMaxima;
+    private bool vidaIniciada;
     private BarraDeVida barraDeVida;
 
-    // Los pone quien hace aparecer al zombi: WaveManager (con el multiplicador de
-    // la oleada) y GeneradorZombis (con la mitad). Un zombi sin moneda, como los
-    // del tutorial, no suelta nada.
+    // Por debajo de esto el zombi esta muerto. Sin margen, cinco balas de 5 * 1,15
+    // contra un zombi de 25 * 1,15 dejaban un resto de coma flotante (1e-6) y
+    // hacia falta una sexta bala para una vida que no se ve.
+    private const float VidaResidual = 0.01f;
+
+    // Los multiplicadores los pone quien hace aparecer al zombi, despues del
+    // Instantiate y antes de su Start: WaveManager (con los de la oleada y el
+    // botin) y GeneradorZombis (con los del nivel del modo libre). Un zombi sin
+    // moneda, como los del tutorial, no suelta nada, y uno que nadie toca vale
+    // lo de su .asset.
     [System.NonSerialized] public float multiplicadorMonedas = 1f;
     [System.NonSerialized] public Moneda monedaPrefab;
+    [System.NonSerialized] public float multiplicadorVida = 1f;
+    [System.NonSerialized] public float multiplicadorDano = 1f;
     private Rigidbody rb;
     [Header("Unity Setup")]
     public ParticleSystem deathParticles;
@@ -47,6 +60,14 @@ public class EnemyController : MonoBehaviour
     // pasarse del techo de población: sin esto spawnean para siempre.
     public static int ZombisVivos { get; private set; }
 
+    // Contadores del botin, para el medidor de balance y las pruebas: cuantas
+    // muertes soltaron monedas, cuanto valor se esperaba en promedio y cuanto
+    // salio de verdad. Con muchas muertes los dos ultimos tienen que parecerse; si
+    // no, el sorteo de monedas o la regla del multiplicador menor a 1 estan mal.
+    public static int MuertesConBotin { get; private set; }
+    public static double MonedasEsperadas { get; private set; }
+    public static double MonedasSoltadas { get; private set; }
+
     // Sprite.Create aloca un Sprite nuevo cada vez, y antes se llamaba una vez por
     // muerte. Son 8 texturas fijas: se crean una sola vez y se reusan.
     private static readonly Dictionary<Texture2D, Sprite> spritesDeSangre = new Dictionary<Texture2D, Sprite>();
@@ -59,7 +80,22 @@ public class EnemyController : MonoBehaviour
         ZombisVivos = 0;
         jugadorCache = null;
         spritesDeSangre.Clear();
+        MuertesConBotin = 0;
+        MonedasEsperadas = 0;
+        MonedasSoltadas = 0;
     }
+
+    public float VidaMaxima
+    {
+        get { IniciarVida(); return vidaMaxima; }
+    }
+
+    public float VidaActual
+    {
+        get { IniciarVida(); return vidaActual; }
+    }
+
+    public float DanoPorGolpe => enemyType.daño * multiplicadorDano;
 
     private void Awake()
     {
@@ -74,12 +110,24 @@ public class EnemyController : MonoBehaviour
 
     void Start()
     {
-        vidaActual = enemyType.hp;
-        vidaMaxima = vidaActual;
+        IniciarVida();
         rb = GetComponent<Rigidbody>();
         thePlayer = ObtenerJugador();
         escalaBase = transform.localScale;
         PrepararDestello();
+    }
+
+    // Perezosa y una sola vez: un zombi puede recibir daño (una granada que
+    // explota justo donde aparece) o ser consultado antes de su Start. La vida sale
+    // del multiplicador vigente en ese momento, y la barra usa esta vidaMaxima, asi
+    // que el escalado no la rompe mientras se aplique antes del primer golpe.
+    private void IniciarVida()
+    {
+        if (vidaIniciada) return;
+        vidaIniciada = true;
+
+        vidaMaxima = enemyType.hp * Mathf.Max(0.01f, multiplicadorVida);
+        vidaActual = vidaMaxima;
     }
 
     // Esto era un FindObjectOfType por zombi spawneado, o sea un barrido completo
@@ -118,24 +166,28 @@ public class EnemyController : MonoBehaviour
 
     private bool estaMuerto;
 
-    public void DanoZombi(int daño)
+    public void DanoZombi(float daño)
     {
         // Destroy es diferido: dos golpes en el mismo paso de fisica llamaban a
         // esto dos veces con la vida ya en cero, y el bloque de muerte corria de
         // nuevo entero: puntos dobles, dos manchas, dos explosiones.
-        if (estaMuerto) return;
+        // Un daño de cero, negativo o NaN no hace nada: no hay numero que mostrar.
+        if (estaMuerto || !(daño > 0f)) return;
 
+        IniciarVida();
         vidaActual -= daño;
-        Efectos.Golpe(transform.position + Vector3.up * (1f + escalaBase.y), daño);
+
+        // El numero flotante va redondeado y nunca en 0: un 5,75 se lee como 6, y
+        // una bala que pega tiene que mostrar algo.
+        Efectos.Golpe(transform.position + Vector3.up * (1f + escalaBase.y), Mathf.Max(1, Mathf.RoundToInt(daño)));
 
         // La barra aparece recien con el primer golpe que no mata.
-        if (vidaActual > 0)
+        if (vidaActual > VidaResidual)
         {
             MostrarBarraDeVida();
             GolpeVisual();
         }
-
-        if (vidaActual <= 0)
+        else
         {
             estaMuerto = true;
 
@@ -178,6 +230,13 @@ public class EnemyController : MonoBehaviour
             cantidad = salen;
             valor = 1;
         }
+
+        // Lo esperado es el promedio del sorteo por el multiplicador, sin la regla
+        // de arriba; lo soltado, lo que salio de verdad. Lo que el techo de monedas
+        // en escena reparta despues ya no cambia el total.
+        MuertesConBotin++;
+        MonedasEsperadas += (enemyType.monedasMin + enemyType.monedasMax) * 0.5 * multiplicadorMonedas;
+        MonedasSoltadas += cantidad * valor;
 
         Moneda.Soltar(monedaPrefab, transform.position, cantidad, valor);
     }
@@ -251,7 +310,7 @@ public class EnemyController : MonoBehaviour
     private void MostrarBarraDeVida()
     {
         if (barraDeVida == null) barraDeVida = BarraDeVida.Crear(this);
-        barraDeVida.Mostrar((float)vidaActual / Mathf.Max(1, vidaMaxima));
+        barraDeVida.Mostrar(vidaActual / Mathf.Max(0.01f, vidaMaxima));
     }
 
     private void DejarManchaDeSangre()
@@ -304,6 +363,6 @@ public class EnemyController : MonoBehaviour
         if (PlayerHealth.instance == null) return;
 
         proximoGolpe = Time.time + intervaloDeGolpe;
-        PlayerHealth.instance.TakeDamage(enemyType.daño);
+        PlayerHealth.instance.TakeDamage(DanoPorGolpe);
     }
 }

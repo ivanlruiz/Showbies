@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 406bc7460318a6541b1689020dac4376, type: 3}
+  m_Name: CatalogoMejoras
+  m_EditorClassIdentifier: Assembly-CSharp::CatalogoMejoras
+  danoBala: {fileID: 11400000, guid: 55afd5d7130ea854580738fc3a66a597, type: 2}
+  cadencia: {fileID: 11400000, guid: c52b8cf4b6e96c64ea403274e850e703, type: 2}
+  vidaMaxima: {fileID: 11400000, guid: 5e1cea42ee215ce4e9d387e04e90b237, type: 2}
+  botin: {fileID: 11400000, guid: d845f5c2ccc3de046af97aab89a17776, type: 2}
+  enTienda:
+  - {fileID: 11400000, guid: 55afd5d7130ea854580738fc3a66a597, type: 2}
+  - {fileID: 11400000, guid: c52b8cf4b6e96c64ea403274e850e703, type: 2}
+  - {fileID: 11400000, guid: 5e1cea42ee215ce4e9d387e04e90b237, type: 2}
+  - {fileID: 11400000, guid: d845f5c2ccc3de046af97aab89a17776, type: 2}

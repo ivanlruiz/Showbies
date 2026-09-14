@@ -130,8 +130,11 @@ public class Granade : MonoBehaviour
 
             if (enemyController != null && yaDanados.Add(enemyController))
             {
-                // Aplicar daño al zombi
-                enemyController.DanoZombi(damage);
+                // Aplicar daño al zombi. Escala con la vida del zombi y no con la
+                // mejora de daño de bala: la granada es un recurso con cooldown que
+                // tiene que seguir matando lo mismo en la oleada 20 que en la 1, y
+                // la mejora de bala ya se paga con monedas por su lado.
+                enemyController.DanoZombi(damage * enemyController.multiplicadorVida);
             }
         }
 
