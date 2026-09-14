@@ -17,6 +17,14 @@ public class MenuPerdiste : MonoBehaviour
         SceneManager.LoadScene(0);
     }
 
+    // El boton MEJORAS de la derrota: la tienda vive en el menu, asi que carga
+    // el menu con la tienda ya abierta. Es el momento en que el jugador acaba de
+    // cobrar y tiene mas ganas de gastar.
+    public void AbrirMejoras()
+    {
+        TiendaMejoras.AbrirEnMenu();
+    }
+
     // El boton atras de Android llega como Escape.
     private void Update()
     {
