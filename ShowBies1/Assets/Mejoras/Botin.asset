@@ -18,7 +18,7 @@ MonoBehaviour:
   color: {r: 1, g: 0.65, b: 0.15, a: 1}
   icono: {fileID: 0}
   simbolo: $
-  precioInicial: 240
+  precioInicial: 120
   crecimientoPrecio: 1.55
   nivelMaximo: 15
   crecimiento: 0

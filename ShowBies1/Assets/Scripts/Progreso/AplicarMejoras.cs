@@ -1,8 +1,9 @@
 using UnityEngine;
 
 // Pasa las mejoras compradas al jugador de la partida: dano y cadencia al arma,
-// vida maxima y cura a la vida. Va en Jugador.prefab, asi lo tienen las tres
-// escenas de juego sin cablear nada por escena.
+// vida maxima y cura a la vida, y el alcance del iman a las monedas. Va en
+// Jugador.prefab, asi lo tienen las tres escenas de juego sin cablear nada por
+// escena.
 //
 // Se aplica una vez, al empezar la partida (Awake, antes de que nadie dispare o
 // reciba dano), y no al comprar: las compras son en el menu, y una mejora que
@@ -22,6 +23,7 @@ public class AplicarMejoras : MonoBehaviour
     public float TirosPorSegundo { get; private set; }
     public int VidaMaxima { get; private set; }
     public float MultiplicadorCura { get; private set; }
+    public float RadioIman { get; private set; }
 
     private void Awake()
     {
@@ -43,10 +45,12 @@ public class AplicarMejoras : MonoBehaviour
         TirosPorSegundo = CatalogoMejoras.TirosPorSegundo;
         VidaMaxima = CatalogoMejoras.VidaMaxima;
         MultiplicadorCura = CatalogoMejoras.MultiplicadorVida;
+        RadioIman = CatalogoMejoras.RadioIman;
 
         GunController arma = jugador.theGun;
         arma.FijarDanoPorBala(DanoPorBala);
         arma.FijarTirosPorSegundo(TirosPorSegundo);
         vida.FijarVidaMaxima(VidaMaxima, MultiplicadorCura);
+        Moneda.FijarRadioIman(RadioIman);
     }
 }

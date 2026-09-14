@@ -187,7 +187,7 @@ public static class PruebasMejoras
                 ProbarValores(informe, catalogo);
             }
             ProbarFormatoNumeros(informe);
-            ProbarEscalado(informe, completo ? catalogo : null);
+            ProbarEscalado(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
 
@@ -226,7 +226,7 @@ public static class PruebasMejoras
         return informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
     }
 
-    // 1. El catalogo existe, valida y tiene las cuatro mejoras en orden.
+    // 1. El catalogo existe, valida y tiene las cinco mejoras en orden.
     static bool ProbarCatalogo(Informe inf, CatalogoMejoras catalogo)
     {
         if (!inf.Verdadero("catalogo: existe en Resources/" + CatalogoMejoras.RutaEnResources, catalogo != null)) return false;
@@ -239,11 +239,12 @@ public static class PruebasMejoras
         completo &= ProbarId(inf, "danoBala", catalogo.danoBala, "dano_bala");
         completo &= ProbarId(inf, "cadencia", catalogo.cadencia, "cadencia");
         completo &= ProbarId(inf, "vidaMaxima", catalogo.vidaMaxima, "vida_maxima");
+        completo &= ProbarId(inf, "iman", catalogo.iman, "iman");
         completo &= ProbarId(inf, "botin", catalogo.botin, "botin");
 
-        string[] orden = { "dano_bala", "cadencia", "vida_maxima", "botin" };
+        string[] orden = { "dano_bala", "cadencia", "vida_maxima", "iman", "botin" };
         int largo = catalogo.enTienda == null ? -1 : catalogo.enTienda.Length;
-        inf.Igual("catalogo: enTienda tiene 4 mejoras", 4, largo);
+        inf.Igual("catalogo: enTienda tiene 5 mejoras", 5, largo);
         for (int i = 0; i < orden.Length; i++)
         {
             string obtenido = i < largo ? Id(catalogo.enTienda[i]) : "(falta)";
@@ -280,20 +281,25 @@ public static class PruebasMejoras
         inf.Cerca("formula de precio: topeado en PrecioMaximo", Mejora.PrecioMaximo, enorme.Precio(5), 0);
     }
 
-    // 2b. Los precios de los assets (x2 del plan original) y sus topes.
+    // 2b. Los precios de los assets y sus topes. Arrancan baratos porque el
+    // jugador arranca flojo: la primera partida tiene que alcanzar para comprar.
     static void ProbarPreciosDelCatalogo(Informe inf, CatalogoMejoras c)
     {
         ChequearPrecios(inf, "precio dano_bala", c.danoBala,
-                        new double[] { 90, 131, 189, 274, 398, 577, 836, 1213, 1759, 2550, 3698 });
+                        new double[] { 40, 58, 84, 122, 177, 256, 372, 539, 782, 1133, 1643 });
         ChequearPrecios(inf, "precio cadencia", c.cadencia,
-                        new double[] { 150, 240, 384, 614, 983, 1573, 2517, 4027, 6442, 10308 });
+                        new double[] { 50, 73, 105, 152, 221, 320, 465, 674, 977, 1417, 2054, 2979, 4319, 6263, 9081, 13167 });
         ChequearPrecios(inf, "precio vida_maxima", c.vidaMaxima,
-                        new double[] { 120, 174, 252, 366, 530, 769, 1115, 1617, 2345, 3400, 4930 });
+                        new double[] { 40, 58, 84, 122, 177, 256, 372, 539, 782, 1133, 1643 });
+        ChequearPrecios(inf, "precio iman", c.iman,
+                        new double[] { 30, 45, 68, 101, 152, 228, 342, 513, 769, 1153, 1730, 2595 });
         ChequearPrecios(inf, "precio botin", c.botin,
-                        new double[] { 240, 372, 577, 894, 1385, 2147, 3328, 5159, 7996, 12394, 19210 });
+                        new double[] { 120, 186, 288, 447, 693, 1074, 1664, 2579, 3998, 6197, 9605, 14888, 23076, 35768, 55440 });
 
-        inf.Verdadero("tope cadencia: EnTope(9) es falso", !c.cadencia.EnTope(9));
-        inf.Verdadero("tope cadencia: EnTope(10) es verdadero", c.cadencia.EnTope(10));
+        inf.Verdadero("tope cadencia: EnTope(15) es falso", !c.cadencia.EnTope(15));
+        inf.Verdadero("tope cadencia: EnTope(16) es verdadero", c.cadencia.EnTope(16));
+        inf.Verdadero("tope iman: EnTope(11) es falso", !c.iman.EnTope(11));
+        inf.Verdadero("tope iman: EnTope(12) es verdadero", c.iman.EnTope(12));
         inf.Verdadero("tope botin: EnTope(14) es falso", !c.botin.EnTope(14));
         inf.Verdadero("tope botin: EnTope(15) es verdadero", c.botin.EnTope(15));
         inf.Verdadero("tope dano_bala: sin tope", !c.danoBala.TieneTope && !c.danoBala.EnTope(1000));
@@ -311,32 +317,36 @@ public static class PruebasMejoras
     // 3. Valores y textos de las mejoras de los assets.
     static void ProbarValores(Informe inf, CatalogoMejoras c)
     {
-        ChequearValor(inf, "valor dano_bala", c.danoBala, 0, 5);
-        ChequearValor(inf, "valor dano_bala", c.danoBala, 1, 5.75);
-        ChequearValor(inf, "valor dano_bala", c.danoBala, 2, 6.6125);
-        ChequearValor(inf, "valor dano_bala", c.danoBala, 5, 10.0568);
-        ChequearValor(inf, "valor dano_bala", c.danoBala, 9, 17.5894);
-        ChequearValor(inf, "valor dano_bala", c.danoBala, 10, 20.2278);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 0, 20);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 1, 21.6);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 5, 28);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 10, 36);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 11, 36);
-        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 1, 230);
-        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 5, 350);
-        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 10, 500);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 0, 1);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 1, 2);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 2, 3);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 5, 6);
+        ChequearValor(inf, "valor dano_bala", c.danoBala, 10, 11);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 0, 4);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 1, 5);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 5, 9);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 16, 20);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 17, 20);
+        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 0, 80);
+        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 1, 100);
+        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 5, 180);
+        ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 10, 280);
+        ChequearValor(inf, "valor iman", c.iman, 0, 2);
+        ChequearValor(inf, "valor iman", c.iman, 1, 2.5);
+        ChequearValor(inf, "valor iman", c.iman, 12, 8);
+        ChequearValor(inf, "valor iman", c.iman, 13, 8);
         ChequearValor(inf, "valor botin", c.botin, 1, 1.1);
         ChequearValor(inf, "valor botin", c.botin, 15, 2.5);
         ChequearValor(inf, "valor botin", c.botin, 16, 2.5);
 
-        inf.Igual("texto dano_bala nivel 0", "5", c.danoBala.TextoValor(0));
-        inf.Igual("texto dano_bala nivel 1", "5,8", c.danoBala.TextoValor(1));
-        inf.Igual("texto dano_bala nivel 4", "8,7", c.danoBala.TextoValor(4));
-        inf.Igual("texto dano_bala nivel 5", "10,1", c.danoBala.TextoValor(5));
-        inf.Igual("texto dano_bala nivel 10", "20,2", c.danoBala.TextoValor(10));
-        inf.Igual("texto cadencia nivel 1", "21,6", c.cadencia.TextoValor(1));
-        inf.Igual("texto cadencia nivel 10", "36", c.cadencia.TextoValor(10));
-        inf.Igual("texto vida_maxima nivel 0", "200", c.vidaMaxima.TextoValor(0));
+        inf.Igual("texto dano_bala nivel 0", "1", c.danoBala.TextoValor(0));
+        inf.Igual("texto dano_bala nivel 1", "2", c.danoBala.TextoValor(1));
+        inf.Igual("texto dano_bala nivel 10", "11", c.danoBala.TextoValor(10));
+        inf.Igual("texto cadencia nivel 0", "4", c.cadencia.TextoValor(0));
+        inf.Igual("texto cadencia nivel 16", "20", c.cadencia.TextoValor(16));
+        inf.Igual("texto vida_maxima nivel 0", "80", c.vidaMaxima.TextoValor(0));
+        inf.Igual("texto iman nivel 0", "2", c.iman.TextoValor(0));
+        inf.Igual("texto iman nivel 1", "2,5", c.iman.TextoValor(1));
         inf.Igual("texto botin nivel 0", "×1", c.botin.TextoValor(0));
         inf.Igual("texto botin nivel 15", "×2,5", c.botin.TextoValor(15));
     }
@@ -356,9 +366,9 @@ public static class PruebasMejoras
         inf.Igual("ConDecimales(1234,56; 1)", "1.235", FormatoNumeros.ConDecimales(1234.56, 1));
     }
 
-    // 4. Escalado por oleada. La vida de los zombis crece a 1,15 por oleada, lo
-    // mismo que el daño de bala por nivel: una mejora por oleada empata.
-    static void ProbarEscalado(Informe inf, CatalogoMejoras c)
+    // 4. Escalado por oleada: la vida de los zombis crece a 1,15 por oleada, el
+    // daño a 1,07 y las monedas a 1,05.
+    static void ProbarEscalado(Informe inf)
     {
         inf.Cerca("escalado: PorOleada(1,15; 1)", 1, Escalado.PorOleada(1.15f, 1), 1e-6);
         inf.Cerca("escalado: PorOleada(1,15; 0)", 1, Escalado.PorOleada(1.15f, 0), 1e-6);
@@ -366,19 +376,6 @@ public static class PruebasMejoras
         inf.Cerca("escalado: PorOleada(1,15; 10)", 3.5179, Escalado.PorOleada(1.15f, 10), 1e-3);
         inf.Cerca("escalado: PorOleada(1,07; 10)", 1.8385, Escalado.PorOleada(1.07f, 10), 1e-3);
         inf.Cerca("escalado: PorOleada(1,05; 10)", 1.5513, Escalado.PorOleada(1.05f, 10), 1e-3);
-
-        if (c == null) return;
-
-        // Un chequeo para las 30 oleadas: la peor diferencia.
-        double peor = 0;
-        int oleadaPeor = 1;
-        for (int o = 1; o <= 30; o++)
-        {
-            double diferencia = Math.Abs(5f * Escalado.PorOleada(1.15f, o) - (float)c.danoBala.Valor(o - 1));
-            if (!(diferencia <= peor)) { peor = diferencia; oleadaPeor = o; }
-        }
-        inf.Cerca("escalado: 5 x PorOleada(1,15; o) sigue a dano_bala.Valor(o - 1) en las oleadas 1 a 30 (peor: oleada " + oleadaPeor + ")",
-                  0, peor, 0.01);
     }
 
     // 5. El acumulador de disparo: la cadencia promedio no depende de los FPS
@@ -386,7 +383,7 @@ public static class PruebasMejoras
     // mas de maxTirosPorFrame.
     static void ProbarAcumuladorDeDisparo(Informe inf)
     {
-        float[] cadencias = { 20f, 21.6f, 28f, 36f, 54f, 108f };
+        float[] cadencias = { 4f, 5f, 14f, 20f, 21.6f, 36f, 60f, 108f };
         int[] fps = { 60, 30, 24 };
         foreach (float cadencia in cadencias)
         {
@@ -621,24 +618,27 @@ public static class PruebasMejoras
     static void ProbarGetters(Informe inf, CatalogoMejoras c)
     {
         EmpezarCaso(null, null);
-        inf.Cerca("getters nivel 0: DanoPorBala", 5, CatalogoMejoras.DanoPorBala, Tolerancia);
-        inf.Cerca("getters nivel 0: TirosPorSegundo", 20, CatalogoMejoras.TirosPorSegundo, Tolerancia);
-        inf.Igual("getters nivel 0: VidaMaxima", 200, CatalogoMejoras.VidaMaxima);
+        inf.Cerca("getters nivel 0: DanoPorBala", 1, CatalogoMejoras.DanoPorBala, Tolerancia);
+        inf.Cerca("getters nivel 0: TirosPorSegundo", 4, CatalogoMejoras.TirosPorSegundo, Tolerancia);
+        inf.Igual("getters nivel 0: VidaMaxima", 80, CatalogoMejoras.VidaMaxima);
         inf.Cerca("getters nivel 0: MultiplicadorVida", 1, CatalogoMejoras.MultiplicadorVida, Tolerancia);
+        inf.Cerca("getters nivel 0: RadioIman", 2, CatalogoMejoras.RadioIman, Tolerancia);
         inf.Cerca("getters nivel 0: MultiplicadorBotin", 1, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
 
         Progreso.DepurarFijarNivel(c.danoBala.id, 5);
         Progreso.DepurarFijarNivel(c.cadencia.id, 10);
         Progreso.DepurarFijarNivel(c.vidaMaxima.id, 5);
+        Progreso.DepurarFijarNivel(c.iman.id, 6);
         Progreso.DepurarFijarNivel(c.botin.id, 15);
-        inf.Cerca("getters 5/10/5/15: DanoPorBala", 10.0568, CatalogoMejoras.DanoPorBala, Tolerancia);
-        inf.Cerca("getters 5/10/5/15: TirosPorSegundo", 36, CatalogoMejoras.TirosPorSegundo, Tolerancia);
-        inf.Igual("getters 5/10/5/15: VidaMaxima", 350, CatalogoMejoras.VidaMaxima);
-        inf.Cerca("getters 5/10/5/15: MultiplicadorVida", 1.75, CatalogoMejoras.MultiplicadorVida, Tolerancia);
-        inf.Cerca("getters 5/10/5/15: MultiplicadorBotin", 2.5, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
+        inf.Cerca("getters 5/10/5/6/15: DanoPorBala", 6, CatalogoMejoras.DanoPorBala, Tolerancia);
+        inf.Cerca("getters 5/10/5/6/15: TirosPorSegundo", 14, CatalogoMejoras.TirosPorSegundo, Tolerancia);
+        inf.Igual("getters 5/10/5/6/15: VidaMaxima", 180, CatalogoMejoras.VidaMaxima);
+        inf.Cerca("getters 5/10/5/6/15: MultiplicadorVida", 2.25, CatalogoMejoras.MultiplicadorVida, Tolerancia);
+        inf.Cerca("getters 5/10/5/6/15: RadioIman", 5, CatalogoMejoras.RadioIman, Tolerancia);
+        inf.Cerca("getters 5/10/5/6/15: MultiplicadorBotin", 2.5, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
     }
 
-    // 8. Compras, con el daño de bala del catalogo (90 el nivel 0, 131 el 1).
+    // 8. Compras, con el daño de bala del catalogo (40 el nivel 0, 58 el 1).
     static void ProbarCompras(Informe inf, CatalogoMejoras c, List<Mejora> temporales)
     {
         Mejora dano = c.danoBala;
@@ -646,66 +646,66 @@ public static class PruebasMejoras
         const string SinMonedas = "SinMonedas";
 
         // Justas.
-        EmpezarConMonedas(90);
+        EmpezarConMonedas(40);
         int revision = Progreso.Revision;
-        inf.Igual("compras con 90: primera", Comprada, Progreso.Comprar(dano).ToString());
-        inf.Cerca("compras con 90: quedan 0", 0, Progreso.Monedas, 1e-9);
-        inf.Igual("compras con 90: nivel 1", 1, Progreso.Nivel(dano.id));
-        inf.Igual("compras con 90: la compra sube la Revision en 1", revision + 1, Progreso.Revision);
-        inf.Igual("compras con 90: segunda", SinMonedas, Progreso.Comprar(dano).ToString());
-        inf.Igual("compras con 90: el rechazo no sube la Revision", revision + 1, Progreso.Revision);
+        inf.Igual("compras con 40: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 40: quedan 0", 0, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 40: nivel 1", 1, Progreso.Nivel(dano.id));
+        inf.Igual("compras con 40: la compra sube la Revision en 1", revision + 1, Progreso.Revision);
+        inf.Igual("compras con 40: segunda", SinMonedas, Progreso.Comprar(dano).ToString());
+        inf.Igual("compras con 40: el rechazo no sube la Revision", revision + 1, Progreso.Revision);
 
         // Un pelo abajo por coma flotante: alcanza y nunca queda negativo.
-        EmpezarConMonedas(89.9999999);
+        EmpezarConMonedas(39.9999999);
         revision = Progreso.Revision;
-        inf.Igual("compras con 89,9999999: primera", Comprada, Progreso.Comprar(dano).ToString());
-        inf.Cerca("compras con 89,9999999: quedan 0", 0, Progreso.Monedas, 1e-9);
-        inf.Verdadero("compras con 89,9999999: nunca negativo", Progreso.Monedas >= 0);
-        inf.Igual("compras con 89,9999999: la compra sube la Revision en 1", revision + 1, Progreso.Revision);
+        inf.Igual("compras con 39,9999999: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 39,9999999: quedan 0", 0, Progreso.Monedas, 1e-9);
+        inf.Verdadero("compras con 39,9999999: nunca negativo", Progreso.Monedas >= 0);
+        inf.Igual("compras con 39,9999999: la compra sube la Revision en 1", revision + 1, Progreso.Revision);
 
         // Un centavo abajo: no alcanza.
-        EmpezarConMonedas(89.99);
+        EmpezarConMonedas(39.99);
         revision = Progreso.Revision;
-        inf.Igual("compras con 89,99: MonedasEnteras", 89, Progreso.MonedasEnteras);
-        inf.Igual("compras con 89,99: primera", SinMonedas, Progreso.Comprar(dano).ToString());
-        inf.Cerca("compras con 89,99: no descuenta", 89.99, Progreso.Monedas, 1e-9);
-        inf.Igual("compras con 89,99: nivel 0", 0, Progreso.Nivel(dano.id));
-        inf.Igual("compras con 89,99: el rechazo no sube la Revision", revision, Progreso.Revision);
+        inf.Igual("compras con 39,99: MonedasEnteras", 39, Progreso.MonedasEnteras);
+        inf.Igual("compras con 39,99: primera", SinMonedas, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 39,99: no descuenta", 39.99, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 39,99: nivel 0", 0, Progreso.Nivel(dano.id));
+        inf.Igual("compras con 39,99: el rechazo no sube la Revision", revision, Progreso.Revision);
 
         // Con resto, y la compra queda en disco en el acto.
         string ruta = Path.Combine(CarpetaProgreso, "progreso.json");
-        EmpezarConMonedas(200.7);
+        EmpezarConMonedas(80.7);
         revision = Progreso.Revision;
-        inf.Igual("compras con 200,7: primera", Comprada, Progreso.Comprar(dano).ToString());
-        inf.Cerca("compras con 200,7: quedan 110,7", 110.7, Progreso.Monedas, 1e-9);
-        inf.Igual("compras con 200,7: segunda (cuesta 131)", SinMonedas, Progreso.Comprar(dano).ToString());
-        inf.Igual("compras con 200,7: Revision sube 1 en total", revision + 1, Progreso.Revision);
+        inf.Igual("compras con 80,7: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 80,7: quedan 40,7", 40.7, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 80,7: segunda (cuesta 58)", SinMonedas, Progreso.Comprar(dano).ToString());
+        inf.Igual("compras con 80,7: Revision sube 1 en total", revision + 1, Progreso.Revision);
         var enDisco = LeerGuardado(ruta);
-        inf.Igual("compras con 200,7: Comprar guarda el nivel en disco", 1, NivelGuardadoDe(enDisco, dano.id));
-        inf.Cerca("compras con 200,7: Comprar guarda las monedas en disco", 110.7, enDisco != null ? enDisco.monedas : double.NaN, 1e-9);
+        inf.Igual("compras con 80,7: Comprar guarda el nivel en disco", 1, NivelGuardadoDe(enDisco, dano.id));
+        inf.Cerca("compras con 80,7: Comprar guarda las monedas en disco", 40.7, enDisco != null ? enDisco.monedas : double.NaN, 1e-9);
 
         // Persistencia: volver a cargar la misma carpeta sin borrarla.
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Igual("compras persistencia: el nivel sigue al recargar", 1, Progreso.Nivel(dano.id));
-        inf.Cerca("compras persistencia: las monedas siguen al recargar", 110.7, Progreso.Monedas, 1e-9);
+        inf.Cerca("compras persistencia: las monedas siguen al recargar", 40.7, Progreso.Monedas, 1e-9);
 
         // Dos seguidas que dejan en cero.
-        EmpezarConMonedas(221);
+        EmpezarConMonedas(98);
         revision = Progreso.Revision;
-        inf.Igual("compras con 221: primera", Comprada, Progreso.Comprar(dano).ToString());
-        inf.Igual("compras con 221: segunda", Comprada, Progreso.Comprar(dano).ToString());
-        inf.Cerca("compras con 221: quedan 0", 0, Progreso.Monedas, 1e-9);
-        inf.Igual("compras con 221: nivel 2", 2, Progreso.Nivel(dano.id));
-        inf.Igual("compras con 221: dos compras suben la Revision en 2", revision + 2, Progreso.Revision);
+        inf.Igual("compras con 98: primera", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Igual("compras con 98: segunda", Comprada, Progreso.Comprar(dano).ToString());
+        inf.Cerca("compras con 98: quedan 0", 0, Progreso.Monedas, 1e-9);
+        inf.Igual("compras con 98: nivel 2", 2, Progreso.Nivel(dano.id));
+        inf.Igual("compras con 98: dos compras suben la Revision en 2", revision + 2, Progreso.Revision);
 
         // Al tope no se cobra aunque sobren monedas.
         EmpezarConMonedas(1e6);
-        Progreso.DepurarFijarNivel(c.cadencia.id, 10);
+        Progreso.DepurarFijarNivel(c.cadencia.id, 16);
         revision = Progreso.Revision;
         inf.Igual("compras cadencia al tope: Estado", "EnTope", Progreso.Estado(c.cadencia).ToString());
         inf.Igual("compras cadencia al tope: Comprar", "EnTope", Progreso.Comprar(c.cadencia).ToString());
         inf.Cerca("compras cadencia al tope: no descuenta", 1e6, Progreso.Monedas, 1e-9);
-        inf.Igual("compras cadencia al tope: nivel sigue en 10", 10, Progreso.Nivel(c.cadencia.id));
+        inf.Igual("compras cadencia al tope: nivel sigue en 16", 16, Progreso.Nivel(c.cadencia.id));
         inf.Igual("compras cadencia al tope: el rechazo no sube la Revision", revision, Progreso.Revision);
 
         // Un nivel guardado por encima del tope (un tope que bajo en un update)
@@ -729,10 +729,11 @@ public static class PruebasMejoras
         inf.Cerca("compras invalidas: no descuentan", 1e6, Progreso.Monedas, 1e-9);
     }
 
-    // 9. Compras posibles encadenadas desde nivel 0: 90 + 120 + 131 + 150 + 174.
+    // 9. Compras posibles encadenadas desde nivel 0, siempre la mas barata:
+    // iman 30 + dano 40 + vida 40 + iman 45 + cadencia 50.
     static void ProbarComprasPosibles(Informe inf)
     {
-        double[] monedas = { 0, 89, 90, 209, 210, 340, 341, 490, 491, 664, 665 };
+        double[] monedas = { 0, 29, 30, 69, 70, 109, 110, 154, 155, 204, 205 };
         int[] esperadas = { 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5 };
         for (int i = 0; i < monedas.Length; i++)
         {
@@ -833,8 +834,8 @@ public static class PruebasMejoras
     // tick en que aparece (asi las oleadas avanzan solas), y al cumplir los
     // segundos de juego escribe Builds/medicion_mejoras.txt.
     //
-    // OJO: las monedas que sueltan los zombis vuelan al jugador al terminar cada
-    // oleada y se suman al progreso real del editor.
+    // OJO: el bono de cada oleada y las monedas que caen al alcance del iman se
+    // suman al progreso real del editor.
     public static void MedirPartida(float segundos)
     {
         var informe = new Informe("MEDICION DE MEJORAS", "PruebasMejoras.MedirPartida: ");
@@ -918,14 +919,16 @@ public static class PruebasMejoras
         float tiros = CatalogoMejoras.TirosPorSegundo;
         int vidaMaxima = CatalogoMejoras.VidaMaxima;
         float multiplicadorVida = CatalogoMejoras.MultiplicadorVida;
+        float radioIman = CatalogoMejoras.RadioIman;
 
         inf.Linea("catalogo: daño/bala " + Numero(dano, "0.0###") + ", tiros/s " + Numero(tiros, "0.0##") +
                   ", vida " + vidaMaxima + ", multiplicador de vida " + Numero(multiplicadorVida, "0.0##") +
-                  ", botin x" + Numero(m.botin, "0.0##"));
+                  ", iman " + Numero(radioIman, "0.0##") + " m, botin x" + Numero(m.botin, "0.0##"));
         inf.Linea("aplicado: daño/bala " + Numero(m.arma.DanoPorBala, "0.0###") +
                   ", tiros/s base " + Numero(m.arma.TirosPorSegundoBase, "0.0##") +
                   ", vida " + m.vida.health + "/" + m.vida.maxHealth +
                   ", cura por caja " + m.vida.CuraPorCaja +
+                  ", iman " + Numero(Moneda.RadioImanDeLaPartida, "0.0##") + " m" +
                   ", botin x" + Numero(m.botin, "0.0##"));
 
         var aplicar = Object.FindFirstObjectByType<AplicarMejoras>();
@@ -938,6 +941,7 @@ public static class PruebasMejoras
             inf.Cerca("aplicado: AplicarMejoras.TirosPorSegundo", tiros, aplicar.TirosPorSegundo, 1e-3);
             inf.Igual("aplicado: AplicarMejoras.VidaMaxima", vidaMaxima, aplicar.VidaMaxima);
             inf.Cerca("aplicado: AplicarMejoras.MultiplicadorCura", multiplicadorVida, aplicar.MultiplicadorCura, 1e-3);
+            inf.Cerca("aplicado: AplicarMejoras.RadioIman", radioIman, aplicar.RadioIman, 1e-3);
         }
         else
         {
@@ -950,6 +954,7 @@ public static class PruebasMejoras
         inf.Cerca("aplicado: GunController.TirosPorSegundoBase", tiros, m.arma.TirosPorSegundoBase, 1e-3);
         inf.Igual("aplicado: PlayerHealth.maxHealth", vidaMaxima, m.vida.maxHealth);
         inf.Cerca("aplicado: PlayerHealth.MultiplicadorCura", multiplicadorVida, m.vida.MultiplicadorCura, 1e-3);
+        inf.Cerca("aplicado: Moneda.RadioImanDeLaPartida", radioIman, Moneda.RadioImanDeLaPartida, 1e-3);
     }
 
     static void Tick()

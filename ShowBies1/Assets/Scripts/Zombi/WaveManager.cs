@@ -38,9 +38,9 @@ public class WaveManager : MonoBehaviour
     public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
 
     // Con las mejoras compradas el jugador pega mas y aguanta mas: sin esto, a las
-    // pocas compras las oleadas dejaban de ser un desafio. La vida crece al mismo
-    // ritmo que la mejora de daño (15 % por nivel, compuesto), asi que un jugador
-    // que compra una mejora de daño por oleada mata con las mismas balas.
+    // pocas compras las oleadas dejaban de ser un desafio. La vida crece 15 % por
+    // oleada, compuesto, y el daño de bala suma 1 por nivel: las primeras compras le
+    // ganan al escalado, y mas adelante hace falta sumarles la cadencia.
     [Header("Dificultad")]
     public float crecimientoVida = 1.15f;    // la vida de cada zombi es hp * crecimientoVida^(oleada - 1)
     public float crecimientoDano = 1.07f;    // su golpe es daño * crecimientoDano^(oleada - 1)
@@ -114,10 +114,6 @@ public class WaveManager : MonoBehaviour
             {
                 yield return null;
             }
-
-            // Las monedas que quedaron en el piso vuelan solas al jugador: la
-            // oleada termino y no tiene sentido obligarlo a recorrer el mapa.
-            Moneda.AtraerTodas();
 
             bonoDeLaOleadaAnterior = bonoPorOleada * OleadaActual;
             Progreso.Sumar(bonoDeLaOleadaAnterior);

@@ -18,10 +18,10 @@ MonoBehaviour:
   color: {r: 0.35, g: 0.95, b: 0.45, a: 1}
   icono: {fileID: 0}
   simbolo: V
-  precioInicial: 120
+  precioInicial: 40
   crecimientoPrecio: 1.45
   nivelMaximo: 0
   crecimiento: 0
-  efectoPorNivel: 0.15
-  valorBase: 200
+  efectoPorNivel: 0.25
+  valorBase: 80
   formato: 0

@@ -13,8 +13,8 @@ public class PlayerHealth : MonoBehaviour
     
 
     public int health;
-    public int maxHealth = 200;
-    public int curaPorPickup = 100;
+    public int maxHealth = 80;
+    public int curaPorPickup = 40;
     public TMP_Text healthTMP;
 
     private bool estaMuerto;
@@ -146,10 +146,9 @@ public class PlayerHealth : MonoBehaviour
             other.gameObject.SetActive(false);
             Destroy(other.gameObject);
 
-            // El tope estaba hardcodeado en 200 y maxHealth no lo leia nadie: el
-            // campo decia 10 en el codigo y 200 en las escenas. Ahora el que manda
-            // es maxHealth, que en las dos escenas ya vale 200 (mismo resultado).
-            // La cura escala con la mejora de vida: 100 sin mejora, 250 con 500.
+            // El tope es maxHealth, que fija AplicarMejoras con la mejora de vida.
+            // La cura escala con la misma mejora y cura siempre la mitad: 40 sin
+            // mejora, 80 con 160 de vida.
             health = Mathf.Min(health + CuraPorCaja, maxHealth);
             Efectos.Caja(other.transform.position);
         }

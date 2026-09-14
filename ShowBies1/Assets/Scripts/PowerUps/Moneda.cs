@@ -32,7 +32,7 @@ public class Moneda : MonoBehaviour
     public float frecuenciaParpadeo = 8f;
 
     [Header("Iman")]
-    public float radioIman = 4f;
+    public float radioIman = 2f;                                 // sin AplicarMejoras; en partida manda la mejora de iman
     public float esperaAntesDelIman = 0.5f;                      // para que se vea la fuente antes de que vuelen
     public float aceleracionIman = 60f;
     public float velocidadMaximaIman = 40f;
@@ -69,7 +69,7 @@ public class Moneda : MonoBehaviour
 
     private static readonly Stack<Moneda> pool = new Stack<Moneda>();
     private static int enEscena;
-    private static int rondaDeAtraccion;
+    private static float radioImanDeLaPartida = -1f;
     private static PlayerController jugador;
     private static int frameDeBusqueda = -1;
     private static Transform camara;
@@ -83,7 +83,7 @@ public class Moneda : MonoBehaviour
     {
         pool.Clear();
         enEscena = 0;
-        rondaDeAtraccion = 0;
+        radioImanDeLaPartida = -1f;
         jugador = null;
         frameDeBusqueda = -1;
         camara = null;
@@ -101,7 +101,6 @@ public class Moneda : MonoBehaviour
     private bool reboto;
     private bool enElPiso;
     private bool atraida;
-    private int rondaAlSalir;
     private Renderer[] renderers;
 
     // Suelta 'cantidad' monedas de 'valor' cada una. Si el techo no deja soltarlas
@@ -120,11 +119,18 @@ public class Moneda : MonoBehaviour
         }
     }
 
-    // Las monedas que ya estan en la escena vuelan al jugador, esten donde esten.
-    // Las que salgan despues no.
-    public static void AtraerTodas()
+    // El alcance del iman en esta partida: lo fija AplicarMejoras al empezar, con la
+    // mejora de iman. Mientras nadie lo fije vale el radioIman del prefab. No hay
+    // otro iman: al terminar la oleada las monedas se quedan donde cayeron, y
+    // juntarlas es parte del juego.
+    public static void FijarRadioIman(float radio)
     {
-        rondaDeAtraccion++;
+        radioImanDeLaPartida = Mathf.Max(0f, radio);
+    }
+
+    public static float RadioImanDeLaPartida
+    {
+        get { return radioImanDeLaPartida; }
     }
 
     private static Moneda Obtener(Moneda prefab)
@@ -150,7 +156,6 @@ public class Moneda : MonoBehaviour
         valor = valorMoneda;
         enUso = true;
         enEscena++;
-        rondaAlSalir = rondaDeAtraccion;
         salioEn = Time.time;
         venceEn = salioEn + vida;
         reboto = false;
@@ -186,7 +191,8 @@ public class Moneda : MonoBehaviour
         {
             Vector3 distancia = objetivo.transform.position - posicion;
             distancia.y = 0f;
-            if (rondaAlSalir < rondaDeAtraccion || distancia.sqrMagnitude <= radioIman * radioIman)
+            float radio = radioImanDeLaPartida >= 0f ? radioImanDeLaPartida : radioIman;
+            if (distancia.sqrMagnitude <= radio * radio)
             {
                 atraida = true;
                 Mostrar(true);

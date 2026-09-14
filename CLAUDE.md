@@ -131,11 +131,11 @@ Los cinco assets viven en `Assets/Zombies/`. Balance actual:
 
 | zombi | hp | daño | velocidad | puntos | monedas | balas para matarlo |
 |---|---|---|---|---|---|---|
-| ZombiNormal | 5 | 1 | 5 | 1 | 1–3 | 1 |
-| ZombiRapido | 3 | 2 | 9 | 2 | 1–3 | 1 |
-| ZombiFASTER | 3 | 1 | 12 | 5 | 2–4 | 1 |
-| ZombiTanque | 25 | 1 | 3 | 20 | 5–8 | 5 |
-| ZombiBOSS | 500 | 10 | 2 | 100 | 30–40 | 100 |
+| ZombiNormal | 5 | 1 | 5 | 1 | 1–3 | 5 |
+| ZombiRapido | 3 | 2 | 9 | 2 | 1–3 | 3 |
+| ZombiFASTER | 3 | 1 | 12 | 5 | 2–4 | 3 |
+| ZombiTanque | 25 | 1 | 3 | 20 | 5–8 | 25 |
+| ZombiBOSS | 500 | 10 | 2 | 100 | 30–40 | 500 |
 
 La vida y el daño **de cada zombi** se calculan como float en `EnemyController`: el valor del `.asset` por
 `multiplicadorVida` y `multiplicadorDano`, que pone quien lo hace aparecer antes de su `Start` (ver Generación de
@@ -143,7 +143,7 @@ enemigos). Los `.asset` no cambian con la oleada, y la columna "balas para matar
 mejoras.
 
 **Tocar el balance no requiere recompilar**: son valores de los `.asset`. Ojo que en puntos por bala el
-BOSS es hoy el peor negocio del juego (100 puntos por 100 balas); está así a propósito hasta que se
+BOSS es hoy el peor negocio del juego (100 puntos por 500 balas sin mejoras); está así a propósito hasta que se
 decida el balance.
 
 ## Puntaje
@@ -176,7 +176,7 @@ cada bala se adelanta según su atraso para que el chorro salga escalonado. Ante
 como mucho: 20 por segundo a 60 FPS y 15 a 30 FPS, así que la cadencia dependía del teléfono.
 
 **La cadencia y el daño los fija la mejora, en tiros por segundo.** `AplicarMejoras` llama a
-`FijarTirosPorSegundo` (20 de base, +8 % por nivel) y `FijarDanoPorBala` (5 × 1,15^nivel). Cada bala lleva su
+`FijarTirosPorSegundo` (4 de base, +1 por nivel) y `FijarDanoPorBala` (1 de base, +1 por nivel). Cada bala lleva su
 `danoAplicado`; el `dañoDar` del prefab y el override `tiempoDisparo` de las escenas quedan como respaldo para una
 escena sin `AplicarMejoras`. **Nunca escribas sobre `gun.bala`**: es el prefab, no una bala.
 
@@ -270,14 +270,16 @@ PlayerPrefs a propósito: es estado estructurado.
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
   que valen `multiplicadorMonedas` cada una. Salen volando para los costados, caen despacio con un rebote y
-  quedan girando en el piso; al acercarse el jugador (`radioIman`, 4 m) vuelan solas hacia él y recién ahí se
+  quedan girando en el piso; al acercarse el jugador (el alcance del imán: 2 m sin mejora, ver Mejoras y tienda)
+  vuelan solas hacia él y recién ahí se
   suman a `Progreso`, con un brillo y una nota de la escala de la bemol mayor sorteada con los pesos de
   `notas` (editables en el prefab; las del acorde, la bemol, do y mi bemol, salen más seguido). Las que nadie
   agarra desaparecen a los 20 s, parpadeando los últimos 3.
 - **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se anuncia
   en el cartel de la oleada siguiente). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
-  que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. Al terminar cada oleada, `Moneda.AtraerTodas` hace volar al jugador
-  las monedas que quedaron en el piso.
+  que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. **Al terminar la oleada las monedas
+  se quedan donde cayeron**: no hay imán global (antes `Moneda.AtraerTodas` las traía todas), juntarlas es parte del
+  juego y la mejora de imán es la que ayuda. Siguen desapareciendo a los 20 s.
 - **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
   `crecimientoMonedas^(oleada − 1)` (1,05) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
   la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
@@ -311,19 +313,25 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 
 | mejora | id | precio inicial | crecimiento | tope | efecto |
 |---|---|---|---|---|---|
-| Daño de bala | `dano_bala` | 90 | ×1,45 | — | 5 × 1,15^nivel |
-| Cadencia | `cadencia` | 150 | ×1,6 | 10 | 20 × (1 + 0,08 × nivel) tiros/s |
-| Vida máxima | `vida_maxima` | 120 | ×1,45 | — | 200 × (1 + 0,15 × nivel) |
-| Botín | `botin` | 240 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
+| Daño de bala | `dano_bala` | 40 | ×1,45 | — | 1 × (1 + nivel) por bala |
+| Cadencia | `cadencia` | 50 | ×1,45 | 16 | 4 × (1 + 0,25 × nivel) tiros/s (de 4 a 20) |
+| Vida máxima | `vida_maxima` | 40 | ×1,45 | — | 80 × (1 + 0,25 × nivel) |
+| Imán | `iman` | 30 | ×1,5 | 12 | 2 × (1 + 0,25 × nivel) m (de 2 a 8) |
+| Botín | `botin` | 120 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
 
+- **El jugador arranca flojo a propósito** (fase 4, pedido de Ivan después de jugar en el teléfono): dispara lento, pega
+  1, tiene 80 de vida y junta monedas a 2 m. Lo que lo hace fuerte son las compras, y por eso los primeros precios
+  son bajos: la primera partida tiene que alcanzar para una o dos. El daño y la cadencia suben de a uno para que
+  cada compra se lea en la tarjeta ("1 → 2") y en los números de daño.
 - **Precio** = `floor(precioInicial × crecimiento^nivel + 0,5 + 1e-9)`. El `+1e-9` no es decorativo: en double
   90 × 1,45 da 130,4999…, y el precio correcto es 131. Los textos redondean igual (`FormatoNumeros.ConDecimales`).
-  Los precios son el doble de los del plan por las monedas que caen de más; se balancean tocando los assets.
+  Se balancean tocando los assets.
 - **Se aplican al empezar la partida, no al comprar.** `AplicarMejoras` está en la raíz de `Jugador.prefab` y en
-  su `Awake` fija daño por bala, tiros por segundo, vida máxima (con la vida llena) y el multiplicador de cura:
-  fija valores, nunca multiplica los actuales, así reintentar no aplica dos veces. La caja de vida cura
-  `curaPorPickup × multiplicador de vida` (sigue siendo la mitad de la vida máxima). El botín lo leen los dos
-  generadores en su `Start`.
+  su `Awake` fija daño por bala, tiros por segundo, vida máxima (con la vida llena), el multiplicador de cura y el
+  alcance del imán (`Moneda.FijarRadioIman`, estático porque las monedas salen de un pool): fija valores, nunca
+  multiplica los actuales, así reintentar no aplica dos veces. La caja de vida cura
+  `curaPorPickup × multiplicador de vida` (40 × el multiplicador: sigue siendo la mitad de la vida máxima). El
+  botín lo leen los dos generadores en su `Start`.
 - **La tienda es un panel del menú**, no una escena: `Prefabs/UI/Tienda.prefab` instanciado en `Menu.unity`, con
   canvas propio (1920x1080, match 0,5, `sortingOrder` 5, área segura). Las tarjetas (`Prefabs/UI/TarjetaMejora`)
   se generan desde `enTienda`, con tres estados: comprable (verde, respira), sin monedas (gris, "faltan N", tocable
@@ -333,7 +341,7 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   carga `UltimoModo` (1 o 3; si no, 3). En la derrota, MEJORAS llama a `TiendaMejoras.AbrirEnMenu`, que carga el
   menú con la tienda abierta. Los botones MEJORAS (`BotonMejoras`) muestran una insignia con
   `CatalogoMejoras.ComprasPosibles()`: cuántas compras seguidas alcanzan de verdad, eligiendo siempre la más barata
-  (con 200 monedas hay tres tarjetas verdes pero alcanza para una sola), y en la derrota "¡Te alcanza para N
+  (con 50 monedas hay cuatro tarjetas verdes pero alcanza para una sola), y en la derrota "¡Te alcanza para N
   mejoras!".
 - **Para agregar una mejora:** un asset `Mejora` con id nuevo → su campo y getter en `CatalogoMejoras` → aplicarla
   en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → casos en `PruebasMejoras`.
@@ -592,7 +600,8 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   escena, topeá el delta: el primer frame dura mucho y se come la animación.
 
 - **`CatalogoMejoras.asset` tiene que estar en `Resources`.** Si se mueve o pierde referencias, todas las mejoras
-  quedan neutras (5, 20, 200, ×1) y en la build no se ve ningún aviso: sólo un LogError y la prueba de lógica.
+  quedan en los valores base (1 de daño, 4 tiros/s, 80 de vida, imán de 2 m, botín ×1) y en la build no se ve
+  ningún aviso: sólo un LogError y la prueba de lógica.
 
 - **Menu y Perdiste tienen el canvas en match 0; la tienda y la pausa, en 0,5.** En 20:9 el menú mide 864 u de
   alto y en 21:9, 823: una fila de tarjetas de 560 u no entraba en el canvas del menú, por eso la tienda tiene el
@@ -614,10 +623,11 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
   aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe
   `Builds/medicion_mejoras.txt`.
-- **ShowBies > Progreso > …** (`HerramientasProgreso`): sumar monedas, niveles de prueba (5, 10, 5, 15), niveles
-  en cero, reiniciar. **Escriben el `progreso.json` real del editor**, igual que `MedirPartida`.
+- **ShowBies > Progreso > …** (`HerramientasProgreso`): sumar monedas, niveles de prueba (5, 10, 5, 6, 15: daño,
+  cadencia, vida, imán, botín), niveles en cero, reiniciar. **Escriben el `progreso.json` real del editor**, igual
+  que `MedirPartida`.
 - **`MedidorBalance`**: F1 (o tres dedos) en partida muestra daño, tiros por segundo medidos contra esperados, vida,
-  botín, multiplicadores de la oleada o del nivel y monedas por zombi. Existe sólo en el editor y en builds de
+  botín, imán, multiplicadores de la oleada o del nivel y monedas por zombi. Existe sólo en el editor y en builds de
   desarrollo; la APK de `ConstructorAndroid` no lo es.
 
 ## Para agregar una mecánica nueva

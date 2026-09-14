@@ -6,19 +6,20 @@ using UnityEngine;
 // cualquiera sin cablearlo en el inspector: el arma, la vida, los generadores y la
 // tienda estan en escenas distintas y todos necesitan lo mismo.
 //
-// Si el catalogo falta, todo queda neutro (los valores de antes de las mejoras)
+// Si el catalogo falta, todo queda en los valores base (el nivel 0 de los assets)
 // con un LogError: el juego sigue andando, sin mejoras.
 [CreateAssetMenu(fileName = "CatalogoMejoras", menuName = "ShowBies/Catalogo de mejoras")]
 public class CatalogoMejoras : ScriptableObject
 {
     public const string RutaEnResources = "CatalogoMejoras";
 
-    // Lo que rendia el juego antes de las mejoras: 5 de dano (el dañoDar de la
-    // bala), 20 tiros por segundo (lo que salia a 60 FPS con tiempoDisparo 0,04 y
-    // una bala por frame) y 200 de vida.
-    public const float DanoPorBalaSinCatalogo = 5f;
-    public const float TirosPorSegundoSinCatalogo = 20f;
-    public const int VidaMaximaSinCatalogo = 200;
+    // Lo que rinde el jugador sin ninguna mejora, igual que el nivel 0 de los
+    // assets: 1 de dano por bala, 4 tiros por segundo, 80 de vida y 2 m de iman.
+    // Arranca flojo a proposito: lo que lo hace fuerte son las compras.
+    public const float DanoPorBalaSinCatalogo = 1f;
+    public const float TirosPorSegundoSinCatalogo = 4f;
+    public const int VidaMaximaSinCatalogo = 80;
+    public const float RadioImanSinCatalogo = 2f;
 
     // Techo de la cuenta de ComprasPosibles: la insignia muestra "99+" y con
     // muchas monedas no vale la pena seguir sumando.
@@ -28,6 +29,7 @@ public class CatalogoMejoras : ScriptableObject
     public Mejora danoBala;
     public Mejora cadencia;
     public Mejora vidaMaxima;
+    public Mejora iman;
     public Mejora botin;
 
     [Header("Las tarjetas de la tienda, en orden")]
@@ -116,10 +118,21 @@ public class CatalogoMejoras : ScriptableObject
         }
     }
 
+    // Los metros desde los que las monedas del piso vuelan solas al jugador.
+    public static float RadioIman
+    {
+        get
+        {
+            CatalogoMejoras catalogo = Instancia;
+            if (catalogo == null || catalogo.iman == null) return RadioImanSinCatalogo;
+            return (float)catalogo.iman.Valor(Progreso.Nivel(catalogo.iman.id));
+        }
+    }
+
     // Cuantas compras se pueden hacer seguidas con las monedas de ahora, siempre
     // comprando la mas barata. No es "cuantas mejoras cuestan menos que lo que
-    // tengo": con 300 monedas se pagan dano (90) y vida (120), pero no ademas
-    // cadencia (150), aunque cada una por separado alcance. Asi la insignia promete
+    // tengo": con 100 monedas se pagan iman (30) y dano (40), pero no ademas
+    // vida (40), aunque cada una por separado alcance. Asi la insignia promete
     // compras que de verdad se pueden hacer. Los niveles se simulan en una copia.
     public static int ComprasPosibles()
     {
@@ -195,6 +208,7 @@ public class CatalogoMejoras : ScriptableObject
         RevisarTipada(danoBala, "danoBala", problemas);
         RevisarTipada(cadencia, "cadencia", problemas);
         RevisarTipada(vidaMaxima, "vidaMaxima", problemas);
+        RevisarTipada(iman, "iman", problemas);
         RevisarTipada(botin, "botin", problemas);
 
         // Ids vacios o repetidos entre todas las mejoras distintas del catalogo:
@@ -203,6 +217,7 @@ public class CatalogoMejoras : ScriptableObject
         SumarSiFalta(revisadas, danoBala);
         SumarSiFalta(revisadas, cadencia);
         SumarSiFalta(revisadas, vidaMaxima);
+        SumarSiFalta(revisadas, iman);
         SumarSiFalta(revisadas, botin);
         if (enTienda != null)
         {

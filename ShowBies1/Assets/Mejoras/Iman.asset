@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8bc06c6ef5c975c49949e6f69a5c4b6f, type: 3}
-  m_Name: Cadencia
+  m_Name: Iman
   m_EditorClassIdentifier: Assembly-CSharp::Mejora
-  id: cadencia
-  nombre: CADENCIA
-  unidad: tiros por segundo
-  color: {r: 0.3, g: 0.75, b: 1, a: 1}
+  id: iman
+  nombre: "IM\xC1N"
+  unidad: metros de alcance
+  color: {r: 0.75, g: 0.45, b: 1, a: 1}
   icono: {fileID: 0}
-  simbolo: C
-  precioInicial: 50
-  crecimientoPrecio: 1.45
-  nivelMaximo: 16
+  simbolo: I
+  precioInicial: 30
+  crecimientoPrecio: 1.5
+  nivelMaximo: 12
   crecimiento: 0
   efectoPorNivel: 0.25
-  valorBase: 4
-  formato: 0
+  valorBase: 2
+  formato: 1

@@ -57,7 +57,7 @@ MonoBehaviour:
   vida: 20
   parpadeoFinal: 3
   frecuenciaParpadeo: 8
-  radioIman: 4
+  radioIman: 2
   esperaAntesDelIman: 0.5
   aceleracionIman: 60
   velocidadMaximaIman: 40

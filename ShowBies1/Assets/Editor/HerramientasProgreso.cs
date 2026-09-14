@@ -16,10 +16,12 @@ using UnityEngine;
 public static class HerramientasProgreso
 {
     // Los niveles de "Niveles de prueba": los mismos que usa el plan de pruebas
-    // en modo play (daño 10,06 por bala, 36 tiros/s, 350 de vida, botin x2,5).
+    // en modo play (daño 6 por bala, 14 tiros/s, 180 de vida, iman de 5 m,
+    // botin x2,5).
     const int NivelDanoDePrueba = 5;
     const int NivelCadenciaDePrueba = 10;
     const int NivelVidaDePrueba = 5;
+    const int NivelImanDePrueba = 6;
     const int NivelBotinDePrueba = 15;
 
     [MenuItem("ShowBies/Progreso/Sumar 1.000 monedas")]
@@ -34,7 +36,7 @@ public static class HerramientasProgreso
         SumarMonedas(100000);
     }
 
-    [MenuItem("ShowBies/Progreso/Niveles de prueba (5, 10, 5, 15)")]
+    [MenuItem("ShowBies/Progreso/Niveles de prueba (5, 10, 5, 6, 15)")]
     static void NivelesDePruebaDesdeMenu()
     {
         FijarNivelesDePrueba();
@@ -76,12 +78,12 @@ public static class HerramientasProgreso
 
     public static void FijarNivelesDePrueba()
     {
-        FijarNiveles(NivelDanoDePrueba, NivelCadenciaDePrueba, NivelVidaDePrueba, NivelBotinDePrueba);
+        FijarNiveles(NivelDanoDePrueba, NivelCadenciaDePrueba, NivelVidaDePrueba, NivelImanDePrueba, NivelBotinDePrueba);
     }
 
     public static void NivelesEnCero()
     {
-        FijarNiveles(0, 0, 0, 0);
+        FijarNiveles(0, 0, 0, 0, 0);
     }
 
     public static void ReiniciarSinPreguntar()
@@ -92,7 +94,7 @@ public static class HerramientasProgreso
 
     // Con los ids que tienen los assets del catalogo y no con ids escritos aca:
     // si alguien renombra un id, esto sigue apuntando a la mejora de verdad.
-    static void FijarNiveles(int dano, int cadencia, int vida, int botin)
+    static void FijarNiveles(int dano, int cadencia, int vida, int iman, int botin)
     {
         var catalogo = CatalogoMejoras.Instancia;
         if (catalogo == null)
@@ -104,10 +106,11 @@ public static class HerramientasProgreso
         Fijar(catalogo.danoBala, "danoBala", dano);
         Fijar(catalogo.cadencia, "cadencia", cadencia);
         Fijar(catalogo.vidaMaxima, "vidaMaxima", vida);
+        Fijar(catalogo.iman, "iman", iman);
         Fijar(catalogo.botin, "botin", botin);
 
         Debug.Log("HerramientasProgreso: niveles daño " + dano + ", cadencia " + cadencia + ", vida " + vida +
-                  ", botin " + botin + " en " + Progreso.RutaArchivo +
+                  ", iman " + iman + ", botin " + botin + " en " + Progreso.RutaArchivo +
                   (EditorApplication.isPlaying ? " (se aplican al recargar la escena)" : ""));
     }
 

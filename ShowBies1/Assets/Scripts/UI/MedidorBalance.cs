@@ -215,6 +215,7 @@ public class MedidorBalance : MonoBehaviour
         CatalogoMejoras catalogo = CatalogoMejoras.Instancia;
         Mejora mejoraDano = catalogo != null ? catalogo.danoBala : null;
         Mejora mejoraBotin = catalogo != null ? catalogo.botin : null;
+        Mejora mejoraIman = catalogo != null ? catalogo.iman : null;
 
         armado.Length = 0;
         armado.Append("MEDIDOR (F1)\n");
@@ -244,6 +245,8 @@ public class MedidorBalance : MonoBehaviour
 
         armado.Append("Botín ×").Append(Numero(CatalogoMejoras.MultiplicadorBotin, "0.0"))
             .Append(" (nivel ").Append(NivelDe(mejoraBotin)).Append(")\n");
+        armado.Append("Imán ").Append(Numero(Moneda.RadioImanDeLaPartida >= 0f ? Moneda.RadioImanDeLaPartida : CatalogoMejoras.RadioIman, "0.0"))
+            .Append(" m (nivel ").Append(NivelDe(mejoraIman)).Append(")\n");
 
         if (oleadas != null)
         {
