@@ -43,6 +43,14 @@ public class PlayerHealth : MonoBehaviour
         instance = this;
     }
 
+    // La clave del record de un modo, por el buildIndex de su escena. La pantalla
+    // de derrota la arma con "UltimoModo". La clave vieja "HighScore", sin modo,
+    // ya no la lee nadie.
+    public static string ClaveRecord(int modo)
+    {
+        return "HighScore_" + modo;
+    }
+
     public void TakeDamage(int amount)
     {
         // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
@@ -54,19 +62,23 @@ public class PlayerHealth : MonoBehaviour
         {
             estaMuerto = true;
 
-            int highScore = PlayerPrefs.GetInt("HighScore");
+            // Un record por modo: los puntos del modo libre y los de las oleadas
+            // no se comparan, y antes compartian una sola clave.
+            int modo = SceneManager.GetActiveScene().buildIndex;
+            string claveRecord = ClaveRecord(modo);
+            int highScore = PlayerPrefs.GetInt(claveRecord);
 
             PlayerPrefs.SetInt("Score", Puntaje.instance.contadorKill);
 
             if (Puntaje.instance.contadorKill > highScore)
             {
 
-                PlayerPrefs.SetInt("HighScore", Puntaje.instance.contadorKill);
+                PlayerPrefs.SetInt(claveRecord, Puntaje.instance.contadorKill);
             }
 
             // Para que "Retry" vuelva al modo que se estaba jugando y no siempre
             // al primero. Sin esto, morir en WaveMode te reiniciaba en ShowBies1.
-            PlayerPrefs.SetInt("UltimoModo", SceneManager.GetActiveScene().buildIndex);
+            PlayerPrefs.SetInt("UltimoModo", modo);
 
             // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
             PlayerPrefs.Save();

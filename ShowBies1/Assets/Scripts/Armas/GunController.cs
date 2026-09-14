@@ -23,6 +23,10 @@ public class GunController : MonoBehaviour
 
     public AudioSource AudioSource;
 
+    [Header("Sonido")]
+    public float intervaloMinimoSonido = 0.04f;   // techo de sonidos de disparo por segundo
+    private float proximoSonido;
+
 
     public Transform firePoint;
     // Start is called before the first frame update
@@ -66,7 +70,14 @@ public class GunController : MonoBehaviour
             if(contadorDisp <= 0)
             {
                 player.cantBalas--;
-                AudioSource.Play();
+                // PlayOneShot y no Play: Play reinicia el mismo sonido, y a esta
+                // cadencia lo cortaba en cada tiro antes de que llegara a oirse. El
+                // techo evita apilar decenas de sonidos con la cadencia mejorada.
+                if (Time.time >= proximoSonido && AudioSource.clip != null)
+                {
+                    AudioSource.PlayOneShot(AudioSource.clip);
+                    proximoSonido = Time.time + intervaloMinimoSonido;
+                }
                 contadorDisp = tiempoDisparo;
                 // Antes era un Instantiate por disparo. Ahora las balas se reusan.
                 BulletController newBullet = BulletController.Obtener(bala, firePoint.position, firePoint.rotation);

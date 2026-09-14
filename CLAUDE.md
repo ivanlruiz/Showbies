@@ -152,6 +152,10 @@ segundo, y el power-up de arma lo baja a 0.01 (100 por segundo). El pool convier
 defecto, editable en el inspector) y después vuelve a la cadencia con la que arrancó la escena. Un
 pickup nuevo pisa al vigente y reinicia el reloj; la munición que dio el pickup no expira.
 
+**El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
+`intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,
+con la cadencia mejorada, no llegaba a oírse.
+
 La bala **no tiene Rigidbody**, sólo un `BoxCollider`: los eventos de colisión llegan porque el zombi
 sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
 
@@ -177,8 +181,11 @@ Todo por `PlayerPrefs`, con tres claves:
 | clave | quién escribe | quién lee |
 |---|---|---|
 | `"Score"` | `PlayerHealth` al morir | `Score` (pantalla de derrota) |
-| `"HighScore"` | `PlayerHealth`, si superás el récord | `highscoretext` |
-| `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry` |
+| `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"` |
+| `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext` |
+
+Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
+`PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
 
 `PlayerHealth.TakeDamage` llama a `PlayerPrefs.Save()` explícitamente. Si agregás una clave, escribila
 en ese mismo bloque o se pierde cuando el juego no cierra bien.
@@ -247,6 +254,11 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
 - Las cámaras de las escenas de juego tienen HDR y MSAA apagados (sin post-proceso no aportan nada),
   y todo lo estático está marcado `BatchingStatic` (las 80 calles de WaveMode eran 80 draw calls).
 - Los generadores usan `maxZombisVivosMovil` (35) en vez de 60 cuando `Plataforma.EsMovil`.
+- Los Animators del zombi normal y del rápido están en **Cull Update Transforms**: fuera de pantalla no
+  mueven huesos. El rápido tiene **dos** Animators (uno con root motion), sin revisar si hacen falta los dos.
+- El tanque, el jefe y el FASTER no tienen Animator: son una cápsula con dos cubos, y **esos cubos son a la
+  vez los brazos visibles y las hitboxes**. No apagues sus renderers pensando que son colliders sueltos
+  (en el normal y el rápido sí están apagados, porque el modelo es el de ToonyTiny).
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
   Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí.
 
@@ -266,6 +278,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 - Configuración: package `com.ivru.showbies` (cambiable hasta publicar, después queda fijo),
   IL2CPP + ARM64, minSdk 25, targetSdk automático, `bundleVersion` / `AndroidBundleVersionCode`
   en `ProjectSettings.asset` (el versionCode tiene que subir en cada subida a la Play Store).
+- Orientación: rotación automática sólo entre los dos horizontales (`defaultScreenOrientation: 4`, sin
+  portrait). Antes estaba fija en uno solo (`reverseLandscape` en el manifest) y no giraba con el
+  teléfono al revés.
 - **Keystores: `*.keystore`, `*.jks` y `keystore.local` están gitignoreados.** Había un
   `ShowBies1/user.keystore` de 2023 versionado, con password desconocida; se sacó del repo (queda
   en disco por si aparece la password). El de release se genera con `keytool` y se guarda con

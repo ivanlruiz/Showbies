@@ -8,7 +8,9 @@ public class highscoretext : MonoBehaviour
     public TextMeshProUGUI texto;
     void Start()
     {
-        texto.text = "Highscore: " + PlayerPrefs.GetInt("HighScore").ToString();
+        // El record del modo que se acaba de jugar.
+        int modo = PlayerPrefs.GetInt("UltimoModo", 1);
+        texto.text = "Highscore: " + PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(modo)).ToString();
 
     }
 
