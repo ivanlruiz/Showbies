@@ -144,6 +144,8 @@ public class Granade : MonoBehaviour
             explosion.Play();
         }
 
+        Efectos.Explosion(transform.position);
+
         if (indicador != null) Destroy(indicador.gameObject);
         Destroy(gameObject);
     }

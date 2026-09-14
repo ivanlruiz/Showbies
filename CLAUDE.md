@@ -40,15 +40,16 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas y mejor oleada, en un JSON)
+Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante
 Assets/Scripts/Tutorial/    ← TutorialManager
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
-Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Particulas/ (BrilloMoneda), Personajes/, UI/ (MenuPausa)
+Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
-Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, moneda.wav, pedo.mp3 y pop.mp3
+Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Editor/              ← ConstructorAndroid.cs (builds de Android: APK de prueba y AAB de release)
 ```
 
@@ -261,6 +262,34 @@ PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles
   de derrota (`TextoMonedasPartida`). El HUD de las escenas de juego muestra el total con `ContadorMonedas`.
   Los números para pantalla pasan por `FormatoNumeros.Compacto` (1.234, 123 K, 4,5 M).
 
+## Jugo
+
+Lo que hace que cada acción se sienta vive en `Efectos` (`Assets/Scripts/Jugo/`), dentro del prefab
+`Assets/Prefabs/Jugo/Efectos.prefab` puesto en ShowBies1, WaveMode y Tutorial. Quien produce un evento llama a
+un método static (`Efectos.Golpe`, `Muerte`, `Explosion`, `DanioJugador`, `Caja`, `Disparo`, `CartelOleada`), que
+**no hace nada si la escena no tiene el prefab**: el juego anda igual, plano.
+
+- **Golpe a un zombi** (en `EnemyController.DanoZombi`, así cubre balas y granada): número de daño
+  (`NumeroFlotante`, TextMeshPro 3D con Bangers y shader overlay, de un pool de 40), chispas y un tic. Si no
+  muere, además destello blanco (sus renderers visibles pasan un instante al material `Destello`) y un aplastado
+  de escala que se recupera en `FixedUpdate`.
+- **Muerte**: chispas y sonido. Desde `vidaParaMuerteGrande` (el tanque) suma temblor fuerte y una **pausa de
+  impacto** (`timeScale` a 0,05 un instante); el jefe, más. Cada muerte cuenta para `ContadorCombo` en el HUD
+  ("COMBO xN", con una ventana de 1,5 s entre muertes).
+- **Granada**: temblor, estruendo, chispas y una pausa corta. **Daño al jugador**: temblor, borde rojo
+  (`VinetaDanio`) y sonido, con 0,4 s mínimos entre dos, para que rodeado no quede prendido. **Cajas**: `pop.mp3`
+  y chispas. **Disparo**: chispas en la boca del arma. **Cartel de oleada**: jingle en la bemol mayor y un rebote
+  de escala (`AparecerConRebote`).
+- **Temblor de cámara**: `CamaraJugador.Temblar(trauma)`. El trauma (0 a 1) se descarga solo y la sacudida crece
+  con su cuadrado, así los golpes chicos casi no se notan. Usa tiempo sin escalar y se frena en la pausa del menú.
+- **Sonidos**: `Sonidos.Tocar(clip, volumen, pitch, variación, separación mínima)`, un solo objeto con fuentes 2D
+  que también usan las monedas. Los sonidos con el tono cambiado rotan entre 12 fuentes; los de pitch 1 van a
+  una fuente que nunca cambia de tono, para que un golpe no desafine una explosión que está sonando.
+- **Chispas**: un solo `ParticleSystem` por escena (`Particulas/Chispas.prefab`) usado con `Emit`, como el brillo
+  de las monedas.
+- **Música de partida**: un loop de 32 s en la bemol mayor en el `AudioSource` del prefab (Vorbis, comprimida en
+  memoria). La música y los sonidos nuevos están sintetizados y son provisorios.
+
 ## Persistencia
 
 El récord, el último modo y el tutorial van por `PlayerPrefs`; las monedas y el progreso no (ver Monedas y
@@ -458,11 +487,14 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 - **Player (capa 6) y Bala (capa 7) no colisionan, y eso está en la matriz del proyecto.** Antes se
   seteaba con `Physics.IgnoreLayerCollision(6, 7)` en el `Start` de cada bala. No lo hagas por código.
 
-- **`pop.mp3` no lo usa nadie** y los power-ups se agarran en silencio. Igual el `AudioSource` con
-  `pedo` que cuelga del Jugador: quedó sin disparador cuando se limpió `PlayerHealth`.
+- **El `AudioSource` con `pedo` que cuelga del Jugador no suena nunca**: quedó sin disparador cuando se limpió
+  `PlayerHealth`. (`pop.mp3`, que antes tampoco usaba nadie, ahora suena al agarrar cajas.)
 
-- **No hay música en las escenas de juego.** El único tema del proyecto es `MainMenu.mp3` y sólo suena
-  en el menú.
+- **La pausa de impacto toca `Time.timeScale`, igual que el menú de pausa.** `Efectos` lo baja un instante y
+  lo devuelve a 1 sólo si `MenuPausa.Pausado` es falso, y lo restaura si la escena se descarga en el medio. Lo que
+  agregues que cambie `timeScale` tiene que respetar lo mismo, y lo que deba seguir andando durante la pausa de
+  impacto (UI, temblor, sonidos) tiene que usar tiempo sin escalar. Para animaciones que arrancan al cargar una
+  escena, topeá el delta: el primer frame dura mucho y se come la animación.
 
 ## Para agregar una mecánica nueva
 
@@ -483,3 +515,5 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
    desaparezca ningún objeto, comparando los `--- !u!` contra HEAD.
 8. Archivo nuevo en `Assets/Scripts/<Subsistema>/`.
 9. ¿Lee input? Cortalo con `MenuPausa.Pausado`: la pausa congela el tiempo escalado, no el input.
+10. ¿Pasa algo que el jugador tiene que sentir? Sumale su método a `Efectos` (sonido, chispas, temblor) en vez de
+    poner sonidos y partículas sueltos: el juego tiene que ser llamativo en cada acción.

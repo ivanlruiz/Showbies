@@ -142,6 +142,7 @@ public class WaveManager : MonoBehaviour
                 cartelOleada.text += "\n<size=45%>+" + bonoDeLaOleadaAnterior + " monedas por la oleada " + (OleadaActual - 1) + "</size>";
             }
             cartelOleada.gameObject.SetActive(true);
+            Efectos.CartelOleada();
         }
 
         yield return new WaitForSeconds(descansoEntreOleadas);

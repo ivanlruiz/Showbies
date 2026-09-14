@@ -59,6 +59,7 @@ public class PlayerHealth : MonoBehaviour
         if (estaMuerto) return;
 
         health -= amount;
+        if (health > 0) Efectos.DanioJugador();
         if(health <= 0)
         {
             estaMuerto = true;
@@ -107,6 +108,7 @@ public class PlayerHealth : MonoBehaviour
             // campo decia 10 en el codigo y 200 en las escenas. Ahora el que manda
             // es maxHealth, que en las dos escenas ya vale 200 (mismo resultado).
             health = Mathf.Min(health + curaPorPickup, maxHealth);
+            Efectos.Caja(other.transform.position);
         }
     }
 }

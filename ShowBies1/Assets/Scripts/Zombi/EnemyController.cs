@@ -29,6 +29,20 @@ public class EnemyController : MonoBehaviour
 
     private float proximoGolpe;
 
+    [Header("Golpe visual")]
+    [SerializeField] private Vector3 aplastadoAlGolpear = new Vector3(1.15f, 0.85f, 1.15f);
+    [SerializeField] private float recuperacionDelAplastado = 0.35f;   // fraccion que recupera por paso de fisica
+
+    // Destello: los renderers visibles pasan un instante al material blanco de
+    // Efectos. Los arrays se arman una vez por zombi, no por golpe.
+    private Renderer[] renderersVisibles;
+    private Material[][] materialesOriginales;
+    private Material[][] materialesDestello;
+    private float destelloHasta;
+    private bool destellando;
+    private Vector3 escalaBase;
+    private bool aplastado;
+
     // Cuántos zombis hay vivos ahora mismo. Los generadores lo miran para no
     // pasarse del techo de población: sin esto spawnean para siempre.
     public static int ZombisVivos { get; private set; }
@@ -64,6 +78,8 @@ public class EnemyController : MonoBehaviour
         vidaMaxima = vidaActual;
         rb = GetComponent<Rigidbody>();
         thePlayer = ObtenerJugador();
+        escalaBase = transform.localScale;
+        PrepararDestello();
     }
 
     // Esto era un FindObjectOfType por zombi spawneado, o sea un barrido completo
@@ -93,6 +109,8 @@ public class EnemyController : MonoBehaviour
            return;
        }
 
+       ActualizarGolpeVisual();
+
        if (thePlayer == null) return;
        transform.LookAt(thePlayer.transform.position);
        rb.linearVelocity = (transform.forward * enemyType.velocidad);
@@ -108,9 +126,14 @@ public class EnemyController : MonoBehaviour
         if (estaMuerto) return;
 
         vidaActual -= daño;
+        Efectos.Golpe(transform.position + Vector3.up * (1f + escalaBase.y), daño);
 
         // La barra aparece recien con el primer golpe que no mata.
-        if (vidaActual > 0) MostrarBarraDeVida();
+        if (vidaActual > 0)
+        {
+            MostrarBarraDeVida();
+            GolpeVisual();
+        }
 
         if (vidaActual <= 0)
         {
@@ -128,6 +151,7 @@ public class EnemyController : MonoBehaviour
             Puntaje.instance.UpdateKillCounterUI();
 
             SoltarMonedas();
+            Efectos.Muerte(transform.position, enemyType.hp);
         }
     }
 
@@ -156,6 +180,72 @@ public class EnemyController : MonoBehaviour
         }
 
         Moneda.Soltar(monedaPrefab, transform.position, cantidad, valor);
+    }
+
+    private void PrepararDestello()
+    {
+        var todos = GetComponentsInChildren<Renderer>();
+        var visibles = new List<Renderer>();
+        foreach (var r in todos)
+        {
+            // Los normales y rapidos tienen renderers apagados (capsula y cubos
+            // que solo son hitbox): esos no se tocan.
+            if (r.enabled) visibles.Add(r);
+        }
+
+        renderersVisibles = visibles.ToArray();
+        materialesOriginales = new Material[renderersVisibles.Length][];
+        for (int i = 0; i < renderersVisibles.Length; i++)
+        {
+            materialesOriginales[i] = renderersVisibles[i].sharedMaterials;
+        }
+    }
+
+    // Blanco un instante y aplastado: se nota cada bala que entra.
+    private void GolpeVisual()
+    {
+        if (!aplastado && escalaBase != Vector3.zero)
+        {
+            transform.localScale = Vector3.Scale(escalaBase, aplastadoAlGolpear);
+            aplastado = true;
+        }
+
+        Material blanco = Efectos.MaterialDestello;
+        if (blanco == null || renderersVisibles == null) return;
+
+        if (materialesDestello == null)
+        {
+            materialesDestello = new Material[renderersVisibles.Length][];
+            for (int i = 0; i < renderersVisibles.Length; i++)
+            {
+                var blancos = new Material[materialesOriginales[i].Length];
+                for (int j = 0; j < blancos.Length; j++) blancos[j] = blanco;
+                materialesDestello[i] = blancos;
+            }
+        }
+
+        for (int i = 0; i < renderersVisibles.Length; i++) renderersVisibles[i].sharedMaterials = materialesDestello[i];
+        destellando = true;
+        destelloHasta = Time.time + Efectos.DuracionDestello;
+    }
+
+    private void ActualizarGolpeVisual()
+    {
+        if (destellando && Time.time >= destelloHasta)
+        {
+            destellando = false;
+            for (int i = 0; i < renderersVisibles.Length; i++) renderersVisibles[i].sharedMaterials = materialesOriginales[i];
+        }
+
+        if (aplastado)
+        {
+            transform.localScale = Vector3.Lerp(transform.localScale, escalaBase, recuperacionDelAplastado);
+            if ((transform.localScale - escalaBase).sqrMagnitude < 0.0001f)
+            {
+                transform.localScale = escalaBase;
+                aplastado = false;
+            }
+        }
     }
 
     private void MostrarBarraDeVida()

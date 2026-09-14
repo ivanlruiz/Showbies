@@ -77,6 +77,7 @@ public class GunController : MonoBehaviour
                 {
                     AudioSource.PlayOneShot(AudioSource.clip);
                     proximoSonido = Time.time + intervaloMinimoSonido;
+                    Efectos.Disparo(firePoint.position);
                 }
                 contadorDisp = tiempoDisparo;
                 // Antes era un Instantiate por disparo. Ahora las balas se reusan.

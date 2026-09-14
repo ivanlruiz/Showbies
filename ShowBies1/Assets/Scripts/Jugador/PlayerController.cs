@@ -116,6 +116,7 @@ public class PlayerController : MonoBehaviour
             Destroy(other.gameObject);
             cantBalas = maxBalas;
             theGun.MejorarCadencia(0.03f);
+            Efectos.Caja(other.transform.position);
         }
         else if (other.gameObject.CompareTag("PUArma"))
         {
@@ -128,6 +129,7 @@ public class PlayerController : MonoBehaviour
             maxBalas = Mathf.Max(maxBalas, cargadorMejorado);
             cantBalas = maxBalas;
             theGun.MejorarCadencia(0.01f);
+            Efectos.Caja(other.transform.position);
         }
     }
 

@@ -65,7 +65,6 @@ public class Moneda : MonoBehaviour
     public int maxMonedasEnEscena = 150;
     public int maxMonedasEnEscenaMovil = 80;
 
-    private const int CantidadDeFuentes = 8;
     private const float SeparacionEntreSonidos = 0.05f;
 
     private static readonly Stack<Moneda> pool = new Stack<Moneda>();
@@ -75,12 +74,9 @@ public class Moneda : MonoBehaviour
     private static int frameDeBusqueda = -1;
     private static Transform camara;
     private static ParticleSystem brillo;
-    private static AudioSource[] fuentes;
-    private static int proximaFuente;
-    private static float ultimoSonido = float.NegativeInfinity;
 
     // Los static sobreviven al cambio de escena y al "enter play mode" sin domain
-    // reload. Lo que es de la escena (jugador, camara, brillo, fuentes y las
+    // reload. Lo que es de la escena (jugador, camara, brillo y las
     // monedas del pool) se destruye con ella: se vuelve a buscar al notarlo null.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
@@ -92,9 +88,6 @@ public class Moneda : MonoBehaviour
         frameDeBusqueda = -1;
         camara = null;
         brillo = null;
-        fuentes = null;
-        proximaFuente = 0;
-        ultimoSonido = float.NegativeInfinity;
     }
 
     private double valor;
@@ -287,19 +280,11 @@ public class Moneda : MonoBehaviour
         brillo.Emit(parametros, particulasPorCobro);
     }
 
-    // Una fuente de audio por cobro sonaria una encima de otra con monedas que
-    // llegan en el mismo frame: se deja pasar un sonido cada 50 ms.
+    // Monedas que llegan en el mismo frame sonarian una encima de otra: se deja
+    // pasar un sonido cada 50 ms.
     private void Sonar()
     {
-        if (sonido == null) return;
-
-        float ahora = Time.time;
-        if (ahora - ultimoSonido < SeparacionEntreSonidos) return;
-        ultimoSonido = ahora;
-
-        AudioSource fuente = Fuente();
-        fuente.pitch = Mathf.Pow(2f, (SortearSemitonos(notas) + afinacion) / 12f);
-        fuente.PlayOneShot(sonido, volumen);
+        Sonidos.Tocar(sonido, volumen, Mathf.Pow(2f, (SortearSemitonos(notas) + afinacion) / 12f), 0f, SeparacionEntreSonidos);
     }
 
     [System.Serializable]
@@ -340,26 +325,6 @@ public class Moneda : MonoBehaviour
         // Random.value puede dar 1 justo, y con el redondeo el sorteo queda apenas
         // por encima de cero despues de la ultima.
         return ultimaConPeso;
-    }
-
-    // PlayOneShot usa el pitch de la fuente, asi que cada tono necesita su propia
-    // fuente mientras suena: se rotan varias.
-    private static AudioSource Fuente()
-    {
-        if (fuentes == null || fuentes[0] == null)
-        {
-            var go = new GameObject("SonidoMonedas");
-            fuentes = new AudioSource[CantidadDeFuentes];
-            for (int i = 0; i < fuentes.Length; i++)
-            {
-                fuentes[i] = go.AddComponent<AudioSource>();
-                fuentes[i].playOnAwake = false;
-                fuentes[i].spatialBlend = 0f;
-            }
-        }
-
-        proximaFuente = (proximaFuente + 1) % fuentes.Length;
-        return fuentes[proximaFuente];
     }
 
     // Con el jugador muerto no hay nada que encontrar: se busca una sola vez por
