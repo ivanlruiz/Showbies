@@ -41,7 +41,8 @@ public class Moneda : MonoBehaviour
     [Header("Cobro")]
     public AudioClip sonido;
     [Range(0f, 1f)] public float volumen = 0.6f;
-    public float ventanaCombo = 0.6f;                            // agarrada antes de esto, suena un tono mas arriba
+    public float afinacion = 0f;                                 // semitonos que llevan la nota del sonido a la bemol
+    public float ventanaCombo = 0.6f;                            // agarrada antes de esto, suena la nota siguiente
     public ParticleSystem brilloPrefab;
     public int particulasPorCobro = 8;
 
@@ -49,9 +50,10 @@ public class Moneda : MonoBehaviour
     public int maxMonedasEnEscena = 150;
     public int maxMonedasEnEscenaMovil = 80;
 
-    // Tonos de la escala que sube al juntar monedas seguidas, en semitonos
-    // (pentatonica mayor): juntar una fuente entera suena como una escala.
-    private static readonly int[] escala = { 0, 2, 4, 7, 9, 12 };
+    // Notas que suenan al juntar monedas seguidas, en semitonos sobre la tonica:
+    // la escala mayor. El sonido esta en la bemol (si se cambia, ver afinacion),
+    // asi que juntar una fuente entera sube por la escala de la bemol mayor.
+    private static readonly int[] escala = { 0, 2, 4, 5, 7, 9, 11, 12 };
     private const int CantidadDeFuentes = 8;
     private const float SeparacionEntreSonidos = 0.05f;
 
@@ -278,7 +280,7 @@ public class Moneda : MonoBehaviour
 
     // Una fuente de audio por cobro sonaria una encima de otra con monedas que
     // llegan en el mismo frame: se deja pasar un sonido cada 50 ms, y cada uno que
-    // sigue al anterior dentro de la ventana sube un tono en la escala.
+    // sigue al anterior dentro de la ventana toca la nota siguiente de la escala.
     private void Sonar()
     {
         if (sonido == null) return;
@@ -290,7 +292,7 @@ public class Moneda : MonoBehaviour
         ultimoSonido = ahora;
 
         AudioSource fuente = Fuente();
-        fuente.pitch = Mathf.Pow(2f, escala[Mathf.Min(combo, escala.Length - 1)] / 12f);
+        fuente.pitch = Mathf.Pow(2f, (escala[Mathf.Min(combo, escala.Length - 1)] + afinacion) / 12f);
         fuente.PlayOneShot(sonido, volumen);
     }
 
