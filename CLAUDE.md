@@ -167,8 +167,10 @@ consultando `EnemyController.ZombisVivos`:
 - **`GeneradorZombis`** (free mode) — cinco corrutinas paralelas, una por tipo, cada una con un `while`
   infinito y su `WaitForSeconds`. Si se llegó al techo, saltea el spawn y sigue esperando.
 - **`WaveManager`** (wave mode) — **una sola** corrutina que corre toda la partida. Cada oleada:
-  1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s) y actualiza
-     `textoOleada` en el HUD.
+  1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s). El HUD
+     (`textoOleada`) muestra "Oleada N" y abajo "Zombis muertos/total" de esa oleada, jefe incluido; se
+     actualiza en `Update` sólo cuando cambia, y los caídos por el kill-Z cuentan como muertos para que
+     llegue al total justo cuando la oleada termina.
   2. Si la oleada es múltiplo de `jefeCadaOleadas` (10), saca un `jefe`.
   3. Saca `zombisBase + zombisPorOleada × oleada` zombis (6 + 2n), de a uno cada
      `intervaloEntreApariciones` (0,8 s), en un punto al azar de `spawnPoints`. El tipo sale por sorteo

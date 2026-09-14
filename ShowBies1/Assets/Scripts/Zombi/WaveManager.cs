@@ -38,12 +38,15 @@ public class WaveManager : MonoBehaviour
     public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
 
     [Header("HUD")]
-    public TMP_Text textoOleada;             // "Oleada N" fijo en el HUD
+    public TMP_Text textoOleada;             // "Oleada N" y "Zombis muertos/total" en el HUD
     public TMP_Text cartelOleada;            // cartel grande que se prende durante el descanso
 
     public int OleadaActual { get; private set; }
 
     private readonly List<GameObject> zombisDeLaOleada = new List<GameObject>();
+    private int zombisEnLaOleada;
+    private int muertosMostrados = -1;
+    private int oleadaMostrada = -1;
 
     private void Start()
     {
@@ -59,16 +62,18 @@ public class WaveManager : MonoBehaviour
         while (true)
         {
             OleadaActual++;
-            if (textoOleada != null) textoOleada.text = "Oleada " + OleadaActual;
+            int cantidad = zombisBase + zombisPorOleada * OleadaActual;
+            bool conJefe = jefe != null && jefeCadaOleadas > 0 && OleadaActual % jefeCadaOleadas == 0;
+            zombisEnLaOleada = cantidad + (conJefe ? 1 : 0);
+            zombisDeLaOleada.Clear();
+            ActualizarHud();
             yield return Descanso();
 
-            zombisDeLaOleada.Clear();
-            if (jefe != null && jefeCadaOleadas > 0 && OleadaActual % jefeCadaOleadas == 0)
+            if (conJefe)
             {
                 Aparecer(jefe);
             }
 
-            int cantidad = zombisBase + zombisPorOleada * OleadaActual;
             for (int i = 0; i < cantidad; i++)
             {
                 while (EnemyController.ZombisVivos >= maxZombisVivos)
@@ -85,6 +90,31 @@ public class WaveManager : MonoBehaviour
                 yield return null;
             }
         }
+    }
+
+    private void Update()
+    {
+        ActualizarHud();
+    }
+
+    // Los zombis de la oleada que ya no estan cuentan como muertos, tambien los
+    // caidos por el kill-Z: la oleada termina cuando no queda ninguno, y el
+    // contador tiene que llegar al total justo en ese momento.
+    private void ActualizarHud()
+    {
+        if (textoOleada == null) return;
+
+        int muertos = 0;
+        for (int i = 0; i < zombisDeLaOleada.Count; i++)
+        {
+            if (zombisDeLaOleada[i] == null) muertos++;
+        }
+
+        // Solo al cambiar: armar el texto por frame aloca por frame.
+        if (muertos == muertosMostrados && OleadaActual == oleadaMostrada) return;
+        muertosMostrados = muertos;
+        oleadaMostrada = OleadaActual;
+        textoOleada.text = "Oleada " + OleadaActual + "\n<size=75%>Zombis " + muertos + "/" + zombisEnLaOleada + "</size>";
     }
 
     private IEnumerator Descanso()
