@@ -36,7 +36,7 @@ Hay **dos modos**, los dos jugables desde el menú:
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
-Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager
+Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, MenuPausa, BotonAtrasMenu
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner)
@@ -183,6 +183,13 @@ Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
 
 Antes las oleadas eran por tiempo (salía la siguiente aunque quedaran zombis) y cada 5 oleadas el tipo de
 zombi se reemplazaba en vez de sumarse: desde la oleada 20 sólo salían jefes.
+
+**Barras de vida.** `EnemyController` crea una `BarraDeVida` con el primer golpe que no mata, así que los
+zombis que mueren de un tiro nunca la muestran. Es un objeto aparte que sigue al zombi y mira a la cámara, no
+un hijo: los zombis rotan hacia el jugador y tienen escalas distintas, y una barra hija heredaría las dos
+cosas. Son dos `SpriteRenderer` sobre un sprite blanco hecho en código (estático, con su reset), no un Canvas
+por zombi. La fracción sale de la vida con la que apareció el zombi (`vidaMaxima`), así que un escalado de vida
+por oleada no la rompe mientras se aplique antes del primer golpe.
 
 ## Persistencia
 

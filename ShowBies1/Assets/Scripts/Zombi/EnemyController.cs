@@ -5,6 +5,8 @@ using UnityEngine;
 public class EnemyController : MonoBehaviour
 {
     private int vidaActual;
+    private int vidaMaxima;
+    private BarraDeVida barraDeVida;
     private Rigidbody rb;
     [Header("Unity Setup")]
     public ParticleSystem deathParticles;
@@ -47,11 +49,13 @@ public class EnemyController : MonoBehaviour
     private void OnDestroy()
     {
         ZombisVivos--;
+        if (barraDeVida != null) Destroy(barraDeVida.gameObject);
     }
 
     void Start()
     {
         vidaActual = enemyType.hp;
+        vidaMaxima = vidaActual;
         rb = GetComponent<Rigidbody>();
         thePlayer = ObtenerJugador();
     }
@@ -99,6 +103,9 @@ public class EnemyController : MonoBehaviour
 
         vidaActual -= daño;
 
+        // La barra aparece recien con el primer golpe que no mata.
+        if (vidaActual > 0) MostrarBarraDeVida();
+
         if (vidaActual <= 0)
         {
             estaMuerto = true;
@@ -114,6 +121,12 @@ public class EnemyController : MonoBehaviour
             Puntaje.instance.contadorKill += enemyType.puntos;
             Puntaje.instance.UpdateKillCounterUI();
         }
+    }
+
+    private void MostrarBarraDeVida()
+    {
+        if (barraDeVida == null) barraDeVida = BarraDeVida.Crear(this);
+        barraDeVida.Mostrar((float)vidaActual / Mathf.Max(1, vidaMaxima));
     }
 
     private void DejarManchaDeSangre()
