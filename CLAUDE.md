@@ -4,12 +4,13 @@ Guía de arquitectura de **ShowBies** para agentes que trabajen en este repo.
 
 ## El juego
 
-ShowBies es un twin-stick shooter 3D de zombis, top-down, para Windows. El jugador se mueve con WASD,
-apunta con el mouse (raycast contra un plano en Y=0), dispara manteniendo click y tira granadas con
-Espacio; Escape pausa. Los zombis aparecen solos, van derecho hacia el jugador y le pegan por colisión. Matar suma
-puntos, morir guarda el highscore y lleva a la pantalla de derrota.
+ShowBies es un twin-stick shooter 3D de zombis, top-down, **pensado para Android** (celular horizontal, con dos
+joysticks y un botón de granada) que también se juega en Windows. En PC el jugador se mueve con WASD, apunta con
+el mouse (raycast contra un plano en Y=0), dispara manteniendo click y apunta la granada manteniendo Espacio;
+Escape pausa. Los zombis aparecen solos, van derecho hacia el jugador y le pegan mientras lo tocan. Matar suma
+puntos y suelta monedas; morir guarda el récord y lleva a la pantalla de derrota.
 
-Hay **dos modos**, los dos jugables desde el menú:
+Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
 
 - **Free mode** (`ShowBies1.unity`) — generación continua: cinco corrutinas paralelas, una por tipo de
   zombi, cada una con su intervalo. Sin final.
@@ -21,7 +22,8 @@ Hay **dos modos**, los dos jugables desde el menú:
 - **Unity 6000.3.14f1**, render built-in, 3D. `ProjectSettings/ProjectVersion.txt` es la fuente de verdad.
 - El proyecto **nació en Unity 2020.3.26f1** y se subió a Unity 6. Buena parte de las rarezas del repo
   son cola de esa migración; si algo parece escrito para una API vieja, probablemente lo esté.
-- Target real: **Windows standalone**, 1920x1080, borderless (`FullScreenWindow`), ventana redimensionable.
+- Target principal: **Android** (ver Móvil). También compila para **Windows standalone**: 1920x1080, borderless
+  (`FullScreenWindow`), ventana redimensionable.
 - **Input Manager viejo** (`activeInputHandler: 0`): todo es `Input.GetAxis` / `Input.GetKey` /
   `Input.GetMouseButton`. No hay Input System.
 - El proyecto Unity está en la subcarpeta **`ShowBies1/`**, no en la raíz del repo.
@@ -41,11 +43,12 @@ Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas y mejor oleada, en un JSON)
-Assets/Scripts/*.cs         ← CanvasHelper, MainMenu, MenuPerdiste, Puntaje, RestartScene
-Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode (+ SampleScene, sin usar)
+Assets/Scripts/Tutorial/    ← TutorialManager
+Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
+Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
 Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Particulas/ (BrilloMoneda), Personajes/, UI/ (MenuPausa)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
-Assets/otros/               ← los 4 audios del juego
+Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, moneda.wav, pedo.mp3 y pop.mp3
 Assets/Editor/              ← ConstructorAndroid.cs (builds de Android: APK de prueba y AAB de release)
 ```
 
@@ -146,9 +149,11 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
 3. `BulletController.Update` se mueve con `transform.Translate` y descuenta `lifeTime`.
 4. Al vencer el tiempo o al chocar, la bala **se apaga y vuelve al pool**, no se destruye.
 
-**Nunca hagas `Instantiate`/`Destroy` de balas directo.** Con `tiempoDisparo = 0.04` son 25 balas por
-segundo, y el power-up de arma lo baja a 0.01 (100 por segundo). El pool convierte 500 disparos en
-49 objetos.
+**Nunca hagas `Instantiate`/`Destroy` de balas directo.** El pool convierte 500 disparos en 49 objetos.
+
+**El arma tira como mucho una bala por frame.** `GunController.Update` dispara una sola vez por frame aunque
+haya pasado más de `tiempoDisparo`: con 0,04 s salen 20 balas por segundo a 60 FPS (no 25) y 15 a 30 FPS, y
+las cajas, que bajan la cadencia a 0,03 s (`PUBalas`) y a 0,01 s (`PUArma`), no pasan de 60 por segundo a 60 FPS.
 
 **La cadencia mejorada es temporal.** Los pickups no tocan `tiempoDisparo` directo: pasan por
 `GunController.MejorarCadencia(valor)`, que aplica la mejora por `duracionMejora` segundos (10 por
@@ -258,13 +263,15 @@ PlayerPrefs a propósito: es estado estructurado que va a crecer con los niveles
 
 ## Persistencia
 
-Todo por `PlayerPrefs`, con tres claves:
+El récord, el último modo y el tutorial van por `PlayerPrefs`; las monedas y el progreso no (ver Monedas y
+progreso):
 
 | clave | quién escribe | quién lee |
 |---|---|---|
 | `"Score"` | `PlayerHealth` al morir | `Score` (pantalla de derrota) |
 | `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"` |
 | `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext` |
+| `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
@@ -302,8 +309,8 @@ click en otra ventana.
 
 ## Móvil
 
-El puerto a Android está a medias pero **el código compila para las dos plataformas**, y eso es
-deliberado: no hay ningún `#if UNITY_ANDROID` en el código del juego. Quien decide es
+Android es el objetivo principal (builds de APK y AAB, pausa con el botón atrás, joystick de granada), pero
+**el código compila para las dos plataformas**, y eso es deliberado: no hay ningún `#if UNITY_ANDROID` en el código del juego. Quien decide es
 **`Plataforma.EsMovil`** (`Assets/Scripts/Plataforma.cs`), el único criterio de "estamos en móvil"
 que usan `PlayerJS`, `PlayerController` y `ConditionalShow`: en una build es la plataforma real; en
 el editor es el **build target activo**. Consecuencia útil: con el target en Android, el editor se
@@ -398,8 +405,8 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   entero estuvo sin compilar por esto. Además el nombre del campo `daño` tiene que coincidir con el
   `"da\xF1o"` serializado en los `.asset` de los zombis, o los stats se pierden.
 
-- **Los `static` cruzan escenas.** `ZombisVivos`, `jugadorCache`, el pool de balas y el caché de sprites
-  de sangre sobreviven al `LoadScene`. Están todos en el reset de `SubsystemRegistration`. Si te olvidás,
+- **Los `static` cruzan escenas.** `ZombisVivos`, `jugadorCache`, el pool de balas, el caché de sprites
+  de sangre, el pool de monedas y los datos de `Progreso` sobreviven al `LoadScene`. Están todos en el reset de `SubsystemRegistration`. Si te olvidás,
   el síntoma típico es un contador que queda alto y deja al generador tapado para siempre.
 
 - **Una corrutina no sobrevive a la muerte de su GameObject.** `EnemyController` arrancaba una corrutina
@@ -413,8 +420,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 
 - **Los índices de escena están hardcodeados.** Ver la tabla de arriba.
 
-- **Un power-up que no agarrás no se destruye nunca.** `PowerUp` spawnea cada 8 s (balas y vida) y cada
-  20 s (arma), sin límite ni caducidad.
+- **Las cajas no tienen techo de cantidad, sólo caducidad.** `PowerUp` spawnea cada 8 s (balas y vida) y cada
+  20 s (arma): son los valores de las escenas, el código dice 3,5. Cada prefab lleva `PickupCaducidad`, que la
+  destruye a los 30 s parpadeando los últimos 3; el tutorial la apaga para que esperen al jugador.
 
 - **Todavía no hay pooling de zombis, manchas ni partículas.** Están un orden de magnitud por debajo de
   las balas, pero siguen siendo `Instantiate`/`Destroy`.
@@ -458,8 +466,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 
 ## Para agregar una mecánica nueva
 
-1. ¿Es un tipo de enemigo? Creá un `Enemy` nuevo en `Assets/Zombies/` (**con `puntos` cargado**, si no
-   vale 1), un prefab con `EnemyController`, y sumalo al generador. No hace falta tag ni tocar código.
+1. ¿Es un tipo de enemigo? Creá un `Enemy` nuevo en `Assets/Zombies/` (**con `puntos`, `monedasMin` y
+   `monedasMax` cargados**; si no, valen 1, 1 y 3), un prefab con `EnemyController`, y sumalo al generador (en
+   WaveMode, a `tipos` del `WaveManager`, con su `desdeOleada` y su `peso`). No hace falta tag ni tocar código.
 2. ¿Spawnea objetos seguido? Pooleá desde el principio: mirá `BulletController.Obtener` / `Devolver`.
 3. ¿Necesita estado global? `static` + reset en `SubsystemRegistration`.
 4. ¿Suma puntos o monedas? Que salga de `DanoZombi` (`enemyType.puntos`, y las monedas que suelta), no de
