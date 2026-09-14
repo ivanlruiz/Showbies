@@ -38,7 +38,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, MenuPausa, BotonAtrasMenu
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner)
 Assets/Scripts/*.cs         ← CanvasHelper, MainMenu, MenuPerdiste, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode (+ SampleScene, sin usar)
@@ -164,10 +164,13 @@ sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
 `PlayerController.ThrowGranade` (Espacio en PC, botón G en móvil, con `granadaCooldown` de 5 s) instancia
 `Granada.prefab` y llama a `Granade.Lanzar(destino)`.
 
-- **Destino.** En PC, el punto del piso bajo el mouse, entre `distanciaMinimaGranada` (3 m) y
-  `distanciaMaximaGranada` (12 m). En móvil no hay puntero: sale a `distanciaGranadaMovil` (8 m) hacia donde se
-  venía apuntando con el joystick de disparo en el último segundo (`PlayerJS.ApuntoHaceMenosDe`; apretar G obliga a
-  soltarlo), y si no, hacia donde mira el jugador. La cuenta es `PlayerController.PuntoEnElPiso`, estática para
+- **Apuntar.** En PC, mantener Espacio marca en el piso dónde va a caer (bajo el mouse, entre
+  `distanciaMinimaGranada` y `distanciaMaximaGranada`, 3 a 12 m) y soltarlo la tira. En móvil el botón G es un
+  joystick (`JoystickGranada`): arrastrar desde donde se apoyó el dedo elige dirección y distancia, soltar la tira y
+  volver al centro antes de soltar cancela. Un toque sin arrastrar la tira rápido a `distanciaGranadaMovil` (8 m)
+  hacia donde se venía apuntando con el joystick de disparo en el último segundo (`PlayerJS.ApuntoHaceMenosDe`), o si
+  no hacia donde mira el jugador. El anillo de "dónde cae" es una copia del indicador de la granada que
+  `PlayerController` crea al arrancar. La cuenta del destino es `PlayerController.PuntoEnElPiso`, estática para
   poder probarla sin input.
 - **Vuelo por trayectoria calculada, no por física.** Al lanzarla, el Rigidbody pasa a kinematic y el collider se
   apaga; `Update` la mueve en un arco de `alturaDelArco` durante `tiempoDeVuelo`. Así cae exacta sobre el anillo y
@@ -177,6 +180,7 @@ sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
 - Mientras vuela, el hijo "Indicador" del prefab (un `LineRenderer`) se suelta y dibuja en el piso el radio de la
   explosión; se destruye con ella.
 - El botón G muestra la recarga con `IndicadorRecargaGranada` y su hijo "Recarga" (Image Filled Radial360).
+  **No tiene `Button`, y no hay que ponérselo:** su `onClick` se sumaría al joystick y cada toque tiraría dos veces.
 
 ## Generación de enemigos
 
@@ -254,8 +258,7 @@ en el editor con target Android los joysticks se veían pero no respondían.
   `moveVelocity` y por `isFiring`.
 - `ConditionalShow` prende y apaga objetos por plataforma (`showOnAndroid` / `showOnPC`). Los joysticks
   ya están puestos en el Canvas de las dos escenas de juego con eso, igual que el **botón de granada**
-  (`BotonGranada`, sólo Android), cuyo `onClick` llama a `PlayerController.ThrowGranade` — público
-  justamente por eso, y con el cooldown adentro, así que el botón no puede spamear.
+  (`BotonGranada`, sólo Android), que es un joystick para apuntarla (ver la sección Granada).
 
 **No vuelvas a meter un `#if UNITY_ANDROID` alrededor de una clase entera.** Ver la trampa de abajo.
 

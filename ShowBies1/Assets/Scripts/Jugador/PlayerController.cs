@@ -30,9 +30,11 @@ public class PlayerController : MonoBehaviour
     public float granadaCooldown = 5f;
     public float distanciaMinimaGranada = 3f;    // para que no caiga a los pies del jugador
     public float distanciaMaximaGranada = 12f;
-    public float distanciaGranadaMovil = 8f;     // en movil no hay un punto al que apuntar: sale a distancia fija
+    public float distanciaGranadaMovil = 8f;     // el toque rapido del boton G: sin arrastrar no hay distancia elegida
+    public Color colorPunteroGranada = new Color(1f, 1f, 1f, 0.6f);   // el anillo mientras se apunta; en vuelo usa el del prefab
 
     private float granadaDisponibleEn;
+    private LineRenderer punteroGranada;
 
     // Segundos que faltan para poder tirar otra granada. Lo muestra el boton de granada.
     public float GranadaRestante { get { return Mathf.Max(0f, granadaDisponibleEn - Time.time); } }
@@ -44,6 +46,16 @@ public class PlayerController : MonoBehaviour
         // Camera.main y no FindObjectOfType: FindObjectOfType esta deprecado en
         // Unity 6 y Camera.main esta cacheado por el engine desde 2020.2.
         mainCamera = Camera.main;
+
+        // El anillo que marca donde va a caer mientras se apunta: una copia del de
+        // la granada, en otro color.
+        if (granadaPrefab != null && granadaPrefab.Indicador != null)
+        {
+            punteroGranada = Instantiate(granadaPrefab.Indicador);
+            punteroGranada.startColor = colorPunteroGranada;
+            punteroGranada.endColor = colorPunteroGranada;
+            punteroGranada.gameObject.SetActive(false);
+        }
     }
 
     private void Update()
@@ -53,6 +65,7 @@ public class PlayerController : MonoBehaviour
             // Lo que se suelte durante la pausa no llega como GetMouseButtonUp:
             // sin esto el arma quedaria disparando sola al reanudar.
             theGun.isFiring = false;
+            OcultarPunteroGranada();
             return;
         }
 
@@ -150,7 +163,14 @@ public class PlayerController : MonoBehaviour
 
     private void HandleShooting()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        // Espacio: mantenerlo marca en el piso donde va a caer (bajo el mouse) y
+        // soltarlo la tira.
+        if (Input.GetKey(KeyCode.Space))
+        {
+            if (GranadaLista) MostrarPunteroGranada(DestinoGranada());
+            else OcultarPunteroGranada();
+        }
+        if (Input.GetKeyUp(KeyCode.Space))
         {
             ThrowGranade();
         }
@@ -177,13 +197,58 @@ public class PlayerController : MonoBehaviour
         // El cooldown de 5 segundos vivía en Granade, sobre la instancia recién
         // creada, así que no limitaba nada: se podían tirar granadas por frame.
         // Va acá, que es donde está el input.
-        if (granadaPrefab == null || MenuPausa.Pausado || Time.time < granadaDisponibleEn) return;
+        LanzarGranadaA(DestinoGranada());
+    }
+
+    // Lo llama el joystick de granada al soltar despues de apuntar. "palanca" es la
+    // direccion en pantalla por cuanto se arrastro, de 0 a 1.
+    public void TirarGranadaApuntada(Vector2 palanca)
+    {
+        LanzarGranadaA(DestinoApuntado(palanca));
+    }
+
+    // Mientras se arrastra el joystick de granada: marca en el piso donde va a caer.
+    public void ApuntarGranada(Vector2 palanca)
+    {
+        if (GranadaLista) MostrarPunteroGranada(DestinoApuntado(palanca));
+        else OcultarPunteroGranada();
+    }
+
+    public void OcultarPunteroGranada()
+    {
+        if (punteroGranada != null && punteroGranada.gameObject.activeSelf) punteroGranada.gameObject.SetActive(false);
+    }
+
+    public bool GranadaLista
+    {
+        get { return granadaPrefab != null && !MenuPausa.Pausado && Time.time >= granadaDisponibleEn; }
+    }
+
+    private void LanzarGranadaA(Vector3 destino)
+    {
+        OcultarPunteroGranada();
+        if (!GranadaLista) return;
 
         granadaDisponibleEn = Time.time + granadaCooldown;
 
         // La granada se encarga sola del vuelo, de explotar y de destruirse.
         Granade granada = Instantiate(granadaPrefab, transform.position, transform.rotation);
-        granada.Lanzar(DestinoGranada());
+        granada.Lanzar(destino);
+    }
+
+    // Igual que el joystick de disparo: arriba en la pantalla es +Z en el mundo.
+    private Vector3 DestinoApuntado(Vector2 palanca)
+    {
+        float distancia = Mathf.Lerp(distanciaMinimaGranada, distanciaMaximaGranada, Mathf.Clamp01(palanca.magnitude));
+        Vector3 apuntado = transform.position + new Vector3(palanca.x, 0f, palanca.y);
+        return PuntoEnElPiso(transform.position, apuntado, transform.forward, distancia, distancia);
+    }
+
+    private void MostrarPunteroGranada(Vector3 centro)
+    {
+        if (punteroGranada == null) return;
+        Granade.DibujarAnillo(punteroGranada, centro, granadaPrefab.radioExplosion);
+        if (!punteroGranada.gameObject.activeSelf) punteroGranada.gameObject.SetActive(true);
     }
 
     // En PC, donde esta el mouse. En movil no hay puntero: hacia donde se venia

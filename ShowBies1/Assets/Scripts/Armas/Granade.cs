@@ -26,6 +26,9 @@ public class Granade : MonoBehaviour
     private float lanzadaEn;
     private readonly Collider[] contactos = new Collider[16];
 
+    // El jugador copia este anillo para marcar donde va a caer mientras apunta.
+    public LineRenderer Indicador { get { return indicador; } }
+
     // La lanza hacia un punto del piso. Vuela por una trayectoria calculada y no
     // por fisica: asi cae justo sobre el anillo, y no choca con el jugador del que
     // sale ni con las balas que van en la misma direccion.
@@ -93,16 +96,21 @@ public class Granade : MonoBehaviour
         // Suelto de la granada para que no vuele con ella, y con los puntos en
         // espacio de mundo para que la escala aplastada del prefab no lo deforme.
         indicador.transform.SetParent(null, false);
-        indicador.useWorldSpace = true;
-        indicador.loop = true;
-        indicador.positionCount = segmentosIndicador;
-        for (int i = 0; i < segmentosIndicador; i++)
-        {
-            float angulo = i * Mathf.PI * 2f / segmentosIndicador;
-            indicador.SetPosition(i, new Vector3(
-                centro.x + Mathf.Cos(angulo) * radioExplosion, 0.05f, centro.z + Mathf.Sin(angulo) * radioExplosion));
-        }
+        DibujarAnillo(indicador, centro, radioExplosion, segmentosIndicador);
         indicador.gameObject.SetActive(true);
+    }
+
+    // Un circulo apenas por encima del piso, con los puntos en espacio de mundo.
+    public static void DibujarAnillo(LineRenderer linea, Vector3 centro, float radio, int segmentos = 48)
+    {
+        linea.useWorldSpace = true;
+        linea.loop = true;
+        linea.positionCount = segmentos;
+        for (int i = 0; i < segmentos; i++)
+        {
+            float angulo = i * Mathf.PI * 2f / segmentos;
+            linea.SetPosition(i, new Vector3(centro.x + Mathf.Cos(angulo) * radio, 0.05f, centro.z + Mathf.Sin(angulo) * radio));
+        }
     }
 
     private void Explode()
