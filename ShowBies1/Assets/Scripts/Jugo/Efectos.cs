@@ -3,12 +3,15 @@ using UnityEngine;
 
 // El "jugo" de las escenas de juego: lo que hace que cada golpe, muerte y
 // explosion se sienta. Vive en el prefab Assets/Prefabs/Jugo/Efectos.prefab,
-// puesto en ShowBies1, WaveMode y Tutorial, con los sonidos, las chispas, el
-// material del destello, los numeros de daño y la musica de la partida.
+// puesto en ShowBies1, WaveMode y Tutorial, con los sonidos, las chispas, las
+// particulas de muerte, el material del destello, los numeros de daño y la
+// musica de la partida.
 //
 // Los que producen los eventos (EnemyController, Granade, PlayerHealth,
 // PlayerController, GunController, WaveManager) llaman a los metodos static,
 // que no hacen nada si la escena no tiene Efectos: el juego anda igual, plano.
+// La excepcion es ParticulasDeMuerte, que sin Efectos instancia las del zombi
+// como antes.
 public class Efectos : MonoBehaviour
 {
     public static Efectos instance;
@@ -182,6 +185,103 @@ public class Efectos : MonoBehaviour
 
         var parametros = new ParticleSystem.EmitParams { position = punto, applyShapeToPosition = true };
         chispas.Emit(parametros, cantidad);
+    }
+
+    // Las particulas que suelta cada tipo de zombi al morir (Particulas/Explosion*).
+    // Antes eran un Instantiate por muerte que se borraba solo al terminar; ahora
+    // cada prefab tiene una copia por escena, pasada a espacio mundo, y cada muerte
+    // emite ahi la rafaga del prefab, como las chispas.
+    private struct CopiaDeMuerte
+    {
+        public ParticleSystem sistema;   // null: el prefab no se puede emitir asi y se instancia como antes
+        public int rafaga;
+    }
+
+    private readonly Dictionary<ParticleSystem, CopiaDeMuerte> copiasDeMuerte = new Dictionary<ParticleSystem, CopiaDeMuerte>();
+
+    public static void ParticulasDeMuerte(ParticleSystem prefab, Vector3 punto)
+    {
+        if (prefab == null) return;
+
+        // Sin Efectos en la escena, o con un prefab que no es una sola rafaga, como antes.
+        var e = instance;
+        CopiaDeMuerte copia;
+        if (e == null || !e.CopiaParaMuerte(prefab, out copia))
+        {
+            Instantiate(prefab, punto, Quaternion.identity);
+            return;
+        }
+
+        // En el editor, un Emit sobre un sistema detenido no dejaba particulas. La
+        // copia no emite sola (su emision esta apagada), asi que Play no tira nada.
+        if (!copia.sistema.isPlaying) copia.sistema.Play();
+        var parametros = new ParticleSystem.EmitParams { position = punto, applyShapeToPosition = true };
+        copia.sistema.Emit(parametros, copia.rafaga);
+    }
+
+    private bool CopiaParaMuerte(ParticleSystem prefab, out CopiaDeMuerte copia)
+    {
+        if (!copiasDeMuerte.TryGetValue(prefab, out copia))
+        {
+            copia = CrearCopiaDeMuerte(prefab);
+            copiasDeMuerte[prefab] = copia;   // tambien si no sirve: no se vuelve a revisar en cada muerte
+        }
+        return copia.sistema != null;
+    }
+
+    private CopiaDeMuerte CrearCopiaDeMuerte(ParticleSystem prefab)
+    {
+        var copia = new CopiaDeMuerte();
+        var main = prefab.main;
+        var emision = prefab.emission;
+        Vector3 escala = prefab.transform.localScale;
+
+        // Lo que se comprobo que se ve igual emitido a mano en espacio mundo: un solo
+        // sistema en espacio local, con escala local y pareja, sin loop, que tira todo
+        // en rafagas fijas al arrancar. Los modulos que mueven particulas en espacio
+        // local (salvo el limite de velocidad, que se corrige abajo) no se probaron.
+        bool sirve = !main.loop && main.simulationSpace == ParticleSystemSimulationSpace.Local &&
+                     main.scalingMode == ParticleSystemScalingMode.Local &&
+                     Mathf.Approximately(escala.x, escala.y) && Mathf.Approximately(escala.x, escala.z) &&
+                     prefab.GetComponentsInChildren<ParticleSystem>(true).Length == 1 &&
+                     emision.rateOverTimeMultiplier <= 0f && emision.rateOverDistanceMultiplier <= 0f && emision.burstCount > 0 &&
+                     main.gravityModifierMultiplier == 0f && !prefab.velocityOverLifetime.enabled &&
+                     !prefab.forceOverLifetime.enabled && !prefab.noise.enabled && !prefab.collision.enabled &&
+                     !prefab.subEmitters.enabled && !prefab.trails.enabled && !prefab.inheritVelocity.enabled &&
+                     !(prefab.limitVelocityOverLifetime.enabled && (prefab.limitVelocityOverLifetime.separateAxes || prefab.limitVelocityOverLifetime.dragMultiplier != 0f));
+        for (int i = 0; sirve && i < emision.burstCount; i++)
+        {
+            var burst = emision.GetBurst(i);
+            sirve = burst.time <= 0f && burst.cycleCount == 1 && burst.probability >= 1f && burst.count.mode == ParticleSystemCurveMode.Constant;
+            copia.rafaga += Mathf.RoundToInt(burst.count.constant);
+        }
+        if (!sirve || copia.rafaga <= 0)
+        {
+            copia.rafaga = 0;
+            return copia;
+        }
+
+        var sistema = Instantiate(prefab, transform);
+        sistema.name = prefab.name + " (compartida)";
+
+        var mainCopia = sistema.main;
+        mainCopia.playOnAwake = false;
+        mainCopia.stopAction = ParticleSystemStopAction.None;   // el prefab se destruye al terminar
+        mainCopia.simulationSpace = ParticleSystemSimulationSpace.World;   // cada rafaga queda donde murio su zombi
+        mainCopia.maxParticles = Mathf.Max(main.maxParticles, copia.rafaga * 40);   // ahora las rafagas se suman
+
+        var emisionCopia = sistema.emission;
+        emisionCopia.enabled = false;   // la rafaga la pone Emit; Play no tira la del prefab
+
+        // En espacio local el limite de velocidad se compara en unidades del prefab, que
+        // esta escalado (de 0,1 a 1); en espacio mundo, sin escalarlo, las particulas de
+        // los prefabs chicos no frenaban y llegaban un 4 % mas lejos.
+        var limite = sistema.limitVelocityOverLifetime;
+        if (limite.enabled) limite.limitMultiplier = prefab.limitVelocityOverLifetime.limitMultiplier * escala.x;
+
+        sistema.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        copia.sistema = sistema;
+        return copia;
     }
 
     private void PausaDeImpacto(float segundos)

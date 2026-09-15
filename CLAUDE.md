@@ -42,7 +42,7 @@ los zombis se ponen más duros con cada oleada, y en el modo libre, con los minu
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
-Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado
+Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis), AnilloIman
@@ -104,6 +104,7 @@ Lo que se comunica sin inspector usa búsquedas cacheadas:
   generadores y el tutorial.
 - `BulletController.pool` — la pila de balas dormidas.
 - `EnemyController.pool` — los zombis muertos, apagados, en una pila por prefab (ver Generación de enemigos).
+- `ManchaDeSangre.pool` — las manchas de sangre apagadas, también por prefab.
 - `MenuPausa.Pausado` — si el juego está en pausa. Lo miran los que leen input.
 - `CatalogoMejoras.Instancia` — sale de `Resources` (no se cablea en ninguna escena); si falta, las mejoras
   quedan neutras con un LogError.
@@ -389,7 +390,8 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 Lo que hace que cada acción se sienta vive en `Efectos` (`Assets/Scripts/Jugo/`), dentro del prefab
 `Assets/Prefabs/Jugo/Efectos.prefab` puesto en ShowBies1, WaveMode y Tutorial. Quien produce un evento llama a
 un método static (`Efectos.Golpe`, `Muerte`, `Explosion`, `DanioJugador`, `Caja`, `Disparo`, `CartelOleada`), que
-**no hace nada si la escena no tiene el prefab**: el juego anda igual, plano.
+**no hace nada si la escena no tiene el prefab**: el juego anda igual, plano. La excepción es `ParticulasDeMuerte`,
+que sin `Efectos` instancia las partículas del zombi como antes.
 
 - **Golpe a un zombi** (en `EnemyController.DanoZombi`, así cubre balas y granada): número de daño
   (`NumeroFlotante`, TextMeshPro 3D con Bangers y shader overlay, de un pool de 40), chispas y un tic. Si no
@@ -414,6 +416,16 @@ un método static (`Efectos.Golpe`, `Muerte`, `Explosion`, `DanioJugador`, `Caja
   pools propios. Todo con tiempo sin escalar y delta topeado.
 - **Chispas**: un solo `ParticleSystem` por escena (`Particulas/Chispas.prefab`) usado con `Emit`, como el brillo
   de las monedas.
+- **Partículas de muerte**: cada zombi tiene las suyas (`deathParticles`, los `Particulas/Explosion*`, una ráfaga de
+  50 de su color). `EnemyController` llama a `Efectos.ParticulasDeMuerte`, que arma **una copia de cada prefab por
+  escena** y emite ahí la ráfaga en el lugar de la muerte, en vez de un `Instantiate` por muerte. La copia pasa a
+  espacio mundo (en espacio local la posición del `Emit` se toma relativa a la copia y escalada con ella, y todas las
+  ráfagas vivas se moverían con la copia), con la emisión propia apagada y el
+  límite de velocidad multiplicado por la escala del prefab: en espacio local ese límite se compara en unidades del
+  prefab escalado, y sin corregirlo las partículas de los prefabs chicos no frenaban. Así se comprobó, midiendo
+  distancia, tamaño y velocidad contra el prefab original, que se ve igual. **Si un prefab de explosión deja de ser
+  una sola ráfaga fija sin loop** (emisión continua, sistemas hijos, gravedad, ruido, fuerzas, colisiones, escala
+  despareja) `CrearCopiaDeMuerte` no lo acepta y se instancia como antes; si le cambiás otra cosa, volvé a comparar.
 - **Música de partida**: un loop de 32 s en la bemol mayor en el `AudioSource` del prefab (Vorbis, comprimida en
   memoria). La música y los sonidos nuevos están sintetizados y son provisorios.
 
@@ -572,14 +584,15 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   `"da\xF1o"` serializado en los `.asset` de los zombis, o los stats se pierden.
 
 - **Los `static` cruzan escenas.** `ZombisVivos`, `jugadorCache`, el pool de balas, el caché de sprites
-  de sangre, el pool de monedas, el pool de zombis y los datos de `Progreso` sobreviven al `LoadScene` (los pools
+  de sangre, el pool de monedas, el pool de zombis, el de manchas y los datos de `Progreso` sobreviven al `LoadScene` (los pools
   descartan las referencias a objetos que la escena ya destruyó). Están todos en el reset de `SubsystemRegistration`. Si te olvidás,
   el síntoma típico es un contador que queda alto y deja al generador tapado para siempre.
 
 - **Una corrutina no sobrevive a la muerte de su GameObject.** `EnemyController` arrancaba una corrutina
   sobre el zombi para borrar la mancha de sangre y en la línea siguiente destruía al zombi: la corrutina
   nunca llegaba al `WaitForSeconds` y las manchas quedaban en la escena para siempre. Para limpiar algo
-  después de destruir al que lo pidió, usá `Destroy(obj, segundos)`, que lo maneja el engine.
+  después de destruir al que lo pidió, usá `Destroy(obj, segundos)`, que lo maneja el engine, o dale al objeto su
+  propio reloj, como `ManchaDeSangre`.
 
 - **Las partículas hijas con `stopAction = Destroy` se cortan si destruís al padre.** La explosión de la
   granada es hija del prefab. Hay que despegarla (`SetParent(null)`) antes de destruir la granada, y
@@ -591,8 +604,11 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   20 s (arma): son los valores de las escenas, el código dice 3,5. Cada prefab lleva `PickupCaducidad`, que la
   destruye a los 30 s parpadeando los últimos 3; el tutorial la apaga para que esperen al jugador.
 
-- **Todavía no hay pooling de manchas ni de partículas de muerte.** Los zombis ya salen de un pool (ver Generación
-  de enemigos); la mancha de sangre y las partículas de cada muerte siguen siendo `Instantiate`/`Destroy`.
+- **Lo que se repite en cada muerte no se crea ni se destruye.** El zombi vuelve a su pool, la mancha de sangre sale
+  del de `ManchaDeSangre` (se apaga sola a los `duracionMancha` segundos, con tiempo escalado como el `Destroy`
+  diferido de antes), las partículas de muerte salen de las copias de `Efectos`, y las monedas, los números de daño
+  y las barras de vida también se reusan. Siguen siendo `Instantiate`/`Destroy` la granada (con su explosión, una
+  cada 5 s como mucho), las cajas y los zombis del tutorial.
 
 - **Las tags `ZombiNormal`, `ZombiBoss`, `ZombiFaster`, `ZombiRapido` y `ZombiTanque` siguen en el
   `TagManager` y en los prefabs, pero ya no las usa nadie.** Para detectar un zombi se pide el

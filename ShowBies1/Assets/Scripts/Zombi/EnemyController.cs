@@ -363,7 +363,8 @@ public class EnemyController : MonoBehaviour
 
             DejarManchaDeSangre();
 
-            Instantiate(deathParticles, transform.position, Quaternion.identity);
+            // Sin Instantiate por muerte: la rafaga sale de una copia del prefab en Efectos.
+            Efectos.ParticulasDeMuerte(deathParticles, transform.position);
 
             // Unico lugar donde se suman puntos. Antes tambien sumaba
             // BulletController por cada impacto, asi que matar con granada valia
@@ -487,18 +488,13 @@ public class EnemyController : MonoBehaviour
 
     private void DejarManchaDeSangre()
     {
-        if (manchaDeSangrePrefab == null || sangreSprites.Length == 0) return;
+        if (manchaDeSangrePrefab == null || sangreSprites == null || sangreSprites.Length == 0) return;
 
-        GameObject manchaDeSangre = Instantiate(manchaDeSangrePrefab, transform.position, Quaternion.identity);
-        manchaDeSangre.SetActive(true);
-        manchaDeSangre.GetComponent<SpriteRenderer>().sprite = SpriteDeSangreAlAzar();
-        manchaDeSangre.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-        manchaDeSangre.transform.position = new Vector3(transform.position.x, .1f, transform.position.z);
-
-        // Con Destroy diferido y no con una corrutina: la corrutina corria sobre el
-        // zombi, que se destruye en este mismo frame, asi que nunca llegaba a
-        // ejecutarse y las manchas quedaban en la escena para siempre.
-        Destroy(manchaDeSangre, duracionMancha);
+        // Sale de un pool y se levanta sola a los duracionMancha segundos. No la
+        // puede limpiar el zombi: en este mismo frame vuelve apagado a su pool, o se
+        // destruye si es del tutorial (antes una corrutina sobre el zombi dejaba las
+        // manchas en la escena para siempre).
+        ManchaDeSangre.Poner(manchaDeSangrePrefab, transform.position, SpriteDeSangreAlAzar(), duracionMancha);
     }
 
     private Sprite SpriteDeSangreAlAzar()
