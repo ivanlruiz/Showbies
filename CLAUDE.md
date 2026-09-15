@@ -413,7 +413,8 @@ que sin `Efectos` instancia las partículas del zombi como antes.
 - **Golpe a un zombi** (en `EnemyController.DanoZombi`, así cubre balas y granada): número de daño
   (`NumeroFlotante`, TextMeshPro 3D con Bangers y shader overlay, de un pool de 40), chispas y un tic. Si no
   muere, además destello blanco (sus renderers visibles pasan un instante al material `Destello`) y un aplastado
-  de escala que se recupera en `FixedUpdate`.
+  de escala que se recupera en `FixedUpdate`. El material usa `Assets/Shaders/Destello.shader`, un color plano como
+  `Unlit/Color` pero con pasada de sombra: con `Unlit/Color` el zombi dejaba de proyectar sombra mientras estaba blanco.
 - **Muerte**: chispas y sonido. Desde `vidaParaMuerteGrande` (el tanque) suma temblor fuerte y una **pausa de
   impacto** (`timeScale` a 0,05 un instante); el jefe, más. Cada muerte cuenta para `ContadorCombo` en el HUD
   ("COMBO xN", con una ventana de 1,5 s entre muertes).
