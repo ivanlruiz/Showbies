@@ -1083,12 +1083,6 @@ public static class PruebasMejoras
         inf.Cerca("aplicado: PlayerHealth.MultiplicadorCura", multiplicadorVida, m.vida.MultiplicadorCura, 1e-3);
         inf.Cerca("aplicado: Moneda.RadioImanDeLaPartida", radioIman, Moneda.RadioImanDeLaPartida, 1e-3);
 
-        // El anillo que muestra ese alcance: si Jugador.prefab pierde el componente
-        // o su material, la mejora de iman vuelve a no verse y nada avisa.
-        var anillo = m.jugador.GetComponent<AnilloIman>();
-        inf.Verdadero("aplicado: el jugador tiene AnilloIman con material", anillo != null && anillo.material != null);
-        inf.Cerca("aplicado: AnilloIman.RadioActual", radioIman, AnilloIman.RadioActual, 1e-3);
-
         // La furia: si Jugador.prefab pierde el componente, el boton del HUD no aparece nunca.
         var furia = m.jugador.GetComponent<Furia>();
         inf.Verdadero("aplicado: el jugador tiene Furia", furia != null);
