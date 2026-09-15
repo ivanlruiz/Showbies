@@ -69,8 +69,24 @@ public class EnemyController : MonoBehaviour
     private bool aplastado;
 
     // Cuántos zombis hay vivos ahora mismo. Los generadores lo miran para no
-    // pasarse del techo de población: sin esto spawnean para siempre.
+    // pasarse del techo de población: sin esto spawnean para siempre. Cuenta los
+    // zombis prendidos (OnEnable/OnDisable), salgan o no del pool.
     public static int ZombisVivos { get; private set; }
+
+    // Los zombis se reusan, como las balas y las monedas: con decenas muriendo por
+    // minuto, crear y destruir cada uno era basura para el recolector y trabajo
+    // para la fisica en cada aparicion, y en los telefonos flojos se notaba en
+    // tirones. El pool es por prefab: un tanque no vuelve como zombi normal.
+    private static readonly Dictionary<GameObject, Stack<EnemyController>> pool = new Dictionary<GameObject, Stack<EnemyController>>();
+    private static int ultimaAparicion;
+
+    private GameObject prefabDeOrigen;   // null si no salio del pool (el tutorial): al morir se destruye
+    private bool enUso;
+    private Animator[] animadores;
+
+    // Distinto en cada aparicion aunque el objeto sea el mismo: lo anotan los que
+    // guardan zombis para preguntar despues si murieron (ver SigueVivo).
+    public int NumeroDeAparicion { get; private set; }
 
     // Contadores del botin, para el medidor de balance y las pruebas: cuantas
     // muertes soltaron monedas, cuanto valor se esperaba en promedio y cuanto
@@ -90,6 +106,8 @@ public class EnemyController : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         ZombisVivos = 0;
+        pool.Clear();
+        ultimaAparicion = 0;
         jugadorCache = null;
         spritesDeSangre.Clear();
         MuertesConBotin = 0;
@@ -109,10 +127,132 @@ public class EnemyController : MonoBehaviour
 
     public float DanoPorGolpe => enemyType.daño * multiplicadorDano;
 
+    // Hace aparecer un zombi de ese prefab: uno apagado del pool si hay, o uno
+    // nuevo. Quien lo llama le pone despues los multiplicadores, como antes con
+    // Instantiate: la vida se calcula perezosa, con los que tenga en el primer golpe.
+    public static EnemyController Aparecer(GameObject prefab, Vector3 posicion)
+    {
+        if (prefab == null) return null;
+
+        // Al cambiar de escena los zombis guardados se destruyen y en la pila quedan
+        // referencias muertas: se descartan antes de usarlas.
+        EnemyController zombi = null;
+        Stack<EnemyController> pila;
+        if (pool.TryGetValue(prefab, out pila))
+        {
+            while (zombi == null && pila.Count > 0) zombi = pila.Pop();
+        }
+
+        if (zombi != null)
+        {
+            // Se mueve apagado y despues se prende: la fisica lo toma ya en su lugar.
+            zombi.transform.SetPositionAndRotation(posicion, Quaternion.identity);
+            zombi.gameObject.SetActive(true);
+            return zombi;
+        }
+
+        var nuevo = Instantiate(prefab, posicion, Quaternion.identity);
+        zombi = nuevo.GetComponent<EnemyController>();
+        if (zombi == null)
+        {
+            Debug.LogWarning("EnemyController.Aparecer: " + prefab.name + " no tiene EnemyController.", prefab);
+            Destroy(nuevo);
+            return null;
+        }
+        zombi.prefabDeOrigen = prefab;
+        return zombi;
+    }
+
+    // Vivo y en la misma aparicion que se anoto: un zombi que murio y volvio a
+    // salir del pool es otro zombi, aunque sea el mismo objeto.
+    public static bool SigueVivo(EnemyController zombi, int numeroDeAparicion)
+    {
+        return zombi != null && zombi.enUso && zombi.NumeroDeAparicion == numeroDeAparicion;
+    }
+
+    // Lo que no cambia de una aparicion a otra se arma una sola vez.
     private void Awake()
     {
+        rb = GetComponent<Rigidbody>();
+        // La rotacion la pone FixedUpdate, mirando al jugador: que los choques no
+        // lo inclinen entre un paso y otro.
+        rb.freezeRotation = true;
+        escalaBase = transform.localScale;
+        animadores = GetComponentsInChildren<Animator>(true);
+        PrepararDestello();
+    }
+
+    // Cada aparicion, nueva o salida del pool, arranca de cero. Corre antes de que
+    // quien lo hizo aparecer le ponga los multiplicadores.
+    private void OnEnable()
+    {
+        enUso = true;
         ZombisVivos++;
+        NumeroDeAparicion = ++ultimaAparicion;
+
+        vidaIniciada = false;
+        estaMuerto = false;
+        proximoGolpe = 0f;
+        multiplicadorMonedas = 1f;
+        monedaPrefab = null;
+        multiplicadorVida = 1f;
+        multiplicadorDano = 1f;
+
+        transform.localScale = escalaBase;
+        aplastado = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        thePlayer = ObtenerJugador();
+        foreach (var animador in animadores) animador.speed = velocidadDeAnimacion;
         SubirSobreElPiso();
+    }
+
+    // Al morir, al caerse o al descargarse la escena. Lo que quedo a mitad de un
+    // golpe (el destello, la barra) no puede pasar a la aparicion siguiente.
+    private void OnDisable()
+    {
+        if (!enUso) return;
+        enUso = false;
+        ZombisVivos--;
+
+        // La barra se apaga en el acto, no en su LateUpdate: el zombi puede volver a
+        // salir del pool en este mismo frame. Queda guardada para la aparicion
+        // siguiente, que la prende con su primer golpe que no mata; crearla de nuevo
+        // eran tres GameObjects por cada zombi golpeado.
+        if (barraDeVida != null) barraDeVida.Ocultar();
+        if (destellando)
+        {
+            destellando = false;
+            for (int i = 0; i < renderersVisibles.Length; i++) renderersVisibles[i].sharedMaterials = materialesOriginales[i];
+        }
+    }
+
+    // La barra es un objeto aparte y, apagada, no se entera de que el zombi ya no
+    // existe: se va con el (al descargar la escena, o un zombi del tutorial).
+    private void OnDestroy()
+    {
+        if (barraDeVida != null) Destroy(barraDeVida.gameObject);
+    }
+
+    // Vuelve apagado al pool. Los que no salieron del pool se destruyen como antes.
+    private void Devolver()
+    {
+        if (prefabDeOrigen == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        if (!enUso) return;
+
+        gameObject.SetActive(false);
+        Stack<EnemyController> pila;
+        if (!pool.TryGetValue(prefabDeOrigen, out pila))
+        {
+            pila = new Stack<EnemyController>();
+            pool[prefabDeOrigen] = pila;
+        }
+        pila.Push(this);
     }
 
     // El piso de las escenas de juego esta en Y = 0 y el pivote del zombi es el
@@ -134,29 +274,11 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
-    {
-        ZombisVivos--;
-        if (barraDeVida != null) Destroy(barraDeVida.gameObject);
-    }
-
-    void Start()
-    {
-        IniciarVida();
-        rb = GetComponent<Rigidbody>();
-        // La rotacion la pone FixedUpdate, mirando al jugador: que los choques no
-        // lo inclinen entre un paso y otro.
-        rb.freezeRotation = true;
-        thePlayer = ObtenerJugador();
-        escalaBase = transform.localScale;
-        PrepararDestello();
-        foreach (var animador in GetComponentsInChildren<Animator>()) animador.speed = velocidadDeAnimacion;
-    }
-
-    // Perezosa y una sola vez: un zombi puede recibir daño (una granada que
-    // explota justo donde aparece) o ser consultado antes de su Start. La vida sale
-    // del multiplicador vigente en ese momento, y la barra usa esta vidaMaxima, asi
-    // que el escalado no la rompe mientras se aplique antes del primer golpe.
+    // Perezosa y una sola vez por aparicion: quien hace aparecer al zombi le pone
+    // los multiplicadores despues de Aparecer, y un zombi puede recibir daño (una
+    // granada que explota justo donde aparece) antes del primer FixedUpdate. La vida
+    // sale del multiplicador vigente en ese momento, y la barra usa esta vidaMaxima,
+    // asi que el escalado no la rompe mientras se aplique antes del primer golpe.
     private void IniciarVida()
     {
         if (vidaIniciada) return;
@@ -189,7 +311,7 @@ public class EnemyController : MonoBehaviour
        // nunca, hasta que el generador queda tapado y la partida se vacia.
        if (transform.position.y < AlturaKillZ)
        {
-           Destroy(gameObject);   // sin puntos ni mancha: nadie lo mato
+           Devolver();   // sin puntos ni mancha: nadie lo mato
            return;
        }
 
@@ -214,11 +336,13 @@ public class EnemyController : MonoBehaviour
 
     public void DanoZombi(float daño)
     {
-        // Destroy es diferido: dos golpes en el mismo paso de fisica llamaban a
-        // esto dos veces con la vida ya en cero, y el bloque de muerte corria de
-        // nuevo entero: puntos dobles, dos manchas, dos explosiones.
+        // Dos golpes en el mismo paso de fisica llaman a esto dos veces con la vida
+        // ya en cero (los eventos de colision del paso se despachan aunque el zombi
+        // ya se haya apagado), y sin la guarda el bloque de muerte corria de nuevo
+        // entero: puntos dobles, dos manchas, dos explosiones.
         // Un daño de cero, negativo o NaN no hace nada: no hay numero que mostrar.
-        if (estaMuerto || !(daño > 0f)) return;
+        // Uno apagado en el pool tampoco: el que cayo por el kill-Z no llego a morir.
+        if (estaMuerto || !enUso || !(daño > 0f)) return;
 
         IniciarVida();
         vidaActual -= daño;
@@ -240,7 +364,6 @@ public class EnemyController : MonoBehaviour
             DejarManchaDeSangre();
 
             Instantiate(deathParticles, transform.position, Quaternion.identity);
-            Destroy(gameObject);
 
             // Unico lugar donde se suman puntos. Antes tambien sumaba
             // BulletController por cada impacto, asi que matar con granada valia
@@ -250,6 +373,9 @@ public class EnemyController : MonoBehaviour
 
             SoltarMonedas();
             Efectos.Muerte(transform.position, enemyType.hp);
+
+            // Al final: todo lo de arriba usa su posicion.
+            Devolver();
         }
     }
 
@@ -405,6 +531,8 @@ public class EnemyController : MonoBehaviour
 
     private void Golpear(Collision collision)
     {
+        // Un muerto no pega: los eventos del paso en que murio llegan igual.
+        if (estaMuerto || !enUso) return;
         if (Time.time < proximoGolpe || !collision.gameObject.CompareTag("Player")) return;
         if (PlayerHealth.instance == null) return;
 

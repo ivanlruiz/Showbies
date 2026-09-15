@@ -860,7 +860,9 @@ public static class PruebasMejoras
         public double esperadasAlEmpezar;
         public double soltadasAlEmpezar;
 
-        public readonly HashSet<EnemyController> procesados = new HashSet<EnemyController>();
+        // Por numero de aparicion y no por componente: los zombis se reusan, y el
+        // mismo EnemyController vuelve a salir como otro zombi.
+        public readonly HashSet<int> procesados = new HashSet<int>();
         public readonly List<Par> pares = new List<Par>();
         public readonly List<Regimen> regimenes = new List<Regimen>();
 
@@ -1052,7 +1054,7 @@ public static class PruebasMejoras
         var zombis = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
         foreach (var zombi in zombis)
         {
-            if (zombi == null || zombi.enemyType == null || !m.procesados.Add(zombi)) continue;
+            if (zombi == null || zombi.enemyType == null || !m.procesados.Add(zombi.NumeroDeAparicion)) continue;
             RegistrarPar(m, zombi);
             zombi.DanoZombi(zombi.VidaActual + 1f);
         }

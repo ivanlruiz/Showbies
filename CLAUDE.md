@@ -100,8 +100,10 @@ Lo que se comunica sin inspector usa búsquedas cacheadas:
 
 - `EnemyController.jugadorCache` — el jugador se busca **una vez** y se comparte. Antes había un
   `FindObjectOfType` por zombi spawneado, que con zombis en escena era costo cuadrático.
-- `EnemyController.ZombisVivos` — contador `static`, `Awake`/`OnDestroy`. Lo miran los dos generadores.
+- `EnemyController.ZombisVivos` — contador `static`, `OnEnable`/`OnDisable` (los zombis prendidos). Lo miran los dos
+  generadores y el tutorial.
 - `BulletController.pool` — la pila de balas dormidas.
+- `EnemyController.pool` — los zombis muertos, apagados, en una pila por prefab (ver Generación de enemigos).
 - `MenuPausa.Pausado` — si el juego está en pausa. Lo miran los que leen input.
 - `CatalogoMejoras.Instancia` — sale de `Resources` (no se cablea en ninguna escena); si falta, las mejoras
   quedan neutras con un LogError.
@@ -138,7 +140,7 @@ Los cinco assets viven en `Assets/Zombies/`. Balance actual:
 | ZombiBOSS | 500 | 10 | 2 | 100 | 30–40 | 500 |
 
 La vida y el daño **de cada zombi** se calculan como float en `EnemyController`: el valor del `.asset` por
-`multiplicadorVida` y `multiplicadorDano`, que pone quien lo hace aparecer antes de su `Start` (ver Generación de
+`multiplicadorVida` y `multiplicadorDano`, que pone quien lo hace aparecer antes de su primer golpe (ver Generación de
 enemigos). Los `.asset` no cambian con la oleada, y la columna "balas para matarlo" vale para la oleada 1 sin
 mejoras.
 
@@ -247,10 +249,24 @@ consultando `EnemyController.ZombisVivos`:
   La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
   `OleadaActual` y los multiplicadores de la oleada actual.
 
+**Los zombis salen de un pool.** Los generadores llaman a `EnemyController.Aparecer(prefab, posición)`, que prende uno
+apagado de ese prefab o crea uno nuevo; al morir o caer por el kill-Z el zombi se apaga y vuelve a su pila
+(`Devolver`). Lo que era de `Awake`/`Start`/`OnDestroy` se repartió: `Awake` arma lo fijo (rigidbody, escala base,
+renderers del destello, animators) y cada aparición arranca en `OnEnable` (vida sin calcular, multiplicadores en 1,
+escala base, relojes en cero, sube sobre el piso, cuenta en `ZombisVivos`) y termina en `OnDisable` (descuenta, apaga
+la barra y deshace un destello a medias). **Un zombi muerto no queda en null**: para saber después si murió,
+anotá su `NumeroDeAparicion` y preguntá `EnemyController.SigueVivo(zombi, número)`, como `WaveManager` y
+`MedirPartida`. Por lo mismo, **apagar y prender un zombi vivo es matarlo y hacerlo aparecer de nuevo**: vuelve con
+la vida sin calcular, los multiplicadores en 1 y otro número de aparición, y la oleada lo cuenta como muerto. Para
+esconder uno, apagale los renderers. Uno que murió en el paso de física actual ya está apagado: las balas lo buscan
+con `GetComponentInParent<EnemyController>(true)` para gastarse igual, y `DanoZombi` y `Golpear` lo ignoran. El
+tutorial sigue haciendo `Instantiate`: esos zombis no tienen prefab de origen y al morir se destruyen como antes.
+
 **Los zombis escalan con la oleada.** `WaveManager.Aparecer` pone `multiplicadorVida` = `crecimientoVida`^(o−1)
-(1,15) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) antes del `Start` del zombi, jefe incluido. La vida
+(1,15) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) apenas sale el zombi, antes de su primer golpe, jefe
+incluido. La vida
 crece más rápido que el daño a propósito: lo que frena es no llegar a matarlos, no que dos golpes liquiden al
-jugador. `EnemyController` inicializa la vida perezosa (en `Start` o en el primer golpe) y muere con vida ≤ 0,01;
+jugador. `EnemyController` inicializa la vida perezosa (en el primer golpe o al consultarla, una vez por aparición) y muere con vida ≤ 0,01;
 el daño al jugador acumula las fracciones (`PlayerHealth.AcumularDano`) y resta enteros.
 
 Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
@@ -263,7 +279,9 @@ zombis que mueren de un tiro nunca la muestran. Es un objeto aparte que sigue al
 un hijo: los zombis rotan hacia el jugador y tienen escalas distintas, y una barra hija heredaría las dos
 cosas. Son dos `SpriteRenderer` sobre un sprite blanco hecho en código (estático, con su reset), no un Canvas
 por zombi. La fracción sale de la vida con la que apareció el zombi (`vidaMaxima`), así que un escalado de vida
-por oleada no la rompe mientras se aplique antes del primer golpe.
+por oleada no la rompe mientras se aplique antes del primer golpe. Cuando el zombi muere la barra se apaga y queda
+guardada con él: la aparición siguiente la prende con su primer golpe que no mata, sin crear otra (el pool es por
+prefab, así que la altura sirve). Se destruye con el zombi.
 
 ## Monedas y progreso
 
@@ -554,7 +572,8 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   `"da\xF1o"` serializado en los `.asset` de los zombis, o los stats se pierden.
 
 - **Los `static` cruzan escenas.** `ZombisVivos`, `jugadorCache`, el pool de balas, el caché de sprites
-  de sangre, el pool de monedas y los datos de `Progreso` sobreviven al `LoadScene`. Están todos en el reset de `SubsystemRegistration`. Si te olvidás,
+  de sangre, el pool de monedas, el pool de zombis y los datos de `Progreso` sobreviven al `LoadScene` (los pools
+  descartan las referencias a objetos que la escena ya destruyó). Están todos en el reset de `SubsystemRegistration`. Si te olvidás,
   el síntoma típico es un contador que queda alto y deja al generador tapado para siempre.
 
 - **Una corrutina no sobrevive a la muerte de su GameObject.** `EnemyController` arrancaba una corrutina
@@ -572,8 +591,8 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   20 s (arma): son los valores de las escenas, el código dice 3,5. Cada prefab lleva `PickupCaducidad`, que la
   destruye a los 30 s parpadeando los últimos 3; el tutorial la apaga para que esperen al jugador.
 
-- **Todavía no hay pooling de zombis, manchas ni partículas.** Están un orden de magnitud por debajo de
-  las balas, pero siguen siendo `Instantiate`/`Destroy`.
+- **Todavía no hay pooling de manchas ni de partículas de muerte.** Los zombis ya salen de un pool (ver Generación
+  de enemigos); la mancha de sangre y las partículas de cada muerte siguen siendo `Instantiate`/`Destroy`.
 
 - **Las tags `ZombiNormal`, `ZombiBoss`, `ZombiFaster`, `ZombiRapido` y `ZombiTanque` siguen en el
   `TagManager` y en los prefabs, pero ya no las usa nadie.** Para detectar un zombi se pide el
@@ -593,8 +612,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   separarse, y el daño dependía de cuánto temblara la física. El reloj también hace que los varios colliders
   del zombi y del jugador no cuenten el mismo toque más de una vez.
 
-- **La muerte necesita guarda.** `Destroy` es diferido: dos golpes letales en el mismo paso de física
-  llaman a `DanoZombi` (o `TakeDamage`) dos veces con la vida ya en cero, y sin el flag `estaMuerto`
+- **La muerte necesita guarda.** Dos golpes letales en el mismo paso de física llaman a `DanoZombi` (o
+  `TakeDamage`) dos veces con la vida ya en cero: los eventos de colisión del paso se despachan aunque el zombi ya se
+  haya apagado (o, con `Destroy`, aunque todavía no se haya ido), y sin el flag `estaMuerto`
   el bloque de muerte corre entero de nuevo — puntos dobles, dos manchas. Si agregás otra fuente de
   daño, no repitas la lógica de muerte: llamá a esos métodos, que ya están guardados.
 
@@ -607,7 +627,8 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   altura y sólo pisa la velocidad horizontal. Antes miraba al centro del jugador y pisaba la velocidad entera en cada
   paso: la gravedad nunca actuaba, y un zombi que terminaba bajo el piso (que es un plano sin espesor) se quedaba
   ahí persiguiendo al jugador. Además los puntos de aparición de WaveMode están en Y = 0 y el pivote del zombi es el
-  centro de su cápsula: `SubirSobreElPiso` lo levanta en su `Awake` para que no nazca medio enterrado.
+  centro de su cápsula: `SubirSobreElPiso` lo levanta cada vez que aparece (`OnEnable`) para que no nazca medio
+enterrado.
 
 - **El "zombi invisible" era el rápido, que no tenía malla.** `ToonyTinyPeople/TT_demo/models/zombiRapido.FBX` es en
   realidad un glTF binario con extensión `.FBX`: Unity no le encuentra mallas y el prefab quedaba con el
@@ -664,7 +685,8 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 
 1. ¿Es un tipo de enemigo? Creá un `Enemy` nuevo en `Assets/Zombies/` (**con `puntos`, `monedasMin` y
    `monedasMax` cargados**; si no, valen 1, 1 y 3), un prefab con `EnemyController`, y sumalo al generador (en
-   WaveMode, a `tipos` del `WaveManager`, con su `desdeOleada` y su `peso`). No hace falta tag ni tocar código.
+   WaveMode, a `tipos` del `WaveManager`, con su `desdeOleada` y su `peso`). No hace falta tag ni tocar código. Si lo
+   hacés aparecer desde código nuevo, con `EnemyController.Aparecer`, no con `Instantiate`.
 2. ¿Spawnea objetos seguido? Pooleá desde el principio: mirá `BulletController.Obtener` / `Devolver`.
 3. ¿Necesita estado global? `static` + reset en `SubsystemRegistration`.
 4. ¿Suma puntos o monedas? Que salga de `DanoZombi` (`enemyType.puntos`, y las monedas que suelta), no de

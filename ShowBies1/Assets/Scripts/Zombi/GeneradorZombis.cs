@@ -130,12 +130,11 @@ public class GeneradorZombis : MonoBehaviour
 
             if (EnemyController.ZombisVivos >= maxZombisVivos) continue;
 
-            var zombi = Instantiate(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)), Quaternion.identity);
-            var enemigo = zombi.GetComponent<EnemyController>();
+            var enemigo = EnemyController.Aparecer(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)));
             if (enemigo != null)
             {
-                // Antes de su Start: la vida se calcula con el multiplicador que
-                // tenga en ese momento.
+                // Antes de su primer golpe: la vida se calcula con el multiplicador
+                // que tenga en ese momento.
                 enemigo.multiplicadorVida = MultiplicadorVidaActual;
                 enemigo.multiplicadorDano = MultiplicadorDanoActual;
                 enemigo.multiplicadorMonedas = MultiplicadorMonedasActual;

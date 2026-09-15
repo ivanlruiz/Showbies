@@ -55,9 +55,23 @@ public class BarraDeVida : MonoBehaviour
 
     public void Mostrar(float fraccion)
     {
+        // Apagada desde la aparicion anterior del mismo zombi: se prende ya en su lugar.
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+            Seguir();
+        }
+
         fraccion = Mathf.Clamp01(fraccion);
         relleno.transform.localScale = new Vector3((ancho - 2f * borde) * fraccion, alto - 2f * borde, 1f);
         relleno.color = Color.HSVToRGB(fraccion / 3f, 0.85f, 0.95f);   // verde con la vida llena, rojo casi muerto
+    }
+
+    // El zombi murio o se cayo y volvio al pool. La barra no se destruye: la usa el
+    // mismo zombi cuando vuelva a salir (es del mismo prefab, asi que la altura sirve).
+    public void Ocultar()
+    {
+        gameObject.SetActive(false);
     }
 
     private void LateUpdate()
@@ -65,6 +79,11 @@ public class BarraDeVida : MonoBehaviour
         if (zombi == null)
         {
             Destroy(gameObject);
+            return;
+        }
+        if (!zombi.isActiveAndEnabled)
+        {
+            Ocultar();
             return;
         }
         Seguir();

@@ -66,7 +66,15 @@ public class WaveManager : MonoBehaviour
     // de la partida. El bono de la oleada no la usa.
     private float botin = 1f;
 
-    private readonly List<GameObject> zombisDeLaOleada = new List<GameObject>();
+    // Un zombi de la oleada con el numero de aparicion con que salio: los zombis se
+    // reusan, y uno que murio puede volver a salir como otro de la misma oleada.
+    private struct ZombiAnotado
+    {
+        public EnemyController zombi;
+        public int aparicion;
+    }
+
+    private readonly List<ZombiAnotado> zombisDeLaOleada = new List<ZombiAnotado>();
     private int zombisEnLaOleada;
     private int muertosMostrados = -1;
     private int oleadaMostrada = -1;
@@ -137,7 +145,7 @@ public class WaveManager : MonoBehaviour
         int muertos = 0;
         for (int i = 0; i < zombisDeLaOleada.Count; i++)
         {
-            if (zombisDeLaOleada[i] == null) muertos++;
+            if (!EnemyController.SigueVivo(zombisDeLaOleada[i].zombi, zombisDeLaOleada[i].aparicion)) muertos++;
         }
 
         // Solo al cambiar: armar el texto por frame aloca por frame.
@@ -191,26 +199,25 @@ public class WaveManager : MonoBehaviour
         Transform punto = spawnPoints[Random.Range(0, spawnPoints.Length)];
         if (punto == null) return;
 
-        var zombi = Instantiate(prefab, punto.position, Quaternion.identity);
-        var enemigo = zombi.GetComponent<EnemyController>();
-        if (enemigo != null)
-        {
-            // Antes de su Start, que es cuando calcula la vida. Los .asset no se
-            // tocan: son los stats de la oleada 1.
-            enemigo.multiplicadorVida = Escalado.PorOleada(crecimientoVida, OleadaActual);
-            enemigo.multiplicadorDano = Escalado.PorOleada(crecimientoDano, OleadaActual);
-            enemigo.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
-            enemigo.monedaPrefab = monedaPrefab;
-        }
-        zombisDeLaOleada.Add(zombi);
+        var enemigo = EnemyController.Aparecer(prefab, punto.position);
+        if (enemigo == null) return;
+
+        // Antes de su primer golpe, que es cuando calcula la vida. Los .asset no se
+        // tocan: son los stats de la oleada 1.
+        enemigo.multiplicadorVida = Escalado.PorOleada(crecimientoVida, OleadaActual);
+        enemigo.multiplicadorDano = Escalado.PorOleada(crecimientoDano, OleadaActual);
+        enemigo.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
+        enemigo.monedaPrefab = monedaPrefab;
+        zombisDeLaOleada.Add(new ZombiAnotado { zombi = enemigo, aparicion = enemigo.NumeroDeAparicion });
     }
 
-    // Los zombis muertos, o caidos por el kill-Z, quedan en la lista como null.
+    // Los zombis muertos, o caidos por el kill-Z, ya no siguen vivos en la aparicion
+    // anotada, aunque su objeto haya vuelto a salir del pool.
     private bool QuedanZombisDeLaOleada()
     {
         for (int i = 0; i < zombisDeLaOleada.Count; i++)
         {
-            if (zombisDeLaOleada[i] != null) return true;
+            if (EnemyController.SigueVivo(zombisDeLaOleada[i].zombi, zombisDeLaOleada[i].aparicion)) return true;
         }
         return false;
     }

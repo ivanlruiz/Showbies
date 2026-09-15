@@ -104,7 +104,11 @@ public class BulletController : MonoBehaviour
         //
         // Antes ademas habia cinco if identicos por tag que sumaban puntos ACA,
         // o sea por impacto y no por muerte. Los puntos los da EnemyController.
-        EnemyController zombi = other.gameObject.GetComponentInParent<EnemyController>();
+        //
+        // Con includeInactive: un zombi que murio en este mismo paso ya volvio
+        // apagado al pool, y sin eso la bala no lo encontraba y seguia de largo
+        // hasta el de atras. Choca y se gasta como antes; el daño lo ignora su guarda.
+        EnemyController zombi = other.gameObject.GetComponentInParent<EnemyController>(true);
         if (zombi == null) return;
 
         zombi.DanoZombi(danoAplicado);
