@@ -45,6 +45,10 @@ public static class Progreso
 
     private static Datos datos;
 
+    // El archivo es de una version mas nueva que este build: se usa, pero Guardar
+    // no lo toca (ver Cargar).
+    private static bool soloLectura;
+
     // Carpeta que reemplaza a persistentDataPath en las pruebas de editor, para no
     // tocar el progreso real. Null = la de siempre.
     private static string carpetaPruebas;
@@ -60,9 +64,15 @@ public static class Progreso
     {
         Application.quitting -= Guardar;
         datos = null;
+        soloLectura = false;
         MonedasDeLaPartida = 0;
         Revision = 0;
         carpetaPruebas = null;
+    }
+
+    public static bool SoloLectura
+    {
+        get { Cargar(); return soloLectura; }
     }
 
     public static double Monedas
@@ -183,10 +193,13 @@ public static class Progreso
         Guardar();
     }
 
+    // Pisa tambien un archivo de una version mas nueva: es una orden explicita y el
+    // original quedo respaldado como .futuro.bak al cargarlo.
     public static void ReiniciarTodo()
     {
         Cargar();
         datos = new Datos { version = VersionActual };
+        soloLectura = false;
         MonedasDeLaPartida = 0;
         Revision++;
         Guardar();
@@ -208,7 +221,7 @@ public static class Progreso
     // queda al menos una de las dos versiones entera.
     public static void Guardar()
     {
-        if (datos == null) return;
+        if (datos == null || soloLectura) return;
 
         string ruta = Ruta();
         string temporal = ruta + ".tmp";
@@ -243,6 +256,7 @@ public static class Progreso
             if (leidos != null) rutaLeida = ruta + ".tmp";
         }
 
+        soloLectura = false;
         if (leidos == null)
         {
             leidos = new Datos { version = VersionActual };
@@ -250,6 +264,17 @@ public static class Progreso
         else if (leidos.version < VersionActual)
         {
             Respaldar(rutaLeida, ruta + ".v" + Math.Max(0, leidos.version) + ".bak");
+        }
+        else if (leidos.version > VersionActual)
+        {
+            // De un build mas nuevo (otra rama, o volver atras una version). Se juega
+            // con los campos que este build entiende, pero no se escribe nada: el
+            // primer Guardar reescribiria el archivo con esta version y perderia lo
+            // que agrego la nueva.
+            Respaldar(rutaLeida, ruta + ".v" + leidos.version + ".futuro.bak");
+            soloLectura = true;
+            Debug.LogWarning("Progreso: " + rutaLeida + " es de la version " + leidos.version + " y este build llega a la " +
+                             VersionActual + ". Se usa sin guardar cambios para no borrar lo que agrego la version nueva.");
         }
 
         Normalizar(leidos);

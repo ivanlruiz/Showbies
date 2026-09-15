@@ -616,6 +616,28 @@ public static class PruebasMejoras
         inf.Verdadero("guardado v1: el JSON guardado dice \"version\": 2", guardado != null && guardado.Contains("\"version\": 2"));
         inf.Verdadero("guardado v1: el JSON guardado tiene \"mejoras\"", guardado != null && guardado.Contains("\"mejoras\""));
 
+        // Version mas nueva que la del build (otra rama o volver atras): se lee lo
+        // que se entiende, se respalda y no se escribe nada, ni guardando ni
+        // comprando. Reiniciar desde las herramientas si lo pisa.
+        string futuro = "{\"version\":99,\"monedas\":77,\"mejorOleada\":4,\"cerebros\":12," +
+                        "\"mejoras\":[{\"id\":\"dano_bala\",\"nivel\":3}]}";
+        ruta = EmpezarCaso(futuro, null);
+        inf.Cerca("guardado futuro: monedas", 77, Progreso.Monedas, 1e-9);
+        inf.Igual("guardado futuro: nivel de dano_bala", 3, Progreso.Nivel("dano_bala"));
+        inf.Verdadero("guardado futuro: queda en solo lectura", Progreso.SoloLectura);
+        inf.Igual("guardado futuro: progreso.json.v99.futuro.bak igual al original", futuro, LeerSiExiste(ruta + ".v99.futuro.bak"));
+        Progreso.Sumar(5);
+        Progreso.DepurarFijarNivel("cadencia", 2);
+        Progreso.Guardar();
+        inf.Igual("guardado futuro: Guardar no pisa el archivo", futuro, LeerSiExiste(ruta));
+        inf.Verdadero("guardado futuro: no queda .tmp", !File.Exists(ruta + ".tmp"));
+        Progreso.ReiniciarTodo();
+        guardado = LeerSiExiste(ruta);
+        inf.Verdadero("guardado futuro: Reiniciar escribe la version actual",
+                      guardado != null && guardado.Contains("\"version\": " + Progreso.VersionActual));
+        inf.Verdadero("guardado futuro: despues de Reiniciar ya no es solo lectura", !Progreso.SoloLectura);
+        inf.Igual("guardado futuro: el .futuro.bak sigue despues de Reiniciar", futuro, LeerSiExiste(ruta + ".v99.futuro.bak"));
+
         // Sin version: vale 0 y se respalda como v0.
         ruta = EmpezarCaso("{\"monedas\":10}", null);
         inf.Cerca("guardado sin version: monedas", 10, Progreso.Monedas, 1e-9);

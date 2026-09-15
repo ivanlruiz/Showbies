@@ -335,7 +335,11 @@ PlayerPrefs a propósito: es estado estructurado.
   cerrar, y **cada compra guarda en el acto**. Se escribe un `.tmp` y después se copia; al cargar, si el
   principal falta o está roto, se prueba el `.tmp`. Un principal ilegible se copia a `progreso.json.roto`, y un
   JSON de versión menor se respalda (el archivo que se leyó) como `progreso.json.v<N>.bak` antes de migrarlo;
-  ningún respaldo pisa uno anterior.
+  ningún respaldo pisa uno anterior. **Un JSON de versión mayor** (de un build más nuevo: otra rama, o volver
+  atrás una versión) se respalda como `progreso.json.v<N>.futuro.bak` y el progreso queda en solo lectura: se
+  juega con los campos que el build entiende, pero `Guardar` no escribe, así un build viejo no borra lo que
+  agregó el nuevo. Lo que se gane o compre en ese estado se pierde al cerrar. Sólo `ReiniciarTodo` (las
+  herramientas de editor) lo pisa.
 - `MonedasEnteras` (floor con 1e-6) es lo que se muestra y lo que se puede pagar. `Sumar`, `Comprar` y las
   funciones de depuración incrementan `Revision`.
 - `MonedasDeLaPartida` vuelve a cero al empezar cada partida (`PlayerHealth.Awake`) y lo muestra la pantalla
