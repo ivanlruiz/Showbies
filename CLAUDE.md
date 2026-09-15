@@ -481,12 +481,20 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
 - Las cámaras de las escenas de juego tienen HDR y MSAA apagados (sin post-proceso no aportan nada),
   y todo lo estático está marcado `BatchingStatic` (las 80 calles de WaveMode eran 80 draw calls).
 - Los generadores usan `maxZombisVivosMovil` (35) en vez de 60 cuando `Plataforma.EsMovil`.
-- Los Animators del zombi normal y del rápido están en **Cull Update Transforms**: fuera de pantalla no
+- Los Animators de los zombis están en **Cull Update Transforms**: fuera de pantalla no
   mueven huesos. El rápido tiene **dos** Animators: el que tiene el esqueleto usa el controller y el avatar del
   normal, sin root motion; el otro no tiene controller y no hace nada (ver la trampa del zombi invisible).
-- El tanque, el jefe y el FASTER no tienen Animator: son una cápsula con dos cubos, y **esos cubos son a la
-  vez los brazos visibles y las hitboxes**. No apagues sus renderers pensando que son colliders sueltos
-  (en el normal y el rápido sí están apagados, porque el modelo es el de ToonyTiny).
+- Todos los zombis se ven con el modelo del zombi de ToonyTiny, que crece o se achica con la escala de la raíz. El
+  normal, el tanque, el FASTER y el jefe lo tienen de hijo directo (`TT_demo_zombie.FBX`, escala 1,2; a y −0,79 el
+  normal y a y −1 los otros tres, con los pies en el fondo de la cápsula: a −0,79 el jefe flotaba 0,4 m). El
+  rápido es la excepción: su hijo es el prefab `zombiRapido` de ToonyTiny, a y −0,92, con la malla, el avatar y el
+  controller de `TT_demo_zombie` pisados (ver la trampa del zombi invisible). Cada tipo tiñe el modelo con su
+  material de `Assets/Materiales/`: el normal sin teñir, `ZombiRapidoPiel` lima, `ZombiTanquePiel` rojo,
+  `ZombiFasterPiel` celeste y `ZombiJefePiel` violeta. **La cápsula y los dos cubos de cada prefab son sólo
+  colliders**, con los renderers apagados: los cubos son las hitboxes y no se borran (con la cabeza grande y los
+  brazos de la animación, el modelo cubre casi toda la cápsula). `EnemyController.velocidadDeAnimacion` ajusta el paso del modelo a lo que camina
+  cada uno (1 el normal y el rápido, 0,45 el tanque, 2,5 el FASTER, 0,3 el jefe). Antes el tanque, el jefe y el
+  FASTER eran la cápsula y los cubos a la vista.
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
   Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí.
 

@@ -50,6 +50,10 @@ public class EnemyController : MonoBehaviour
 
     private float proximoGolpe;
 
+    [Header("Animacion")]
+    [Tooltip("Velocidad del Animator del modelo. Todos usan el modelo del zombi normal a distinta escala: el paso tiene que ir con lo que camina cada uno (el tanque pesado, el FASTER frenetico).")]
+    [SerializeField] private float velocidadDeAnimacion = 1f;
+
     [Header("Golpe visual")]
     [SerializeField] private Vector3 aplastadoAlGolpear = new Vector3(1.15f, 0.85f, 1.15f);
     [SerializeField] private float recuperacionDelAplastado = 0.35f;   // fraccion que recupera por paso de fisica
@@ -146,6 +150,7 @@ public class EnemyController : MonoBehaviour
         thePlayer = ObtenerJugador();
         escalaBase = transform.localScale;
         PrepararDestello();
+        foreach (var animador in GetComponentsInChildren<Animator>()) animador.speed = velocidadDeAnimacion;
     }
 
     // Perezosa y una sola vez: un zombi puede recibir daño (una granada que
