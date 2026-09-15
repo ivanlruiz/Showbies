@@ -20,8 +20,9 @@ MonoBehaviour:
   simbolo: I
   precioInicial: 30
   crecimientoPrecio: 1.5
-  nivelMaximo: 12
+  nivelMaximo: 13
   crecimiento: 0
   efectoPorNivel: 0.25
   valorBase: 2
+  arrancaEnCero: 1
   formato: 1

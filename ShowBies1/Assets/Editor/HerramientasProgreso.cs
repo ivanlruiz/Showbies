@@ -16,7 +16,7 @@ using UnityEngine;
 public static class HerramientasProgreso
 {
     // Los niveles de "Niveles de prueba": los mismos que usa el plan de pruebas
-    // en modo play (daño 6 por bala, 14 tiros/s, 180 de vida, iman de 5 m,
+    // en modo play (daño 6 por bala, 14 tiros/s, 180 de vida, iman de 4,5 m,
     // botin x2,5).
     const int NivelDanoDePrueba = 5;
     const int NivelCadenciaDePrueba = 10;

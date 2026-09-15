@@ -3,7 +3,8 @@ using UnityEngine;
 // El alcance del iman dibujado en el piso, alrededor del jugador: un anillo del
 // color de las monedas que aparece cuando hay monedas sueltas en la escena y late
 // cada vez que se agarra una. Hace visible la mejora de iman: comprarla agranda el
-// anillo, y el jugador ve hasta donde tiene que acercarse para juntarlas.
+// anillo, y el jugador ve hasta donde tiene que acercarse para juntarlas. Sin la
+// mejora comprada no hay iman y no se dibuja.
 //
 // Va en la raiz de Jugador.prefab. Crea su LineRenderer al empezar, en un hijo con
 // los puntos en espacio de mundo, asi no le afectan la rotacion ni la escala del
@@ -94,6 +95,17 @@ public class AnilloIman : MonoBehaviour
         // anillo tiene que seguir latiendo; en la pausa del menu se congela.
         float dt = MenuPausa.Pausado ? 0f : Mathf.Min(Time.unscaledDeltaTime, 1f / 30f);
         tiempo += dt;
+
+        // Sin la mejora de iman no hay alcance que mostrar: las monedas se agarran
+        // pasandoles por encima. Los cobros de mientras no quedan pendientes de latir.
+        if (RadioActual <= 0f)
+        {
+            cobrosVistos = Moneda.Cobros;
+            alfa = 0f;
+            latido = 0f;
+            if (linea.enabled) linea.enabled = false;
+            return;
+        }
 
         if (Moneda.Cobros != cobrosVistos)
         {

@@ -14,12 +14,12 @@ public class CatalogoMejoras : ScriptableObject
     public const string RutaEnResources = "CatalogoMejoras";
 
     // Lo que rinde el jugador sin ninguna mejora, igual que el nivel 0 de los
-    // assets: 1 de dano por bala, 4 tiros por segundo, 80 de vida y 2 m de iman.
+    // assets: 1 de dano por bala, 4 tiros por segundo, 80 de vida y sin iman.
     // Arranca flojo a proposito: lo que lo hace fuerte son las compras.
     public const float DanoPorBalaSinCatalogo = 1f;
     public const float TirosPorSegundoSinCatalogo = 4f;
     public const int VidaMaximaSinCatalogo = 80;
-    public const float RadioImanSinCatalogo = 2f;
+    public const float RadioImanSinCatalogo = 0f;
 
     // Techo de la cuenta de ComprasPosibles: la insignia muestra "99+" y con
     // muchas monedas no vale la pena seguir sumando.
@@ -118,7 +118,8 @@ public class CatalogoMejoras : ScriptableObject
         }
     }
 
-    // Los metros desde los que las monedas del piso vuelan solas al jugador.
+    // Los metros desde los que las monedas del piso vuelan solas al jugador. 0 sin
+    // la mejora: se agarran igual al pasarles por encima (Moneda.distanciaDeCobro).
     public static float RadioIman
     {
         get

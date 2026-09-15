@@ -270,8 +270,8 @@ PlayerPrefs a propósito: es estado estructurado.
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
   que valen `multiplicadorMonedas` cada una. Salen volando para los costados, caen despacio con un rebote y
-  quedan girando en el piso; al acercarse el jugador (el alcance del imán: 2 m sin mejora, ver Mejoras y tienda)
-  vuelan solas hacia él y recién ahí se
+  quedan girando en el piso; al acercarse el jugador vuelan solas hacia él (sin la mejora de imán hay que pasar a
+  `distanciaDeCobro`, 0,8 m, que es pasarles por encima; con ella, al alcance del imán) y recién ahí se
   suman a `Progreso`, con un brillo y una nota de la escala de la bemol mayor sorteada con los pesos de
   `notas` (editables en el prefab; las del acorde, la bemol, do y mi bemol, salen más seguido). Las que nadie
   agarra desaparecen a los 20 s, parpadeando los últimos 3.
@@ -287,16 +287,20 @@ PlayerPrefs a propósito: es estado estructurado.
   su `Awake`, así no le afectan la rotación ni la escala del jugador. Va con `sortingOrder` -1: las manchas, las
   chispas y las barras de vida también son transparentes sin profundidad, y sin orden explícito una mancha lo tapaba
   o no según de qué lado del jugador cayera. Usa tiempo sin escalar para seguir latiendo
-  en la pausa de impacto y se congela en la pausa del menú. En el tutorial nunca aparece: sus zombis no sueltan
-  monedas.
+  en la pausa de impacto y se congela en la pausa del menú. Sin la mejora de imán comprada no se dibuja, y en el
+  tutorial nunca aparece: sus zombis no sueltan monedas.
 - **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
   `crecimientoMonedas^(oleada − 1)` (1,05) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
   la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
   0,5 no mueve el contador al agarrarla. Un zombi sin `monedaPrefab`, como los del tutorial, no suelta nada.
 - **Las monedas no tienen Rigidbody ni collider** y salen de un pool, con un techo de 150 en escena (80 en
   móvil): el vuelo es una parábola a mano y el cobro, una distancia al jugador. Si el techo no deja soltar
-  todas, las que salen se reparten el valor de las que no.
-- **El modelo es el hijo `Modelo` del prefab** (hoy un cilindro dorado provisorio). Lo que gira es la raíz, de
+  todas, las que salen se reparten el valor de las que no. **Como no tienen collider, el vuelo no ve las paredes:**
+  al salir, `FrenarAntesDeLasParedes` tira un raycast horizontal hasta lo máximo que puede recorrer (velocidad /
+  frenado) y, si hay un collider fijo en el camino (sin Rigidbody y que no sea una bala), la frena para que caiga a
+  `margenContraParedes` (0,3 m) de él. Sin eso caían detrás de las paredes invisibles del borde, y sin imán quedaban
+  perdidas.
+- **El modelo es el hijo `Modelo` del prefab** (hoy un cilindro dorado provisorio de 0,4 m, con el centro a 0,3 m del piso). Lo que gira es la raíz, de
   frente a la cámara: para cambiar el modelo se reemplaza el hijo, con la cara de la moneda mirando a +Z. El
   sonido es `Assets/otros/moneda.wav`, también provisorio: la bemol 5 y la bemol 6, la misma nota a una octava
   para que al llevarlo con el pitch a cualquier grado de la escala las dos queden en la bemol mayor. Si se
@@ -325,13 +329,15 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 | Daño de bala | `dano_bala` | 40 | ×1,45 | — | 1 × (1 + nivel) por bala |
 | Cadencia | `cadencia` | 50 | ×1,45 | 16 | 4 × (1 + 0,25 × nivel) tiros/s (de 4 a 20) |
 | Vida máxima | `vida_maxima` | 40 | ×1,45 | — | 80 × (1 + 0,25 × nivel) |
-| Imán | `iman` | 30 | ×1,5 | 12 | 2 × (1 + 0,25 × nivel) m (de 2 a 8) |
+| Imán | `iman` | 30 | ×1,5 | 13 | sin comprar no hay; 2 × (1 + 0,25 × (nivel − 1)) m (de 2 a 8) |
 | Botín | `botin` | 120 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
 
 - **El jugador arranca flojo a propósito** (fase 4, pedido de Ivan después de jugar en el teléfono): dispara lento, pega
-  1, tiene 80 de vida y junta monedas a 2 m. Lo que lo hace fuerte son las compras, y por eso los primeros precios
+  1, tiene 80 de vida y no tiene imán (junta las monedas pasándoles por encima). Lo que lo hace fuerte son las compras, y por eso los primeros precios
   son bajos: la primera partida tiene que alcanzar para una o dos. El daño y la cadencia suben de a uno para que
   cada compra se lea en la tarjeta ("1 → 2") y en los números de daño.
+- **`Mejora.arrancaEnCero`**: sin comprar vale 0 y el nivel 1 vale `valorBase`. El tope se aplica antes de correr el
+  nivel, así un nivel guardado de más no pasa del máximo. Lo usa el imán: sin comprarlo no hay imán.
 - **Precio** = `floor(precioInicial × crecimiento^nivel + 0,5 + 1e-9)`. El `+1e-9` no es decorativo: en double
   90 × 1,45 da 130,4999…, y el precio correcto es 131. Los textos redondean igual (`FormatoNumeros.ConDecimales`).
   Se balancean tocando los assets.
@@ -611,7 +617,7 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   escena, topeá el delta: el primer frame dura mucho y se come la animación.
 
 - **`CatalogoMejoras.asset` tiene que estar en `Resources`.** Si se mueve o pierde referencias, todas las mejoras
-  quedan en los valores base (1 de daño, 4 tiros/s, 80 de vida, imán de 2 m, botín ×1) y en la build no se ve
+  quedan en los valores base (1 de daño, 4 tiros/s, 80 de vida, sin imán, botín ×1) y en la build no se ve
   ningún aviso: sólo un LogError y la prueba de lógica.
 
 - **Menu y Perdiste tienen el canvas en match 0; la tienda y la pausa, en 0,5.** En 20:9 el menú mide 864 u de

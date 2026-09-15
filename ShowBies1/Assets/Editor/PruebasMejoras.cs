@@ -181,6 +181,7 @@ public static class PruebasMejoras
             if (!completo) informe.Linea("(catalogo incompleto: se saltean las pruebas que dependen de los assets)");
 
             ProbarFormulaDePrecio(informe, temporales);
+            ProbarArrancaEnCero(informe, temporales);
             if (completo)
             {
                 ProbarPreciosDelCatalogo(informe, catalogo);
@@ -281,6 +282,22 @@ public static class PruebasMejoras
         inf.Cerca("formula de precio: topeado en PrecioMaximo", Mejora.PrecioMaximo, enorme.Precio(5), 0);
     }
 
+    // 2a'. Una mejora que arranca en cero: sin comprar no rinde nada, el nivel 1
+    // vale el valor base y el tope se aplica antes de correr el nivel.
+    static void ProbarArrancaEnCero(Informe inf, List<Mejora> temporales)
+    {
+        var m = CrearTemporal(temporales, "prueba_cero", 30, 1.5, 4, CrecimientoEfecto.Aditivo, 0.25, 2, FormatoValor.UnDecimal);
+        m.arrancaEnCero = true;
+        inf.Cerca("arranca en cero: nivel -1 vale 0", 0, m.Valor(-1), Tolerancia);
+        inf.Cerca("arranca en cero: nivel 0 vale 0", 0, m.Valor(0), Tolerancia);
+        inf.Cerca("arranca en cero: nivel 1 vale la base", 2, m.Valor(1), Tolerancia);
+        inf.Cerca("arranca en cero: nivel 2", 2.5, m.Valor(2), Tolerancia);
+        inf.Cerca("arranca en cero: nivel 4 (tope)", 3.5, m.Valor(4), Tolerancia);
+        inf.Cerca("arranca en cero: nivel 9 no pasa del tope", 3.5, m.Valor(9), Tolerancia);
+        inf.Cerca("arranca en cero: el multiplicador no cambia", 1.25, m.Multiplicador(1), Tolerancia);
+        inf.Igual("arranca en cero: texto nivel 0", "0", m.TextoValor(0));
+    }
+
     // 2b. Los precios de los assets y sus topes. Arrancan baratos porque el
     // jugador arranca flojo: la primera partida tiene que alcanzar para comprar.
     static void ProbarPreciosDelCatalogo(Informe inf, CatalogoMejoras c)
@@ -292,14 +309,14 @@ public static class PruebasMejoras
         ChequearPrecios(inf, "precio vida_maxima", c.vidaMaxima,
                         new double[] { 40, 58, 84, 122, 177, 256, 372, 539, 782, 1133, 1643 });
         ChequearPrecios(inf, "precio iman", c.iman,
-                        new double[] { 30, 45, 68, 101, 152, 228, 342, 513, 769, 1153, 1730, 2595 });
+                        new double[] { 30, 45, 68, 101, 152, 228, 342, 513, 769, 1153, 1730, 2595, 3892 });
         ChequearPrecios(inf, "precio botin", c.botin,
                         new double[] { 120, 186, 288, 447, 693, 1074, 1664, 2579, 3998, 6197, 9605, 14888, 23076, 35768, 55440 });
 
         inf.Verdadero("tope cadencia: EnTope(15) es falso", !c.cadencia.EnTope(15));
         inf.Verdadero("tope cadencia: EnTope(16) es verdadero", c.cadencia.EnTope(16));
-        inf.Verdadero("tope iman: EnTope(11) es falso", !c.iman.EnTope(11));
-        inf.Verdadero("tope iman: EnTope(12) es verdadero", c.iman.EnTope(12));
+        inf.Verdadero("tope iman: EnTope(12) es falso", !c.iman.EnTope(12));
+        inf.Verdadero("tope iman: EnTope(13) es verdadero", c.iman.EnTope(13));
         inf.Verdadero("tope botin: EnTope(14) es falso", !c.botin.EnTope(14));
         inf.Verdadero("tope botin: EnTope(15) es verdadero", c.botin.EnTope(15));
         inf.Verdadero("tope dano_bala: sin tope", !c.danoBala.TieneTope && !c.danoBala.EnTope(1000));
@@ -331,10 +348,12 @@ public static class PruebasMejoras
         ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 1, 100);
         ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 5, 180);
         ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 10, 280);
-        ChequearValor(inf, "valor iman", c.iman, 0, 2);
-        ChequearValor(inf, "valor iman", c.iman, 1, 2.5);
-        ChequearValor(inf, "valor iman", c.iman, 12, 8);
+        inf.Verdadero("iman arranca en cero", c.iman.arrancaEnCero);
+        ChequearValor(inf, "valor iman", c.iman, 0, 0);
+        ChequearValor(inf, "valor iman", c.iman, 1, 2);
+        ChequearValor(inf, "valor iman", c.iman, 2, 2.5);
         ChequearValor(inf, "valor iman", c.iman, 13, 8);
+        ChequearValor(inf, "valor iman", c.iman, 14, 8);
         ChequearValor(inf, "valor botin", c.botin, 1, 1.1);
         ChequearValor(inf, "valor botin", c.botin, 15, 2.5);
         ChequearValor(inf, "valor botin", c.botin, 16, 2.5);
@@ -345,8 +364,9 @@ public static class PruebasMejoras
         inf.Igual("texto cadencia nivel 0", "4", c.cadencia.TextoValor(0));
         inf.Igual("texto cadencia nivel 16", "20", c.cadencia.TextoValor(16));
         inf.Igual("texto vida_maxima nivel 0", "80", c.vidaMaxima.TextoValor(0));
-        inf.Igual("texto iman nivel 0", "2", c.iman.TextoValor(0));
-        inf.Igual("texto iman nivel 1", "2,5", c.iman.TextoValor(1));
+        inf.Igual("texto iman nivel 0", "0", c.iman.TextoValor(0));
+        inf.Igual("texto iman nivel 1", "2", c.iman.TextoValor(1));
+        inf.Igual("texto iman nivel 2", "2,5", c.iman.TextoValor(2));
         inf.Igual("texto botin nivel 0", "×1", c.botin.TextoValor(0));
         inf.Igual("texto botin nivel 15", "×2,5", c.botin.TextoValor(15));
     }
@@ -622,7 +642,7 @@ public static class PruebasMejoras
         inf.Cerca("getters nivel 0: TirosPorSegundo", 4, CatalogoMejoras.TirosPorSegundo, Tolerancia);
         inf.Igual("getters nivel 0: VidaMaxima", 80, CatalogoMejoras.VidaMaxima);
         inf.Cerca("getters nivel 0: MultiplicadorVida", 1, CatalogoMejoras.MultiplicadorVida, Tolerancia);
-        inf.Cerca("getters nivel 0: RadioIman", 2, CatalogoMejoras.RadioIman, Tolerancia);
+        inf.Cerca("getters nivel 0: RadioIman", 0, CatalogoMejoras.RadioIman, Tolerancia);
         inf.Cerca("getters nivel 0: MultiplicadorBotin", 1, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
 
         Progreso.DepurarFijarNivel(c.danoBala.id, 5);
@@ -634,7 +654,7 @@ public static class PruebasMejoras
         inf.Cerca("getters 5/10/5/6/15: TirosPorSegundo", 14, CatalogoMejoras.TirosPorSegundo, Tolerancia);
         inf.Igual("getters 5/10/5/6/15: VidaMaxima", 180, CatalogoMejoras.VidaMaxima);
         inf.Cerca("getters 5/10/5/6/15: MultiplicadorVida", 2.25, CatalogoMejoras.MultiplicadorVida, Tolerancia);
-        inf.Cerca("getters 5/10/5/6/15: RadioIman", 5, CatalogoMejoras.RadioIman, Tolerancia);
+        inf.Cerca("getters 5/10/5/6/15: RadioIman", 4.5, CatalogoMejoras.RadioIman, Tolerancia);
         inf.Cerca("getters 5/10/5/6/15: MultiplicadorBotin", 2.5, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
     }
 

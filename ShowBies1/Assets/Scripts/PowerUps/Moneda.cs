@@ -22,21 +22,22 @@ public class Moneda : MonoBehaviour
     public float gravedad = 14f;
     public float velocidadMaximaDeCaida = 3f;                    // lo que la hace caer lento
     public float rebote = 3.5f;                                  // velocidad hacia arriba del unico rebote
-    public float altura = 0.5f;                                  // altura del centro de la moneda en el piso
+    public float altura = 0.3f;                                  // altura del centro de la moneda en el piso
+    public float margenContraParedes = 0.3f;                     // como minimo, cae a esto de una pared
 
     [Header("En el piso")]
     public float velocidadDeGiro = 360f;                         // grados por segundo; volando gira el triple
-    public float flotacion = 0.1f;                               // cuanto sube y baja quieta en el piso
+    public float flotacion = 0.06f;                              // cuanto sube y baja quieta en el piso
     public float vida = 20f;                                     // segundos antes de desaparecer
     public float parpadeoFinal = 3f;
     public float frecuenciaParpadeo = 8f;
 
     [Header("Iman")]
-    public float radioIman = 2f;                                 // sin AplicarMejoras; en partida manda la mejora de iman
+    public float radioIman = 0f;                                 // sin AplicarMejoras; en partida manda la mejora de iman (0 sin comprarla)
     public float esperaAntesDelIman = 0.5f;                      // para que se vea la fuente antes de que vuelen
     public float aceleracionIman = 60f;
     public float velocidadMaximaIman = 40f;
-    public float distanciaDeCobro = 0.8f;
+    public float distanciaDeCobro = 0.8f;                        // sin iman, tambien la distancia a la que hay que pasar para agarrarla
 
     [Header("Cobro")]
     public AudioClip sonido;
@@ -70,6 +71,10 @@ public class Moneda : MonoBehaviour
     private static readonly Stack<Moneda> pool = new Stack<Moneda>();
     private static int enEscena;
     private static float radioImanDeLaPartida = -1f;
+
+    // Para el raycast de salida. No guarda nada entre una moneda y otra, asi que no
+    // va en el reset.
+    private static readonly RaycastHit[] golpesDeSalida = new RaycastHit[8];
 
     // Cuantas monedas se cobraron desde que arranco el juego. AnilloIman lo mira
     // para latir con cada una, sin eventos, como la tienda con Progreso.Revision.
@@ -183,8 +188,40 @@ public class Moneda : MonoBehaviour
             Mathf.Sin(direccion) * rapidez);
 
         origen.y = Mathf.Max(origen.y, altura);
+        velocidad = FrenarAntesDeLasParedes(origen, velocidad);
         Ubicar(origen, 0f);
         Mostrar(true);
+    }
+
+    // Las monedas no tienen collider y su vuelo no ve las paredes: una que salia hacia
+    // el borde del mapa caia detras de la pared invisible, donde el jugador no llega,
+    // y sin iman quedaba perdida. Antes de salir se mira hasta donde podria llegar (lo
+    // maximo que recorre con el frenado: velocidad / frenado) y, si hay algo fijo en
+    // el camino, se la frena para que caiga antes. Solo cuentan los colliders fijos:
+    // ni un zombi ni una bala en vuelo la frenan.
+    private Vector3 FrenarAntesDeLasParedes(Vector3 origen, Vector3 v)
+    {
+        Vector3 horizontal = new Vector3(v.x, 0f, v.z);
+        float rapidez = horizontal.magnitude;
+        if (rapidez <= 0.001f || frenadoHorizontal <= 0f) return v;
+
+        Vector3 direccion = horizontal / rapidez;
+        float alcance = rapidez / frenadoHorizontal + margenContraParedes;
+        int cantidad = Physics.RaycastNonAlloc(origen, direccion, golpesDeSalida, alcance, ~0, QueryTriggerInteraction.Ignore);
+
+        float libre = alcance;
+        for (int i = 0; i < cantidad; i++)
+        {
+            Collider golpeado = golpesDeSalida[i].collider;
+            if (golpeado.attachedRigidbody != null || golpeado.GetComponentInParent<BulletController>() != null) continue;
+            libre = Mathf.Min(libre, golpesDeSalida[i].distance);
+        }
+        if (libre >= alcance) return v;
+
+        float nuevaRapidez = Mathf.Max(0f, libre - margenContraParedes) * frenadoHorizontal;
+        v.x = direccion.x * nuevaRapidez;
+        v.z = direccion.z * nuevaRapidez;
+        return v;
     }
 
     private void Update()
@@ -202,7 +239,9 @@ public class Moneda : MonoBehaviour
         {
             Vector3 distancia = objetivo.transform.position - posicion;
             distancia.y = 0f;
-            float radio = radioImanDeLaPartida >= 0f ? radioImanDeLaPartida : radioIman;
+            // Sin la mejora de iman el radio es 0 y se agarran igual, pasandoles por
+            // encima: nunca menos que la distancia de cobro.
+            float radio = Mathf.Max(radioImanDeLaPartida >= 0f ? radioImanDeLaPartida : radioIman, distanciaDeCobro);
             if (distancia.sqrMagnitude <= radio * radio)
             {
                 atraida = true;

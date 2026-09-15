@@ -38,8 +38,10 @@ public class Mejora : ScriptableObject
     public CrecimientoEfecto crecimiento = CrecimientoEfecto.Aditivo;
     [Tooltip("Aditivo: el multiplicador suma esto por nivel. Multiplicativo: se multiplica por (1 + esto) por nivel.")]
     public double efectoPorNivel = 0.15;
-    [Tooltip("El valor en nivel 0, que el multiplicador escala.")]
+    [Tooltip("El valor en nivel 0 (en nivel 1 si arrancaEnCero), que el multiplicador escala.")]
     public double valorBase = 1;
+    [Tooltip("Sin comprarla no hay efecto (vale 0) y el nivel 1 vale valorBase. Para mejoras que se desbloquean, como el iman.")]
+    public bool arrancaEnCero;
     public FormatoValor formato = FormatoValor.UnDecimal;
 
     // Techo del precio: sin tope, un crecimiento exponencial termina en infinito
@@ -78,9 +80,14 @@ public class Mejora : ScriptableObject
         return 1 + efectoPorNivel * n;
     }
 
+    // Con arrancaEnCero todo corre un nivel: el 0 no tiene efecto y el 1 vale lo que
+    // valdria el 0. El tope se aplica antes de correrlo, asi un nivel guardado por
+    // encima del tope no pasa del maximo.
     public double Valor(int nivel)
     {
-        return valorBase * Multiplicador(nivel);
+        int n = NivelEfectivo(nivel);
+        if (arrancaEnCero) return n == 0 ? 0 : valorBase * Multiplicador(n - 1);
+        return valorBase * Multiplicador(n);
     }
 
     public string TextoValor(int nivel)
