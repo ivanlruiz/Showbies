@@ -585,7 +585,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   realidad un glTF binario con extensión `.FBX`: Unity no le encuentra mallas y el prefab quedaba con el
   `SkinnedMeshRenderer` y la cabeza sin malla, y sin controller. Pegaba y chocaba (la cápsula está) pero no se veía.
   `Prefabs/Personajes/ZombiRapido.prefab` ahora pisa la malla, la cabeza, el avatar y el controller con los de
-  `TT_demo_zombie.FBX` (mismos 15 huesos en el mismo orden). No uses ese FBX para nada nuevo.
+  `TT_demo_zombie.FBX` (mismos 15 huesos en el mismo orden). No uses ese FBX para nada nuevo. Para que no se
+  confunda con el normal, el cuerpo y la cabeza usan `Materiales/ZombiRapidoPiel.mat`: la textura de TT_demo con
+  `_Color` verde lima (Legacy Diffuse multiplica la textura por ese color).
 
 - **Player (capa 6) y Bala (capa 7) no colisionan, y eso está en la matriz del proyecto.** Antes se
   seteaba con `Physics.IgnoreLayerCollision(6, 7)` en el `Start` de cada bala. No lo hagas por código.
