@@ -134,6 +134,14 @@ public class GunController : MonoBehaviour
         return n;
     }
 
+    // Lo que queda del intervalo entre tiros en un frame sin disparar: baja hasta 0 y
+    // ahi se queda. Asi, despues de una pausa mas larga que el intervalo el primer
+    // tiro sale en el acto, pero soltar no recarga el arma. Estatico para probarlo.
+    public static float EnfriarSinDisparar(float contador, float deltaTime)
+    {
+        return Mathf.Max(0f, contador - Mathf.Max(0f, deltaTime));
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -156,7 +164,11 @@ public class GunController : MonoBehaviour
         }
         else
         {
-            contadorDisp = 0;
+            // Sin disparar, lo que faltaba para el proximo tiro sigue corriendo hasta
+            // 0. Antes volvia a 0 de golpe al soltar, y soltar y volver a tocar el
+            // disparo mas rapido que la cadencia tiraba mas balas por segundo que la
+            // mejora: con 4 tiros/s, moviendo el joystick a golpecitos salian muchas mas.
+            contadorDisp = EnfriarSinDisparar(contadorDisp, Time.deltaTime);
         }
 
 

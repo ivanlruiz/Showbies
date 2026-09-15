@@ -439,6 +439,38 @@ public static class PruebasMejoras
         int primero = GunController.TirosDelFrame(ref contador, 1f / 60f, intervalo, 8, out atraso);
         inf.Igual("disparo: primer llamado con contador 0 tira 1", 1, primero);
         inf.Cerca("disparo: primer llamado sin atraso", 0, atraso, 1e-6);
+
+        // Soltar el disparo no recarga el arma: tocarlo mas rapido que la cadencia no
+        // tira mas balas. Antes, a 4 tiros/s tocando 30 veces por segundo salian 30.
+        const int frames = 600;   // 10 s a 60 FPS
+        int tocando30 = TirosTocando(4f, 1f / 60f, frames, 1, 1);
+        inf.Verdadero("disparo: a 4 tiros/s tocando 30 veces por segundo no pasa de 4 por segundo (" + tocando30 + " en 10 s)",
+                      tocando30 >= 35 && tocando30 <= 41);
+        int tocando12 = TirosTocando(4f, 1f / 60f, frames, 2, 3);
+        inf.Verdadero("disparo: a 4 tiros/s tocando 12 veces por segundo no pasa de 4 por segundo (" + tocando12 + " en 10 s)",
+                      tocando12 >= 35 && tocando12 <= 41);
+
+        // Con pausas mas largas que el intervalo, cada toque sigue tirando en el acto:
+        // 0,1 s apretado y 0,5 s suelto, una bala por toque.
+        int toques = (frames + 35) / 36;
+        inf.Igual("disparo: con pausas de 0,5 s cada toque tira una bala en el acto", toques, TirosTocando(4f, 1f / 60f, frames, 6, 30));
+        inf.Cerca("disparo: sin disparar el contador baja hasta 0 y no pasa", 0, GunController.EnfriarSinDisparar(0.01f, 0.5f), 1e-6);
+    }
+
+    // Como GunController.Update con el disparo apretado framesApretado frames y
+    // suelto framesSuelto, en ciclo.
+    static int TirosTocando(float tirosPorSegundo, float dt, int frames, int framesApretado, int framesSuelto)
+    {
+        float contador = 0f;
+        float atraso;
+        int total = 0;
+        int ciclo = framesApretado + framesSuelto;
+        for (int i = 0; i < frames; i++)
+        {
+            if (i % ciclo < framesApretado) total += GunController.TirosDelFrame(ref contador, dt, 1f / tirosPorSegundo, 8, out atraso);
+            else contador = GunController.EnfriarSinDisparar(contador, dt);
+        }
+        return total;
     }
 
     static double SimularTiros(float tirosPorSegundo, float dt, float segundos, int maximo)

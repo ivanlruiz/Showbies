@@ -175,6 +175,11 @@ mientras el contador esté vencido, hasta `maxTirosPorFrame` (8), con un techo d
 cada bala se adelanta según su atraso para que el chorro salga escalonado. Antes el arma tiraba una bala por frame
 como mucho: 20 por segundo a 60 FPS y 15 a 30 FPS, así que la cadencia dependía del teléfono.
 
+**Soltar el disparo no recarga el arma.** Mientras no se dispara, `EnfriarSinDisparar` baja el contador hasta 0 y
+ahí lo deja: después de una pausa más larga que el intervalo el primer tiro sale en el acto, pero tocar el disparo más
+rápido que la cadencia no tira más balas. Antes el contador volvía a 0 al soltar, y con 4 tiros/s mover el joystick
+de disparo a golpecitos disparaba mucho más que la mejora.
+
 **La cadencia y el daño los fija la mejora, en tiros por segundo.** `AplicarMejoras` llama a
 `FijarTirosPorSegundo` (4 de base, +1 por nivel) y `FijarDanoPorBala` (1 de base, +1 por nivel). Cada bala lleva su
 `danoAplicado`; el `dañoDar` del prefab y el override `tiempoDisparo` de las escenas quedan como respaldo para una
