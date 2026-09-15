@@ -227,7 +227,7 @@ public static class PruebasMejoras
         return informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
     }
 
-    // 1. El catalogo existe, valida y tiene las cinco mejoras en orden.
+    // 1. El catalogo existe, valida y tiene las seis mejoras en orden.
     static bool ProbarCatalogo(Informe inf, CatalogoMejoras catalogo)
     {
         if (!inf.Verdadero("catalogo: existe en Resources/" + CatalogoMejoras.RutaEnResources, catalogo != null)) return false;
@@ -242,10 +242,11 @@ public static class PruebasMejoras
         completo &= ProbarId(inf, "vidaMaxima", catalogo.vidaMaxima, "vida_maxima");
         completo &= ProbarId(inf, "iman", catalogo.iman, "iman");
         completo &= ProbarId(inf, "botin", catalogo.botin, "botin");
+        completo &= ProbarId(inf, "furia", catalogo.furia, "furia");
 
-        string[] orden = { "dano_bala", "cadencia", "vida_maxima", "iman", "botin" };
+        string[] orden = { "dano_bala", "cadencia", "vida_maxima", "iman", "botin", "furia" };
         int largo = catalogo.enTienda == null ? -1 : catalogo.enTienda.Length;
-        inf.Igual("catalogo: enTienda tiene 5 mejoras", 5, largo);
+        inf.Igual("catalogo: enTienda tiene 6 mejoras", 6, largo);
         for (int i = 0; i < orden.Length; i++)
         {
             string obtenido = i < largo ? Id(catalogo.enTienda[i]) : "(falta)";
@@ -321,6 +322,11 @@ public static class PruebasMejoras
         inf.Verdadero("tope botin: EnTope(15) es verdadero", c.botin.EnTope(15));
         inf.Verdadero("tope dano_bala: sin tope", !c.danoBala.TieneTope && !c.danoBala.EnTope(1000));
         inf.Verdadero("tope vida_maxima: sin tope", !c.vidaMaxima.TieneTope && !c.vidaMaxima.EnTope(1000));
+
+        // La furia se compra una sola vez.
+        ChequearPrecios(inf, "precio furia", c.furia, new double[] { 5000 });
+        inf.Verdadero("tope furia: EnTope(0) es falso", !c.furia.EnTope(0));
+        inf.Verdadero("tope furia: EnTope(1) es verdadero", c.furia.EnTope(1));
     }
 
     static void ChequearPrecios(Informe inf, string nombre, Mejora mejora, double[] esperados)
@@ -369,6 +375,45 @@ public static class PruebasMejoras
         inf.Igual("texto iman nivel 2", "2,5", c.iman.TextoValor(2));
         inf.Igual("texto botin nivel 0", "×1", c.botin.TextoValor(0));
         inf.Igual("texto botin nivel 15", "×2,5", c.botin.TextoValor(15));
+
+        // La furia: sin comprar no dura nada, comprada dura 6 s.
+        inf.Verdadero("furia arranca en cero", c.furia.arrancaEnCero);
+        ChequearValor(inf, "valor furia", c.furia, 0, 0);
+        ChequearValor(inf, "valor furia", c.furia, 1, 6);
+        ChequearValor(inf, "valor furia", c.furia, 2, 6);
+        inf.Igual("texto furia nivel 0", "0", c.furia.TextoValor(0));
+        inf.Igual("texto furia nivel 1", "6", c.furia.TextoValor(1));
+
+        // El reloj de la furia y de su enfriamiento.
+        inf.Cerca("furia: sin activar no falta nada", 0, Furia.Restante(10f, float.NegativeInfinity, 120f), 0);
+        inf.Cerca("furia: recien activada falta todo el enfriamiento", 120, Furia.Restante(10f, 10f, 120f), Tolerancia);
+        inf.Cerca("furia: a los 30 s faltan 90", 90, Furia.Restante(40f, 10f, 120f), Tolerancia);
+        inf.Cerca("furia: a los 120 s esta lista", 0, Furia.Restante(130f, 10f, 120f), 0);
+        inf.Cerca("furia: a los 6 s termino", 0, Furia.Restante(16f, 10f, 6f), 0);
+
+        // La furia en el arma: multiplica encima de la mejora y de la caja, con el techo.
+        var objeto = UnityEditor.EditorUtility.CreateGameObjectWithHideFlags("prueba_arma", HideFlags.HideAndDontSave);
+        try
+        {
+            var arma = objeto.AddComponent<GunController>();
+            arma.FijarTirosPorSegundo(10f);
+            arma.FijarDanoPorBala(3f);
+            arma.FijarFuria(2f, 2f);
+            inf.Cerca("furia en el arma: tiros por segundo x2", 20, arma.TirosPorSegundo, Tolerancia);
+            inf.Cerca("furia en el arma: daño por tiro x2", 6, arma.DanoPorTiro, Tolerancia);
+            inf.Cerca("furia en el arma: el daño de la mejora no cambia", 3, arma.DanoPorBala, Tolerancia);
+            arma.PotenciarCadencia(3f);
+            inf.Cerca("furia con caja: se multiplican", 60, arma.TirosPorSegundo, Tolerancia);
+            arma.FijarTirosPorSegundo(20f);
+            inf.Cerca("furia con caja y cadencia al tope: techo de 120", 120, arma.TirosPorSegundo, Tolerancia);
+            arma.FijarFuria(1f, 1f);
+            inf.Cerca("furia apagada: vuelve la caja sola", 60, arma.TirosPorSegundo, Tolerancia);
+            inf.Cerca("furia apagada: daño por tiro vuelve a la mejora", 3, arma.DanoPorTiro, Tolerancia);
+        }
+        finally
+        {
+            Object.DestroyImmediate(objeto);
+        }
     }
 
     static void ChequearValor(Informe inf, string nombre, Mejora mejora, int nivel, double esperado)
@@ -698,6 +743,8 @@ public static class PruebasMejoras
         inf.Cerca("getters nivel 0: MultiplicadorVida", 1, CatalogoMejoras.MultiplicadorVida, Tolerancia);
         inf.Cerca("getters nivel 0: RadioIman", 0, CatalogoMejoras.RadioIman, Tolerancia);
         inf.Cerca("getters nivel 0: MultiplicadorBotin", 1, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
+        inf.Verdadero("getters nivel 0: FuriaDesbloqueada es falso", !CatalogoMejoras.FuriaDesbloqueada);
+        inf.Cerca("getters nivel 0: DuracionFuria", 0, CatalogoMejoras.DuracionFuria, Tolerancia);
 
         Progreso.DepurarFijarNivel(c.danoBala.id, 5);
         Progreso.DepurarFijarNivel(c.cadencia.id, 10);
@@ -710,6 +757,10 @@ public static class PruebasMejoras
         inf.Cerca("getters 5/10/5/6/15: MultiplicadorVida", 2.25, CatalogoMejoras.MultiplicadorVida, Tolerancia);
         inf.Cerca("getters 5/10/5/6/15: RadioIman", 4.5, CatalogoMejoras.RadioIman, Tolerancia);
         inf.Cerca("getters 5/10/5/6/15: MultiplicadorBotin", 2.5, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
+
+        Progreso.DepurarFijarNivel(c.furia.id, 1);
+        inf.Verdadero("getters furia comprada: FuriaDesbloqueada", CatalogoMejoras.FuriaDesbloqueada);
+        inf.Cerca("getters furia comprada: DuracionFuria", 6, CatalogoMejoras.DuracionFuria, Tolerancia);
     }
 
     // 8. Compras, con el daño de bala del catalogo (40 el nivel 0, 58 el 1).
@@ -1037,6 +1088,12 @@ public static class PruebasMejoras
         var anillo = m.jugador.GetComponent<AnilloIman>();
         inf.Verdadero("aplicado: el jugador tiene AnilloIman con material", anillo != null && anillo.material != null);
         inf.Cerca("aplicado: AnilloIman.RadioActual", radioIman, AnilloIman.RadioActual, 1e-3);
+
+        // La furia: si Jugador.prefab pierde el componente, el boton del HUD no aparece nunca.
+        var furia = m.jugador.GetComponent<Furia>();
+        inf.Verdadero("aplicado: el jugador tiene Furia", furia != null);
+        if (furia != null)
+            inf.Verdadero("aplicado: Furia.Desbloqueada coincide con la compra", furia.Desbloqueada == CatalogoMejoras.FuriaDesbloqueada);
     }
 
     static void Tick()

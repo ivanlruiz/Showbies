@@ -8,6 +8,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("Movement Settings")]
     public float moveSpeed = 8f;
+
+    // Lo sube la furia mientras dura. No se serializa: es estado de la partida.
+    [System.NonSerialized] public float multiplicadorVelocidad = 1f;
     private Rigidbody myRigidbody;
 
     [Header("Input Settings")]
@@ -86,7 +89,7 @@ public class PlayerController : MonoBehaviour
     public void Move(Vector2 input)
     {
         moveInput = new Vector3(input.x, 0f, input.y);
-        moveVelocity = moveInput * moveSpeed;
+        moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad;
 
         if (trans != null && trans.anim != null)
         {
@@ -142,7 +145,7 @@ public class PlayerController : MonoBehaviour
     private void HandleMovement()
     {
         moveInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
-        moveVelocity = moveInput * moveSpeed;
+        moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad;
 
         if (moveInput.magnitude > 0.1f)
         {

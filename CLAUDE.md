@@ -18,7 +18,7 @@ Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
   y con más tipos mezclados, y un jefe cada 10. Mismo mapa pero con las calles (`Ciudad`) encendidas.
 
 Es un **incremental**: las monedas que se juntan en las partidas se gastan en la **tienda de mejoras** del menú
-(daño de bala, cadencia, vida máxima y botín), y las mejoras se aplican al empezar cada partida. Del otro lado,
+(daño de bala, cadencia, vida máxima, imán, botín y la furia), y las mejoras se aplican al empezar cada partida. Del otro lado,
 los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos.
 
 ## Entorno
@@ -41,10 +41,10 @@ los zombis se ponen más duros con cada oleada, y en el modo libre, con los minu
 
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma
-Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions
+Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis), AnilloIman
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
@@ -52,9 +52,9 @@ Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música),
 Assets/Scripts/Tutorial/    ← TutorialManager
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
-Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora)
+Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
-Assets/Mejoras/             ← las cuatro Mejora (.asset) y Resources/CatalogoMejoras
+Assets/Mejoras/             ← las seis Mejora (.asset) y Resources/CatalogoMejoras
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso y ControlesEnElEditor (menú ShowBies)
 ```
@@ -190,7 +190,8 @@ escena sin `AplicarMejoras`. **Nunca escribas sobre `gun.bala`**: es el prefab, 
 
 **Las cajas multiplican la cadencia por un rato.** `PotenciarCadencia(multiplicador)`: `PUBalas` ×1,5 y `PUArma` ×3
 durante `duracionMejora` (10 s); la última pisa a la anterior y al vencer vuelve a la cadencia mejorada. Antes
-fijaban un intervalo, y con la cadencia al tope una caja de balas empeoraba el arma. La munición no expira.
+fijaban un intervalo, y con la cadencia al tope una caja de balas empeoraba el arma. La munición no expira. La
+furia multiplica aparte (`FijarFuria`), así una caja que llega durante la furia no la pisa.
 
 **El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
 `intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,
@@ -223,6 +224,26 @@ sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
   explosión; se destruye con ella.
 - El botón G muestra la recarga con `IndicadorRecargaGranada` y su hijo "Recarga" (Image Filled Radial360).
   **No tiene `Button`, y no hay que ponérselo:** su `onClick` se sumaría al joystick y cada toque tiraría dos veces.
+
+## Furia
+
+Un pico de poder que se compra **una sola vez** en la tienda (la mejora `furia`, 5.000 monedas, tope 1) y se activa
+en la partida. `Furia` (`Assets/Scripts/Jugador/`, en la raíz de `Jugador.prefab`) lee la compra en su `Awake`, como
+`AplicarMejoras`, y lleva los relojes con tiempo escalado: la pausa los congela.
+
+- **Se activa** con el botón del HUD (`BotonFuria`, prefab `Prefabs/UI/BotonFuria` en ShowBies1 y WaveMode, arriba
+  del botón de granada, visible en PC y en móvil) o con la **F** en PC. Sin comprarla el botón no aparece. En PC,
+  hacer click en el botón también dispara (el arma lee el mouse sin mirar la UI): para eso está la F.
+- **Dura** lo que dice el asset (`valorBase`, 6 s) y **se recarga en `enfriamiento`** (120 s), contados desde que se
+  activa. Mientras dura: cadencia ×2 y daño ×2 por un multiplicador aparte del arma (`GunController.FijarFuria`, que
+  se multiplica con la caja y respeta el techo de `maxTirosPorSegundo`) y velocidad ×1,3
+  (`PlayerController.multiplicadorVelocidad`). Esos números están en el componente del prefab.
+- **Jugo** (`Efectos.EmpezarFuria`): cartel "¡FURIA!" con rebote, chispas, temblor, una pausa de impacto corta, la
+  música más aguda y el borde rojo latiendo mientras dura. El botón respira cuando está lista, vibra mientras dura y
+  cuenta los segundos del enfriamiento.
+- `GunController.DanoPorBala` sigue siendo el de la mejora (lo miran el medidor y las pruebas); lo que lleva cada bala
+  es `DanoPorTiro`.
+- **Es un desbloqueo permanente:** cuando entre el renacer de la fase 5, no tiene que reiniciarla.
 
 ## Generación de enemigos
 
@@ -359,6 +380,7 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 | Vida máxima | `vida_maxima` | 40 | ×1,45 | — | 80 × (1 + 0,25 × nivel) |
 | Imán | `iman` | 30 | ×1,5 | 13 | sin comprar no hay; 2 × (1 + 0,25 × (nivel − 1)) m (de 2 a 8) |
 | Botín | `botin` | 120 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
+| Furia | `furia` | 5.000 | — | 1 | desbloquea el botón de furia: 6 s de cadencia y daño ×2 (ver Furia) |
 
 - **El jugador arranca flojo a propósito** (fase 4, pedido de Ivan después de jugar en el teléfono): dispara lento, pega
   1, tiene 80 de vida y no tiene imán (junta las monedas pasándoles por encima). Lo que lo hace fuerte son las compras, y por eso los primeros precios
@@ -699,8 +721,8 @@ enterrado.
   a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
   aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe
   `Builds/medicion_mejoras.txt`.
-- **ShowBies > Progreso > …** (`HerramientasProgreso`): sumar monedas, niveles de prueba (5, 10, 5, 6, 15: daño,
-  cadencia, vida, imán, botín), niveles en cero, reiniciar. **Escriben el `progreso.json` real del editor**, igual
+- **ShowBies > Progreso > …** (`HerramientasProgreso`): sumar monedas, niveles de prueba (5, 10, 5, 6, 15 y la
+  furia: daño, cadencia, vida, imán, botín, furia), niveles en cero, reiniciar. **Escriben el `progreso.json` real del editor**, igual
   que `MedirPartida`.
 - **`MedidorBalance`**: F1 (o tres dedos) en partida muestra daño, tiros por segundo medidos contra esperados, vida,
   botín, imán, multiplicadores de la oleada o del nivel y monedas por zombi. Existe sólo en el editor y en builds de

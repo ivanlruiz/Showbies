@@ -26,6 +26,8 @@ public class GunController : MonoBehaviour
 
     private float tirosPorSegundoBase = -1f;   // -1: nadie la fijó, se usa tiempoDisparo
     private float multiplicadorPickup = 1f;
+    private float multiplicadorCadenciaFuria = 1f;
+    private float multiplicadorDanoFuria = 1f;
     private float danoPorBala = -1f;           // -1: nadie lo fijó, se usa el dañoDar del prefab
     private float mejoraVenceEn;
     private bool mejoraActiva;
@@ -51,15 +53,26 @@ public class GunController : MonoBehaviour
     // 1 sin caja.
     public float MultiplicadorCadencia { get { return multiplicadorPickup; } }
 
-    // La cadencia vigente: la base por la caja, con el techo.
+    // 1 y 1 sin furia.
+    public float MultiplicadorCadenciaFuria { get { return multiplicadorCadenciaFuria; } }
+    public float MultiplicadorDanoFuria { get { return multiplicadorDanoFuria; } }
+
+    // La cadencia vigente: la base por la caja y por la furia, con el techo.
     public float TirosPorSegundo
     {
-        get { return Mathf.Min(TirosPorSegundoBase * multiplicadorPickup, Mathf.Max(1f, maxTirosPorSegundo)); }
+        get { return Mathf.Min(TirosPorSegundoBase * multiplicadorPickup * multiplicadorCadenciaFuria, Mathf.Max(1f, maxTirosPorSegundo)); }
     }
 
+    // El daño de la mejora, sin la furia: el que muestran el medidor y las pruebas.
     public float DanoPorBala
     {
         get { return danoPorBala >= 0f ? danoPorBala : (bala != null ? bala.dañoDar : 0); }
+    }
+
+    // Lo que lleva cada bala que sale ahora, con la furia.
+    public float DanoPorTiro
+    {
+        get { return DanoPorBala * multiplicadorDanoFuria; }
     }
 
     // Start is called before the first frame update
@@ -90,6 +103,15 @@ public class GunController : MonoBehaviour
         multiplicadorPickup = Mathf.Max(1f, multiplicador);
         mejoraActiva = true;
         mejoraVenceEn = Time.time + duracionMejora;
+    }
+
+    // La furia multiplica encima de la mejora y de la caja, así una caja que llega
+    // durante la furia no la pisa. Con 1 y 1 se apaga. La prende y la apaga Furia,
+    // que lleva el reloj.
+    public void FijarFuria(float cadencia, float dano)
+    {
+        multiplicadorCadenciaFuria = Mathf.Max(1f, cadencia);
+        multiplicadorDanoFuria = Mathf.Max(1f, dano);
     }
 
     // Para el indicador del HUD.
@@ -196,7 +218,7 @@ public class GunController : MonoBehaviour
         // Antes era un Instantiate por disparo. Ahora las balas se reusan.
         BulletController newBullet = BulletController.Obtener(bala, firePoint.position, firePoint.rotation);
         newBullet.velocidad = velocidadBala;
-        newBullet.danoAplicado = DanoPorBala;
+        newBullet.danoAplicado = DanoPorTiro;
         newBullet.Adelantar(atraso);
     }
 

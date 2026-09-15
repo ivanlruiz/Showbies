@@ -31,6 +31,7 @@ public class CatalogoMejoras : ScriptableObject
     public Mejora vidaMaxima;
     public Mejora iman;
     public Mejora botin;
+    public Mejora furia;
 
     [Header("Las tarjetas de la tienda, en orden")]
     public Mejora[] enTienda;
@@ -130,6 +131,27 @@ public class CatalogoMejoras : ScriptableObject
         }
     }
 
+    // La furia se compra una sola vez: con el nivel 1 aparece su boton en la
+    // partida. Su valor son los segundos que dura; 0 sin comprarla.
+    public static bool FuriaDesbloqueada
+    {
+        get
+        {
+            CatalogoMejoras catalogo = Instancia;
+            return catalogo != null && catalogo.furia != null && Progreso.Nivel(catalogo.furia.id) >= 1;
+        }
+    }
+
+    public static float DuracionFuria
+    {
+        get
+        {
+            CatalogoMejoras catalogo = Instancia;
+            if (catalogo == null || catalogo.furia == null) return 0f;
+            return (float)catalogo.furia.Valor(Progreso.Nivel(catalogo.furia.id));
+        }
+    }
+
     // Cuantas compras se pueden hacer seguidas con las monedas de ahora, siempre
     // comprando la mas barata. No es "cuantas mejoras cuestan menos que lo que
     // tengo": con 100 monedas se pagan iman (30) y dano (40), pero no ademas
@@ -211,6 +233,7 @@ public class CatalogoMejoras : ScriptableObject
         RevisarTipada(vidaMaxima, "vidaMaxima", problemas);
         RevisarTipada(iman, "iman", problemas);
         RevisarTipada(botin, "botin", problemas);
+        RevisarTipada(furia, "furia", problemas);
 
         // Ids vacios o repetidos entre todas las mejoras distintas del catalogo:
         // dos mejoras con el mismo id compartirian el nivel guardado.
@@ -220,6 +243,7 @@ public class CatalogoMejoras : ScriptableObject
         SumarSiFalta(revisadas, vidaMaxima);
         SumarSiFalta(revisadas, iman);
         SumarSiFalta(revisadas, botin);
+        SumarSiFalta(revisadas, furia);
         if (enTienda != null)
         {
             for (int i = 0; i < enTienda.Length; i++) SumarSiFalta(revisadas, enTienda[i]);

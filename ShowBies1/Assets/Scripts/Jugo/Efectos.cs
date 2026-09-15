@@ -33,6 +33,13 @@ public class Efectos : MonoBehaviour
     public int chispasPorDisparo = 2;
     public int chispasPorCaja = 25;
 
+    [Header("Furia del jugador")]
+    public float temblorFuria = 0.6f;
+    public float pausaFuria = 0.06f;
+    public float tonoMusicaFuria = 1.12f;       // la musica va mas aguda mientras dura
+    public float pulsoVinetaFuria = 0.35f;
+    public float intervaloPulsoFuria = 0.45f;  // segundos entre latidos del borde rojo
+
     [Header("Destello de golpe")]
     public Material materialDestello;
     public float duracionDestello = 0.07f;
@@ -63,6 +70,9 @@ public class Efectos : MonoBehaviour
     private float pausaHasta;               // en tiempo sin escalar
     private bool enPausaDeImpacto;
     private float proximoDanioVisual;
+    private AudioSource musica;
+    private float furiaHasta = -1f;         // en Time.time; negativo sin furia
+    private float proximoPulsoFuria;        // en tiempo sin escalar
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
@@ -77,6 +87,7 @@ public class Efectos : MonoBehaviour
     {
         instance = this;
         if (chispasPrefab != null) chispas = Instantiate(chispasPrefab, transform);
+        musica = GetComponent<AudioSource>();
     }
 
     private void OnDestroy()
@@ -90,6 +101,8 @@ public class Efectos : MonoBehaviour
 
     private void Update()
     {
+        ActualizarFuria();
+
         if (!enPausaDeImpacto || Time.unscaledTime < pausaHasta) return;
 
         enPausaDeImpacto = false;
@@ -177,6 +190,51 @@ public class Efectos : MonoBehaviour
         if (e == null) return;
 
         Sonidos.Tocar(e.cartelOleada, 0.8f);
+    }
+
+    // Arranca la furia del jugador: estruendo agudo, chispas, temblor y un instante
+    // de camara lenta. Mientras dura, la musica va mas aguda y el borde rojo late.
+    public static void EmpezarFuria(Vector3 punto, float duracion)
+    {
+        var e = instance;
+        if (e == null) return;
+
+        e.Emitir(punto, e.chispasPorExplosion);
+        Sonidos.Tocar(e.cartelOleada, 1f, 1.5f);
+        Sonidos.Tocar(e.explosion, 0.7f, 1.4f);
+        CamaraJugador.Temblar(e.temblorFuria);
+        e.PausaDeImpacto(e.pausaFuria);
+        e.furiaHasta = Time.time + Mathf.Max(0f, duracion);
+        e.proximoPulsoFuria = 0f;
+        if (e.musica != null) e.musica.pitch = e.tonoMusicaFuria;
+    }
+
+    public static void TerminarFuria()
+    {
+        if (instance != null) instance.ApagarFuria();
+    }
+
+    // Con tiempo escalado, para terminar junto con la furia del jugador; los
+    // latidos del borde, sin escalar, como la vineta.
+    private void ActualizarFuria()
+    {
+        if (furiaHasta < 0f) return;
+        if (Time.time >= furiaHasta)
+        {
+            ApagarFuria();
+            return;
+        }
+        if (!MenuPausa.Pausado && Time.unscaledTime >= proximoPulsoFuria)
+        {
+            proximoPulsoFuria = Time.unscaledTime + intervaloPulsoFuria;
+            VinetaDanio.Pulso(pulsoVinetaFuria);
+        }
+    }
+
+    private void ApagarFuria()
+    {
+        furiaHasta = -1f;
+        if (musica != null) musica.pitch = 1f;
     }
 
     private void Emitir(Vector3 punto, int cantidad)
