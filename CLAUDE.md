@@ -56,7 +56,7 @@ Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/Mejoras/             ← las cuatro Mejora (.asset) y Resources/CatalogoMejoras
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
-Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras y HerramientasProgreso (menú ShowBies)
+Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso y ControlesEnElEditor (menú ShowBies)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -498,6 +498,11 @@ en el editor con target Android los joysticks se veían pero no respondían.
 - `ConditionalShow` prende y apaga objetos por plataforma (`showOnAndroid` / `showOnPC`). Los joysticks
   ya están puestos en el Canvas de las dos escenas de juego con eso, igual que el **botón de granada**
   (`BotonGranada`, sólo Android), que es un joystick para apuntarla (ver la sección Granada).
+
+**Para jugar con teclado y mouse en el editor sin cambiar el target** (que reimporta todo): **ShowBies > Controles >
+Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`), no del proyecto, y hace que
+`Plataforma.EsMovil` dé falso en el editor aunque el target sea Android. Se aplica al entrar en play. Ojo que
+también cambia los techos que dependen de la plataforma: 60 zombis vivos y 150 monedas en vez de 35 y 80.
 
 **No vuelvas a meter un `#if UNITY_ANDROID` alrededor de una clase entera.** Ver la trampa de abajo.
 
