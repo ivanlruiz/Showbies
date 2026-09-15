@@ -70,6 +70,16 @@ public class Moneda : MonoBehaviour
     private static readonly Stack<Moneda> pool = new Stack<Moneda>();
     private static int enEscena;
     private static float radioImanDeLaPartida = -1f;
+
+    // Cuantas monedas se cobraron desde que arranco el juego. AnilloIman lo mira
+    // para latir con cada una, sin eventos, como la tienda con Progreso.Revision.
+    public static int Cobros { get; private set; }
+
+    // Las que estan en la escena ahora, volando o en el piso.
+    public static int MonedasEnEscena
+    {
+        get { return enEscena; }
+    }
     private static PlayerController jugador;
     private static int frameDeBusqueda = -1;
     private static Transform camara;
@@ -84,6 +94,7 @@ public class Moneda : MonoBehaviour
         pool.Clear();
         enEscena = 0;
         radioImanDeLaPartida = -1f;
+        Cobros = 0;
         jugador = null;
         frameDeBusqueda = -1;
         camara = null;
@@ -272,6 +283,7 @@ public class Moneda : MonoBehaviour
     private void Cobrar(Vector3 posicion)
     {
         Progreso.Sumar(valor);
+        Cobros++;
         Brillar(posicion);
         Sonar();
         Devolver();

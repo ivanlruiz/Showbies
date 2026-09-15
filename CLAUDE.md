@@ -45,7 +45,7 @@ Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance
-Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
+Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis), AnilloIman
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante
@@ -280,6 +280,15 @@ PlayerPrefs a propósito: es estado estructurado.
   que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. **Al terminar la oleada las monedas
   se quedan donde cayeron**: no hay imán global (antes `Moneda.AtraerTodas` las traía todas), juntarlas es parte del
   juego y la mejora de imán es la que ayuda. Siguen desapareciendo a los 20 s.
+- **El alcance del imán se ve.** `AnilloIman`, en la raíz de `Jugador.prefab`, dibuja en el piso un anillo dorado
+  del radio del imán mientras haya monedas en la escena (`Moneda.MonedasEnEscena`), y late (crece, se engrosa y
+  brilla) con cada moneda cobrada: mira el contador `Moneda.Cobros` en vez de suscribirse a un evento. Es un
+  `LineRenderer` con el material Sprites-Default (el del indicador de la granada), en espacio de mundo y creado en
+  su `Awake`, así no le afectan la rotación ni la escala del jugador. Va con `sortingOrder` -1: las manchas, las
+  chispas y las barras de vida también son transparentes sin profundidad, y sin orden explícito una mancha lo tapaba
+  o no según de qué lado del jugador cayera. Usa tiempo sin escalar para seguir latiendo
+  en la pausa de impacto y se congela en la pausa del menú. En el tutorial nunca aparece: sus zombis no sueltan
+  monedas.
 - **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
   `crecimientoMonedas^(oleada − 1)` (1,05) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
   la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de

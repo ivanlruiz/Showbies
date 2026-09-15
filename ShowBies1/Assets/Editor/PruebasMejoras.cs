@@ -955,6 +955,12 @@ public static class PruebasMejoras
         inf.Igual("aplicado: PlayerHealth.maxHealth", vidaMaxima, m.vida.maxHealth);
         inf.Cerca("aplicado: PlayerHealth.MultiplicadorCura", multiplicadorVida, m.vida.MultiplicadorCura, 1e-3);
         inf.Cerca("aplicado: Moneda.RadioImanDeLaPartida", radioIman, Moneda.RadioImanDeLaPartida, 1e-3);
+
+        // El anillo que muestra ese alcance: si Jugador.prefab pierde el componente
+        // o su material, la mejora de iman vuelve a no verse y nada avisa.
+        var anillo = m.jugador.GetComponent<AnilloIman>();
+        inf.Verdadero("aplicado: el jugador tiene AnilloIman con material", anillo != null && anillo.material != null);
+        inf.Cerca("aplicado: AnilloIman.RadioActual", radioIman, AnilloIman.RadioActual, 1e-3);
     }
 
     static void Tick()
