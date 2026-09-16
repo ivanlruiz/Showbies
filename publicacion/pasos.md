@@ -3,6 +3,28 @@
 Estado al 2026-09-16. Lo tildado ya está hecho en el proyecto; lo demás es en la web de Play Console,
 que es la parte que no puedo hacer yo.
 
+## Lo que ya está cargado en Play Console
+
+La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la cuenta personal "j'ntr".
+
+- [x] **Datos de inicio de sesión**: no, no hay nada restringido.
+- [x] **Aplicaciones gubernamentales**: no.
+- [x] **Funciones financieras**: ninguna.
+- [x] **Salud**: ninguna.
+- [x] **Categoría**: Juego > Acción.
+- [x] **Email de contacto** de la ficha: el Gmail de Ivan (se ve en la tienda).
+- [ ] **Anuncios**, **ID de publicidad** y **Seguridad de los datos**: dependen de si la primera build ya lleva
+      AdMob. Tienen que coincidir con lo que tenga el AAB que se sube.
+- [ ] **Contenido y audiencia objetivo**: 13 años o más (decidido). Play no deja empezarlo hasta que esté
+      completa la sección Anuncios.
+- [ ] **Clasificación de contenido** (cuestionario IARC).
+- [ ] **Política de privacidad**: se publica con GitHub Pages desde este repo (decidido). El texto de
+      `privacidad.html` tiene que decir si hay anuncios.
+- [ ] **Ficha de Play Store** (textos de `ficha.md` y gráficos).
+
+En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
+en el menú ⋮ de abajo a la derecha.
+
 ## Lo que ya está resuelto en el proyecto
 
 - [x] **Keystore de release**: `showbies-release.keystore`, con ruta, alias y passwords en `ShowBies1/keystore.local`
