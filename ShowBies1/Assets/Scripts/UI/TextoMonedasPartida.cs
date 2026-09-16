@@ -142,6 +142,8 @@ public class TextoMonedasPartida : MonoBehaviour
     {
         if (valor == mostradas) return;
         mostradas = valor;
-        texto.text = "+" + FormatoNumeros.Compacto(valor) + " monedas  (total " + FormatoNumeros.Compacto(total) + ")";
+        // En mayusculas porque la fuente del juego (Bangers) es de titular: en
+        // minuscula queda como versalita y desentona con el resto de la pantalla.
+        texto.text = "+" + FormatoNumeros.Compacto(valor) + " MONEDAS   <size=70%>TOTAL " + FormatoNumeros.Compacto(total) + "</size>";
     }
 }

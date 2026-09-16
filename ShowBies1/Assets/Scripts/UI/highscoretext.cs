@@ -1,22 +1,24 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
+// El record del modo que se acaba de jugar, en la pantalla de derrota. Si la
+// partida ES el record nuevo, este texto se apaga: lo dice el puntaje (ver Score).
 public class highscoretext : MonoBehaviour
 {
     public TextMeshProUGUI texto;
-    void Start()
+
+    [Tooltip("{0} es el récord.")]
+    public string formato = "<size=55%>RÉCORD</size>  {0}";
+
+    private void Start()
     {
-        // El record del modo que se acaba de jugar.
+        if (Score.HuboRecordNuevo())
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
         int modo = PlayerPrefs.GetInt("UltimoModo", 1);
-        texto.text = "Highscore: " + PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(modo)).ToString();
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        texto.text = string.Format(formato, FormatoNumeros.Compacto(PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(modo))));
     }
 }
