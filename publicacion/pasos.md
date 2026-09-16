@@ -13,13 +13,15 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
 - [x] **Salud**: ninguna.
 - [x] **Categoría**: Juego > Acción.
 - [x] **Email de contacto** de la ficha: el Gmail de Ivan (se ve en la tienda).
-- [ ] **Anuncios**, **ID de publicidad** y **Seguridad de los datos**: dependen de si la primera build ya lleva
-      AdMob. Tienen que coincidir con lo que tenga el AAB que se sube.
-- [ ] **Contenido y audiencia objetivo**: 13 años o más (decidido). Play no deja empezarlo hasta que esté
-      completa la sección Anuncios.
-- [ ] **Clasificación de contenido** (cuestionario IARC).
-- [ ] **Política de privacidad**: se publica con GitHub Pages desde este repo (decidido). El texto de
-      `privacidad.html` tiene que decir si hay anuncios.
+- [x] **Anuncios**: no. **ID de publicidad**: no. La primera build sale sin AdMob y la prueba cerrada arranca
+      así; cuando suba la build con anuncios hay que cambiar estas dos, la seguridad de los datos y la política.
+- [x] **Contenido y audiencia objetivo**: 13-15, 16-17 y 18+.
+- [x] **Clasificación de contenido** (IARC): violencia fantástica contra no humanos, sangre limitada, miedo.
+      Salió ESRB E10+, ClassInd 10 y GRAC 12+.
+- [x] **Política de privacidad**: `https://ivanlruiz.github.io/Showbies/privacidad.html`, desde la rama
+      `gh-pages` (un solo archivo, copia de `privacidad.html`: al cambiar uno hay que actualizar el otro).
+- [ ] **Seguridad de los datos**: respondida (no recopila ni comparte) pero sin enviar; el guardado final no
+      se aplicó desde la extensión.
 - [ ] **Ficha de Play Store** (textos de `ficha.md` y gráficos).
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
