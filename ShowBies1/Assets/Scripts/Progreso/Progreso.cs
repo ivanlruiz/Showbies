@@ -27,6 +27,23 @@ public static class Progreso
         public int nivel;
     }
 
+    // Cuantas veces se uso un lugar de anuncio en el dia guardado. Lista y no
+    // diccionario, como los niveles: JsonUtility no serializa diccionarios.
+    [Serializable]
+    private class UsoDeLugar
+    {
+        public string lugar;
+        public int cantidad;
+    }
+
+    [Serializable]
+    private class EstadoAnuncios
+    {
+        public int dia;                  // aaaammdd local; 0 = todavia ninguno
+        public int fallasPremiadas;      // del dia guardado
+        public List<UsoDeLugar> usos = new List<UsoDeLugar>();
+    }
+
     [Serializable]
     private class Datos
     {
@@ -36,10 +53,18 @@ public static class Progreso
         public double monedas;
         public int mejorOleada;
         public List<NivelDeMejora> mejoras = new List<NivelDeMejora>();
+
+        // v3, para los anuncios. Los que faltan en un JSON viejo quedan con estos
+        // valores, asi que migrar de la 2 a la 3 no necesita nada mas.
+        public int partidasTerminadas;
+        public double segundosJugados;
+        public bool ofrecerVideos = true;
+        public EstadoAnuncios anuncios = new EstadoAnuncios();
     }
 
-    // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras.
-    public const int VersionActual = 2;
+    // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
+    // necesitan los anuncios (partidas, tiempo jugado, interruptor y topes del dia).
+    public const int VersionActual = 3;
 
     private const string NombreArchivo = "progreso.json";
 
@@ -53,8 +78,19 @@ public static class Progreso
     // tocar el progreso real. Null = la de siempre.
     private static string carpetaPruebas;
 
+    // La partida cuyo premio de duplicar ya se cobro; -1 si ninguna.
+    private static int partidaDuplicada = -1;
+
     // Lo que se gano en la partida en curso, o en la ultima si ya termino.
     public static double MonedasDeLaPartida { get; private set; }
+
+    // Sube con cada partida que empieza. No se guarda: sirve para que un premio
+    // que se cobra una vez por partida (el x2 de la derrota) no se cobre dos.
+    public static int NumeroDePartida { get; private set; }
+
+    // Lo que duro la ultima partida. No se guarda: lo lee la pantalla de derrota,
+    // que es otra escena y ya no tiene al jugador para preguntarle.
+    public static float SegundosDeLaUltimaPartida { get; private set; }
 
     // Sube con cada cambio de monedas o niveles.
     public static int Revision { get; private set; }
@@ -66,6 +102,9 @@ public static class Progreso
         datos = null;
         soloLectura = false;
         MonedasDeLaPartida = 0;
+        NumeroDePartida = 0;
+        SegundosDeLaUltimaPartida = 0;
+        partidaDuplicada = -1;
         Revision = 0;
         carpetaPruebas = null;
     }
@@ -107,6 +146,44 @@ public static class Progreso
     {
         Cargar();
         MonedasDeLaPartida = 0;
+        NumeroDePartida++;
+    }
+
+    // Al morir, desde el mismo bloque de PlayerHealth que ya guarda. Cuenta la
+    // partida y el tiempo jugado: los anuncios no se ofrecen en la primera partida
+    // ni en una de dos segundos.
+    public static void TerminarPartida(float segundos)
+    {
+        Cargar();
+        if (segundos < 0f || float.IsNaN(segundos) || float.IsInfinity(segundos)) segundos = 0f;
+        SegundosDeLaUltimaPartida = segundos;
+        datos.partidasTerminadas++;
+        datos.segundosJugados += segundos;
+    }
+
+    public static int PartidasTerminadas
+    {
+        get { Cargar(); return datos.partidasTerminadas; }
+    }
+
+    public static double SegundosJugados
+    {
+        get { Cargar(); return datos.segundosJugados; }
+    }
+
+    // El interruptor "Ofrecer videos" del menu. Guarda en el acto: es una decision
+    // del jugador, como una compra.
+    public static bool OfrecerVideos
+    {
+        get { Cargar(); return datos.ofrecerVideos; }
+        set
+        {
+            Cargar();
+            if (datos.ofrecerVideos == value) return;
+            datos.ofrecerVideos = value;
+            Revision++;
+            Guardar();
+        }
     }
 
     public static void Sumar(double cantidad)
@@ -117,6 +194,111 @@ public static class Progreso
         datos.monedas += cantidad;
         MonedasDeLaPartida += cantidad;
         Revision++;
+    }
+
+    // La UNICA entrada de monedas que no es jugar. Sumar es para lo que se gana
+    // matando zombis y por el bono de oleada (Moneda.cs y WaveManager.cs); esto es
+    // para los premios: el x2 de un video y lo que venga despues. Se separan para
+    // que un premio nunca cuente como monedas ganadas jugando.
+    public static void CobrarPremio(string motivo, double cantidad, bool mostrarEnLaPartida)
+    {
+        if (!(cantidad > 0) || double.IsInfinity(cantidad)) return;
+        Cargar();
+        datos.monedas += cantidad;
+        if (mostrarEnLaPartida) MonedasDeLaPartida += cantidad;
+        Revision++;
+        Guardar();
+        Debug.Log("Progreso: premio \"" + motivo + "\" de " + cantidad.ToString("0.##") + " monedas");
+    }
+
+    // El x2 de la derrota: duplica lo que dejo la partida, una sola vez por partida.
+    // Devuelve si se cobro.
+    public static bool DuplicarMonedasDeLaPartida()
+    {
+        Cargar();
+        if (partidaDuplicada == NumeroDePartida || MonedasDeLaPartida < 1) return false;
+
+        partidaDuplicada = NumeroDePartida;
+        CobrarPremio("duplicar_derrota", MonedasDeLaPartida, true);
+        return true;
+    }
+
+    public static bool YaSeDuplicoLaPartida
+    {
+        get { return partidaDuplicada == NumeroDePartida; }
+    }
+
+    // Los topes de anuncios son por dia local, guardado como aaaammdd: es un entero
+    // comparable y JsonUtility no serializa DateTime.
+    public static int DiaDeHoy()
+    {
+        DateTime ahora = DateTime.Now;
+        return ahora.Year * 10000 + ahora.Month * 100 + ahora.Day;
+    }
+
+    // Si el reloj volvio atras (un dia menor que el guardado) los topes NO se
+    // reinician: si no, alcanzaria con cambiar la fecha del telefono. Estatico para
+    // probarlo sin escena.
+    public static bool EsDiaNuevo(int diaGuardado, int hoy)
+    {
+        return hoy > diaGuardado;
+    }
+
+    public static int UsosDeHoy(string lugar)
+    {
+        if (string.IsNullOrEmpty(lugar)) return 0;
+        Cargar();
+        PonerAlDiaLosAnuncios();
+        UsoDeLugar uso = BuscarUso(lugar);
+        return uso != null ? uso.cantidad : 0;
+    }
+
+    public static void RegistrarUsoDeAnuncio(string lugar)
+    {
+        if (string.IsNullOrEmpty(lugar)) return;
+        Cargar();
+        PonerAlDiaLosAnuncios();
+        UsoDeLugar uso = BuscarUso(lugar);
+        if (uso == null)
+        {
+            uso = new UsoDeLugar { lugar = lugar, cantidad = 0 };
+            datos.anuncios.usos.Add(uso);
+        }
+        uso.cantidad++;
+        Guardar();
+    }
+
+    public static int FallasPremiadasHoy
+    {
+        get { Cargar(); PonerAlDiaLosAnuncios(); return datos.anuncios.fallasPremiadas; }
+    }
+
+    public static void RegistrarFallaPremiada()
+    {
+        Cargar();
+        PonerAlDiaLosAnuncios();
+        datos.anuncios.fallasPremiadas++;
+        Guardar();
+    }
+
+    private static void PonerAlDiaLosAnuncios()
+    {
+        int hoy = DiaDeHoy();
+        if (!EsDiaNuevo(datos.anuncios.dia, hoy)) return;
+
+        datos.anuncios.dia = hoy;
+        datos.anuncios.fallasPremiadas = 0;
+        datos.anuncios.usos.Clear();
+    }
+
+    private static UsoDeLugar BuscarUso(string lugar)
+    {
+        List<UsoDeLugar> usos = datos.anuncios.usos;
+        for (int i = 0; i < usos.Count; i++)
+        {
+            if (usos[i] != null && usos[i].lugar == lugar) return usos[i];
+        }
+        return null;
     }
 
     public static void RegistrarOleadaCompletada(int oleada)
@@ -317,6 +499,18 @@ public static class Progreso
         if (d.mejoras == null) d.mejoras = new List<NivelDeMejora>();
         if (double.IsNaN(d.monedas) || double.IsInfinity(d.monedas) || d.monedas < 0) d.monedas = 0;
         if (d.mejorOleada < 0) d.mejorOleada = 0;
+        if (d.partidasTerminadas < 0) d.partidasTerminadas = 0;
+        if (double.IsNaN(d.segundosJugados) || double.IsInfinity(d.segundosJugados) || d.segundosJugados < 0) d.segundosJugados = 0;
+        if (d.anuncios == null) d.anuncios = new EstadoAnuncios();
+        if (d.anuncios.usos == null) d.anuncios.usos = new List<UsoDeLugar>();
+        if (d.anuncios.dia < 0) d.anuncios.dia = 0;
+        if (d.anuncios.fallasPremiadas < 0) d.anuncios.fallasPremiadas = 0;
+        for (int i = d.anuncios.usos.Count - 1; i >= 0; i--)
+        {
+            UsoDeLugar uso = d.anuncios.usos[i];
+            if (uso == null || string.IsNullOrEmpty(uso.lugar)) d.anuncios.usos.RemoveAt(i);
+            else if (uso.cantidad < 0) uso.cantidad = 0;
+        }
 
         var limpias = new List<NivelDeMejora>(d.mejoras.Count);
         for (int i = 0; i < d.mejoras.Count; i++)

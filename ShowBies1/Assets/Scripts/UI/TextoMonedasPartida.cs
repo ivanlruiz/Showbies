@@ -25,6 +25,7 @@ public class TextoMonedasPartida : MonoBehaviour
     // del juego. Tambien es el techo de ticks: mas seguidos se vuelven un zumbido.
     private static readonly float[] SemitonosTick = { 0f, 2f, 4f, 5f, 7f, 9f, 11f, 12f, 14f, 16f, 17f, 19f, 21f, 23f };
 
+    private double desde;
     private double objetivo;
     private double total;
     private long mostradas = -1;
@@ -52,9 +53,38 @@ public class TextoMonedasPartida : MonoBehaviour
             return;
         }
 
-        cantidadTicks = (int)System.Math.Min(SemitonosTick.Length, System.Math.Floor(objetivo));
+        Arrancar(0, objetivo);
+    }
+
+    // Lo llama OfertaDeDuplicar cuando el video ya se vio y las monedas ya
+    // entraron: el numero sube desde donde estaba hasta el nuevo, con los mismos
+    // ticks. Contar de nuevo desde cero se leeria como si el premio fuera todo lo
+    // que hay.
+    public void Duplicar()
+    {
+        total = Progreso.Monedas;
+        double nuevo = Progreso.MonedasDeLaPartida;
+        if (nuevo <= objetivo)
+        {
+            Escribir((long)System.Math.Floor(System.Math.Max(0, nuevo)));
+            return;
+        }
+
+        progresoGolpe = -1f;
+        texto.rectTransform.localScale = escalaBase;
+        texto.color = colorBase;
+        Arrancar(objetivo, nuevo);
+    }
+
+    private void Arrancar(double desdeValor, double hasta)
+    {
+        desde = desdeValor;
+        objetivo = hasta;
+        tiempo = 0f;
+        ticksTocados = 0;
+        cantidadTicks = (int)System.Math.Min(SemitonosTick.Length, System.Math.Floor(objetivo - desde));
         contando = true;
-        Escribir(0);
+        Escribir((long)System.Math.Floor(System.Math.Max(0, desde)));
     }
 
     private void Update()
@@ -73,11 +103,11 @@ public class TextoMonedasPartida : MonoBehaviour
 
         float t = (tiempo - demoraConteo) / Mathf.Max(0.01f, duracionConteo);
         float k = CurvasUI.SalidaCubica(t);
-        Escribir((long)System.Math.Floor(objetivo * k));
+        Escribir((long)System.Math.Floor(desde + (objetivo - desde) * k));
 
         // Los ticks se reparten por el recorrido del numero y no por el tiempo: con
         // la curva, al principio suenan seguidos y al final se espacian.
-        while (ticksTocados < cantidadTicks && k >= (ticksTocados + 1f) / cantidadTicks)
+        while (cantidadTicks > 0 && ticksTocados < cantidadTicks && k >= (ticksTocados + 1f) / cantidadTicks)
         {
             Sonidos.Tocar(tick, volumenTick, Sonidos.PitchDe(SemitonosTick[ticksTocados]), 0f, 0f);
             ticksTocados++;

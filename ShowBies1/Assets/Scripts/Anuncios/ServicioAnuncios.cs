@@ -1,0 +1,242 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+// La puerta de entrada a los anuncios. El juego nunca habla con la red: pregunta
+// si se puede ofrecer (PuedeOfrecer) y, si el jugador acepta, pide el video
+// (Mostrar). Todo lo demas (topes del dia, separacion entre videos, el proveedor,
+// el hilo del aviso) vive aca.
+//
+// Reglas que no se negocian, porque son la diferencia entre un premio y una
+// trampa: el video es siempre opt-in, se anuncia el premio exacto antes, se
+// entrega una sola vez y cerrarlo antes no castiga.
+public static class ServicioAnuncios
+{
+    private static IProveedorAnuncios proveedor;
+    private static bool inicializado;
+    private static ConfigAnuncios configDePruebas;
+
+    // Cual solicitud esta esperando respuesta. El aviso de una anterior (o repetido)
+    // se ignora: los SDK avisan de mas y desde cualquier hilo.
+    private static int solicitud;
+    private static int solicitudResuelta;
+
+    private static Action premioPendiente;
+    private static Action sinPremioPendiente;
+    private static string lugarPendiente;
+    private static float ultimoAnuncioEn = float.NegativeInfinity;   // en tiempo real
+    private static bool audioPausadoAntes;
+
+    private static readonly object candado = new object();
+    private static readonly Queue<KeyValuePair<int, ResultadoAnuncio>> avisos = new Queue<KeyValuePair<int, ResultadoAnuncio>>();
+
+    // Mientras hay un video en pantalla: el juego esta detras y la app puede perder
+    // el foco sin que eso signifique que el jugador se fue.
+    public static bool MostrandoAnuncio { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        proveedor = null;
+        inicializado = false;
+        configDePruebas = null;
+        solicitud = 0;
+        solicitudResuelta = 0;
+        premioPendiente = null;
+        sinPremioPendiente = null;
+        lugarPendiente = null;
+        ultimoAnuncioEn = float.NegativeInfinity;
+        audioPausadoAntes = false;
+        MostrandoAnuncio = false;
+        lock (candado) avisos.Clear();
+    }
+
+    public static string NombreDelProveedor
+    {
+        get { return Proveedor != null ? Proveedor.Nombre : "ninguno"; }
+    }
+
+    // Si hay alguien que pueda llegar a mostrar un video. Lo mira el interruptor del
+    // menu, que no tiene sentido en una build sin anuncios.
+    public static bool HayProveedor
+    {
+        get { return !(Proveedor is ProveedorNulo); }
+    }
+
+    private static IProveedorAnuncios Proveedor
+    {
+        get
+        {
+            if (inicializado) return proveedor;
+            inicializado = true;
+
+            ConfigAnuncios config = ConfigAnuncios.Instancia;
+            var cual = config != null ? config.proveedor : ConfigAnuncios.Proveedor.Nulo;
+            switch (cual)
+            {
+                case ConfigAnuncios.Proveedor.Falso:
+                    proveedor = new ProveedorFalso();
+                    break;
+                // Real todavia no existe: hasta que se integre la red, no hay anuncios.
+                default:
+                    proveedor = new ProveedorNulo();
+                    break;
+            }
+            proveedor.Inicializar();
+            return proveedor;
+        }
+    }
+
+    // Solo para las pruebas del editor, como Progreso.UsarCarpetaDePruebas: cambia
+    // el proveedor y la config por los de la prueba y deja el servicio como recien
+    // arrancado. Con null en los dos vuelve a lo de siempre. Esto existe porque lo
+    // que hay del otro lado son monedas: el circuito entero (premio una sola vez,
+    // topes, cerrar sin castigo) se prueba sin entrar en play.
+    public static void UsarParaPruebas(IProveedorAnuncios proveedorDePrueba, ConfigAnuncios config)
+    {
+        proveedor = proveedorDePrueba;
+        inicializado = proveedorDePrueba != null;
+        configDePruebas = config;
+        solicitud = 0;
+        solicitudResuelta = 0;
+        premioPendiente = null;
+        sinPremioPendiente = null;
+        lugarPendiente = null;
+        ultimoAnuncioEn = float.NegativeInfinity;
+        MostrandoAnuncio = false;
+        lock (candado) avisos.Clear();
+    }
+
+    // La config que rige ahora: la del asset, o la de la prueba si hay una.
+    public static ConfigAnuncios ConfigEnUso
+    {
+        get { return configDePruebas != null ? configDePruebas : ConfigAnuncios.Instancia; }
+    }
+
+    // Los segundos reales desde el ultimo video. No sobrevive a cerrar el juego, y
+    // esta bien: el tope que importa entre sesiones es el del dia.
+    public static float SegundosDesdeElUltimo
+    {
+        get { return Time.realtimeSinceStartup - ultimoAnuncioEn; }
+    }
+
+    // El nucleo de "se puede ofrecer", sin escena ni proveedor: asi se prueba entero.
+    public static bool PuedeOfrecerConDatos(ConfigAnuncios config, bool ofrecerVideos, bool mostrandoAnuncio,
+                                            int partidasTerminadas, double segundosJugados, int usosDeHoy,
+                                            float segundosDesdeElUltimo, bool proveedorListo)
+    {
+        if (config == null || !ofrecerVideos || mostrandoAnuncio || !proveedorListo) return false;
+        if (partidasTerminadas < config.partidasTerminadasMinimas) return false;
+        if (segundosJugados < config.segundosJugadosMinimos) return false;
+        if (usosDeHoy >= config.vecesPorDia) return false;
+        return segundosDesdeElUltimo >= config.segundosEntreAnuncios;
+    }
+
+    public static bool PuedeOfrecer(string lugar)
+    {
+        if (string.IsNullOrEmpty(lugar)) return false;
+
+        ConfigAnuncios config = ConfigEnUso;
+        return PuedeOfrecerConDatos(config, Progreso.OfrecerVideos, MostrandoAnuncio,
+                                    Progreso.PartidasTerminadas, Progreso.SegundosJugados,
+                                    Progreso.UsosDeHoy(lugar), SegundosDesdeElUltimo,
+                                    Proveedor.Listo(lugar));
+    }
+
+    // Pide el video. Devuelve si se lanzo; el premio llega despues, en el hilo
+    // principal. "alNoRecompensar" es para volver a la pantalla como estaba, no para
+    // castigar: cerrar el video no cuesta nada.
+    public static bool Mostrar(string lugar, Action alRecompensar, Action alNoRecompensar)
+    {
+        if (!PuedeOfrecer(lugar)) return false;
+
+        solicitud++;
+        MostrandoAnuncio = true;
+        lugarPendiente = lugar;
+        premioPendiente = alRecompensar;
+        sinPremioPendiente = alNoRecompensar;
+
+        // Antes de irse a pantalla completa: si Android mata la app mientras se ve el
+        // video, lo jugado hasta acá tiene que estar en disco.
+        Progreso.Guardar();
+        PlayerPrefs.Save();
+
+        audioPausadoAntes = AudioListener.pause;
+        AudioListener.pause = true;
+
+        int token = solicitud;
+        VigiaAplicacion.Asegurar();
+        Proveedor.Mostrar(lugar, resultado => Encolar(token, resultado));
+        return true;
+    }
+
+    // La llama el proveedor, quiza desde otro hilo: solo encola.
+    private static void Encolar(int token, ResultadoAnuncio resultado)
+    {
+        lock (candado)
+        {
+            avisos.Enqueue(new KeyValuePair<int, ResultadoAnuncio>(token, resultado));
+        }
+    }
+
+    // La vacia VigiaAplicacion en su Update, en el hilo principal.
+    public static void AtenderAvisos()
+    {
+        while (true)
+        {
+            KeyValuePair<int, ResultadoAnuncio> aviso;
+            lock (candado)
+            {
+                if (avisos.Count == 0) return;
+                aviso = avisos.Dequeue();
+            }
+            Resolver(aviso.Key, aviso.Value);
+        }
+    }
+
+    private static void Resolver(int token, ResultadoAnuncio resultado)
+    {
+        // De una solicitud vieja, o la segunda vez que avisan de la misma.
+        if (token != solicitud || token == solicitudResuelta) return;
+        solicitudResuelta = token;
+
+        string lugar = lugarPendiente;
+        Action premio = premioPendiente;
+        Action sinPremio = sinPremioPendiente;
+        premioPendiente = null;
+        sinPremioPendiente = null;
+        lugarPendiente = null;
+
+        AudioListener.pause = audioPausadoAntes;
+        MostrandoAnuncio = false;
+        ultimoAnuncioEn = Time.realtimeSinceStartup;
+
+        bool premiar = resultado == ResultadoAnuncio.Recompensado;
+
+        // Un video que se rompio al mostrarse no es culpa del jugador: se premia
+        // igual, pero pocas veces por dia, porque cortar la red seria la forma facil
+        // de cobrar sin mirar nada.
+        if (resultado == ResultadoAnuncio.FallaAlMostrar)
+        {
+            ConfigAnuncios config = ConfigEnUso;
+            int tope = config != null ? config.fallasPremiadasPorDia : 0;
+            if (Progreso.FallasPremiadasHoy < tope)
+            {
+                Progreso.RegistrarFallaPremiada();
+                premiar = true;
+            }
+        }
+
+        // Solo gasta el tope lo que se premio: cerrar el video deja la oferta.
+        if (premiar) Progreso.RegistrarUsoDeAnuncio(lugar);
+
+        if (premiar)
+        {
+            if (premio != null) premio();
+        }
+        else if (sinPremio != null)
+        {
+            sinPremio();
+        }
+    }
+}

@@ -199,6 +199,8 @@ public static class PruebasMejoras
                 if (UsaLaCarpetaDePruebas(informe))
                 {
                     ProbarGuardado(informe);
+                    ProbarAnuncios(informe);
+                    ProbarCircuitoDeAnuncios(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -606,7 +608,7 @@ public static class PruebasMejoras
     // Leer Monedas fuerza la carga: la Revision inicial se lee recien despues.
     static void EmpezarConMonedas(double monedas)
     {
-        EmpezarCaso("{\"version\":2,\"monedas\":" + Numero(monedas) + "}", null);
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":" + Numero(monedas) + "}", null);
         _ = Progreso.Monedas;
     }
 
@@ -658,7 +660,8 @@ public static class PruebasMejoras
         inf.Igual("guardado v1: progreso.json.v1.bak igual al original", v1, LeerSiExiste(ruta + ".v1.bak"));
         Progreso.Guardar();
         string guardado = LeerSiExiste(ruta);
-        inf.Verdadero("guardado v1: el JSON guardado dice \"version\": 2", guardado != null && guardado.Contains("\"version\": 2"));
+        inf.Verdadero("guardado v1: el JSON guardado dice la version actual",
+                      guardado != null && guardado.Contains("\"version\": " + Progreso.VersionActual));
         inf.Verdadero("guardado v1: el JSON guardado tiene \"mejoras\"", guardado != null && guardado.Contains("\"mejoras\""));
 
         // Version mas nueva que la del build (otra rama o volver atras): se lee lo
@@ -856,6 +859,281 @@ public static class PruebasMejoras
 
     // 9. Compras posibles encadenadas desde nivel 0, siempre la mas barata:
     // iman 30 + dano 40 + vida 40 + iman 45 + cadencia 50.
+    // 12. Anuncios: la migracion a v3, los contadores del progreso, el premio que
+    // se cobra una sola vez y las condiciones para ofrecer un video.
+    static void ProbarAnuncios(Informe inf)
+    {
+        // --- migracion v2 -> v3 -------------------------------------------------
+        string v2 = "{\"version\":2,\"monedas\":500,\"mejorOleada\":4}";
+        string ruta = EmpezarCaso(v2, null);
+        inf.Cerca("anuncios v2: monedas", 500, Progreso.Monedas, 1e-9);
+        inf.Igual("anuncios v2: partidas terminadas arranca en 0", 0, Progreso.PartidasTerminadas);
+        inf.Cerca("anuncios v2: segundos jugados arranca en 0", 0, Progreso.SegundosJugados, 1e-9);
+        inf.Verdadero("anuncios v2: los videos arrancan ofrecidos", Progreso.OfrecerVideos);
+        inf.Igual("anuncios v2: progreso.json.v2.bak igual al original", v2, LeerSiExiste(ruta + ".v2.bak"));
+        Progreso.Guardar();
+        inf.Igual("anuncios v2: se guarda como v" + Progreso.VersionActual,
+                  Progreso.VersionActual, LeerGuardado(ruta) != null ? LeerGuardado(ruta).version : -1);
+
+        // --- TerminarPartida ----------------------------------------------------
+        EmpezarConMonedas(0);
+        Progreso.TerminarPartida(30f);
+        Progreso.TerminarPartida(12.5f);
+        inf.Igual("anuncios: dos partidas terminadas", 2, Progreso.PartidasTerminadas);
+        inf.Cerca("anuncios: segundos jugados sumados", 42.5, Progreso.SegundosJugados, 1e-3);
+        inf.Cerca("anuncios: segundos de la ultima partida", 12.5, Progreso.SegundosDeLaUltimaPartida, 1e-3);
+
+        Progreso.TerminarPartida(float.NaN);
+        inf.Cerca("anuncios: un NaN no ensucia los segundos", 42.5, Progreso.SegundosJugados, 1e-3);
+        Progreso.TerminarPartida(-5f);
+        inf.Cerca("anuncios: un negativo no resta", 42.5, Progreso.SegundosJugados, 1e-3);
+        inf.Igual("anuncios: pero las partidas si se cuentan", 4, Progreso.PartidasTerminadas);
+
+        // --- el interruptor guarda en el acto -----------------------------------
+        EmpezarConMonedas(0);
+        ruta = Path.Combine(CarpetaProgreso, "progreso.json");
+        Progreso.OfrecerVideos = false;
+        inf.Verdadero("anuncios: el interruptor queda apagado", !(Progreso.OfrecerVideos));
+        inf.Verdadero("anuncios: apagarlo guarda en el acto",
+                      LeerSiExiste(ruta) != null && LeerSiExiste(ruta).Contains("\"ofrecerVideos\": false"));
+        Progreso.OfrecerVideos = true;
+
+        // --- premios ------------------------------------------------------------
+        EmpezarConMonedas(100);
+        Progreso.EmpezarPartida();
+        Progreso.Sumar(50);
+        long revision = Progreso.Revision;
+        Progreso.CobrarPremio("prueba", 25, true);
+        inf.Cerca("anuncios: el premio suma al total", 175, Progreso.Monedas, 1e-9);
+        inf.Cerca("anuncios: el premio se ve en la partida", 75, Progreso.MonedasDeLaPartida, 1e-9);
+        inf.Verdadero("anuncios: el premio sube la revision", Progreso.Revision > revision);
+
+        Progreso.CobrarPremio("prueba", 0, true);
+        Progreso.CobrarPremio("prueba", -10, true);
+        inf.Cerca("anuncios: un premio de 0 o negativo no hace nada", 175, Progreso.Monedas, 1e-9);
+
+        Progreso.CobrarPremio("fuera", 25, false);
+        inf.Cerca("anuncios: un premio que no es de la partida suma al total", 200, Progreso.Monedas, 1e-9);
+        inf.Cerca("anuncios: pero no al contador de la partida", 75, Progreso.MonedasDeLaPartida, 1e-9);
+
+        // --- el x2 de la derrota ------------------------------------------------
+        EmpezarConMonedas(0);
+        Progreso.EmpezarPartida();
+        Progreso.Sumar(40);
+        inf.Verdadero("anuncios x2: se cobra", Progreso.DuplicarMonedasDeLaPartida());
+        inf.Cerca("anuncios x2: la partida vale el doble", 80, Progreso.MonedasDeLaPartida, 1e-9);
+        inf.Cerca("anuncios x2: el total tambien", 80, Progreso.Monedas, 1e-9);
+        inf.Verdadero("anuncios x2: queda marcado", Progreso.YaSeDuplicoLaPartida);
+        inf.Verdadero("anuncios x2: no se cobra dos veces", !(Progreso.DuplicarMonedasDeLaPartida()));
+        inf.Cerca("anuncios x2: y no toco las monedas", 80, Progreso.Monedas, 1e-9);
+
+        Progreso.EmpezarPartida();
+        inf.Verdadero("anuncios x2: la partida siguiente vuelve a poder", !(Progreso.YaSeDuplicoLaPartida));
+        inf.Verdadero("anuncios x2: pero sin monedas no hay premio", !(Progreso.DuplicarMonedasDeLaPartida()));
+
+        // --- el dia de los topes -------------------------------------------------
+        inf.Verdadero("anuncios dia: un dia mayor es nuevo", Progreso.EsDiaNuevo(20260101, 20260102));
+        inf.Verdadero("anuncios dia: el mismo dia no", !(Progreso.EsDiaNuevo(20260102, 20260102)));
+        inf.Verdadero("anuncios dia: atrasar el reloj no reinicia los topes", !(Progreso.EsDiaNuevo(20260102, 20250101)));
+        inf.Verdadero("anuncios dia: sin dia guardado, el primero es nuevo", Progreso.EsDiaNuevo(0, 20260102));
+        inf.Verdadero("anuncios dia: DiaDeHoy es aaaammdd", Progreso.DiaDeHoy() >= 20200101 && Progreso.DiaDeHoy() <= 21000101);
+
+        // --- usos del dia --------------------------------------------------------
+        EmpezarConMonedas(0);
+        inf.Igual("anuncios usos: arranca en 0", 0, Progreso.UsosDeHoy(LugarAnuncio.DuplicarDerrota));
+        Progreso.RegistrarUsoDeAnuncio(LugarAnuncio.DuplicarDerrota);
+        Progreso.RegistrarUsoDeAnuncio(LugarAnuncio.DuplicarDerrota);
+        inf.Igual("anuncios usos: cuenta los del lugar", 2, Progreso.UsosDeHoy(LugarAnuncio.DuplicarDerrota));
+        inf.Igual("anuncios usos: otro lugar cuenta aparte", 0, Progreso.UsosDeHoy(LugarAnuncio.Revivir));
+        inf.Igual("anuncios usos: las fallas premiadas arrancan en 0", 0, Progreso.FallasPremiadasHoy);
+        Progreso.RegistrarFallaPremiada();
+        inf.Igual("anuncios usos: se cuenta la falla premiada", 1, Progreso.FallasPremiadasHoy);
+
+        // --- PuedeOfrecer --------------------------------------------------------
+        var config = ScriptableObject.CreateInstance<ConfigAnuncios>();
+        try
+        {
+            config.partidasTerminadasMinimas = 2;
+            config.segundosJugadosMinimos = 180f;
+            config.vecesPorDia = 3;
+            config.segundosEntreAnuncios = 60f;
+
+            inf.Verdadero("puede ofrecer: con todo en regla", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 2, 200, 0, 999f, true));
+            inf.Verdadero("puede ofrecer: sin config, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(null, true, false, 9, 9999, 0, 999f, true)));
+            inf.Verdadero("puede ofrecer: con el interruptor apagado, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(config, false, false, 9, 9999, 0, 999f, true)));
+            inf.Verdadero("puede ofrecer: no durante otro video", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, true, 9, 9999, 0, 999f, true)));
+            inf.Verdadero("puede ofrecer: no sin video cargado", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, false)));
+            inf.Verdadero("puede ofrecer: no en la primera partida", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 1, 9999, 0, 999f, true)));
+            inf.Verdadero("puede ofrecer: no con poco jugado", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 179, 0, 999f, true)));
+            inf.Verdadero("puede ofrecer: no con el tope del dia cumplido", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 3, 999f, true)));
+            inf.Verdadero("puede ofrecer: el ultimo uso del dia todavia se puede", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 2, 999f, true));
+            inf.Verdadero("puede ofrecer: no antes de los 60 s del anterior", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 59.9f, true)));
+            inf.Verdadero("puede ofrecer: a los 60 s justos, si", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 60f, true));
+
+            config.vecesPorDia = 0;
+            inf.Verdadero("puede ofrecer: con el tope en 0, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, true)));
+        }
+        finally
+        {
+            Object.DestroyImmediate(config);
+        }
+    }
+
+    // Un proveedor de mentira para las pruebas: devuelve el resultado que se le
+    // pide, y si se le pide, avisa dos veces (los SDK de verdad lo hacen).
+    class ProveedorDePrueba : IProveedorAnuncios
+    {
+        public ResultadoAnuncio resultado = ResultadoAnuncio.Recompensado;
+        public bool hayVideo = true;
+        public bool avisarDosVeces;
+        public int veces;
+
+        public string Nombre { get { return "prueba"; } }
+        public void Inicializar() { }
+        public bool Listo(string lugar) { return hayVideo; }
+
+        public void Mostrar(string lugar, System.Action<ResultadoAnuncio> alTerminar)
+        {
+            veces++;
+            if (alTerminar == null) return;
+            alTerminar(resultado);
+            if (avisarDosVeces) alTerminar(resultado);
+        }
+    }
+
+    // 13. El circuito del premio: lo que hay del otro lado son monedas, asi que se
+    // prueba entero sin entrar en play.
+    static void ProbarCircuitoDeAnuncios(Informe inf)
+    {
+        var proveedor = new ProveedorDePrueba();
+        var config = ScriptableObject.CreateInstance<ConfigAnuncios>();
+        config.partidasTerminadasMinimas = 0;
+        config.segundosJugadosMinimos = 0f;
+        config.vecesPorDia = 3;
+        config.segundosEntreAnuncios = 60f;
+        config.fallasPremiadasPorDia = 1;
+
+        int premios = 0;
+        int cierres = 0;
+        System.Action alPremiar = () => premios++;
+        System.Action alCerrar = () => cierres++;
+
+        try
+        {
+            string lugar = LugarAnuncio.DuplicarDerrota;
+
+            // --- se vio entero ---------------------------------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            premios = cierres = 0;
+            bool audioAntes = AudioListener.pause;
+
+            inf.Verdadero("circuito: se puede ofrecer", ServicioAnuncios.PuedeOfrecer(lugar));
+            inf.Verdadero("circuito: Mostrar arranca", ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar));
+            inf.Verdadero("circuito: el premio no llega antes de atender los avisos", premios == 0);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito: el premio llega una vez", 1, premios);
+            inf.Igual("circuito: y no se llama al de sin premio", 0, cierres);
+            inf.Igual("circuito: gasta un uso del dia", 1, Progreso.UsosDeHoy(lugar));
+            inf.Verdadero("circuito: ya no esta mostrando", !ServicioAnuncios.MostrandoAnuncio);
+            inf.Verdadero("circuito: el audio vuelve como estaba", AudioListener.pause == audioAntes);
+
+            // El segundo enseguida no: hay que dejar pasar los 60 s.
+            inf.Verdadero("circuito: no se ofrece otro enseguida", !ServicioAnuncios.PuedeOfrecer(lugar));
+            inf.Verdadero("circuito: y Mostrar tampoco arranca",
+                          !ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar));
+            inf.Igual("circuito: sin premio de mas", 1, premios);
+
+            // --- avisa dos veces -------------------------------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            proveedor.avisarDosVeces = true;
+            premios = cierres = 0;
+            ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito: dos avisos del SDK, un solo premio", 1, premios);
+            inf.Igual("circuito: y un solo uso del dia", 1, Progreso.UsosDeHoy(lugar));
+            proveedor.avisarDosVeces = false;
+
+            // --- lo cerro antes --------------------------------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            proveedor.resultado = ResultadoAnuncio.Cerrado;
+            premios = cierres = 0;
+            ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito: cerrarlo no premia", 0, premios);
+            inf.Igual("circuito: cerrarlo avisa que no hubo premio", 1, cierres);
+            inf.Igual("circuito: y no gasta el tope del dia", 0, Progreso.UsosDeHoy(lugar));
+
+            // --- no habia video --------------------------------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            proveedor.resultado = ResultadoAnuncio.NoDisponible;
+            premios = cierres = 0;
+            ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito: sin video no hay premio", 0, premios);
+            inf.Igual("circuito: sin video no gasta tope", 0, Progreso.UsosDeHoy(lugar));
+
+            // --- fallo al mostrarse ----------------------------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            proveedor.resultado = ResultadoAnuncio.FallaAlMostrar;
+            premios = cierres = 0;
+            ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito: un video roto se premia igual la primera vez", 1, premios);
+            inf.Igual("circuito: y queda anotado", 1, Progreso.FallasPremiadasHoy);
+
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            premios = cierres = 0;
+            ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito: la segunda falla del dia ya no se premia", 0, premios);
+            inf.Igual("circuito: y avisa que no hubo premio", 1, cierres);
+
+            // --- tope del dia ----------------------------------------------------
+            EmpezarConMonedas(0);
+            proveedor.resultado = ResultadoAnuncio.Recompensado;
+            premios = 0;
+            for (int i = 0; i < 5; i++)
+            {
+                ServicioAnuncios.UsarParaPruebas(proveedor, config);
+                ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+                ServicioAnuncios.AtenderAvisos();
+            }
+            inf.Igual("circuito: el tope del dia corta en 3", 3, premios);
+            inf.Igual("circuito: y los usos quedan en 3", 3, Progreso.UsosDeHoy(lugar));
+
+            // --- el interruptor del jugador --------------------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            Progreso.OfrecerVideos = false;
+            premios = 0;
+            inf.Verdadero("circuito: con los videos apagados no se ofrece",
+                          !ServicioAnuncios.PuedeOfrecer(lugar));
+            inf.Verdadero("circuito: ni se muestra", !ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar));
+            inf.Igual("circuito: y no hay premio", 0, premios);
+            Progreso.OfrecerVideos = true;
+
+            // --- el x2 completo, que es lo que ve el jugador ----------------------
+            EmpezarConMonedas(1000);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            Progreso.EmpezarPartida();
+            Progreso.Sumar(120);
+            ServicioAnuncios.Mostrar(lugar, () => Progreso.DuplicarMonedasDeLaPartida(), alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Cerca("circuito x2: la partida vale el doble", 240, Progreso.MonedasDeLaPartida, 1e-9);
+            inf.Cerca("circuito x2: el total suma el premio", 1240, Progreso.Monedas, 1e-9);
+        }
+        finally
+        {
+            ServicioAnuncios.UsarParaPruebas(null, null);
+            Object.DestroyImmediate(config);
+        }
+    }
+
     static void ProbarComprasPosibles(Informe inf)
     {
         double[] monedas = { 0, 29, 30, 69, 70, 109, 110, 154, 155, 204, 205 };

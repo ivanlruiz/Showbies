@@ -23,6 +23,7 @@ public class BotonMejoras : MonoBehaviour
     private const float EscalaGolpe = 1.4f;
 
     private int revisionVista;
+    private bool avisoTapado;
     private int comprasMostradas = -1;               // -1: todavía no se mostró nada
     private float tiempoGolpe = -1f;                 // negativo: quieta
     private Vector3 escalaBaseInsignia = Vector3.one;
@@ -45,7 +46,10 @@ public class BotonMejoras : MonoBehaviour
 
     private void Update()
     {
-        if (Progreso.Revision != revisionVista) Actualizar();
+        // La oferta de duplicar de la derrota ocupa el renglon del aviso: mientras
+        // esta, el aviso se calla, y vuelve cuando se resuelve (con mas monedas si
+        // el jugador cobro).
+        if (Progreso.Revision != revisionVista || avisoTapado != OfertaDeDuplicar.TapaElAviso) Actualizar();
 
         if (tiempoGolpe < 0f || insignia == null) return;
 
@@ -63,6 +67,7 @@ public class BotonMejoras : MonoBehaviour
     private void Actualizar()
     {
         revisionVista = Progreso.Revision;
+        avisoTapado = OfertaDeDuplicar.TapaElAviso;
         int compras = CatalogoMejoras.ComprasPosibles();
 
         // La primera vez muestra lo que hay sin festejar; después, cada cambio
@@ -78,8 +83,9 @@ public class BotonMejoras : MonoBehaviour
 
         if (aviso != null)
         {
-            if (aviso.gameObject.activeSelf != hay) aviso.gameObject.SetActive(hay);
-            if (hay && cambio)
+            bool mostrarAviso = hay && !avisoTapado;
+            if (aviso.gameObject.activeSelf != mostrarAviso) aviso.gameObject.SetActive(mostrarAviso);
+            if (mostrarAviso)
                 aviso.text = compras == 1 ? formatoAvisoUna : string.Format(formatoAviso, compras);
         }
 

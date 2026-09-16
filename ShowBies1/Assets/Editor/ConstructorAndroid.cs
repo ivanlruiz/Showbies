@@ -31,7 +31,47 @@ public static class ConstructorAndroid
     {
         EditorUserBuildSettings.buildAppBundle = false;
         PlayerSettings.Android.useCustomKeystore = false;
-        Construir(RutaApk);
+
+        // La APK es para probar en el telefono: el anuncio falso (el cartel con la
+        // barra) tiene que llegar si o si, sin importar como quedo el asset.
+        var proveedorAnterior = FijarProveedorDeAnuncios(ConfigAnuncios.Proveedor.Falso);
+        try
+        {
+            Construir(RutaApk);
+        }
+        finally
+        {
+            RestaurarProveedorDeAnuncios(proveedorAnterior);
+        }
+    }
+
+    // Cambia el proveedor del asset para esta build y devuelve el que habia, o null
+    // si no hay asset. Al terminar se restaura, asi la build no deja el asset
+    // cambiado en el repo.
+    static ConfigAnuncios.Proveedor? FijarProveedorDeAnuncios(ConfigAnuncios.Proveedor cual)
+    {
+        var config = Resources.Load<ConfigAnuncios>(ConfigAnuncios.RutaEnResources);
+        if (config == null) return null;
+
+        var anterior = config.proveedor;
+        if (anterior == cual) return anterior;
+
+        config.proveedor = cual;
+        EditorUtility.SetDirty(config);
+        AssetDatabase.SaveAssets();
+        return anterior;
+    }
+
+    static void RestaurarProveedorDeAnuncios(ConfigAnuncios.Proveedor? anterior)
+    {
+        if (anterior == null) return;
+
+        var config = Resources.Load<ConfigAnuncios>(ConfigAnuncios.RutaEnResources);
+        if (config == null || config.proveedor == anterior.Value) return;
+
+        config.proveedor = anterior.Value;
+        EditorUtility.SetDirty(config);
+        AssetDatabase.SaveAssets();
     }
 
     [MenuItem("Build/Android AAB (release)")]
@@ -39,6 +79,16 @@ public static class ConstructorAndroid
     {
         var datos = LeerKeystoreLocal();
         if (datos == null) return;
+
+        // El AAB es lo que se sube a la Play Store: el anuncio falso ahi seria una
+        // pantalla de prueba en produccion. Se corta antes de compilar.
+        var configAnuncios = Resources.Load<ConfigAnuncios>(ConfigAnuncios.RutaEnResources);
+        if (configAnuncios != null && configAnuncios.proveedor == ConfigAnuncios.Proveedor.Falso)
+        {
+            Fallar("el proveedor de anuncios esta en Falso: no se sube a Play con el anuncio de prueba. "
+                + "Cambialo en Assets/Anuncios/Resources/ConfigAnuncios.");
+            return;
+        }
 
         var keystoreAnterior = PlayerSettings.Android.keystoreName;
         var aliasAnterior = PlayerSettings.Android.keyaliasName;

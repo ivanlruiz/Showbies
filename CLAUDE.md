@@ -44,10 +44,11 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, InterruptorVideos
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
+Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante
 Assets/Scripts/Tutorial/    ← TutorialManager
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
@@ -55,6 +56,7 @@ Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+
 Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/Mejoras/             ← las seis Mejora (.asset) y Resources/CatalogoMejoras
+Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso y ControlesEnElEditor (menú ShowBies)
 ```
@@ -308,9 +310,10 @@ prefab, así que la altura sirve). Se destruye con el zombi.
 ## Monedas y progreso
 
 Lo que el jugador conserva entre partidas vive en `Progreso` (`Assets/Scripts/Progreso/`): un JSON en
-`Application.persistentDataPath/progreso.json` con las monedas, la mejor oleada completada y el nivel de cada
-mejora (versión 2: `mejoras` es una lista `{id, nivel}`, porque `JsonUtility` no guarda diccionarios). No usa
-PlayerPrefs a propósito: es estado estructurado.
+`Application.persistentDataPath/progreso.json` con las monedas, la mejor oleada completada, el nivel de cada
+mejora y lo que necesitan los anuncios (versión 3: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
+guarda diccionarios, y desde la 3 se suman `partidasTerminadas`, `segundosJugados`, `ofrecerVideos` y los topes
+del día). No usa PlayerPrefs a propósito: es estado estructurado.
 
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
@@ -354,6 +357,12 @@ PlayerPrefs a propósito: es estado estructurado.
   herramientas de editor) lo pisa.
 - `MonedasEnteras` (floor con 1e-6) es lo que se muestra y lo que se puede pagar. `Sumar`, `Comprar` y las
   funciones de depuración incrementan `Revision`.
+- **`Sumar` es para lo que se gana jugando y `CobrarPremio` para todo lo demás** (hoy, el x2 de un video).
+  Están separados a propósito: un premio no tiene que contar como monedas ganadas jugando cuando entre el
+  renacer. Ver Anuncios.
+- `PlayerHealth` llama a `Progreso.TerminarPartida(segundos)` al morir, en el mismo bloque que guarda: cuenta
+  la partida y el tiempo jugado, que es lo que mira la oferta de video para no premiar una partida de dos
+  segundos.
 - `MonedasDeLaPartida` vuelve a cero al empezar cada partida (`PlayerHealth.Awake`) y lo muestra la pantalla
   de derrota (`TextoMonedasPartida`). El HUD de las escenas de juego muestra el total con `ContadorMonedas`.
   Los números para pantalla pasan por `FormatoNumeros.Compacto` (1.234, 123 K, 4,5 M).
@@ -401,6 +410,63 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   mejoras!".
 - **Para agregar una mejora:** un asset `Mejora` con id nuevo → su campo y getter en `CatalogoMejoras` → aplicarla
   en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → casos en `PruebasMejoras`.
+
+## Anuncios
+
+Los videos con recompensa son la única monetización del juego, y entran por **un solo lugar**: el **x2 de las
+monedas en la pantalla de derrota**. Todo lo demás (topes, proveedor, hilos) vive en
+`Assets/Scripts/Anuncios/` y el juego no habla nunca con una red de anuncios.
+
+**Las reglas que no se negocian**, porque son la diferencia entre un premio y una trampa:
+
+- **Siempre opt-in y en una pausa natural.** Nunca durante la partida: la derrota es el único momento, y el
+  jugador ya terminó de jugar.
+- **El premio se dice exacto antes de mirar** ("VER VIDEO: +137 MONEDAS"), no como sorpresa.
+- **Cerrar el video antes no castiga**: no hay premio, pero tampoco se gasta el tope del día ni pasa nada más.
+- **Si no se puede ofrecer, el botón no existe**, no aparece en gris.
+- **Se puede apagar**: el botoncito VIDEOS del menú (`InterruptorVideos`, abajo a la izquierda) apaga la oferta
+  para siempre y no vuelve a preguntar. Si no hay proveedor (Windows), el botón ni aparece.
+- **Un premio nunca es "monedas ganadas jugando".** Entra por `Progreso.CobrarPremio`, no por `Sumar`: cuando
+  entre el renacer de la fase 5, lo que se cobró con videos no tiene que contar para los cerebros.
+
+**Las piezas:**
+
+| pieza | qué hace |
+|---|---|
+| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy sólo se usa `duplicar_derrota`. |
+| `IProveedorAnuncios` | quién muestra el video: `Listo(lugar)` y `Mostrar(lugar, aviso)`. Cambiar de red es escribir otra clase. |
+| `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows y el de "todavía no hay red". |
+| `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet, y anda igual en el teléfono. |
+| `ConfigAnuncios` | todos los números, en `Assets/Anuncios/Resources/ConfigAnuncios.asset`. Si falta, no se ofrece nada (con un LogError). |
+| `ServicioAnuncios` | la puerta: `PuedeOfrecer(lugar)` y `Mostrar(lugar, alPremiar, alNoPremiar)`. |
+| `VigiaAplicacion` | un objeto con `DontDestroyOnLoad` que se instala solo. Vacía los avisos de los videos en el hilo principal y **guarda el progreso cuando la app pierde el foco en cualquier escena** (antes eso lo hacía sólo `MenuPausa`, que no está ni en el menú ni en la derrota). |
+| `OfertaDeDuplicar` | el botón de la derrota (objeto `OfertaVideo` en `Perdiste.unity`, componente en `Menu`). |
+
+**Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada, con 180 s jugados en total, una
+partida de 90 s o más, al menos 20 monedas en la partida, hasta 3 veces por día y con 60 s entre un video y otro.
+El día es un `aaaammdd` local guardado en el progreso, y **atrasar el reloj del teléfono no reinicia los topes**
+(sólo cuenta un día mayor al guardado).
+
+**El aviso del SDK llega desde cualquier hilo y a veces dos veces.** Por eso `ServicioAnuncios` numera cada
+solicitud, encola el aviso con un candado y lo resuelve una sola vez en el `Update` de `VigiaAplicacion`. Antes
+de irse a pantalla completa guarda el progreso y los `PlayerPrefs`: Android puede matar la app mientras se ve
+el video. El audio del juego se pausa y se restaura como estaba.
+
+**Un video que se rompe al mostrarse se premia igual, pero una vez por día** (`fallasPremiadasPorDia`): no es
+culpa del jugador, pero cortar la red no puede ser la forma fácil de cobrar sin mirar nada.
+
+**El botón ocupa el renglón del aviso "¡Te alcanza para N mejoras!"**, que se calla mientras la oferta está y
+vuelve cuando se resuelve, con más monedas si el jugador cobró (`OfertaDeDuplicar.TapaElAviso`, que mira
+`BotonMejoras`).
+
+**A partir de una hora de sesión la derrota sugiere descansar** (`AvisoDescanso`, `minutosParaAvisoDeDescanso`).
+No bloquea nada.
+
+**Todavía no hay red de anuncios de verdad.** `ConfigAnuncios.proveedor` está en `Falso` y `Real` no existe:
+cuando se integre (AdMob o LevelPlay) es una clase nueva que implemente `IProveedorAnuncios` y un `case` en
+`ServicioAnuncios`. Nada del juego se entera. Ojo con dos cosas al integrarla: el plugin de AdMob para Unity
+está roto en Unity 6000.3.17 y posteriores (issue 4212 del repo), y AdMob sólo sirve anuncios de verdad cuando
+la app ya está publicada y vinculada a su ficha de Play.
 
 ## Jugo
 
@@ -464,6 +530,9 @@ Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas),
 
 `PlayerHealth.TakeDamage` llama a `PlayerPrefs.Save()` explícitamente. Si agregás una clave, escribila
 en ese mismo bloque o se pierde cuando el juego no cierra bien.
+
+`VigiaAplicacion` (ver Anuncios) guarda el progreso cuando la app pierde el foco **en cualquier escena**,
+incluidos el menú y la derrota, donde no hay menú de pausa que lo haga.
 
 `"UltimoModo"` es lo que hace que "Retry" vuelva al modo que estabas jugando y no siempre al primero.
 La tecla R hace lo mismo por otro camino: recarga la escena activa.
@@ -576,7 +645,10 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   backup fuera del repo: si se pierde, no se puede actualizar la app publicada (salvo con Play App
   Signing, que conviene activar al subirla por primera vez).
 - Los restos de Unity Mediation (discontinuado por Unity) ya se borraron; el paquete nunca estuvo
-  en `manifest.json`. Los ads van a entrar con LevelPlay o AdMob, desde cero.
+  en `manifest.json`. La red de anuncios de verdad todavía no está (ver Anuncios).
+- **La APK fuerza el proveedor de anuncios Falso** mientras dura la build y después deja el asset como
+  estaba, así el cartel de prueba llega siempre al teléfono. **El AAB se niega a construirse si el
+  proveedor está en Falso**: un anuncio de prueba en la Play Store no.
 - El `totalSize` del BuildReport miente: cuenta símbolos e intermedios (~430 MB); el APK real son
   ~32 MB. La carpeta `*_BurstDebugInformation_DoNotShip` que aparece al lado del APK no se
   distribuye.
@@ -701,14 +773,20 @@ enterrado.
   LiberationSans. Si aparecen modificados en git sin haber tocado fuentes, se restauran. Bangers no tiene `→`: la
   flecha de las tarjetas es un sprite.
 
+- **Un `Image` sin sprite ignora `Image.Type.Filled`.** La barra del anuncio de prueba se veía llena desde el
+  primer frame por eso; ahora mueve el ancho del `RectTransform`. Lo mismo vale para cualquier medidor que se
+  arme por código con un rectángulo de color.
+
 - **Al duplicar un botón del menú, no le cambies la transición a None.** Los botones del menú tienen un Image negro
   que la transición ColorTint deja invisible; con None aparece.
 
 ## Pruebas y medición
 
 - **ShowBies > Pruebas > Logica de mejoras** (`PruebasMejoras.CorrerTodas`): precios, efectos, textos, escalado,
-  acumuladores, guardado y migración (en una carpeta temporal) y compras. No corre en play. Escribe
-  `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+  acumuladores, guardado y migración (en una carpeta temporal), compras y **todo el circuito de los anuncios**
+  (premio una sola vez aunque el SDK avise dos, cerrar sin castigo, topes del día, falla premiada, el x2
+  completo), con un proveedor de mentira que se enchufa con `ServicioAnuncios.UsarParaPruebas`. No corre en
+  play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata
   a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
   aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe

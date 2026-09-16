@@ -28,6 +28,11 @@ public class PlayerHealth : MonoBehaviour
     // no llega a un punto entero queda acá y se suma al golpe siguiente.
     private float danoPendiente;
 
+    // Cuándo empezó la partida, en tiempo escalado: así la pausa no cuenta como
+    // jugado. Lo mira la oferta de duplicar, que no premia una partida de dos
+    // segundos.
+    private float empezoEn;
+
     public float MultiplicadorCura { get { return multiplicadorCura; } }
     public int CuraPorCaja { get { return Mathf.RoundToInt(curaPorPickup * multiplicadorCura); } }
 
@@ -52,6 +57,7 @@ public class PlayerHealth : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        empezoEn = Time.time;
         Progreso.EmpezarPartida();
     }
 
@@ -126,6 +132,7 @@ public class PlayerHealth : MonoBehaviour
 
             // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
             PlayerPrefs.Save();
+            Progreso.TerminarPartida(Time.time - empezoEn);
             Progreso.Guardar();
 
             SceneManager.LoadScene(2);
