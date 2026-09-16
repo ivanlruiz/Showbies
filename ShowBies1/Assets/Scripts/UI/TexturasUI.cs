@@ -193,6 +193,58 @@ public static class TexturasUI
         return dx * dx + dy * dy <= radio * radio;
     }
 
+    // El globo del selector de idioma: un circulo con meridianos y paralelos, como el
+    // icono "language" de Material Symbols. Resuelto por muestreo, igual que la
+    // claqueta, para que las curvas no salgan escalonadas.
+    public static Texture2D Globo(int lado)
+    {
+        lado = Mathf.Max(8, lado);
+        var pixeles = new Color32[lado * lado];
+        const int Muestras = 4;
+
+        for (int y = 0; y < lado; y++)
+        {
+            for (int x = 0; x < lado; x++)
+            {
+                int adentro = 0;
+                for (int sy = 0; sy < Muestras; sy++)
+                {
+                    for (int sx = 0; sx < Muestras; sx++)
+                    {
+                        float u = (x + (sx + 0.5f) / Muestras) / lado * 2f - 1f;
+                        float v = (y + (sy + 0.5f) / Muestras) / lado * 2f - 1f;
+                        if (EnElGlobo(u, v)) adentro++;
+                    }
+                }
+                pixeles[y * lado + x] = Blanco(adentro / (float)(Muestras * Muestras));
+            }
+        }
+
+        return Crear(lado, pixeles, "Globo");
+    }
+
+    // Coordenadas de -1 a 1 con el centro en 0.
+    private static bool EnElGlobo(float x, float y)
+    {
+        const float Grosor = 0.085f;
+        const float Borde = 0.92f;
+        const float MitadDelGrosor = Grosor * 0.5f;
+
+        float r = Mathf.Sqrt(x * x + y * y);
+        if (r > Borde) return false;
+        if (r > Borde - Grosor) return true;                                  // el contorno
+        if (Mathf.Abs(x) < MitadDelGrosor) return true;                        // el meridiano del medio
+        if (Mathf.Abs(y) < MitadDelGrosor) return true;                        // el ecuador
+        if (Mathf.Abs(Mathf.Abs(y) - 0.46f) < MitadDelGrosor) return true;     // los dos paralelos
+
+        // Los meridianos curvos: una elipse angosta. La distancia se aproxima
+        // escalando por el semieje chico, que alcanza para un trazo parejo.
+        const float SemiejeX = 0.42f;
+        float semiejeY = Borde - MitadDelGrosor;
+        float e = Mathf.Sqrt((x * x) / (SemiejeX * SemiejeX) + (y * y) / (semiejeY * semiejeY));
+        return Mathf.Abs(e - 1f) * SemiejeX < MitadDelGrosor;
+    }
+
     // Distancia del centro del pixel al centro de la textura, en radios y hasta 1.
     private static float Distancia(int x, int y, float centro)
     {

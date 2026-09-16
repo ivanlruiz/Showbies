@@ -1,7 +1,8 @@
 using UnityEngine;
 
 // El boton atras de Android en el menu principal, que Unity entrega como
-// Escape. Con la tienda de mejoras abierta la cierra, como su boton "VOLVER";
+// Escape. Con el selector de idioma abierto lo cierra; con la tienda de mejoras
+// abierta la cierra, como su boton "VOLVER";
 // con el panel de modos abierto vuelve al principal, como su boton "Back"; en
 // el principal cierra el juego, que es lo que se espera en Android. En PC,
 // Escape en el principal no hace nada: para salir esta el boton Quit.
@@ -15,6 +16,7 @@ public class BotonAtrasMenu : MonoBehaviour
     public GameObject menuPrincipal;
     public GameObject menuModos;
     public TiendaMejoras tienda;
+    public SelectorIdioma selectorIdioma;
 
     private void Update()
     {
@@ -23,6 +25,12 @@ public class BotonAtrasMenu : MonoBehaviour
 
     public void Atras()
     {
+        if (selectorIdioma != null && selectorIdioma.Abierto)
+        {
+            selectorIdioma.Cerrar();
+            return;
+        }
+
         if (tienda != null && tienda.Abierta)
         {
             tienda.Cerrar();

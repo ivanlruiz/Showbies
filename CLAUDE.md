@@ -51,14 +51,16 @@ Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, Efec
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro
 Assets/Scripts/Tutorial/    ← TutorialManager
+Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
 Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/Mejoras/             ← las seis Mejora (.asset) y Resources/CatalogoMejoras
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
+Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
-Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso y ControlesEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -365,7 +367,7 @@ del día). No usa PlayerPrefs a propósito: es estado estructurado.
   segundos.
 - `MonedasDeLaPartida` vuelve a cero al empezar cada partida (`PlayerHealth.Awake`) y lo muestra la pantalla
   de derrota (`TextoMonedasPartida`). El HUD de las escenas de juego muestra el total con `ContadorMonedas`.
-  Los números para pantalla pasan por `FormatoNumeros.Compacto` (1.234, 123 K, 4,5 M).
+  Los números para pantalla pasan por `FormatoNumeros.Compacto`, que los escribe según el idioma (ver Idiomas).
 
 ## Mejoras y tienda
 
@@ -409,7 +411,8 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   (con 50 monedas hay cuatro tarjetas verdes pero alcanza para una sola), y en la derrota "¡Te alcanza para N
   mejoras!".
 - **Para agregar una mejora:** un asset `Mejora` con id nuevo → su campo y getter en `CatalogoMejoras` → aplicarla
-  en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → casos en `PruebasMejoras`.
+  en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → `mejora_<id>_nombre` y `mejora_<id>_unidad` en la
+  tabla de textos → casos en `PruebasMejoras`.
 
 ## Anuncios
 
@@ -506,9 +509,9 @@ la app ya está publicada y vinculada a su ficha de Play.
 
 ## Pantallas: idioma, fuente y botones
 
-Todo lo que lee el jugador esta **en espaniol y con Bangers**, la fuente del juego: no queda ningun texto con la
-fuente por defecto de Unity (LiberationSans), que era lo que hacia que el menu y la derrota parecieran de dos
-juegos distintos. Si agregas un texto, ponele Bangers; si es una palabra en ingles, traducila.
+Todo lo que lee el jugador esta **con Bangers**, la fuente del juego, y **sale de la tabla de textos** (ver Idiomas):
+no queda ningun texto con la fuente por defecto de Unity (LiberationSans), que era lo que hacia que el menu y la
+derrota parecieran de dos juegos distintos. Si agregas un texto, ponele Bangers y dale una fila en la tabla.
 
 **Todos los botones salen del mismo molde**, el de MEJORAS:
 
@@ -520,9 +523,9 @@ Boton            <- Button + BotonJugoso (la raiz recibe el toque y no se anima)
     Texto        <- TMP centrado, oscuro
 ```
 
-El color dice que hace cada uno: **verde** lo que te devuelve al juego (JUGAR, OTRA VEZ, CONTINUAR, MODO LIBRE),
-**dorado** la tienda (MEJORAS), **azul** lo que cambia de modo (MODOS DE JUEGO, REINICIAR), **naranja** las
-oleadas, **gris** lo secundario (TUTORIAL, SALIR, MENU, VOLVER, NO GRACIAS).
+El color dice que hace cada uno: **verde** lo que te devuelve al juego (PLAY, PLAY AGAIN, RESUME, ENDLESS),
+**dorado** la tienda (UPGRADES) y el idioma elegido, **azul** lo que cambia de modo (GAME MODES, RESTART),
+**naranja** las oleadas, **gris** lo secundario (TUTORIAL, QUIT, MENU, BACK, NO THANKS).
 
 **El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
 ya no existe; con el fondo nuevo, eso lo tenia todo de color negro. Apagar la transicion tampoco va (ver la
@@ -530,10 +533,11 @@ trampa).
 
 **Jerarquia de cada pantalla**, que sigue lo que el jugador necesita de un vistazo:
 
-- **Derrota**: PERDISTE, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
+- **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
   record chicos, el renglon de la oferta de video o el aviso de compras, y abajo los tres botones. Si la partida
-  fue record, el puntaje dice "¡NUEVO RECORD!" y el texto del record se calla (`Score.HuboRecordNuevo`).
-- **Menu**: el nombre del juego arriba y cinco botones, con JUGAR primero y SALIR ultimo.
+  fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`).
+- **Menu**: el nombre del juego arriba, cinco botones con PLAY primero y QUIT ultimo, el globo del idioma arriba a
+  la izquierda y las monedas arriba a la derecha.
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
   (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
@@ -541,6 +545,44 @@ trampa).
 Las posiciones de la derrota y de la ventanita de revivir estan **medidas**, no puestas a ojo: cuando muevas algo
 de esas pantallas, revisa que ningun par de elementos se pise, contando los que se prenden solos (la oferta de
 video y el aviso de compras comparten renglon a proposito).
+
+## Idiomas
+
+El juego está **en inglés por defecto** y se puede pasar a **español de España**. Arranca en inglés la primera vez y
+en cada instalación nueva, sin mirar el idioma del teléfono; el jugador lo cambia con el **globo** de arriba a la
+izquierda del menú, que abre una ventana con un botón por idioma. La elección queda en `PlayerPrefs["Idioma"]`
+(es una preferencia del dispositivo, no progreso).
+
+**Todo texto que ve el jugador sale de la tabla** `Assets/Idioma/Resources/Textos.txt`: una fila por texto, con
+`id`, `en` y `es` separados por TAB. Se abre con cualquier planilla. Nunca escribas un texto a mano en una escena
+ni en el código.
+
+- **Un texto fijo** de una escena o un prefab (un título, la etiqueta de un botón) lleva el componente
+  `TextoTraducido` con su `id`: lo escribe al prenderse y cada vez que cambia el idioma, sin recargar la escena.
+- **Un texto que arma el código** usa `Textos.De("id")` o `Textos.Formato("id", a, b)`. Escribí el id entero
+  entre comillas: la prueba lo busca así en el código. La excepción son las mejoras, cuyo nombre y unidad salen
+  de `mejora_<id>_nombre` y `mejora_<id>_unidad` (el `id` de la mejora ya es fijo para siempre); los campos
+  `nombre` y `unidad` del asset quedaron sólo para el inspector.
+- **Casi nada es una frase suelta**: son plantillas con `{0}`, `{1}` y rich text (`<size=55%>COINS</size>  {0}`).
+  Se traduce la plantilla entera, formato incluido, y cada idioma tiene que tener **los mismos `{n}`** (uno que
+  falta tira una excepción en plena partida). La prueba lo verifica. En `TMP_Text.SetText(formato, número)`, que
+  no aloca, la plantilla de la tabla funciona igual.
+- **Lo que se refresca solo al cambiar de idioma**: los `TextoTraducido`, la tienda (tarjetas y pie), los botones
+  MEJORAS y los contadores de monedas. El idioma se cambia desde el menú, así que lo que se escribe una vez en
+  partida (HUD, derrota) no necesita refrescarse. Si agregás algo al menú que arme texto por código, compará
+  `Idioma.Revision` como hacen ellos.
+- **Los números también dependen del idioma** (`FormatoNumeros`): `1,234` / `4.5M` / `2.3B` en inglés y
+  `1.234` / `4,5 M` / `2,3 MM` en español. Los separadores se arman a mano: la cultura del sistema no está en
+  todas las builds y la de un teléfono en otro idioma daría otra cosa.
+- **El español es de España**: tuteo, "ratón", "coger", "vídeo" con tilde. Nada de voseo.
+- **Un id que falta no rompe nada pero se ve**: sale `[id]` en pantalla y un aviso en la consola. Un texto vacío
+  en un idioma cae al inglés.
+- **Para sumar un idioma**: una columna con su código en la cabecera de la tabla, un valor en `Lengua` (en el
+  orden de las columnas), su código y su nombre propio en `Idioma`, y los números en `FormatoNumeros`.
+- **ShowBies > Idioma** cambia el idioma desde el editor; "Olvidar" deja el editor como alguien que abre el
+  juego por primera vez.
+- Se eligió este sistema y no el paquete Localization de Unity porque ese depende de Addressables: demasiado para
+  dos idiomas y ~75 textos. Si algún día hacen falta muchos, los textos ya están separados en una tabla.
 
 ## Jugo
 
@@ -598,6 +640,7 @@ progreso):
 | `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"` |
 | `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext`, `TiendaMejoras.Jugar` |
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
+| `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
@@ -632,8 +675,8 @@ click en otra ventana.
   `OnBackInvokedCallback` y reinyecta `KEYCODE_BACK` a la actividad. Deja de llegar si alguien pone
   `Input.backButtonLeavesApp = true`.
 - Cada pantalla decide qué hace Escape: en juego pausa y reanuda (`MenuPausa`), en la derrota vuelve al
-  menú (`MenuPerdiste`), y en el menú principal cierra primero la tienda, después el panel de modos o, en el
-  principal, sale del juego sólo en móvil (`BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del
+  menú (`MenuPerdiste`), y en el menú principal cierra primero la ventana de idioma, después la tienda, después el panel de modos o,
+  en el principal, sale del juego sólo en móvil (`BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del
   menú). `RestartScene` ya no cierra el
   juego con Escape: en PC, para salir está Quit.
 
@@ -867,8 +910,10 @@ enterrado.
 - **ShowBies > Pruebas > Logica de mejoras** (`PruebasMejoras.CorrerTodas`): precios, efectos, textos, escalado,
   acumuladores, guardado y migración (en una carpeta temporal), compras y **todo el circuito de los anuncios**
   (premio una sola vez aunque el SDK avise dos, cerrar sin castigo, topes del día, falla premiada, el x2
-  completo), con un proveedor de mentira que se enchufa con `ServicioAnuncios.UsarParaPruebas`. No corre en
-  play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+  completo), con un proveedor de mentira que se enchufa con `ServicioAnuncios.UsarParaPruebas`, y **los idiomas**
+  (que cada texto tenga los dos idiomas y los mismos `{n}`, y que existan todos los ids que piden el código, las
+  mejoras, los prefabs y las escenas). Las pruebas fijan el idioma en español al empezar y lo devuelven al
+  terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata
   a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
   aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe

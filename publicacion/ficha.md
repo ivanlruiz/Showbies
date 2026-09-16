@@ -29,7 +29,7 @@ how long you last next time.
 
 SURVIVE TWO WAYS
 • Wave mode: waves that end when the last zombie drops. Every wave is bigger, and every tenth one sends a boss.
-• Free mode: no waves, no mercy. The longer you stay alive, the tougher they get.
+• Endless mode: no waves, no mercy. The longer you stay alive, the tougher they get.
 
 UPGRADE BETWEEN RUNS
 Damage, fire rate, max health, pickup magnet, loot. You start weak on purpose: the first run should buy you
@@ -60,37 +60,37 @@ ShowBies: Matazombis
 
 ### Descripción corta
 ```
-Twin-stick de zombis. Sobreviví a la horda, juntá monedas, mejorá, repetí.
+Twin-stick de zombis. Sobrevive a la horda, junta monedas, mejora y repite.
 ```
 
 ### Descripción larga
 ```
 Vienen los zombis. Todos. Al mismo tiempo.
 
-ShowBies es un twin-stick rápido: te movés con un pulgar, apuntás y disparás con el otro, y tirás granadas
+ShowBies es un twin-stick rápido: te mueves con un pulgar, apuntas y disparas con el otro, y lanzas granadas
 cuando la cosa se descontrola. Cada zombi que cae suelta monedas, y cada moneda compra las mejoras que deciden
-cuánto aguantás la próxima vez.
+cuánto aguantas la próxima vez.
 
 DOS FORMAS DE SOBREVIVIR
 • Modo oleadas: cada oleada termina cuando cae el último zombi. Cada una es más grande, y cada diez viene un jefe.
-• Modo libre: sin oleadas y sin piedad. Cuanto más aguantás, más duros se ponen.
+• Modo libre: sin oleadas y sin piedad. Cuanto más aguantas, más duros se vuelven.
 
-MEJORÁ ENTRE PARTIDAS
-Daño, cadencia, vida máxima, imán de monedas, botín. Arrancás flojo a propósito: la primera partida tiene que
-alcanzarte para la primera mejora, y esa mejora tiene que notarse en la segunda.
+MEJORA ENTRE PARTIDAS
+Daño, cadencia, vida máxima, imán de monedas, botín. Empiezas flojo a propósito: la primera partida tiene que
+darte para la primera mejora, y esa mejora tiene que notarse en la segunda.
 
-SOLTÁ LA FURIA
+DESATA LA FURIA
 Se compra una sola vez y te deja un botón en la pantalla: cadencia y daño al doble, más velocidad, seis
-segundos, cada dos minutos. Guardala para cuando estés rodeado, que es justo para eso.
+segundos, cada dos minutos. Guárdala para cuando estés rodeado, que es justo para eso.
 
 CINCO TIPOS DE MUERTO
 El normal, el rápido, el rapidísimo, el tanque que se come un cargador entero y el jefe de 500 de vida. Todos
 pegan más fuerte a medida que suben las oleadas.
 
 • Se juega en horizontal, con controles táctiles pensados para los pulgares
-• No necesita internet: todo corre en tu teléfono
+• No necesita internet: todo funciona en tu móvil
 • Sin cuentas ni registros
-• Gratis, y no recolecta tus datos
+• Gratis, y no recopila tus datos
 ```
 
 ---
