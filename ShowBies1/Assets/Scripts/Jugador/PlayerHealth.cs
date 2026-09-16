@@ -60,6 +60,9 @@ public class PlayerHealth : MonoBehaviour
         {
             ultimaVidaMostrada = health;
             healthTMP.text = health.ToString();
+            // El color dice cómo estás sin tener que leer el número: en medio de una
+            // horda no hay tiempo de comparar 34 contra 80.
+            healthTMP.color = ColorDeVida(maxHealth > 0 ? (float)health / maxHealth : 0f);
         }
     }
 
@@ -68,6 +71,15 @@ public class PlayerHealth : MonoBehaviour
         instance = this;
         empezoEn = Time.time;
         Progreso.EmpezarPartida();
+    }
+
+    // Verde de 60 para arriba, amarillo hasta 30 y rojo abajo de eso. Estatico
+    // para probarlo sin escena.
+    public static Color ColorDeVida(float fraccion)
+    {
+        if (fraccion > 0.6f) return new Color(0.55f, 0.9f, 0.4f, 1f);
+        if (fraccion > 0.3f) return new Color(1f, 0.82f, 0.25f, 1f);
+        return new Color(1f, 0.35f, 0.3f, 1f);
     }
 
     // La clave del record de un modo, por el buildIndex de su escena. La pantalla

@@ -34,7 +34,9 @@ public class Puntaje : MonoBehaviour
     public void UpdateKillCounterUI()
     {
 
-        contadorKill_TMP.text = "Puntos: " + contadorKill.ToString();
+        // La etiqueta chica y el numero grande: en el HUD lo que se lee de reojo
+        // es el numero, no la palabra.
+        contadorKill_TMP.text = "<size=55%>PUNTOS</size>  " + FormatoNumeros.Compacto(contadorKill);
         
     }
 
