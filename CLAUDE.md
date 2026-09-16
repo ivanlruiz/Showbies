@@ -288,6 +288,13 @@ consultando `EnemyController.ZombisVivos`:
      la 3, tanque desde la 6 y FASTER desde la 9. Si se llegó al techo, espera.
   4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos.
 
+  **La partida de oleadas se retoma** (pedido de Ivan): al empezar cada oleada, `WaveManager` guarda en el progreso la
+  oleada y los puntos (`Progreso.GuardarOleadaEnCurso`) y escribe el archivo. Si se sale al menú o se cierra la app,
+  la próxima vez arranca esa oleada desde cero (todos sus zombis, vida llena) con esos puntos, y el botón OLEADAS
+  del menú avisa "CONTINUE WAVE N" (`BotonOleadas`). **Se olvida al morir** (`PlayerHealth.Terminar`) **y al
+  reiniciar** (REINICIAR de la pausa y la R, con `WaveManager.OlvidarPartidaSiEsOleadas`): las dos cosas empiezan una
+  partida nueva. Salir en mitad de una oleada que se estaba perdiendo la reinicia sin morir: es a propósito.
+
   La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
   `OleadaActual` y los multiplicadores de la oleada actual.
 

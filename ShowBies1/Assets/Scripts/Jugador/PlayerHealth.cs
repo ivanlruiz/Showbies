@@ -168,6 +168,7 @@ public class PlayerHealth : MonoBehaviour
         // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
         PlayerPrefs.Save();
         Progreso.TerminarPartida(SegundosDePartida);
+        if (modo == TiendaMejoras.EscenaOleadas) Progreso.OlvidarOleadaEnCurso();
         Progreso.Guardar();
 
         SceneManager.LoadScene(2);

@@ -855,6 +855,20 @@ public static class PruebasMejoras
     // 7. Migracion desde v1, archivos rotos y normalizacion.
     static void ProbarGuardado(Informe inf)
     {
+        // La oleada a medias: un JSON sin los campos la lee como 0, se guarda y se
+        // relee, y olvidarla la deja en 0.
+        string ruta0 = EmpezarCaso("{\"version\":3,\"monedas\":1}", null);
+        inf.Igual("oleada en curso: sin campo vale 0", 0, Progreso.OleadaEnCurso);
+        Progreso.GuardarOleadaEnCurso(15, 1234);
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("oleada en curso: se relee la oleada", 15, Progreso.OleadaEnCurso);
+        inf.Igual("oleada en curso: se releen los puntos", 1234, Progreso.PuntosEnCurso);
+        Progreso.OlvidarOleadaEnCurso();
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("oleada en curso: olvidada vale 0", 0, Progreso.OleadaEnCurso);
+        inf.Igual("oleada en curso: olvidada sin puntos", 0, Progreso.PuntosEnCurso);
+        inf.Verdadero("oleada en curso: existe el archivo", File.Exists(ruta0));
+
         // v1: se lee, se respalda tal cual y se guarda como v2.
         string v1 = "{\"version\":1,\"monedas\":123.5,\"mejorOleada\":7}";
         string ruta = EmpezarCaso(v1, null);

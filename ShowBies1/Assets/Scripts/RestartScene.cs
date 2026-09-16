@@ -18,6 +18,7 @@ public class RestartScene : MonoBehaviour
         // la escena en loop, una vez por frame hasta soltarla.
         if (Input.GetKeyDown(KeyCode.R))
         {
+            WaveManager.OlvidarPartidaSiEsOleadas();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }

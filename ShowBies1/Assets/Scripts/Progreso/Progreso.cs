@@ -60,6 +60,12 @@ public static class Progreso
         public double segundosJugados;
         public bool ofrecerVideos = true;
         public EstadoAnuncios anuncios = new EstadoAnuncios();
+
+        // La partida de oleadas a medias: la oleada que se estaba jugando y los puntos
+        // con que empezo. 0 = ninguna. Un JSON sin estos campos los lee como 0, asi que
+        // no cambia la version.
+        public int oleadaEnCurso;
+        public int puntosEnCurso;
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
@@ -165,6 +171,36 @@ public static class Progreso
         SegundosDeLaUltimaPartida = segundos;
         datos.partidasTerminadas++;
         datos.segundosJugados += segundos;
+    }
+
+    // Pedido de Ivan: salir en la oleada 15 no te devuelve a la 1. WaveManager guarda
+    // la oleada al empezarla y la retoma desde cero (todos sus zombis, vida llena).
+    // Se olvida al morir y al reiniciar a proposito.
+    public static int OleadaEnCurso
+    {
+        get { Cargar(); return datos.oleadaEnCurso; }
+    }
+
+    public static int PuntosEnCurso
+    {
+        get { Cargar(); return datos.puntosEnCurso; }
+    }
+
+    public static void GuardarOleadaEnCurso(int oleada, int puntos)
+    {
+        Cargar();
+        datos.oleadaEnCurso = Math.Max(0, oleada);
+        datos.puntosEnCurso = Math.Max(0, puntos);
+        Revision++;
+    }
+
+    public static void OlvidarOleadaEnCurso()
+    {
+        Cargar();
+        if (datos.oleadaEnCurso == 0 && datos.puntosEnCurso == 0) return;
+        datos.oleadaEnCurso = 0;
+        datos.puntosEnCurso = 0;
+        Revision++;
     }
 
     public static int PartidasTerminadas

@@ -23,6 +23,15 @@ public class TipoEnOleada
 // desde la oleada 20 solo salian jefes.
 public class WaveManager : MonoBehaviour
 {
+    // La partida de oleadas a medias se olvida al morir y al reiniciar: las dos
+    // cosas empiezan una partida nueva. Salir al menu o cerrar la app no.
+    public static void OlvidarPartidaSiEsOleadas()
+    {
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != TiendaMejoras.EscenaOleadas) return;
+        Progreso.OlvidarOleadaEnCurso();
+        Progreso.Guardar();
+    }
+
     [Header("Zombis")]
     public TipoEnOleada[] tipos;
     public GameObject jefe;
@@ -85,6 +94,19 @@ public class WaveManager : MonoBehaviour
         if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
         if (cartelOleada != null) cartelOleada.gameObject.SetActive(false);
         botin = CatalogoMejoras.MultiplicadorBotin;
+
+        // Una partida que quedo a medias sigue en la oleada en que se dejo, desde el
+        // principio de esa oleada y con los puntos que se tenian al empezarla.
+        int guardada = Progreso.OleadaEnCurso;
+        if (guardada > 1)
+        {
+            OleadaActual = guardada - 1;
+            if (Puntaje.instance != null)
+            {
+                Puntaje.instance.contadorKill = Progreso.PuntosEnCurso;
+                Puntaje.instance.UpdateKillCounterUI();
+            }
+        }
         StartCoroutine(Jugar());
     }
 
@@ -95,6 +117,8 @@ public class WaveManager : MonoBehaviour
         while (true)
         {
             OleadaActual++;
+            Progreso.GuardarOleadaEnCurso(OleadaActual, Puntaje.instance != null ? Puntaje.instance.contadorKill : 0);
+            Progreso.Guardar();
             int cantidad = zombisBase + zombisPorOleada * OleadaActual;
             bool conJefe = jefe != null && jefeCadaOleadas > 0 && OleadaActual % jefeCadaOleadas == 0;
             zombisEnLaOleada = cantidad + (conJefe ? 1 : 0);

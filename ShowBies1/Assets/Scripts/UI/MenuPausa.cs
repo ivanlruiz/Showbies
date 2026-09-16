@@ -70,6 +70,7 @@ public class MenuPausa : MonoBehaviour
     public void Reiniciar()
     {
         Restaurar();
+        WaveManager.OlvidarPartidaSiEsOleadas();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 

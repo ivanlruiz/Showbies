@@ -19,6 +19,7 @@ menu_salir	QUIT	SALIR
 modo_libre	ENDLESS	MODO LIBRE
 modo_oleadas	WAVES	OLEADAS
 modo_libre_bloqueado	REACH WAVE {0}	LLEGA A LA OLEADA {0}
+modo_oleadas_continuar	CONTINUE WAVE {0}	SIGUE EN LA OLEADA {0}
 comun_volver	BACK	VOLVER
 idioma_titulo	LANGUAGE	IDIOMA
 
