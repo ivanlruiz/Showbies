@@ -38,6 +38,8 @@ public class TutorialManager : MonoBehaviour
     {
         panelFinal.SetActive(false);
         posicionInicial = jugador.transform.position;
+        // La granada se compra en la tienda, pero el tutorial la ensenia: aca esta siempre.
+        jugador.GranadaDesbloqueada = true;
         Entrar(Paso.Moverse);
     }
 
@@ -178,6 +180,7 @@ public class TutorialManager : MonoBehaviour
     }
 
     // Botones del panel final
-    public void IrAJugar() { SceneManager.LoadScene(1); }
+    // Al libre si ya lo tiene; a un jugador nuevo, a las oleadas.
+    public void IrAJugar() { SceneManager.LoadScene(ModoLibre.EscenaPara(TiendaMejoras.EscenaModoLibre)); }
     public void IrAlMenu() { SceneManager.LoadScene(0); }
 }

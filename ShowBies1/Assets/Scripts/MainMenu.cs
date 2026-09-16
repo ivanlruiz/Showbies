@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 public class MainMenu : MonoBehaviour
 {
+   // El modo libre; si todavia no esta desbloqueado, las oleadas.
    public void PlayGame ()
     {
-        SceneManager.LoadScene(1);
-        
+        SceneManager.LoadScene(ModoLibre.EscenaPara(TiendaMejoras.EscenaModoLibre));
     }
 
     public void QuitGame ()

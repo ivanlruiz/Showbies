@@ -256,6 +256,7 @@ public class TiendaMejoras : MonoBehaviour
     {
         int modo = PlayerPrefs.GetInt("UltimoModo", EscenaOleadas);
         if (modo != EscenaModoLibre && modo != EscenaOleadas) modo = EscenaOleadas;
+        modo = ModoLibre.EscenaPara(modo);
 
         Time.timeScale = 1f;
         SceneManager.LoadScene(modo);

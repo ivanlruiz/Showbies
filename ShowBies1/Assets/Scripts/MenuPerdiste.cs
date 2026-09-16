@@ -8,8 +8,10 @@ public class MenuPerdiste : MonoBehaviour
     public void Retry ()
     {
         // Vuelve al modo que se estaba jugando, no siempre al primero.
-        // PlayerHealth lo guarda al morir; si no hay nada, cae en ShowBies1.
-        SceneManager.LoadScene(PlayerPrefs.GetInt("UltimoModo", 1));
+        // PlayerHealth lo guarda al morir; si no hay nada, a las oleadas. El libre
+        // pasa por ModoLibre por si todavia no esta desbloqueado.
+        int modo = PlayerPrefs.GetInt("UltimoModo", TiendaMejoras.EscenaOleadas);
+        SceneManager.LoadScene(ModoLibre.EscenaPara(modo));
     }
 
     public void Menu()
