@@ -42,7 +42,9 @@ public class OfertaDeRevivir : MonoBehaviour
     public Image iconoPlay;
 
     [Header("Números")]
-    public float alfaDelVelo = 0.88f;
+    [Tooltip("Cuánto oscurece el velo. El grueso del efecto lo pone el blanco y negro: "
+        + "con el velo muy oscuro no se ve que la pantalla perdió el color.")]
+    public float alfaDelVelo = 0.45f;
     public float duracionRebote = 0.35f;
 
     private static OfertaDeRevivir instancia;
@@ -66,6 +68,10 @@ public class OfertaDeRevivir : MonoBehaviour
     private float radioDespeje;
     private float gracia;
     private int ultimoSegundoEscrito = -1;
+
+    // La pantalla se queda en blanco y negro mientras dura la oferta. Es un filtro
+    // en la camara, asi que la ventanita (UI en overlay) sigue a color.
+    private FiltroBlancoYNegro filtro;
 
     // Los sprites se dibujan en código (TexturasUI) para no sumar imágenes al
     // proyecto: quien los pide es dueño de las texturas y las destruye.
@@ -113,6 +119,7 @@ public class OfertaDeRevivir : MonoBehaviour
         {
             corriendo = false;
             Activa = false;
+            if (filtro != null) filtro.Soltar();
             if (!MenuPausa.Pausado) Time.timeScale = 1f;
         }
         if (instancia == this) instancia = null;
@@ -147,6 +154,7 @@ public class OfertaDeRevivir : MonoBehaviour
         ultimoSegundoEscrito = -1;
 
         if (velo != null) velo.color = ColorDelVelo(0f);
+        filtro = FiltroBlancoYNegro.Enganchar(Camera.main);
         if (anillo != null) anillo.fillAmount = 1f;
         if (ventana != null) ventana.localScale = Vector3.zero;
         if (botonVideo != null) botonVideo.interactable = true;
@@ -166,8 +174,9 @@ public class OfertaDeRevivir : MonoBehaviour
 
         float pasado = Time.unscaledTime - desde;
 
-        if (velo != null && agrisado > 0f) velo.color = ColorDelVelo(Mathf.Clamp01(pasado / agrisado));
-        else if (velo != null) velo.color = ColorDelVelo(1f);
+        float grisado = agrisado > 0f ? Mathf.Clamp01(pasado / agrisado) : 1f;
+        if (velo != null) velo.color = ColorDelVelo(grisado);
+        if (filtro != null) filtro.cantidad = grisado;
 
         if (ventana != null)
         {
@@ -243,5 +252,7 @@ public class OfertaDeRevivir : MonoBehaviour
     {
         Activa = false;
         if (panel != null) panel.SetActive(false);
+        if (filtro != null) filtro.Soltar();
+        filtro = null;
     }
 }

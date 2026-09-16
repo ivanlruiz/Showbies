@@ -49,7 +49,7 @@ Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (l
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion
-Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante
+Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro
 Assets/Scripts/Tutorial/    ← TutorialManager
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
@@ -470,7 +470,7 @@ No bloquea nada.
 
 Cuando el jugador muere y hay un video, la partida **no termina**: `PlayerHealth` le pregunta a
 `OfertaDeRevivir` y, si esta se hace cargo, el juego queda congelado (`Time.timeScale = 0`) con el jugador
-muerto en el lugar donde cayó. La pantalla se va agrisando en 5 s mientras una ventanita muestra
+muerto en el lugar donde cayó. El mundo **se queda en blanco y negro** en 5 s mientras una ventanita muestra
 "¡HAS MUERTO!" y un botón de video con un anillo que se cierra en 10 s. Recién cuando el jugador dice que no,
 o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarPartida`, escena de derrota).
 
@@ -487,6 +487,12 @@ o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarParti
   oferta abierta, `OnDestroy` devuelve el `timeScale`.
 - Los tres dibujos del botón (círculo, anillo y triángulo de play) los hace `TexturasUI` en código, así que no
   hay imágenes nuevas en el proyecto; el componente es dueño de esas texturas y las destruye.
+- **El blanco y negro es `FiltroBlancoYNegro`** (`Assets/Scripts/Jugo/`), un image effect de los de siempre
+  (`OnRenderImage` + `Graphics.Blit`) con `Assets/Shaders/BlancoYNegro.shader`. Se engancha a `Camera.main` en
+  el momento y se suelta al terminar: es un blit de pantalla completa y no vale la pena tenerlo prendido toda
+  la partida para usarlo diez segundos. El material sale de `Assets/Anuncios/Resources/BlancoYNegro.mat` y no
+  de `Shader.Find`: **un shader que no usa ninguna escena no entra en la build** y en el teléfono se vería
+  rosa. Como la UI en overlay no pasa por la cámara, la ventanita (y el HUD) quedan a color.
 
 **Todavía no hay red de anuncios de verdad.** `ConfigAnuncios.proveedor` está en `Falso` y `Real` no existe:
 cuando se integre (AdMob o LevelPlay) es una clase nueva que implemente `IProveedorAnuncios` y un `case` en
@@ -798,6 +804,12 @@ enterrado.
 - **Construir UI en el editor ensucia el atlas dinámico de Bangers** (`Bangers SDF.asset`) y el fallback de
   LiberationSans. Si aparecen modificados en git sin haber tocado fuentes, se restauran. Bangers no tiene `→`: la
   flecha de las tarjetas es un sprite.
+
+- **Con la ventana de Unity en segundo plano, el juego en play NO corre** (`Run In Background` está apagado en
+  ProjectSettings). No corren `Update` ni `OnRenderImage`, no se renderizan frames y
+  `ScreenCapture.CaptureScreenshot` no escribe nada, pero el editor sí sigue vivo: una prueba manejada desde
+  `EditorApplication.update` parece avanzar y todo lo del juego parece roto. Si hay que medir o fotografiar
+  algo en play sin mirar la pantalla, prendé `PlayerSettings.runInBackground` y volvelo a apagar al terminar.
 
 - **Un `Image` sin sprite ignora `Image.Type.Filled`.** La barra del anuncio de prueba se veía llena desde el
   primer frame por eso; ahora mueve el ancho del `RectTransform`. Lo mismo vale para cualquier medidor que se

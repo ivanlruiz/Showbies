@@ -1172,7 +1172,7 @@ MonoBehaviour:
   segundos: {fileID: 5008135092392904513}
   circulo: {fileID: 6971080049079682406}
   iconoPlay: {fileID: 635992777508403218}
-  alfaDelVelo: 0.88
+  alfaDelVelo: 0.45
   duracionRebote: 0.35
 --- !u!1 &8160632186765404492
 GameObject:
