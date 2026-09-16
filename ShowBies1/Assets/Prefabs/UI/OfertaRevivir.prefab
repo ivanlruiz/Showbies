@@ -260,6 +260,7 @@ GameObject:
   - component: {fileID: 4959135927897327484}
   - component: {fileID: 4111560469640346016}
   - component: {fileID: 5073327966327042609}
+  - component: {fileID: 3910577790349068799}
   m_Layer: 0
   m_Name: Titulo
   m_TagString: Untagged
@@ -314,7 +315,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\xA1HAS MUERTO!"
+  m_text: YOU DIED!
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -386,6 +387,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3910577790349068799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1996686537572741375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: revivir_titulo
 --- !u!1 &2136526439490695959
 GameObject:
   m_ObjectHideFlags: 0
@@ -397,6 +411,7 @@ GameObject:
   - component: {fileID: 1286712545318453710}
   - component: {fileID: 3570643003234451401}
   - component: {fileID: 8648038445322407770}
+  - component: {fileID: 4045132059311273350}
   m_Layer: 0
   m_Name: Bajada
   m_TagString: Untagged
@@ -451,7 +466,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Mir\xE1 un video y segu\xED jugando"
+  m_text: Watch a video to keep playing
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -523,6 +538,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4045132059311273350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2136526439490695959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: revivir_bajada
 --- !u!1 &2283535096262065978
 GameObject:
   m_ObjectHideFlags: 0
@@ -922,6 +950,7 @@ GameObject:
   - component: {fileID: 8754401517711673237}
   - component: {fileID: 5443651800113404533}
   - component: {fileID: 7262378126024614286}
+  - component: {fileID: 1720074107777375100}
   m_Layer: 0
   m_Name: Texto
   m_TagString: Untagged
@@ -976,7 +1005,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: NO, GRACIAS
+  m_text: NO, THANKS
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -1048,6 +1077,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1720074107777375100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5684996475404556557}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: revivir_no
 --- !u!1 &7690989688427441034
 GameObject:
   m_ObjectHideFlags: 0

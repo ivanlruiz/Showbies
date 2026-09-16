@@ -525,6 +525,7 @@ GameObject:
   - component: {fileID: 785681214}
   - component: {fileID: 785681216}
   - component: {fileID: 785681215}
+  - component: {fileID: 785681217}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -571,7 +572,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "MEN\xDA"
+  m_text: MENU
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -651,6 +652,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 785681213}
   m_CullTransparentMesh: 1
+--- !u!114 &785681217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 785681213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: derrota_menu
 --- !u!1 &788370875
 GameObject:
   m_ObjectHideFlags: 0
@@ -1199,6 +1213,7 @@ GameObject:
   - component: {fileID: 1002036804}
   - component: {fileID: 1002036806}
   - component: {fileID: 1002036805}
+  - component: {fileID: 1002036807}
   m_Layer: 5
   m_Name: Perdiste
   m_TagString: Untagged
@@ -1245,7 +1260,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: PERDISTE
+  m_text: GAME OVER
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -1325,6 +1340,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1002036803}
   m_CullTransparentMesh: 1
+--- !u!114 &1002036807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1002036803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: derrota_titulo
 --- !u!1 &1008112935
 GameObject:
   m_ObjectHideFlags: 0
@@ -1586,8 +1614,6 @@ MonoBehaviour:
   insignia: {fileID: 111075798}
   textoInsignia: {fileID: 1020977088}
   aviso: {fileID: 1790788641}
-  formatoAviso: "\xA1Te alcanza para {0} mejoras!"
-  formatoAvisoUna: "\xA1Te alcanza para una mejora!"
   jugo: {fileID: 1036549990}
 --- !u!114 &1036549990
 MonoBehaviour:
@@ -1730,7 +1756,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'VER VIDEO: +0 MONEDAS'
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -1888,6 +1914,7 @@ GameObject:
   - component: {fileID: 1051221028}
   - component: {fileID: 1051221030}
   - component: {fileID: 1051221029}
+  - component: {fileID: 1051221031}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -1934,7 +1961,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MEJORAS
+  m_text: UPGRADES
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -2014,6 +2041,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1051221027}
   m_CullTransparentMesh: 1
+--- !u!114 &1051221031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1051221027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: menu_mejoras
 --- !u!1 &1098738219
 GameObject:
   m_ObjectHideFlags: 0
@@ -2100,6 +2140,7 @@ GameObject:
   - component: {fileID: 1106758757}
   - component: {fileID: 1106758759}
   - component: {fileID: 1106758758}
+  - component: {fileID: 1106758760}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -2146,7 +2187,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: OTRA VEZ
+  m_text: PLAY AGAIN
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -2226,6 +2267,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1106758756}
   m_CullTransparentMesh: 1
+--- !u!114 &1106758760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1106758756}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: derrota_otra_vez
 --- !u!1 &1349075455
 GameObject:
   m_ObjectHideFlags: 0
@@ -2839,7 +2893,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: +0 monedas  (total 0)
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -2930,6 +2984,7 @@ GameObject:
   - component: {fileID: 1751678518}
   - component: {fileID: 1751678517}
   - component: {fileID: 1751678516}
+  - component: {fileID: 1751678519}
   m_Layer: 5
   m_Name: AvisoDescanso
   m_TagString: Untagged
@@ -2957,7 +3012,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Llev\xE1s m\xE1s de una hora jugando. Un descanso viene bien."
+  m_text: You've been playing for over an hour. Maybe take a break?
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -3056,6 +3111,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 360}
   m_SizeDelta: {x: 1400, y: 44}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1751678519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751678515}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: aviso_descanso
 --- !u!1 &1790788640
 GameObject:
   m_ObjectHideFlags: 0
@@ -3094,7 +3162,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\xA1Te alcanza para una mejora!"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -3319,8 +3387,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 1942286121}
-  formato: <size=55%>PUNTOS</size>  {0}
-  formatoRecord: "<size=55%>\xA1NUEVO R\xC9CORD!</size>  {0}"
   colorRecord: {r: 1, g: 0.85, b: 0.25, a: 1}
 --- !u!114 &1942286121
 MonoBehaviour:
@@ -3342,7 +3408,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Score:'
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -3480,7 +3546,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Highscore:'
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -3573,7 +3639,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   texto: {fileID: 2047962100}
-  formato: "<size=55%>R\xC9CORD</size>  {0}"
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

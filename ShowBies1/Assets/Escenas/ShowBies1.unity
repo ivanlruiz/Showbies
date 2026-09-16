@@ -1381,7 +1381,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Nivel 1
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -2931,6 +2931,7 @@ GameObject:
   - component: {fileID: 1453897880}
   - component: {fileID: 1453897879}
   - component: {fileID: 1453897881}
+  - component: {fileID: 1453897882}
   m_Layer: 5
   m_Name: R
   m_TagString: Untagged
@@ -2977,7 +2978,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: R  REINICIAR
+  m_text: R  RESTART
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -3071,6 +3072,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   showOnAndroid: 0
   showOnPC: 1
+--- !u!114 &1453897882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1453897877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: hud_reiniciar_pc
 --- !u!1001 &1505294601
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3739,7 +3753,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ContadorMonedas
   texto: {fileID: 1966665477}
-  prefijo: '<size=55%>MONEDAS</size>  '
+  idTexto: hud_monedas
   escalaDelSalto: 1.4
   duracionDelSalto: 0.2
   colorDelSalto: {r: 1, g: 1, b: 1, a: 1}
@@ -3765,7 +3779,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Monedas: 0'
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -4040,7 +4054,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Puntos: '
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}

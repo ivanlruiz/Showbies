@@ -164,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ContadorMonedas
   texto: {fileID: 8754035406065105313}
-  prefijo: 
+  idTexto: 
   escalaDelSalto: 1.4
   duracionDelSalto: 0.2
   colorDelSalto: {r: 1, g: 1, b: 1, a: 1}
@@ -421,6 +421,7 @@ GameObject:
   - component: {fileID: 4358755353879172456}
   - component: {fileID: 6228898382179581023}
   - component: {fileID: 4953058657101096689}
+  - component: {fileID: 682491257840086941}
   m_Layer: 5
   m_Name: Sombra
   m_TagString: Untagged
@@ -475,7 +476,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MEJORAS
+  m_text: UPGRADES
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -547,6 +548,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &682491257840086941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3674604017810199855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: tienda_titulo
 --- !u!1 &3678802953572858089
 GameObject:
   m_ObjectHideFlags: 0
@@ -1204,6 +1218,7 @@ GameObject:
   - component: {fileID: 8634256076460180876}
   - component: {fileID: 1562897119985875295}
   - component: {fileID: 455009166348597134}
+  - component: {fileID: 4421987788357168384}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -1258,7 +1273,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VOLVER
+  m_text: BACK
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -1330,6 +1345,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4421987788357168384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5107721456567272595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: comun_volver
 --- !u!1 &5469407161584310158
 GameObject:
   m_ObjectHideFlags: 0
@@ -2028,6 +2056,7 @@ GameObject:
   - component: {fileID: 6042757160486667880}
   - component: {fileID: 3947160330755176373}
   - component: {fileID: 6394704343573901825}
+  - component: {fileID: 76058019615752998}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -2082,7 +2111,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\xA1A JUGAR!"
+  m_text: PLAY!
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -2154,6 +2183,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &76058019615752998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7816167382703433714}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: tienda_jugar
 --- !u!1 &7886725446159445428
 GameObject:
   m_ObjectHideFlags: 0
@@ -2165,6 +2207,7 @@ GameObject:
   - component: {fileID: 5883107734881391419}
   - component: {fileID: 8055044638873544619}
   - component: {fileID: 1968314084299259873}
+  - component: {fileID: 1458787423653397508}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -2219,7 +2262,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MEJORAS
+  m_text: UPGRADES
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -2291,6 +2334,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1458787423653397508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7886725446159445428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: tienda_titulo
 --- !u!1 &8217447686763940939
 GameObject:
   m_ObjectHideFlags: 0

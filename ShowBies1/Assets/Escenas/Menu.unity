@@ -205,6 +205,7 @@ GameObject:
   - component: {fileID: 39917046}
   - component: {fileID: 39917048}
   - component: {fileID: 39917047}
+  - component: {fileID: 39917049}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -251,7 +252,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MODOS DE JUEGO
+  m_text: GAME MODES
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -331,6 +332,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 39917045}
   m_CullTransparentMesh: 1
+--- !u!114 &39917049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 39917045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: menu_modos
 --- !u!1 &79253035
 GameObject:
   m_ObjectHideFlags: 0
@@ -484,8 +498,6 @@ MonoBehaviour:
   insignia: {fileID: 1515306596}
   textoInsignia: {fileID: 1051221028}
   aviso: {fileID: 0}
-  formatoAviso: "\xA1Te alcanza para {0} mejoras!"
-  formatoAvisoUna: "\xA1Te alcanza para una mejora!"
   jugo: {fileID: 111075802}
 --- !u!114 &111075802
 MonoBehaviour:
@@ -766,6 +778,7 @@ GameObject:
   - component: {fileID: 290451325}
   - component: {fileID: 290451327}
   - component: {fileID: 290451326}
+  - component: {fileID: 290451328}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -812,7 +825,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: VOLVER
+  m_text: BACK
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -892,6 +905,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 290451324}
   m_CullTransparentMesh: 1
+--- !u!114 &290451328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 290451324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: comun_volver
 --- !u!1 &362767463
 GameObject:
   m_ObjectHideFlags: 0
@@ -944,7 +970,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ContadorMonedas
   texto: {fileID: 1098738221}
-  prefijo: 
+  idTexto: 
   escalaDelSalto: 1.4
   duracionDelSalto: 0.2
   colorDelSalto: {r: 1, g: 1, b: 1, a: 1}
@@ -1343,6 +1369,7 @@ GameObject:
   - component: {fileID: 779797987}
   - component: {fileID: 779797989}
   - component: {fileID: 779797988}
+  - component: {fileID: 779797990}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -1389,7 +1416,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: SALIR
+  m_text: QUIT
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -1469,6 +1496,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 779797986}
   m_CullTransparentMesh: 1
+--- !u!114 &779797990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779797986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: menu_salir
 --- !u!1 &815578559
 GameObject:
   m_ObjectHideFlags: 0
@@ -1480,6 +1520,7 @@ GameObject:
   - component: {fileID: 815578560}
   - component: {fileID: 815578562}
   - component: {fileID: 815578561}
+  - component: {fileID: 815578563}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -1526,7 +1567,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MEJORAS
+  m_text: UPGRADES
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -1606,6 +1647,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 815578559}
   m_CullTransparentMesh: 1
+--- !u!114 &815578563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 815578559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: menu_mejoras
 --- !u!1 &816274815
 GameObject:
   m_ObjectHideFlags: 0
@@ -1767,6 +1821,7 @@ GameObject:
   - component: {fileID: 901316340}
   - component: {fileID: 901316342}
   - component: {fileID: 901316341}
+  - component: {fileID: 901316343}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -1813,7 +1868,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: JUGAR
+  m_text: PLAY
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -1893,6 +1948,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 901316339}
   m_CullTransparentMesh: 1
+--- !u!114 &901316343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 901316339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: menu_jugar
 --- !u!1 &982819592
 GameObject:
   m_ObjectHideFlags: 0
@@ -3327,6 +3395,7 @@ GameObject:
   - component: {fileID: 1325988540}
   - component: {fileID: 1325988542}
   - component: {fileID: 1325988541}
+  - component: {fileID: 1325988543}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -3373,7 +3442,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MODO LIBRE
+  m_text: ENDLESS
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -3453,6 +3522,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1325988539}
   m_CullTransparentMesh: 1
+--- !u!114 &1325988543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1325988539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: modo_libre
 --- !u!1 &1338155488
 GameObject:
   m_ObjectHideFlags: 0
@@ -4578,6 +4660,7 @@ GameObject:
   - component: {fileID: 1899786072}
   - component: {fileID: 1899786074}
   - component: {fileID: 1899786073}
+  - component: {fileID: 1899786075}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -4704,6 +4787,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1899786071}
   m_CullTransparentMesh: 1
+--- !u!114 &1899786075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1899786071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: menu_tutorial
 --- !u!1 &1900771721
 GameObject:
   m_ObjectHideFlags: 0
@@ -4953,6 +5049,7 @@ GameObject:
   - component: {fileID: 2028471627}
   - component: {fileID: 2028471629}
   - component: {fileID: 2028471628}
+  - component: {fileID: 2028471630}
   m_Layer: 5
   m_Name: Texto
   m_TagString: Untagged
@@ -4999,7 +5096,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: OLEADAS
+  m_text: WAVES
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
@@ -5079,6 +5176,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2028471626}
   m_CullTransparentMesh: 1
+--- !u!114 &2028471630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2028471626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2b93ee1caa34e4398cb541462c5794, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
+  id: modo_oleadas
 --- !u!1 &2054526515
 GameObject:
   m_ObjectHideFlags: 0
