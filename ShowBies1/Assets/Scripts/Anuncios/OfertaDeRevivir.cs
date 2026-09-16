@@ -38,8 +38,8 @@ public class OfertaDeRevivir : MonoBehaviour
     public TMP_Text segundos;
     [Tooltip("El círculo de fondo del botón de video.")]
     public Image circulo;
-    [Tooltip("El triángulo de play.")]
-    public Image iconoPlay;
+    [Tooltip("La claqueta.")]
+    public Image icono;
 
     [Header("Números")]
     [Tooltip("Cuánto oscurece el velo. El grueso del efecto lo pone el blanco y negro: "
@@ -77,7 +77,7 @@ public class OfertaDeRevivir : MonoBehaviour
     // proyecto: quien los pide es dueño de las texturas y las destruye.
     private Texture2D texturaCirculo;
     private Texture2D texturaAnillo;
-    private Texture2D texturaPlay;
+    private Texture2D texturaIcono;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
@@ -101,11 +101,11 @@ public class OfertaDeRevivir : MonoBehaviour
 
         texturaCirculo = TexturasUI.Circulo(128);
         texturaAnillo = TexturasUI.Anillo(256, 0.18f);
-        texturaPlay = TexturasUI.Play(96);
+        texturaIcono = TexturasUI.Claqueta(160);
 
         Vestir(circulo, texturaCirculo);
         Vestir(anillo, texturaAnillo);
-        Vestir(iconoPlay, texturaPlay);
+        Vestir(icono, texturaIcono);
 
         if (botonVideo != null) botonVideo.onClick.AddListener(Aceptar);
         if (botonNo != null) botonNo.onClick.AddListener(Rechazar);
@@ -125,7 +125,7 @@ public class OfertaDeRevivir : MonoBehaviour
         if (instancia == this) instancia = null;
         if (texturaCirculo != null) Destroy(texturaCirculo);
         if (texturaAnillo != null) Destroy(texturaAnillo);
-        if (texturaPlay != null) Destroy(texturaPlay);
+        if (texturaIcono != null) Destroy(texturaIcono);
     }
 
     private static void Vestir(Image imagen, Texture2D textura)

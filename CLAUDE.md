@@ -470,8 +470,9 @@ No bloquea nada.
 
 Cuando el jugador muere y hay un video, la partida **no termina**: `PlayerHealth` le pregunta a
 `OfertaDeRevivir` y, si esta se hace cargo, el juego queda congelado (`Time.timeScale = 0`) con el jugador
-muerto en el lugar donde cayó. El mundo **se queda en blanco y negro** en 5 s mientras una ventanita muestra
-"¡HAS MUERTO!" y un botón de video con un anillo que se cierra en 10 s. Recién cuando el jugador dice que no,
+muerto en el lugar donde cayó. El mundo **se queda en blanco y negro** en 5 s mientras una ventanita chica y semitransparente
+(620 x 340 sobre un canvas de 1920 x 1080) muestra "¡HAS MUERTO!" y un botón con una claqueta y un anillo que
+se cierra en 10 s. Recién cuando el jugador dice que no,
 o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarPartida`, escena de derrota).
 
 - **Una sola vez por partida** (`PlayerHealth.yaRevivio`): con un revivir por video sin límite la partida no
@@ -485,8 +486,10 @@ o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarParti
 - Mientras la ventana está abierta, `OfertaDeRevivir.Activa` es cierto y **`MenuPausa` no pausa**: reanudar
   desde el menú de pausa devolvería el `timeScale` a 1 con el jugador muerto. Si la escena se descarga con la
   oferta abierta, `OnDestroy` devuelve el `timeScale`.
-- Los tres dibujos del botón (círculo, anillo y triángulo de play) los hace `TexturasUI` en código, así que no
-  hay imágenes nuevas en el proyecto; el componente es dueño de esas texturas y las destruye.
+- Los tres dibujos del botón (círculo, anillo y claqueta) los hace `TexturasUI` en código, así que no hay
+  imágenes nuevas en el proyecto; el componente es dueño de esas texturas y las destruye. La claqueta es el
+  icono "movie" de Material Symbols redibujado a mano, resuelto con 4 x 4 muestras por píxel para que las
+  diagonales salgan suaves.
 - **El blanco y negro es `FiltroBlancoYNegro`** (`Assets/Scripts/Jugo/`), un image effect de los de siempre
   (`OnRenderImage` + `Graphics.Blit`) con `Assets/Shaders/BlancoYNegro.shader`. Se engancha a `Camera.main` en
   el momento y se suelta al terminar: es un blit de pantalla completa y no vale la pena tenerlo prendido toda

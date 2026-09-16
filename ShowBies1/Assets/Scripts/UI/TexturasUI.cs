@@ -121,6 +121,78 @@ public static class TexturasUI
         return Crear(lado, pixeles, "Play");
     }
 
+    // La claqueta de cine, para el boton de video: un marco redondeado con la banda
+    // de rayas diagonales arriba. Es el icono "movie" de Material Symbols dibujado a
+    // mano, en las mismas proporciones (su viewBox es de 960 x 960).
+    //
+    // Se resuelve por muestreo: cada pixel se prueba en 4 x 4 puntos y el alfa es la
+    // fraccion que cayo adentro. Es la forma corta de tener bordes suaves en
+    // diagonales sin escribir un rasterizador.
+    public static Texture2D Claqueta(int lado)
+    {
+        lado = Mathf.Max(8, lado);
+        var pixeles = new Color32[lado * lado];
+        const int Muestras = 4;
+
+        for (int y = 0; y < lado; y++)
+        {
+            for (int x = 0; x < lado; x++)
+            {
+                int adentro = 0;
+                for (int sy = 0; sy < Muestras; sy++)
+                {
+                    for (int sx = 0; sx < Muestras; sx++)
+                    {
+                        float u = (x + (sx + 0.5f) / Muestras) / lado * 960f;
+                        // El SVG tiene la y hacia abajo y la textura hacia arriba.
+                        float v = 960f - (y + (sy + 0.5f) / Muestras) / lado * 960f;
+                        if (EnLaClaqueta(u, v)) adentro++;
+                    }
+                }
+                pixeles[y * lado + x] = Blanco(adentro / (float)(Muestras * Muestras));
+            }
+        }
+
+        return Crear(lado, pixeles, "Claqueta");
+    }
+
+    // Coordenadas del icono: x de 0 a 960 y de 0 (arriba) a 960 (abajo). El cuerpo
+    // va de 160 a 800 en y, con la banda de rayas en el primer tercio.
+    private static bool EnLaClaqueta(float x, float y)
+    {
+        const float Izquierda = 80f, Derecha = 880f, Arriba = 160f, Abajo = 800f;
+        const float HuecoIzq = 160f, HuecoDer = 800f, HuecoArr = 400f, HuecoAba = 720f;
+        const float FinDeLaBanda = 320f;
+
+        if (!EnRectanguloRedondeado(x, y, Izquierda, Arriba, Derecha, Abajo, 56f)) return false;
+
+        // Abajo de la banda el icono es solo el marco.
+        if (y > FinDeLaBanda && x > HuecoIzq && x < HuecoDer && y > HuecoArr && y < HuecoAba) return false;
+
+        if (y <= FinDeLaBanda)
+        {
+            // Rayas diagonales: 80 de ancho cada 160, corridas medio ancho por cada
+            // dos de alto, que es la inclinacion del icono original.
+            float corrida = x - 0.5f * (FinDeLaBanda - y);
+            float fase = Mathf.Repeat(corrida - Izquierda, 160f);
+            if (fase >= 80f) return false;
+        }
+
+        return true;
+    }
+
+    private static bool EnRectanguloRedondeado(float x, float y, float x0, float y0, float x1, float y1, float radio)
+    {
+        if (x < x0 || x > x1 || y < y0 || y > y1) return false;
+
+        // Solo las esquinas: el centro de la esquina esta a 'radio' de los dos bordes.
+        float cx = Mathf.Clamp(x, x0 + radio, x1 - radio);
+        float cy = Mathf.Clamp(y, y0 + radio, y1 - radio);
+        float dx = x - cx;
+        float dy = y - cy;
+        return dx * dx + dy * dy <= radio * radio;
+    }
+
     // Distancia del centro del pixel al centro de la textura, en radios y hasta 1.
     private static float Distancia(int x, int y, float centro)
     {
