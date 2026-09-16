@@ -22,7 +22,8 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       `gh-pages` (un solo archivo, copia de `privacidad.html`: al cambiar uno hay que actualizar el otro).
 - [ ] **Seguridad de los datos**: respondida (no recopila ni comparte) pero sin enviar; el guardado final no
       se aplicó desde la extensión.
-- [ ] **Ficha de Play Store** (textos de `ficha.md` y gráficos).
+- [x] **Ficha de Play Store** (borrador): textos en inglés (principal), español de España y de Latinoamérica
+      (`ficha.md`); icono 512, banner 1024x500 y 4 capturas 1920x1080 en inglés, en `Builds/ficha/` (fuera de git).
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.

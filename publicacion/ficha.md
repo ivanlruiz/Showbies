@@ -43,7 +43,7 @@ FIVE KINDS OF DEAD
 The plain one, the fast one, the very fast one, the tank that eats a whole magazine, and the boss with 500 HP.
 They all hit harder as the waves go up.
 
-• Plays in one hand-friendly landscape screen, with touch controls made for thumbs
+• Plays in landscape, with touch controls made for thumbs
 • No internet needed — everything runs on your phone
 • No accounts, no sign-ups, nothing to fill in
 • Free, and it doesn't collect your data
@@ -51,7 +51,10 @@ They all hit harder as the waves go up.
 
 ---
 
-## Español (segundo idioma)
+## Español de España (es-ES)
+
+Cargado así en Play. La ficha de Latinoamérica (es-419) usa el mismo texto con "junta monedas",
+"Empiezas débil", "tiene que alcanzarte" y "celular" en vez de "recoge", "flojo", "darte" y "móvil".
 
 ### Nombre de la app
 ```
@@ -60,14 +63,14 @@ ShowBies: Matazombis
 
 ### Descripción corta
 ```
-Twin-stick de zombis. Sobrevive a la horda, junta monedas, mejora y repite.
+Shooter de zombis a dos palancas. Sobrevive, recoge monedas, mejora y repite.
 ```
 
 ### Descripción larga
 ```
 Vienen los zombis. Todos. Al mismo tiempo.
 
-ShowBies es un twin-stick rápido: te mueves con un pulgar, apuntas y disparas con el otro, y lanzas granadas
+ShowBies es un shooter a dos palancas rápido: te mueves con un pulgar, apuntas y disparas con el otro, y lanzas granadas
 cuando la cosa se descontrola. Cada zombi que cae suelta monedas, y cada moneda compra las mejoras que deciden
 cuánto aguantas la próxima vez.
 
@@ -83,7 +86,7 @@ DESATA LA FURIA
 Se compra una sola vez y te deja un botón en la pantalla: cadencia y daño al doble, más velocidad, seis
 segundos, cada dos minutos. Guárdala para cuando estés rodeado, que es justo para eso.
 
-CINCO TIPOS DE MUERTO
+CINCO TIPOS DE ZOMBI
 El normal, el rápido, el rapidísimo, el tanque que se come un cargador entero y el jefe de 500 de vida. Todos
 pegan más fuerte a medida que suben las oleadas.
 
