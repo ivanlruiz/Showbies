@@ -25,6 +25,9 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
 - [x] **Ficha de Play Store** (borrador): textos en inglés (principal), español de España y de Latinoamérica
       (`ficha.md`); icono 512, banner 1024x500 y 4 capturas 1920x1080 en inglés, en `Builds/ficha/` (fuera de git).
 
+- [x] **Prueba cerrada (Alpha)**: 177 países y notas de la versión en los tres idiomas. El AAB (versionCode 4,
+      1.1.0) salió de `main`; se sube a mano porque pesa 32 MB. Faltan los testers (12 como mínimo) y enviar a revisión.
+
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
 

@@ -2,6 +2,10 @@
 
 Play pide estos tres textos por idioma. Los límites son de Google y están contados.
 
+> **Actualizado el 16/9/2026:** la descripción larga que está cargada en Play ya no es la de abajo. Cambió para
+> contar que la granada y el modo libre se desbloquean (el libre al llegar a la oleada 12), que la partida de
+> oleadas se retoma donde se dejó, y para sumar los golpes críticos. La consola es la fuente de verdad.
+
 ---
 
 ## Inglés (idioma principal)
