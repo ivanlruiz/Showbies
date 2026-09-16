@@ -54,7 +54,7 @@ public class BotonModoLibre : MonoBehaviour
         }
         else
         {
-            texto.text = Textos.De("modo_libre") + "\n<size=45%>"
+            texto.text = Textos.De("modo_libre") + "\n<size=62%>"
                 + Textos.Formato("modo_libre_bloqueado", ModoLibre.OleadaParaDesbloquear) + "</size>";
         }
     }
