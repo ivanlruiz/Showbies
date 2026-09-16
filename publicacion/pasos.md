@@ -22,7 +22,8 @@ que es la parte que no puedo hacer yo.
 1. **Probalo en el teléfono.** Desde la fase 4 no se probó nada en un dispositivo real, y desde entonces
    cambiaron los zombis, el pool, la furia, los anuncios y toda la UI. `Build > Android APK` y jugá dos o tres
    partidas completas, incluidas morir, pausar y comprar en la tienda.
-2. **Decidí el nombre del paquete.** Hoy es `com.ivru.showbies` y **no se puede cambiar después de publicar**.
+2. [x] **Nombre del paquete: `com.ivanruiz.showbies`**, el mismo que tiene la app creada en Play Console. Estaba en
+   `com.ivru.showbies` y se cambió para que coincidan. **No se puede cambiar después de publicar.**
 3. **Elegí el nombre de desarrollador**, que es público y va en la ficha.
 
 ## En Play Console

@@ -167,7 +167,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.ivru.showbies
+    Android: com.ivanruiz.showbies
     Standalone: com.E.C.T.A..ShowBies1
   buildNumber:
     Standalone: 0

@@ -750,7 +750,8 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   de `PlayerSettings` al terminar, así el keystore nunca queda configurado en `ProjectSettings` ni
   la build de APK se rompe por falta de password.
 
-- Configuración: package `com.ivru.showbies` (cambiable hasta publicar, después queda fijo),
+- Configuración: package `com.ivanruiz.showbies`, el que está registrado en la cuenta de Play Console (una app
+  publicada no lo cambia nunca, y uno que no esté registrado en la cuenta no se puede subir),
   IL2CPP + ARM64, minSdk 25, **targetSdk 36** (fijo: Google lo exige a las apps nuevas desde el 31/8/2026, y en
   "automático" depende del SDK que tenga instalado la máquina), `bundleVersion` / `AndroidBundleVersionCode` en
   `ProjectSettings.asset` (el versionCode tiene que subir en cada subida a la Play Store).
