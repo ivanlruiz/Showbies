@@ -44,7 +44,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, InterruptorVideos
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
@@ -497,7 +497,8 @@ o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarParti
   de `Shader.Find`: **un shader que no usa ninguna escena no entra en la build** y en el teléfono se vería
   rosa. Como la UI en overlay no pasa por la cámara, la ventanita (y el HUD) quedan a color.
 
-**Todavía no hay red de anuncios de verdad.** `ConfigAnuncios.proveedor` está en `Falso` y `Real` no existe:
+**Todavía no hay red de anuncios de verdad.** `ConfigAnuncios.proveedor` está en `Nulo` (la primera versión
+para Play sale sin publicidad; la APK de prueba igual fuerza `Falso`) y `Real` no existe:
 cuando se integre (AdMob o LevelPlay) es una clase nueva que implemente `IProveedorAnuncios` y un `case` en
 `ServicioAnuncios`. Nada del juego se entera. Ojo con dos cosas al integrarla: el plugin de AdMob para Unity
 está roto en Unity 6000.3.17 y posteriores (issue 4212 del repo), y AdMob sólo sirve anuncios de verdad cuando
@@ -707,8 +708,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   la build de APK se rompe por falta de password.
 
 - Configuración: package `com.ivru.showbies` (cambiable hasta publicar, después queda fijo),
-  IL2CPP + ARM64, minSdk 25, targetSdk automático, `bundleVersion` / `AndroidBundleVersionCode`
-  en `ProjectSettings.asset` (el versionCode tiene que subir en cada subida a la Play Store).
+  IL2CPP + ARM64, minSdk 25, **targetSdk 36** (fijo: Google lo exige a las apps nuevas desde el 31/8/2026, y en
+  "automático" depende del SDK que tenga instalado la máquina), `bundleVersion` / `AndroidBundleVersionCode` en
+  `ProjectSettings.asset` (el versionCode tiene que subir en cada subida a la Play Store).
 - Orientación: rotación automática sólo entre los dos horizontales (`defaultScreenOrientation: 4`, sin
   portrait). Antes estaba fija en uno solo (`reverseLandscape` en el manifest) y no giraba con el
   teléfono al revés.
