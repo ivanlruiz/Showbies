@@ -1174,6 +1174,10 @@ MonoBehaviour:
   icono: {fileID: 635992777508403218}
   alfaDelVelo: 0.45
   duracionRebote: 0.35
+  segundosDeApuro: 3
+  sonido: {fileID: 8300000, guid: 2dfb80e7e6c2f19489beb252efd030af, type: 3}
+  volumenSonido: 0.7
+  semitonosSonido: -5
 --- !u!1 &8160632186765404492
 GameObject:
   m_ObjectHideFlags: 0

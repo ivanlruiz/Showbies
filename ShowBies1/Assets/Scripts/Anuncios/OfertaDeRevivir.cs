@@ -47,6 +47,15 @@ public class OfertaDeRevivir : MonoBehaviour
     public float alfaDelVelo = 0.45f;
     public float duracionRebote = 0.35f;
 
+    [Tooltip("Segundos finales en los que el reloj late y se pone rojo.")]
+    public float segundosDeApuro = 3f;
+
+    [Header("Sonido")]
+    [Tooltip("Suena al aparecer la ventanita. Grave, que es una mala noticia.")]
+    public AudioClip sonido;
+    public float volumenSonido = 0.7f;
+    public float semitonosSonido = -5f;
+
     private static OfertaDeRevivir instancia;
 
     // Mientras esta la ventanita el juego esta congelado con timeScale 0 y el
@@ -72,6 +81,10 @@ public class OfertaDeRevivir : MonoBehaviour
     // La pantalla se queda en blanco y negro mientras dura la oferta. Es un filtro
     // en la camara, asi que la ventanita (UI en overlay) sigue a color.
     private FiltroBlancoYNegro filtro;
+
+    // Para devolver el anillo como estaba: lo late el apuro y lo tiñe de rojo.
+    private Color colorDelAnillo;
+    private bool guardoElColor;
 
     // Los sprites se dibujan en código (TexturasUI) para no sumar imágenes al
     // proyecto: quien los pide es dueño de las texturas y las destruye.
@@ -161,6 +174,17 @@ public class OfertaDeRevivir : MonoBehaviour
         if (botonNo != null) botonNo.interactable = true;
         if (panel != null) panel.SetActive(true);
 
+        if (anillo != null)
+        {
+            if (!guardoElColor) { colorDelAnillo = anillo.color; guardoElColor = true; }
+            anillo.color = colorDelAnillo;
+            anillo.rectTransform.localScale = Vector3.one;
+        }
+
+        // Tiempo sin escalar y sin separacion minima: es el unico sonido que suena
+        // en este momento, y el juego ya esta congelado.
+        Sonidos.Tocar(sonido, volumenSonido, Sonidos.PitchDe(semitonosSonido), 0f, 0f);
+
         // El juego queda donde estaba: los zombis congelados encima y la partida
         // esperando. Todo lo de esta ventana usa tiempo sin escalar.
         Activa = true;
@@ -186,6 +210,26 @@ public class OfertaDeRevivir : MonoBehaviour
 
         float restante = Mathf.Max(0f, duracion - pasado);
         if (anillo != null) anillo.fillAmount = duracion > 0f ? restante / duracion : 0f;
+
+        // Los ultimos segundos el reloj late y se pone rojo: no es para apurar la
+        // decision (que se venza es lo mismo que decir que no), es para que nadie se
+        // quede mirando sin enterarse de que se le acaba.
+        if (anillo != null && guardoElColor)
+        {
+            bool apura = restante <= segundosDeApuro && restante > 0f;
+            if (apura)
+            {
+                float latido = 1f + 0.08f * Mathf.Abs(Mathf.Sin(pasado * 6f));
+                anillo.rectTransform.localScale = Vector3.one * latido;
+                anillo.color = Color.Lerp(colorDelAnillo, new Color(1f, 0.3f, 0.25f, 1f),
+                                          Mathf.PingPong(pasado * 3f, 1f));
+            }
+            else
+            {
+                anillo.rectTransform.localScale = Vector3.one;
+                anillo.color = colorDelAnillo;
+            }
+        }
 
         int entero = Mathf.CeilToInt(restante);
         if (segundos != null && entero != ultimoSegundoEscrito)

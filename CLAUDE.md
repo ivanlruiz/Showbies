@@ -503,6 +503,44 @@ cuando se integre (AdMob o LevelPlay) es una clase nueva que implemente `IProvee
 está roto en Unity 6000.3.17 y posteriores (issue 4212 del repo), y AdMob sólo sirve anuncios de verdad cuando
 la app ya está publicada y vinculada a su ficha de Play.
 
+## Pantallas: idioma, fuente y botones
+
+Todo lo que lee el jugador esta **en espaniol y con Bangers**, la fuente del juego: no queda ningun texto con la
+fuente por defecto de Unity (LiberationSans), que era lo que hacia que el menu y la derrota parecieran de dos
+juegos distintos. Si agregas un texto, ponele Bangers; si es una palabra en ingles, traducila.
+
+**Todos los botones salen del mismo molde**, el de MEJORAS:
+
+```
+Boton            <- Button + BotonJugoso (la raiz recibe el toque y no se anima)
+  Sombra         <- Image del mismo sprite, corrida 8 px hacia abajo
+  Visual         <- lo que BotonJugoso aprieta, rebota y hace respirar
+    Fondo        <- Image con el sprite y el color del boton
+    Texto        <- TMP centrado, oscuro
+```
+
+El color dice que hace cada uno: **verde** lo que te devuelve al juego (JUGAR, OTRA VEZ, CONTINUAR, MODO LIBRE),
+**dorado** la tienda (MEJORAS), **azul** lo que cambia de modo (MODOS DE JUEGO, REINICIAR), **naranja** las
+oleadas, **gris** lo secundario (TUTORIAL, SALIR, MENU, VOLVER, NO GRACIAS).
+
+**El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
+ya no existe; con el fondo nuevo, eso lo tenia todo de color negro. Apagar la transicion tampoco va (ver la
+trampa).
+
+**Jerarquia de cada pantalla**, que sigue lo que el jugador necesita de un vistazo:
+
+- **Derrota**: PERDISTE, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
+  record chicos, el renglon de la oferta de video o el aviso de compras, y abajo los tres botones. Si la partida
+  fue record, el puntaje dice "¡NUEVO RECORD!" y el texto del record se calla (`Score.HuboRecordNuevo`).
+- **Menu**: el nombre del juego arriba y cinco botones, con JUGAR primero y SALIR ultimo.
+- **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
+  chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
+  (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
+
+Las posiciones de la derrota y de la ventanita de revivir estan **medidas**, no puestas a ojo: cuando muevas algo
+de esas pantallas, revisa que ningun par de elementos se pise, contando los que se prenden solos (la oferta de
+video y el aviso de compras comparten renglon a proposito).
+
 ## Jugo
 
 Lo que hace que cada acción se sienta vive en `Efectos` (`Assets/Scripts/Jugo/`), dentro del prefab
@@ -818,8 +856,9 @@ enterrado.
   primer frame por eso; ahora mueve el ancho del `RectTransform`. Lo mismo vale para cualquier medidor que se
   arme por código con un rectángulo de color.
 
-- **Al duplicar un botón del menú, no le cambies la transición a None.** Los botones del menú tienen un Image negro
-  que la transición ColorTint deja invisible; con None aparece.
+- **La transición de un botón es ColorTint con el normal en blanco.** Los botones viejos tenían un Image negro
+  que el ColorTint dejaba invisible, así que ponérselo en None lo hacía aparecer; hoy ese Image ya no está,
+  pero el ColorTint sigue: si el normal no es blanco, tiñe el fondo de color del botón.
 
 ## Pruebas y medición
 
