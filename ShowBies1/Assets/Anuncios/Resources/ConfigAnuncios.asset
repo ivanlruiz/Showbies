@@ -13,11 +13,17 @@ MonoBehaviour:
   m_Name: ConfigAnuncios
   m_EditorClassIdentifier: Assembly-CSharp::ConfigAnuncios
   proveedor: 1
+  segundosParaDecidirRevivir: 10
+  segundosDeAgrisado: 5
+  radioDeDespeje: 7
+  segundosDeGracia: 2.5
+  segundosDeLaPartidaParaRevivir: 30
   partidasTerminadasMinimas: 2
   segundosDeLaPartidaMinimos: 90
   segundosJugadosMinimos: 180
   monedasMinimasParaDuplicar: 20
   vecesPorDia: 3
+  vecesPorPartida: 1
   segundosEntreAnuncios: 60
   fallasPremiadasPorDia: 1
   minutosParaAvisoDeDescanso: 60

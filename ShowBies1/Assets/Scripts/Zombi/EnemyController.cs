@@ -235,6 +235,31 @@ public class EnemyController : MonoBehaviour
         if (barraDeVida != null) Destroy(barraDeVida.gameObject);
     }
 
+    // Saca del mapa a los zombis que esten a 'radio' del punto, SIN puntos ni
+    // monedas ni mancha, como el kill-Z. Lo usa el revivir con un video: el jugador
+    // vuelve en el mismo lugar donde lo mataron y necesita aire, pero cobrar por esos
+    // zombis convertiria el video en una forma barata de limpiar la pantalla.
+    // Devuelve cuantos se fueron.
+    public static int DespejarAlrededor(Vector3 punto, float radio)
+    {
+        if (!(radio > 0f)) return 0;
+
+        int despejados = 0;
+        float radioAlCuadrado = radio * radio;
+        var zombis = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        foreach (var zombi in zombis)
+        {
+            if (zombi == null || !zombi.enUso) continue;
+            if ((zombi.transform.position - punto).sqrMagnitude > radioAlCuadrado) continue;
+
+            Efectos.ParticulasDeMuerte(zombi.deathParticles, zombi.transform.position);
+            zombi.estaMuerto = true;
+            zombi.Devolver();
+            despejados++;
+        }
+        return despejados;
+    }
+
     // Vuelve apagado al pool. Los que no salieron del pool se destruyen como antes.
     private void Devolver()
     {

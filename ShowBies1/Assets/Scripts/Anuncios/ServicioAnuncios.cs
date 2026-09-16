@@ -123,12 +123,14 @@ public static class ServicioAnuncios
     // El nucleo de "se puede ofrecer", sin escena ni proveedor: asi se prueba entero.
     public static bool PuedeOfrecerConDatos(ConfigAnuncios config, bool ofrecerVideos, bool mostrandoAnuncio,
                                             int partidasTerminadas, double segundosJugados, int usosDeHoy,
-                                            float segundosDesdeElUltimo, bool proveedorListo)
+                                            float segundosDesdeElUltimo, bool proveedorListo,
+                                            int videosDeLaPartida)
     {
         if (config == null || !ofrecerVideos || mostrandoAnuncio || !proveedorListo) return false;
         if (partidasTerminadas < config.partidasTerminadasMinimas) return false;
         if (segundosJugados < config.segundosJugadosMinimos) return false;
         if (usosDeHoy >= config.vecesPorDia) return false;
+        if (videosDeLaPartida >= config.vecesPorPartida) return false;
         return segundosDesdeElUltimo >= config.segundosEntreAnuncios;
     }
 
@@ -140,7 +142,7 @@ public static class ServicioAnuncios
         return PuedeOfrecerConDatos(config, Progreso.OfrecerVideos, MostrandoAnuncio,
                                     Progreso.PartidasTerminadas, Progreso.SegundosJugados,
                                     Progreso.UsosDeHoy(lugar), SegundosDesdeElUltimo,
-                                    Proveedor.Listo(lugar));
+                                    Proveedor.Listo(lugar), Progreso.VideosDeLaPartida);
     }
 
     // Pide el video. Devuelve si se lanzo; el premio llega despues, en el hilo

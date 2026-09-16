@@ -413,8 +413,9 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 
 ## Anuncios
 
-Los videos con recompensa son la única monetización del juego, y entran por **un solo lugar**: el **x2 de las
-monedas en la pantalla de derrota**. Todo lo demás (topes, proveedor, hilos) vive en
+Los videos con recompensa son la única monetización del juego y entran por **dos lugares**: **revivir** al morir
+y, si no revivió, el **x2 de las monedas en la pantalla de derrota**. **Un solo video premiado por partida**
+(`vecesPorPartida`), así que en la práctica es o uno o el otro. Todo lo demás (topes, proveedor, hilos) vive en
 `Assets/Scripts/Anuncios/` y el juego no habla nunca con una red de anuncios.
 
 **Las reglas que no se negocian**, porque son la diferencia entre un premio y una trampa:
@@ -424,8 +425,9 @@ monedas en la pantalla de derrota**. Todo lo demás (topes, proveedor, hilos) vi
 - **El premio se dice exacto antes de mirar** ("VER VIDEO: +137 MONEDAS"), no como sorpresa.
 - **Cerrar el video antes no castiga**: no hay premio, pero tampoco se gasta el tope del día ni pasa nada más.
 - **Si no se puede ofrecer, el botón no existe**, no aparece en gris.
-- **Se puede apagar**: el botoncito VIDEOS del menú (`InterruptorVideos`, abajo a la izquierda) apaga la oferta
-  para siempre y no vuelve a preguntar. Si no hay proveedor (Windows), el botón ni aparece.
+- **Se puede apagar**: `Progreso.OfrecerVideos` apaga todas las ofertas y el servicio lo respeta. Hoy no hay
+  ningún botón que lo toque (hubo uno en el menú y a Ivan no le gustó): queda para cuando haya pantalla de
+  opciones.
 - **Un premio nunca es "monedas ganadas jugando".** Entra por `Progreso.CobrarPremio`, no por `Sumar`: cuando
   entre el renacer de la fase 5, lo que se cobró con videos no tiene que contar para los cerebros.
 
@@ -433,7 +435,7 @@ monedas en la pantalla de derrota**. Todo lo demás (topes, proveedor, hilos) vi
 
 | pieza | qué hace |
 |---|---|
-| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy sólo se usa `duplicar_derrota`. |
+| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir` y `duplicar_derrota`. |
 | `IProveedorAnuncios` | quién muestra el video: `Listo(lugar)` y `Mostrar(lugar, aviso)`. Cambiar de red es escribir otra clase. |
 | `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows y el de "todavía no hay red". |
 | `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet, y anda igual en el teléfono. |
@@ -441,9 +443,11 @@ monedas en la pantalla de derrota**. Todo lo demás (topes, proveedor, hilos) vi
 | `ServicioAnuncios` | la puerta: `PuedeOfrecer(lugar)` y `Mostrar(lugar, alPremiar, alNoPremiar)`. |
 | `VigiaAplicacion` | un objeto con `DontDestroyOnLoad` que se instala solo. Vacía los avisos de los videos en el hilo principal y **guarda el progreso cuando la app pierde el foco en cualquier escena** (antes eso lo hacía sólo `MenuPausa`, que no está ni en el menú ni en la derrota). |
 | `OfertaDeDuplicar` | el botón de la derrota (objeto `OfertaVideo` en `Perdiste.unity`, componente en `Menu`). |
+| `OfertaDeRevivir` | la ventanita de "¡HAS MUERTO!" (prefab `Prefabs/UI/OfertaRevivir` en ShowBies1 y WaveMode). |
 
-**Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada, con 180 s jugados en total, una
-partida de 90 s o más, al menos 20 monedas en la partida, hasta 3 veces por día y con 60 s entre un video y otro.
+**Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada, con 180 s jugados en total, hasta
+3 veces por día, 1 por partida y con 60 s entre un video y otro. El x2 pide además una partida de 90 s y 20
+monedas; revivir, una partida de 30 s.
 El día es un `aaaammdd` local guardado en el progreso, y **atrasar el reloj del teléfono no reinicia los topes**
 (sólo cuenta un día mayor al guardado).
 
@@ -461,6 +465,28 @@ vuelve cuando se resuelve, con más monedas si el jugador cobró (`OfertaDeDupli
 
 **A partir de una hora de sesión la derrota sugiere descansar** (`AvisoDescanso`, `minutosParaAvisoDeDescanso`).
 No bloquea nada.
+
+### Revivir
+
+Cuando el jugador muere y hay un video, la partida **no termina**: `PlayerHealth` le pregunta a
+`OfertaDeRevivir` y, si esta se hace cargo, el juego queda congelado (`Time.timeScale = 0`) con el jugador
+muerto en el lugar donde cayó. La pantalla se va agrisando en 5 s mientras una ventanita muestra
+"¡HAS MUERTO!" y un botón de video con un anillo que se cierra en 10 s. Recién cuando el jugador dice que no,
+o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarPartida`, escena de derrota).
+
+- **Una sola vez por partida** (`PlayerHealth.yaRevivio`): con un revivir por video sin límite la partida no
+  termina nunca y la tienda deja de tener sentido.
+- **Volver no regala nada más que seguir jugando**: `EnemyController.DespejarAlrededor` saca del mapa a los
+  zombis que estén a `radioDeDespeje` (7 m) **sin puntos, monedas ni mancha**, como el kill-Z, y el jugador
+  vuelve con la vida llena y `segundosDeGracia` (2,5 s) sin recibir daño. Si esos zombis dieran monedas, el
+  video sería la forma barata de cobrar una pantalla llena.
+- **Que se venza el reloj es exactamente lo mismo que decir que no**, y el botón NO, GRACIAS está desde el
+  primer segundo y se lee igual de bien que el otro.
+- Mientras la ventana está abierta, `OfertaDeRevivir.Activa` es cierto y **`MenuPausa` no pausa**: reanudar
+  desde el menú de pausa devolvería el `timeScale` a 1 con el jugador muerto. Si la escena se descarga con la
+  oferta abierta, `OnDestroy` devuelve el `timeScale`.
+- Los tres dibujos del botón (círculo, anillo y triángulo de play) los hace `TexturasUI` en código, así que no
+  hay imágenes nuevas en el proyecto; el componente es dueño de esas texturas y las destruye.
 
 **Todavía no hay red de anuncios de verdad.** `ConfigAnuncios.proveedor` está en `Falso` y `Real` no existe:
 cuando se integre (AdMob o LevelPlay) es una clase nueva que implemente `IProveedorAnuncios` y un `case` en

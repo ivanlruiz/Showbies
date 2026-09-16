@@ -24,6 +24,9 @@ public class MenuPausa : MonoBehaviour
 
     private void Update()
     {
+        // Con la oferta de revivir en pantalla el juego ya esta congelado y el
+        // jugador, muerto: pausar encima solo puede romper el timeScale.
+        if (OfertaDeRevivir.Activa) return;
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
 
         if (Pausado) Reanudar();
@@ -43,6 +46,7 @@ public class MenuPausa : MonoBehaviour
 
     public void Pausar()
     {
+        if (OfertaDeRevivir.Activa) return;
         if (Pausado) return;
 
         Pausado = true;

@@ -92,6 +92,10 @@ public static class Progreso
     // que es otra escena y ya no tiene al jugador para preguntarle.
     public static float SegundosDeLaUltimaPartida { get; private set; }
 
+    // Videos premiados en la partida en curso. Tampoco se guarda: el tope de uno
+    // por partida es para no encadenar ofertas en la misma corrida.
+    public static int VideosDeLaPartida { get; private set; }
+
     // Sube con cada cambio de monedas o niveles.
     public static int Revision { get; private set; }
 
@@ -104,6 +108,7 @@ public static class Progreso
         MonedasDeLaPartida = 0;
         NumeroDePartida = 0;
         SegundosDeLaUltimaPartida = 0;
+        VideosDeLaPartida = 0;
         partidaDuplicada = -1;
         Revision = 0;
         carpetaPruebas = null;
@@ -146,6 +151,7 @@ public static class Progreso
     {
         Cargar();
         MonedasDeLaPartida = 0;
+        VideosDeLaPartida = 0;
         NumeroDePartida++;
     }
 
@@ -265,6 +271,7 @@ public static class Progreso
             datos.anuncios.usos.Add(uso);
         }
         uso.cantidad++;
+        VideosDeLaPartida++;
         Guardar();
     }
 

@@ -18,6 +18,15 @@ public class PlayerHealth : MonoBehaviour
     public TMP_Text healthTMP;
 
     private bool estaMuerto;
+
+    // Hasta cuándo no recibe daño. Al revivir con un video vuelve en el mismo
+    // lugar donde lo mataron: sin unos segundos de gracia, el zombi que estaba
+    // pegado lo mata de nuevo en el acto.
+    private float invulnerableHasta;
+
+    // Un solo revivir por partida: si no, con un video cada vez la partida no
+    // termina nunca.
+    private bool yaRevivio;
     private int ultimaVidaMostrada = int.MinValue;
 
     // La cura de las cajas escala con la mejora de vida, así una caja sigue
@@ -97,48 +106,77 @@ public class PlayerHealth : MonoBehaviour
         return entero;
     }
 
+    public bool YaRevivio { get { return yaRevivio; } }
+    public float SegundosDePartida { get { return Time.time - empezoEn; } }
+
     public void TakeDamage(float amount)
     {
         // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
         // veces con la vida ya en cero, y el bloque de muerte corria de nuevo.
-        if (estaMuerto) return;
+        if (estaMuerto || Time.time < invulnerableHasta) return;
 
         int dano = AcumularDano(ref danoPendiente, amount);
         if (dano <= 0) return;
 
         health -= dano;
         if (health > 0) Efectos.DanioJugador();
-        if(health <= 0)
+        if (health > 0) return;
+
+        estaMuerto = true;
+
+        // Antes de dar la partida por terminada: si hay un video para revivir, el
+        // juego queda congelado con la oferta en pantalla y la derrota espera. Es
+        // la oferta la que después llama a Revivir o a Terminar.
+        if (!yaRevivio && OfertaDeRevivir.Ofrecer(this)) return;
+
+        Terminar();
+    }
+
+    // La muerte de verdad: guarda el récord, cierra la partida y va a la derrota.
+    public void Terminar()
+    {
+        // Un record por modo: los puntos del modo libre y los de las oleadas
+        // no se comparan, y antes compartian una sola clave.
+        int modo = SceneManager.GetActiveScene().buildIndex;
+        string claveRecord = ClaveRecord(modo);
+        int highScore = PlayerPrefs.GetInt(claveRecord);
+
+        PlayerPrefs.SetInt("Score", Puntaje.instance.contadorKill);
+
+        if (Puntaje.instance.contadorKill > highScore)
         {
-            estaMuerto = true;
 
-            // Un record por modo: los puntos del modo libre y los de las oleadas
-            // no se comparan, y antes compartian una sola clave.
-            int modo = SceneManager.GetActiveScene().buildIndex;
-            string claveRecord = ClaveRecord(modo);
-            int highScore = PlayerPrefs.GetInt(claveRecord);
-
-            PlayerPrefs.SetInt("Score", Puntaje.instance.contadorKill);
-
-            if (Puntaje.instance.contadorKill > highScore)
-            {
-
-                PlayerPrefs.SetInt(claveRecord, Puntaje.instance.contadorKill);
-            }
-
-            // Para que "Retry" vuelva al modo que se estaba jugando y no siempre
-            // al primero. Sin esto, morir en WaveMode te reiniciaba en ShowBies1.
-            PlayerPrefs.SetInt("UltimoModo", modo);
-
-            // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
-            PlayerPrefs.Save();
-            Progreso.TerminarPartida(Time.time - empezoEn);
-            Progreso.Guardar();
-
-            SceneManager.LoadScene(2);
-            Destroy(gameObject);
-            
+            PlayerPrefs.SetInt(claveRecord, Puntaje.instance.contadorKill);
         }
+
+        // Para que "Retry" vuelva al modo que se estaba jugando y no siempre
+        // al primero. Sin esto, morir en WaveMode te reiniciaba en ShowBies1.
+        PlayerPrefs.SetInt("UltimoModo", modo);
+
+        // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
+        PlayerPrefs.Save();
+        Progreso.TerminarPartida(SegundosDePartida);
+        Progreso.Guardar();
+
+        SceneManager.LoadScene(2);
+        Destroy(gameObject);
+    }
+
+    // Volver a jugar después de un video: vida llena, unos segundos sin recibir
+    // daño y la zona despejada. Los zombis de alrededor se van SIN dar puntos ni
+    // monedas: si los diera, revivir sería la forma barata de cobrar una pantalla
+    // llena de zombis.
+    public void Revivir(float radioDespeje, float segundosDeGracia)
+    {
+        estaMuerto = false;
+        yaRevivio = true;
+        health = maxHealth;
+        danoPendiente = 0f;
+        invulnerableHasta = Time.time + Mathf.Max(0f, segundosDeGracia);
+
+        int despejados = EnemyController.DespejarAlrededor(transform.position, radioDespeje);
+        Efectos.Explosion(transform.position);
+        if (despejados > 0) Efectos.CartelOleada();
     }
     private void OnTriggerEnter(Collider other)
     {

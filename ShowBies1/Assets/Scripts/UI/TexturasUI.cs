@@ -51,6 +51,76 @@ public static class TexturasUI
         return Crear(lado, pixeles, "Rayos");
     }
 
+    // Un circulo lleno con el borde suavizado. Para el fondo del boton de video.
+    public static Texture2D Circulo(int lado)
+    {
+        lado = Mathf.Max(2, lado);
+        var pixeles = new Color32[lado * lado];
+        float centro = lado * 0.5f;
+        // El suavizado es de un pixel, expresado en radios.
+        float borde = 1f / centro;
+
+        for (int y = 0; y < lado; y++)
+        {
+            for (int x = 0; x < lado; x++)
+            {
+                float d = Distancia(x, y, centro);
+                pixeles[y * lado + x] = Blanco(Mathf.InverseLerp(1f, 1f - borde, d));
+            }
+        }
+
+        return Crear(lado, pixeles, "Circulo");
+    }
+
+    // Un anillo de 'grosor' (0 a 1, en radios). Es el sprite del reloj que se cierra
+    // alrededor del boton de video: con Image.Type.Filled y Radial360 se vacia solo.
+    public static Texture2D Anillo(int lado, float grosor)
+    {
+        lado = Mathf.Max(2, lado);
+        grosor = Mathf.Clamp(grosor, 0.02f, 1f);
+        var pixeles = new Color32[lado * lado];
+        float centro = lado * 0.5f;
+        float borde = 1f / centro;
+        float interior = 1f - grosor;
+
+        for (int y = 0; y < lado; y++)
+        {
+            for (int x = 0; x < lado; x++)
+            {
+                float d = Distancia(x, y, centro);
+                float afuera = Mathf.InverseLerp(1f, 1f - borde, d);
+                float adentro = Mathf.InverseLerp(interior - borde, interior, d);
+                pixeles[y * lado + x] = Blanco(Mathf.Min(afuera, adentro));
+            }
+        }
+
+        return Crear(lado, pixeles, "Anillo");
+    }
+
+    // El triangulo de "play", apuntando a la derecha y centrado en su ancho visual:
+    // un triangulo centrado en la caja se ve corrido a la izquierda.
+    public static Texture2D Play(int lado)
+    {
+        lado = Mathf.Max(4, lado);
+        var pixeles = new Color32[lado * lado];
+
+        for (int y = 0; y < lado; y++)
+        {
+            for (int x = 0; x < lado; x++)
+            {
+                // u de 0 (izquierda) a 1 (derecha), v de -1 a 1 (centro en 0).
+                float u = (x + 0.5f) / lado;
+                float v = ((y + 0.5f) / lado) * 2f - 1f;
+                // Ancho de la mitad del triangulo a esa altura: 1 en la base, 0 en la punta.
+                float mitad = 1f - u;
+                float alfa = Mathf.Abs(v) <= mitad ? 1f : 0f;
+                pixeles[y * lado + x] = Blanco(alfa);
+            }
+        }
+
+        return Crear(lado, pixeles, "Play");
+    }
+
     // Distancia del centro del pixel al centro de la textura, en radios y hasta 1.
     private static float Distancia(int x, int y, float centro)
     {

@@ -22,6 +22,18 @@ public class ConfigAnuncios : ScriptableObject
         + "llega al teléfono en la APK de prueba. ConstructorAndroid lo fuerza a Falso al buildear la APK.")]
     public Proveedor proveedor = Proveedor.Falso;
 
+    [Header("Revivir")]
+    [Tooltip("Segundos que da la ventanita para decidir.")]
+    public float segundosParaDecidirRevivir = 10f;
+    [Tooltip("Segundos que tarda la pantalla en agrisarse del todo.")]
+    public float segundosDeAgrisado = 5f;
+    [Tooltip("Metros de zombis que se despejan al volver.")]
+    public float radioDeDespeje = 7f;
+    [Tooltip("Segundos sin recibir daño después de revivir.")]
+    public float segundosDeGracia = 2.5f;
+    [Tooltip("Lo mínimo que tiene que haber durado la partida para ofrecer revivir.")]
+    public float segundosDeLaPartidaParaRevivir = 30f;
+
     [Header("Cuándo se puede ofrecer")]
     [Tooltip("Partidas terminadas que hacen falta: 2 = nunca en la primera partida.")]
     public int partidasTerminadasMinimas = 2;
@@ -34,6 +46,8 @@ public class ConfigAnuncios : ScriptableObject
 
     [Header("Topes")]
     public int vecesPorDia = 3;
+    [Tooltip("Videos premiados en una misma partida. 1 = o revivís o duplicás, no las dos.")]
+    public int vecesPorPartida = 1;
     [Tooltip("Segundos reales entre dos videos.")]
     public float segundosEntreAnuncios = 60f;
     [Tooltip("Cuántas veces por día se premia igual un video que falló al mostrarse.")]
@@ -74,9 +88,15 @@ public class ConfigAnuncios : ScriptableObject
     {
         partidasTerminadasMinimas = Mathf.Max(0, partidasTerminadasMinimas);
         segundosDeLaPartidaMinimos = Mathf.Max(0f, segundosDeLaPartidaMinimos);
+        segundosParaDecidirRevivir = Mathf.Max(1f, segundosParaDecidirRevivir);
+        segundosDeAgrisado = Mathf.Max(0f, segundosDeAgrisado);
+        radioDeDespeje = Mathf.Max(0f, radioDeDespeje);
+        segundosDeGracia = Mathf.Max(0f, segundosDeGracia);
+        segundosDeLaPartidaParaRevivir = Mathf.Max(0f, segundosDeLaPartidaParaRevivir);
         segundosJugadosMinimos = Mathf.Max(0f, segundosJugadosMinimos);
         monedasMinimasParaDuplicar = Mathf.Max(0, monedasMinimasParaDuplicar);
         vecesPorDia = Mathf.Max(0, vecesPorDia);
+        vecesPorPartida = Mathf.Max(0, vecesPorPartida);
         segundosEntreAnuncios = Mathf.Max(0f, segundosEntreAnuncios);
         fallasPremiadasPorDia = Mathf.Max(0, fallasPremiadasPorDia);
         minutosParaAvisoDeDescanso = Mathf.Max(0f, minutosParaAvisoDeDescanso);

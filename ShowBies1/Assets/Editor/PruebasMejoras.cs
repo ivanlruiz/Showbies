@@ -610,6 +610,9 @@ public static class PruebasMejoras
     {
         EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":" + Numero(monedas) + "}", null);
         _ = Progreso.Monedas;
+        // Como partida nueva: los contadores que no se guardan (monedas de la
+        // partida, videos vistos) arrancan en cero en cada caso.
+        Progreso.EmpezarPartida();
     }
 
     // Si Progreso no escribiera en la carpeta de pruebas, lo que sigue pisaria el
@@ -956,22 +959,29 @@ public static class PruebasMejoras
             config.partidasTerminadasMinimas = 2;
             config.segundosJugadosMinimos = 180f;
             config.vecesPorDia = 3;
+            config.vecesPorPartida = 1;
             config.segundosEntreAnuncios = 60f;
 
-            inf.Verdadero("puede ofrecer: con todo en regla", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 2, 200, 0, 999f, true));
-            inf.Verdadero("puede ofrecer: sin config, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(null, true, false, 9, 9999, 0, 999f, true)));
-            inf.Verdadero("puede ofrecer: con el interruptor apagado, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(config, false, false, 9, 9999, 0, 999f, true)));
-            inf.Verdadero("puede ofrecer: no durante otro video", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, true, 9, 9999, 0, 999f, true)));
-            inf.Verdadero("puede ofrecer: no sin video cargado", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, false)));
-            inf.Verdadero("puede ofrecer: no en la primera partida", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 1, 9999, 0, 999f, true)));
-            inf.Verdadero("puede ofrecer: no con poco jugado", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 179, 0, 999f, true)));
-            inf.Verdadero("puede ofrecer: no con el tope del dia cumplido", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 3, 999f, true)));
-            inf.Verdadero("puede ofrecer: el ultimo uso del dia todavia se puede", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 2, 999f, true));
-            inf.Verdadero("puede ofrecer: no antes de los 60 s del anterior", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 59.9f, true)));
-            inf.Verdadero("puede ofrecer: a los 60 s justos, si", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 60f, true));
+            inf.Verdadero("puede ofrecer: con todo en regla", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 2, 200, 0, 999f, true, 0));
+            inf.Verdadero("puede ofrecer: sin config, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(null, true, false, 9, 9999, 0, 999f, true, 0)));
+            inf.Verdadero("puede ofrecer: con el interruptor apagado, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(config, false, false, 9, 9999, 0, 999f, true, 0)));
+            inf.Verdadero("puede ofrecer: no durante otro video", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, true, 9, 9999, 0, 999f, true, 0)));
+            inf.Verdadero("puede ofrecer: no sin video cargado", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, false, 0)));
+            inf.Verdadero("puede ofrecer: no en la primera partida", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 1, 9999, 0, 999f, true, 0)));
+            inf.Verdadero("puede ofrecer: no con poco jugado", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 179, 0, 999f, true, 0)));
+            inf.Verdadero("puede ofrecer: no con el tope del dia cumplido", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 3, 999f, true, 0)));
+            inf.Verdadero("puede ofrecer: el ultimo uso del dia todavia se puede", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 2, 999f, true, 0));
+            inf.Verdadero("puede ofrecer: no antes de los 60 s del anterior", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 59.9f, true, 0)));
+            inf.Verdadero("puede ofrecer: a los 60 s justos, si", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 60f, true, 0));
+
+            inf.Verdadero("puede ofrecer: no con un video ya visto en la partida", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, true, 1)));
+
+            config.vecesPorPartida = 2;
+            inf.Verdadero("puede ofrecer: con el tope por partida en 2, el segundo si", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, true, 1));
+            config.vecesPorPartida = 1;
 
             config.vecesPorDia = 0;
-            inf.Verdadero("puede ofrecer: con el tope en 0, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, true)));
+            inf.Verdadero("puede ofrecer: con el tope en 0, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, true, 0)));
         }
         finally
         {
@@ -1086,6 +1096,7 @@ public static class PruebasMejoras
             inf.Igual("circuito: un video roto se premia igual la primera vez", 1, premios);
             inf.Igual("circuito: y queda anotado", 1, Progreso.FallasPremiadasHoy);
 
+            Progreso.EmpezarPartida();
             ServicioAnuncios.UsarParaPruebas(proveedor, config);
             premios = cierres = 0;
             ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
@@ -1099,12 +1110,29 @@ public static class PruebasMejoras
             premios = 0;
             for (int i = 0; i < 5; i++)
             {
+                Progreso.EmpezarPartida();
                 ServicioAnuncios.UsarParaPruebas(proveedor, config);
                 ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
                 ServicioAnuncios.AtenderAvisos();
             }
             inf.Igual("circuito: el tope del dia corta en 3", 3, premios);
             inf.Igual("circuito: y los usos quedan en 3", 3, Progreso.UsosDeHoy(lugar));
+
+            // --- un solo video por partida ---------------------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            premios = 0;
+            ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito partida: el primer video se cobra", 1, premios);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            inf.Verdadero("circuito partida: el segundo de la misma partida no se ofrece",
+                          !ServicioAnuncios.PuedeOfrecer(lugar));
+            inf.Verdadero("circuito partida: y no se muestra",
+                          !ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar));
+            Progreso.EmpezarPartida();
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            inf.Verdadero("circuito partida: en la partida siguiente si", ServicioAnuncios.PuedeOfrecer(lugar));
 
             // --- el interruptor del jugador --------------------------------------
             EmpezarConMonedas(0);
