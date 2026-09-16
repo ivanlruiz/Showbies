@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Pasa las mejoras compradas al jugador de la partida: dano y cadencia al arma,
-// vida maxima y cura a la vida, y el alcance del iman a las monedas. Va en
+// vida maxima y cura a la vida, el alcance del iman a las monedas y si hay granada. Va en
 // Jugador.prefab, asi lo tienen las tres escenas de juego sin cablear nada por
 // escena.
 //
@@ -24,6 +24,7 @@ public class AplicarMejoras : MonoBehaviour
     public int VidaMaxima { get; private set; }
     public float MultiplicadorCura { get; private set; }
     public float RadioIman { get; private set; }
+    public float ProbabilidadCritico { get; private set; }
 
     private void Awake()
     {
@@ -52,5 +53,8 @@ public class AplicarMejoras : MonoBehaviour
         arma.FijarTirosPorSegundo(TirosPorSegundo);
         vida.FijarVidaMaxima(VidaMaxima, MultiplicadorCura);
         Moneda.FijarRadioIman(RadioIman);
+        jugador.GranadaDesbloqueada = CatalogoMejoras.GranadaDesbloqueada;
+        ProbabilidadCritico = CatalogoMejoras.ProbabilidadCritico;
+        arma.FijarProbabilidadCritico(ProbabilidadCritico);
     }
 }

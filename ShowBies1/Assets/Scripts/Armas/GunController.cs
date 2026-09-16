@@ -69,6 +69,25 @@ public class GunController : MonoBehaviour
         get { return danoPorBala >= 0f ? danoPorBala : (bala != null ? bala.dañoDar : 0); }
     }
 
+    // Golpes criticos: cada bala sortea al salir y, si toca, pega multiplicadorCritico
+    // veces. La probabilidad la fija la mejora (0 sin comprarla).
+    public float multiplicadorCritico = 2f;
+    private float probabilidadCritico;
+
+    public float ProbabilidadCritico { get { return probabilidadCritico; } }
+
+    public void FijarProbabilidadCritico(float probabilidad)
+    {
+        probabilidadCritico = Mathf.Clamp01(probabilidad);
+    }
+
+    // Estatico para probarlo sin azar. Random.value puede dar 1 exacto, asi que el
+    // 100 % se trata aparte: con la mejora al tope todas son criticas.
+    public static bool EsCritico(float probabilidad, float sorteo)
+    {
+        return probabilidad >= 1f || sorteo < probabilidad;
+    }
+
     // Lo que lleva cada bala que sale ahora, con la furia.
     public float DanoPorTiro
     {
@@ -218,7 +237,9 @@ public class GunController : MonoBehaviour
         // Antes era un Instantiate por disparo. Ahora las balas se reusan.
         BulletController newBullet = BulletController.Obtener(bala, firePoint.position, firePoint.rotation);
         newBullet.velocidad = velocidadBala;
-        newBullet.danoAplicado = DanoPorTiro;
+        bool critico = probabilidadCritico > 0f && EsCritico(probabilidadCritico, Random.value);
+        newBullet.critico = critico;
+        newBullet.danoAplicado = critico ? DanoPorTiro * multiplicadorCritico : DanoPorTiro;
         newBullet.Adelantar(atraso);
     }
 

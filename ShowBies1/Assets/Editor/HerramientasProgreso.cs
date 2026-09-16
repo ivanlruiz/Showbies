@@ -24,6 +24,8 @@ public static class HerramientasProgreso
     const int NivelImanDePrueba = 6;
     const int NivelBotinDePrueba = 15;
     const int NivelFuriaDePrueba = 1;
+    const int NivelGranadaDePrueba = 1;
+    const int NivelCriticosDePrueba = 4;
 
     [MenuItem("ShowBies/Progreso/Sumar 1.000 monedas")]
     static void SumarMilMonedas()
@@ -37,7 +39,7 @@ public static class HerramientasProgreso
         SumarMonedas(100000);
     }
 
-    [MenuItem("ShowBies/Progreso/Niveles de prueba (5, 10, 5, 6, 15, furia)")]
+    [MenuItem("ShowBies/Progreso/Niveles de prueba (5, 10, 5, 6, 15, furia, granada, criticos 4)")]
     static void NivelesDePruebaDesdeMenu()
     {
         FijarNivelesDePrueba();
@@ -79,12 +81,12 @@ public static class HerramientasProgreso
 
     public static void FijarNivelesDePrueba()
     {
-        FijarNiveles(NivelDanoDePrueba, NivelCadenciaDePrueba, NivelVidaDePrueba, NivelImanDePrueba, NivelBotinDePrueba, NivelFuriaDePrueba);
+        FijarNiveles(NivelDanoDePrueba, NivelCadenciaDePrueba, NivelVidaDePrueba, NivelImanDePrueba, NivelBotinDePrueba, NivelFuriaDePrueba, NivelGranadaDePrueba, NivelCriticosDePrueba);
     }
 
     public static void NivelesEnCero()
     {
-        FijarNiveles(0, 0, 0, 0, 0, 0);
+        FijarNiveles(0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     public static void ReiniciarSinPreguntar()
@@ -95,7 +97,7 @@ public static class HerramientasProgreso
 
     // Con los ids que tienen los assets del catalogo y no con ids escritos aca:
     // si alguien renombra un id, esto sigue apuntando a la mejora de verdad.
-    static void FijarNiveles(int dano, int cadencia, int vida, int iman, int botin, int furia)
+    static void FijarNiveles(int dano, int cadencia, int vida, int iman, int botin, int furia, int granada, int criticos)
     {
         var catalogo = CatalogoMejoras.Instancia;
         if (catalogo == null)
@@ -110,9 +112,11 @@ public static class HerramientasProgreso
         Fijar(catalogo.iman, "iman", iman);
         Fijar(catalogo.botin, "botin", botin);
         Fijar(catalogo.furia, "furia", furia);
+        Fijar(catalogo.granada, "granada", granada);
+        Fijar(catalogo.criticos, "criticos", criticos);
 
         Debug.Log("HerramientasProgreso: niveles daño " + dano + ", cadencia " + cadencia + ", vida " + vida +
-                  ", iman " + iman + ", botin " + botin + ", furia " + furia + " en " + Progreso.RutaArchivo +
+                  ", iman " + iman + ", botin " + botin + ", furia " + furia + ", granada " + granada + ", criticos " + criticos + " en " + Progreso.RutaArchivo +
                   (EditorApplication.isPlaying ? " (se aplican al recargar la escena)" : ""));
     }
 

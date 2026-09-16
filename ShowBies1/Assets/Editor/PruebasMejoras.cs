@@ -234,7 +234,7 @@ public static class PruebasMejoras
         return informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
     }
 
-    // 1. El catalogo existe, valida y tiene las seis mejoras en orden.
+    // 1. El catalogo existe, valida y tiene las ocho mejoras en orden.
     static bool ProbarCatalogo(Informe inf, CatalogoMejoras catalogo)
     {
         if (!inf.Verdadero("catalogo: existe en Resources/" + CatalogoMejoras.RutaEnResources, catalogo != null)) return false;
@@ -250,10 +250,12 @@ public static class PruebasMejoras
         completo &= ProbarId(inf, "iman", catalogo.iman, "iman");
         completo &= ProbarId(inf, "botin", catalogo.botin, "botin");
         completo &= ProbarId(inf, "furia", catalogo.furia, "furia");
+        completo &= ProbarId(inf, "granada", catalogo.granada, "granada");
+        completo &= ProbarId(inf, "criticos", catalogo.criticos, "criticos");
 
-        string[] orden = { "dano_bala", "cadencia", "vida_maxima", "iman", "botin", "furia" };
+        string[] orden = { "dano_bala", "cadencia", "criticos", "vida_maxima", "granada", "iman", "botin", "furia" };
         int largo = catalogo.enTienda == null ? -1 : catalogo.enTienda.Length;
-        inf.Igual("catalogo: enTienda tiene 6 mejoras", 6, largo);
+        inf.Igual("catalogo: enTienda tiene 8 mejoras", 8, largo);
         for (int i = 0; i < orden.Length; i++)
         {
             string obtenido = i < largo ? Id(catalogo.enTienda[i]) : "(falta)";
@@ -334,6 +336,26 @@ public static class PruebasMejoras
         ChequearPrecios(inf, "precio furia", c.furia, new double[] { 5000 });
         inf.Verdadero("tope furia: EnTope(0) es falso", !c.furia.EnTope(0));
         inf.Verdadero("tope furia: EnTope(1) es verdadero", c.furia.EnTope(1));
+
+        // La granada tambien se compra una sola vez.
+        ChequearPrecios(inf, "precio granada", c.granada, new double[] { 250 });
+        inf.Verdadero("tope granada: EnTope(0) es falso", !c.granada.EnTope(0));
+        inf.Verdadero("tope granada: EnTope(1) es verdadero", c.granada.EnTope(1));
+
+        // Los criticos: ocho compras con los porcentajes de la tabla.
+        ChequearPrecios(inf, "precio criticos", c.criticos, new double[] { 150, 270, 486, 875, 1575, 2834, 5102, 9183 });
+        inf.Verdadero("tope criticos: EnTope(7) es falso", !c.criticos.EnTope(7));
+        inf.Verdadero("tope criticos: EnTope(8) es verdadero", c.criticos.EnTope(8));
+        double[] porcentajes = { 0, 5, 10, 20, 30, 50, 75, 90, 100 };
+        for (int i = 0; i < porcentajes.Length; i++) ChequearValor(inf, "valor criticos", c.criticos, i, porcentajes[i]);
+        ChequearValor(inf, "valor criticos pasado el tope", c.criticos, 12, 100);
+        inf.Igual("texto criticos nivel 0", "0%", c.criticos.TextoValor(0));
+        inf.Igual("texto criticos nivel 1", "5%", c.criticos.TextoValor(1));
+        inf.Igual("texto criticos nivel 8", "100%", c.criticos.TextoValor(8));
+        inf.Verdadero("critico: con 0 % nunca", !GunController.EsCritico(0f, 0f));
+        inf.Verdadero("critico: con 5 % y sorteo 0,04 si", GunController.EsCritico(0.05f, 0.04f));
+        inf.Verdadero("critico: con 5 % y sorteo 0,05 no", !GunController.EsCritico(0.05f, 0.05f));
+        inf.Verdadero("critico: con 100 % aunque el sorteo de 1", GunController.EsCritico(1f, 1f));
     }
 
     static void ChequearPrecios(Informe inf, string nombre, Mejora mejora, double[] esperados)
@@ -930,6 +952,22 @@ public static class PruebasMejoras
         inf.Cerca("getters nivel 0: MultiplicadorBotin", 1, CatalogoMejoras.MultiplicadorBotin, Tolerancia);
         inf.Verdadero("getters nivel 0: FuriaDesbloqueada es falso", !CatalogoMejoras.FuriaDesbloqueada);
         inf.Cerca("getters nivel 0: DuracionFuria", 0, CatalogoMejoras.DuracionFuria, Tolerancia);
+        inf.Verdadero("getters nivel 0: GranadaDesbloqueada es falso", !CatalogoMejoras.GranadaDesbloqueada);
+        inf.Cerca("getters nivel 0: ProbabilidadCritico", 0, CatalogoMejoras.ProbabilidadCritico, Tolerancia);
+        Progreso.DepurarFijarNivel(c.criticos.id, 5);
+        inf.Cerca("getters criticos 5: ProbabilidadCritico", 0.5f, CatalogoMejoras.ProbabilidadCritico, Tolerancia);
+        Progreso.DepurarFijarNivel(c.criticos.id, 0);
+        Progreso.DepurarFijarNivel(c.granada.id, 1);
+        inf.Verdadero("getters granada 1: GranadaDesbloqueada", CatalogoMejoras.GranadaDesbloqueada);
+        Progreso.DepurarFijarNivel(c.granada.id, 0);
+
+        // El modo libre se desbloquea al llegar a la oleada 12 (completar la 11).
+        inf.Verdadero("modo libre: sin oleadas bloqueado", !ModoLibre.DesbloqueadoCon(0));
+        inf.Verdadero("modo libre: completada la 10 bloqueado", !ModoLibre.DesbloqueadoCon(10));
+        inf.Verdadero("modo libre: completada la 11 (llego a la 12) libre", ModoLibre.DesbloqueadoCon(11));
+        inf.Verdadero("modo libre: completada la 30 libre", ModoLibre.DesbloqueadoCon(30));
+        inf.Igual("modo libre: sin progreso lleva a las oleadas", TiendaMejoras.EscenaOleadas, ModoLibre.EscenaPara(TiendaMejoras.EscenaModoLibre));
+        inf.Igual("modo libre: las oleadas no cambian", TiendaMejoras.EscenaOleadas, ModoLibre.EscenaPara(TiendaMejoras.EscenaOleadas));
 
         Progreso.DepurarFijarNivel(c.danoBala.id, 5);
         Progreso.DepurarFijarNivel(c.cadencia.id, 10);

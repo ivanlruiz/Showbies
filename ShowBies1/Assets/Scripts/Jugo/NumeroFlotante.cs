@@ -14,6 +14,8 @@ public class NumeroFlotante : MonoBehaviour
     public float dañoParaEscalaMaxima = 50f;  // desde este daño sale al doble de tamaño y con colorFuerte
     public Color colorDebil = Color.white;
     public Color colorFuerte = new Color(1f, 0.8f, 0.1f);
+    public Color colorCritico = new Color(1f, 0.22f, 0.12f);
+    public float escalaCritico = 1.7f;              // sobre la escala que le toca por el daño
 
     [System.NonSerialized] public System.Action<NumeroFlotante> alTerminar;
 
@@ -28,17 +30,18 @@ public class NumeroFlotante : MonoBehaviour
         texto = GetComponent<TextMeshPro>();
     }
 
-    public void Mostrar(Vector3 punto, int valor)
+    public void Mostrar(Vector3 punto, int valor, bool critico = false)
     {
         float fuerza = Mathf.Clamp01(valor / dañoParaEscalaMaxima);
-        color = Color.Lerp(colorDebil, colorFuerte, fuerza);
-        escala = escalaBase * (1f + fuerza);
+        color = critico ? colorCritico : Color.Lerp(colorDebil, colorFuerte, fuerza);
+        escala = escalaBase * (1f + fuerza) * (critico ? escalaCritico : 1f);
 
         transform.position = punto + new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f));
         velocidad = new Vector3(Random.Range(-1.2f, 1.2f), velocidadInicial, 0f);
         nacio = Time.time;
 
-        texto.SetText("{0}", valor);
+        if (critico) texto.SetText("{0}!", valor);
+        else texto.SetText("{0}", valor);
         gameObject.SetActive(true);
         Animar(0f);
     }

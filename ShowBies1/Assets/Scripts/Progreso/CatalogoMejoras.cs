@@ -32,6 +32,8 @@ public class CatalogoMejoras : ScriptableObject
     public Mejora iman;
     public Mejora botin;
     public Mejora furia;
+    public Mejora granada;
+    public Mejora criticos;
 
     [Header("Las tarjetas de la tienda, en orden")]
     public Mejora[] enTienda;
@@ -142,6 +144,28 @@ public class CatalogoMejoras : ScriptableObject
         }
     }
 
+    // La probabilidad de que una bala sea critica, de 0 a 1. El asset la guarda en
+    // porcentaje (0, 5, 10, 20... 100) porque es como se lee en la tarjeta.
+    public static float ProbabilidadCritico
+    {
+        get
+        {
+            CatalogoMejoras catalogo = Instancia;
+            if (catalogo == null || catalogo.criticos == null) return 0f;
+            return Mathf.Clamp01((float)catalogo.criticos.Valor(Progreso.Nivel(catalogo.criticos.id)) / 100f);
+        }
+    }
+
+    // La granada tambien se compra una sola vez: sin ella no hay boton G ni Espacio.
+    public static bool GranadaDesbloqueada
+    {
+        get
+        {
+            CatalogoMejoras catalogo = Instancia;
+            return catalogo != null && catalogo.granada != null && Progreso.Nivel(catalogo.granada.id) >= 1;
+        }
+    }
+
     public static float DuracionFuria
     {
         get
@@ -234,6 +258,8 @@ public class CatalogoMejoras : ScriptableObject
         RevisarTipada(iman, "iman", problemas);
         RevisarTipada(botin, "botin", problemas);
         RevisarTipada(furia, "furia", problemas);
+        RevisarTipada(granada, "granada", problemas);
+        RevisarTipada(criticos, "criticos", problemas);
 
         // Ids vacios o repetidos entre todas las mejoras distintas del catalogo:
         // dos mejoras con el mismo id compartirian el nivel guardado.
@@ -244,6 +270,8 @@ public class CatalogoMejoras : ScriptableObject
         SumarSiFalta(revisadas, iman);
         SumarSiFalta(revisadas, botin);
         SumarSiFalta(revisadas, furia);
+        SumarSiFalta(revisadas, granada);
+        SumarSiFalta(revisadas, criticos);
         if (enTienda != null)
         {
             for (int i = 0; i < enTienda.Length; i++) SumarSiFalta(revisadas, enTienda[i]);

@@ -359,7 +359,7 @@ public class EnemyController : MonoBehaviour
 
     private bool estaMuerto;
 
-    public void DanoZombi(float daño)
+    public void DanoZombi(float daño, bool critico = false)
     {
         // Dos golpes en el mismo paso de fisica llaman a esto dos veces con la vida
         // ya en cero (los eventos de colision del paso se despachan aunque el zombi
@@ -374,7 +374,7 @@ public class EnemyController : MonoBehaviour
 
         // El numero flotante va redondeado y nunca en 0: un 5,75 se lee como 6, y
         // una bala que pega tiene que mostrar algo.
-        Efectos.Golpe(transform.position + Vector3.up * (1f + escalaBase.y), Mathf.Max(1, Mathf.RoundToInt(daño)));
+        Efectos.Golpe(transform.position + Vector3.up * (1f + escalaBase.y), Mathf.Max(1, Mathf.RoundToInt(daño)), critico);
 
         // La barra aparece recien con el primer golpe que no mata.
         if (vidaActual > VidaResidual)

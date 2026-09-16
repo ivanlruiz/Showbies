@@ -15,10 +15,12 @@ Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
 - **Free mode** (`ShowBies1.unity`) — generación continua: cinco corrutinas paralelas, una por tipo de
   zombi, cada una con su intervalo. Sin final, pero se pone más difícil con el tiempo ("Nivel N" en el HUD).
 - **Wave mode** (`WaveMode.unity`) — oleadas que terminan al matar a todos sus zombis, cada una más grande
-  y con más tipos mezclados, y un jefe cada 10. Mismo mapa pero con las calles (`Ciudad`) encendidas.
+  y con más tipos mezclados, y un jefe cada 10. Mismo mapa que el libre (las calles del centro, `Ciudad`, se sacaron).
+
+**El modo libre se desbloquea** al llegar a la oleada 12 del modo oleadas (`ModoLibre`, ver Menú y modos).
 
 Es un **incremental**: las monedas que se juntan en las partidas se gastan en la **tienda de mejoras** del menú
-(daño de bala, cadencia, vida máxima, imán, botín y la furia), y las mejoras se aplican al empezar cada partida. Del otro lado,
+(daño de bala, cadencia, críticos, vida máxima, granada, imán, botín y la furia), y las mejoras se aplican al empezar cada partida. Del otro lado,
 los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos.
 
 ## Entorno
@@ -56,7 +58,7 @@ Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
 Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
-Assets/Mejoras/             ← las seis Mejora (.asset) y Resources/CatalogoMejoras
+Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMejoras
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
@@ -75,11 +77,20 @@ Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasM
 | 3 | `WaveMode.unity` | wave mode |
 | 4 | `Tutorial.unity` | tutorial jugable (opcional, desde el menú) |
 
-**Los índices están hardcodeados en el código** (`MainMenu.PlayGame` → 1, `MainMenu.GameModes` → 3,
+**Los índices están hardcodeados en el código** (`MainMenu.PlayGame` y `BotonModoLibre.Jugar` → 1, `MainMenu.GameModes` → 3,
 `MainMenu.Tutorial` → 4, `PlayerHealth` → 2, `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1,
 `TiendaMejoras.Jugar` → 1 o 3 y `TiendaMejoras.AbrirEnMenu` → 0, estos dos con las constantes `EscenaMenu`,
 `EscenaModoLibre` y `EscenaOleadas`).
 Reordenar Build Settings rompe la navegación en silencio.
+
+### Menú y modos
+
+**PLAY abre el panel de modos** (`GameModesMenu`: MODO LIBRE, OLEADAS y VOLVER); ya no hay botón GAME MODES. El modo
+libre está **bloqueado hasta llegar a la oleada 12** (`ModoLibre.OleadaParaDesbloquear`; llegar a la 12 es haber
+completado la 11, que es lo que guarda `Progreso.MejorOleada`). Bloqueado, `BotonModoLibre` lo pinta gris con
+"REACH WAVE 12" abajo y tocarlo lo hace temblar. **Todo lo que carga el libre pasa por `ModoLibre.EscenaPara`**, que
+manda a las oleadas si todavía no está: `MainMenu.PlayGame`, el final del tutorial, el ¡A JUGAR! de la tienda y el
+OTRA VEZ de la derrota. Si agregás otro camino al libre, pasalo por ahí.
 
 ### Tutorial
 
@@ -206,6 +217,11 @@ sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
 
 ## Granada
 
+**La granada se compra** (la mejora `granada`, 250 monedas, tope 1). Sin comprarla `PlayerController.GranadaDesbloqueada`
+es falso (lo fija `AplicarMejoras`): `GranadaLista` da falso, Espacio no apunta y el botón G se esconde con un
+`CanvasGroup` (`JoystickGranada.LateUpdate`, no apagando el objeto). El tutorial la prende en su `Start`, porque la
+enseña. Una escena sin `AplicarMejoras` la tiene siempre.
+
 `PlayerController.ThrowGranade` (Espacio en PC, botón G en móvil, con `granadaCooldown` de 5 s) instancia
 `Granada.prefab` y llama a `Granade.Lanzar(destino)`.
 
@@ -242,8 +258,8 @@ en la partida. `Furia` (`Assets/Scripts/Jugador/`, en la raíz de `Jugador.prefa
   activa. Mientras dura: cadencia ×2 y daño ×2 por un multiplicador aparte del arma (`GunController.FijarFuria`, que
   se multiplica con la caja y respeta el techo de `maxTirosPorSegundo`) y velocidad ×1,3
   (`PlayerController.multiplicadorVelocidad`). Esos números están en el componente del prefab.
-- **Jugo** (`Efectos.EmpezarFuria`): cartel "¡FURIA!" con rebote, chispas, temblor, una pausa de impacto corta, la
-  música más aguda y el borde rojo latiendo mientras dura. El botón respira cuando está lista, vibra mientras dura y
+- **Jugo** (`Efectos.EmpezarFuria`): cartel "¡FURIA!" con rebote, chispas, temblor, una pausa de impacto corta y el
+  borde rojo latiendo mientras dura. El botón respira cuando está lista, vibra mientras dura y
   cuenta los segundos del enfriamiento.
 - `GunController.DanoPorBala` sigue siendo el de la mejora (lo miran el medidor y las pruebas); lo que lleva cada bala
   es `DanoPorTiro`.
@@ -379,7 +395,9 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 |---|---|---|---|---|---|
 | Daño de bala | `dano_bala` | 40 | ×1,45 | — | 1 × (1 + nivel) por bala |
 | Cadencia | `cadencia` | 50 | ×1,45 | 16 | 4 × (1 + 0,25 × nivel) tiros/s (de 4 a 20) |
+| Golpes críticos | `criticos` | 150 | ×1,8 | 8 | probabilidad de daño ×2 por bala: 0, 5, 10, 20, 30, 50, 75, 90 y 100 % (`valoresPorNivel`) |
 | Vida máxima | `vida_maxima` | 40 | ×1,45 | — | 80 × (1 + 0,25 × nivel) |
+| Granada | `granada` | 250 | — | 1 | desbloquea la granada (ver Granada) |
 | Imán | `iman` | 30 | ×1,5 | 13 | sin comprar no hay; 2 × (1 + 0,25 × (nivel − 1)) m (de 2 a 8) |
 | Botín | `botin` | 120 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
 | Furia | `furia` | 5.000 | — | 1 | desbloquea el botón de furia: 6 s de cadencia y daño ×2 (ver Furia) |
@@ -388,6 +406,11 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   1, tiene 80 de vida y no tiene imán (junta las monedas pasándoles por encima). Lo que lo hace fuerte son las compras, y por eso los primeros precios
   son bajos: la primera partida tiene que alcanzar para una o dos. El daño y la cadencia suben de a uno para que
   cada compra se lea en la tarjeta ("1 → 2") y en los números de daño.
+- **Golpes críticos**: cada bala sortea al salir (`GunController.EsCritico`, con el 100 % tratado aparte porque
+  `Random.value` puede dar 1) y la crítica lleva `DanoPorTiro × multiplicadorCritico` (2). La bala marca `critico` y el
+  número de daño sale rojo, más grande y con "!", con el doble de chispas y el golpe más agudo. La granada no tira
+  críticos. **`Mejora.valoresPorNivel`**: si tiene valores, el nivel N vale el elemento N y la fórmula se ignora; el
+  formato `Porcentaje` lo escribe "5%".
 - **`Mejora.arrancaEnCero`**: sin comprar vale 0 y el nivel 1 vale `valorBase`. El tope se aplica antes de correr el
   nivel, así un nivel guardado de más no pasa del máximo. Lo usa el imán: sin comprarlo no hay imán.
 - **Precio** = `floor(precioInicial × crecimiento^nivel + 0,5 + 1e-9)`. El `+1e-9` no es decorativo: en double
@@ -524,7 +547,7 @@ Boton            <- Button + BotonJugoso (la raiz recibe el toque y no se anima)
 ```
 
 El color dice que hace cada uno: **verde** lo que te devuelve al juego (PLAY, PLAY AGAIN, RESUME, ENDLESS),
-**dorado** la tienda (UPGRADES) y el idioma elegido, **azul** lo que cambia de modo (GAME MODES, RESTART),
+**dorado** la tienda (UPGRADES) y el idioma elegido, **azul** lo que cambia de modo (RESTART),
 **naranja** las oleadas, **gris** lo secundario (TUTORIAL, QUIT, MENU, BACK, NO THANKS).
 
 **El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
@@ -536,7 +559,7 @@ trampa).
 - **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
   record chicos, el renglon de la oferta de video o el aviso de compras, y abajo los tres botones. Si la partida
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`).
-- **Menu**: el nombre del juego arriba, cinco botones con PLAY primero y QUIT ultimo, el globo del idioma arriba a
+- **Menu**: el nombre del juego arriba, cuatro botones (PLAY, UPGRADES, TUTORIAL, QUIT), el globo del idioma arriba a
   la izquierda y las monedas arriba a la derecha.
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
@@ -626,8 +649,8 @@ que sin `Efectos` instancia las partículas del zombi como antes.
   distancia, tamaño y velocidad contra el prefab original, que se ve igual. **Si un prefab de explosión deja de ser
   una sola ráfaga fija sin loop** (emisión continua, sistemas hijos, gravedad, ruido, fuerzas, colisiones, escala
   despareja) `CrearCopiaDeMuerte` no lo acepta y se instancia como antes; si le cambiás otra cosa, volvé a comparar.
-- **Música de partida**: un loop de 32 s en la bemol mayor en el `AudioSource` del prefab (Vorbis, comprimida en
-  memoria). La música y los sonidos nuevos están sintetizados y son provisorios.
+- **Sin música en la partida** (pedido de Ivan): el `AudioSource` del prefab quedó sin clip. `Assets/otros/musica.wav`
+  (el loop de 32 s en la bemol mayor) sigue en el proyecto sin uso. Los sonidos nuevos están sintetizados y son provisorios.
 
 ## Persistencia
 
@@ -718,7 +741,7 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   AA ni anisotrópico, texturas a mitad de resolución (`globalTextureMipmapLimit = 1`; las del piso
   son 4K). El editor corre en Ultra, así que **lo que ves en el editor no es lo que ve el teléfono**.
 - Las cámaras de las escenas de juego tienen HDR y MSAA apagados (sin post-proceso no aportan nada),
-  y todo lo estático está marcado `BatchingStatic` (las 80 calles de WaveMode eran 80 draw calls).
+  y todo lo estático está marcado `BatchingStatic`.
 - Los generadores usan `maxZombisVivosMovil` (35) en vez de 60 cuando `Plataforma.EsMovil`.
 - Los Animators de los zombis están en **Cull Update Transforms**: fuera de pantalla no
   mueven huesos. El rápido tiene **dos** Animators: el que tiene el esqueleto usa el controller y el avatar del

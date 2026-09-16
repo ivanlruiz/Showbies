@@ -111,14 +111,17 @@ public class Efectos : MonoBehaviour
     }
 
     // Cualquier daño a un zombi, mate o no: el numero, unas chispas y un tic.
-    public static void Golpe(Vector3 punto, int daño)
+    // Un critico se tiene que notar: numero rojo, mas grande y con "!", el doble de
+    // chispas y el golpe mas agudo.
+    public static void Golpe(Vector3 punto, int daño, bool critico = false)
     {
         var e = instance;
         if (e == null) return;
 
-        e.Emitir(punto, e.chispasPorGolpe);
-        e.MostrarNumero(punto, daño);
-        Sonidos.Tocar(e.golpe, 0.35f, 1f, 0.15f, 0.05f);
+        e.Emitir(punto, critico ? e.chispasPorGolpe * 2 : e.chispasPorGolpe);
+        e.MostrarNumero(punto, daño, critico);
+        if (critico) Sonidos.Tocar(e.golpe, 0.5f, 1.35f, 0.1f, 0.04f);
+        else Sonidos.Tocar(e.golpe, 0.35f, 1f, 0.15f, 0.05f);
     }
 
     // Un zombi que muere. Las muertes grandes (tanque y jefe) sacuden la camara y
@@ -353,7 +356,7 @@ public class Efectos : MonoBehaviour
 
     // Los numeros salen de un pool con techo: si ya hay maxNumeros en pantalla,
     // el golpe nuevo no muestra numero en vez de crear otro.
-    private void MostrarNumero(Vector3 punto, int valor)
+    private void MostrarNumero(Vector3 punto, int valor, bool critico)
     {
         if (numeroPrefab == null) return;
 
@@ -365,6 +368,6 @@ public class Efectos : MonoBehaviour
             numero = Instantiate(numeroPrefab, transform);
             numero.alTerminar = numerosLibres.Push;
         }
-        numero.Mostrar(punto, valor);
+        numero.Mostrar(punto, valor, critico);
     }
 }

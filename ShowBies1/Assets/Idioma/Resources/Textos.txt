@@ -18,6 +18,7 @@ menu_tutorial	TUTORIAL	TUTORIAL
 menu_salir	QUIT	SALIR
 modo_libre	ENDLESS	MODO LIBRE
 modo_oleadas	WAVES	OLEADAS
+modo_libre_bloqueado	REACH WAVE {0}	LLEGA A LA OLEADA {0}
 comun_volver	BACK	VOLVER
 idioma_titulo	LANGUAGE	IDIOMA
 
@@ -47,6 +48,10 @@ mejora_botin_nombre	LOOT	BOTÍN
 mejora_botin_unidad	coins per zombie	monedas por zombi
 mejora_furia_nombre	RAGE	FURIA
 mejora_furia_unidad	seconds of rage	segundos de furia
+mejora_granada_nombre	GRENADE	GRANADA
+mejora_granada_unidad	grenade every 5 s	granada cada 5 s
+mejora_criticos_nombre	CRITICAL HITS	GOLPES CRÍTICOS
+mejora_criticos_unidad	chance of double damage	probabilidad de daño doble
 
 # --- HUD y partida
 hud_monedas	<size=55%>COINS</size>  {0}	<size=55%>MONEDAS</size>  {0}

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 public enum CrecimientoEfecto { Aditivo, Multiplicativo }
-public enum FormatoValor { Entero, UnDecimal, Multiplicador }
+public enum FormatoValor { Entero, UnDecimal, Multiplicador, Porcentaje }
 public enum EstadoMejora { Comprable, SinMonedas, EnTope, Invalida }
 public enum ResultadoCompra { Comprada, SinMonedas, EnTope, Invalida }
 
@@ -45,6 +45,9 @@ public class Mejora : ScriptableObject
     [Tooltip("Sin comprarla no hay efecto (vale 0) y el nivel 1 vale valorBase. Para mejoras que se desbloquean, como el iman.")]
     public bool arrancaEnCero;
     public FormatoValor formato = FormatoValor.UnDecimal;
+    [Tooltip("Si tiene valores, el efecto sale de esta tabla y no de la formula: el nivel N vale el elemento N "
+        + "(el 0 es sin comprar). Para mejoras con saltos a mano, como los criticos.")]
+    public double[] valoresPorNivel;
 
     // Techo del precio: sin tope, un crecimiento exponencial termina en infinito
     // y un precio infinito rompe las comparaciones y el texto.
@@ -88,6 +91,8 @@ public class Mejora : ScriptableObject
     public double Valor(int nivel)
     {
         int n = NivelEfectivo(nivel);
+        if (valoresPorNivel != null && valoresPorNivel.Length > 0)
+            return valoresPorNivel[Mathf.Min(n, valoresPorNivel.Length - 1)];
         if (arrancaEnCero) return n == 0 ? 0 : valorBase * Multiplicador(n - 1);
         return valorBase * Multiplicador(n);
     }
@@ -99,6 +104,7 @@ public class Mejora : ScriptableObject
         {
             case FormatoValor.Entero: return FormatoNumeros.ConDecimales(valor, 0);
             case FormatoValor.Multiplicador: return "×" + FormatoNumeros.ConDecimales(valor, 1);
+            case FormatoValor.Porcentaje: return FormatoNumeros.ConDecimales(valor, 0) + "%";
             default: return FormatoNumeros.ConDecimales(valor, 1);
         }
     }

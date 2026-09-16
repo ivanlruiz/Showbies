@@ -18,10 +18,14 @@ MonoBehaviour:
   iman: {fileID: 11400000, guid: 9f712a1340a94b3597549052af20d86c, type: 2}
   botin: {fileID: 11400000, guid: d845f5c2ccc3de046af97aab89a17776, type: 2}
   furia: {fileID: 11400000, guid: 42e8f0d95e46a5c49aa50bd305607e96, type: 2}
+  granada: {fileID: 11400000, guid: c79f0fac2130489e89d06faff27260b8, type: 2}
+  criticos: {fileID: 11400000, guid: 656152a2085343e9b557f3ca8aab2c44, type: 2}
   enTienda:
   - {fileID: 11400000, guid: 55afd5d7130ea854580738fc3a66a597, type: 2}
   - {fileID: 11400000, guid: c52b8cf4b6e96c64ea403274e850e703, type: 2}
+  - {fileID: 11400000, guid: 656152a2085343e9b557f3ca8aab2c44, type: 2}
   - {fileID: 11400000, guid: 5e1cea42ee215ce4e9d387e04e90b237, type: 2}
+  - {fileID: 11400000, guid: c79f0fac2130489e89d06faff27260b8, type: 2}
   - {fileID: 11400000, guid: 9f712a1340a94b3597549052af20d86c, type: 2}
   - {fileID: 11400000, guid: d845f5c2ccc3de046af97aab89a17776, type: 2}
   - {fileID: 11400000, guid: 42e8f0d95e46a5c49aa50bd305607e96, type: 2}

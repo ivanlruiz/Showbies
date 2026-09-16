@@ -12,6 +12,7 @@ public class BulletController : MonoBehaviour
     // de daño. No se serializa: si se guardara en el prefab, el primer tiro de la
     // partida siguiente arrancaría con el daño de la anterior.
     [System.NonSerialized] public float danoAplicado;
+    [System.NonSerialized] public bool critico;   // lo decide el arma al dispararla; cambia el numero que se ve
 
     // Pool de balas.
     //
@@ -52,6 +53,7 @@ public class BulletController : MonoBehaviour
         bala.lifeTime = bala.lifeTimeInicial;
         // El del prefab por si quien la pide no pone otro; GunController lo pisa.
         bala.danoAplicado = prefab.dañoDar;
+        bala.critico = false;
         bala.enUso = true;
         return bala;
     }
@@ -111,7 +113,7 @@ public class BulletController : MonoBehaviour
         EnemyController zombi = other.gameObject.GetComponentInParent<EnemyController>(true);
         if (zombi == null) return;
 
-        zombi.DanoZombi(danoAplicado);
+        zombi.DanoZombi(danoAplicado, critico);
         Devolver();
     }
 }

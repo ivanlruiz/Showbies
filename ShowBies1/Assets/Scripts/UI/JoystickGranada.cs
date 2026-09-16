@@ -21,9 +21,28 @@ public class JoystickGranada : MonoBehaviour, IPointerDownHandler, IDragHandler,
     private bool apretado;
     private bool apunto;
 
+    private CanvasGroup grupo;
+    private bool visible = true;
+
     private void Awake()
     {
         canvas = GetComponentInParent<Canvas>().rootCanvas;
+        grupo = GetComponent<CanvasGroup>();
+        if (grupo == null) grupo = gameObject.AddComponent<CanvasGroup>();
+    }
+
+    // Sin comprar la granada el boton no se ve ni recibe toques. Se esconde con un
+    // CanvasGroup y no apagando el objeto: el tutorial la prende en su Start, y un
+    // objeto apagado no volveria a mirar.
+    private void LateUpdate()
+    {
+        bool mostrar = jugador != null && jugador.GranadaDesbloqueada;
+        if (mostrar == visible) return;
+        visible = mostrar;
+        grupo.alpha = mostrar ? 1f : 0f;
+        grupo.blocksRaycasts = mostrar;
+        grupo.interactable = mostrar;
+        if (!mostrar) apretado = false;
     }
 
     public void OnPointerDown(PointerEventData eventData)

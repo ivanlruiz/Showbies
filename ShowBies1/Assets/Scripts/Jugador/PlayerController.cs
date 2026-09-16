@@ -43,6 +43,11 @@ public class PlayerController : MonoBehaviour
     private float granadaDisponibleEn;
     private LineRenderer punteroGranada;
 
+    // Si se puede tirar granadas: la fija AplicarMejoras con la compra de la tienda
+    // (y el tutorial la prende). Arranca en verdadero para que una escena sin
+    // AplicarMejoras siga teniendo granada.
+    public bool GranadaDesbloqueada { get; set; } = true;
+
     // Segundos que faltan para poder tirar otra granada. Lo muestra el boton de granada.
     public float GranadaRestante { get { return Mathf.Max(0f, granadaDisponibleEn - Time.time); } }
 
@@ -232,7 +237,7 @@ public class PlayerController : MonoBehaviour
 
     public bool GranadaLista
     {
-        get { return granadaPrefab != null && !MenuPausa.Pausado && Time.time >= granadaDisponibleEn; }
+        get { return GranadaDesbloqueada && granadaPrefab != null && !MenuPausa.Pausado && Time.time >= granadaDisponibleEn; }
     }
 
     private void LanzarGranadaA(Vector3 destino)
