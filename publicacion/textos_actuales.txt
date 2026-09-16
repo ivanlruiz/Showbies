@@ -1,0 +1,130 @@
+# Inventario de textos del juego (2026-09-16)
+#
+# Generado recorriendo escenas y prefabs: cada TMP_Text con texto escrito a mano.
+# Es la base para la traduccion a ingles. Faltan en esta lista, y hay que sumarlos:
+#   - los textos que arma el codigo (Score, highscoretext, Puntaje, ContadorMonedas,
+#     TextoMonedasPartida, BotonMejoras, TarjetaMejora, WaveManager, OfertaDeDuplicar,
+#     BotonFuria, ProveedorFalso)
+#   - el nombre y la unidad de las seis mejoras, en Assets/Mejoras/*.asset
+#   - los seis pasos del tutorial, en TutorialManager (dos versiones cada uno: PC y movil)
+
+== ESCENAS ==
+
+--- Menu
+  Main Menu/BG/Titulo  =  "SHOWBIES"
+  Main Menu/MainMenu/Play/Visual/Texto  =  "JUGAR"
+  Main Menu/MainMenu/Mejoras/Visual/Texto  =  "MEJORAS"
+  Main Menu/MainMenu/Quit/Visual/Texto  =  "SALIR"
+  Main Menu/MainMenu/GameModes/Visual/Texto  =  "MODOS DE JUEGO"
+  Main Menu/MainMenu/Tutorial/Visual/Texto  =  "TUTORIAL"
+  Main Menu/GameModesMenu/FreeMode/Visual/Texto  =  "MODO LIBRE"
+  Main Menu/GameModesMenu/WaveMode/Visual/Texto  =  "OLEADAS"
+  Main Menu/GameModesMenu/Back/Visual/Texto  =  "VOLVER"
+  Tienda/Panel/AreaSegura/Encabezado/BotonVolver/Visual/Texto  =  "VOLVER"
+  Tienda/Panel/AreaSegura/Encabezado/Titulo/Sombra  =  "MEJORAS"
+  Tienda/Panel/AreaSegura/Encabezado/Titulo/Texto  =  "MEJORAS"
+  Tienda/Panel/AreaSegura/Pie/BotonJugar/Visual/Texto  =  "¡A JUGAR!"
+
+--- ShowBies1
+  Canvas/CanvasHelper/Textos/R  =  "R  REINICIAR"
+  Canvas/CanvasHelper/Textos/Puntos:  =  "Puntos: "
+  Canvas/CanvasHelper/Textos/Balas  =  "<size=100%>500</size> <size=60%><voffset=em>/500</voffset></size>"
+  Canvas/CanvasHelper/Textos/ContadorFps  =  "-- FPS"
+  Canvas/CanvasHelper/Textos/Monedas  =  "Monedas: 0"
+  Canvas/CanvasHelper/Textos/Combo  =  "COMBO x3"
+  Canvas/CanvasHelper/Textos/Nivel  =  "Nivel 1"
+  Canvas/CanvasHelper/BotonGranada/Etiqueta  =  "G"
+  Canvas/CanvasHelper/BotonFuria/Boton/Visual/Etiqueta  =  "FURIA"
+  Canvas/CanvasHelper/BotonFuria/Cartel  =  "¡FURIA!"
+  MenuPausa/AreaSegura/BotonPausa/Texto  =  "II"
+  MenuPausa/Panel/Titulo  =  "PAUSA"
+  MenuPausa/Panel/BotonContinuar/Visual/Texto  =  "CONTINUAR"
+  MenuPausa/Panel/BotonReiniciar/Visual/Texto  =  "REINICIAR"
+  MenuPausa/Panel/BotonMenu/Visual/Texto  =  "MENÚ PRINCIPAL"
+  OfertaRevivir/Panel/Ventana/Titulo  =  "¡HAS MUERTO!"
+  OfertaRevivir/Panel/Ventana/Bajada  =  "Mirá un video y seguí jugando"
+  OfertaRevivir/Panel/Ventana/BotonNo/Texto  =  "NO, GRACIAS"
+
+--- Perdiste
+  Menu/Canvas/BG/Perdiste  =  "PERDISTE"
+  Menu/Canvas/BG/HighScore  =  "Highscore:"
+  Menu/Canvas/BG/Score  =  "Score:"
+  Menu/Canvas/BG/Monedas  =  "+0 monedas  (total 0)"
+  Menu/Canvas/BG/AvisoCompras  =  "¡Te alcanza para una mejora!"
+  Menu/Canvas/BG/OfertaVideo/Visual/Texto  =  "VER VIDEO: +0 MONEDAS"
+  Menu/Canvas/BG/Mejoras/Visual/Texto  =  "MEJORAS"
+  Menu/Canvas/BG/AvisoDescanso  =  "Llevás más de una hora jugando. Un descanso viene bien."
+  Menu/Canvas/BG/Jugar/Visual/Texto  =  "OTRA VEZ"
+  Menu/Canvas/BG/AlMenu/Visual/Texto  =  "MENÚ"
+
+--- WaveMode
+  Canvas/CanvasHelper/Textos/R  =  "R  REINICIAR"
+  Canvas/CanvasHelper/Textos/Puntos:  =  "Wave 1 "
+  Canvas/CanvasHelper/Textos/Balas  =  "<size=100%>500</size> <size=60%><voffset=em>/500</voffset></size>"
+  Canvas/CanvasHelper/Textos/ContadorFps  =  "-- FPS"
+  Canvas/CanvasHelper/Textos/Oleada  =  "Oleada 1\n<size=75%>Zombis 0/8</size>"
+  Canvas/CanvasHelper/Textos/CartelOleada  =  "Oleada 1"
+  Canvas/CanvasHelper/Textos/Monedas  =  "Monedas: 0"
+  Canvas/CanvasHelper/Textos/Combo  =  "COMBO x3"
+  Canvas/CanvasHelper/BotonGranada/Etiqueta  =  "G"
+  Canvas/CanvasHelper/BotonFuria/Boton/Visual/Etiqueta  =  "FURIA"
+  Canvas/CanvasHelper/BotonFuria/Cartel  =  "¡FURIA!"
+  MenuPausa/AreaSegura/BotonPausa/Texto  =  "II"
+  MenuPausa/Panel/Titulo  =  "PAUSA"
+  MenuPausa/Panel/BotonContinuar/Visual/Texto  =  "CONTINUAR"
+  MenuPausa/Panel/BotonReiniciar/Visual/Texto  =  "REINICIAR"
+  MenuPausa/Panel/BotonMenu/Visual/Texto  =  "MENÚ PRINCIPAL"
+  OfertaRevivir/Panel/Ventana/Titulo  =  "¡HAS MUERTO!"
+  OfertaRevivir/Panel/Ventana/Bajada  =  "Mirá un video y seguí jugando"
+  OfertaRevivir/Panel/Ventana/BotonNo/Texto  =  "NO, GRACIAS"
+
+--- Tutorial
+  Canvas/CanvasHelper/Textos/R  =  "Press "R" to Restart"
+  Canvas/CanvasHelper/Textos/Puntos:  =  "Puntos: "
+  Canvas/CanvasHelper/Textos/Balas  =  "<size=100%>500</size> <size=60%><voffset=em>/500</voffset></size>"
+  Canvas/CanvasHelper/Textos/PanelFinal/Titulo  =  "¡Eso es todo! Ya sabés jugar."
+  Canvas/CanvasHelper/Textos/PanelFinal/BotonJugar/Texto  =  "Jugar"
+  Canvas/CanvasHelper/Textos/PanelFinal/BotonMenu/Texto  =  "Menú"
+  Canvas/CanvasHelper/Textos/ContadorFps  =  "-- FPS"
+  Canvas/CanvasHelper/Textos/Combo  =  "COMBO x3"
+  Canvas/CanvasHelper/BotonGranada/Etiqueta  =  "G"
+  MenuPausa/AreaSegura/BotonPausa/Texto  =  "II"
+  MenuPausa/Panel/Titulo  =  "PAUSA"
+  MenuPausa/Panel/BotonContinuar/Visual/Texto  =  "CONTINUAR"
+  MenuPausa/Panel/BotonReiniciar/Visual/Texto  =  "REINICIAR"
+  MenuPausa/Panel/BotonMenu/Visual/Texto  =  "MENÚ PRINCIPAL"
+
+== PREFABS ==
+
+--- BotonFuria
+  Boton/Visual/Etiqueta  =  "FURIA"
+  Cartel  =  "¡FURIA!"
+
+--- MenuPausa
+  AreaSegura/BotonPausa/Texto  =  "II"
+  Panel/Titulo  =  "PAUSA"
+  Panel/BotonContinuar/Visual/Texto  =  "CONTINUAR"
+  Panel/BotonReiniciar/Visual/Texto  =  "REINICIAR"
+  Panel/BotonMenu/Visual/Texto  =  "MENÚ PRINCIPAL"
+
+--- OfertaRevivir
+  Panel/Ventana/Titulo  =  "¡HAS MUERTO!"
+  Panel/Ventana/Bajada  =  "Mirá un video y seguí jugando"
+  Panel/Ventana/BotonNo/Texto  =  "NO, GRACIAS"
+
+--- TarjetaMejora
+  Contenido/Icono/Simbolo  =  "D"
+  Contenido/Nombre  =  "DAÑO DE BALA"
+  Contenido/Nivel  =  "NIVEL 0"
+  Contenido/Descripcion  =  "daño por bala"
+  Contenido/Faltan  =  "faltan 10"
+  Contenido/Boton/Visual/TextoTope  =  "MÁX"
+  Contenido/Estampa  =  "¡MÁXIMO!"
+
+--- Tienda
+  Panel/AreaSegura/Encabezado/BotonVolver/Visual/Texto  =  "VOLVER"
+  Panel/AreaSegura/Encabezado/Titulo/Sombra  =  "MEJORAS"
+  Panel/AreaSegura/Encabezado/Titulo/Texto  =  "MEJORAS"
+  Panel/AreaSegura/Pie/BotonJugar/Visual/Texto  =  "¡A JUGAR!"
+
+TOTAL de textos escritos a mano: 95
