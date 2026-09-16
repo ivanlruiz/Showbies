@@ -174,6 +174,9 @@ public static class PruebasMejoras
         }
 
         var temporales = new List<Mejora>();
+        // Los textos y numeros esperados de abajo estan en espaniol; el idioma real
+        // del editor se devuelve en el finally.
+        Idioma.UsarParaPruebas(Lengua.Espanol);
         try
         {
             var catalogo = CatalogoMejoras.Instancia;
@@ -188,6 +191,7 @@ public static class PruebasMejoras
                 ProbarValores(informe, catalogo);
             }
             ProbarFormatoNumeros(informe);
+            ProbarIdiomas(informe);
             ProbarEscalado(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
@@ -224,6 +228,7 @@ public static class PruebasMejoras
             {
                 if (m != null) Object.DestroyImmediate(m);
             }
+            Idioma.UsarParaPruebas(null);
         }
 
         return informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
@@ -431,6 +436,180 @@ public static class PruebasMejoras
         inf.Igual("ConDecimales(8,745; 1)", "8,7", FormatoNumeros.ConDecimales(8.745, 1));
         inf.Igual("ConDecimales(229,99; 0)", "230", FormatoNumeros.ConDecimales(229.99, 0));
         inf.Igual("ConDecimales(1234,56; 1)", "1.235", FormatoNumeros.ConDecimales(1234.56, 1));
+        inf.Igual("Compacto(1234) en espaniol", "1.234", FormatoNumeros.Compacto(1234));
+        inf.Igual("Compacto(123456) en espaniol", "123 K", FormatoNumeros.Compacto(123456));
+        inf.Igual("Compacto(4,5 M) en espaniol", "4,5 M", FormatoNumeros.Compacto(4500000));
+        inf.Igual("Compacto(2,3 MM) en espaniol", "2,3 MM", FormatoNumeros.Compacto(2300000000));
+
+        // En ingles cambian los dos separadores y los sufijos: "1.234" en ingles se
+        // lee "uno coma dos".
+        Idioma.UsarParaPruebas(Lengua.Ingles);
+        try
+        {
+            inf.Igual("ConDecimales(5,75; 1) en ingles", "5.8", FormatoNumeros.ConDecimales(5.75, 1));
+            inf.Igual("ConDecimales(1234,56; 1) en ingles", "1,235", FormatoNumeros.ConDecimales(1234.56, 1));
+            inf.Igual("Compacto(1234) en ingles", "1,234", FormatoNumeros.Compacto(1234));
+            inf.Igual("Compacto(99999) en ingles", "99,999", FormatoNumeros.Compacto(99999));
+            inf.Igual("Compacto(123456) en ingles", "123K", FormatoNumeros.Compacto(123456));
+            inf.Igual("Compacto(4,5 M) en ingles", "4.5M", FormatoNumeros.Compacto(4500000));
+            inf.Igual("Compacto(2,3 B) en ingles", "2.3B", FormatoNumeros.Compacto(2300000000));
+        }
+        finally
+        {
+            Idioma.UsarParaPruebas(Lengua.Espanol);
+        }
+    }
+
+    // Los idiomas: el valor por defecto, la tabla de textos entera y que todo lo que
+    // la usa (el codigo y los TextoTraducido de escenas y prefabs) pida ids que existen.
+    static void ProbarIdiomas(Informe inf)
+    {
+        inf.Verdadero("idioma: por defecto es ingles", Idioma.PorDefecto == Lengua.Ingles);
+        inf.Verdadero("idioma: sin nada guardado arranca en ingles", Idioma.DesdeCodigo("") == Lengua.Ingles);
+        inf.Verdadero("idioma: null arranca en ingles", Idioma.DesdeCodigo(null) == Lengua.Ingles);
+        inf.Verdadero("idioma: un codigo desconocido arranca en ingles", Idioma.DesdeCodigo("fr") == Lengua.Ingles);
+        inf.Verdadero("idioma: \"es\" es espaniol", Idioma.DesdeCodigo("es") == Lengua.Espanol);
+        inf.Verdadero("idioma: el codigo va y vuelve", Idioma.DesdeCodigo(Idioma.Codigo(Lengua.Espanol)) == Lengua.Espanol);
+
+        int antes = Idioma.Revision;
+        Idioma.Cambiar(Lengua.Ingles);
+        inf.Verdadero("idioma: cambiar sube la revision", Idioma.Revision > antes);
+        antes = Idioma.Revision;
+        Idioma.Cambiar(Lengua.Ingles);
+        inf.Igual("idioma: cambiar al mismo no sube la revision", antes, Idioma.Revision);
+        Idioma.UsarParaPruebas(Lengua.Espanol);
+
+        // La lectura, con una tabla armada: columnas en otro orden, comentarios,
+        // saltos de linea escapados y un id repetido que no pisa al primero.
+        var leida = new Dictionary<string, string[]>();
+        var problemas = new List<string>();
+        Textos.Leer("# comentario\nid\tes\ten\n\nhola\tHola\tHello\nsalto\tuno\\ndos\tone\\ntwo\nhola\tOtra\tOther\n", leida, problemas.Add);
+        inf.Igual("textos: un id repetido se avisa", 1, problemas.Count);
+        inf.Igual("textos: la lectura saltea comentarios y lineas vacias", 2, leida.Count);
+        inf.Igual("textos: la columna se busca por su codigo", "Hello",
+                  leida.ContainsKey("hola") ? leida["hola"][(int)Lengua.Ingles] : null);
+        inf.Igual("textos: un id repetido no pisa al primero", "Hola",
+                  leida.ContainsKey("hola") ? leida["hola"][(int)Lengua.Espanol] : null);
+        inf.Igual("textos: \\n es un salto de linea", "uno\ndos",
+                  leida.ContainsKey("salto") ? leida["salto"][(int)Lengua.Espanol] : null);
+
+        // La tabla de verdad.
+        Textos.Recargar();
+        var ids = new List<string>(Textos.Ids);
+        if (!inf.Verdadero("textos: la tabla existe y tiene textos (" + ids.Count + ")", ids.Count >= 60)) return;
+
+        var marcador = new System.Text.RegularExpressions.Regex(@"\{(\d+)[^}]*\}");
+        int incompletos = 0, desparejos = 0;
+        foreach (string id in ids)
+        {
+            string en = Textos.Crudo(id, Lengua.Ingles);
+            string es = Textos.Crudo(id, Lengua.Espanol);
+            if (string.IsNullOrEmpty(en) || string.IsNullOrEmpty(es))
+            {
+                inf.Falla("textos: \"" + id + "\" no tiene los dos idiomas");
+                incompletos++;
+                continue;
+            }
+
+            // Un {1} que falta en un idioma tira una excepcion en plena partida.
+            var enNumeros = new SortedSet<string>();
+            foreach (System.Text.RegularExpressions.Match m in marcador.Matches(en)) enNumeros.Add(m.Groups[1].Value);
+            var esNumeros = new SortedSet<string>();
+            foreach (System.Text.RegularExpressions.Match m in marcador.Matches(es)) esNumeros.Add(m.Groups[1].Value);
+            if (!enNumeros.SetEquals(esNumeros))
+            {
+                inf.Falla("textos: \"" + id + "\" no tiene los mismos {n} en los dos idiomas");
+                desparejos++;
+            }
+        }
+        inf.Igual("textos: todos tienen los dos idiomas", 0, incompletos);
+        inf.Igual("textos: todos tienen los mismos {n} en los dos idiomas", 0, desparejos);
+
+        var existentes = new HashSet<string>(ids);
+
+        // Los ids que pide el codigo: Textos.De("..."), Textos.Formato("...", ...) y los
+        // que se arman con el id de una mejora.
+        // Solo los ids escritos enteros: "mejora_" + id se prueba aparte, con el catalogo.
+        var pedido = new System.Text.RegularExpressions.Regex(@"Textos\.(?:De|Formato)\(\s*""([a-z0-9_]+)""\s*[,)]");
+        int enCodigo = 0, faltanEnCodigo = 0;
+        foreach (string archivo in Directory.GetFiles(Path.Combine(Application.dataPath, "Scripts"), "*.cs", SearchOption.AllDirectories))
+        {
+            foreach (System.Text.RegularExpressions.Match m in pedido.Matches(File.ReadAllText(archivo)))
+            {
+                enCodigo++;
+                if (existentes.Contains(m.Groups[1].Value)) continue;
+                inf.Falla("textos: " + Path.GetFileName(archivo) + " pide \"" + m.Groups[1].Value + "\", que no esta en la tabla");
+                faltanEnCodigo++;
+            }
+        }
+        inf.Verdadero("textos: el codigo pide textos (" + enCodigo + ")", enCodigo > 0);
+        inf.Igual("textos: todo lo que pide el codigo existe", 0, faltanEnCodigo);
+
+        var catalogo = CatalogoMejoras.Instancia;
+        if (catalogo != null)
+        {
+            int faltanMejoras = 0;
+            foreach (var mejora in catalogo.enTienda)
+            {
+                if (mejora == null) continue;
+                foreach (string parte in new[] { "_nombre", "_unidad" })
+                {
+                    string id = "mejora_" + mejora.id + parte;
+                    if (existentes.Contains(id)) continue;
+                    inf.Falla("textos: la mejora " + mejora.id + " no tiene \"" + id + "\"");
+                    faltanMejoras++;
+                }
+            }
+            inf.Igual("textos: cada mejora de la tienda tiene nombre y unidad", 0, faltanMejoras);
+        }
+
+        // Los TextoTraducido de los prefabs.
+        int enPrefabs = 0, faltanEnPrefabs = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs" }))
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+            if (prefab == null) continue;
+            foreach (var traducido in prefab.GetComponentsInChildren<TextoTraducido>(true))
+            {
+                enPrefabs++;
+                if (existentes.Contains(traducido.id)) continue;
+                inf.Falla("textos: el prefab " + prefab.name + "/" + traducido.name + " pide \"" + traducido.id + "\", que no esta en la tabla");
+                faltanEnPrefabs++;
+            }
+        }
+        inf.Igual("textos: todo lo que piden los prefabs existe (" + enPrefabs + ")", 0, faltanEnPrefabs);
+
+        // Los de las escenas se leen del archivo, sin abrirlas: cada TextoTraducido
+        // queda como un bloque con el guid del script y su "id:".
+        string guidScript = AssetDatabase.AssetPathToGUID("Assets/Scripts/Idioma/TextoTraducido.cs");
+        int enEscenas = 0, faltanEnEscenas = 0;
+        if (!string.IsNullOrEmpty(guidScript))
+        {
+            foreach (var escena in EditorBuildSettings.scenes)
+            {
+                string ruta = Path.Combine(Path.GetDirectoryName(Application.dataPath), escena.path);
+                if (!File.Exists(ruta)) continue;
+                string[] lineas = File.ReadAllLines(ruta);
+                for (int i = 0; i < lineas.Length; i++)
+                {
+                    if (!lineas[i].Contains("guid: " + guidScript)) continue;
+                    for (int j = i + 1; j < Math.Min(lineas.Length, i + 6); j++)
+                    {
+                        string linea = lineas[j].Trim();
+                        if (!linea.StartsWith("id:")) continue;
+                        string id = linea.Substring(3).Trim();
+                        enEscenas++;
+                        if (!existentes.Contains(id))
+                        {
+                            inf.Falla("textos: " + Path.GetFileName(escena.path) + " pide \"" + id + "\", que no esta en la tabla");
+                            faltanEnEscenas++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        inf.Igual("textos: todo lo que piden las escenas existe (" + enEscenas + ")", 0, faltanEnEscenas);
     }
 
     // 4. Escalado por oleada: la vida de los zombis crece a 1,15 por oleada, el

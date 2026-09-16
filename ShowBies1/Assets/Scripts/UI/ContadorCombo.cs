@@ -67,7 +67,7 @@ public class ContadorCombo : MonoBehaviour
             if (combo >= minimoParaMostrar)
             {
                 colorActual = colores[Mathf.Min(combo / Mathf.Max(1, muertesPorColor), colores.Length - 1)];
-                texto.SetText("COMBO x{0}", combo);
+                texto.SetText(Textos.De("hud_combo"), combo);
                 texto.enabled = true;
                 salto = 1f;
             }

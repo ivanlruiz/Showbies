@@ -77,9 +77,7 @@ public class TutorialManager : MonoBehaviour
                     if (jugador.theGun.MejoraActiva)
                     {
                         esperandoQueVenzaLaMejora = true;
-                        textoInstruccion.text = Texto(
-                            "Mirá el reloj arriba a la derecha: la cadencia mejorada dura unos segundos.\nEl cargador más grande, en cambio, queda para siempre.",
-                            "Mirá el reloj arriba a la derecha: la cadencia mejorada dura unos segundos.\nEl cargador más grande, en cambio, queda para siempre.");
+                        textoInstruccion.text = Textos.De("tut_reloj");
                     }
                 }
                 else if (!jugador.theGun.MejoraActiva)
@@ -98,22 +96,16 @@ public class TutorialManager : MonoBehaviour
         switch (paso)
         {
             case Paso.Moverse:
-                textoInstruccion.text = Texto(
-                    "Movete con W, A, S y D.",
-                    "Movete con el joystick de la izquierda.");
+                textoInstruccion.text = Texto(Textos.De("tut_mover_pc"), Textos.De("tut_mover_movil"));
                 break;
 
             case Paso.Disparar:
-                textoInstruccion.text = Texto(
-                    "Apuntá con el mouse y mantené el click izquierdo para disparar.\n¡Viene un zombi!",
-                    "Apuntá y dispará con el joystick de la derecha.\n¡Viene un zombi!");
+                textoInstruccion.text = Texto(Textos.De("tut_disparar_pc"), Textos.De("tut_disparar_movil"));
                 Spawnear(zombiPrefab, DireccionAlAzar() * distanciaSpawnZombi);
                 break;
 
             case Paso.Granada:
-                textoInstruccion.text = Texto(
-                    "Cuando vengan varios juntos, mantené ESPACIO para ver dónde cae la granada (apuntás con el mouse) y soltalo para tirarla.",
-                    "Cuando vengan varios juntos, arrastrá el botón G para apuntar la granada y soltalo para tirarla.");
+                textoInstruccion.text = Texto(Textos.De("tut_granada_pc"), Textos.De("tut_granada_movil"));
                 var centro = DireccionAlAzar() * distanciaSpawnZombi;
                 Spawnear(zombiPrefab, centro);
                 Spawnear(zombiPrefab, centro + new Vector3(1.5f, 0f, 0f));
@@ -124,18 +116,14 @@ public class TutorialManager : MonoBehaviour
                 // Limpiar lo que haya quedado del paso de la granada
                 foreach (var z in FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
                     Destroy(z.gameObject);
-                textoInstruccion.text = Texto(
-                    "Cada tanto aparecen cajas: la de balas recarga el cargador y la de vida te cura.\nAgarrá una.",
-                    "Cada tanto aparecen cajas: la de balas recarga el cargador y la de vida te cura.\nAgarrá una.");
+                textoInstruccion.text = Textos.De("tut_cajas");
                 Spawnear(puBalasPrefab, new Vector3(4f, 0f, 2f));
                 Spawnear(puVidaPrefab, new Vector3(-4f, 0f, 2f));
                 break;
 
             case Paso.Arma:
                 esperandoQueVenzaLaMejora = false;
-                textoInstruccion.text = Texto(
-                    "La caja de arma mejora el arma: cargador más grande y dispara mucho más rápido.\nAgarrala.",
-                    "La caja de arma mejora el arma: cargador más grande y dispara mucho más rápido.\nAgarrala.");
+                textoInstruccion.text = Textos.De("tut_caja_arma");
                 Spawnear(puArmaPrefab, new Vector3(0f, 0f, 4f));
                 break;
 

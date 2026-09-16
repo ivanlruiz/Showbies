@@ -11,18 +11,16 @@ using TMPro;
 public class Score : MonoBehaviour
 {
     public TextMeshProUGUI text;
-
-    [Tooltip("{0} es el puntaje.")]
-    public string formato = "<size=55%>PUNTOS</size>  {0}";
-    public string formatoRecord = "<size=55%>¡NUEVO RÉCORD!</size>  {0}";
     public Color colorRecord = new Color(1f, 0.85f, 0.25f, 1f);
 
     private void Start()
     {
-        int puntaje = PlayerPrefs.GetInt("Score");
+        string puntaje = FormatoNumeros.Compacto(PlayerPrefs.GetInt("Score"));
         bool esRecord = HuboRecordNuevo();
 
-        text.text = string.Format(esRecord ? formatoRecord : formato, FormatoNumeros.Compacto(puntaje));
+        text.text = esRecord
+            ? Textos.Formato("derrota_record_nuevo", puntaje)
+            : Textos.Formato("derrota_puntos", puntaje);
         if (esRecord) text.color = colorRecord;
     }
 

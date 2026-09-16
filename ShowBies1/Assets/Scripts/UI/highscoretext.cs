@@ -7,9 +7,6 @@ public class highscoretext : MonoBehaviour
 {
     public TextMeshProUGUI texto;
 
-    [Tooltip("{0} es el récord.")]
-    public string formato = "<size=55%>RÉCORD</size>  {0}";
-
     private void Start()
     {
         if (Score.HuboRecordNuevo())
@@ -19,6 +16,7 @@ public class highscoretext : MonoBehaviour
         }
 
         int modo = PlayerPrefs.GetInt("UltimoModo", 1);
-        texto.text = string.Format(formato, FormatoNumeros.Compacto(PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(modo))));
+        string record = FormatoNumeros.Compacto(PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(modo)));
+        texto.text = Textos.Formato("derrota_record", record);
     }
 }

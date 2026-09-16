@@ -1,0 +1,100 @@
+# Textos de ShowBies. Una fila por texto: id, ingles y espaniol, separados por TAB.
+#
+# - El id no se cambia: lo usan las escenas (TextoTraducido) y el codigo (Textos.De).
+# - Un salto de linea se escribe \n. Las lineas que empiezan con # son comentarios.
+# - {0}, {1}... son los numeros que pone el codigo: cada idioma tiene que tener los
+#   mismos (lo verifica ShowBies > Pruebas > Logica de mejoras).
+# - El rich text (<size=55%>) va dentro de la traduccion: cada idioma acomoda el suyo.
+# - El espaniol es de Espania (tuteo, "ratón", "coger", "vídeo").
+# - Para sumar un idioma: una columna con su codigo en la cabecera y un valor en Lengua.
+
+id	en	es
+
+# --- Menu y modos
+menu_jugar	PLAY	JUGAR
+menu_mejoras	UPGRADES	MEJORAS
+menu_modos	GAME MODES	MODOS DE JUEGO
+menu_tutorial	TUTORIAL	TUTORIAL
+menu_salir	QUIT	SALIR
+modo_libre	ENDLESS	MODO LIBRE
+modo_oleadas	WAVES	OLEADAS
+comun_volver	BACK	VOLVER
+idioma_titulo	LANGUAGE	IDIOMA
+
+# --- Tienda
+tienda_titulo	UPGRADES	MEJORAS
+tienda_jugar	PLAY!	¡A JUGAR!
+tienda_pie_mejor_oleada	Best wave: {0}\n<size=80%>Upgrades apply at the start of each run</size>	Mejor oleada: {0}\n<size=80%>Las mejoras se aplican al empezar cada partida</size>
+tienda_pie_sin_oleadas	Play the waves to earn coins!\n<size=80%>Upgrades apply at the start of each run</size>	¡Juega las oleadas para ganar monedas!\n<size=80%>Las mejoras se aplican al empezar cada partida</size>
+tienda_sin_catalogo	Upgrade catalog not found	No se ha encontrado el catálogo de mejoras
+tienda_racha	x{0}!	¡x{0}!
+tienda_maximo	MAXED!	¡MÁXIMO!
+tarjeta_nivel	LEVEL {0}	NIVEL {0}
+tarjeta_nivel_tope	LEVEL {0}/{1}	NIVEL {0}/{1}
+tarjeta_max	MAX	MÁX
+tarjeta_faltan	need {0}	faltan {0}
+
+# --- Mejoras: el id sale del id de la mejora, que no se renombra nunca
+mejora_dano_bala_nombre	BULLET DAMAGE	DAÑO DE BALA
+mejora_dano_bala_unidad	damage per bullet	daño por bala
+mejora_cadencia_nombre	FIRE RATE	CADENCIA
+mejora_cadencia_unidad	shots per second	disparos por segundo
+mejora_vida_maxima_nombre	MAX HEALTH	VIDA MÁXIMA
+mejora_vida_maxima_unidad	starting health	vida al empezar
+mejora_iman_nombre	MAGNET	IMÁN
+mejora_iman_unidad	meters of reach	metros de alcance
+mejora_botin_nombre	LOOT	BOTÍN
+mejora_botin_unidad	coins per zombie	monedas por zombi
+mejora_furia_nombre	RAGE	FURIA
+mejora_furia_unidad	seconds of rage	segundos de furia
+
+# --- HUD y partida
+hud_monedas	<size=55%>COINS</size>  {0}	<size=55%>MONEDAS</size>  {0}
+hud_puntos	<size=55%>SCORE</size>  {0}	<size=55%>PUNTOS</size>  {0}
+hud_nivel	Level {0}	Nivel {0}
+hud_oleada	Wave {0}\n<size=75%>Zombies {1}/{2}</size>	Oleada {0}\n<size=75%>Zombis {1}/{2}</size>
+hud_combo	COMBO x{0}	COMBO x{0}
+hud_reiniciar_pc	R  RESTART	R  REINICIAR
+cartel_oleada	Wave {0}	Oleada {0}
+cartel_bono	\n<size=45%>+{0} coins for wave {1}</size>	\n<size=45%>+{0} monedas por la oleada {1}</size>
+furia_boton	RAGE	FURIA
+furia_boton_pc	RAGE\n<size=55%>(F)</size>	FURIA\n<size=55%>(F)</size>
+furia_cartel	RAGE!	¡FURIA!
+
+# --- Pausa
+pausa_titulo	PAUSED	PAUSA
+pausa_continuar	RESUME	CONTINUAR
+pausa_reiniciar	RESTART	REINICIAR
+pausa_menu	MAIN MENU	MENÚ PRINCIPAL
+
+# --- Derrota
+derrota_titulo	GAME OVER	HAS PERDIDO
+derrota_puntos	<size=55%>SCORE</size>  {0}	<size=55%>PUNTOS</size>  {0}
+derrota_record	<size=55%>BEST</size>  {0}	<size=55%>RÉCORD</size>  {0}
+derrota_record_nuevo	<size=55%>NEW BEST!</size>  {0}	<size=55%>¡NUEVO RÉCORD!</size>  {0}
+derrota_monedas	+{0} COINS   <size=70%>TOTAL {1}</size>	+{0} MONEDAS   <size=70%>TOTAL {1}</size>
+derrota_otra_vez	PLAY AGAIN	OTRA VEZ
+derrota_menu	MENU	MENÚ
+aviso_compras_una	You can afford an upgrade!	¡Te llega para una mejora!
+aviso_compras_varias	You can afford {0} upgrades!	¡Te llega para {0} mejoras!
+aviso_descanso	You've been playing for over an hour. Maybe take a break?	Llevas más de una hora jugando. Un descanso te vendrá bien.
+oferta_duplicar	WATCH VIDEO: +{0} COINS	VER VÍDEO: +{0} MONEDAS
+
+# --- Revivir
+revivir_titulo	YOU DIED!	¡HAS MUERTO!
+revivir_bajada	Watch a video to keep playing	Mira un vídeo y sigue jugando
+revivir_no	NO, THANKS	NO, GRACIAS
+
+# --- Tutorial: cada paso tiene su version de PC y de movil
+tut_mover_pc	Move with W, A, S and D.	Muévete con W, A, S y D.
+tut_mover_movil	Move with the left joystick.	Muévete con el joystick de la izquierda.
+tut_disparar_pc	Aim with the mouse and hold left click to shoot.\nA zombie is coming!	Apunta con el ratón y mantén pulsado el clic izquierdo para disparar.\n¡Viene un zombi!
+tut_disparar_movil	Aim and shoot with the right joystick.\nA zombie is coming!	Apunta y dispara con el joystick de la derecha.\n¡Viene un zombi!
+tut_granada_pc	When several come at once, hold SPACE to see where the grenade lands (aim with the mouse) and let go to throw it.	Cuando vengan varios juntos, mantén pulsado ESPACIO para ver dónde cae la granada (apuntas con el ratón) y suéltalo para lanzarla.
+tut_granada_movil	When several come at once, drag the G button to aim the grenade and let go to throw it.	Cuando vengan varios juntos, arrastra el botón G para apuntar la granada y suéltalo para lanzarla.
+tut_cajas	Crates show up now and then: ammo refills your magazine and health heals you.\nGrab one.	De vez en cuando aparecen cajas: la de balas recarga el cargador y la de vida te cura.\nCoge una.
+tut_caja_arma	The weapon crate upgrades your gun: a bigger magazine and a much faster fire rate.\nGrab it.	La caja de arma mejora tu arma: cargador más grande y dispara mucho más rápido.\nCógela.
+tut_reloj	See the timer at the top right? The faster fire rate only lasts a few seconds.\nThe bigger magazine is yours to keep.	Mira el reloj de arriba a la derecha: la cadencia mejorada dura unos segundos.\nEl cargador más grande, en cambio, se queda para siempre.
+tut_fin_titulo	That's it! You know how to play.	¡Eso es todo! Ya sabes jugar.
+tut_fin_jugar	PLAY	JUGAR
+tut_fin_menu	MENU	MENÚ

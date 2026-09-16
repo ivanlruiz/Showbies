@@ -102,7 +102,7 @@ public class GeneradorZombis : MonoBehaviour
 
         // Solo al cambiar: armar el texto por frame aloca por frame.
         nivelMostrado = nivel;
-        if (textoNivel != null) textoNivel.SetText("Nivel {0}", nivel);
+        if (textoNivel != null) textoNivel.SetText(Textos.De("hud_nivel"), nivel);
 
         // El nivel 1 es el de arranque y no se festeja. Los siguientes apagan y
         // prenden el texto para que su AparecerConRebote, si lo tiene, rebote, y

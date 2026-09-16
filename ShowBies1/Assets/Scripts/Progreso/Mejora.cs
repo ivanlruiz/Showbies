@@ -19,8 +19,10 @@ public class Mejora : ScriptableObject
     [Tooltip("Con este id se guarda el nivel en progreso.json. No cambiarlo despues de publicar: "
         + "los jugadores perderian los niveles que compraron.")]
     public string id;
+    [Tooltip("Solo para reconocerla en el inspector. Lo que ve el jugador sale de la tabla de textos: "
+        + "mejora_<id>_nombre y mejora_<id>_unidad, en Assets/Idioma/Resources/Textos.txt.")]
     public string nombre;
-    [Tooltip("Que mide el valor, para la tarjeta (\"tiros por segundo\", \"vida al empezar\").")]
+    [Tooltip("Solo para el inspector, como el nombre: la unidad que se ve sale de mejora_<id>_unidad.")]
     public string unidad;
     public Color color = Color.white;
     public Sprite icono;

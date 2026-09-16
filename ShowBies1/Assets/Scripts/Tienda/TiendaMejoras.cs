@@ -71,7 +71,6 @@ public class TiendaMejoras : MonoBehaviour
     private const float LatidoResplandor = 0.03f;
     private const float DuracionFlash = 0.25f;
     private const float AlfaFlash = 0.35f;
-    private const string TextoPie = "\n<size=80%>Las mejoras se aplican al empezar cada partida</size>";
 
     // Todo en la bemol mayor, en semitonos desde la bemol: las tarjetas entran
     // subiendo, las monedas que vuelan bajan por la escala y el arpegio de cada
@@ -95,6 +94,7 @@ public class TiendaMejoras : MonoBehaviour
     private float tiempoAbierta;
     private float fade;
     private int revisionVista;
+    private int idiomaVisto = -1;
 
     private bool musicaBajada;
     private float volumenMusicaOriginal;
@@ -166,7 +166,7 @@ public class TiendaMejoras : MonoBehaviour
         if (catalogo == null || catalogo.enTienda == null)
         {
             sinCatalogo = true;
-            if (pista != null) pista.text = "No se encontró el catálogo de mejoras";
+            if (pista != null) pista.text = Textos.De("tienda_sin_catalogo");
             return;
         }
 
@@ -228,14 +228,6 @@ public class TiendaMejoras : MonoBehaviour
             musicaBajada = true;
         }
 
-        if (pista != null && !sinCatalogo)
-        {
-            int mejorOleada = Progreso.MejorOleada;
-            pista.text = mejorOleada > 0
-                ? "Mejor oleada: " + mejorOleada + TextoPie
-                : "¡Jugá las oleadas para ganar monedas!" + TextoPie;
-        }
-
         RefrescarTodas();
 
         for (int i = 0; i < tarjetas.Count; i++)
@@ -291,6 +283,23 @@ public class TiendaMejoras : MonoBehaviour
     {
         for (int i = 0; i < tarjetas.Count; i++) tarjetas[i].Refrescar();
         revisionVista = Progreso.Revision;
+        idiomaVisto = Idioma.Revision;
+        EscribirPista();
+    }
+
+    private void EscribirPista()
+    {
+        if (pista == null) return;
+        if (sinCatalogo)
+        {
+            pista.text = Textos.De("tienda_sin_catalogo");
+            return;
+        }
+
+        int mejorOleada = Progreso.MejorOleada;
+        pista.text = mejorOleada > 0
+            ? Textos.Formato("tienda_pie_mejor_oleada", mejorOleada)
+            : Textos.De("tienda_pie_sin_oleadas");
     }
 
     private void Update()
@@ -314,7 +323,7 @@ public class TiendaMejoras : MonoBehaviour
         // Sin eventos: la tienda mira el contador de cambios de Progreso. Así se
         // entera también de las monedas y niveles que cambian las herramientas
         // del editor con la tienda abierta.
-        if (Progreso.Revision != revisionVista) RefrescarTodas();
+        if (Progreso.Revision != revisionVista || Idioma.Revision != idiomaVisto) RefrescarTodas();
 
         ActualizarScroll();
         ActualizarGolpesPendientes(dt);
@@ -472,7 +481,7 @@ public class TiendaMejoras : MonoBehaviour
         Sacudir(8f, 0.15f);
 
         if (racha >= 1 && efectos != null)
-            efectos.TextoFlotante(destino, "¡x" + (racha + 1) + "!", Color.white, 60f);
+            efectos.TextoFlotante(destino, Textos.Formato("tienda_racha", racha + 1), Color.white, 60f);
 
         if (llegoAlTope)
         {
@@ -490,7 +499,7 @@ public class TiendaMejoras : MonoBehaviour
             if (efectos != null)
             {
                 efectos.Estallido(destino, colorTope, 40);
-                efectos.TextoFlotante(destino, "¡MÁXIMO!", colorTope, 90f);
+                efectos.TextoFlotante(destino, Textos.De("tienda_maximo"), colorTope, 90f);
             }
         }
 

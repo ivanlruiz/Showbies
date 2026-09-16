@@ -49,7 +49,7 @@ public class OfertaDeDuplicar : MonoBehaviour
 
         if (etiqueta != null)
         {
-            etiqueta.text = "VER VIDEO: +" + FormatoNumeros.Compacto(Progreso.MonedasDeLaPartida) + " MONEDAS";
+            etiqueta.text = Textos.Formato("oferta_duplicar", FormatoNumeros.Compacto(Progreso.MonedasDeLaPartida));
         }
         if (boton != null)
         {

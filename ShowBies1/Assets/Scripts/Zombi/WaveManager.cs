@@ -152,17 +152,17 @@ public class WaveManager : MonoBehaviour
         if (muertos == muertosMostrados && OleadaActual == oleadaMostrada) return;
         muertosMostrados = muertos;
         oleadaMostrada = OleadaActual;
-        textoOleada.text = "Oleada " + OleadaActual + "\n<size=75%>Zombis " + muertos + "/" + zombisEnLaOleada + "</size>";
+        textoOleada.text = Textos.Formato("hud_oleada", OleadaActual, muertos, zombisEnLaOleada);
     }
 
     private IEnumerator Descanso()
     {
         if (cartelOleada != null)
         {
-            cartelOleada.text = "Oleada " + OleadaActual;
+            cartelOleada.text = Textos.Formato("cartel_oleada", OleadaActual);
             if (bonoDeLaOleadaAnterior > 0)
             {
-                cartelOleada.text += "\n<size=45%>+" + bonoDeLaOleadaAnterior + " monedas por la oleada " + (OleadaActual - 1) + "</size>";
+                cartelOleada.text += Textos.Formato("cartel_bono", bonoDeLaOleadaAnterior, OleadaActual - 1);
             }
             cartelOleada.gameObject.SetActive(true);
             Efectos.CartelOleada();

@@ -15,14 +15,13 @@ public class BotonMejoras : MonoBehaviour
     public GameObject insignia;
     public TMPro.TMP_Text textoInsignia;
     public TMPro.TMP_Text aviso;
-    public string formatoAviso = "¡Te alcanza para {0} mejoras!";
-    public string formatoAvisoUna = "¡Te alcanza para una mejora!";
     public BotonJugoso jugo;
 
     private const float DuracionGolpe = 0.3f;
     private const float EscalaGolpe = 1.4f;
 
     private int revisionVista;
+    private int idiomaVisto = -1;
     private bool avisoTapado;
     private int comprasMostradas = -1;               // -1: todavía no se mostró nada
     private float tiempoGolpe = -1f;                 // negativo: quieta
@@ -49,7 +48,8 @@ public class BotonMejoras : MonoBehaviour
         // La oferta de duplicar de la derrota ocupa el renglon del aviso: mientras
         // esta, el aviso se calla, y vuelve cuando se resuelve (con mas monedas si
         // el jugador cobro).
-        if (Progreso.Revision != revisionVista || avisoTapado != OfertaDeDuplicar.TapaElAviso) Actualizar();
+        if (Progreso.Revision != revisionVista || avisoTapado != OfertaDeDuplicar.TapaElAviso
+            || idiomaVisto != Idioma.Revision) Actualizar();
 
         if (tiempoGolpe < 0f || insignia == null) return;
 
@@ -67,6 +67,7 @@ public class BotonMejoras : MonoBehaviour
     private void Actualizar()
     {
         revisionVista = Progreso.Revision;
+        idiomaVisto = Idioma.Revision;
         avisoTapado = OfertaDeDuplicar.TapaElAviso;
         int compras = CatalogoMejoras.ComprasPosibles();
 
@@ -86,7 +87,7 @@ public class BotonMejoras : MonoBehaviour
             bool mostrarAviso = hay && !avisoTapado;
             if (aviso.gameObject.activeSelf != mostrarAviso) aviso.gameObject.SetActive(mostrarAviso);
             if (mostrarAviso)
-                aviso.text = compras == 1 ? formatoAvisoUna : string.Format(formatoAviso, compras);
+                aviso.text = compras == 1 ? Textos.De("aviso_compras_una") : Textos.Formato("aviso_compras_varias", compras);
         }
 
         if (jugo != null) jugo.respirar = hay;

@@ -44,7 +44,7 @@ public class BotonFuria : MonoBehaviour
         }
         if (cartel != null) cartel.SetActive(false);
         if (visual != null) escalaBaseVisual = visual.localScale;
-        if (etiqueta != null) etiqueta.text = Plataforma.EsMovil ? "FURIA" : "FURIA\n<size=55%>(F)</size>";
+        if (etiqueta != null) etiqueta.text = Plataforma.EsMovil ? Textos.De("furia_boton") : Textos.De("furia_boton_pc");
         if (segundos != null) segundos.gameObject.SetActive(false);
         if (furia != null) activacionesVistas = furia.Activaciones;
     }

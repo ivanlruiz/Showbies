@@ -36,7 +36,7 @@ public class Puntaje : MonoBehaviour
 
         // La etiqueta chica y el numero grande: en el HUD lo que se lee de reojo
         // es el numero, no la palabra.
-        contadorKill_TMP.text = "<size=55%>PUNTOS</size>  " + FormatoNumeros.Compacto(contadorKill);
+        contadorKill_TMP.text = Textos.Formato("hud_puntos", FormatoNumeros.Compacto(contadorKill));
         
     }
 

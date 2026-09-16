@@ -13,7 +13,9 @@ using UnityEngine;
 public class ContadorMonedas : MonoBehaviour
 {
     public TMP_Text texto;
-    public string prefijo = "Monedas: ";
+    [Tooltip("Texto de la tabla con un {0} para el numero (\"hud_monedas\"). Vacio: el numero solo, "
+        + "que es como se usa en el menu y en la tienda, al lado del icono de la moneda.")]
+    public string idTexto = "";
     public float escalaDelSalto = 1.4f;
     public float duracionDelSalto = 0.2f;
     public Color colorDelSalto = Color.white;
@@ -71,8 +73,23 @@ public class ContadorMonedas : MonoBehaviour
         posicionBase = texto.rectTransform.anchoredPosition;
     }
 
+    private int idiomaVisto = -1;
+
     private void Update()
     {
+        // Cambiar el idioma cambia la forma de escribir el numero (1.234 / 1,234):
+        // se reescribe el que se esta mostrando.
+        if (idiomaVisto != Idioma.Revision)
+        {
+            idiomaVisto = Idioma.Revision;
+            long mostrado = mostradas;
+            if (mostrado >= 0)
+            {
+                mostradas = -1;
+                Escribir(mostrado);
+            }
+        }
+
         float dt = Mathf.Min(Time.unscaledDeltaTime, DeltaMaximo);
         long actuales = Progreso.MonedasEnteras;
 
@@ -132,7 +149,8 @@ public class ContadorMonedas : MonoBehaviour
     {
         if (valor == mostradas) return;
         mostradas = valor;
-        texto.text = prefijo + FormatoNumeros.Compacto(valor);
+        string numero = FormatoNumeros.Compacto(valor);
+        texto.text = string.IsNullOrEmpty(idTexto) ? numero : string.Format(Textos.De(idTexto), numero);
     }
 
     public void Sacudir(float amplitud = 10f, float duracion = 0.3f)

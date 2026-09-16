@@ -119,8 +119,6 @@ public class TarjetaMejora : MonoBehaviour
 
         if (mejora == null) return;
 
-        if (nombre != null) nombre.text = mejora.nombre;
-        if (descripcion != null) descripcion.text = mejora.unidad;
         if (simbolo != null) simbolo.text = mejora.simbolo;
 
         if (icono != null) icono.color = mejora.color;
@@ -166,10 +164,16 @@ public class TarjetaMejora : MonoBehaviour
         int n = Progreso.Nivel(Mejora.id);
         Estado = Progreso.Estado(Mejora);
 
+        // El nombre y la unidad se escriben en cada refresco y no al configurar: la
+        // tienda refresca cuando cambia el idioma. Salen de la tabla por el id de la
+        // mejora, que ya es fijo para siempre.
+        if (nombre != null) nombre.text = Textos.De("mejora_" + Mejora.id + "_nombre");
+        if (descripcion != null) descripcion.text = Textos.De("mejora_" + Mejora.id + "_unidad");
+
         if (nivel != null)
             nivel.text = Mejora.TieneTope
-                ? "NIVEL " + Mathf.Min(n, Mejora.nivelMaximo) + "/" + Mejora.nivelMaximo
-                : "NIVEL " + n;
+                ? Textos.Formato("tarjeta_nivel_tope", Mathf.Min(n, Mejora.nivelMaximo), Mejora.nivelMaximo)
+                : Textos.Formato("tarjeta_nivel", n);
 
         if (barraNivel != null) barraNivel.gameObject.SetActive(Mejora.TieneTope);
         objetivoRelleno = Mejora.TieneTope ? Mathf.Clamp01((float)n / Mejora.nivelMaximo) : 0f;
@@ -186,7 +190,7 @@ public class TarjetaMejora : MonoBehaviour
             if (textoTope != null)
             {
                 textoTope.gameObject.SetActive(true);
-                textoTope.text = "MÁX";
+                textoTope.text = Textos.De("tarjeta_max");
             }
             if (estampa != null) estampa.gameObject.SetActive(true);
 
@@ -225,7 +229,7 @@ public class TarjetaMejora : MonoBehaviour
         {
             faltan.gameObject.SetActive(!comprable);
             if (!comprable)
-                faltan.text = "faltan " + FormatoNumeros.Compacto(System.Math.Max(1.0, costo - Progreso.MonedasEnteras));
+                faltan.text = Textos.Formato("tarjeta_faltan", FormatoNumeros.Compacto(System.Math.Max(1.0, costo - Progreso.MonedasEnteras)));
         }
 
         if (jugoBoton != null) jugoBoton.respirar = comprable;
