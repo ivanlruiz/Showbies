@@ -93,6 +93,18 @@ primera vez, **activá Play App Signing** (es el seguro contra perder el keyster
 
 ## Anuncios
 
+**AdMob ya está creado** (16/9/2026, cuenta de Play Console). No son secretos: van en el código.
+
+| qué | ID |
+|---|---|
+| App ShowBies (Android, sin tienda vinculada todavía) | `ca-app-pub-5295383586829735~6982656335` |
+| Bonificado `revivir` (recompensa 1 "revivir") | `ca-app-pub-5295383586829735/1512416812` |
+| Bonificado `duplicar_derrota` (recompensa 1 "monedas_x2") | `ca-app-pub-5295383586829735/8640931940` |
+
+Los nombres de los bloques son los de `LugarAnuncio`. Mientras la app no esté vinculada a su ficha publicada, AdMob
+limita los anuncios: para probar se usan los bloques de prueba de Google. Al publicar en producción, vincular la
+tienda desde **Configuración de la app → Añadir tienda** (`com.ivanruiz.showbies`).
+
 La primera versión sale **sin anuncios**, y es a propósito: el proveedor real (AdMob) todavía no está integrado,
 y **AdMob no sirve anuncios de verdad hasta que la app esté publicada y vinculada a su ficha**. O sea que el
 orden natural es publicar → crear la cuenta de AdMob → vincular la app → integrar el SDK → actualizar.
