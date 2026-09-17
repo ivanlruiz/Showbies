@@ -1,8 +1,9 @@
 using UnityEngine;
 
 // El botón MEJORAS del menú y de la derrota. Muestra en una insignia cuántas
-// compras alcanzan las monedas y, si tiene un aviso, lo dice con palabras; el
-// botón respira sólo si hay algo para comprar.
+// compras alcanzan las monedas y, si tiene un aviso, lo dice con palabras. El
+// botón se queda quieto: lo que late es la insignia, y sólo si hay algo para
+// comprar (pedido de Ivan: que llame la atención el número, no el botón).
 //
 // La cuenta es CatalogoMejoras.ComprasPosibles: compras reales encadenadas de la
 // más barata a la siguiente, no monedas divididas por el precio más bajo, así la
@@ -19,6 +20,10 @@ public class BotonMejoras : MonoBehaviour
 
     private const float DuracionGolpe = 0.3f;
     private const float EscalaGolpe = 1.4f;
+    private const float PeriodoLatido = 1.4f;       // segundos entre dos latidos
+    private const float DuracionLatido = 0.35f;
+    private const float EscalaLatido = 1.25f;
+    private const float GiroLatido = 10f;           // grados del bamboleo
 
     private int revisionVista;
     private int idiomaVisto = -1;
@@ -26,10 +31,16 @@ public class BotonMejoras : MonoBehaviour
     private int comprasMostradas = -1;               // -1: todavía no se mostró nada
     private float tiempoGolpe = -1f;                 // negativo: quieta
     private Vector3 escalaBaseInsignia = Vector3.one;
+    private Quaternion rotacionBaseInsignia = Quaternion.identity;
+    private float relojLatido;
 
     private void Awake()
     {
-        if (insignia != null) escalaBaseInsignia = insignia.transform.localScale;
+        if (insignia != null)
+        {
+            escalaBaseInsignia = insignia.transform.localScale;
+            rotacionBaseInsignia = insignia.transform.localRotation;
+        }
     }
 
     private void OnEnable()
@@ -40,7 +51,12 @@ public class BotonMejoras : MonoBehaviour
     private void OnDisable()
     {
         tiempoGolpe = -1f;
-        if (insignia != null) insignia.transform.localScale = escalaBaseInsignia;
+        relojLatido = 0f;
+        if (insignia != null)
+        {
+            insignia.transform.localScale = escalaBaseInsignia;
+            insignia.transform.localRotation = rotacionBaseInsignia;
+        }
     }
 
     private void Update()
@@ -51,17 +67,36 @@ public class BotonMejoras : MonoBehaviour
         if (Progreso.Revision != revisionVista || avisoTapado != OfertaDeDuplicar.TapaElAviso
             || idiomaVisto != Idioma.Revision) Actualizar();
 
-        if (tiempoGolpe < 0f || insignia == null) return;
+        if (insignia == null || !insignia.activeSelf) return;
+        float dt = Mathf.Min(Time.unscaledDeltaTime, 1f / 30f);
 
-        tiempoGolpe += Mathf.Min(Time.unscaledDeltaTime, 1f / 30f);
-        float t = tiempoGolpe / DuracionGolpe;
-        if (t >= 1f)
+        // El golpe (cambió la cuenta) manda sobre el latido.
+        if (tiempoGolpe >= 0f)
         {
-            tiempoGolpe = -1f;
-            insignia.transform.localScale = escalaBaseInsignia;
+            tiempoGolpe += dt;
+            float t = tiempoGolpe / DuracionGolpe;
+            if (t >= 1f)
+            {
+                tiempoGolpe = -1f;
+                relojLatido = 0f;
+                Pose(1f, 0f);
+                return;
+            }
+            Pose(1f + (EscalaGolpe - 1f) * CurvasUI.Campana(t), 0f);
             return;
         }
-        insignia.transform.localScale = escalaBaseInsignia * (1f + (EscalaGolpe - 1f) * CurvasUI.Campana(t));
+
+        relojLatido = (relojLatido + dt) % PeriodoLatido;
+        float fase = relojLatido / DuracionLatido;
+        if (fase >= 1f) { Pose(1f, 0f); return; }
+        float campana = CurvasUI.Campana(fase);
+        Pose(1f + (EscalaLatido - 1f) * campana, Mathf.Sin(fase * Mathf.PI * 2f) * GiroLatido * campana);
+    }
+
+    private void Pose(float escala, float grados)
+    {
+        insignia.transform.localScale = escalaBaseInsignia * escala;
+        insignia.transform.localRotation = rotacionBaseInsignia * Quaternion.Euler(0f, 0f, grados);
     }
 
     private void Actualizar()
@@ -90,6 +125,6 @@ public class BotonMejoras : MonoBehaviour
                 aviso.text = compras == 1 ? Textos.De("aviso_compras_una") : Textos.Formato("aviso_compras_varias", compras);
         }
 
-        if (jugo != null) jugo.respirar = hay;
+        if (jugo != null) jugo.respirar = false;
     }
 }
