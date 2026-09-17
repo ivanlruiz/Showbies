@@ -85,7 +85,9 @@ Reordenar Build Settings rompe la navegación en silencio.
 
 ### Menú y modos
 
-**PLAY abre el panel de modos** (`GameModesMenu`: MODO LIBRE, OLEADAS y VOLVER); ya no hay botón GAME MODES. El modo
+**PLAY abre el panel de modos** (`GameModesMenu`: TUTORIAL, MODO LIBRE, OLEADAS y VOLVER); ya no hay botón GAME MODES.
+**PLAY está abajo a la derecha, cerca del pulgar** (pedido de Ivan), y en el panel de modos OLEADAS ocupa ese mismo lugar,
+con el libre y el tutorial encima y VOLVER abajo a la izquierda. El menú no muestra monedas: solo la tienda. El modo
 libre está **bloqueado hasta llegar a la oleada 12** (`ModoLibre.OleadaParaDesbloquear`; llegar a la 12 es haber
 completado la 11, que es lo que guarda `Progreso.MejorOleada`). Bloqueado, `BotonModoLibre` lo pinta gris con
 "REACH WAVE 12" abajo y tocarlo lo hace temblar. **Todo lo que carga el libre pasa por `ModoLibre.EscenaPara`**, que
@@ -566,8 +568,8 @@ trampa).
 - **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
   record chicos, el renglon de la oferta de video o el aviso de compras, y abajo los tres botones. Si la partida
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`).
-- **Menu**: el nombre del juego arriba, cuatro botones (PLAY, UPGRADES, TUTORIAL, QUIT), el globo del idioma arriba a
-  la izquierda y las monedas arriba a la derecha.
+- **Menu**: el nombre del juego arriba, UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
+  idioma y el engranaje del sonido arriba a la izquierda. Sin monedas: se ven en la tienda.
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
   (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).

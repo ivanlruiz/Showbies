@@ -11,8 +11,8 @@ Lista de Ivan del 16/9/2026, para después de subir la prueba cerrada. Todavía 
 
 ## Menú
 
-- [ ] **Sacar las monedas del menú principal:** que se vean solo en la tienda de mejoras.
-- [ ] **Reacomodar los botones del menú.** PLAY abajo a la derecha, y al tocarlo que pregunte qué modo jugar:
+- [x] **Sacar las monedas del menú principal:** que se vean solo en la tienda de mejoras.
+- [x] **Reacomodar los botones del menú.** PLAY abajo a la derecha, y al tocarlo que pregunte qué modo jugar:
       modo libre, oleadas o tutorial. El tutorial deja de ser un botón aparte del menú.
 
 ## Juego
