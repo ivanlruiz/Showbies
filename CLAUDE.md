@@ -438,7 +438,7 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   programado con `Sonidos.Programar`, estallido y temblor; compras seguidas suben el arpegio por I-IV-V-I'.
 - **Navegación:** MEJORAS en el menú abre la tienda; VOLVER, Escape o el atrás de Android la cierran; ¡A JUGAR!
   carga `UltimoModo` (1 o 3; si no, 3). En la derrota, MEJORAS llama a `TiendaMejoras.AbrirEnMenu`, que carga el
-  menú con la tienda abierta. Los botones MEJORAS (`BotonMejoras`) muestran una insignia con
+  menú con la tienda abierta. Los botones MEJORAS (`BotonMejoras`) no se mueven: lo que late y se bambolea es su insignia, con
   `CatalogoMejoras.ComprasPosibles()`: cuántas compras seguidas alcanzan de verdad, eligiendo siempre la más barata
   (con 50 monedas hay cuatro tarjetas verdes pero alcanza para una sola), y en la derrota "¡Te alcanza para N
   mejoras!".
@@ -564,10 +564,18 @@ usan `Sprites/UI/Pildora` en Sliced (un circulo con bordes de 127 px: Unity achi
 queda redondo en las puntas) y `Visual` suma un hijo `Icono` (`Sprites/UI/Icono*`, dibujados en blanco y teñidos con el
 color del texto). `IconoDeBoton` lo pega a la izquierda del texto y centra los dos juntos, midiendo el texto cada
 vez que cambia (idioma, CONTINUE WAVE N). Colores: fondo saturado con texto oscuro de su tono, y lo secundario
-(QUIT, TUTORIAL, BACK, MENU) en vidrio blanco al 20 % con texto blanco. Llevan icono los botones de accion (jugar,
+(QUIT, TUTORIAL, BACK, MENU) en vidrio oscuro translucido con texto blanco (el blanco no se veia sobre el pasto claro). Llevan icono los botones de accion (jugar,
 reiniciar, mejoras, menu, volver, salir y los modos); los que ya dicen todo con su texto o los pinta el codigo (el
 precio de las tarjetas, los idiomas, el video de la derrota, NO, GRACIAS) son solo pildora. Para uno nuevo: la forma de
 `Pildora`, un `Icono` con `IconoDeBoton` y los colores de arriba.
+
+**La paleta es clara, "pasto de dia"** (elegida por Ivan): cielo celeste (0,66; 0,86; 0,96) en las camaras, la niebla del
+menu y el fondo de la derrota; pasto verde claro (`Materiales/PisoGrilla.png` con `prototype_512x512_green2`, que ya no es
+metalico: con `_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas; paneles crema (tienda y
+ventana de idioma) y tarjetas blancas con texto oscuro. **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
+contorno** con el material `Bangers SDF - Outline` (HUD, derrota, titulos): sin contorno, el blanco y el amarillo se pierden.
+Ojo: ese material y la fuente estan en `TextMesh Pro/Examples & Extras/`, que esta gitignoreado. La pausa, el revivir y los
+paneles del tutorial siguen oscuros a proposito: tapan la partida.
 
 **El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
 ya no existe; con el fondo nuevo, eso lo tenia todo de color negro. Apagar la transicion tampoco va (ver la

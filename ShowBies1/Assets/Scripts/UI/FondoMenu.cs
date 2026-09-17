@@ -24,7 +24,7 @@ public class FondoMenu : MonoBehaviour
 
     public ZombiDelFondo[] zombis;
     public Material materialPiso;
-    public Color colorCielo = new Color(0.07f, 0.2f, 0.06f, 1f);
+    public Color colorCielo = new Color(0.66f, 0.86f, 0.96f, 1f);
 
     [Header("Camara")]
     public Vector3 posicionCamara = new Vector3(0f, 3.4f, -6.5f);

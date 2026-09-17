@@ -12,7 +12,9 @@ public class TituloEnLaNiebla : MonoBehaviour
 {
     public TextMeshPro texto;
     public Color colorLetras = new Color(1f, 0.83f, 0.2f, 1f);
-    public Color colorCielo = new Color(0.07f, 0.2f, 0.06f, 1f);
+    public Color colorCielo = new Color(0.66f, 0.86f, 0.96f, 1f);
+    public Color colorContorno = new Color(0.17f, 0.29f, 0.1f, 1f);
+    [Range(0f, 0.5f)] public float grosorContorno = 0.2f;
 
     [Range(0f, 1f)] public float nieblaMinima = 0.05f;
     [Range(0f, 1f)] public float nieblaMaxima = 0.55f;
@@ -21,14 +23,27 @@ public class TituloEnLaNiebla : MonoBehaviour
     public float amplitudFlotado = 0.12f;   // sube y baja apenas, en metros
 
     private Vector3 posicionBase;
+    private Material material;
     private float inicio;
 
     private void Start()
     {
         if (texto == null) texto = GetComponent<TextMeshPro>();
         posicionBase = transform.localPosition;
+        // Copia propia del material (fontMaterial): el contorno se desvanece con la niebla
+        // y no tiene que tocar a los demas textos con Bangers.
+        if (texto != null)
+        {
+            material = texto.fontMaterial;
+            material.SetFloat(ShaderUtilities.ID_OutlineWidth, grosorContorno);
+        }
         inicio = Time.unscaledTime;
         Pintar(1f);
+    }
+
+    private void OnDestroy()
+    {
+        if (material != null) Destroy(material);
     }
 
     private void Update()
@@ -49,5 +64,6 @@ public class TituloEnLaNiebla : MonoBehaviour
     {
         if (texto == null) return;
         texto.color = Color.Lerp(colorLetras, colorCielo, niebla);
+        if (material != null) material.SetColor(ShaderUtilities.ID_OutlineColor, Color.Lerp(colorContorno, colorCielo, niebla));
     }
 }
