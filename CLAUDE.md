@@ -574,7 +574,7 @@ menu y el fondo de la derrota; pasto verde claro (`Materiales/PisoGrilla.png` co
 metalico: con `_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas; paneles crema (tienda y
 ventana de idioma) y tarjetas blancas con texto oscuro. **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
 contorno** con el material `Bangers SDF - Outline` (HUD, derrota, titulos): sin contorno, el blanco y el amarillo se pierden.
-Ojo: ese material y la fuente estan en `TextMesh Pro/Examples & Extras/`, que esta gitignoreado. La pausa, el revivir y los
+La pausa, el revivir y los
 paneles del tutorial siguen oscuros a proposito: tapan la partida.
 
 **El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
@@ -969,6 +969,10 @@ enterrado.
   alto y en 21:9, 823: una fila de tarjetas de 560 u no entraba en el canvas del menú, por eso la tienda tiene el
   suyo.
 
+- **La fuente del juego vive en `Assets/Fuentes/`**: `Bangers.ttf`, `Bangers SDF.asset` (dinámica: completa el atlas desde el
+  .ttf, así que no se borra ninguno de los dos) y el material `Bangers SDF - Outline`. Antes estaban en
+  `TextMesh Pro/Examples & Extras/`, que está gitignoreado: un clon del repo no tenía la fuente. Se movieron con
+  `AssetDatabase.MoveAsset`, con los mismos guid. Nada del juego tiene que apuntar a esa carpeta de ejemplos.
 - **Construir UI en el editor ensucia el atlas dinámico de Bangers** (`Bangers SDF.asset`) y el fallback de
   LiberationSans. Si aparecen modificados en git sin haber tocado fuentes, se restauran. Bangers no tiene `→`: la
   flecha de las tarjetas es un sprite.
