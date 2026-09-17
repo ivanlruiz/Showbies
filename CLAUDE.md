@@ -559,6 +559,14 @@ El color dice que hace cada uno: **verde** lo que te devuelve al juego (PLAY, PL
 **dorado** la tienda (UPGRADES) y el idioma elegido, **azul** lo que cambia de modo (RESTART),
 **naranja** las oleadas, **gris** lo secundario (TUTORIAL, QUIT, MENU, BACK, NO THANKS).
 
+**Los botones del menu son pildoras con icono** (estilo elegido por Ivan): el mismo molde, pero `Fondo` y `Sombra`
+usan `Sprites/UI/Pildora` en Sliced (un circulo con bordes de 127 px: Unity achica los bordes al alto del boton y
+queda redondo en las puntas) y `Visual` suma un hijo `Icono` (`Sprites/UI/Icono*`, dibujados en blanco y teñidos con el
+color del texto). `IconoDeBoton` lo pega a la izquierda del texto y centra los dos juntos, midiendo el texto cada
+vez que cambia (idioma, CONTINUE WAVE N). Colores: fondo saturado con texto oscuro de su tono, y lo secundario
+(QUIT, TUTORIAL, BACK) en vidrio blanco al 20 % con texto blanco. **La tienda, la pausa y la derrota todavia usan el
+molde anterior.**
+
 **El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
 ya no existe; con el fondo nuevo, eso lo tenia todo de color negro. Apagar la transicion tampoco va (ver la
 trampa).
@@ -568,20 +576,24 @@ trampa).
 - **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
   record chicos, el renglon de la oferta de video o el aviso de compras, y abajo los tres botones. Si la partida
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`).
-- **Menu**: el nombre del juego arriba, UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
+- **Menu**: el nombre del juego arriba (en el fondo 3D, no en el canvas), UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
   idioma y el engranaje del sonido arriba a la izquierda. Sin monedas: se ven en la tienda.
+
+- **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
+  chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
+  (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
 
 **El fondo del menu esta vivo.** `FondoMenu` (objeto raiz `FondoMenu` de `Menu.unity`) acomoda la camara del menu
 mirando un poco desde arriba, reusa su luz direccional y arma el piso de la partida con niebla del color del cielo,
 para que no se vea donde termina. Por delante cruzan zombis de verdad (los cinco prefabs, con pesos en el
 inspector): se instancian dentro de un padre apagado y se les borran scripts, colliders y rigidbodies antes de
 prenderlos, asi **no cuentan en `ZombisVivos`** ni buscan al jugador. `MonedasDelFondo` (en la raiz del canvas
-"Main Menu") deja caer monedas doradas girando justo encima de `BG`, que quedo con alfa 0. **La niebla esta
+"Main Menu") deja caer monedas doradas girando justo encima de `BG`, que quedo con alfa 0. **El nombre del juego tambien es
+parte del fondo:** un `TextMeshPro` 3D (`FondoMenu/Titulo`) detras de los zombis, que `TituloEnLaNiebla` esconde a
+medias y vuelve a mostrar llevando el color de las letras hacia el del cielo (la niebla de Unity no toca a
+TextMeshPro). Nunca lo tapa entero: tiene que leerse en las capturas de la ficha. **La niebla esta
 guardada en la escena y no solo en el codigo:** el stripping de shaders mira la niebla de las escenas del build, y
 prendida solo en runtime no tendria variantes en Android.
-- **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
-  chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
-  (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
 
 Las posiciones de la derrota y de la ventanita de revivir estan **medidas**, no puestas a ojo: cuando muevas algo
 de esas pantallas, revisa que ningun par de elementos se pise, contando los que se prenden solos (la oferta de
