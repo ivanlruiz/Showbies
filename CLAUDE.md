@@ -400,7 +400,7 @@ Monedas por entrar una vez por día, que crecen con la racha (pedido de Ivan par
 `RecompensaDiaria` (`Assets/Scripts/Progreso/`) y la ventana, `VentanaRecompensaDiaria` (raíz del canvas "Main Menu"),
 que se arma entera en código y aparece sola al abrir el menú si hoy hay algo para cobrar.
 
-- **Racha:** sube si el último cobro fue ayer; si se saltó un día vuelve a 1. Paga 50, 75, 100, 150, 200, 300 y 500
+- **Racha:** sube si el último cobro fue ayer; si se saltó un día vuelve a 1. Paga 150, 250, 400, 600, 900, 1.300 y 2.000
   (`MonedasPorDia`), y del día 7 en adelante sigue pagando lo del 7 mientras no se corte.
 - **Crece con la mejor oleada:** × (1 + 0,1 × `MejorOleada`), para que no quede chica cuando las mejoras cuestan miles.
 - **Se guarda en el progreso** (`diaRecompensa` aaaammdd y `rachaRecompensa`, sin cambiar la versión) y entra por

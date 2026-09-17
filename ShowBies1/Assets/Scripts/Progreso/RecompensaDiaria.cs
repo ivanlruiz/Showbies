@@ -16,7 +16,7 @@ using System.Globalization;
 // Lo que se puede probar sin escena es estatico y recibe el dia (RachaParaHoy, Monto).
 public static class RecompensaDiaria
 {
-    public static readonly int[] MonedasPorDia = { 50, 75, 100, 150, 200, 300, 500 };
+    public static readonly int[] MonedasPorDia = { 150, 250, 400, 600, 900, 1300, 2000 };   // Ivan: "que sean mas monedas"
     public const double CrecimientoPorOleada = 0.1;   // +10 % por cada oleada de la mejor marca
 
     public static int DiasDelCiclo => MonedasPorDia.Length;

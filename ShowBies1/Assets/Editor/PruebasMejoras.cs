@@ -1413,22 +1413,22 @@ public static class PruebasMejoras
         inf.Igual("diaria: bisiesto", 2, RecompensaDiaria.RachaParaHoy(20280229, 20280228, 1));
         inf.Igual("diaria: fecha guardada rota, racha 1", 1, RecompensaDiaria.RachaParaHoy(20260917, 20260899, 4));
         inf.Igual("diaria: casillero del dia 9 es el 7", 7, RecompensaDiaria.Casillero(9));
-        inf.Cerca("diaria: monto dia 1 sin oleadas", 50, RecompensaDiaria.Monto(1, 0), 1e-9);
-        inf.Cerca("diaria: monto dia 7", 500, RecompensaDiaria.Monto(7, 0), 1e-9);
-        inf.Cerca("diaria: monto dia 12 queda en el 7", 500, RecompensaDiaria.Monto(12, 0), 1e-9);
-        inf.Cerca("diaria: monto con mejor oleada 10", 200, RecompensaDiaria.Monto(3, 10), 1e-9);
+        inf.Cerca("diaria: monto dia 1 sin oleadas", 150, RecompensaDiaria.Monto(1, 0), 1e-9);
+        inf.Cerca("diaria: monto dia 7", 2000, RecompensaDiaria.Monto(7, 0), 1e-9);
+        inf.Cerca("diaria: monto dia 12 queda en el 7", 2000, RecompensaDiaria.Monto(12, 0), 1e-9);
+        inf.Cerca("diaria: monto con mejor oleada 10", 800, RecompensaDiaria.Monto(3, 10), 1e-9);
 
         EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);
         inf.Igual("diaria: sin campos, dia 0", 0, Progreso.DiaUltimaRecompensa);
-        inf.Cerca("diaria: cobro dia 1 con oleada 5", 75, RecompensaDiaria.CobrarEl(20260917), 1e-9);
-        inf.Cerca("diaria: monedas tras cobrar", 85, Progreso.Monedas, 1e-9);
+        inf.Cerca("diaria: cobro dia 1 con oleada 5", 225, RecompensaDiaria.CobrarEl(20260917), 1e-9);
+        inf.Cerca("diaria: monedas tras cobrar", 235, Progreso.Monedas, 1e-9);
         inf.Cerca("diaria: no cuenta como partida", 0, Progreso.MonedasDeLaPartida, 1e-9);
         inf.Cerca("diaria: el mismo dia no paga", 0, RecompensaDiaria.CobrarEl(20260917), 1e-9);
-        inf.Cerca("diaria: al otro dia paga el 2", 113, RecompensaDiaria.CobrarEl(20260918), 1e-9);
+        inf.Cerca("diaria: al otro dia paga el 2", 375, RecompensaDiaria.CobrarEl(20260918), 1e-9);
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Igual("diaria: se relee el dia", 20260918, Progreso.DiaUltimaRecompensa);
         inf.Igual("diaria: se relee la racha", 2, Progreso.RachaRecompensa);
-        inf.Cerca("diaria: se releen las monedas", 198, Progreso.Monedas, 1e-9);
+        inf.Cerca("diaria: se releen las monedas", 610, Progreso.Monedas, 1e-9);
     }
 
     static void ProbarComprasPosibles(Informe inf)
