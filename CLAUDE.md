@@ -559,13 +559,15 @@ El color dice que hace cada uno: **verde** lo que te devuelve al juego (PLAY, PL
 **dorado** la tienda (UPGRADES) y el idioma elegido, **azul** lo que cambia de modo (RESTART),
 **naranja** las oleadas, **gris** lo secundario (TUTORIAL, QUIT, MENU, BACK, NO THANKS).
 
-**Los botones del menu son pildoras con icono** (estilo elegido por Ivan): el mismo molde, pero `Fondo` y `Sombra`
+**Todos los botones son pildoras con icono** (estilo elegido por Ivan): el mismo molde, pero `Fondo` y `Sombra`
 usan `Sprites/UI/Pildora` en Sliced (un circulo con bordes de 127 px: Unity achica los bordes al alto del boton y
 queda redondo en las puntas) y `Visual` suma un hijo `Icono` (`Sprites/UI/Icono*`, dibujados en blanco y teñidos con el
 color del texto). `IconoDeBoton` lo pega a la izquierda del texto y centra los dos juntos, midiendo el texto cada
 vez que cambia (idioma, CONTINUE WAVE N). Colores: fondo saturado con texto oscuro de su tono, y lo secundario
-(QUIT, TUTORIAL, BACK) en vidrio blanco al 20 % con texto blanco. **La tienda, la pausa y la derrota todavia usan el
-molde anterior.**
+(QUIT, TUTORIAL, BACK, MENU) en vidrio blanco al 20 % con texto blanco. Llevan icono los botones de accion (jugar,
+reiniciar, mejoras, menu, volver, salir y los modos); los que ya dicen todo con su texto o los pinta el codigo (el
+precio de las tarjetas, los idiomas, el video de la derrota, NO, GRACIAS) son solo pildora. Para uno nuevo: la forma de
+`Pildora`, un `Icono` con `IconoDeBoton` y los colores de arriba.
 
 **El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
 ya no existe; con el fondo nuevo, eso lo tenia todo de color negro. Apagar la transicion tampoco va (ver la

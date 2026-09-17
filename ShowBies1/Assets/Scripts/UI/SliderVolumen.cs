@@ -50,6 +50,9 @@ public class SliderVolumen : MonoBehaviour
         var imagenPerilla = perillaRt.gameObject.AddComponent<Image>();
         imagenPerilla.sprite = perilla;
         imagenPerilla.color = Color.white;
+        // El Slider estira la perilla al alto de la barra (sus anclas van de 0 a 1 en y):
+        // sin esto el circulo sale ovalado.
+        imagenPerilla.preserveAspect = true;
 
         var s = barra.gameObject.AddComponent<Slider>();
         s.fillRect = relleno;
