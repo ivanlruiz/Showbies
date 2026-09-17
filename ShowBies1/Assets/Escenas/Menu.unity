@@ -4913,6 +4913,8 @@ GameObject:
   - component: {fileID: 1452757532}
   - component: {fileID: 1452757533}
   - component: {fileID: 1452757534}
+  - component: {fileID: 1452757536}
+  - component: {fileID: 1452757535}
   m_Layer: 5
   m_Name: Main Menu
   m_TagString: Untagged
@@ -5120,6 +5122,7 @@ MonoBehaviour:
   menuModos: {fileID: 1900771721}
   tienda: {fileID: 1020977087}
   selectorIdioma: {fileID: 1452757534}
+  opcionesSonido: {fileID: 1452757535}
 --- !u!114 &1452757534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5151,6 +5154,34 @@ MonoBehaviour:
   colorElegido: {r: 1, g: 0.78, b: 0.22, a: 1}
   colorOtro: {r: 0.55, g: 0.55, b: 0.65, a: 1}
   duracionRebote: 0.3
+--- !u!114 &1452757535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1452757527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0be41cefdb84a949b7e6b6b7a7d789c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OpcionesSonido
+  selectorIdioma: {fileID: 1452757534}
+  separacionDelGlobo: 24
+  duracionRebote: 0.3
+--- !u!114 &1452757536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1452757527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 914184a546b560043825eba2ad609287, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FuenteConVolumen
+  tipo: 1
 --- !u!1 &1509229833
 GameObject:
   m_ObjectHideFlags: 0

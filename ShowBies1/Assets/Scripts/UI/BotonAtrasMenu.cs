@@ -17,6 +17,7 @@ public class BotonAtrasMenu : MonoBehaviour
     public GameObject menuModos;
     public TiendaMejoras tienda;
     public SelectorIdioma selectorIdioma;
+    public OpcionesSonido opcionesSonido;
 
     private void Update()
     {
@@ -25,6 +26,12 @@ public class BotonAtrasMenu : MonoBehaviour
 
     public void Atras()
     {
+        if (opcionesSonido != null && opcionesSonido.Abierto)
+        {
+            opcionesSonido.Cerrar();
+            return;
+        }
+
         if (selectorIdioma != null && selectorIdioma.Abierto)
         {
             selectorIdioma.Cerrar();

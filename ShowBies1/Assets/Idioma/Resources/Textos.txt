@@ -21,6 +21,9 @@ modo_oleadas	WAVES	OLEADAS
 modo_libre_bloqueado	REACH WAVE {0}	LLEGA A LA OLEADA {0}
 modo_oleadas_continuar	CONTINUE WAVE {0}	SIGUE EN LA OLEADA {0}
 comun_volver	BACK	VOLVER
+sonido_titulo	SOUND	SONIDO
+sonido_efectos	EFFECTS	EFECTOS
+sonido_musica	MUSIC	MÚSICA
 idioma_titulo	LANGUAGE	IDIOMA
 
 # --- Tienda

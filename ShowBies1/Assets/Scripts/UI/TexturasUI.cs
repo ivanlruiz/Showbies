@@ -223,6 +223,56 @@ public static class TexturasUI
         return Crear(lado, pixeles, "Globo");
     }
 
+    // Un engranaje blanco: ocho dientes alrededor de un aro, con agujero en el medio.
+    // Es el icono de "opciones de sonido" del menu, al lado del globo del idioma.
+    public static Texture2D Engranaje(int lado)
+    {
+        lado = Mathf.Max(8, lado);
+        var pixeles = new Color32[lado * lado];
+        const int Muestras = 4;
+
+        for (int y = 0; y < lado; y++)
+        {
+            for (int x = 0; x < lado; x++)
+            {
+                int adentro = 0;
+                for (int sy = 0; sy < Muestras; sy++)
+                {
+                    for (int sx = 0; sx < Muestras; sx++)
+                    {
+                        float u = (x + (sx + 0.5f) / Muestras) / lado * 2f - 1f;
+                        float v = (y + (sy + 0.5f) / Muestras) / lado * 2f - 1f;
+                        if (EnElEngranaje(u, v)) adentro++;
+                    }
+                }
+                pixeles[y * lado + x] = Blanco(adentro / (float)(Muestras * Muestras));
+            }
+        }
+
+        return Crear(lado, pixeles, "Engranaje");
+    }
+
+    private static bool EnElEngranaje(float x, float y)
+    {
+        const float Aro = 0.66f;          // el cuerpo
+        const float Agujero = 0.28f;
+        const float PuntaDiente = 0.92f;
+        const int Dientes = 8;
+        const float AnchoDiente = 0.34f;  // del diente, en unidades de la textura
+
+        float r = Mathf.Sqrt(x * x + y * y);
+        if (r < Agujero || r > PuntaDiente) return false;
+        if (r <= Aro) return true;
+
+        // Un diente: el punto, girado al angulo del diente mas cercano, cae dentro de
+        // una franja recta de AnchoDiente.
+        float angulo = Mathf.Atan2(y, x);
+        float paso = Mathf.PI * 2f / Dientes;
+        float mas = Mathf.Round(angulo / paso) * paso;
+        float lateral = Mathf.Abs(-Mathf.Sin(mas) * x + Mathf.Cos(mas) * y);
+        return lateral < AnchoDiente * 0.5f;
+    }
+
     // Coordenadas de -1 a 1 con el centro en 0.
     private static bool EnElGlobo(float x, float y)
     {

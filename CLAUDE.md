@@ -282,8 +282,8 @@ consultando `EnemyController.ZombisVivos`:
      actualiza en `Update` sólo cuando cambia, y los caídos por el kill-Z cuentan como muertos para que
      llegue al total justo cuando la oleada termina.
   2. Si la oleada es múltiplo de `jefeCadaOleadas` (10), saca un `jefe`.
-  3. Saca `zombisBase + zombisPorOleada × oleada` zombis (6 + 2n), de a uno cada
-     `intervaloEntreApariciones` (0,8 s), en un punto al azar de `spawnPoints`. El tipo sale por sorteo
+  3. Saca `zombisBase + zombisPorOleada × oleada` zombis (10 + 4n: 14 en la 1, 50 en la 10; pedido de Ivan antes de
+     la prueba cerrada, antes eran 6 + 2n), de a uno cada `intervaloEntreApariciones` (0,35 s, antes 0,8 s), en un punto al azar de `spawnPoints`. El tipo sale por sorteo
      entre los `tipos` ya habilitados (`desdeOleada`), con `peso` relativo: normal desde la 1, rápido desde
      la 3, tanque desde la 6 y FASTER desde la 9. Si se llegó al techo, espera.
   4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos.
@@ -659,6 +659,23 @@ que sin `Efectos` instancia las partículas del zombi como antes.
 - **Sin música en la partida** (pedido de Ivan): el `AudioSource` del prefab quedó sin clip. `Assets/otros/musica.wav`
   (el loop de 32 s en la bemol mayor) sigue en el proyecto sin uso. Los sonidos nuevos están sintetizados y son provisorios.
 
+## Volumen
+
+El jugador elige **dos volúmenes**, efectos y música (`Volumen`, en `PlayerPrefs` "VolumenEfectos" y "VolumenMusica", de 0
+a 1). Se cambian desde el **engranaje del menú** (a la derecha del globo) y desde el **menú de pausa**, con el mismo control
+(`SliderVolumen`, armado en código).
+
+- **Toda fuente de escena o prefab lleva `FuenteConVolumen`**: su volumen queda en el del inspector por el del jugador. Las que
+  hacen loop son música (la del menú y la de `Efectos`), el resto efectos (el disparo). Si agregás un `AudioSource`, sumale el
+  componente o no va a responder al control. Para bajar una fuente un rato se usa su `Atenuacion`, no `volume`: la tienda
+  baja así la música del menú.
+- **`Sonidos` multiplica por el volumen de efectos** al tocar y al programar, así golpes, monedas, explosiones y la tienda
+  responden sin componente.
+- **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
+  (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
+  los arma debajo de los botones de la pausa. El atrás de Android cierra la ventana de sonido primero.
+- Se escribe a disco medio segundo después de soltar el control o al cerrarse la ventana, no en cada movimiento.
+
 ## Persistencia
 
 El récord, el último modo y el tutorial van por `PlayerPrefs`; las monedas y el progreso no (ver Monedas y
@@ -670,6 +687,7 @@ progreso):
 | `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"` |
 | `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext`, `TiendaMejoras.Jugar` |
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
+| `"VolumenEfectos"`, `"VolumenMusica"` | `SliderVolumen` (menú y pausa) | `Volumen`; sin nada guardado, 1 |
 | `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma

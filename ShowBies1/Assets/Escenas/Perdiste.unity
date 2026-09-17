@@ -677,6 +677,7 @@ GameObject:
   - component: {fileID: 788370876}
   - component: {fileID: 788370878}
   - component: {fileID: 788370879}
+  - component: {fileID: 788370880}
   m_Layer: 0
   m_Name: Menu
   m_TagString: Untagged
@@ -826,6 +827,19 @@ MonoBehaviour:
   etiqueta: {fileID: 1042412802}
   contador: {fileID: 1609428528}
   avisoDeDescanso: {fileID: 1751678515}
+--- !u!114 &788370880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 788370875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 914184a546b560043825eba2ad609287, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FuenteConVolumen
+  tipo: 0
 --- !u!1 &815578559
 GameObject:
   m_ObjectHideFlags: 0

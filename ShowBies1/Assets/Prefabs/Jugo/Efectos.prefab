@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8814578216983504815}
   - component: {fileID: 4001782625764812310}
   - component: {fileID: 7124501423870020711}
+  - component: {fileID: 6293534684419845620}
   m_Layer: 0
   m_Name: Efectos
   m_TagString: Untagged
@@ -58,6 +59,11 @@ MonoBehaviour:
   chispasPorExplosion: 60
   chispasPorDisparo: 2
   chispasPorCaja: 25
+  temblorFuria: 0.6
+  pausaFuria: 0.06
+  tonoMusicaFuria: 1.12
+  pulsoVinetaFuria: 0.35
+  intervaloPulsoFuria: 0.45
   materialDestello: {fileID: 2100000, guid: c4deb24009f4ea84a9c84d0b1a999202, type: 2}
   duracionDestello: 0.07
   numeroPrefab: {fileID: 5768066985209305881, guid: e0923acc886aee847869703854a7b984, type: 3}
@@ -171,3 +177,16 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &6293534684419845620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7382444874135454158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 914184a546b560043825eba2ad609287, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FuenteConVolumen
+  tipo: 1

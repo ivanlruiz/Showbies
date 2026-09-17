@@ -221,10 +221,17 @@ public class TiendaMejoras : MonoBehaviour
 
         // Los sonidos de la tienda están en la bemol y la música del menú puede no
         // estarlo: baja mientras la tienda está abierta.
+        // Con FuenteConVolumen se baja por su Atenuacion: tocar volume directo lo pisaria
+        // el volumen del jugador en el cuadro siguiente.
         if (musica != null && !musicaBajada)
         {
-            volumenMusicaOriginal = musica.volume;
-            musica.volume = volumenMusicaOriginal * volumenMusicaAbierta;
+            var conVolumen = musica.GetComponent<FuenteConVolumen>();
+            if (conVolumen != null) conVolumen.Atenuacion = volumenMusicaAbierta;
+            else
+            {
+                volumenMusicaOriginal = musica.volume;
+                musica.volume = volumenMusicaOriginal * volumenMusicaAbierta;
+            }
             musicaBajada = true;
         }
 
@@ -277,7 +284,10 @@ public class TiendaMejoras : MonoBehaviour
         if (!musicaBajada) return;
 
         musicaBajada = false;
-        if (musica != null) musica.volume = volumenMusicaOriginal;
+        if (musica == null) return;
+        var conVolumen = musica.GetComponent<FuenteConVolumen>();
+        if (conVolumen != null) conVolumen.Atenuacion = 1f;
+        else musica.volume = volumenMusicaOriginal;
     }
 
     private void RefrescarTodas()

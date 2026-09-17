@@ -76,6 +76,10 @@ public static class Sonidos
 
         CrearFuentesSiFaltan();
 
+        // El volumen de efectos que eligio el jugador.
+        volumen *= Volumen.Efectos;
+        if (volumen <= 0f) return true;
+
         float tono = pitch * (1f + Random.Range(-variacionPitch, variacionPitch));
         if (Mathf.Approximately(tono, 1f))
         {
@@ -108,7 +112,7 @@ public static class Sonidos
         int i = ElegirFuente(programadasLibreEn, ref proximaProgramada);
         AudioSource fuente = programadas[i];
         fuente.clip = clip;
-        fuente.volume = Mathf.Clamp01(volumen);
+        fuente.volume = Mathf.Clamp01(volumen * Volumen.Efectos);
         fuente.pitch = pitch;
         fuente.PlayScheduled(inicio);
         programadasLibreEn[i] = inicio + clip.length / Mathf.Max(0.01f, pitch);

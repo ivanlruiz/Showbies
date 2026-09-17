@@ -975,6 +975,12 @@ public static class PruebasMejoras
         inf.Verdadero("getters granada 1: GranadaDesbloqueada", CatalogoMejoras.GranadaDesbloqueada);
         Progreso.DepurarFijarNivel(c.granada.id, 0);
 
+        // Volumen: la cuenta de cada fuente y los topes.
+        inf.Cerca("volumen: base por jugador", 0.13f, FuenteConVolumen.Calcular(0.26f, 0.5f, 1f), Tolerancia);
+        inf.Cerca("volumen: con la tienda bajando la musica", 0.25f, FuenteConVolumen.Calcular(1f, 0.5f, 0.5f), Tolerancia);
+        inf.Cerca("volumen: en cero no suena", 0f, FuenteConVolumen.Calcular(1f, 0f, 1f), Tolerancia);
+        inf.Cerca("volumen: un valor de mas se topa", 1f, FuenteConVolumen.Calcular(1f, 3f, 1f), Tolerancia);
+
         // El modo libre se desbloquea al llegar a la oleada 12 (completar la 11).
         inf.Verdadero("modo libre: sin oleadas bloqueado", !ModoLibre.DesbloqueadoCon(0));
         inf.Verdadero("modo libre: completada la 10 bloqueado", !ModoLibre.DesbloqueadoCon(10));

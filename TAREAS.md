@@ -17,13 +17,13 @@ Lista de Ivan del 16/9/2026, para después de subir la prueba cerrada. Todavía 
 
 ## Juego
 
-- [ ] **Más zombis por oleada y que aparezcan más rápido** (`zombisBase`, `zombisPorOleada` e
+- [x] **Más zombis por oleada y que aparezcan más rápido** (`zombisBase`, `zombisPorOleada` e
       `intervaloEntreApariciones` del `WaveManager` de WaveMode). Ojo con el techo de zombis vivos en el celular (35).
 - [ ] **Mapas diferentes.** Hoy el modo libre y las oleadas usan el mismo piso.
 
 ## Sonido
 
-- [ ] **Volumen de efectos y de música por separado,** con un lugar en la UI para cambiarlo (hoy no hay pantalla
+- [x] **Volumen de efectos y de música por separado,** con un lugar en la UI para cambiarlo (hoy no hay pantalla
       de opciones). La música de partida se sacó; definir si vuelve con su propio volumen.
 
 ## Mejoras

@@ -367,6 +367,7 @@ GameObject:
   - component: {fileID: 3916532637247898025}
   - component: {fileID: 3238900422480691295}
   - component: {fileID: 8998462304396332086}
+  - component: {fileID: 6316456074965033117}
   m_Layer: 5
   m_Name: MenuPausa
   m_TagString: Untagged
@@ -471,6 +472,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuPausa
   panel: {fileID: 8668526712939682011}
+--- !u!114 &6316456074965033117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1399679279974442286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c661bd86bbbc4494d917d7f761bf77c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VolumenEnPausa
+  menuPausa: {fileID: 8998462304396332086}
+  titulo: {fileID: 4421851347175340467}
+  alturaFila: -390
+  ancho: 440
+  separacion: 160
 --- !u!1 &1958771116829897592
 GameObject:
   m_ObjectHideFlags: 0

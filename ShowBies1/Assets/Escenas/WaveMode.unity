@@ -715,9 +715,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3275518440274919472, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2037945219}
+    - targetCorrespondingSourceObject: {fileID: 3275518440274919472, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2037945221}
     - targetCorrespondingSourceObject: {fileID: 3275518440651567677, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2083570185}
+    - targetCorrespondingSourceObject: {fileID: 3275518440651567677, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2083570186}
   m_SourcePrefab: {fileID: 100100000, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
 --- !u!114 &406560286 stripped
 MonoBehaviour:
@@ -2073,9 +2079,9 @@ MonoBehaviour:
   - {fileID: 176671164}
   - {fileID: 2051766333}
   - {fileID: 360960685}
-  zombisBase: 6
-  zombisPorOleada: 2
-  intervaloEntreApariciones: 0.8
+  zombisBase: 10
+  zombisPorOleada: 4
+  intervaloEntreApariciones: 0.35
   descansoEntreOleadas: 3
   maxZombisVivos: 60
   maxZombisVivosMovil: 35
@@ -4530,6 +4536,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.430312, y: 2.7579415, z: 1}
   m_Center: {x: 0.12514001, y: 0.37897086, z: 0}
+--- !u!114 &2037945221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2037945215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 914184a546b560043825eba2ad609287, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FuenteConVolumen
+  tipo: 0
 --- !u!1 &2051766332
 GameObject:
   m_ObjectHideFlags: 0
@@ -4738,6 +4757,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &2083570186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2083570182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 914184a546b560043825eba2ad609287, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FuenteConVolumen
+  tipo: 0
 --- !u!1 &2110854561
 GameObject:
   m_ObjectHideFlags: 0
