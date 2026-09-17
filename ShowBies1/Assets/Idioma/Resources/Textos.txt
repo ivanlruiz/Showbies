@@ -107,3 +107,11 @@ tut_reloj	See the timer at the top right? The faster fire rate only lasts a few 
 tut_fin_titulo	That's it! You know how to play.	¡Eso es todo! Ya sabes jugar.
 tut_fin_jugar	PLAY	JUGAR
 tut_fin_menu	MENU	MENÚ
+
+# Recompensa diaria (VentanaRecompensaDiaria)
+diaria_titulo	DAILY REWARD	PREMIO DIARIO
+diaria_volve	Come back every day for bigger rewards!	¡Vuelve cada día y gana más!
+diaria_racha	{0}-DAY STREAK!	¡RACHA DE {0} DÍAS!
+diaria_dia	DAY {0}	DÍA {0}
+diaria_cobrar	CLAIM +{0}	COBRAR +{0}
+diaria_cobrado	+{0} COINS!	¡+{0} MONEDAS!

@@ -66,6 +66,12 @@ public static class Progreso
         // no cambia la version.
         public int oleadaEnCurso;
         public int puntosEnCurso;
+
+        // La recompensa diaria (RecompensaDiaria): el ultimo dia cobrado, aaaammdd, y la
+        // racha con la que se cobro. 0 = nunca. Igual que la oleada en curso, un JSON sin
+        // estos campos los lee como 0 y no cambia la version.
+        public int diaRecompensa;
+        public int rachaRecompensa;
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
@@ -200,6 +206,25 @@ public static class Progreso
         if (datos.oleadaEnCurso == 0 && datos.puntosEnCurso == 0) return;
         datos.oleadaEnCurso = 0;
         datos.puntosEnCurso = 0;
+        Revision++;
+    }
+
+    public static int DiaUltimaRecompensa
+    {
+        get { Cargar(); return datos.diaRecompensa; }
+    }
+
+    public static int RachaRecompensa
+    {
+        get { Cargar(); return datos.rachaRecompensa; }
+    }
+
+    // Solo anota el dia y la racha; las monedas entran por CobrarPremio, que guarda.
+    public static void RegistrarRecompensaDiaria(int dia, int racha)
+    {
+        Cargar();
+        datos.diaRecompensa = Math.Max(0, dia);
+        datos.rachaRecompensa = Math.Max(0, racha);
         Revision++;
     }
 

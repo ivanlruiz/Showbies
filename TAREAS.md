@@ -30,3 +30,11 @@ Lista de Ivan del 16/9/2026, para después de subir la prueba cerrada. Todavía 
 
 - [ ] **Power-ups en la tienda:** que las cajas (balas, vida y arma) se puedan mejorar con monedas, por ejemplo más
       duración, más efecto o que aparezcan más seguido.
+
+## Retención (para que vuelvan cada día)
+
+- [x] **Recompensa diaria:** monedas por entrar, que crecen si entrás varios días seguidos.
+- [ ] **Misiones:** 3 por día del tipo "matá 200 zombis", "llegá a la oleada 10" o "usá la furia 3 veces". Dan monedas y
+      le ponen un objetivo a cada partida.
+- [ ] **Logros:** hitos permanentes (primer jefe, 10.000 zombis, crítico al 100 %). Se pueden conectar con Google Play
+      Games.

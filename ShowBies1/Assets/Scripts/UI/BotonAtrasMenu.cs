@@ -18,6 +18,7 @@ public class BotonAtrasMenu : MonoBehaviour
     public TiendaMejoras tienda;
     public SelectorIdioma selectorIdioma;
     public OpcionesSonido opcionesSonido;
+    public VentanaRecompensaDiaria recompensaDiaria;
 
     private void Update()
     {
@@ -26,6 +27,13 @@ public class BotonAtrasMenu : MonoBehaviour
 
     public void Atras()
     {
+        // La recompensa diaria tapa todo: el atras la cierra sin cobrar.
+        if (recompensaDiaria != null && VentanaRecompensaDiaria.Abierta)
+        {
+            recompensaDiaria.Cerrar();
+            return;
+        }
+
         if (opcionesSonido != null && opcionesSonido.Abierto)
         {
             opcionesSonido.Cerrar();

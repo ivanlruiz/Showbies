@@ -394,6 +394,21 @@ del día). No usa PlayerPrefs a propósito: es estado estructurado.
   de derrota (`TextoMonedasPartida`). El HUD de las escenas de juego muestra el total con `ContadorMonedas`.
   Los números para pantalla pasan por `FormatoNumeros.Compacto`, que los escribe según el idioma (ver Idiomas).
 
+## Recompensa diaria
+
+Monedas por entrar una vez por día, que crecen con la racha (pedido de Ivan para que vuelvan cada día). La lógica es
+`RecompensaDiaria` (`Assets/Scripts/Progreso/`) y la ventana, `VentanaRecompensaDiaria` (raíz del canvas "Main Menu"),
+que se arma entera en código y aparece sola al abrir el menú si hoy hay algo para cobrar.
+
+- **Racha:** sube si el último cobro fue ayer; si se saltó un día vuelve a 1. Paga 50, 75, 100, 150, 200, 300 y 500
+  (`MonedasPorDia`), y del día 7 en adelante sigue pagando lo del 7 mientras no se corte.
+- **Crece con la mejor oleada:** × (1 + 0,1 × `MejorOleada`), para que no quede chica cuando las mejoras cuestan miles.
+- **Se guarda en el progreso** (`diaRecompensa` aaaammdd y `rachaRecompensa`, sin cambiar la versión) y entra por
+  `CobrarPremio`: no son monedas ganadas jugando. **Atrasar el reloj no da otra**: sólo cuenta un día mayor al guardado
+  (`Progreso.EsDiaNuevo`), como los topes de los anuncios.
+- El atrás de Android la cierra sin cobrar (`BotonAtrasMenu`); vuelve a salir la próxima vez que se abre el menú ese día.
+- Las pruebas cubren racha, corte, reloj atrasado, fin de mes y de año, bisiesto, montos y el cobro guardado.
+
 ## Mejoras y tienda
 
 Cada mejora es un ScriptableObject `Mejora` en `Assets/Mejoras/`, y `Assets/Mejoras/Resources/CatalogoMejoras`

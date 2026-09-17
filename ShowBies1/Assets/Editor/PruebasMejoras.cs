@@ -205,6 +205,7 @@ public static class PruebasMejoras
                     ProbarGuardado(informe);
                     ProbarAnuncios(informe);
                     ProbarCircuitoDeAnuncios(informe);
+                    ProbarRecompensaDiaria(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1397,6 +1398,37 @@ public static class PruebasMejoras
             ServicioAnuncios.UsarParaPruebas(null, null);
             Object.DestroyImmediate(config);
         }
+    }
+
+    // La recompensa diaria: racha, corte, reloj atrasado, monto y cobro.
+    static void ProbarRecompensaDiaria(Informe inf)
+    {
+        inf.Igual("diaria: nunca cobrada, racha 1", 1, RecompensaDiaria.RachaParaHoy(20260917, 0, 0));
+        inf.Igual("diaria: mismo dia, nada", 0, RecompensaDiaria.RachaParaHoy(20260917, 20260917, 3));
+        inf.Igual("diaria: ayer, sube la racha", 4, RecompensaDiaria.RachaParaHoy(20260917, 20260916, 3));
+        inf.Igual("diaria: salto un dia, vuelve a 1", 1, RecompensaDiaria.RachaParaHoy(20260917, 20260915, 3));
+        inf.Igual("diaria: reloj atrasado, nada", 0, RecompensaDiaria.RachaParaHoy(20260910, 20260917, 3));
+        inf.Igual("diaria: fin de mes", 6, RecompensaDiaria.RachaParaHoy(20261001, 20260930, 5));
+        inf.Igual("diaria: fin de anio", 2, RecompensaDiaria.RachaParaHoy(20270101, 20261231, 1));
+        inf.Igual("diaria: bisiesto", 2, RecompensaDiaria.RachaParaHoy(20280229, 20280228, 1));
+        inf.Igual("diaria: fecha guardada rota, racha 1", 1, RecompensaDiaria.RachaParaHoy(20260917, 20260899, 4));
+        inf.Igual("diaria: casillero del dia 9 es el 7", 7, RecompensaDiaria.Casillero(9));
+        inf.Cerca("diaria: monto dia 1 sin oleadas", 50, RecompensaDiaria.Monto(1, 0), 1e-9);
+        inf.Cerca("diaria: monto dia 7", 500, RecompensaDiaria.Monto(7, 0), 1e-9);
+        inf.Cerca("diaria: monto dia 12 queda en el 7", 500, RecompensaDiaria.Monto(12, 0), 1e-9);
+        inf.Cerca("diaria: monto con mejor oleada 10", 200, RecompensaDiaria.Monto(3, 10), 1e-9);
+
+        EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);
+        inf.Igual("diaria: sin campos, dia 0", 0, Progreso.DiaUltimaRecompensa);
+        inf.Cerca("diaria: cobro dia 1 con oleada 5", 75, RecompensaDiaria.CobrarEl(20260917), 1e-9);
+        inf.Cerca("diaria: monedas tras cobrar", 85, Progreso.Monedas, 1e-9);
+        inf.Cerca("diaria: no cuenta como partida", 0, Progreso.MonedasDeLaPartida, 1e-9);
+        inf.Cerca("diaria: el mismo dia no paga", 0, RecompensaDiaria.CobrarEl(20260917), 1e-9);
+        inf.Cerca("diaria: al otro dia paga el 2", 113, RecompensaDiaria.CobrarEl(20260918), 1e-9);
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("diaria: se relee el dia", 20260918, Progreso.DiaUltimaRecompensa);
+        inf.Igual("diaria: se relee la racha", 2, Progreso.RachaRecompensa);
+        inf.Cerca("diaria: se releen las monedas", 198, Progreso.Monedas, 1e-9);
     }
 
     static void ProbarComprasPosibles(Informe inf)
