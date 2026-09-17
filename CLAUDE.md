@@ -570,6 +570,15 @@ trampa).
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`).
 - **Menu**: el nombre del juego arriba, UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
   idioma y el engranaje del sonido arriba a la izquierda. Sin monedas: se ven en la tienda.
+
+**El fondo del menu esta vivo.** `FondoMenu` (objeto raiz `FondoMenu` de `Menu.unity`) acomoda la camara del menu
+mirando un poco desde arriba, reusa su luz direccional y arma el piso de la partida con niebla del color del cielo,
+para que no se vea donde termina. Por delante cruzan zombis de verdad (los cinco prefabs, con pesos en el
+inspector): se instancian dentro de un padre apagado y se les borran scripts, colliders y rigidbodies antes de
+prenderlos, asi **no cuentan en `ZombisVivos`** ni buscan al jugador. `MonedasDelFondo` (en la raiz del canvas
+"Main Menu") deja caer monedas doradas girando justo encima de `BG`, que quedo con alfa 0. **La niebla esta
+guardada en la escena y no solo en el codigo:** el stripping de shaders mira la niebla de las escenas del build, y
+prendida solo en runtime no tendria variantes en Android.
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
   (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).

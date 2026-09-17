@@ -6,7 +6,7 @@ Lista de Ivan del 16/9/2026, para después de subir la prueba cerrada. Todavía 
 
 - [ ] **Cambiar la fuente de los textos.** Hoy todo usa Bangers. Elegir la nueva y reemplazarla en todas las
       pantallas (menú, HUD, tienda, derrota, revivir, tutorial y números flotantes).
-- [ ] **Cambiar el fondo** del menú (hoy es verde liso).
+- [x] **Cambiar el fondo** del menú: zombis cruzando sobre el piso de la partida y monedas cayendo.
 - [ ] **Paleta de colores más clara** en todo el juego. Hoy el mapa es verde oscuro y la UI es oscura.
 
 ## Menú

@@ -14,12 +14,12 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
-  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_FogMode: 3
+  m_Fog: 1
+  m_FogColor: {r: 0.07, g: 0.2, b: 0.06, a: 1}
+  m_FogMode: 1
   m_FogDensity: 0.01
-  m_LinearFogStart: 0
-  m_LinearFogEnd: 300
+  m_LinearFogStart: 14
+  m_LinearFogEnd: 45
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
@@ -2027,6 +2027,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 725206360}
   m_CullTransparentMesh: 1
+--- !u!1 &742176203
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 742176205}
+  - component: {fileID: 742176204}
+  m_Layer: 0
+  m_Name: FondoMenu
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &742176204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742176203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bff0d99b5b82164468eb22c4ae85d738, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FondoMenu
+  zombis:
+  - prefab: {fileID: 6952442577594072745, guid: 69f91a5ee7b7abd40bea94e8b386fc10, type: 3}
+    peso: 4
+  - prefab: {fileID: 7536970143023020194, guid: 35ed0f47b6af16f478a2dea78d6c8975, type: 3}
+    peso: 3
+  - prefab: {fileID: 5727603112678993193, guid: 0b95624e2613d5b40966701a0def174b, type: 3}
+    peso: 1.5
+  - prefab: {fileID: 3558220430278878339, guid: dcac29e5e6a306e418895ab3ac732986, type: 3}
+    peso: 1.5
+  - prefab: {fileID: 208933554839980591, guid: be2b0c9c0c14cd041a980759b79e2433, type: 3}
+    peso: 0.35
+  materialPiso: {fileID: 2100000, guid: 339ba09c580268e4db3a0333c8cc1235, type: 2}
+  colorCielo: {r: 0.07, g: 0.2, b: 0.06, a: 1}
+  posicionCamara: {x: 0, y: 7, z: -9}
+  rotacionCamara: {x: 28, y: 0, z: 0}
+  intensidadLuz: 1.25
+  intervaloMinimo: 1.4
+  intervaloMaximo: 2.8
+  maximoALaVez: 8
+  factorVelocidad: 0.45
+  profundidadMinima: 1
+  profundidadMaxima: 11
+  anchoDelRecorrido: 16
+--- !u!4 &742176205
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742176203}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &753737807
 GameObject:
   m_ObjectHideFlags: 0
@@ -3464,7 +3531,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.113549314, g: 0.3773585, b: 0.097899616, a: 1}
+  m_Color: {r: 0.113549314, g: 0.3773585, b: 0.097899616, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4569,6 +4636,7 @@ GameObject:
   - component: {fileID: 1452757534}
   - component: {fileID: 1452757536}
   - component: {fileID: 1452757535}
+  - component: {fileID: 1452757537}
   m_Layer: 5
   m_Name: Main Menu
   m_TagString: Untagged
@@ -4836,6 +4904,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FuenteConVolumen
   tipo: 1
+--- !u!114 &1452757537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1452757527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90c1d51b0f0a4f34f972bfdac622cd4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MonedasDelFondo
+  fondo: {fileID: 1200115698}
+  cantidad: 14
+  tamanioMinimo: 34
+  tamanioMaximo: 70
+  velocidadMinima: 40
+  velocidadMaxima: 110
+  colorMoneda: {r: 1, g: 0.8, b: 0.2, a: 1}
+  colorBorde: {r: 0.72, g: 0.42, b: 0.02, a: 1}
 --- !u!1 &1509229833
 GameObject:
   m_ObjectHideFlags: 0
@@ -6611,3 +6699,4 @@ SceneRoots:
   - {fileID: 1452757531}
   - {fileID: 724110074}
   - {fileID: 1020977086}
+  - {fileID: 742176205}
