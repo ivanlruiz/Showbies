@@ -12,6 +12,8 @@ using System.Globalization;
 // - Atrasar el reloj del telefono no da otra recompensa: solo cuenta un dia mayor al
 //   guardado (Progreso.EsDiaNuevo), igual que los topes de los anuncios.
 // - Entra por Progreso.CobrarPremio: no son monedas ganadas jugando.
+// - Despues de cobrar se puede mirar un video (LugarAnuncio.DuplicarRegalo) para cobrar
+//   lo mismo otra vez (CobrarDuplicado), una sola vez por cobro.
 //
 // Lo que se puede probar sin escena es estatico y recibe el dia (RachaParaHoy, Monto).
 public static class RecompensaDiaria
@@ -62,6 +64,21 @@ public static class RecompensaDiaria
     }
 
     // Cobra la de hoy y devuelve cuanto dio (0 si ya se habia cobrado).
+    // Lo ultimo que se cobro y todavia se puede duplicar con un video. En memoria: si se
+    // cierra el juego antes de mirar el video, la oferta se pierde, y esta bien.
+    private static double paraDuplicar;
+
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void Reiniciar()
+    {
+        paraDuplicar = 0;
+    }
+
+    public static double ParaDuplicar
+    {
+        get { return paraDuplicar; }
+    }
+
     public static double Cobrar()
     {
         return CobrarEl(Progreso.DiaDeHoy());
@@ -74,6 +91,17 @@ public static class RecompensaDiaria
         double monto = Monto(racha, Progreso.MejorOleada);
         Progreso.RegistrarRecompensaDiaria(hoy, racha);
         Progreso.CobrarPremio("recompensa_diaria", monto, false);
+        paraDuplicar = monto;
+        return monto;
+    }
+
+    // El premio del video: lo mismo que se acaba de cobrar, una sola vez. Devuelve cuanto dio.
+    public static double CobrarDuplicado()
+    {
+        double monto = paraDuplicar;
+        if (!(monto > 0)) return 0;
+        paraDuplicar = 0;
+        Progreso.CobrarPremio("recompensa_diaria_video", monto, false);
         return monto;
     }
 }

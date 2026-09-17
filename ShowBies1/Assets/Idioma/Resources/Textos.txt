@@ -115,3 +115,4 @@ diaria_racha	{0}-DAY STREAK!	¡RACHA DE {0} DÍAS!
 diaria_dia	DAY {0}	DÍA {0}
 diaria_cobrar	CLAIM +{0}	COBRAR +{0}
 diaria_cobrado	+{0} COINS!	¡+{0} MONEDAS!
+diaria_video	VIDEO: +{0} MORE	VÍDEO: +{0} MÁS

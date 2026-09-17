@@ -406,6 +406,10 @@ que se arma entera en código y aparece sola al abrir el menú si hoy hay algo p
 - **Se guarda en el progreso** (`diaRecompensa` aaaammdd y `rachaRecompensa`, sin cambiar la versión) y entra por
   `CobrarPremio`: no son monedas ganadas jugando. **Atrasar el reloj no da otra**: sólo cuenta un día mayor al guardado
   (`Progreso.EsDiaNuevo`), como los topes de los anuncios.
+- **El video va después de cobrar** (pedido de Ivan): se cobra con COBRAR y recién ahí, si `ServicioAnuncios.PuedeOfrecer`
+  el lugar `regalo_x2`, la ventana ofrece VÍDEO: +N MÁS al lado de VOLVER (un botón de atrás, no un NO, GRACIAS). El video
+  paga lo mismo otra vez (`RecompensaDiaria.CobrarDuplicado`, una sola vez por cobro y en memoria). Sin video, la ventana
+  se va sola. Cerrar el video antes no castiga: vuelve la oferta si todavía se puede ofrecer.
 - El atrás de Android la cierra sin cobrar (`BotonAtrasMenu`); vuelve a salir la próxima vez que se abre el menú ese día.
 - Las pruebas cubren racha, corte, reloj atrasado, fin de mes y de año, bisiesto, montos y el cobro guardado.
 
@@ -463,8 +467,9 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 
 ## Anuncios
 
-Los videos con recompensa son la única monetización del juego y entran por **dos lugares**: **revivir** al morir
-y, si no revivió, el **x2 de las monedas en la pantalla de derrota**. **Un solo video premiado por partida**
+Los videos con recompensa son la única monetización del juego y entran por **tres lugares**: **revivir** al morir,
+si no revivió, el **x2 de las monedas en la pantalla de derrota**, y en el menú el **x2 de la recompensa diaria** (ver
+Recompensa diaria). **Un solo video premiado por partida**
 (`vecesPorPartida`), así que en la práctica es o uno o el otro. Todo lo demás (topes, proveedor, hilos) vive en
 `Assets/Scripts/Anuncios/` y el juego no habla nunca con una red de anuncios.
 
@@ -485,7 +490,7 @@ y, si no revivió, el **x2 de las monedas en la pantalla de derrota**. **Un solo
 
 | pieza | qué hace |
 |---|---|
-| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir` y `duplicar_derrota`. |
+| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir`, `duplicar_derrota` y `regalo_x2` (la recompensa diaria). |
 | `IProveedorAnuncios` | quién muestra el video: `Listo(lugar)` y `Mostrar(lugar, aviso)`. Cambiar de red es escribir otra clase. |
 | `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows y el de "todavía no hay red". |
 | `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet, y anda igual en el teléfono. |

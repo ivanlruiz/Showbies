@@ -5466,6 +5466,7 @@ MonoBehaviour:
   materialContorno: {fileID: 2100000, guid: f629c6e43dba4bf38cb74d8860150664, type: 2}
   pildora: {fileID: 21300000, guid: 0f913b6593a72244dac6d78bf50adbd0, type: 3}
   tilde: {fileID: 21300000, guid: 75c5d96349c394243835311bea8abc03, type: 3}
+  iconoAtras: {fileID: 21300000, guid: 30f2fae9ad3f1074fa9c532668918252, type: 3}
   nota: {fileID: 8300000, guid: 7b67e640e9f07a845ae7a048cf7600c4, type: 3}
   sonidoFestejo: {fileID: 8300000, guid: 2dfb80e7e6c2f19489beb252efd030af, type: 3}
   sonidoClick: {fileID: 0}

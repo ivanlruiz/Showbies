@@ -7,6 +7,11 @@ using UnityEngine.UI;
 // en verde con su tilde, el de hoy dorado y latiendo), y un boton COBRAR +N. Al cobrar
 // suena el arpegio de la tienda, el casillero de hoy se pone verde y la ventana se va.
 //
+// Despues de cobrar, si se puede ofrecer un video (LugarAnuncio.DuplicarRegalo, con las
+// reglas de siempre: opt-in, el premio exacto escrito en el boton, cerrarlo antes no
+// castiga), la ventana no se va: ofrece VIDEO: +N MAS al lado de VOLVER (pedido de Ivan:
+// un boton de atras, no un NO, GRACIAS). Si no hay video, se va sola como siempre.
+//
 // Se arma entera en codigo, como OpcionesSonido: en la escena solo esta este componente
 // (en la raiz del canvas "Main Menu") con los sprites, la fuente y los sonidos. El
 // atras de Android la cierra sin cobrar (BotonAtrasMenu): vuelve a salir la proxima vez
@@ -17,6 +22,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     public Material materialContorno;       // titulo sobre el crema
     public Sprite pildora;
     public Sprite tilde;
+    public Sprite iconoAtras;
     public AudioClip nota;                  // moneda.wav
     public AudioClip sonidoFestejo;         // cartel.wav
     public AudioClip sonidoClick;           // el de los demas botones
@@ -27,6 +33,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     public Color colorHoy = new Color(0.97f, 0.79f, 0.28f, 1f);
     public Color colorFuturo = new Color(0f, 0f, 0f, 0.08f);
     public Color colorMoneda = new Color(1f, 0.76f, 0.12f, 1f);
+    public Color colorVideo = new Color(1f, 0.52f, 0.12f, 1f);
     public Color colorBordeMoneda = new Color(0.72f, 0.42f, 0.02f, 1f);
     public Color colorTilde = new Color(0.1f, 0.3f, 0.05f, 1f);
 
@@ -44,7 +51,14 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private Image tildeHoy;
     private TMP_Text titulo;
     private GameObject boton;
+    private GameObject botonVideo;
+    private GameObject botonAtras;
+    private double montoHoy;
+    private bool esperandoVideo;
+    private bool cobrado;
+    private float relojGolpe = -1f;       // tiempo desde el ultimo festejo, para el salto del casillero
     private Texture2D texturaMoneda;
+    private Texture2D texturaClaqueta;
     private Texture2D texturaBorde;
     private Sprite bordeMoneda;
 
@@ -71,6 +85,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     {
         if (panel != null) Abierta = false;
         if (texturaMoneda != null) Destroy(texturaMoneda);
+        if (texturaClaqueta != null) Destroy(texturaClaqueta);
         if (texturaBorde != null) Destroy(texturaBorde);
     }
 
@@ -85,25 +100,82 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
     public void Cerrar()
     {
-        if (!Abierta || relojSalida >= 0f) return;
+        // Con un video en pantalla no se cierra: el premio tiene que encontrar la ventana.
+        if (!Abierta || relojSalida >= 0f || esperandoVideo) return;
         relojSalida = 0f;
     }
 
     private void Cobrar()
     {
-        if (esperaParaIrse >= 0f || relojSalida >= 0f) return;
+        if (esperaParaIrse >= 0f || relojSalida >= 0f || cobrado) return;
         double monto = RecompensaDiaria.Cobrar();
         if (monto <= 0) { Cerrar(); return; }
+        cobrado = true;
 
-        for (int k = 0; k < SemitonosFestejo.Length; k++)
-            Sonidos.Programar(nota, 0.05 * k, 0.8f, Sonidos.PitchDe(SemitonosFestejo[k]));
-        Sonidos.Tocar(sonidoFestejo, 0.7f);
-
+        Festejar();
         if (fondoHoy != null) fondoHoy.color = colorCobrado;
         if (tildeHoy != null) tildeHoy.enabled = true;
         titulo.text = Textos.Formato("diaria_cobrado", FormatoNumeros.Compacto(monto));
         boton.SetActive(false);
-        esperaParaIrse = EsperaTrasCobrar;
+
+        // Recien ahora la oferta del video; sin video, se va sola.
+        if (ServicioAnuncios.PuedeOfrecer(LugarAnuncio.DuplicarRegalo)) MostrarOferta(true);
+        else esperaParaIrse = EsperaTrasCobrar;
+    }
+
+    private void MostrarOferta(bool mostrar)
+    {
+        if (botonVideo != null) botonVideo.SetActive(mostrar);
+        if (botonAtras != null) botonAtras.SetActive(mostrar);
+    }
+
+    private void PedirVideo()
+    {
+        if (relojSalida >= 0f || esperandoVideo) return;
+        esperandoVideo = true;
+        MostrarOferta(false);
+        bool lanzado = ServicioAnuncios.Mostrar(LugarAnuncio.DuplicarRegalo, () =>
+        {
+            esperandoVideo = false;
+            double extra = RecompensaDiaria.CobrarDuplicado();
+            if (extra > 0)
+            {
+                Festejar();
+                titulo.text = Textos.Formato("diaria_cobrado", FormatoNumeros.Compacto(montoHoy + extra));
+            }
+            esperaParaIrse = EsperaTrasCobrar;
+        }, () =>
+        {
+            // Cerrarlo antes no castiga: vuelve la oferta si sigue en pie.
+            esperandoVideo = false;
+            SeguirTrasElVideo();
+        });
+        if (!lanzado)
+        {
+            esperandoVideo = false;
+            SeguirTrasElVideo();
+        }
+    }
+
+    private void SeguirTrasElVideo()
+    {
+        if (ServicioAnuncios.PuedeOfrecer(LugarAnuncio.DuplicarRegalo)) MostrarOferta(true);
+        else esperaParaIrse = EsperaTrasCobrar;
+    }
+
+    private void Atras()
+    {
+        if (esperandoVideo) return;
+        MostrarOferta(false);
+        Cerrar();
+    }
+
+    private void Festejar()
+    {
+        for (int k = 0; k < SemitonosFestejo.Length; k++)
+            Sonidos.Programar(nota, 0.05 * k, 0.8f, Sonidos.PitchDe(SemitonosFestejo[k]));
+        Sonidos.Tocar(sonidoFestejo, 0.7f);
+        relojGolpe = 0f;
     }
 
     private void Update()
@@ -132,8 +204,9 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         if (casilleroHoy != null)
         {
             // Late mientras espera el cobro; al cobrar da un salto y se queda quieto.
-            float latido = esperaParaIrse >= 0f
-                ? 0.25f * CurvasUI.Campana(Mathf.Clamp01((EsperaTrasCobrar - esperaParaIrse) / 0.4f))
+            if (relojGolpe >= 0f) relojGolpe += dt;
+            float latido = cobrado
+                ? (relojGolpe >= 0f ? 0.25f * CurvasUI.Campana(Mathf.Clamp01(relojGolpe / 0.4f)) : 0f)
                 : 0.06f * Mathf.Sin(reloj * 6f);
             casilleroHoy.localScale = Vector3.one * (1.12f + latido);
         }
@@ -207,45 +280,65 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         }
 
         bordeMoneda = borde;
-        boton = ArmarBoton(ventana, moneda, Textos.Formato("diaria_cobrar",
-                           FormatoNumeros.Compacto(RecompensaDiaria.Monto(racha, mejor))));
+        montoHoy = RecompensaDiaria.Monto(racha, mejor);
+        boton = ArmarBoton(ventana, "BotonCobrar", 560f, new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255),
+                           moneda, colorMoneda, true, Textos.Formato("diaria_cobrar", FormatoNumeros.Compacto(montoHoy)), Cobrar);
+
+        texturaClaqueta = TexturasUI.Claqueta(128);
+        var claqueta = Sprite.Create(texturaClaqueta, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        botonVideo = ArmarBoton(ventana, "BotonVideo", 620f, colorVideo, new Color32(0x3a, 0x1a, 0x00, 255),
+                                claqueta, new Color32(0x3a, 0x1a, 0x00, 255), false,
+                                Textos.Formato("diaria_video", FormatoNumeros.Compacto(montoHoy)), PedirVideo);
+        ((RectTransform)botonVideo.transform).anchoredPosition = new Vector2(-175f, -218f);
+        // VOLVER se lee igual de bien que el video: mismo tamanio de letra, vidrio oscuro como los demas.
+        botonAtras = ArmarBoton(ventana, "BotonAtras", 340f, new Color(0.06f, 0.12f, 0.05f, 0.45f), Color.white,
+                                iconoAtras, Color.white, false, Textos.De("comun_volver"), Atras);
+        ((RectTransform)botonAtras.transform).anchoredPosition = new Vector2(330f, -218f);
+        MostrarOferta(false);
     }
 
-    private GameObject ArmarBoton(RectTransform padre, Sprite moneda, string texto)
+    private GameObject ArmarBoton(RectTransform padre, string nombre, float ancho, Color color, Color colorTexto,
+                                  Sprite dibujo, Color colorIcono, bool iconoConBorde, string texto,
+                                  UnityEngine.Events.UnityAction alTocar)
     {
-        var raiz = Rect(padre, "BotonCobrar", new Vector2(0f, -218f), new Vector2(560f, 130f));
+        var tamanio = new Vector2(ancho, 130f);
+        var raiz = Rect(padre, nombre, new Vector2(0f, -218f), tamanio);
         var toque = raiz.gameObject.AddComponent<Image>();
         toque.color = new Color(1f, 1f, 1f, 0f);
         var button = raiz.gameObject.AddComponent<Button>();
         button.targetGraphic = toque;
-        button.onClick.AddListener(Cobrar);
+        button.onClick.AddListener(alTocar);
 
         // Visual antes que la sombra: BotonJugoso toma en su Awake el primer hijo como visual.
-        var visual = Rect(raiz, "Visual", Vector2.zero, new Vector2(560f, 130f));
-        var fondo = Rect(visual, "Fondo", Vector2.zero, new Vector2(560f, 130f));
+        var visual = Rect(raiz, "Visual", Vector2.zero, tamanio);
+        var fondo = Rect(visual, "Fondo", Vector2.zero, tamanio);
         var imgFondo = fondo.gameObject.AddComponent<Image>();
         imgFondo.sprite = pildora; imgFondo.type = Image.Type.Sliced;
-        imgFondo.color = new Color32(0x7d, 0xe0, 0x4a, 255);
+        imgFondo.color = color;
         imgFondo.raycastTarget = false;
 
-        var icono = Rect(visual, "Icono", Vector2.zero, new Vector2(58f, 58f));
-        icono.anchorMin = icono.anchorMax = new Vector2(0f, 0.5f);
-        var imgIcono = icono.gameObject.AddComponent<Image>();
-        imgIcono.sprite = moneda;
-        imgIcono.color = colorMoneda;
-        imgIcono.raycastTarget = false;
-        ConBorde(icono, bordeMoneda);
-
-        var tmp = Texto(visual, "Texto", texto, 62f, new Color32(0x10, 0x24, 0x0e, 255), Vector2.zero, new Vector2(560f, 130f));
-        var junto = icono.gameObject.AddComponent<IconoDeBoton>();
-        junto.texto = tmp;
-        junto.separacion = 12f;
+        var tmp = Texto(visual, "Texto", texto, 54f, colorTexto, Vector2.zero, tamanio);
+        if (dibujo != null)
+        {
+            var icono = Rect(visual, "Icono", Vector2.zero, new Vector2(58f, 58f));
+            icono.anchorMin = icono.anchorMax = new Vector2(0f, 0.5f);
+            icono.SetSiblingIndex(tmp.transform.GetSiblingIndex());
+            var imgIcono = icono.gameObject.AddComponent<Image>();
+            imgIcono.sprite = dibujo;
+            imgIcono.color = colorIcono;
+            imgIcono.preserveAspect = true;
+            imgIcono.raycastTarget = false;
+            if (iconoConBorde) ConBorde(icono, bordeMoneda);
+            var junto = icono.gameObject.AddComponent<IconoDeBoton>();
+            junto.texto = tmp;
+            junto.separacion = 12f;
+        }
 
         var jugoso = raiz.gameObject.AddComponent<BotonJugoso>();
         jugoso.respirar = true;
         jugoso.sonidoClick = sonidoClick;
 
-        var sombra = Rect(raiz, "Sombra", new Vector2(0f, -8f), new Vector2(560f, 130f));
+        var sombra = Rect(raiz, "Sombra", new Vector2(0f, -8f), tamanio);
         sombra.SetAsFirstSibling();
         var imgSombra = sombra.gameObject.AddComponent<Image>();
         imgSombra.sprite = pildora; imgSombra.type = Image.Type.Sliced;

@@ -1429,6 +1429,13 @@ public static class PruebasMejoras
         inf.Igual("diaria: se relee el dia", 20260918, Progreso.DiaUltimaRecompensa);
         inf.Igual("diaria: se relee la racha", 2, Progreso.RachaRecompensa);
         inf.Cerca("diaria: se releen las monedas", 610, Progreso.Monedas, 1e-9);
+        inf.Cerca("diaria: dia 3 paga", 600, RecompensaDiaria.CobrarEl(20260919), 1e-9);
+        inf.Cerca("diaria: queda para duplicar lo cobrado", 600, RecompensaDiaria.ParaDuplicar, 1e-9);
+        inf.Cerca("diaria: el video paga lo mismo otra vez", 600, RecompensaDiaria.CobrarDuplicado(), 1e-9);
+        inf.Cerca("diaria: el video no paga dos veces", 0, RecompensaDiaria.CobrarDuplicado(), 1e-9);
+        inf.Igual("diaria: el video no toca la racha", 3, Progreso.RachaRecompensa);
+        inf.Cerca("diaria: monedas tras el video", 1810, Progreso.Monedas, 1e-9);
+        inf.Cerca("diaria: sin cobro no hay video", 0, RecompensaDiaria.CobrarDuplicado(), 1e-9);
     }
 
     static void ProbarComprasPosibles(Informe inf)
