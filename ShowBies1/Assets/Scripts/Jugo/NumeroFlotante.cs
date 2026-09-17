@@ -15,7 +15,7 @@ public class NumeroFlotante : MonoBehaviour
     public Color colorDebil = Color.white;
     public Color colorFuerte = new Color(1f, 0.8f, 0.1f);
     public Color colorCritico = new Color(1f, 0.22f, 0.12f);
-    public float escalaCritico = 1.7f;              // sobre la escala que le toca por el daño
+    public float escalaCritico = 1.3f;              // sobre la escala que le toca por el daño
 
     [System.NonSerialized] public System.Action<NumeroFlotante> alTerminar;
 
