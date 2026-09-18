@@ -20,6 +20,5 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Escenas/Tutorial.unity
     guid: 0bdb3d51815f3fe47b3e5971ecc70b17
-  m_configObjects:
-    com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
+  m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

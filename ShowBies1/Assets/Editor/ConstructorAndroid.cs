@@ -92,6 +92,12 @@ public static class ConstructorAndroid
 
         var keystoreAnterior = PlayerSettings.Android.keystoreName;
         var aliasAnterior = PlayerSettings.Android.keyaliasName;
+        // Los simbolos nativos van dentro del AAB: sin ellos, un crash de un tester llega a
+        // Android vitals como direcciones sueltas en libil2cpp.so, y Play avisa en cada subida.
+        var nivelSimbolos = UnityEditor.Android.UserBuildSettings.DebugSymbols.level;
+        var formatoSimbolos = UnityEditor.Android.UserBuildSettings.DebugSymbols.format;
+        UnityEditor.Android.UserBuildSettings.DebugSymbols.level = Unity.Android.Types.DebugSymbolLevel.SymbolTable;
+        UnityEditor.Android.UserBuildSettings.DebugSymbols.format = Unity.Android.Types.DebugSymbolFormat.IncludeInBundle;
         EditorUserBuildSettings.buildAppBundle = true;
         PlayerSettings.Android.useCustomKeystore = true;
         PlayerSettings.Android.keystoreName = Path.GetFullPath(datos["keystore"]);
@@ -113,6 +119,8 @@ public static class ConstructorAndroid
             PlayerSettings.Android.keyaliasName = aliasAnterior;
             PlayerSettings.Android.useCustomKeystore = false;
             EditorUserBuildSettings.buildAppBundle = false;
+            UnityEditor.Android.UserBuildSettings.DebugSymbols.level = nivelSimbolos;
+            UnityEditor.Android.UserBuildSettings.DebugSymbols.format = formatoSimbolos;
         }
     }
 
