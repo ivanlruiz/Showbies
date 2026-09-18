@@ -1313,6 +1313,14 @@ public static class PruebasMejoras
             inf.Igual("circuito: cerrarlo no premia", 0, premios);
             inf.Igual("circuito: cerrarlo avisa que no hubo premio", 1, cierres);
             inf.Igual("circuito: y no gasta el tope del dia", 0, Progreso.UsosDeHoy(lugar));
+            inf.Verdadero("circuito: cerrarlo deja la oferta en pie", ServicioAnuncios.PuedeOfrecer(lugar));
+
+            // --- la diaria no cuenta el tope por partida -------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            Progreso.RegistrarUsoDeAnuncio(LugarAnuncio.DuplicarDerrota);
+            inf.Verdadero("circuito: un video en la partida corta la derrota", !ServicioAnuncios.PuedeOfrecer(LugarAnuncio.DuplicarDerrota));
+            inf.Verdadero("circuito: pero no el x2 de la diaria", ServicioAnuncios.PuedeOfrecer(LugarAnuncio.DuplicarRegalo));
 
             // --- no habia video --------------------------------------------------
             EmpezarConMonedas(0);

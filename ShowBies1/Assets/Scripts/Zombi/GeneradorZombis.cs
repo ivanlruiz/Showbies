@@ -139,6 +139,7 @@ public class GeneradorZombis : MonoBehaviour
                 enemigo.multiplicadorDano = MultiplicadorDanoActual;
                 enemigo.multiplicadorMonedas = MultiplicadorMonedasActual;
                 enemigo.monedaPrefab = monedaPrefab;
+                enemigo.EsJefe = enemy == ZombiBOSS;
             }
         }
     }

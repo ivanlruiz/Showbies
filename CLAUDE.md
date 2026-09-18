@@ -487,7 +487,9 @@ Recompensa diaria). **Un solo video premiado por partida**
 - **Siempre opt-in y en una pausa natural.** Nunca durante la partida: la derrota es el único momento, y el
   jugador ya terminó de jugar.
 - **El premio se dice exacto antes de mirar** ("VER VIDEO: +137 MONEDAS"), no como sorpresa.
-- **Cerrar el video antes no castiga**: no hay premio, pero tampoco se gasta el tope del día ni pasa nada más.
+- **Cerrar el video antes no castiga**: no hay premio, pero tampoco se gasta el tope del día ni la separación de
+  60 s entre videos, así que la oferta sigue en pie. El tope por partida no se aplica al x2 de la diaria, que se cobra
+  en el menú.
 - **Si no se puede ofrecer, el botón no existe**, no aparece en gris.
 - **Se puede apagar**: `Progreso.OfrecerVideos` apaga todas las ofertas y el servicio lo respeta. Hoy no hay
   ningún botón que lo toque (hubo uno en el menú y a Ivan no le gustó): queda para cuando haya pantalla de
@@ -544,11 +546,19 @@ o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarParti
 - **Volver no regala nada más que seguir jugando**: `EnemyController.DespejarAlrededor` saca del mapa a los
   zombis que estén a `radioDeDespeje` (7 m) **sin puntos, monedas ni mancha**, como el kill-Z, y el jugador
   vuelve con la vida llena y `segundosDeGracia` (2,5 s) sin recibir daño. Si esos zombis dieran monedas, el
-  video sería la forma barata de cobrar una pantalla llena.
+  video sería la forma barata de cobrar una pantalla llena. **El jefe no se despeja** (`EnemyController.EsJefe`, que
+  marcan `WaveManager` y `GeneradorZombis`): la oleada lo contaría como muerto y revivir al lado del jefe lo borraría.
+- **Caer al vacío no se revive**: el kill-Z del jugador llama directo a `Terminar`. Revivir lo dejaría 20 m bajo el piso
+  y volvería a morir con el video gastado.
+- **El récord se escribe al morir, antes de ofrecer revivir** (`PlayerHealth.GuardarRecord`, que sólo sube): si
+  Android mata la app durante el video, `Terminar` no llega a correr.
 - **Que se venza el reloj es exactamente lo mismo que decir que no**, y el botón NO, GRACIAS está desde el
   primer segundo y se lee igual de bien que el otro.
 - Mientras la ventana está abierta, `OfertaDeRevivir.Activa` es cierto y **`MenuPausa` no pausa**: reanudar
-  desde el menú de pausa devolvería el `timeScale` a 1 con el jugador muerto. Si la escena se descarga con la
+  desde el menú de pausa devolvería el `timeScale` a 1 con el jugador muerto. **`MenuPausa.JuegoCongelado`**
+  (pausa u oferta abierta) es lo que miran el input (`PlayerController`, `PlayerJS`, la granada, la furia) y la pausa
+  de impacto de `Efectos`: antes una explosión en el momento de morir devolvía el `timeScale` a 1 detrás del ¡HAS
+  MUERTO!. Si la escena se descarga con la
   oferta abierta, `OnDestroy` devuelve el `timeScale`.
 - Los tres dibujos del botón (círculo, anillo y claqueta) los hace `TexturasUI` en código, así que no hay
   imágenes nuevas en el proyecto; el componente es dueño de esas texturas y las destruye. La claqueta es el

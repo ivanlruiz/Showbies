@@ -232,6 +232,7 @@ public class WaveManager : MonoBehaviour
         enemigo.multiplicadorDano = Escalado.PorOleada(crecimientoDano, OleadaActual);
         enemigo.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
         enemigo.monedaPrefab = monedaPrefab;
+        enemigo.EsJefe = prefab == jefe;
         zombisDeLaOleada.Add(new ZombiAnotado { zombi = enemigo, aparicion = enemigo.NumeroDeAparicion });
     }
 

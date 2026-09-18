@@ -45,11 +45,11 @@ Lo que encontró la auditoría de 10 agentes y quedó para después de la versi�
 
 **Antes de integrar AdMob** (hoy no pasan porque la versión de Play sale sin anuncios):
 
-- [ ] La pausa de impacto descongela el juego con la oferta de revivir abierta (`Efectos.cs`).
-- [ ] Revivir saca al jefe y a todo lo que está a 7 m, y la oleada los cuenta como muertos (`EnemyController.DespejarAlrededor`).
-- [ ] Cerrar un video bloquea la oferta 60 s, y el tope "por partida" sigue contando en el menú (`ServicioAnuncios`).
-- [ ] Revivir después de caer por el kill-Z gasta el video y el jugador vuelve a morir a los 2,5 s.
-- [ ] Si Android mata la app durante el video de revivir, se pierde el récord de esa partida.
+- [x] La pausa de impacto descongela el juego con la oferta de revivir abierta (`Efectos.cs`).
+- [x] Revivir saca al jefe y a todo lo que está a 7 m, y la oleada los cuenta como muertos (`EnemyController.DespejarAlrededor`).
+- [x] Cerrar un video bloquea la oferta 60 s, y el tope "por partida" sigue contando en el menú (`ServicioAnuncios`).
+- [x] Revivir después de caer por el kill-Z gasta el video y el jugador vuelve a morir a los 2,5 s.
+- [x] Si Android mata la app durante el video de revivir, se pierde el récord de esa partida.
 
 **A mediano plazo:**
 

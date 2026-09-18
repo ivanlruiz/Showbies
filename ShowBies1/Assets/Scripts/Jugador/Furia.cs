@@ -60,7 +60,7 @@ public class Furia : MonoBehaviour
 
     public bool Lista
     {
-        get { return Desbloqueada && !MenuPausa.Pausado && RestanteEnfriamiento <= 0f; }
+        get { return Desbloqueada && !MenuPausa.JuegoCongelado && RestanteEnfriamiento <= 0f; }
     }
 
     // Lo que falta de un reloj que arranco en "desde" y dura "duracion". Sin
@@ -89,7 +89,7 @@ public class Furia : MonoBehaviour
 
         // En movil la activa el boton del HUD. Como todo lo que lee input, se corta
         // en la pausa.
-        if (!Plataforma.EsMovil && !MenuPausa.Pausado && Input.GetKeyDown(tecla)) Activar();
+        if (!Plataforma.EsMovil && !MenuPausa.JuegoCongelado && Input.GetKeyDown(tecla)) Activar();
 
         bool activa = Activa;
         if (activa != aplicada) Aplicar(activa);

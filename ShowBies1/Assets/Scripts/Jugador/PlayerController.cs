@@ -72,7 +72,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (MenuPausa.Pausado)
+        if (MenuPausa.JuegoCongelado)
         {
             // Lo que se suelte durante la pausa no llega como GetMouseButtonUp:
             // sin esto el arma quedaria disparando sola al reanudar.
@@ -237,7 +237,7 @@ public class PlayerController : MonoBehaviour
 
     public bool GranadaLista
     {
-        get { return GranadaDesbloqueada && granadaPrefab != null && !MenuPausa.Pausado && Time.time >= granadaDisponibleEn; }
+        get { return GranadaDesbloqueada && granadaPrefab != null && !MenuPausa.JuegoCongelado && Time.time >= granadaDisponibleEn; }
     }
 
     private void LanzarGranadaA(Vector3 destino)

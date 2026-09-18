@@ -96,7 +96,7 @@ public class Efectos : MonoBehaviour
 
         // timeScale es global: si la escena se descarga en plena pausa de impacto,
         // la siguiente arrancaria en camara lenta.
-        if (enPausaDeImpacto && !MenuPausa.Pausado) Time.timeScale = 1f;
+        if (enPausaDeImpacto && !MenuPausa.JuegoCongelado) Time.timeScale = 1f;
     }
 
     private void Update()
@@ -107,7 +107,7 @@ public class Efectos : MonoBehaviour
 
         enPausaDeImpacto = false;
         // Si en el medio se abrio el menu de pausa, el tiempo lo maneja el menu.
-        if (!MenuPausa.Pausado) Time.timeScale = 1f;
+        if (!MenuPausa.JuegoCongelado) Time.timeScale = 1f;
     }
 
     // Cualquier daño a un zombi, mate o no: el numero, unas chispas y un tic.
@@ -347,7 +347,7 @@ public class Efectos : MonoBehaviour
 
     private void PausaDeImpacto(float segundos)
     {
-        if (MenuPausa.Pausado || segundos <= 0f) return;
+        if (MenuPausa.JuegoCongelado || segundos <= 0f) return;
 
         pausaHasta = Mathf.Max(pausaHasta, Time.unscaledTime + segundos);
         enPausaDeImpacto = true;

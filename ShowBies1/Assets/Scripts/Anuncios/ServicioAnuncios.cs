@@ -142,7 +142,10 @@ public static class ServicioAnuncios
         return PuedeOfrecerConDatos(config, Progreso.OfrecerVideos, MostrandoAnuncio,
                                     Progreso.PartidasTerminadas, Progreso.SegundosJugados,
                                     Progreso.UsosDeHoy(lugar), SegundosDesdeElUltimo,
-                                    Proveedor.Listo(lugar), Progreso.VideosDeLaPartida);
+                                    Proveedor.Listo(lugar),
+                                    // El tope por partida es para la derrota y el revivir; la diaria
+                                    // se cobra en el menu, entre partidas.
+                                    lugar == LugarAnuncio.DuplicarRegalo ? 0 : Progreso.VideosDeLaPartida);
     }
 
     // Pide el video. Devuelve si se lanzo; el premio llega despues, en el hilo
@@ -211,7 +214,6 @@ public static class ServicioAnuncios
 
         AudioListener.pause = audioPausadoAntes;
         MostrandoAnuncio = false;
-        ultimoAnuncioEn = Time.realtimeSinceStartup;
 
         bool premiar = resultado == ResultadoAnuncio.Recompensado;
 
@@ -229,8 +231,14 @@ public static class ServicioAnuncios
             }
         }
 
-        // Solo gasta el tope lo que se premio: cerrar el video deja la oferta.
-        if (premiar) Progreso.RegistrarUsoDeAnuncio(lugar);
+        // Solo gasta el tope y la separacion entre videos lo que se premio: cerrar el video
+        // deja la oferta en pie. Antes la separacion contaba cualquier resultado y la oferta
+        // desaparecia 60 s despues de cerrarlo.
+        if (premiar)
+        {
+            Progreso.RegistrarUsoDeAnuncio(lugar);
+            ultimoAnuncioEn = Time.realtimeSinceStartup;
+        }
 
         if (premiar)
         {

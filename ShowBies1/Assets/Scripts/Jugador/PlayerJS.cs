@@ -33,7 +33,7 @@ public class PlayerJS : MonoBehaviour
 
     void Update()
     {
-        if (!Plataforma.EsMovil || MenuPausa.Pausado) return;
+        if (!Plataforma.EsMovil || MenuPausa.JuegoCongelado) return;
 
         UpdateMoveJoystick();
         UpdateShootJoystick();

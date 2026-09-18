@@ -130,6 +130,10 @@ public class EnemyController : MonoBehaviour
     // Hace aparecer un zombi de ese prefab: uno apagado del pool si hay, o uno
     // nuevo. Quien lo llama le pone despues los multiplicadores, como antes con
     // Instantiate: la vida se calcula perezosa, con los que tenga en el primer golpe.
+    // Lo marca quien lo hace aparecer (el jefe de la oleada o el BOSS del modo libre).
+    // Vuelve a falso en cada aparicion.
+    public bool EsJefe { get; set; }
+
     public static EnemyController Aparecer(GameObject prefab, Vector3 posicion)
     {
         if (prefab == null) return null;
@@ -187,6 +191,7 @@ public class EnemyController : MonoBehaviour
     private void OnEnable()
     {
         enUso = true;
+        EsJefe = false;
         ZombisVivos++;
         NumeroDeAparicion = ++ultimaAparicion;
 
@@ -240,6 +245,9 @@ public class EnemyController : MonoBehaviour
     // vuelve en el mismo lugar donde lo mataron y necesita aire, pero cobrar por esos
     // zombis convertiria el video en una forma barata de limpiar la pantalla.
     // Devuelve cuantos se fueron.
+    // El jefe no se despeja: sale uno por oleada y la oleada lo contaria como muerto, asi que
+    // revivir al lado del jefe lo borraria sin pelear. Es lento: con la gracia hay tiempo
+    // de alejarse.
     public static int DespejarAlrededor(Vector3 punto, float radio)
     {
         if (!(radio > 0f)) return 0;
@@ -249,7 +257,7 @@ public class EnemyController : MonoBehaviour
         var zombis = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
         foreach (var zombi in zombis)
         {
-            if (zombi == null || !zombi.enUso) continue;
+            if (zombi == null || !zombi.enUso || zombi.EsJefe) continue;
             if ((zombi.transform.position - punto).sqrMagnitude > radioAlCuadrado) continue;
 
             Efectos.ParticulasDeMuerte(zombi.deathParticles, zombi.transform.position);

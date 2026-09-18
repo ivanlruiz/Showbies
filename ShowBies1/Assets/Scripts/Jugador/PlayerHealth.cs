@@ -52,7 +52,14 @@ public class PlayerHealth : MonoBehaviour
         // para siempre sin morir: softlock. Cuenta como muerte normal.
         if (!estaMuerto && transform.position.y < -20f)
         {
-            TakeDamage(Mathf.Max(health, 1));
+            // Directo, sin TakeDamage: caer al vacio no se revive (el revivir deja al jugador
+            // en el mismo lugar, 20 m bajo el piso, y volveria a morir con el video ya
+            // gastado), y durante la gracia TakeDamage no hace nada y el jugador caeria para
+            // siempre.
+            health = 0;
+            estaMuerto = true;
+            Terminar();
+            return;
         }
 
         // Solo al cambiar: el ToString por frame es una alocacion por frame.
@@ -139,6 +146,9 @@ public class PlayerHealth : MonoBehaviour
         // Antes de dar la partida por terminada: si hay un video para revivir, el
         // juego queda congelado con la oferta en pantalla y la derrota espera. Es
         // la oferta la que después llama a Revivir o a Terminar.
+        // El record primero: si Android mata la app durante el video de revivir, Terminar
+        // no llega a correr y la partida record se perderia.
+        GuardarRecord();
         if (!yaRevivio && OfertaDeRevivir.Ofrecer(this)) return;
 
         Terminar();
@@ -150,16 +160,8 @@ public class PlayerHealth : MonoBehaviour
         // Un record por modo: los puntos del modo libre y los de las oleadas
         // no se comparan, y antes compartian una sola clave.
         int modo = SceneManager.GetActiveScene().buildIndex;
-        string claveRecord = ClaveRecord(modo);
-        int highScore = PlayerPrefs.GetInt(claveRecord);
-
         PlayerPrefs.SetInt("Score", Puntaje.instance.contadorKill);
-
-        if (Puntaje.instance.contadorKill > highScore)
-        {
-
-            PlayerPrefs.SetInt(claveRecord, Puntaje.instance.contadorKill);
-        }
+        GuardarRecord();
 
         // Para que "Retry" vuelva al modo que se estaba jugando y no siempre
         // al primero. Sin esto, morir en WaveMode te reiniciaba en ShowBies1.
@@ -173,6 +175,19 @@ public class PlayerHealth : MonoBehaviour
 
         SceneManager.LoadScene(2);
         Destroy(gameObject);
+    }
+
+    // El record del modo, que solo puede subir. Lo llaman la muerte (antes de ofrecer
+    // revivir) y Terminar.
+    private void GuardarRecord()
+    {
+        if (Puntaje.instance == null) return;
+        string claveRecord = ClaveRecord(SceneManager.GetActiveScene().buildIndex);
+        if (Puntaje.instance.contadorKill > PlayerPrefs.GetInt(claveRecord))
+        {
+            PlayerPrefs.SetInt(claveRecord, Puntaje.instance.contadorKill);
+            PlayerPrefs.Save();
+        }
     }
 
     // Volver a jugar después de un video: vida llena, unos segundos sin recibir

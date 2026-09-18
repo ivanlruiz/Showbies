@@ -16,6 +16,14 @@ public class MenuPausa : MonoBehaviour
 
     public static bool Pausado { get; private set; }
 
+    // El juego esta quieto: el menu de pausa o la oferta de revivir abierta (que deja el
+    // timeScale en 0 con el jugador muerto). Lo miran los que leen input y la pausa de
+    // impacto de Efectos, que si no devolvia el timeScale a 1 detras del HAS MUERTO.
+    public static bool JuegoCongelado
+    {
+        get { return Pausado || OfertaDeRevivir.Activa; }
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
