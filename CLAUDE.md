@@ -94,6 +94,11 @@ completado la 11, que es lo que guarda `Progreso.MejorOleada`). Bloqueado, `Boto
 manda a las oleadas si todavía no está: `MainMenu.PlayGame`, el final del tutorial, el ¡A JUGAR! de la tienda y el
 OTRA VEZ de la derrota. Si agregás otro camino al libre, pasalo por ahí.
 
+**`MainMenu` y `GameModesMenu` están estirados al canvas** (anclas 0,0 a 1,1). Antes eran rectángulos fijos de 1920x1080
+centrados, y como el canvas escala por ancho, en un teléfono 20:9 (2400x1080, el más común) mide 864 de alto: PLAY,
+OLEADAS y VOLVER quedaban cortados por abajo. Los botones de las esquinas tienen que colgar de algo que siga el borde
+real de la pantalla.
+
 ### Tutorial
 
 `Tutorial.unity` es una copia de ShowBies1 con `Spawners` apagados: los zombis y las cajas los pone
@@ -411,6 +416,9 @@ que se arma entera en código y aparece sola al abrir el menú si hoy hay algo p
   paga lo mismo otra vez (`RecompensaDiaria.CobrarDuplicado`, una sola vez por cobro y en memoria). Sin video, la ventana
   se va sola. Cerrar el video antes no castiga: vuelve la oferta si todavía se puede ofrecer.
 - El atrás de Android la cierra sin cobrar (`BotonAtrasMenu`); vuelve a salir la próxima vez que se abre el menú ese día.
+- **No se abre con la tienda abierta** (MEJORAS de la derrota carga el menú con la tienda encima, en otro canvas): se
+  arma en `Start` y se abre en el primer `Update` con `TiendaMejoras.Abierta` en falso.
+- Cada casillero se etiqueta con el mismo día de racha que usa su monto: desde el día 8 el casillero de hoy dice DÍA 8.
 - Las pruebas cubren racha, corte, reloj atrasado, fin de mes y de año, bisiesto, montos y el cobro guardado.
 
 ## Mejoras y tienda
@@ -462,8 +470,9 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   (con 50 monedas hay cuatro tarjetas verdes pero alcanza para una sola), y en la derrota "¡Te alcanza para N
   mejoras!".
 - **Para agregar una mejora:** un asset `Mejora` con id nuevo → su campo y getter en `CatalogoMejoras` → aplicarla
-  en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → `mejora_<id>_nombre` y `mejora_<id>_unidad` en la
-  tabla de textos → casos en `PruebasMejoras`.
+  en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → `mejora_<id>_nombre`, `mejora_<id>_unidad` y
+  `mejora_<id>_simbolo` (la letra grande de la tarjeta, la inicial en cada idioma) en la tabla de textos → casos en
+  `PruebasMejoras`. El campo `simbolo` del asset quedó sólo para el inspector.
 
 ## Anuncios
 
@@ -864,6 +873,12 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   en disco por si aparece la password). El de release se genera con `keytool` y se guarda con
   backup fuera del repo: si se pierde, no se puede actualizar la app publicada (salvo con Play App
   Signing, que conviene activar al subirla por primera vez).
+- **El AAB lleva los símbolos nativos** (`UserBuildSettings.DebugSymbols`: `SymbolTable` dentro del bundle, y se
+  restauran al terminar), así los crashes de Android vitals llegan con nombres de funciones.
+- **No hay paquete Sentis** (`com.unity.ai.inference`): no lo usaba nadie y, por la carpeta Resources que trae, metía
+  7,6 MB (el 23 % del AAB) y ~970 warnings de shaders en cada build. Se fue con burst, collections, app-ui y
+  test-framework.performance, que sólo traía él (este último creaba un `Assets/Resources` vacío). Los ejemplos de
+  TextMesh Pro tampoco van: estaban gitignoreados pero su `Resources` entraba igual en la build.
 - Los restos de Unity Mediation (discontinuado por Unity) ya se borraron; el paquete nunca estuvo
   en `manifest.json`. La red de anuncios de verdad todavía no está (ver Anuncios).
 - **La APK fuerza el proveedor de anuncios Falso** mientras dura la build y después deja el asset como

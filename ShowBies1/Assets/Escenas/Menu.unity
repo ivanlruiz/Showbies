@@ -2359,7 +2359,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279048740
+    rgba: 4294967295
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -2510,7 +2510,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279048740
+    rgba: 4278199866
   m_fontColor: {r: 0.22745098, g: 0.14901961, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -2976,7 +2976,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279048740
+    rgba: 4279116816
   m_fontColor: {r: 0.0627451, g: 0.14117648, b: 0.05490196, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -3094,10 +3094,10 @@ RectTransform:
   - {fileID: 2054526516}
   m_Father: {fileID: 1452757531}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0050049, y: 0.0024872}
-  m_SizeDelta: {x: 1920, y: 1080}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &982819594
 MonoBehaviour:
@@ -4413,7 +4413,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -5476,6 +5476,7 @@ MonoBehaviour:
   colorHoy: {r: 0.97, g: 0.79, b: 0.28, a: 1}
   colorFuturo: {r: 0, g: 0, b: 0, a: 0.08}
   colorMoneda: {r: 1, g: 0.76, b: 0.12, a: 1}
+  colorVideo: {r: 1, g: 0.52, b: 0.12, a: 1}
   colorBordeMoneda: {r: 0.72, g: 0.42, b: 0.02, a: 1}
   colorTilde: {r: 0.1, g: 0.3, b: 0.05, a: 1}
 --- !u!1 &1509229833
@@ -6866,10 +6867,10 @@ RectTransform:
   - {fileID: 1509229834}
   m_Father: {fileID: 1452757531}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0050049, y: 0.0024872}
-  m_SizeDelta: {x: 1920, y: 1080}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1900771723
 MonoBehaviour:

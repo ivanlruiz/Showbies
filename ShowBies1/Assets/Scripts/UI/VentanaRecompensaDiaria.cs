@@ -63,6 +63,8 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private Sprite bordeMoneda;
 
     private int racha;
+    private bool pendiente;                 // armada, esperando a que se cierre la tienda
+    private TiendaMejoras tienda;
     private float reloj = -1f;              // tiempo desde que se abrio
     private float relojSalida = -1f;        // tiempo desde que empezo a irse
     private float esperaParaIrse = -1f;     // tras cobrar, cuanto falta para empezar a irse
@@ -78,7 +80,12 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         racha = RecompensaDiaria.RachaDeHoy;
         if (racha <= 0) return;
         Armar();
-        Abrir();
+        panel.SetActive(false);
+        // No se abre en el acto: si el menu cargo con la tienda abierta (MEJORAS de la
+        // derrota), la tienda tiene su propio canvas por encima y la diaria quedaria
+        // escondida debajo. Se abre en el primer Update con la tienda cerrada.
+        tienda = FindAnyObjectByType<TiendaMejoras>(FindObjectsInactive.Include);
+        pendiente = true;
     }
 
     private void OnDestroy()
@@ -180,6 +187,11 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
     private void Update()
     {
+        if (pendiente && (tienda == null || !tienda.Abierta))
+        {
+            pendiente = false;
+            Abrir();
+        }
         if (!Abierta) return;
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
 
@@ -252,14 +264,17 @@ public class VentanaRecompensaDiaria : MonoBehaviour
             Redondear(img, 3f);
             img.color = dia < hoy ? colorCobrado : dia == hoy ? colorHoy : colorFuturo;
 
-            Texto(casillero, "Dia", Textos.Formato("diaria_dia", dia), 30f, colorTextoOscuro, new Vector2(0f, 62f), new Vector2(Ancho, 40f));
+            // Cada casillero es un dia de racha: el de hoy es la racha actual (del 7 en adelante
+            // se queda en el ultimo casillero) y los otros, los dias de al lado. La etiqueta y el
+            // monto salen del mismo numero, asi en el dia 8 no dice DIA 7 con el monto del 8.
+            int rachaDelCasillero = racha - hoy + dia;
+            Texto(casillero, "Dia", Textos.Formato("diaria_dia", rachaDelCasillero), 30f, colorTextoOscuro, new Vector2(0f, 62f), new Vector2(Ancho, 40f));
             var circulo = Rect(casillero, "Moneda", new Vector2(0f, 8f), new Vector2(54f, 54f));
             var imgMoneda = circulo.gameObject.AddComponent<Image>();
             imgMoneda.sprite = moneda;
             imgMoneda.color = colorMoneda;
             ConBorde(circulo, borde);
             // A partir del dia de hoy se muestra lo que se cobraria con la racha intacta.
-            int rachaDelCasillero = racha - hoy + dia;
             string monto = FormatoNumeros.Compacto(RecompensaDiaria.Monto(rachaDelCasillero, mejor));
             Texto(casillero, "Monto", monto, 36f, colorTextoOscuro, new Vector2(0f, -52f), new Vector2(Ancho, 46f));
 

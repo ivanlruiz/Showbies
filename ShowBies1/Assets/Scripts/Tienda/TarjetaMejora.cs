@@ -119,8 +119,6 @@ public class TarjetaMejora : MonoBehaviour
 
         if (mejora == null) return;
 
-        if (simbolo != null) simbolo.text = mejora.simbolo;
-
         if (icono != null) icono.color = mejora.color;
         if (franja != null) franja.color = mejora.color;
         PonerColorRelleno(mejora.color);
@@ -169,6 +167,8 @@ public class TarjetaMejora : MonoBehaviour
         // mejora, que ya es fijo para siempre.
         if (nombre != null) nombre.text = Textos.De("mejora_" + Mejora.id + "_nombre");
         if (descripcion != null) descripcion.text = Textos.De("mejora_" + Mejora.id + "_unidad");
+        // La letra grande tambien depende del idioma: la V de VIDA no dice nada en MAX HEALTH.
+        if (simbolo != null) simbolo.text = Textos.De("mejora_" + Mejora.id + "_simbolo");
 
         if (nivel != null)
             nivel.text = Mejora.TieneTope

@@ -575,7 +575,7 @@ public static class PruebasMejoras
             foreach (var mejora in catalogo.enTienda)
             {
                 if (mejora == null) continue;
-                foreach (string parte in new[] { "_nombre", "_unidad" })
+                foreach (string parte in new[] { "_nombre", "_unidad", "_simbolo" })
                 {
                     string id = "mejora_" + mejora.id + parte;
                     if (existentes.Contains(id)) continue;
