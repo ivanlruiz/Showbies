@@ -38,3 +38,33 @@ Lista de Ivan del 16/9/2026, para después de subir la prueba cerrada. Todavía 
       le ponen un objetivo a cada partida.
 - [ ] **Logros:** hitos permanentes (primer jefe, 10.000 zombis, crítico al 100 %). Se pueden conectar con Google Play
       Games.
+
+## Pendientes de la auditoría (18/9/2026)
+
+Lo que encontró la auditoría de 10 agentes y quedó para después de la versión 5. Lo de antes de subir ya está hecho.
+
+**Antes de integrar AdMob** (hoy no pasan porque la versión de Play sale sin anuncios):
+
+- [ ] La pausa de impacto descongela el juego con la oferta de revivir abierta (`Efectos.cs`).
+- [ ] Revivir saca al jefe y a todo lo que está a 7 m, y la oleada los cuenta como muertos (`EnemyController.DespejarAlrededor`).
+- [ ] Cerrar un video bloquea la oferta 60 s, y el tope "por partida" sigue contando en el menú (`ServicioAnuncios`).
+- [ ] Revivir después de caer por el kill-Z gasta el video y el jugador vuelve a morir a los 2,5 s.
+- [ ] Si Android mata la app durante el video de revivir, se pierde el récord de esa partida.
+
+**A mediano plazo:**
+
+- [ ] **Repo público:** reparte assets del Asset Store (ToonyTinyPeople, Joystick Pack, Blood decal pack, texturas) y además
+      sirve la política de privacidad de Play. Primero mover la política a otro lado y cambiar la URL en Play Console;
+      después pasar el repo a privado o sacar esas carpetas de la historia.
+- [ ] **Muro de balance entre las oleadas 35 y 39:** el daño sube de a 1 con precio ×1,45 y la vida de los zombis ×1,15
+      por oleada.
+- [ ] **Política de privacidad:** dice que el progreso nunca sale del teléfono, pero el Auto Backup de Android lo sube.
+- [ ] Adelantar la fecha del teléfono cobra varias recompensas diarias seguidas.
+
+**Chicos:** el modo libre no guarda durante la partida; empatar el récord muestra NUEVO RÉCORD; los zombis pueden aparecer
+pegados al jugador; la granada apuntada explota a los pies con un zombi pegado; morir en el mismo frame que termina la
+oleada la guarda como la siguiente; campos nuevos del progreso sin subir `VersionActual`; las monedas proyectan sombra
+y son un draw call cada una; los sonidos sintetizados no se precargan; la APK de prueba no se instala encima de la de
+Play (misma package, otra firma); `Assets/Sprites/Materials.meta` trackeado con la carpeta vacía; CLAUDE.md
+desactualizado en la lista de scripts y en dónde se guardan los PlayerPrefs.
+
