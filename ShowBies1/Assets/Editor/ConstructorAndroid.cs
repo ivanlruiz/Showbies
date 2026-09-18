@@ -121,6 +121,10 @@ public static class ConstructorAndroid
             EditorUserBuildSettings.buildAppBundle = false;
             UnityEditor.Android.UserBuildSettings.DebugSymbols.level = nivelSimbolos;
             UnityEditor.Android.UserBuildSettings.DebugSymbols.format = formatoSimbolos;
+            // La build escribe ProjectSettings a disco en el medio, con la ruta del keystore de
+            // release: sin volver a guardar, el archivo queda con esa ruta local aunque en memoria
+            // ya este restaurada (paso con las versiones 4 y 5).
+            AssetDatabase.SaveAssets();
         }
     }
 
