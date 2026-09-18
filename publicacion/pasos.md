@@ -27,6 +27,10 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
 
 - [x] **Prueba cerrada (Alpha)**: 177 países y notas de la versión en los tres idiomas. El AAB (versionCode 4,
       1.1.0) salió de `main`; se sube a mano porque pesa 32 MB. Faltan los testers (12 como mínimo) y enviar a revisión.
+- [x] **Versión 5 (1.2.0)** enviada a revisión el 18/9/2026, también de `main`: menú con fondo vivo, botones en
+      píldora, paleta clara, recompensa diaria, más zombis por oleada, retomar la oleada, volumen y los arreglos de la
+      auditoría. Sin Sentis el AAB bajó a unos 24 MB de descarga (35 MB con los símbolos nativos, que Play no reparte).
+      La advertencia de "archivo de desofuscación" se ignora: el juego no ofusca Java (no usa R8).
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
