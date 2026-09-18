@@ -31,6 +31,10 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       píldora, paleta clara, recompensa diaria, más zombis por oleada, retomar la oleada, volumen y los arreglos de la
       auditoría. Sin Sentis el AAB bajó a unos 24 MB de descarga (35 MB con los símbolos nativos, que Play no reparte).
       La advertencia de "archivo de desofuscación" se ignora: el juego no ofusca Java (no usa R8).
+- [x] **Ficha con capturas nuevas** (18/9/2026): 7 capturas 1920x1080 con la paleta clara y el HUD de teléfono
+      (endless, furia, jefe, premio diario, tienda, menú, oleada 10), en teléfono y tablets de 7" y 10", en
+      `Builds/ficha/v5/`. Se mandaron a revisión junto con la versión 5 y la descripción completa de los tres idiomas:
+      Play no deja revisiones separadas, un envío nuevo reinicia la que está en curso.
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
