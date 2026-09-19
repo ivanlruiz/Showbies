@@ -1915,6 +1915,12 @@ MonoBehaviour:
   escalaDelSalto: 1.5
   duracionDelSalto: 0.15
   desvanecido: 0.4
+  nota: {fileID: 8300000, guid: fcb555ae28324144096433d15348b264, type: 3}
+  volumenNota: 0.35
+  hitos: 0a000000190000003200000064000000
+  duracionHito: 1.3
+  escalaDelHito: 2.2
+  temblorDelHito: 0.3
 --- !u!114 &1003424762
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2079,6 +2085,7 @@ MonoBehaviour:
   - {fileID: 176671164}
   - {fileID: 2051766333}
   - {fileID: 360960685}
+  distanciaMinimaAlJugador: 8
   zombisBase: 10
   zombisPorOleada: 4
   intervaloEntreApariciones: 0.35
@@ -2155,6 +2162,7 @@ MonoBehaviour:
   crecimientoDano: 1.07
   crecimientoMonedas: 1.05
   textoNivel: {fileID: 0}
+  distanciaMinimaAlJugador: 8
 --- !u!1 &1073852463
 GameObject:
   m_ObjectHideFlags: 0

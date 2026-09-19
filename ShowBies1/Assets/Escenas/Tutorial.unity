@@ -1931,6 +1931,7 @@ MonoBehaviour:
   crecimientoDano: 1.07
   crecimientoMonedas: 1.05
   textoNivel: {fileID: 0}
+  distanciaMinimaAlJugador: 8
 --- !u!4 &691945976
 Transform:
   m_ObjectHideFlags: 0
@@ -4332,6 +4333,12 @@ MonoBehaviour:
   escalaDelSalto: 1.5
   duracionDelSalto: 0.15
   desvanecido: 0.4
+  nota: {fileID: 8300000, guid: fcb555ae28324144096433d15348b264, type: 3}
+  volumenNota: 0.35
+  hitos: 0a000000190000003200000064000000
+  duracionHito: 1.3
+  escalaDelHito: 2.2
+  temblorDelHito: 0.3
 --- !u!114 &1863263893
 MonoBehaviour:
   m_ObjectHideFlags: 0

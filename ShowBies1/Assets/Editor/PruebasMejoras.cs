@@ -210,6 +210,7 @@ public static class PruebasMejoras
                     ProbarPrimeraVez(informe);
                     ProbarPedidoDeResena(informe);
                     ProbarRelojConfiable(informe);
+                    ProbarJugoSonoro(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1532,6 +1533,25 @@ public static class PruebasMejoras
                       reloj(marca.AddDays(1), ms - 1, 7) == marca.AddDays(1));
         inf.Verdadero("reloj: atrasado, vale el reloj (lo frena EsDiaNuevo)",
                       reloj(marca.AddDays(-3), ms + diez, 7) == marca.AddDays(-3));
+    }
+
+    // La escalera de las monedas y los hitos del combo.
+    static void ProbarJugoSonoro(Informe inf)
+    {
+        inf.Igual("escalera: la primera moneda es la bemol", 0, Moneda.GradoSiguiente(-1, 0f, 0.45f));
+        inf.Igual("escalera: seguida sube un grado", 4, Moneda.GradoSiguiente(3, 0.2f, 0.45f));
+        inf.Igual("escalera: si se corta vuelve a empezar", 0, Moneda.GradoSiguiente(5, 0.6f, 0.45f));
+        inf.Igual("escalera: arriba de todo sigue por la octava de arriba", 7, Moneda.GradoSiguiente(14, 0.1f, 0.45f));
+        inf.Igual("escalera: el grado 7 es la octava", 12, Moneda.SemitonosDelGrado(7));
+        inf.Igual("escalera: el ultimo, dos octavas", 24, Moneda.SemitonosDelGrado(14));
+
+        int[] hitos = { 10, 25, 50, 100 };
+        inf.Igual("combo: de 9 a 10 cruza el 10", 10, ContadorCombo.HitoCruzado(hitos, 9, 10));
+        inf.Igual("combo: de 10 a 11 no cruza nada", 0, ContadorCombo.HitoCruzado(hitos, 10, 11));
+        inf.Igual("combo: una granada de 8 a 27 cruza el 25", 25, ContadorCombo.HitoCruzado(hitos, 8, 27));
+        inf.Igual("combo: sin hitos no cruza nada", 0, ContadorCombo.HitoCruzado(null, 0, 99));
+        inf.Igual("combo: el primer salto es la bemol", 0, ContadorCombo.SemitonosDelSalto(0));
+        inf.Igual("combo: los saltos de mas se quedan arriba", 24, ContadorCombo.SemitonosDelSalto(40));
     }
 
     static void ProbarRecompensaDiaria(Informe inf)

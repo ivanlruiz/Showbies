@@ -384,8 +384,10 @@ del día, y desde la 4 los contadores de por vida). No usa PlayerPrefs a propós
   que valen `multiplicadorMonedas` cada una. Salen volando para los costados, caen despacio con un rebote y
   quedan girando en el piso; al acercarse el jugador vuelan solas hacia él (sin la mejora de imán hay que pasar a
   `distanciaDeCobro`, 0,8 m, que es pasarles por encima; con ella, al alcance del imán) y recién ahí se
-  suman a `Progreso`, con un brillo y una nota de la escala de la bemol mayor sorteada con los pesos de
-  `notas` (editables en el prefab; las del acorde, la bemol, do y mi bemol, salen más seguido). Las que nadie
+  suman a `Progreso`, con un brillo y una nota de la escala de la bemol mayor: **la escalera** (`Moneda.GradoSiguiente`),
+  las agarradas seguidas (menos de `ventanaEscalera`, 0,45 s, entre una y otra) suben grado por grado dos octavas y
+  siguen dando vueltas por la de arriba; cada octava completa brilla el triple. Si se corta, vuelve a la bemol. Una
+  moneda cuyo sonido no pasa el techo de 50 ms no sube la escalera. (Antes cada una sorteaba una nota.) Las que nadie
   agarra desaparecen a los 20 s, parpadeando los últimos 3.
 - **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se anuncia
   en el cartel de la oleada siguiente). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
@@ -761,7 +763,10 @@ que sin `Efectos` instancia las partículas del zombi como antes.
   `Unlit/Color` pero con pasada de sombra: con `Unlit/Color` el zombi dejaba de proyectar sombra mientras estaba blanco.
 - **Muerte**: chispas y sonido. Desde `vidaParaMuerteGrande` (el tanque) suma temblor fuerte y una **pausa de
   impacto** (`timeScale` a 0,05 un instante); el jefe, más. Cada muerte cuenta para `ContadorCombo` en el HUD
-  ("COMBO xN", con una ventana de 1,5 s entre muertes).
+  ("COMBO xN", con una ventana de 1,5 s entre muertes), que **suena**: cada salto toca `combo.wav` (una marimba en la
+  bemol, sintetizada) un grado más arriba, uno por frame como mucho, y al cruzar x10, x25, x50 y x100 muestra su
+  palabra (¡ARRASANDO!, ¡MASACRE!, ¡IMPARABLE!, ¡LEGENDARIO!) un rato, con un arpegio, un temblor y un salto más
+  grande. Solo efecto: no da monedas.
 - **Granada**: temblor, estruendo, chispas y una pausa corta. **Daño al jugador**: temblor, borde rojo
   (`VinetaDanio`) y sonido, con 0,4 s mínimos entre dos, para que rodeado no quede prendido. **Cajas**: `pop.mp3`
   y chispas. **Disparo**: chispas en la boca del arma. **Cartel de oleada**: jingle en la bemol mayor y un rebote

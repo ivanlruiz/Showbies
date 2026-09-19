@@ -44,20 +44,14 @@ public class Moneda : MonoBehaviour
     [Range(0f, 1f)] public float volumen = 0.6f;
     public float afinacion = 0f;                                 // semitonos que llevan la nota del sonido a la bemol
 
-    // Cada moneda agarrada toca una nota de la escala de la bemol mayor, sorteada
-    // con estos pesos (la probabilidad de cada una es su peso sobre la suma). Las
-    // del acorde salen mas seguido, asi una lluvia de monedas suena consonante.
-    public Nota[] notas =
-    {
-        new Nota("La bemol", 0, 3f),
-        new Nota("Si bemol", 2, 1f),
-        new Nota("Do", 4, 2f),
-        new Nota("Re bemol", 5, 1f),
-        new Nota("Mi bemol", 7, 2f),
-        new Nota("Fa", 9, 1f),
-        new Nota("Sol", 11, 0.5f),
-        new Nota("La bemol agudo", 12, 1.5f),
-    };
+    // La escalera: las monedas agarradas seguidas (sin que pasen mas de ventanaEscalera
+    // segundos entre una y otra) suben la escala de la bemol mayor grado por grado, y al
+    // llegar arriba siguen dando vueltas por la octava de arriba. Pasar por encima de un
+    // monton de monedas es una melodia que pide mas. Si se corta, vuelve a la bemol.
+    // Antes cada moneda sorteaba una nota: sonaba lindo pero no llevaba a ningun lado.
+    public float ventanaEscalera = 0.45f;
+    [Tooltip("Veces que brillan de mas al completar cada octava.")]
+    public int brilloDeOctava = 3;
 
     public ParticleSystem brilloPrefab;
     public int particulasPorCobro = 8;
@@ -67,6 +61,12 @@ public class Moneda : MonoBehaviour
     public int maxMonedasEnEscenaMovil = 80;
 
     private const float SeparacionEntreSonidos = 0.05f;
+
+    // La bemol mayor en semitonos, dos octavas.
+    private static readonly int[] Escala = { 0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24 };
+    private const int PrimerGradoDeArriba = 7;
+    private static int escalon = -1;
+    private static float ultimaNotaEn = float.NegativeInfinity;
 
     private static readonly Stack<Moneda> pool = new Stack<Moneda>();
     private static int enEscena;
@@ -94,6 +94,8 @@ public class Moneda : MonoBehaviour
         frameDeBusqueda = -1;
         camara = null;
         brillo = null;
+        escalon = -1;
+        ultimaNotaEn = float.NegativeInfinity;
     }
 
     private double valor;
@@ -312,66 +314,47 @@ public class Moneda : MonoBehaviour
     private void Cobrar(Vector3 posicion)
     {
         Progreso.Sumar(valor);
-        Brillar(posicion);
-        Sonar();
+        bool octava = Sonar();
+        Brillar(posicion, octava ? particulasPorCobro * Mathf.Max(1, brilloDeOctava) : particulasPorCobro);
         Devolver();
     }
 
-    private void Brillar(Vector3 posicion)
+    private void Brillar(Vector3 posicion, int particulas)
     {
         if (brilloPrefab == null) return;
         if (brillo == null) brillo = Instantiate(brilloPrefab);
 
         var parametros = new ParticleSystem.EmitParams { position = posicion, applyShapeToPosition = true };
-        brillo.Emit(parametros, particulasPorCobro);
+        brillo.Emit(parametros, particulas);
     }
 
-    // Monedas que llegan en el mismo frame sonarian una encima de otra: se deja
-    // pasar un sonido cada 50 ms.
-    private void Sonar()
+    // El grado que sigue en la escalera. Estatico para probarlo sin escena.
+    public static int GradoSiguiente(int escalonActual, float segundosDesdeLaAnterior, float ventana)
     {
-        Sonidos.Tocar(sonido, volumen, Mathf.Pow(2f, (SortearSemitonos(notas) + afinacion) / 12f), 0f, SeparacionEntreSonidos);
+        if (escalonActual < 0 || segundosDesdeLaAnterior > ventana) return 0;
+        int siguiente = escalonActual + 1;
+        return siguiente < Escala.Length ? siguiente : PrimerGradoDeArriba;
     }
 
-    [System.Serializable]
-    public class Nota
+    public static int SemitonosDelGrado(int grado)
     {
-        public string nombre;
-        public int semitonos;       // sobre la bemol del sonido
-        public float peso = 1f;     // relativo a los de las otras notas; 0 no sale nunca
-
-        public Nota() { }
-
-        public Nota(string nombre, int semitonos, float peso)
-        {
-            this.nombre = nombre;
-            this.semitonos = semitonos;
-            this.peso = peso;
-        }
+        return Escala[Mathf.Clamp(grado, 0, Escala.Length - 1)];
     }
 
-    // Elige una nota con probabilidad proporcional a su peso. Sin ninguna con peso,
-    // suena la nota del sonido tal cual.
-    public static int SortearSemitonos(Nota[] notas)
+    // Monedas que llegan en el mismo frame sonarian una encima de otra: se deja pasar
+    // un sonido cada 50 ms, y la que no suena no sube la escalera. Devuelve si esta
+    // nota completo una octava (para brillar de mas).
+    private bool Sonar()
     {
-        float total = 0f;
-        foreach (var nota in notas) total += Mathf.Max(0f, nota.peso);
-        if (total <= 0f) return 0;
+        int grado = GradoSiguiente(escalon, Time.unscaledTime - ultimaNotaEn, ventanaEscalera);
+        float pitch = Mathf.Pow(2f, (SemitonosDelGrado(grado) + afinacion) / 12f);
+        if (!Sonidos.Tocar(sonido, volumen, pitch, 0f, SeparacionEntreSonidos)) return false;
 
-        float sorteo = Random.value * total;
-        int ultimaConPeso = 0;
-        foreach (var nota in notas)
-        {
-            if (nota.peso <= 0f) continue;
-            ultimaConPeso = nota.semitonos;
-            sorteo -= nota.peso;
-            if (sorteo <= 0f) return nota.semitonos;
-        }
-
-        // Random.value puede dar 1 justo, y con el redondeo el sorteo queda apenas
-        // por encima de cero despues de la ultima.
-        return ultimaConPeso;
+        escalon = grado;
+        ultimaNotaEn = Time.unscaledTime;
+        return grado > 0 && SemitonosDelGrado(grado) % 12 == 0;
     }
+
 
     // Con el jugador muerto no hay nada que encontrar: se busca una sola vez por
     // frame y no una vez por moneda.
