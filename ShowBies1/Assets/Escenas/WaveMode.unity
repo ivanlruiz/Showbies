@@ -2085,10 +2085,10 @@ MonoBehaviour:
   descansoEntreOleadas: 3
   maxZombisVivos: 60
   maxZombisVivosMovil: 35
-  crecimientoVida: 1.15
+  crecimientoVida: 1.11
   crecimientoDano: 1.07
   monedaPrefab: {fileID: 209914667697901589, guid: 2a7ca24049b93874db76077fb4e20d20, type: 3}
-  crecimientoMonedas: 1.05
+  crecimientoMonedas: 1.08
   bonoPorOleada: 4
   textoOleada: {fileID: 794040599}
   cartelOleada: {fileID: 1290508352}

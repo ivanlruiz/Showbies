@@ -637,8 +637,8 @@ public static class PruebasMejoras
         inf.Igual("textos: todo lo que piden las escenas existe (" + enEscenas + ")", 0, faltanEnEscenas);
     }
 
-    // 4. Escalado por oleada: la vida de los zombis crece a 1,15 por oleada, el
-    // daño a 1,07 y las monedas a 1,05.
+    // 4. Escalado por oleada: la cuenta de Escalado.PorOleada, con los crecimientos que
+    // tenian las oleadas al escribirla (vida 1,15, daño 1,07, monedas 1,05).
     static void ProbarEscalado(Informe inf)
     {
         inf.Cerca("escalado: PorOleada(1,15; 1)", 1, Escalado.PorOleada(1.15f, 1), 1e-6);

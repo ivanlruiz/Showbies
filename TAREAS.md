@@ -57,7 +57,7 @@ Lo que encontró la auditoría de 10 agentes y quedó para después de la versi�
       sirve la política de privacidad de Play. Ya se mudó la política a `ivanlruiz/showbies-privacidad` y el link nuevo
       está guardado en Play Console sin enviar. Falta: mandarlo a revisión cuando se apruebe la versión 5, y cuando Play
       muestre el link nuevo, pasar este repo a privado.
-- [ ] **Muro de balance entre las oleadas 35 y 39:** el daño sube de a 1 con precio ×1,45 y la vida de los zombis ×1,15
+- [ ] **Muro de balance entre las oleadas 35 y 39** (parcheado el 19/9, falta la solución de fondo): el daño sube de a 1 con precio ×1,45 y la vida de los zombis ×1,15
       por oleada.
 - [x] **Política de privacidad:** dice que el progreso nunca sale del teléfono, pero el Auto Backup de Android lo sube.
       Corregida en la versión del 19/9.
@@ -74,7 +74,7 @@ desactualizado en la lista de scripts y en dónde se guardan los PlayerPrefs.
 
 Seis agentes, uno por ángulo. En orden de prioridad:
 
-1. **Parche del muro de las oleadas 35-39, sin código** (simulado: hoy la 35 pide ~440 partidas y la 40 no se alcanza).
+1. [x] **Parche del muro de las oleadas 35-39, sin código** (hecho: vida 1,11 y monedas 1,08; el jefe quedó igual) (simulado: hoy la 35 pide ~440 partidas y la 40 no se alcanza).
    En el WaveManager de WaveMode: `crecimientoVida` 1,15 → 1,11, `crecimientoMonedas` 1,05 → 1,08 y un jefe más blando
    (`crecimientoVidaJefe` 1,10 o BOSS.asset de 500 a 300). Lleva el muro a la 45-48. Validar jugando de la 30 a la 45.
    Simulación: `scratchpad/ideas_balance/sim.py` de la sesión (copiarla al repo si se usa).

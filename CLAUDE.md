@@ -287,7 +287,7 @@ consultando `EnemyController.ZombisVivos`:
   infinito y su `WaitForSeconds`. Si se llegó al techo, saltea el spawn y sigue esperando. **Escala con el
   tiempo:** `NivelActual` sube uno cada `segundosPorNivel` (45 s de tiempo escalado, así la pausa lo congela) y
   cada zombi aparece con vida × `crecimientoVida`^(nivel−1), daño × `crecimientoDano`^(nivel−1) y monedas ×
-  `crecimientoMonedas`^(nivel−1), los mismos crecimientos que las oleadas. `textoNivel` muestra "Nivel N" en el
+  `crecimientoMonedas`^(nivel−1) (1,15, 1,07 y 1,05: los que tenían las oleadas antes del parche del 19/9). `textoNivel` muestra "Nivel N" en el
   HUD y, al subir, rebota y suena el jingle del cartel. Sin esto el modo libre era una granja de monedas.
 - **`WaveManager`** (wave mode) — **una sola** corrutina que corre toda la partida. Cada oleada:
   1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s). El HUD
@@ -325,10 +325,12 @@ con `GetComponentInParent<EnemyController>(true)` para gastarse igual, y `DanoZo
 tutorial sigue haciendo `Instantiate`: esos zombis no tienen prefab de origen y al morir se destruyen como antes.
 
 **Los zombis escalan con la oleada.** `WaveManager.Aparecer` pone `multiplicadorVida` = `crecimientoVida`^(o−1)
-(1,15) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) apenas sale el zombi, antes de su primer golpe, jefe
+(1,11) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) apenas sale el zombi, antes de su primer golpe, jefe
 incluido. La vida
 crece más rápido que el daño a propósito: lo que frena es no llegar a matarlos, no que dos golpes liquiden al
-jugador. `EnemyController` inicializa la vida perezosa (en el primer golpe o al consultarla, una vez por aparición) y muere con vida ≤ 0,01;
+jugador. **La vida era 1,15 y las monedas 1,05** hasta el 19/9: una simulación mostró un muro en la oleada 35 (el daño
+comprable crece con el logaritmo de las monedas y la vida, exponencial), y con 1,11 y 1,08 (Ivan lo probó en la 35 y
+lo notó bien) se corre a la 45-48. La solución de fondo (hitos de daño multiplicativos, renacer) está en TAREAS. `EnemyController` inicializa la vida perezosa (en el primer golpe o al consultarla, una vez por aparición) y muere con vida ≤ 0,01;
 el daño al jugador acumula las fracciones (`PlayerHealth.AcumularDano`) y resta enteros.
 
 Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
@@ -367,7 +369,7 @@ del día). No usa PlayerPrefs a propósito: es estado estructurado.
   se quedan donde cayeron**: no hay imán global (antes `Moneda.AtraerTodas` las traía todas), juntarlas es parte del
   juego y la mejora de imán es la que ayuda. Siguen desapareciendo a los 20 s.
 - **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
-  `crecimientoMonedas^(oleada − 1)` (1,05) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
+  `crecimientoMonedas^(oleada − 1)` (1,08) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
   la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
   0,5 no mueve el contador al agarrarla. Un zombi sin `monedaPrefab`, como los del tutorial, no suelta nada.
 - **Las monedas no tienen Rigidbody ni collider** y salen de un pool, con un techo de 150 en escena (80 en
