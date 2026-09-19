@@ -54,11 +54,13 @@ Lo que encontró la auditoría de 10 agentes y quedó para después de la versi�
 **A mediano plazo:**
 
 - [ ] **Repo público:** reparte assets del Asset Store (ToonyTinyPeople, Joystick Pack, Blood decal pack, texturas) y además
-      sirve la política de privacidad de Play. Primero mover la política a otro lado y cambiar la URL en Play Console;
-      después pasar el repo a privado o sacar esas carpetas de la historia.
+      sirve la política de privacidad de Play. Ya se mudó la política a `ivanlruiz/showbies-privacidad` y el link nuevo
+      está guardado en Play Console sin enviar. Falta: mandarlo a revisión cuando se apruebe la versión 5, y cuando Play
+      muestre el link nuevo, pasar este repo a privado.
 - [ ] **Muro de balance entre las oleadas 35 y 39:** el daño sube de a 1 con precio ×1,45 y la vida de los zombis ×1,15
       por oleada.
-- [ ] **Política de privacidad:** dice que el progreso nunca sale del teléfono, pero el Auto Backup de Android lo sube.
+- [x] **Política de privacidad:** dice que el progreso nunca sale del teléfono, pero el Auto Backup de Android lo sube.
+      Corregida en la versión del 19/9.
 - [ ] Adelantar la fecha del teléfono cobra varias recompensas diarias seguidas.
 
 **Chicos:** el modo libre no guarda durante la partida; empatar el récord muestra NUEVO RÉCORD; los zombis pueden aparecer

@@ -18,8 +18,11 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
 - [x] **Contenido y audiencia objetivo**: 13-15, 16-17 y 18+.
 - [x] **Clasificación de contenido** (IARC): violencia fantástica contra no humanos, sangre limitada, miedo.
       Salió ESRB E10+, ClassInd 10 y GRAC 12+.
-- [x] **Política de privacidad**: `https://ivanlruiz.github.io/Showbies/privacidad.html`, desde la rama
-      `gh-pages` (un solo archivo, copia de `privacidad.html`: al cambiar uno hay que actualizar el otro).
+- [x] **Política de privacidad**: `https://ivanlruiz.github.io/showbies-privacidad/`, desde el repo público
+      `ivanlruiz/showbies-privacidad` (`index.html` y `privacidad.html`, copias de `privacidad.html` de acá: al
+      cambiar uno hay que actualizar los otros). Se mudó ahí el 19/9 para poder pasar este repo a privado. El link
+      nuevo está **guardado sin enviar** en Play Console, para no reiniciar la revisión de la versión 5. El viejo
+      (`ivanlruiz.github.io/Showbies/privacidad.html`, rama `gh-pages`) sigue vivo hasta que Play muestre el nuevo.
 - [ ] **Seguridad de los datos**: respondida (no recopila ni comparte) pero sin enviar; el guardado final no
       se aplicó desde la extensión.
 - [x] **Ficha de Play Store** (borrador): textos en inglés (principal), español de España y de Latinoamérica
