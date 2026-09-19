@@ -88,6 +88,7 @@ public class WaveManager : MonoBehaviour
     private int zombisEnLaOleada;
     private int muertosMostrados = -1;
     private int oleadaMostrada = -1;
+    private int totalMostrado = -1;
     private int bonoDeLaOleadaAnterior;
 
     private void Start()
@@ -184,9 +185,11 @@ public class WaveManager : MonoBehaviour
         }
 
         // Solo al cambiar: armar el texto por frame aloca por frame.
-        if (muertos == muertosMostrados && OleadaActual == oleadaMostrada) return;
+        // El total tambien cambia: el jefe suma los que invoca.
+        if (muertos == muertosMostrados && OleadaActual == oleadaMostrada && zombisEnLaOleada == totalMostrado) return;
         muertosMostrados = muertos;
         oleadaMostrada = OleadaActual;
+        totalMostrado = zombisEnLaOleada;
         textoOleada.text = Textos.Formato("hud_oleada", OleadaActual, muertos, zombisEnLaOleada);
     }
 
@@ -274,6 +277,15 @@ public class WaveManager : MonoBehaviour
 
     // Los zombis muertos, o caidos por el kill-Z, ya no siguen vivos en la aparicion
     // anotada, aunque su objeto haya vuelto a salir del pool.
+    // Los que invoca el jefe (JefePatrones) cuentan en la oleada y en el total del HUD: sin
+    // esto la oleada terminaba con ellos vivos.
+    public void SumarALaOleada(EnemyController zombi)
+    {
+        if (zombi == null) return;
+        zombisDeLaOleada.Add(new ZombiAnotado { zombi = zombi, aparicion = zombi.NumeroDeAparicion });
+        zombisEnLaOleada++;
+    }
+
     private bool QuedanZombisDeLaOleada()
     {
         for (int i = 0; i < zombisDeLaOleada.Count; i++)

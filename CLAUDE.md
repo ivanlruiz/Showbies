@@ -44,7 +44,7 @@ los zombis se ponen más duros con cada oleada, y en el modo libre, con los minu
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
-Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
+Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, ConstructorUI
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
@@ -347,6 +347,15 @@ la vida sin calcular, los multiplicadores en 1 y otro número de aparición, y l
 esconder uno, apagale los renderers. Uno que murió en el paso de física actual ya está apagado: las balas lo buscan
 con `GetComponentInParent<EnemyController>(true)` para gastarse igual, y `DanoZombi` y `Golpear` lo ignoran. El
 tutorial sigue haciendo `Instantiate`: esos zombis no tienen prefab de origen y al morir se destruyen como antes.
+
+**El jefe tiene patrones propios** (`JefePatrones`, en el prefab ZombiBOSS; pedido de Ivan: antes era un zombi grande y
+lento). Alterna dos ataques con aviso cuando el jugador está a menos de `distanciaParaAtacar` (15 m): la **carga** (se
+frena, marca en el piso una línea roja hacia el jugador 0,9 s, ruge y embiste en línea recta a 16 m/s) y la **invocación**
+(se frena, un anillo rojo que se achica y aparecen 4 zombis normales con sus multiplicadores). A la mitad de su vida
+entra en furia: ataca más seguido e invoca 6. Los invocados cuentan en la oleada y en el total del HUD
+(`WaveManager.SumarALaOleada`). Para moverse por su cuenta usa `IMovimientoPropio`: `EnemyController` lo busca en su
+`Awake` y en cada paso de física le pregunta primero; si devuelve verdadero, la persecución de siempre no corre ese paso.
+Las líneas usan el material del indicador de la granada y el rugido es `explosion.wav` más grave.
 
 **Los zombis escalan con la oleada.** `WaveManager.Aparecer` pone `multiplicadorVida` = `crecimientoVida`^(o−1)
 (1,11) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) apenas sale el zombi, antes de su primer golpe, jefe

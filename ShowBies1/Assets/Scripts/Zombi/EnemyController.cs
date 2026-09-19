@@ -184,6 +184,7 @@ public class EnemyController : MonoBehaviour
         rb.freezeRotation = true;
         escalaBase = transform.localScale;
         animadores = GetComponentsInChildren<Animator>(true);
+        movimientoPropio = GetComponent<IMovimientoPropio>();
         PrepararDestello();
     }
 
@@ -352,6 +353,7 @@ public class EnemyController : MonoBehaviour
        ActualizarGolpeVisual();
 
        if (thePlayer == null) return;
+       if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform)) return;
 
        // Mira y camina en horizontal, y la velocidad vertical queda en manos de la
        // fisica. Antes miraba al centro del jugador y pisaba la velocidad entera en
@@ -367,6 +369,9 @@ public class EnemyController : MonoBehaviour
     }
 
     private bool estaMuerto;
+
+    // Un componente que a veces mueve al zombi por su cuenta (el jefe, JefePatrones).
+    private IMovimientoPropio movimientoPropio;
 
     // El nombre del asset Enemy, para los contadores de por vida. Leido una vez en
     // Awake: .name arma un string nuevo en cada llamada.

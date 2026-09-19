@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6663267490067947319}
   - component: {fileID: 111893206611182897}
   - component: {fileID: 6352431393070222262}
+  - component: {fileID: 5413109257751512748}
   m_Layer: 0
   m_Name: ZombiBOSS
   m_TagString: ZombiBoss
@@ -176,6 +177,34 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &5413109257751512748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208933554839980591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c8164fbb8669db48ad23e8f3b0c70ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JefePatrones
+  esperaInicial: 3
+  cadaCuanto: 5
+  avisoCarga: 0.9
+  velocidadCarga: 16
+  duracionCarga: 1
+  anchoLinea: 1.4
+  invocado: {fileID: 6952442577594072745, guid: 69f91a5ee7b7abd40bea94e8b386fc10, type: 3}
+  cantidadInvocados: 4
+  radioInvocacion: 3.5
+  avisoInvocar: 0.8
+  fraccionFuria: 0.5
+  ritmoEnFuria: 0.65
+  invocadosExtraEnFuria: 2
+  materialAviso: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  colorAviso: {r: 1, g: 0.2, b: 0.15, a: 0.85}
+  rugido: {fileID: 8300000, guid: 0a7fea0764885f340945d537f6d113d2, type: 3}
 --- !u!1 &3932927318091467470
 GameObject:
   m_ObjectHideFlags: 0
