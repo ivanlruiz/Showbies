@@ -491,7 +491,9 @@ completada en el día y la lista).
   globo hecha en código por `VentanaMisiones` (raíz del canvas "Main Menu"), que también arma la ventana: cada misión con
   su barra, el premio y COBRAR, y cuánto falta para las nuevas. El atrás de Android la cierra.
 - **En la partida**: `AvisoDeMisiones` (objeto propio en ShowBies1 y WaveMode) muestra "¡MISIÓN CUMPLIDA!" con lo que pedía,
-  un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten.
+  un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten. Avisa
+  también, en dorado, las estrellas del bestiario que se ganan jugando ("¡ESTRELLA! CAMINANTE x100"); si llegan dos a
+  la vez, salen una después de otra.
 
 ## Bestiario
 

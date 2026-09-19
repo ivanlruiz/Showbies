@@ -8,6 +8,8 @@ using UnityEngine;
 //
 // Mira las misiones del dia cada tanto (no hace falta en cada frame) y avisa las que se
 // cumplen durante esta partida; las que ya estaban cumplidas al empezar no se repiten.
+// Tambien avisa las estrellas del bestiario que se ganan jugando ("¡ESTRELLA!", en
+// dorado, con el tipo y el escalon). Si llegan dos a la vez, salen una despues de otra.
 // Va en ShowBies1 y WaveMode (objeto AvisoDeMisiones), con el texto armado en codigo
 // sobre el canvas del HUD.
 public class AvisoDeMisiones : MonoBehaviour
@@ -19,8 +21,19 @@ public class AvisoDeMisiones : MonoBehaviour
     public float cadaCuanto = 0.3f;
     public float duracion = 2.6f;
 
+    public Color colorMision = new Color(0.72f, 0.56f, 1f);
+    public Color colorEstrella = new Color(1f, 0.8f, 0.2f);
+
+    private struct Aviso
+    {
+        public string titulo;
+        public string detalle;
+        public Color color;
+    }
+
     private readonly HashSet<int> yaCumplidas = new HashSet<int>();
-    private readonly Queue<string> pendientes = new Queue<string>();
+    private readonly Queue<Aviso> pendientes = new Queue<Aviso>();
+    private readonly int[] estrellasVistas = new int[Bestiario.Tipos.Length];
     private TMP_Text cartel;
     private float proximaRevision;
     private float mostrandoDesde = -1f;
@@ -30,6 +43,29 @@ public class AvisoDeMisiones : MonoBehaviour
     {
         MisionesDiarias.Asegurar();
         Anotar(true);
+        for (int i = 0; i < estrellasVistas.Length; i++) estrellasVistas[i] = Bestiario.Alcanzadas(Bestiario.Tipos[i]);
+    }
+
+    // Las estrellas nuevas desde la ultima mirada, una por escalon cruzado.
+    private void AnotarEstrellas()
+    {
+        for (int i = 0; i < estrellasVistas.Length; i++)
+        {
+            string tipo = Bestiario.Tipos[i];
+            int alcanzadas = Bestiario.Alcanzadas(tipo);
+            var escalones = Bestiario.Escalones(tipo);
+            while (estrellasVistas[i] < alcanzadas)
+            {
+                int escalon = escalones[estrellasVistas[i]];
+                estrellasVistas[i]++;
+                pendientes.Enqueue(new Aviso
+                {
+                    titulo = Textos.De("aviso_estrella"),
+                    detalle = Bestiario.Nombre(tipo) + " x" + FormatoNumeros.Compacto(escalon),
+                    color = colorEstrella,
+                });
+            }
+        }
     }
 
     // Las cumplidas pasan a yaCumplidas; con avisar, las nuevas van a la fila de avisos.
@@ -49,7 +85,12 @@ public class AvisoDeMisiones : MonoBehaviour
         {
             if (yaCumplidas.Contains(i) || !MisionesDiarias.Cumplida(misiones[i])) continue;
             yaCumplidas.Add(i);
-            if (!alEmpezar) pendientes.Enqueue(MisionesDiarias.Descripcion(misiones[i]));
+            if (!alEmpezar) pendientes.Enqueue(new Aviso
+            {
+                titulo = Textos.De("mision_cumplida"),
+                detalle = MisionesDiarias.Descripcion(misiones[i]),
+                color = colorMision,
+            });
         }
     }
 
@@ -60,6 +101,7 @@ public class AvisoDeMisiones : MonoBehaviour
         {
             proximaRevision = t + cadaCuanto;
             Anotar(false);
+            AnotarEstrellas();
         }
 
         if (cartel == null && pendientes.Count > 0 && canvas != null) Mostrar(pendientes.Dequeue(), t);
@@ -76,7 +118,7 @@ public class AvisoDeMisiones : MonoBehaviour
         }
     }
 
-    private void Mostrar(string descripcion, float t)
+    private void Mostrar(Aviso aviso, float t)
     {
         var go = new GameObject("MisionCumplida", typeof(RectTransform), typeof(TextMeshProUGUI));
         var rt = (RectTransform)go.transform;
@@ -87,9 +129,9 @@ public class AvisoDeMisiones : MonoBehaviour
         cartel = go.GetComponent<TextMeshProUGUI>();
         if (fuente != null) cartel.font = fuente;
         if (materialContorno != null) cartel.fontSharedMaterial = materialContorno;
-        cartel.text = Textos.De("mision_cumplida") + "\n<size=55%>" + descripcion + "</size>";
+        cartel.text = aviso.titulo + "\n<size=55%>" + aviso.detalle + "</size>";
         cartel.fontSize = 72f;
-        cartel.color = new Color(0.72f, 0.56f, 1f);
+        cartel.color = aviso.color;
         cartel.alignment = TextAlignmentOptions.Center;
         cartel.textWrappingMode = TextWrappingModes.NoWrap;
         cartel.raycastTarget = false;

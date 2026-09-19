@@ -61,6 +61,7 @@ bestiario_titulo	BESTIARY	BESTIARIO
 bestiario_bajada	Kill zombies to earn stars	Mata zombis para ganar estrellas
 bestiario_siguiente	NEXT {0}	SIGUIENTE {0}
 bestiario_completo	COMPLETE!	¡COMPLETO!
+aviso_estrella	STAR!	¡ESTRELLA!
 zombi_normal	WALKER	CAMINANTE
 zombi_rapido	RUNNER	CORREDOR
 zombi_faster	SPRINTER	VELOZ
