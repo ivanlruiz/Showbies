@@ -99,3 +99,17 @@ Después:
 - Retención: misiones diarias (3 por día y cofre), próximo objetivo en la derrota, bestiario, desafío semanal.
 - Crecimiento: compartir el récord; red real con LevelPlay (confirmar antes lo del plugin de AdMob); cuando entren los
   anuncios, corregir en la ficha "no recopila datos" y "sin internet"; lanzamiento escalonado y A/B del icono.
+
+## Ideas de Archero (19/9/2026)
+
+1. **Elegir 1 de 3 al terminar cada oleada** (el próximo feature grande, para la versión 7). En el descanso entre oleadas,
+   tres cartas; se elige una, dura solo esa partida y se acumula. Disparo (doble, abanico, atraviesa, rebota, hacia atrás),
+   elementales (fuego con daño por segundo, hielo que frena, rayo que salta), supervivencia (+vida, curarse al matar,
+   escudo de un golpe) y monedas (botín, imán). No compite con la tienda: la tienda es lo permanente, esto la partida.
+   Ayuda con el muro de las oleadas altas. Lo más trabajoso: las balas que atraviesan y rebotan (sobre el pool actual).
+2. **Cartas raras y combinaciones**: una dorada de vez en cuando y combos secretos (fuego + rebote = balas de lava).
+3. **Disparar solo al quedarse quieto** como opción de control, para jugar con un pulgar.
+4. **El ángel del jefe**: después de cada jefe, curarse entero o una carta extra.
+5. **Capítulos con mapas**: cada 10 oleadas cambia el escenario (ya pedido en Visual como mapas diferentes).
+
+No copiar: la energía que limita partidas ni el equipo con cofres y rarezas (monetización agresiva).
