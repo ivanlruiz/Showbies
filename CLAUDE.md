@@ -482,9 +482,10 @@ completada en el día y la lista).
 - **El avance sale de los contadores de por vida**: al armarlas se anota cuánto marcaba cada uno (`inicio`) y el avance es
   la diferencia. "Completa la oleada N" mira la mejor oleada del día, que avisa `WaveManager` (`RegistrarOleada`).
 - **Premio**: 150, 300 y 600 × (1 + 0,1 × mejor oleada), por `CobrarPremio` (no cuenta como jugado). Se cobra en el menú.
-- **En el menú**: el botón MISIONES (violeta, con la tilde) arriba de MEJORAS, con su insignia contando las que hay para
-  cobrar. Es una copia del de MEJORAS hecha en código por `VentanaMisiones` (raíz del canvas "Main Menu"), que también arma
-  la ventana: cada misión con su barra, el premio y COBRAR, y cuánto falta para las nuevas. El atrás de Android la cierra.
+- **En el menú**: un botón redondo **arriba a la derecha** (pedido de Ivan), en espejo con el globo y el engranaje, con el
+  portapapeles de Material (`Sprites/UI/IconoMisiones`) y una insignia contando las que hay para cobrar. Es una copia del
+  globo hecha en código por `VentanaMisiones` (raíz del canvas "Main Menu"), que también arma la ventana: cada misión con
+  su barra, el premio y COBRAR, y cuánto falta para las nuevas. El atrás de Android la cierra.
 - **En la partida**: `AvisoDeMisiones` (objeto propio en ShowBies1 y WaveMode) muestra "¡MISIÓN CUMPLIDA!" con lo que pedía,
   un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten.
 
@@ -708,7 +709,7 @@ trampa).
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`, que mira
   `PlayerHealth.RecordNuevo`: solo superarlo cuenta, un empate no).
 - **Menu**: el nombre del juego arriba (en el fondo 3D, no en el canvas), UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
-  idioma y el engranaje del sonido arriba a la izquierda. Sin monedas: se ven en la tienda.
+  idioma y el engranaje del sonido arriba a la izquierda, y las misiones arriba a la derecha. Sin monedas: se ven en la tienda.
 
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda

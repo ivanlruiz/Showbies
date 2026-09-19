@@ -9,15 +9,15 @@ using UnityEngine.UI;
 // de la diaria y la fila se pone verde con su tilde. Abajo, cuanto falta para las
 // nuevas y VOLVER.
 //
-// Nada de esto esta en la escena: el boton es una copia del de MEJORAS (sin su
-// BotonMejoras) puesta arriba de el, con su insignia contando las misiones para cobrar,
-// y la ventana se arma en codigo como la de la diaria. Vive en la raiz del canvas
+// Nada de esto esta en la escena: el boton es una copia redonda del globo del idioma,
+// arriba a la derecha y con el portapapeles (pedido de Ivan), con una insignia contando
+// las misiones para cobrar, y la ventana se arma en codigo como la de la diaria. Vive en la raiz del canvas
 // "Main Menu"; el atras de Android la cierra (BotonAtrasMenu).
 public class VentanaMisiones : MonoBehaviour
 {
-    public Button botonMejoras;
-    public float separacionDelBoton = 140f;
-    public Sprite iconoBoton;               // la tilde
+    public SelectorIdioma selectorIdioma;   // el globo, que se copia para el boton
+    public Button botonMejoras;             // de donde sale la insignia
+    public Sprite iconoBoton;               // IconoMisiones, el portapapeles
     public TMP_FontAsset fuente;
     public Material materialContorno;
     public Sprite pildora;
@@ -27,8 +27,6 @@ public class VentanaMisiones : MonoBehaviour
     public AudioClip sonidoFestejo;         // cartel.wav
     public AudioClip sonidoClick;
 
-    public Color colorBoton = new Color(0.72f, 0.56f, 1f, 1f);
-    public Color colorTextoBoton = new Color(0.16f, 0.06f, 0.32f, 1f);
     public Color colorVentana = new Color(1f, 0.96f, 0.86f, 1f);
     public Color colorTextoOscuro = new Color(0.16f, 0.14f, 0.2f, 1f);
     public Color colorTitulo = new Color(0.97f, 0.79f, 0.28f, 1f);
@@ -97,50 +95,55 @@ public class VentanaMisiones : MonoBehaviour
 
     private void CrearBoton()
     {
-        if (botonMejoras == null) return;
+        if (selectorIdioma == null || selectorIdioma.botonGlobo == null) return;
 
-        // Se copia debajo de un padre apagado para que BotonMejoras no llegue a
-        // arrancar en la copia: se saca antes de prenderla.
-        var tapa = new GameObject("Tapa");
-        tapa.SetActive(false);
-        var copia = Instantiate(botonMejoras.gameObject, tapa.transform);
-        DestroyImmediate(copia.GetComponent<BotonMejoras>());
-        copia.name = "Misiones";
+        // Una copia del globo, en espejo arriba a la derecha (pedido de Ivan), con el
+        // portapapeles en vez del globo: se hace en Start, cuando SelectorIdioma ya le
+        // puso sus dibujos, como el engranaje de OpcionesSonido.
+        var globo = (RectTransform)selectorIdioma.botonGlobo.transform;
+        var copia = Instantiate(globo.gameObject, globo.parent);
+        copia.name = "BotonMisiones";
         var rt = (RectTransform)copia.transform;
-        var original = (RectTransform)botonMejoras.transform;
-        rt.SetParent(original.parent, false);
-        rt.anchoredPosition = original.anchoredPosition + new Vector2(0f, separacionDelBoton);
-        Destroy(tapa);
+        rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(1f, 1f);
+        rt.anchoredPosition = new Vector2(-globo.anchoredPosition.x, globo.anchoredPosition.y);
 
-        var fondo = copia.transform.Find("Visual/Fondo");
-        if (fondo != null) fondo.GetComponent<Image>().color = colorBoton;
-        var icono = copia.GetComponentInChildren<IconoDeBoton>(true);
-        if (icono != null)
+        if (selectorIdioma.iconoGlobo != null && iconoBoton != null)
         {
-            var imagen = icono.GetComponent<Image>();
-            if (iconoBoton != null) imagen.sprite = iconoBoton;
-            imagen.color = colorTextoBoton;
-        }
-        var traducido = copia.GetComponentInChildren<TextoTraducido>(true);
-        if (traducido != null)
-        {
-            traducido.id = "menu_misiones";
-            traducido.GetComponent<TMP_Text>().color = colorTextoBoton;
-            // Ya se prendio al cambiarla de padre y escribio el texto de MEJORAS.
-            traducido.Aplicar();
+            var icono = copia.transform.Find(Ruta(selectorIdioma.iconoGlobo.transform, globo));
+            if (icono != null) icono.GetComponent<Image>().sprite = iconoBoton;
         }
 
         var boton = copia.GetComponent<Button>();
         boton.onClick = new Button.ButtonClickedEvent();
         boton.onClick.AddListener(Abrir);
 
-        var insigniaT = copia.transform.Find("Insignia");
-        if (insigniaT != null)
+        // La insignia es una copia de la de MEJORAS, en la esquina del circulo.
+        var molde = botonMejoras != null ? botonMejoras.transform.Find("Insignia") : null;
+        if (molde != null)
         {
-            insignia = (RectTransform)insigniaT;
-            numeroInsignia = insigniaT.GetComponentInChildren<TMP_Text>(true);
+            insignia = (RectTransform)Instantiate(molde.gameObject, rt).transform;
+            insignia.name = "Insignia";
+            insignia.anchorMin = insignia.anchorMax = new Vector2(1f, 1f);
+            insignia.pivot = new Vector2(0.5f, 0.5f);
+            insignia.anchoredPosition = new Vector2(-10f, -10f);
+            insignia.sizeDelta = new Vector2(48f, 48f);
+            numeroInsignia = insignia.GetComponentInChildren<TMP_Text>(true);
+            if (numeroInsignia != null) numeroInsignia.fontSize = 30f;
         }
-        copia.SetActive(true);
+    }
+
+    // La ruta de un hijo desde un ancestro, para encontrar lo mismo en la copia.
+    private static string Ruta(Transform hijo, Transform ancestro)
+    {
+        string ruta = hijo.name;
+        var t = hijo.parent;
+        while (t != null && t != ancestro)
+        {
+            ruta = t.name + "/" + ruta;
+            t = t.parent;
+        }
+        return ruta;
     }
 
     private void RefrescarInsignia(float dt)
