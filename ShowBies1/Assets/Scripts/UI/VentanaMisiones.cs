@@ -6,8 +6,9 @@ using UnityEngine.UI;
 // El boton MISIONES del menu y la ventana que abre, con las tres misiones del dia
 // (MisionesDiarias): cada una con su dificultad (verde, amarilla, roja), lo que pide,
 // una barra de avance, el premio y COBRAR cuando esta cumplida. Al cobrar, el arpegio
-// de la diaria y la fila se pone verde con su tilde. Abajo, cuanto falta para las
-// nuevas y VOLVER.
+// de la diaria y la fila se pone verde con su tilde. Abajo, VOLVER y el cofre del dia:
+// gris con la cuenta ("COFRE 1/3") hasta cobrar las tres, dorado y latiendo cuando se
+// puede abrir, y al tocarlo tiembla, estalla con el arpegio doble y queda verde.
 //
 // Nada de esto esta en la escena: el boton es una copia redonda del globo del idioma,
 // arriba a la derecha y con el portapapeles (pedido de Ivan), con una insignia contando
@@ -23,6 +24,7 @@ public class VentanaMisiones : MonoBehaviour
     public Sprite pildora;
     public Sprite tilde;
     public Sprite iconoAtras;
+    public Sprite iconoCofre;
     public AudioClip nota;                  // moneda.wav
     public AudioClip sonidoFestejo;         // cartel.wav
     public AudioClip sonidoClick;
@@ -34,6 +36,11 @@ public class VentanaMisiones : MonoBehaviour
     public Color colorCumplida = new Color(0.49f, 0.88f, 0.29f, 1f);
     public Color colorBarra = new Color(0.3f, 0.75f, 0.2f, 1f);
     public Color colorMoneda = new Color(1f, 0.76f, 0.12f, 1f);
+    public Color colorCofre = new Color(0.97f, 0.79f, 0.28f, 1f);
+    public Color colorTextoCofre = new Color(0.23f, 0.15f, 0f, 1f);
+    public Color colorVidrio = new Color(0.06f, 0.12f, 0.05f, 0.45f);
+    public Color colorTextoAbierto = new Color(0.06f, 0.14f, 0.05f, 1f);
+    public float esperaDelCofre = 0.6f;
     public Color[] coloresDificultad =
     {
         new Color(0.49f, 0.88f, 0.29f, 1f),
@@ -75,6 +82,13 @@ public class VentanaMisiones : MonoBehaviour
     private int revisionVista = -1;
     private float reloj = -1f;
     private float relojInsignia;
+    private Button cofre;
+    private Image fondoCofre;
+    private Image iconoDelCofre;
+    private TMP_Text textoCofre;
+    private BotonJugoso jugoCofre;
+    private float abriendo = -1f;
+    private double montoAbierto;
 
     private void Start()
     {
@@ -184,11 +198,29 @@ public class VentanaMisiones : MonoBehaviour
     {
         double monto = MisionesDiarias.Cobrar(indice);
         if (monto <= 0) return;
+        Festejar();
+        filas[indice].golpe = 0f;
+        Refrescar();
+    }
+
+    private void Festejar()
+    {
         for (int k = 0; k < SemitonosFestejo.Length; k++)
             Sonidos.Programar(nota, 0.05 * k, 0.8f, Sonidos.PitchDe(SemitonosFestejo[k]));
         Sonidos.Tocar(sonidoFestejo, 0.7f);
-        filas[indice].golpe = 0f;
-        Refrescar();
+    }
+
+    private void TocarCofre()
+    {
+        if (abriendo >= 0f) return;
+        if (!MisionesDiarias.CofreDisponible)
+        {
+            // Todavia no: tiembla y no hace nada, como una tarjeta sin monedas.
+            if (jugoCofre != null && !MisionesDiarias.CofreCobrado) jugoCofre.Sacudir();
+            return;
+        }
+        abriendo = 0f;
+        if (jugoCofre != null) jugoCofre.Sacudir(22f, esperaDelCofre);
     }
 
     private void Update()
@@ -199,6 +231,26 @@ public class VentanaMisiones : MonoBehaviour
 
         reloj += dt;
         ventana.localScale = Vector3.one * CurvasUI.SalidaAtras(Mathf.Clamp01(reloj / 0.45f));
+
+        // El cofre tiembla un rato antes de abrirse.
+        if (abriendo >= 0f)
+        {
+            abriendo += dt;
+            if (abriendo >= esperaDelCofre)
+            {
+                abriendo = -1f;
+                montoAbierto = MisionesDiarias.CobrarCofre();
+                if (montoAbierto > 0)
+                {
+                    Festejar();
+                    for (int k = 0; k < SemitonosFestejo.Length; k++)
+                        Sonidos.Programar(nota, 0.4 + 0.05 * k, 0.8f, Sonidos.PitchDe(SemitonosFestejo[k] + 12));
+                    if (jugoCofre != null) jugoCofre.Golpe(1.35f, 0.4f);
+                    CamaraJugador.Temblar(0.2f);
+                }
+                Refrescar();
+            }
+        }
         if (Progreso.Revision != revisionVista) Refrescar();
         textoNuevas.text = TextoNuevas();
 
@@ -236,6 +288,35 @@ public class VentanaMisiones : MonoBehaviour
             fila.cobrar.SetActive(cumplida && !mision.cobrada);
             fila.tilde.enabled = mision.cobrada && tilde != null;
         }
+        PintarCofre(mejor);
+    }
+
+    private void PintarCofre(int mejor)
+    {
+        if (cofre == null) return;
+        Color fondo, texto;
+        if (MisionesDiarias.CofreCobrado)
+        {
+            fondo = colorCumplida;
+            texto = colorTextoAbierto;
+            textoCofre.text = Textos.Formato("misiones_cofre_abierto", FormatoNumeros.Compacto(MisionesDiarias.MontoCofre(mejor)));
+        }
+        else if (MisionesDiarias.CofreDisponible)
+        {
+            fondo = colorCofre;
+            texto = colorTextoCofre;
+            textoCofre.text = Textos.Formato("misiones_cofre", FormatoNumeros.Compacto(MisionesDiarias.MontoCofre(mejor)));
+        }
+        else
+        {
+            fondo = colorVidrio;
+            texto = Color.white;
+            textoCofre.text = Textos.Formato("misiones_cofre_falta", MisionesDiarias.Cobradas);
+        }
+        fondoCofre.color = fondo;
+        textoCofre.color = texto;
+        if (iconoDelCofre != null) iconoDelCofre.color = texto;
+        if (jugoCofre != null) jugoCofre.respirar = MisionesDiarias.CofreDisponible;
     }
 
     private static string TextoNuevas()
@@ -266,9 +347,18 @@ public class VentanaMisiones : MonoBehaviour
 
         for (int i = 0; i < filas.Length; i++) filas[i] = ArmarFila(i, 85f - 125f * i);
 
-        var volver = ArmarBoton(ventana, "Volver", new Vector2(0f, -262f), new Vector2(340f, 100f),
-                                new Color(0.06f, 0.12f, 0.05f, 0.45f), Color.white, iconoAtras, Textos.De("comun_volver"), 46f);
+        var volver = ArmarBoton(ventana, "Volver", new Vector2(-300f, -262f), new Vector2(340f, 100f),
+                                colorVidrio, Color.white, iconoAtras, Textos.De("comun_volver"), 46f);
         volver.onClick.AddListener(Cerrar);
+
+        cofre = ArmarBoton(ventana, "Cofre", new Vector2(200f, -262f), new Vector2(480f, 100f),
+                           colorVidrio, Color.white, iconoCofre, Textos.Formato("misiones_cofre_falta", 0), 46f);
+        cofre.onClick.AddListener(TocarCofre);
+        fondoCofre = cofre.transform.Find("Visual/Fondo").GetComponent<Image>();
+        textoCofre = cofre.transform.Find("Visual/Texto").GetComponent<TMP_Text>();
+        var icono = cofre.transform.Find("Visual/Icono");
+        if (icono != null) iconoDelCofre = icono.GetComponent<Image>();
+        jugoCofre = cofre.GetComponent<BotonJugoso>();
     }
 
     private Fila ArmarFila(int indice, float y)

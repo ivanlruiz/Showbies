@@ -94,7 +94,7 @@ Después:
   disparo (escopeta, perforante, rebote).
 - Jugo: vibración en Android con interruptor, multi-kill con pausa de impacto, el jefe como evento (entrada y muerte).
 - Opciones: joystick flotante, zurdos, tamaño de sticks, regulador de temblor y destellos; asistencia de puntería en móvil.
-- Retención: ~~misiones diarias~~ (hechas el 19/9; falta el cofre por las 3), próximo objetivo en la derrota, bestiario, desafío semanal.
+- Retención: ~~misiones diarias~~ (hechas el 19/9, con el cofre por las 3), próximo objetivo en la derrota, bestiario, desafío semanal.
 - Crecimiento: compartir el récord; red real con LevelPlay (confirmar antes lo del plugin de AdMob); cuando entren los
   anuncios, corregir en la ficha "no recopila datos" y "sin internet"; lanzamiento escalonado y A/B del icono.
 

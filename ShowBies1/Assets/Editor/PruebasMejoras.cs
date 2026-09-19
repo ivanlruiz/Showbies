@@ -1616,6 +1616,19 @@ public static class PruebasMejoras
         inf.Cerca("misiones: las monedas llegaron", 150, Progreso.Monedas, 1e-9);
         inf.Cerca("misiones: no cuentan como jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
 
+        // El cofre: con las tres cobradas, una sola vez.
+        inf.Verdadero("cofre: con una cobrada no se abre", !MisionesDiarias.CofreDisponible && MisionesDiarias.Cobradas == 1);
+        inf.Cerca("cofre: cerrado no paga", 0, MisionesDiarias.CobrarCofre(), 1e-9);
+        MisionesDiarias.Cobrar(1);
+        Progreso.ContarMuerte("ZombiBOSS", true);
+        MisionesDiarias.Cobrar(2);
+        inf.Verdadero("cofre: con las tres cobradas se abre", MisionesDiarias.CofreDisponible);
+        inf.Igual("cofre: cuenta en la insignia", 1, MisionesDiarias.PorCobrar);
+        inf.Cerca("cofre: paga el premio", 800, MisionesDiarias.CobrarCofre(), 1e-9);
+        inf.Cerca("cofre: no paga dos veces", 0, MisionesDiarias.CobrarCofre(), 1e-9);
+        inf.Verdadero("cofre: queda cobrado", MisionesDiarias.CofreCobrado && MisionesDiarias.PorCobrar == 0);
+        inf.Cerca("cofre: con oleada 10 paga mas", 1600, MisionesDiarias.MontoCofre(10), 1e-9);
+
         int diaGuardado = estado.dia;
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Verdadero("misiones: se relee la cobrada", MisionesDiarias.DeHoy.Count == 3 && MisionesDiarias.DeHoy[0].cobrada);

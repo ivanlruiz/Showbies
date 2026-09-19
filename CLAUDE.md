@@ -482,6 +482,10 @@ completada en el día y la lista).
 - **El avance sale de los contadores de por vida**: al armarlas se anota cuánto marcaba cada uno (`inicio`) y el avance es
   la diferencia. "Completa la oleada N" mira la mejor oleada del día, que avisa `WaveManager` (`RegistrarOleada`).
 - **Premio**: 150, 300 y 600 × (1 + 0,1 × mejor oleada), por `CobrarPremio` (no cuenta como jugado). Se cobra en el menú.
+- **El cofre del día**: con las tres cobradas se abre uno (`CobrarCofre`, `cofreCobrado` en el progreso, vuelve con las
+  misiones nuevas) que paga 800 × (1 + 0,1 × mejor oleada). En la ventana, al lado de VOLVER: gris con "COFRE 1/3"
+  (tocarlo tiembla), dorado y latiendo cuando se puede abrir (cuenta en la insignia), y al tocarlo tiembla, estalla con
+  el arpegio doble y queda verde. El ícono es `Sprites/UI/IconoCofre`, dibujado en blanco.
 - **En el menú**: un botón redondo **arriba a la derecha** (pedido de Ivan), en espejo con el globo y el engranaje, con el
   portapapeles de Material (`Sprites/UI/IconoMisiones`) y una insignia contando las que hay para cobrar. Es una copia del
   globo hecha en código por `VentanaMisiones` (raíz del canvas "Main Menu"), que también arma la ventana: cada misión con

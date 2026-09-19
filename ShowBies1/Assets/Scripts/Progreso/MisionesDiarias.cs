@@ -13,6 +13,9 @@ using System.Collections.Generic;
 // ni imposibles, y las misiones de la furia, la granada y los criticos solo salen si
 // estan comprados.
 //
+// Cobradas las tres, se abre el cofre del dia (CobrarCofre), uno por dia: empuja a jugar
+// la segunda y la tercera partida.
+//
 // El premio entra por Progreso.CobrarPremio: no cuenta como monedas ganadas jugando.
 // Lo que se puede probar sin escena es estatico y recibe lo que necesita (Armar, Monto).
 public static class MisionesDiarias
@@ -29,6 +32,7 @@ public static class MisionesDiarias
     public const int Cantidad = 3;
     public static readonly double[] PremioBase = { 150, 300, 600 };   // facil, media, dificil
     public const double CrecimientoPorOleada = 0.1;                   // como la diaria
+    public const double PremioCofre = 800;
 
     // Lo que avanza cada partida de la mejor oleada: los zombis que se matan llegando
     // a la oleada m (10 + 4n por oleada), por dificultad.
@@ -53,6 +57,7 @@ public static class MisionesDiarias
 
         estado.dia = hoy;
         estado.mejorOleadaDelDia = 0;
+        estado.cofreCobrado = false;
         estado.lista = Armar(hoy, Progreso.MejorOleada, Progreso.Nivel("furia") > 0,
                              Progreso.Nivel("granada") > 0, Progreso.Nivel("criticos") > 0);
         foreach (var mision in estado.lista) mision.inicio = Contador(mision.tipo);
@@ -146,6 +151,7 @@ public static class MisionesDiarias
         {
             int n = 0;
             foreach (var mision in Lista) if (Cumplida(mision) && !mision.cobrada) n++;
+            if (CofreDisponible) n++;
             return n;
         }
     }
@@ -161,6 +167,42 @@ public static class MisionesDiarias
         mision.cobrada = true;
         double monto = Monto(mision.dificultad, Progreso.MejorOleada);
         Progreso.CobrarPremio("mision_" + mision.tipo, monto, false);
+        return monto;
+    }
+
+    // Cuantas de las del dia estan cobradas: el cofre se abre con las tres.
+    public static int Cobradas
+    {
+        get
+        {
+            int n = 0;
+            foreach (var mision in Lista) if (mision.cobrada) n++;
+            return n;
+        }
+    }
+
+    public static bool CofreDisponible
+    {
+        get { return Lista.Count == Cantidad && Cobradas >= Cantidad && !Progreso.Misiones.cofreCobrado; }
+    }
+
+    public static bool CofreCobrado
+    {
+        get { Asegurar(); return Progreso.Misiones.cofreCobrado; }
+    }
+
+    public static double MontoCofre(int mejorOleada)
+    {
+        return Math.Floor(PremioCofre * (1.0 + CrecimientoPorOleada * Math.Max(0, mejorOleada)) + 0.5 + 1e-9);
+    }
+
+    // Lo abre si estan las tres cobradas y no se abrio hoy; devuelve cuanto dio.
+    public static double CobrarCofre()
+    {
+        if (!CofreDisponible) return 0;
+        Progreso.Misiones.cofreCobrado = true;
+        double monto = MontoCofre(Progreso.MejorOleada);
+        Progreso.CobrarPremio("mision_cofre", monto, false);
         return monto;
     }
 
@@ -205,5 +247,6 @@ public class EstadoMisiones
 {
     public int dia;                 // aaaammdd de las misiones guardadas; 0 = ninguna
     public int mejorOleadaDelDia;   // para "completa la oleada N"
+    public bool cofreCobrado;       // el cofre de las tres, uno por dia
     public List<MisionDelDia> lista = new List<MisionDelDia>();
 }

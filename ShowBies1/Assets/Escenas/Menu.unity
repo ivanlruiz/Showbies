@@ -5531,6 +5531,7 @@ MonoBehaviour:
   pildora: {fileID: 21300000, guid: 0f913b6593a72244dac6d78bf50adbd0, type: 3}
   tilde: {fileID: 21300000, guid: 75c5d96349c394243835311bea8abc03, type: 3}
   iconoAtras: {fileID: 21300000, guid: 30f2fae9ad3f1074fa9c532668918252, type: 3}
+  iconoCofre: {fileID: 21300000, guid: 40deb3a33407b8f46a82e0bdc8afd276, type: 3}
   nota: {fileID: 8300000, guid: 7b67e640e9f07a845ae7a048cf7600c4, type: 3}
   sonidoFestejo: {fileID: 8300000, guid: 2dfb80e7e6c2f19489beb252efd030af, type: 3}
   sonidoClick: {fileID: 0}
@@ -5541,6 +5542,11 @@ MonoBehaviour:
   colorCumplida: {r: 0.49, g: 0.88, b: 0.29, a: 1}
   colorBarra: {r: 0.3, g: 0.75, b: 0.2, a: 1}
   colorMoneda: {r: 1, g: 0.76, b: 0.12, a: 1}
+  colorCofre: {r: 0.97, g: 0.79, b: 0.28, a: 1}
+  colorTextoCofre: {r: 0.23, g: 0.15, b: 0, a: 1}
+  colorVidrio: {r: 0.06, g: 0.12, b: 0.05, a: 0.45}
+  colorTextoAbierto: {r: 0.06, g: 0.14, b: 0.05, a: 1}
+  esperaDelCofre: 0.6
   coloresDificultad:
   - {r: 0.49, g: 0.88, b: 0.29, a: 1}
   - {r: 1, g: 0.79, b: 0.2, a: 1}
