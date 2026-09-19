@@ -177,6 +177,7 @@ public class EnemyController : MonoBehaviour
     // Lo que no cambia de una aparicion a otra se arma una sola vez.
     private void Awake()
     {
+        nombreTipo = enemyType != null ? enemyType.name : "";
         rb = GetComponent<Rigidbody>();
         // La rotacion la pone FixedUpdate, mirando al jugador: que los choques no
         // lo inclinen entre un paso y otro.
@@ -367,6 +368,10 @@ public class EnemyController : MonoBehaviour
 
     private bool estaMuerto;
 
+    // El nombre del asset Enemy, para los contadores de por vida. Leido una vez en
+    // Awake: .name arma un string nuevo en cada llamada.
+    private string nombreTipo;
+
     public void DanoZombi(float daño, bool critico = false)
     {
         // Dos golpes en el mismo paso de fisica llaman a esto dos veces con la vida
@@ -379,6 +384,7 @@ public class EnemyController : MonoBehaviour
 
         IniciarVida();
         vidaActual -= daño;
+        if (critico) Progreso.ContarCritico();
 
         // El numero flotante va redondeado y nunca en 0: un 5,75 se lee como 6, y
         // una bala que pega tiene que mostrar algo.
@@ -406,6 +412,7 @@ public class EnemyController : MonoBehaviour
             Puntaje.instance.UpdateKillCounterUI();
 
             SoltarMonedas();
+            Progreso.ContarMuerte(nombreTipo, EsJefe);
             Efectos.Muerte(transform.position, enemyType.hp);
 
             // Al final: todo lo de arriba usa su posicion.

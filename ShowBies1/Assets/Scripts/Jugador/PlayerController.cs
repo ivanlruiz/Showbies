@@ -250,6 +250,7 @@ public class PlayerController : MonoBehaviour
         // La granada se encarga sola del vuelo, de explotar y de destruirse.
         Granade granada = Instantiate(granadaPrefab, transform.position, transform.rotation);
         granada.Lanzar(destino);
+        Progreso.ContarGranada();
     }
 
     // Igual que el joystick de disparo: arriba en la pantalla es +Z en el mundo.

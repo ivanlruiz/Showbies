@@ -81,7 +81,7 @@ Seis agentes, uno por ángulo. En orden de prioridad:
 2. **Primer camino del jugador nuevo:** la primera vez, PLAY entra directo a la oleada 1 con pulgares fantasma sobre los
    joysticks; después, primera compra guiada (una mano sobre la tarjeta de daño). Postergar la recompensa diaria hasta
    la primera partida terminada. El tutorial viejo enseña la granada, que al principio no se tiene.
-3. **Contadores de por vida** en `Progreso` (matados por tipo, jefes, granadas, furias, monedas ganadas jugando):
+3. [x] **Contadores de por vida** en `Progreso` (matados por tipo, jefes, granadas, furias, monedas ganadas jugando):
    base de misiones, logros y renacer. Subir `VersionActual`.
 4. **Pedido de reseña in-app** (Google Play In-App Review) después del primer jefe; nunca en la derrota, sin premio.
    Tiene que estar en el AAB que sale a producción.

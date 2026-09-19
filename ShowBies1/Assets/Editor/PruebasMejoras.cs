@@ -206,6 +206,7 @@ public static class PruebasMejoras
                     ProbarAnuncios(informe);
                     ProbarCircuitoDeAnuncios(informe);
                     ProbarRecompensaDiaria(informe);
+                    ProbarEstadisticas(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1411,6 +1412,54 @@ public static class PruebasMejoras
     }
 
     // La recompensa diaria: racha, corte, reloj atrasado, monto y cobro.
+    // Los contadores de por vida: un JSON de la version 3 los lee en cero, se suman,
+    // sobreviven a guardar y releer, y los premios no cuentan como monedas jugadas.
+    static void ProbarEstadisticas(Informe inf)
+    {
+        string ruta = EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);
+        inf.Igual("estadisticas: un JSON v3 arranca sin muertes", 0L, Progreso.MatadosEnTotal);
+        inf.Cerca("estadisticas: y sin monedas jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
+
+        Progreso.ContarMuerte("ZombiNormal", false);
+        Progreso.ContarMuerte("ZombiNormal", false);
+        Progreso.ContarMuerte("ZombiBOSS", true);
+        Progreso.ContarMuerte(null, false);
+        Progreso.ContarGranada();
+        Progreso.ContarFuria();
+        Progreso.ContarCritico();
+        Progreso.ContarCritico();
+        Progreso.Sumar(12.5);
+        Progreso.CobrarPremio("prueba", 100, false);
+
+        inf.Igual("estadisticas: muertes por tipo", 2, Progreso.Matados("ZombiNormal"));
+        inf.Igual("estadisticas: un tipo sin muertes", 0, Progreso.Matados("ZombiTanque"));
+        inf.Igual("estadisticas: muertes en total (el tipo vacio cuenta)", 4L, Progreso.MatadosEnTotal);
+        inf.Igual("estadisticas: jefes", 1, Progreso.JefesMatados);
+        inf.Igual("estadisticas: granadas", 1, Progreso.GranadasTiradas);
+        inf.Igual("estadisticas: furias", 1, Progreso.FuriasActivadas);
+        inf.Igual("estadisticas: criticos", 2L, Progreso.Criticos);
+        inf.Cerca("estadisticas: el premio no cuenta como jugado", 12.5, Progreso.MonedasGanadasJugando, 1e-9);
+
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("estadisticas: se releen las muertes", 2, Progreso.Matados("ZombiNormal"));
+        inf.Igual("estadisticas: se releen los jefes", 1, Progreso.JefesMatados);
+        inf.Igual("estadisticas: se releen los criticos", 2L, Progreso.Criticos);
+        inf.Cerca("estadisticas: se releen las monedas jugadas", 12.5, Progreso.MonedasGanadasJugando, 1e-9);
+        inf.Igual("estadisticas: se guarda como v" + Progreso.VersionActual,
+                  Progreso.VersionActual, LeerGuardado(ruta) != null ? LeerGuardado(ruta).version : -1);
+
+        EmpezarCaso("{\"version\":4,\"monedas\":1,\"estadisticas\":{\"matados\":[" +
+                    "{\"id\":\"ZombiRapido\",\"cantidad\":3},{\"id\":\"ZombiRapido\",\"cantidad\":7}," +
+                    "{\"id\":\"\",\"cantidad\":9},{\"id\":\"ZombiTanque\",\"cantidad\":-4}]," +
+                    "\"jefesMatados\":-2,\"criticos\":-1,\"monedasGanadasJugando\":-5}}", null);
+        inf.Igual("estadisticas: repetido, gana el mayor", 7, Progreso.Matados("ZombiRapido"));
+        inf.Igual("estadisticas: negativo queda en cero", 0, Progreso.Matados("ZombiTanque"));
+        inf.Igual("estadisticas: sin id se descarta", 7L, Progreso.MatadosEnTotal);
+        inf.Igual("estadisticas: jefes negativos en cero", 0, Progreso.JefesMatados);
+        inf.Igual("estadisticas: criticos negativos en cero", 0L, Progreso.Criticos);
+        inf.Cerca("estadisticas: monedas jugadas negativas en cero", 0, Progreso.MonedasGanadasJugando, 1e-9);
+    }
+
     static void ProbarRecompensaDiaria(Informe inf)
     {
         inf.Igual("diaria: nunca cobrada, racha 1", 1, RecompensaDiaria.RachaParaHoy(20260917, 0, 0));

@@ -102,6 +102,7 @@ public class Furia : MonoBehaviour
 
         activadaEn = Time.time;
         Activaciones++;
+        Progreso.ContarFuria();
         Aplicar(true);
         Efectos.EmpezarFuria(transform.position, Duracion);
         return true;

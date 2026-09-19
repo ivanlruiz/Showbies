@@ -351,9 +351,9 @@ prefab, así que la altura sirve). Se destruye con el zombi.
 
 Lo que el jugador conserva entre partidas vive en `Progreso` (`Assets/Scripts/Progreso/`): un JSON en
 `Application.persistentDataPath/progreso.json` con las monedas, la mejor oleada completada, el nivel de cada
-mejora y lo que necesitan los anuncios (versión 3: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
-guarda diccionarios, y desde la 3 se suman `partidasTerminadas`, `segundosJugados`, `ofrecerVideos` y los topes
-del día). No usa PlayerPrefs a propósito: es estado estructurado.
+mejora y lo que necesitan los anuncios (versión 4: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
+guarda diccionarios, desde la 3 se suman `partidasTerminadas`, `segundosJugados`, `ofrecerVideos` y los topes
+del día, y desde la 4 los contadores de por vida). No usa PlayerPrefs a propósito: es estado estructurado.
 
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
@@ -400,6 +400,13 @@ del día). No usa PlayerPrefs a propósito: es estado estructurado.
 - **`Sumar` es para lo que se gana jugando y `CobrarPremio` para todo lo demás** (hoy, el x2 de un video).
   Están separados a propósito: un premio no tiene que contar como monedas ganadas jugando cuando entre el
   renacer. Ver Anuncios.
+- **Los contadores de por vida** (`estadisticas`, v4): zombis matados por tipo (con el nombre del asset `Enemy`,
+  que por eso no se renombra), jefes, granadas, furias, críticos y `monedasGanadasJugando`, que suma solo lo que
+  entra por `Sumar` (los premios no). Todavía no los muestra nada: son la base de misiones, logros y el renacer, y
+  lo que no se cuenta se pierde. Se cuentan donde pasa cada cosa (`DanoZombi` en el bloque de muerte y al recibir un
+  crítico, `ThrowGranade`, `Furia.Activar`), no suben `Revision` y se guardan en los mismos puntos que las monedas.
+  La versión subió a 4 aunque migrar no pida nada, para que un build viejo abra el archivo en solo lectura y no los
+  borre.
 - `PlayerHealth` llama a `Progreso.TerminarPartida(segundos)` al morir, en el mismo bloque que guarda: cuenta
   la partida y el tiempo jugado, que es lo que mira la oferta de video para no premiar una partida de dos
   segundos.

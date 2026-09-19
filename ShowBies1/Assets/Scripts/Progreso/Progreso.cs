@@ -44,6 +44,30 @@ public static class Progreso
         public List<UsoDeLugar> usos = new List<UsoDeLugar>();
     }
 
+    // Los contadores de por vida (v4). No los muestra nada todavia: son la base de
+    // las misiones, los logros y el renacer, y lo que no se cuenta desde ahora se
+    // pierde. Se suman en memoria y se guardan en los mismos puntos que las monedas.
+    [Serializable]
+    private class Estadisticas
+    {
+        // Por tipo de zombi, con el nombre del asset Enemy: un Enemy no se renombra.
+        public List<Conteo> matados = new List<Conteo>();
+        public int jefesMatados;
+        public int granadasTiradas;
+        public int furiasActivadas;
+        public long criticos;
+        // Solo lo que entra por Sumar: los premios (videos, la diaria) no cuentan,
+        // asi el renacer no se puede comprar mirando videos.
+        public double monedasGanadasJugando;
+    }
+
+    [Serializable]
+    private class Conteo
+    {
+        public string id;
+        public int cantidad;
+    }
+
     [Serializable]
     private class Datos
     {
@@ -72,11 +96,16 @@ public static class Progreso
         // estos campos los lee como 0 y no cambia la version.
         public int diaRecompensa;
         public int rachaRecompensa;
+
+        // v4. Un JSON de la 3 los lee en cero: lo de antes no se conto.
+        public Estadisticas estadisticas = new Estadisticas();
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
     // necesitan los anuncios (partidas, tiempo jugado, interruptor y topes del dia).
-    public const int VersionActual = 3;
+    // 4: suma los contadores de por vida. Sube aunque migrar no pida nada, para que
+    // un build viejo abra el archivo en solo lectura y no borre los contadores.
+    public const int VersionActual = 4;
 
     private const string NombreArchivo = "progreso.json";
 
@@ -259,8 +288,85 @@ public static class Progreso
         if (!(cantidad > 0) || double.IsInfinity(cantidad)) return;
         Cargar();
         datos.monedas += cantidad;
+        datos.estadisticas.monedasGanadasJugando += cantidad;
         MonedasDeLaPartida += cantidad;
         Revision++;
+    }
+
+    // --- Contadores de por vida. No suben Revision: no los muestra nadie, y
+    // Revision refresca la tienda y los contadores de monedas.
+
+    // Desde EnemyController.DanoZombi, en el bloque de muerte: el kill-Z y el despeje
+    // de revivir no cuentan, igual que no dan puntos.
+    public static void ContarMuerte(string tipo, bool jefe)
+    {
+        Cargar();
+        if (string.IsNullOrEmpty(tipo)) tipo = "?";
+        Conteo conteo = Buscar(datos.estadisticas.matados, tipo);
+        if (conteo == null) datos.estadisticas.matados.Add(new Conteo { id = tipo, cantidad = 1 });
+        else if (conteo.cantidad < int.MaxValue) conteo.cantidad++;
+        if (jefe && datos.estadisticas.jefesMatados < int.MaxValue) datos.estadisticas.jefesMatados++;
+    }
+
+    public static void ContarGranada()
+    {
+        Cargar();
+        if (datos.estadisticas.granadasTiradas < int.MaxValue) datos.estadisticas.granadasTiradas++;
+    }
+
+    public static void ContarFuria()
+    {
+        Cargar();
+        if (datos.estadisticas.furiasActivadas < int.MaxValue) datos.estadisticas.furiasActivadas++;
+    }
+
+    public static void ContarCritico()
+    {
+        Cargar();
+        datos.estadisticas.criticos++;
+    }
+
+    public static int Matados(string tipo)
+    {
+        Cargar();
+        Conteo conteo = Buscar(datos.estadisticas.matados, tipo);
+        return conteo != null ? conteo.cantidad : 0;
+    }
+
+    public static long MatadosEnTotal
+    {
+        get
+        {
+            Cargar();
+            long total = 0;
+            foreach (Conteo c in datos.estadisticas.matados) total += c.cantidad;
+            return total;
+        }
+    }
+
+    public static int JefesMatados
+    {
+        get { Cargar(); return datos.estadisticas.jefesMatados; }
+    }
+
+    public static int GranadasTiradas
+    {
+        get { Cargar(); return datos.estadisticas.granadasTiradas; }
+    }
+
+    public static int FuriasActivadas
+    {
+        get { Cargar(); return datos.estadisticas.furiasActivadas; }
+    }
+
+    public static long Criticos
+    {
+        get { Cargar(); return datos.estadisticas.criticos; }
+    }
+
+    public static double MonedasGanadasJugando
+    {
+        get { Cargar(); return datos.estadisticas.monedasGanadasJugando; }
     }
 
     // La UNICA entrada de monedas que no es jugar. Sumar es para lo que se gana
@@ -573,6 +679,26 @@ public static class Progreso
         if (d.anuncios.usos == null) d.anuncios.usos = new List<UsoDeLugar>();
         if (d.anuncios.dia < 0) d.anuncios.dia = 0;
         if (d.anuncios.fallasPremiadas < 0) d.anuncios.fallasPremiadas = 0;
+
+        if (d.estadisticas == null) d.estadisticas = new Estadisticas();
+        Estadisticas e = d.estadisticas;
+        if (e.matados == null) e.matados = new List<Conteo>();
+        if (e.jefesMatados < 0) e.jefesMatados = 0;
+        if (e.granadasTiradas < 0) e.granadasTiradas = 0;
+        if (e.furiasActivadas < 0) e.furiasActivadas = 0;
+        if (e.criticos < 0) e.criticos = 0;
+        if (double.IsNaN(e.monedasGanadasJugando) || double.IsInfinity(e.monedasGanadasJugando) || e.monedasGanadasJugando < 0)
+            e.monedasGanadasJugando = 0;
+        var conteos = new List<Conteo>(e.matados.Count);
+        foreach (Conteo c in e.matados)
+        {
+            if (c == null || string.IsNullOrEmpty(c.id)) continue;
+            Conteo existente = Buscar(conteos, c.id);
+            // Repetido: gana el mayor, como los niveles.
+            if (existente == null) conteos.Add(new Conteo { id = c.id, cantidad = Math.Max(0, c.cantidad) });
+            else if (c.cantidad > existente.cantidad) existente.cantidad = c.cantidad;
+        }
+        e.matados = conteos;
         for (int i = d.anuncios.usos.Count - 1; i >= 0; i--)
         {
             UsoDeLugar uso = d.anuncios.usos[i];
@@ -604,6 +730,15 @@ public static class Progreso
     }
 
     private static NivelDeMejora Buscar(List<NivelDeMejora> lista, string id)
+    {
+        for (int i = 0; i < lista.Count; i++)
+        {
+            if (lista[i].id == id) return lista[i];
+        }
+        return null;
+    }
+
+    private static Conteo Buscar(List<Conteo> lista, string id)
     {
         for (int i = 0; i < lista.Count; i++)
         {
