@@ -53,6 +53,8 @@ mision_cumplida	MISSION COMPLETE!	¡MISIÓN CUMPLIDA!
 misiones_cofre	CHEST +{0}	COFRE +{0}
 misiones_cofre_falta	CHEST {0}/3	COFRE {0}/3
 misiones_cofre_abierto	OPENED! +{0}	¡ABIERTO! +{0}
+objetivo_mision	NEXT: {0}  {1}/{2}	PRÓXIMO: {0}  {1}/{2}
+objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} PARA {1} NIVEL {2}
 
 # --- Tienda
 tienda_titulo	UPGRADES	MEJORAS

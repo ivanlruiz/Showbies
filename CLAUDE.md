@@ -709,7 +709,9 @@ trampa).
 **Jerarquia de cada pantalla**, que sigue lo que el jugador necesita de un vistazo:
 
 - **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
-  record chicos, el renglon de la oferta de video o el aviso de compras, y abajo los tres botones. Si la partida
+  record chicos, el renglon de la oferta de video o el aviso de compras, **el proximo objetivo** (`ProximoObjetivo`, armado
+  en codigo en y = -155: la mision a medias o la mejora que todavia no alcanza con mas avance, con una barra que se llena)
+  y abajo los tres botones, en y = -290 (se bajaron para hacerle lugar; en 21:9 terminan a 50 del borde). Si la partida
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`, que mira
   `PlayerHealth.RecordNuevo`: solo superarlo cuenta, un empate no).
 - **Menu**: el nombre del juego arriba (en el fondo 3D, no en el canvas), UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del

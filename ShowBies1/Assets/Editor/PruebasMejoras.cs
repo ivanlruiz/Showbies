@@ -212,6 +212,7 @@ public static class PruebasMejoras
                     ProbarRelojConfiable(informe);
                     ProbarJugoSonoro(informe);
                     ProbarMisiones(informe);
+                    ProbarProximoObjetivo(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1638,6 +1639,35 @@ public static class PruebasMejoras
         Progreso.Misiones.dia = diaGuardado + 1;
         MisionesDiarias.Asegurar();
         inf.Verdadero("misiones: con el reloj atrasado siguen las mismas", MisionesDiarias.DeHoy[0].cobrada);
+    }
+
+    // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.
+    static void ProbarProximoObjetivo(Informe inf)
+    {
+        EmpezarCaso("{\"version\":4,\"monedas\":20}", null);
+        MisionesDiarias.Asegurar();
+        var estado = Progreso.Misiones;
+        estado.lista = new List<MisionDelDia>
+        {
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 0, objetivo = 10, inicio = Progreso.MatadosEnTotal - 9 },
+            new MisionDelDia { tipo = MisionesDiarias.Oleada, dificultad = 1, objetivo = 5 },
+            new MisionDelDia { tipo = MisionesDiarias.Jefe, dificultad = 2, objetivo = 1, inicio = Progreso.JefesMatados },
+        };
+        string texto;
+        float fraccion;
+        inf.Verdadero("objetivo: hay uno", ProximoObjetivo.Elegir(out texto, out fraccion));
+        inf.Cerca("objetivo: la mision al 90 % le gana a la mejora", 0.9, fraccion, 1e-4);
+        inf.Verdadero("objetivo: dice la mision", texto != null && texto.Contains("10"));
+
+        estado.lista[0].inicio = Progreso.MatadosEnTotal;   // la mision vuelve a 0 de 10
+        inf.Verdadero("objetivo: sin misiones cerca, una mejora", ProximoObjetivo.Elegir(out texto, out fraccion));
+        inf.Verdadero("objetivo: la mejora mas cerca, sin llegar", fraccion > 0f && fraccion < 1f);
+
+        EmpezarCaso("{\"version\":4,\"monedas\":100000}", null);
+        MisionesDiarias.Asegurar();
+        Progreso.Misiones.lista.Clear();
+        ProximoObjetivo.Elegir(out texto, out fraccion);
+        inf.Verdadero("objetivo: con todo al alcance no elige una mejora que ya alcanza", fraccion < 1f);
     }
 
     static void ProbarRecompensaDiaria(Informe inf)
