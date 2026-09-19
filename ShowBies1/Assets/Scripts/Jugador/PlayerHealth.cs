@@ -77,7 +77,24 @@ public class PlayerHealth : MonoBehaviour
     {
         instance = this;
         empezoEn = Time.time;
+        RecordNuevo = false;
         Progreso.EmpezarPartida();
+    }
+
+    // La partida supero el record de su modo (estrictamente: empatarlo no cuenta). Lo
+    // lee la derrota (Score.HuboRecordNuevo), que antes comparaba el puntaje con el
+    // record ya guardado y un empate salia como NUEVO RECORD.
+    public static bool RecordNuevo { get; private set; }
+
+    public bool EstaMuerto
+    {
+        get { return estaMuerto; }
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearRecordNuevo()
+    {
+        RecordNuevo = false;
     }
 
     // Verde de 60 para arriba, amarillo hasta 30 y rojo abajo de eso. Estatico
@@ -187,6 +204,7 @@ public class PlayerHealth : MonoBehaviour
         {
             PlayerPrefs.SetInt(claveRecord, Puntaje.instance.contadorKill);
             PlayerPrefs.Save();
+            RecordNuevo = true;
         }
     }
 

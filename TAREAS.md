@@ -63,12 +63,9 @@ Lo que encontró la auditoría de 10 agentes y quedó para después de la versi�
       Corregida en la versión del 19/9.
 - [ ] Adelantar la fecha del teléfono cobra varias recompensas diarias seguidas.
 
-**Chicos:** el modo libre no guarda durante la partida; empatar el récord muestra NUEVO RÉCORD; los zombis pueden aparecer
-pegados al jugador; la granada apuntada explota a los pies con un zombi pegado; morir en el mismo frame que termina la
-oleada la guarda como la siguiente; campos nuevos del progreso sin subir `VersionActual`; las monedas proyectan sombra
-y son un draw call cada una; los sonidos sintetizados no se precargan; la APK de prueba no se instala encima de la de
-Play (misma package, otra firma); `Assets/Sprites/Materials.meta` trackeado con la carpeta vacía; CLAUDE.md
-desactualizado en la lista de scripts y en dónde se guardan los PlayerPrefs.
+**Chicos:** hechos el 19/9 (empatar el récord, zombis pegados al aparecer, granada a los pies, morir al terminar la
+oleada, el libre sin guardar, versión del progreso, monedas con sombra, sonidos sin precargar, la APK que no se
+instalaba encima de la de Play, `Materials.meta` vacío y CLAUDE.md desactualizado).
 
 ## Ronda de ideas (19/9/2026)
 

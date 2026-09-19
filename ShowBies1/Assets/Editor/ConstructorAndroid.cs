@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 using System.IO;
@@ -25,6 +26,7 @@ public static class ConstructorAndroid
     const string RutaAab = CarpetaSalida + "/ShowBies.aab";
     const string RutaResultado = CarpetaSalida + "/build_result.txt";
     const string RutaKeystoreLocal = "keystore.local";
+    const string SufijoPaquetePrueba = ".prueba";
 
     [MenuItem("Build/Android APK")]
     public static void BuildApk()
@@ -35,13 +37,24 @@ public static class ConstructorAndroid
         // La APK es para probar en el telefono: el anuncio falso (el cartel con la
         // barra) tiene que llegar si o si, sin importar como quedo el asset.
         var proveedorAnterior = FijarProveedorDeAnuncios(ConfigAnuncios.Proveedor.Falso);
+
+        // Otro paquete y otro nombre: la de Play esta firmada con otra clave y Android no
+        // deja instalar una encima de la otra (habia que desinstalar y se perdia el
+        // progreso). Asi las dos conviven en el telefono, cada una con su progreso.
+        string paquete = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+        string nombre = PlayerSettings.productName;
+        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, paquete + SufijoPaquetePrueba);
+        PlayerSettings.productName = nombre + " (prueba)";
         try
         {
             Construir(RutaApk);
         }
         finally
         {
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, paquete);
+            PlayerSettings.productName = nombre;
             RestaurarProveedorDeAnuncios(proveedorAnterior);
+            AssetDatabase.SaveAssets();
         }
     }
 

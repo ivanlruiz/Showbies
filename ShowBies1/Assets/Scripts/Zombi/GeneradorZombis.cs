@@ -56,6 +56,7 @@ public class GeneradorZombis : MonoBehaviour
     public float crecimientoDano = 1.07f;
     public float crecimientoMonedas = 1.05f;
     public TMPro.TMP_Text textoNivel;        // "Nivel N" en el HUD; opcional
+    public float distanciaMinimaAlJugador = 8f; // ningun zombi nace mas cerca que esto
 
     // La mejora de botin se lee una vez al empezar: no se puede comprar en medio
     // de la partida.
@@ -111,6 +112,10 @@ public class GeneradorZombis : MonoBehaviour
         // el, el modo libre se pondria mas dificil sin ningun aviso.
         if (nivel > 1)
         {
+            // Un punto seguro para guardar, como el fin de oleada en WaveMode: antes el
+            // modo libre solo guardaba al pausar y al morir, y si Android mataba la app
+            // se perdian las monedas de toda la partida.
+            Progreso.Guardar();
             if (textoNivel != null)
             {
                 textoNivel.gameObject.SetActive(false);
@@ -118,6 +123,24 @@ public class GeneradorZombis : MonoBehaviour
             }
             Efectos.CartelOleada();
         }
+    }
+
+    // Un punto al azar del mapa, lejos del jugador: hasta unos intentos, y si no sale
+    // ninguno, el ultimo (en un mapa de casi 100 m no deberia pasar).
+    private Vector3 PosicionLejosDelJugador()
+    {
+        Transform jugador = PlayerHealth.instance != null ? PlayerHealth.instance.transform : null;
+        float minimo = distanciaMinimaAlJugador * distanciaMinimaAlJugador;
+        Vector3 posicion = Vector3.zero;
+        for (int intento = 0; intento < 6; intento++)
+        {
+            posicion = new Vector3(Random.Range(-48f, 48f), 0.5f, Random.Range(-45f, 45f));
+            if (jugador == null) break;
+            Vector3 d = posicion - jugador.position;
+            d.y = 0f;
+            if (d.sqrMagnitude >= minimo) break;
+        }
+        return posicion;
     }
 
     private IEnumerator spawnEnemy(float interval, GameObject enemy)
@@ -130,7 +153,7 @@ public class GeneradorZombis : MonoBehaviour
 
             if (EnemyController.ZombisVivos >= maxZombisVivos) continue;
 
-            var enemigo = EnemyController.Aparecer(enemy, new Vector3(Random.Range(-48f, 48), Random.Range(0.5f, 0.5f), Random.Range(-45, 45)));
+            var enemigo = EnemyController.Aparecer(enemy, PosicionLejosDelJugador());
             if (enemigo != null)
             {
                 // Antes de su primer golpe: la vida se calcula con el multiplicador

@@ -27,10 +27,8 @@ public class Score : MonoBehaviour
     // Lo mira tambien el texto del record, para callarse cuando esto es cierto.
     public static bool HuboRecordNuevo()
     {
-        int puntaje = PlayerPrefs.GetInt("Score");
-        if (puntaje <= 0) return false;
-
-        int modo = PlayerPrefs.GetInt("UltimoModo", 1);
-        return puntaje >= PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(modo));
+        // Lo anota PlayerHealth al superar el record: comparar aca el puntaje con el
+        // record guardado no distingue un record nuevo de un empate.
+        return PlayerPrefs.GetInt("Score") > 0 && PlayerHealth.RecordNuevo;
     }
 }

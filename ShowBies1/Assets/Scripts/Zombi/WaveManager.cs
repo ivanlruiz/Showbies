@@ -37,6 +37,7 @@ public class WaveManager : MonoBehaviour
     public GameObject jefe;
     public int jefeCadaOleadas = 10;
     public Transform[] spawnPoints;          // se elige uno al azar por zombi
+    public float distanciaMinimaAlJugador = 8f; // ninguno nace mas cerca que esto, si se puede
 
     [Header("Ritmo")]
     public int zombisBase = 6;               // zombis por oleada = zombisBase + zombisPorOleada * oleada
@@ -147,6 +148,15 @@ public class WaveManager : MonoBehaviour
                 yield return null;
             }
 
+            // Si el jugador murio en el mismo paso en que cayo el ultimo zombi, la oleada
+            // no cuenta mientras la oferta de revivir espera: si revive sigue, y si no,
+            // la partida termina en esta oleada. Antes se completaba y se guardaba la
+            // siguiente como oleada en curso.
+            while (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto)
+            {
+                yield return null;
+            }
+
             bonoDeLaOleadaAnterior = bonoPorOleada * OleadaActual;
             Progreso.Sumar(bonoDeLaOleadaAnterior);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
@@ -216,11 +226,36 @@ public class WaveManager : MonoBehaviour
         return null;
     }
 
+    // Un punto de aparicion al azar lejos del jugador: si el jugador esta parado al
+    // lado de uno, el zombi nacia encima y pegaba en el acto. Si todos estan cerca,
+    // el mas lejano.
+    private Transform ElegirPunto()
+    {
+        Transform jugador = PlayerHealth.instance != null ? PlayerHealth.instance.transform : null;
+        if (jugador == null) return spawnPoints[Random.Range(0, spawnPoints.Length)];
+
+        float minimo = distanciaMinimaAlJugador * distanciaMinimaAlJugador;
+        int inicio = Random.Range(0, spawnPoints.Length);
+        Transform masLejano = null;
+        float mayor = -1f;
+        for (int i = 0; i < spawnPoints.Length; i++)
+        {
+            Transform punto = spawnPoints[(inicio + i) % spawnPoints.Length];
+            if (punto == null) continue;
+            Vector3 d = punto.position - jugador.position;
+            d.y = 0f;
+            float distancia = d.sqrMagnitude;
+            if (distancia >= minimo) return punto;
+            if (distancia > mayor) { mayor = distancia; masLejano = punto; }
+        }
+        return masLejano;
+    }
+
     private void Aparecer(GameObject prefab)
     {
         if (prefab == null || spawnPoints.Length == 0) return;
 
-        Transform punto = spawnPoints[Random.Range(0, spawnPoints.Length)];
+        Transform punto = ElegirPunto();
         if (punto == null) return;
 
         var enemigo = EnemyController.Aparecer(prefab, punto.position);

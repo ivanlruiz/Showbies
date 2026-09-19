@@ -46,13 +46,13 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
-Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion
-Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro
+Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
+Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, Volumen, FuenteConVolumen
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
@@ -268,7 +268,8 @@ enseña. Una escena sin `AplicarMejoras` la tiene siempre.
 - **Vuelo por trayectoria calculada, no por física.** Al lanzarla, el Rigidbody pasa a kinematic y el collider se
   apaga; `Update` la mueve en un arco de `alturaDelArco` durante `tiempoDeVuelo`. Así cae exacta sobre el anillo y
   no choca con el jugador del que sale ni con las balas que van en la misma dirección.
-- **Explota** al pasar a `radioDeContacto` de un zombi en el aire, o `demoraAlCaer` (0,3 s) después de caer. Una
+- **Explota** al pasar a `radioDeContacto` de un zombi en el aire (recién después de alejarse `distanciaSegura`,
+  1,5 m, del jugador: con un zombi pegado explotaba a los pies), o `demoraAlCaer` (0,3 s) después de caer. Una
   granada instanciada sin `Lanzar` se comporta como antes: cae donde nace y explota con la mecha de 3 s.
 - **Daño:** `damage` (10) × `multiplicadorVida` del zombi al que le pega, así escala con la oleada y no con la
   mejora de daño. Con 10 fijos, desde la oleada 6 ya no mataba ni a un normal.
@@ -303,7 +304,8 @@ Los dos generadores respetan el mismo techo, `maxZombisVivos` (60 por defecto, e
 consultando `EnemyController.ZombisVivos`:
 
 - **`GeneradorZombis`** (free mode) — cinco corrutinas paralelas, una por tipo, cada una con un `while`
-  infinito y su `WaitForSeconds`. Si se llegó al techo, saltea el spawn y sigue esperando. **Escala con el
+  infinito y su `WaitForSeconds`, en un punto al azar a más de `distanciaMinimaAlJugador` (8 m) del jugador. Si se
+  llegó al techo, saltea el spawn y sigue esperando. Al subir de nivel guarda el progreso. **Escala con el
   tiempo:** `NivelActual` sube uno cada `segundosPorNivel` (45 s de tiempo escalado, así la pausa lo congela) y
   cada zombi aparece con vida × `crecimientoVida`^(nivel−1), daño × `crecimientoDano`^(nivel−1) y monedas ×
   `crecimientoMonedas`^(nivel−1) (1,15, 1,07 y 1,05: los que tenían las oleadas antes del parche del 19/9). `textoNivel` muestra "Nivel N" en el
@@ -315,10 +317,13 @@ consultando `EnemyController.ZombisVivos`:
      llegue al total justo cuando la oleada termina.
   2. Si la oleada es múltiplo de `jefeCadaOleadas` (10), saca un `jefe`.
   3. Saca `zombisBase + zombisPorOleada × oleada` zombis (10 + 4n: 14 en la 1, 50 en la 10; pedido de Ivan antes de
-     la prueba cerrada, antes eran 6 + 2n), de a uno cada `intervaloEntreApariciones` (0,35 s, antes 0,8 s), en un punto al azar de `spawnPoints`. El tipo sale por sorteo
+     la prueba cerrada, antes eran 6 + 2n), de a uno cada `intervaloEntreApariciones` (0,35 s, antes 0,8 s), en un punto al azar de `spawnPoints` a más de `distanciaMinimaAlJugador` (8 m) del jugador (si todos
+     están cerca, el más lejano: antes nacían encima y pegaban en el acto). El tipo sale por sorteo
      entre los `tipos` ya habilitados (`desdeOleada`), con `peso` relativo: normal desde la 1, rápido desde
      la 3, tanque desde la 6 y FASTER desde la 9. Si se llegó al techo, espera.
-  4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos.
+  4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos. Si el
+     jugador murió en el mismo paso, espera a ver si revive: si no, la partida termina en esa oleada y no se
+     completa ni se guarda la siguiente.
 
   **La partida de oleadas se retoma** (pedido de Ivan): al empezar cada oleada, `WaveManager` guarda en el progreso la
   oleada y los puntos (`Progreso.GuardarOleadaEnCurso`) y escribe el archivo. Si se sale al menú o se cierra la app,
@@ -391,7 +396,8 @@ del día, y desde la 4 los contadores de por vida). No usa PlayerPrefs a propós
   `crecimientoMonedas^(oleada − 1)` (1,08) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
   la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
   0,5 no mueve el contador al agarrarla. Un zombi sin `monedaPrefab`, como los del tutorial, no suelta nada.
-- **Las monedas no tienen Rigidbody ni collider** y salen de un pool, con un techo de 150 en escena (80 en
+- **Las monedas no tienen Rigidbody ni collider**, no proyectan ni reciben sombra (con el material instanciado,
+  para que no sean un draw call cada una) y salen de un pool, con un techo de 150 en escena (80 en
   móvil): el vuelo es una parábola a mano y el cobro, una distancia al jugador. Si el techo no deja soltar
   todas, las que salen se reparten el valor de las que no. **Como no tienen collider, el vuelo no ve las paredes:**
   al salir, `FrenarAntesDeLasParedes` tira un raycast horizontal hasta lo máximo que puede recorrer (velocidad /
@@ -404,7 +410,7 @@ del día, y desde la 4 los contadores de por vida). No usa PlayerPrefs a propós
   para que al llevarlo con el pitch a cualquier grado de la escala las dos queden en la bemol mayor. Si se
   cambia por otro sonido, `afinacion` (en semitonos) lleva su nota a la bemol; con dos notas distintas, en
   algún grado una de las dos se sale de la escala.
-- **Se suman en memoria al agarrarlas y se guardan en disco en puntos seguros:** al completar cada oleada, al
+- **Se suman en memoria al agarrarlas y se guardan en disco en puntos seguros:** al completar cada oleada (y al subir de nivel en el libre), al
   pausar (también pasa cuando la app pierde el foco, antes de que Android pueda matarla), al morir y al
   cerrar, y **cada compra guarda en el acto**. Se escribe un `.tmp` y después se copia; al cargar, si el
   principal falta o está roto, se prueba el `.tmp`. Un principal ilegible se copia a `progreso.json.roto`, y un
@@ -673,7 +679,8 @@ trampa).
 
 - **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
   record chicos, el renglon de la oferta de video o el aviso de compras, y abajo los tres botones. Si la partida
-  fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`).
+  fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`, que mira
+  `PlayerHealth.RecordNuevo`: solo superarlo cuenta, un empate no).
 - **Menu**: el nombre del juego arriba (en el fondo 3D, no en el canvas), UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
   idioma y el engranaje del sonido arriba a la izquierda. Sin monedas: se ven en la tienda.
 
@@ -921,7 +928,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirven por CLI con `-executeMethod`:
 
 - **Build > Android APK** (`ConstructorAndroid.BuildApk`): `Builds/ShowBies.apk` firmado con el
-  debug keystore, para probar en el teléfono. No pide nada.
+  debug keystore, para probar en el teléfono. No pide nada. Sale con el paquete `com.ivanruiz.showbies.prueba` y el
+  nombre "ShowBies (prueba)" (los restaura al terminar): la de Play está firmada con otra clave y Android no deja
+  instalar una encima de la otra, así que conviven, cada una con su progreso.
 - **Build > Android AAB (release)** (`ConstructorAndroid.BuildAab`): `Builds/ShowBies.aab` firmado
   con el keystore de release, que es lo que se sube a la Play Store. Lee ruta, alias y passwords
   de `ShowBies1/keystore.local` (gitignoreado; plantilla en `keystore.local.example`) y los limpia

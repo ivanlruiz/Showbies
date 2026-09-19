@@ -15,7 +15,8 @@ public class Granade : MonoBehaviour
     [SerializeField] private float alturaDelArco = 2.5f;
     [SerializeField] private float demoraAlCaer = 0.3f;
     [SerializeField] private float alturaAlCaer = 0.1f;      // la mitad del alto de la granada: apoyada, no enterrada
-    [SerializeField] private float radioDeContacto = 0.6f;   // que tan cerca de un zombi tiene que pasar para explotar en el aire
+    [SerializeField] private float radioDeContacto = 0.6f;
+    [SerializeField] private float distanciaSegura = 1.5f;   // no explota por contacto antes de alejarse esto del jugador   // que tan cerca de un zombi tiene que pasar para explotar en el aire
     [SerializeField] private LineRenderer indicador;         // anillo en el piso con el radio de la explosion
     [SerializeField] private int segmentosIndicador = 48;
 
@@ -71,7 +72,11 @@ public class Granade : MonoBehaviour
             posicion.y += 4f * alturaDelArco * t * (1f - t);
             transform.position = posicion;
 
-            if (TocaUnZombi()) Explode();
+            // Recien lejos de la mano: con un zombi pegado al jugador, la granada
+            // apuntada explotaba a los pies en el primer frame en vez de volar.
+            Vector3 recorrido = posicion - origen;
+            recorrido.y = 0f;
+            if (recorrido.sqrMagnitude >= distanciaSegura * distanciaSegura && TocaUnZombi()) Explode();
             return;
         }
 
