@@ -10,7 +10,8 @@ using System.Globalization;
 // - El monto crece con la mejor oleada, para que no quede chico cuando las mejoras
 //   ya cuestan miles.
 // - Atrasar el reloj del telefono no da otra recompensa: solo cuenta un dia mayor al
-//   guardado (Progreso.EsDiaNuevo), igual que los topes de los anuncios.
+//   guardado (Progreso.EsDiaNuevo), igual que los topes de los anuncios. Adelantarlo
+//   tampoco, mientras no se reinicie el telefono (RelojConfiable).
 // - Entra por Progreso.CobrarPremio: no son monedas ganadas jugando.
 // - Despues de cobrar se puede mirar un video (LugarAnuncio.DuplicarRegalo) para cobrar
 //   lo mismo otra vez (CobrarDuplicado), una sola vez por cobro.

@@ -97,6 +97,13 @@ public static class Progreso
         public int diaRecompensa;
         public int rachaRecompensa;
 
+        // La marca del reloj del ultimo cobro de la diaria (RelojConfiable): la hora en
+        // ticks UTC, los milisegundos desde que arranco el telefono y el numero de
+        // arranque. 0 = sin marca, que es lo que lee un JSON sin estos campos.
+        public long relojUtc;
+        public long relojMs;
+        public int relojArranques;
+
         // v4. Un JSON de la 3 los lee en cero: lo de antes no se conto.
         public Estadisticas estadisticas = new Estadisticas();
     }
@@ -254,6 +261,17 @@ public static class Progreso
         Cargar();
         datos.diaRecompensa = Math.Max(0, dia);
         datos.rachaRecompensa = Math.Max(0, racha);
+
+        // La marca con que despues se nota si el reloj se adelanto a mano. La hora es la
+        // confiable, no la del reloj: si ya estaba adelantado, la marca no lo hereda.
+        long ms;
+        int arranques;
+        if (RelojConfiable.Leer(out ms, out arranques))
+        {
+            datos.relojUtc = HoraConfiable().Ticks;
+            datos.relojMs = ms;
+            datos.relojArranques = arranques;
+        }
         Revision++;
     }
 
@@ -403,10 +421,22 @@ public static class Progreso
 
     // Los topes de anuncios son por dia local, guardado como aaaammdd: es un entero
     // comparable y JsonUtility no serializa DateTime.
+    // El dia con la hora confiable (RelojConfiable): adelantar el reloj del telefono no
+    // hace que llegue antes el dia siguiente.
     public static int DiaDeHoy()
     {
-        DateTime ahora = DateTime.Now;
+        DateTime ahora = HoraConfiable().ToLocalTime();
         return ahora.Year * 10000 + ahora.Month * 100 + ahora.Day;
+    }
+
+    private static DateTime HoraConfiable()
+    {
+        DateTime utc = DateTime.UtcNow;
+        long ms;
+        int arranques;
+        if (!RelojConfiable.Leer(out ms, out arranques)) return utc;
+        Cargar();
+        return RelojConfiable.Confiable(utc, ms, arranques, datos.relojUtc, datos.relojMs, datos.relojArranques);
     }
 
     // Si el reloj volvio atras (un dia menor que el guardado) los topes NO se

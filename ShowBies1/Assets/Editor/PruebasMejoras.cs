@@ -209,6 +209,7 @@ public static class PruebasMejoras
                     ProbarEstadisticas(informe);
                     ProbarPrimeraVez(informe);
                     ProbarPedidoDeResena(informe);
+                    ProbarRelojConfiable(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1504,6 +1505,33 @@ public static class PruebasMejoras
                       !PedidoDeResena.Corresponde(12, 5, "2026-12-01", hoy, 10, 3, 60));
         inf.Verdadero("resena: fecha guardada rota, se pide",
                       PedidoDeResena.Corresponde(12, 5, "ayer", hoy, 10, 3, 60));
+    }
+
+    // El reloj adelantado a mano: en el mismo arranque del telefono vale la hora de la
+    // marca mas el tiempo real; en otro arranque, o sin marca, vale el reloj.
+    static void ProbarRelojConfiable(Informe inf)
+    {
+        var marca = new DateTime(2026, 9, 19, 12, 0, 0, DateTimeKind.Utc);
+        long ms = 5000000, diez = 10 * 60 * 1000;
+        Func<DateTime, long, int, DateTime> reloj = (ahora, ahoraMs, arranques) =>
+            RelojConfiable.Confiable(ahora, ahoraMs, arranques, marca.Ticks, ms, 7);
+
+        inf.Verdadero("reloj: sin marca vale el reloj",
+                      RelojConfiable.Confiable(marca.AddDays(1), ms, 7, 0, 0, 0) == marca.AddDays(1));
+        inf.Verdadero("reloj: adelantado un dia a los 10 min, vale el tiempo real",
+                      reloj(marca.AddDays(1), ms + diez, 7) == marca.AddMilliseconds(diez));
+        inf.Verdadero("reloj: sin tocar, vale el reloj",
+                      reloj(marca.AddMinutes(10), ms + diez, 7) == marca.AddMinutes(10));
+        inf.Verdadero("reloj: una hora de mas se tolera (hora de verano)",
+                      reloj(marca.AddMinutes(70), ms + diez, 7) == marca.AddMinutes(70));
+        inf.Verdadero("reloj: al dia siguiente de verdad, vale el reloj",
+                      reloj(marca.AddHours(20), ms + 20L * 3600 * 1000, 7) == marca.AddHours(20));
+        inf.Verdadero("reloj: otro arranque, vale el reloj",
+                      reloj(marca.AddDays(1), 1000, 8) == marca.AddDays(1));
+        inf.Verdadero("reloj: contador que va para atras, vale el reloj",
+                      reloj(marca.AddDays(1), ms - 1, 7) == marca.AddDays(1));
+        inf.Verdadero("reloj: atrasado, vale el reloj (lo frena EsDiaNuevo)",
+                      reloj(marca.AddDays(-3), ms + diez, 7) == marca.AddDays(-3));
     }
 
     static void ProbarRecompensaDiaria(Informe inf)

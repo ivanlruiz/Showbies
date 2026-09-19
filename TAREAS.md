@@ -61,7 +61,8 @@ Lo que encontró la auditoría de 10 agentes y quedó para después de la versi�
       por oleada.
 - [x] **Política de privacidad:** dice que el progreso nunca sale del teléfono, pero el Auto Backup de Android lo sube.
       Corregida en la versión del 19/9.
-- [ ] Adelantar la fecha del teléfono cobra varias recompensas diarias seguidas.
+- [x] Adelantar la fecha del teléfono cobra varias recompensas diarias seguidas (RelojConfiable, 19/9: hace falta
+      reiniciar el teléfono para hacerlo).
 
 **Chicos:** hechos el 19/9 (empatar el récord, zombis pegados al aparecer, granada a los pies, morir al terminar la
 oleada, el libre sin guardar, versión del progreso, monedas con sombra, sonidos sin precargar, la APK que no se

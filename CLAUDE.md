@@ -451,7 +451,10 @@ terminada: ver Primera vez).
 - **Crece con la mejor oleada:** × (1 + 0,1 × `MejorOleada`), para que no quede chica cuando las mejoras cuestan miles.
 - **Se guarda en el progreso** (`diaRecompensa` aaaammdd y `rachaRecompensa`, sin cambiar la versión) y entra por
   `CobrarPremio`: no son monedas ganadas jugando. **Atrasar el reloj no da otra**: sólo cuenta un día mayor al guardado
-  (`Progreso.EsDiaNuevo`), como los topes de los anuncios.
+  (`Progreso.EsDiaNuevo`), como los topes de los anuncios. **Adelantarlo tampoco**, mientras no se reinicie el teléfono:
+  `Progreso.DiaDeHoy` usa `RelojConfiable`, que al cobrar guarda una marca (hora, `SystemClock.elapsedRealtime` y el
+  número de arranque) y, en el mismo arranque, si el reloj dice más de 2 h por encima del tiempo real, usa la hora de
+  la marca más el tiempo real. Solo en Android; en PC vale el reloj.
 - **El video va después de cobrar** (pedido de Ivan): se cobra con COBRAR y recién ahí, si `ServicioAnuncios.PuedeOfrecer`
   el lugar `regalo_x2`, la ventana ofrece VÍDEO: +N MÁS al lado de VOLVER (un botón de atrás, no un NO, GRACIAS). El video
   paga lo mismo otra vez (`RecompensaDiaria.CobrarDuplicado`, una sola vez por cobro y en memoria). Sin video, la ventana
