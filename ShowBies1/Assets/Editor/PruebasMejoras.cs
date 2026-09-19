@@ -211,6 +211,7 @@ public static class PruebasMejoras
                     ProbarPedidoDeResena(informe);
                     ProbarRelojConfiable(informe);
                     ProbarJugoSonoro(informe);
+                    ProbarMisiones(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1552,6 +1553,78 @@ public static class PruebasMejoras
         inf.Igual("combo: sin hitos no cruza nada", 0, ContadorCombo.HitoCruzado(null, 0, 99));
         inf.Igual("combo: el primer salto es la bemol", 0, ContadorCombo.SemitonosDelSalto(0));
         inf.Igual("combo: los saltos de mas se quedan arriba", 24, ContadorCombo.SemitonosDelSalto(40));
+    }
+
+    // Las misiones del dia: como se arman, como avanzan con los contadores y como se cobran.
+    static void ProbarMisiones(Informe inf)
+    {
+        var a = MisionesDiarias.Armar(20260919, 10, false, false, false);
+        var b = MisionesDiarias.Armar(20260919, 10, false, false, false);
+        inf.Igual("misiones: son tres", 3, a.Count);
+        bool iguales = true, distintas = true;
+        for (int i = 0; i < a.Count; i++)
+        {
+            if (a[i].tipo != b[i].tipo || a[i].objetivo != b[i].objetivo) iguales = false;
+            for (int j = 0; j < i; j++) if (a[i].tipo == a[j].tipo) distintas = false;
+        }
+        inf.Verdadero("misiones: el mismo dia salen las mismas", iguales);
+        inf.Verdadero("misiones: tres tipos distintos", distintas);
+
+        bool sinCompras = true, jefeBien = true, hayFuria = false, objetivosBien = true;
+        for (int dia = 20260101; dia < 20260131; dia++)
+        {
+            foreach (var m in MisionesDiarias.Armar(dia, 12, false, false, false))
+            {
+                if (m.tipo == MisionesDiarias.Furia || m.tipo == MisionesDiarias.Granadas || m.tipo == MisionesDiarias.Criticos) sinCompras = false;
+                if (m.tipo == MisionesDiarias.Jefe && m.dificultad != 2) jefeBien = false;
+                if (!(m.objetivo > 0)) objetivosBien = false;
+            }
+            foreach (var m in MisionesDiarias.Armar(dia, 5, true, true, true))
+            {
+                if (m.tipo == MisionesDiarias.Furia) hayFuria = true;
+                if (m.tipo == MisionesDiarias.Jefe) jefeBien = false;
+            }
+        }
+        inf.Verdadero("misiones: sin compras no piden furia, granada ni criticos", sinCompras);
+        inf.Verdadero("misiones: el jefe solo en la dificil y con la oleada 9", jefeBien);
+        inf.Verdadero("misiones: con la furia comprada alguna la pide", hayFuria);
+        inf.Verdadero("misiones: todos los objetivos son positivos", objetivosBien);
+        inf.Cerca("misiones: numeros redondos", 1250, MisionesDiarias.Redondo(1234), 1e-9);
+        inf.Cerca("misiones: premio facil sin oleadas", 150, MisionesDiarias.Monto(0, 0), 1e-9);
+        inf.Cerca("misiones: premio dificil con oleada 10", 1200, MisionesDiarias.Monto(2, 10), 1e-9);
+
+        // Con el progreso: una de matar 3, se matan 3, se cobra una sola vez y se guarda.
+        EmpezarCaso("{\"version\":4,\"monedas\":0}", null);
+        MisionesDiarias.Asegurar();
+        inf.Igual("misiones: un progreso nuevo arma tres", 3, MisionesDiarias.DeHoy.Count);
+        var estado = Progreso.Misiones;
+        estado.lista = new List<MisionDelDia>
+        {
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 0, objetivo = 3, inicio = Progreso.MatadosEnTotal },
+            new MisionDelDia { tipo = MisionesDiarias.Oleada, dificultad = 1, objetivo = 5 },
+            new MisionDelDia { tipo = MisionesDiarias.Jefe, dificultad = 2, objetivo = 1, inicio = Progreso.JefesMatados },
+        };
+        inf.Igual("misiones: sin avance no hay nada para cobrar", 0, MisionesDiarias.PorCobrar);
+        inf.Cerca("misiones: sin cumplir no paga", 0, MisionesDiarias.Cobrar(0), 1e-9);
+        for (int i = 0; i < 3; i++) Progreso.ContarMuerte("ZombiNormal", false);
+        MisionesDiarias.RegistrarOleada(4);
+        inf.Igual("misiones: matar 3 cumplida, la oleada no", 1, MisionesDiarias.PorCobrar);
+        MisionesDiarias.RegistrarOleada(5);
+        inf.Igual("misiones: la oleada 5 la cumple", 2, MisionesDiarias.PorCobrar);
+        inf.Cerca("misiones: cobrar paga el premio", 150, MisionesDiarias.Cobrar(0), 1e-9);
+        inf.Cerca("misiones: no paga dos veces", 0, MisionesDiarias.Cobrar(0), 1e-9);
+        inf.Cerca("misiones: las monedas llegaron", 150, Progreso.Monedas, 1e-9);
+        inf.Cerca("misiones: no cuentan como jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
+
+        int diaGuardado = estado.dia;
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Verdadero("misiones: se relee la cobrada", MisionesDiarias.DeHoy.Count == 3 && MisionesDiarias.DeHoy[0].cobrada);
+        inf.Igual("misiones: se relee la oleada del dia", 5, Progreso.Misiones.mejorOleadaDelDia);
+
+        // Un reloj atrasado no las cambia: el dia guardado es mayor que hoy.
+        Progreso.Misiones.dia = diaGuardado + 1;
+        MisionesDiarias.Asegurar();
+        inf.Verdadero("misiones: con el reloj atrasado siguen las mismas", MisionesDiarias.DeHoy[0].cobrada);
     }
 
     static void ProbarRecompensaDiaria(Informe inf)

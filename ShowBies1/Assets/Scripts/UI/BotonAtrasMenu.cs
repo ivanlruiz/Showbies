@@ -21,6 +21,7 @@ public class BotonAtrasMenu : MonoBehaviour
     public OpcionesSonido opcionesSonido;
     public VentanaRecompensaDiaria recompensaDiaria;
     public ConfirmarSalir confirmarSalir;
+    public VentanaMisiones misiones;
 
     private void Update()
     {
@@ -39,6 +40,12 @@ public class BotonAtrasMenu : MonoBehaviour
         if (confirmarSalir != null && confirmarSalir.Abierta)
         {
             confirmarSalir.Cerrar();
+            return;
+        }
+
+        if (misiones != null && VentanaMisiones.Abierta)
+        {
+            misiones.Cerrar();
             return;
         }
 

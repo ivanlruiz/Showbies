@@ -160,6 +160,7 @@ public class WaveManager : MonoBehaviour
             bonoDeLaOleadaAnterior = bonoPorOleada * OleadaActual;
             Progreso.Sumar(bonoDeLaOleadaAnterior);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
+            MisionesDiarias.RegistrarOleada(OleadaActual);
             Progreso.Guardar();
         }
     }

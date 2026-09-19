@@ -106,6 +106,9 @@ public static class Progreso
 
         // v4. Un JSON de la 3 los lee en cero: lo de antes no se conto.
         public Estadisticas estadisticas = new Estadisticas();
+
+        // Las misiones del dia (MisionesDiarias). Un JSON sin el campo las arma de nuevo.
+        public EstadoMisiones misiones = new EstadoMisiones();
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
@@ -242,6 +245,18 @@ public static class Progreso
         if (datos.oleadaEnCurso == 0 && datos.puntosEnCurso == 0) return;
         datos.oleadaEnCurso = 0;
         datos.puntosEnCurso = 0;
+        Revision++;
+    }
+
+    // Las misiones del dia: las arma y las cobra MisionesDiarias.
+    public static EstadoMisiones Misiones
+    {
+        get { Cargar(); return datos.misiones; }
+    }
+
+    // Para quien cambia algo de Misiones: la tienda y los botones del menu miran Revision.
+    public static void AvisarCambio()
+    {
         Revision++;
     }
 
@@ -709,6 +724,11 @@ public static class Progreso
         if (d.anuncios.usos == null) d.anuncios.usos = new List<UsoDeLugar>();
         if (d.anuncios.dia < 0) d.anuncios.dia = 0;
         if (d.anuncios.fallasPremiadas < 0) d.anuncios.fallasPremiadas = 0;
+
+        if (d.misiones == null) d.misiones = new EstadoMisiones();
+        if (d.misiones.lista == null) d.misiones.lista = new List<MisionDelDia>();
+        d.misiones.lista.RemoveAll(m => m == null || string.IsNullOrEmpty(m.tipo));
+        if (d.misiones.mejorOleadaDelDia < 0) d.misiones.mejorOleadaDelDia = 0;
 
         if (d.estadisticas == null) d.estadisticas = new Estadisticas();
         Estadisticas e = d.estadisticas;

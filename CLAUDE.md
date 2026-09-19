@@ -46,9 +46,9 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
@@ -466,6 +466,27 @@ terminada: ver Primera vez).
   arma en `Start` y se abre en el primer `Update` con `TiendaMejoras.Abierta` en falso.
 - Cada casillero se etiqueta con el mismo día de racha que usa su monto: desde el día 8 el casillero de hoy dice DÍA 8.
 - Las pruebas cubren racha, corte, reloj atrasado, fin de mes y de año, bisiesto, montos y el cobro guardado.
+
+## Misiones del día
+
+Tres por día (fácil, media y difícil, en verde, amarillo y rojo), pedido de Ivan para que cada partida tenga un objetivo.
+La lógica es `MisionesDiarias` (`Assets/Scripts/Progreso/`), guardada en el progreso (`misiones`: el día, la mejor oleada
+completada en el día y la lista).
+
+- **Cambian a medianoche** con el día confiable (`Progreso.DiaDeHoy`), y el mismo día salen siempre las mismas: se sortean
+  con el día de semilla (`Armar`). Un reloj atrasado no las cambia.
+- **Tipos** (el nombre se guarda en el JSON: no se renombra): matar N zombis, completar la oleada N, ganar N monedas, usar
+  la furia, tirar granadas y hacer críticos (estas tres solo si están compradas) y derrotar un jefe (solo la difícil, con
+  la mejor oleada en 9). Tres tipos distintos por día. Los objetivos se ajustan a la mejor oleada (`Objetivo`, en números
+  redondos).
+- **El avance sale de los contadores de por vida**: al armarlas se anota cuánto marcaba cada uno (`inicio`) y el avance es
+  la diferencia. "Completa la oleada N" mira la mejor oleada del día, que avisa `WaveManager` (`RegistrarOleada`).
+- **Premio**: 150, 300 y 600 × (1 + 0,1 × mejor oleada), por `CobrarPremio` (no cuenta como jugado). Se cobra en el menú.
+- **En el menú**: el botón MISIONES (violeta, con la tilde) arriba de MEJORAS, con su insignia contando las que hay para
+  cobrar. Es una copia del de MEJORAS hecha en código por `VentanaMisiones` (raíz del canvas "Main Menu"), que también arma
+  la ventana: cada misión con su barra, el premio y COBRAR, y cuánto falta para las nuevas. El atrás de Android la cierra.
+- **En la partida**: `AvisoDeMisiones` (objeto propio en ShowBies1 y WaveMode) muestra "¡MISIÓN CUMPLIDA!" con lo que pedía,
+  un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten.
 
 ## Mejoras y tienda
 

@@ -34,7 +34,7 @@ Lista de Ivan del 16/9/2026, para después de subir la prueba cerrada. Todavía 
 ## Retención (para que vuelvan cada día)
 
 - [x] **Recompensa diaria:** monedas por entrar, que crecen si entrás varios días seguidos.
-- [ ] **Misiones:** 3 por día del tipo "matá 200 zombis", "llegá a la oleada 10" o "usá la furia 3 veces". Dan monedas y
+- [x] **Misiones:** 3 por día del tipo "matá 200 zombis", "llegá a la oleada 10" o "usá la furia 3 veces". Dan monedas y
       le ponen un objetivo a cada partida.
 - [ ] **Logros:** hitos permanentes (primer jefe, 10.000 zombis, crítico al 100 %). Se pueden conectar con Google Play
       Games.
@@ -94,7 +94,7 @@ Después:
   disparo (escopeta, perforante, rebote).
 - Jugo: vibración en Android con interruptor, multi-kill con pausa de impacto, el jefe como evento (entrada y muerte).
 - Opciones: joystick flotante, zurdos, tamaño de sticks, regulador de temblor y destellos; asistencia de puntería en móvil.
-- Retención: misiones diarias (3 por día y cofre), próximo objetivo en la derrota, bestiario, desafío semanal.
+- Retención: ~~misiones diarias~~ (hechas el 19/9; falta el cofre por las 3), próximo objetivo en la derrota, bestiario, desafío semanal.
 - Crecimiento: compartir el récord; red real con LevelPlay (confirmar antes lo del plugin de AdMob); cuando entren los
   anuncios, corregir en la ficha "no recopila datos" y "sin internet"; lanzamiento escalonado y A/B del icono.
 

@@ -37,6 +37,20 @@ guia_monedas	GRAB THE COINS!	¡COGE LAS MONEDAS!
 guia_compra	UPGRADE YOUR DAMAGE!	¡MEJORA TU DAÑO!
 guia_a_jugar	NOW TRY IT OUT!	¡AHORA PRUÉBALO!
 
+# --- Misiones del dia (MisionesDiarias, VentanaMisiones, AvisoDeMisiones)
+menu_misiones	MISSIONS	MISIONES
+misiones_titulo	DAILY MISSIONS	MISIONES DEL DÍA
+misiones_nuevas	New missions in {0}h {1}m	Misiones nuevas en {0} h {1} min
+mision_matar	Kill {0} zombies	Mata {0} zombis
+mision_oleada	Complete wave {0}	Completa la oleada {0}
+mision_monedas	Earn {0} coins	Gana {0} monedas
+mision_furia	Use the fury {0} times	Usa la furia {0} veces
+mision_granadas	Throw {0} grenades	Lanza {0} granadas
+mision_criticos	Land {0} critical hits	Haz {0} golpes críticos
+mision_jefe	Defeat a boss	Derrota a un jefe
+mision_cobrar	CLAIM	COBRAR
+mision_cumplida	MISSION COMPLETE!	¡MISIÓN CUMPLIDA!
+
 # --- Tienda
 tienda_titulo	UPGRADES	MEJORAS
 tienda_jugar	PLAY!	¡A JUGAR!
