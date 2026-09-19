@@ -46,7 +46,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
@@ -830,6 +830,13 @@ en el editor con target Android los joysticks se veían pero no respondían.
 Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`), no del proyecto, y hace que
 `Plataforma.EsMovil` dé falso en el editor aunque el target sea Android. Se aplica al entrar en play. Ojo que
 también cambia los techos que dependen de la plataforma: 60 zombis vivos y 150 monedas en vez de 35 y 80.
+
+**En PC el puntero es una mira** mientras se juega (pedido de Ivan): `CursorMira`, en la raíz de `MenuPausa.prefab`, así
+está en las tres escenas de juego. La textura es `Sprites/UI/Mira.png`, importada como **Cursor** (legible, RGBA32 y sin
+mipmaps, que es lo que pide `Cursor.SetCursor`), con el centro, que es el punto que apunta, en (32, 32). Con el juego
+congelado (`MenuPausa.JuegoCongelado`: la pausa o el ¡HAS MUERTO!) vuelve la flecha para tocar botones, y al apagarse
+el componente también: el puntero es de toda la aplicación y cruza escenas, así el menú y la derrota no heredan la
+mira. En el editor se ve con el target en Windows o con "Teclado y mouse en el editor".
 
 **No vuelvas a meter un `#if UNITY_ANDROID` alrededor de una clase entera.** Ver la trampa de abajo.
 

@@ -459,6 +459,7 @@ GameObject:
   - component: {fileID: 3238900422480691295}
   - component: {fileID: 8998462304396332086}
   - component: {fileID: 6316456074965033117}
+  - component: {fileID: 9120599946114633069}
   m_Layer: 5
   m_Name: MenuPausa
   m_TagString: Untagged
@@ -580,6 +581,20 @@ MonoBehaviour:
   alturaFila: -390
   ancho: 440
   separacion: 160
+--- !u!114 &9120599946114633069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1399679279974442286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26d3f698de1120c498379e4adbee6fa0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CursorMira
+  textura: {fileID: 2800000, guid: 1a79154406e82c6459f6776789849a48, type: 3}
+  centro: {x: 32, y: 32}
 --- !u!1 &1958771116829897592
 GameObject:
   m_ObjectHideFlags: 0
