@@ -4,7 +4,8 @@ using UnityEngine;
 // Escape. Con el selector de idioma abierto lo cierra; con la tienda de mejoras
 // abierta la cierra, como su boton "VOLVER";
 // con el panel de modos abierto vuelve al principal, como su boton "Back"; en
-// el principal cierra el juego, que es lo que se espera en Android. En PC,
+// el principal pregunta si salir del juego (ConfirmarSalir, la misma ventana del
+// boton SALIR), y con esa ventana abierta la cierra: el atras es "no". En PC,
 // Escape en el principal no hace nada: para salir esta el boton Quit.
 //
 // Es el unico lector de Escape del menu. Va en el canvas y no en MainMenu porque
@@ -19,6 +20,7 @@ public class BotonAtrasMenu : MonoBehaviour
     public SelectorIdioma selectorIdioma;
     public OpcionesSonido opcionesSonido;
     public VentanaRecompensaDiaria recompensaDiaria;
+    public ConfirmarSalir confirmarSalir;
 
     private void Update()
     {
@@ -31,6 +33,12 @@ public class BotonAtrasMenu : MonoBehaviour
         if (recompensaDiaria != null && VentanaRecompensaDiaria.Abierta)
         {
             recompensaDiaria.Cerrar();
+            return;
+        }
+
+        if (confirmarSalir != null && confirmarSalir.Abierta)
+        {
+            confirmarSalir.Cerrar();
             return;
         }
 
@@ -59,7 +67,8 @@ public class BotonAtrasMenu : MonoBehaviour
         }
         else if (Plataforma.EsMovil)
         {
-            Application.Quit();
+            // Sin la ventana, cierra como antes.
+            if (confirmarSalir == null || !confirmarSalir.Abrir()) Application.Quit();
         }
     }
 }

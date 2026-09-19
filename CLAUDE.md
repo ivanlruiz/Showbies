@@ -46,7 +46,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
@@ -98,6 +98,12 @@ OTRA VEZ de la derrota. Si agregás otro camino al libre, pasalo por ahí.
 centrados, y como el canvas escala por ancho, en un teléfono 20:9 (2400x1080, el más común) mide 864 de alto: PLAY,
 OLEADAS y VOLVER quedaban cortados por abajo. Los botones de las esquinas tienen que colgar de algo que siga el borde
 real de la pantalla.
+
+**SALIR pregunta antes de cerrar** (pedido de Ivan: está en el medio del menú y un toque sin querer cerraba el juego).
+`ConfirmarSalir` (raíz del canvas "Main Menu") copia al arrancar la ventana del idioma, como `OpcionesSonido`, más ancha
+para tapar los botones del menú, y la arma como "¿SALIR DEL JUEGO?" con SEGUIR JUGANDO (verde, late) y SALIR (vidrio).
+La abren `MainMenu.QuitGame` y el atrás de Android en el principal; el atrás con la ventana abierta la cierra. Si no se
+pudo armar, las dos cosas cierran el juego como antes.
 
 ### Tutorial
 
@@ -662,7 +668,8 @@ ni en el código.
 - **Un texto fijo** de una escena o un prefab (un título, la etiqueta de un botón) lleva el componente
   `TextoTraducido` con su `id`: lo escribe al prenderse y cada vez que cambia el idioma, sin recargar la escena.
 - **Un texto que arma el código** usa `Textos.De("id")` o `Textos.Formato("id", a, b)`. Escribí el id entero
-  entre comillas: la prueba lo busca así en el código. La excepción son las mejoras, cuyo nombre y unidad salen
+  entre comillas: la prueba lo busca así en el código (y también `x.id = "id";`, cuando el código le cambia el id a
+  un `TextoTraducido` que copió, como `OpcionesSonido` y `ConfirmarSalir`). La excepción son las mejoras, cuyo nombre y unidad salen
   de `mejora_<id>_nombre` y `mejora_<id>_unidad` (el `id` de la mejora ya es fijo para siempre); los campos
   `nombre` y `unidad` del asset quedaron sólo para el inspector.
 - **Casi nada es una frase suelta**: son plantillas con `{0}`, `{1}` y rich text (`<size=55%>COINS</size>  {0}`).
@@ -796,8 +803,8 @@ click en otra ventana.
   `Input.backButtonLeavesApp = true`.
 - Cada pantalla decide qué hace Escape: en juego pausa y reanuda (`MenuPausa`), en la derrota vuelve al
   menú (`MenuPerdiste`), y en el menú principal cierra primero la ventana de idioma, después la tienda, después el panel de modos o,
-  en el principal, sale del juego sólo en móvil (`BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del
-  menú). `RestartScene` ya no cierra el
+  en el principal, pregunta si salir del juego sólo en móvil (`ConfirmarSalir`, la misma ventana del botón SALIR; lo
+  maneja `BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del menú). `RestartScene` ya no cierra el
   juego con Escape: en PC, para salir está Quit.
 
 ## Móvil

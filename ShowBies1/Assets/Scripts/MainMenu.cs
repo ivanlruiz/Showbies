@@ -4,16 +4,22 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 public class MainMenu : MonoBehaviour
 {
+    // La ventana de "¿SALIR DEL JUEGO?", en la raiz del canvas. La usa el panel
+    // principal, que es el del boton SALIR; en el de modos queda vacia.
+    public ConfirmarSalir confirmarSalir;
+
    // El modo libre; si todavia no esta desbloqueado, las oleadas.
    public void PlayGame ()
     {
         SceneManager.LoadScene(ModoLibre.EscenaPara(TiendaMejoras.EscenaModoLibre));
     }
 
+    // Pregunta antes de cerrar: el boton esta en el medio del menu y un toque sin querer
+    // cerraba el juego. Si la ventana no esta, cierra como antes.
     public void QuitGame ()
     {
+        if (confirmarSalir != null && confirmarSalir.Abrir()) return;
         Application.Quit();
-       
     }
 
     public void GameModes()

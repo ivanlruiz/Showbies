@@ -550,18 +550,20 @@ public static class PruebasMejoras
 
         var existentes = new HashSet<string>(ids);
 
-        // Los ids que pide el codigo: Textos.De("..."), Textos.Formato("...", ...) y los
-        // que se arman con el id de una mejora.
+        // Los ids que pide el codigo: Textos.De("..."), Textos.Formato("...", ...), los que
+        // le pone a un TextoTraducido copiado (t.id = "...";, como OpcionesSonido y
+        // ConfirmarSalir) y los que se arman con el id de una mejora.
         // Solo los ids escritos enteros: "mejora_" + id se prueba aparte, con el catalogo.
-        var pedido = new System.Text.RegularExpressions.Regex(@"Textos\.(?:De|Formato)\(\s*""([a-z0-9_]+)""\s*[,)]");
+        var pedido = new System.Text.RegularExpressions.Regex(@"Textos\.(?:De|Formato)\(\s*""([a-z0-9_]+)""\s*[,)]|\.id\s*=\s*""([a-z0-9_]+)""\s*;");
         int enCodigo = 0, faltanEnCodigo = 0;
         foreach (string archivo in Directory.GetFiles(Path.Combine(Application.dataPath, "Scripts"), "*.cs", SearchOption.AllDirectories))
         {
             foreach (System.Text.RegularExpressions.Match m in pedido.Matches(File.ReadAllText(archivo)))
             {
+                string id = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
                 enCodigo++;
-                if (existentes.Contains(m.Groups[1].Value)) continue;
-                inf.Falla("textos: " + Path.GetFileName(archivo) + " pide \"" + m.Groups[1].Value + "\", que no esta en la tabla");
+                if (existentes.Contains(id)) continue;
+                inf.Falla("textos: " + Path.GetFileName(archivo) + " pide \"" + id + "\", que no esta en la tabla");
                 faltanEnCodigo++;
             }
         }
