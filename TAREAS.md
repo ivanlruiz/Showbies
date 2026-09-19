@@ -70,3 +70,32 @@ y son un draw call cada una; los sonidos sintetizados no se precargan; la APK de
 Play (misma package, otra firma); `Assets/Sprites/Materials.meta` trackeado con la carpeta vacía; CLAUDE.md
 desactualizado en la lista de scripts y en dónde se guardan los PlayerPrefs.
 
+## Ronda de ideas (19/9/2026)
+
+Seis agentes, uno por ángulo. En orden de prioridad:
+
+1. **Parche del muro de las oleadas 35-39, sin código** (simulado: hoy la 35 pide ~440 partidas y la 40 no se alcanza).
+   En el WaveManager de WaveMode: `crecimientoVida` 1,15 → 1,11, `crecimientoMonedas` 1,05 → 1,08 y un jefe más blando
+   (`crecimientoVidaJefe` 1,10 o BOSS.asset de 500 a 300). Lleva el muro a la 45-48. Validar jugando de la 30 a la 45.
+   Simulación: `scratchpad/ideas_balance/sim.py` de la sesión (copiarla al repo si se usa).
+2. **Primer camino del jugador nuevo:** la primera vez, PLAY entra directo a la oleada 1 con pulgares fantasma sobre los
+   joysticks; después, primera compra guiada (una mano sobre la tarjeta de daño). Postergar la recompensa diaria hasta
+   la primera partida terminada. El tutorial viejo enseña la granada, que al principio no se tiene.
+3. **Contadores de por vida** en `Progreso` (matados por tipo, jefes, granadas, furias, monedas ganadas jugando):
+   base de misiones, logros y renacer. Subir `VersionActual`.
+4. **Pedido de reseña in-app** (Google Play In-App Review) después del primer jefe; nunca en la derrota, sin premio.
+   Tiene que estar en el AAB que sale a producción.
+5. **Jugo barato:** combo que toca notas que suben y carteles en x10/x25/x50 (`ContadorCombo`); escalera de monedas
+   (las agarradas seguidas suben de grado en vez de sonar al azar, `Moneda`).
+
+Después:
+- Balance de fondo: daño ×1,5 cada 5 niveles (`Mejora` con hitos) con vida 1,12 y monedas 1,09; subir topes de
+  cadencia y críticos; renacer desde la oleada 30.
+- Combate: zombi hinchado que explota al morir (abre el enganche de comportamiento por zombi), oleadas con evento
+  (ESTAMPIDA, FIEBRE DEL ORO, NIEBLA), jefe con ataques con aviso, zombi embestidor, la caja de arma da un modo de
+  disparo (escopeta, perforante, rebote).
+- Jugo: vibración en Android con interruptor, multi-kill con pausa de impacto, el jefe como evento (entrada y muerte).
+- Opciones: joystick flotante, zurdos, tamaño de sticks, regulador de temblor y destellos; asistencia de puntería en móvil.
+- Retención: misiones diarias (3 por día y cofre), próximo objetivo en la derrota, bestiario, desafío semanal.
+- Crecimiento: compartir el récord; red real con LevelPlay (confirmar antes lo del plugin de AdMob); cuando entren los
+  anuncios, corregir en la ficha "no recopila datos" y "sin internet"; lanzamiento escalonado y A/B del icono.
