@@ -29,6 +29,14 @@ sonido_efectos	EFFECTS	EFECTOS
 sonido_musica	MUSIC	MÚSICA
 idioma_titulo	LANGUAGE	IDIOMA
 
+# --- Primera vez (GuiaPrimeraPartida y GuiaPrimeraCompra)
+guia_mover	MOVE	MUÉVETE
+guia_disparar	AIM AND SHOOT	APUNTA Y DISPARA
+guia_pc	WASD TO MOVE\nHOLD CLICK TO SHOOT	WASD PARA MOVERTE\nMANTÉN EL CLIC PARA DISPARAR
+guia_monedas	GRAB THE COINS!	¡COGE LAS MONEDAS!
+guia_compra	UPGRADE YOUR DAMAGE!	¡MEJORA TU DAÑO!
+guia_a_jugar	NOW TRY IT OUT!	¡AHORA PRUÉBALO!
+
 # --- Tienda
 tienda_titulo	UPGRADES	MEJORAS
 tienda_jugar	PLAY!	¡A JUGAR!

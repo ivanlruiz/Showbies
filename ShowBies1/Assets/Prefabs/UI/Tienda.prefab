@@ -1463,6 +1463,7 @@ GameObject:
   - component: {fileID: 7419314894968292173}
   - component: {fileID: 587004547088447012}
   - component: {fileID: 6163052285183081840}
+  - component: {fileID: 3348080878655088648}
   m_Layer: 5
   m_Name: Tienda
   m_TagString: Untagged
@@ -1594,6 +1595,22 @@ MonoBehaviour:
   sonidoPop: {fileID: 8300000, guid: 3287b491d45d6bc459a2aa1ab7ece8fd, type: 3}
   colorTope: {r: 1, g: 0.84, b: 0.25, a: 1}
   ventanaCombo: 1.5
+--- !u!114 &3348080878655088648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5469407161584310158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f352b31b96ff4846ac7c458b127844d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuiaPrimeraCompra
+  tienda: {fileID: 6163052285183081840}
+  idRecomendada: dano_bala
+  colorFlecha: {r: 1, g: 0.78, b: 0.2, a: 1}
+  demora: 0.9
 --- !u!1 &5608666521483815988
 GameObject:
   m_ObjectHideFlags: 0

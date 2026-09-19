@@ -82,6 +82,12 @@ public class TiendaMejoras : MonoBehaviour
     private static readonly int[] SemitonosTope = { 12, 16, 19 };
 
     private readonly List<TarjetaMejora> tarjetas = new List<TarjetaMejora>();
+
+    // Las lee GuiaPrimeraCompra para senalar la tarjeta recomendada.
+    public IReadOnlyList<TarjetaMejora> Tarjetas
+    {
+        get { return tarjetas; }
+    }
     // Segundos que faltan para el golpe de bienvenida de cada tarjeta comprable;
     // negativo si no hay ninguno pendiente.
     private readonly List<float> golpesPendientes = new List<float>();

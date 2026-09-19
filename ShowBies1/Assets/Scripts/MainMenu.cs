@@ -8,6 +8,23 @@ public class MainMenu : MonoBehaviour
     // principal, que es el del boton SALIR; en el de modos queda vacia.
     public ConfirmarSalir confirmarSalir;
 
+    // El panel de modos, que abre PLAY. Solo en el panel principal.
+    public GameObject menuModos;
+
+    // PLAY: la primera vez va derecho a la oleada 1 (PrimeraVez), sin el panel de modos:
+    // cuatro opciones, el libre bloqueado y un tutorial opcional son demasiado para
+    // alguien que acaba de instalar. Despues abre el panel de modos, como siempre.
+    public void TocarJugar()
+    {
+        if (PrimeraVez.NuncaJugo)
+        {
+            SceneManager.LoadScene(TiendaMejoras.EscenaOleadas);
+            return;
+        }
+        if (menuModos != null) menuModos.SetActive(true);
+        gameObject.SetActive(false);
+    }
+
    // El modo libre; si todavia no esta desbloqueado, las oleadas.
    public void PlayGame ()
     {

@@ -49,10 +49,10 @@ Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
-Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI
+Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro
-Assets/Scripts/Tutorial/    ← TutorialManager
+Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
@@ -86,6 +86,7 @@ Reordenar Build Settings rompe la navegación en silencio.
 ### Menú y modos
 
 **PLAY abre el panel de modos** (`GameModesMenu`: TUTORIAL, MODO LIBRE, OLEADAS y VOLVER); ya no hay botón GAME MODES.
+La excepción es la primera vez (ver Primera vez): `MainMenu.TocarJugar` manda derecho a la oleada 1.
 **PLAY está abajo a la derecha, cerca del pulgar** (pedido de Ivan), y en el panel de modos OLEADAS ocupa ese mismo lugar,
 con el libre y el tutorial encima y VOLVER abajo a la izquierda. El menú no muestra monedas: solo la tienda. El modo
 libre está **bloqueado hasta llegar a la oleada 12** (`ModoLibre.OleadaParaDesbloquear`; llegar a la 12 es haber
@@ -104,6 +105,23 @@ real de la pantalla.
 para tapar los botones del menú, y la arma como "¿SALIR DEL JUEGO?" con SEGUIR JUGANDO (verde, late) y SALIR (vidrio).
 La abren `MainMenu.QuitGame` y el atrás de Android en el principal; el atrás con la ventana abierta la cierra. Si no se
 pudo armar, las dos cosas cierran el juego como antes.
+
+### Primera vez
+
+Lo que ve alguien que recien instala (ronda de ideas del 19/9: el panel de modos, el tutorial opcional y una tienda de
+ocho tarjetas sin guía eran demasiado). Lo decide `PrimeraVez` (`Assets/Scripts/Tutorial/`) mirando el progreso, sin
+marcas aparte: `NuncaJugo` (ninguna partida terminada, ninguna oleada completada ni a medias), `NoTerminoPartidas` y
+`NuncaCompro`.
+
+- **PLAY va derecho a la oleada 1** (`MainMenu.TocarJugar`, que es el `onClick` del botón): después abre el panel de modos.
+- **La primera partida trae una guía** (`GuiaPrimeraPartida`, objeto propio en WaveMode, armada en código): en el
+  teléfono un pulgar fantasma sobre cada joystick con su cartel, que se va al usarlo; en PC un cartel con WASD y el clic.
+  Con el primer zombi muerto, "¡COGE LAS MONEDAS!" hasta agarrar una. No frena nada. Sigue si se sale y se retoma
+  (mira `NoTerminoPartidas`, porque `WaveManager` guarda la oleada en curso apenas empieza).
+- **La primera compra está señalada** (`GuiaPrimeraCompra`, en la raíz del prefab `Tienda`): si nunca compró y le alcanza
+  para el daño, la lista se desplaza hasta esa tarjeta y una flecha dorada la señala desde abajo; al comprar, la flecha
+  pasa a ¡A JUGAR!. Es el triángulo de `TexturasUI.Play` girado.
+- **La recompensa diaria espera a la primera partida terminada**: si no, se cobran 150 monedas y se compra antes de jugar.
 
 ### Tutorial
 
@@ -418,7 +436,8 @@ del día, y desde la 4 los contadores de por vida). No usa PlayerPrefs a propós
 
 Monedas por entrar una vez por día, que crecen con la racha (pedido de Ivan para que vuelvan cada día). La lógica es
 `RecompensaDiaria` (`Assets/Scripts/Progreso/`) y la ventana, `VentanaRecompensaDiaria` (raíz del canvas "Main Menu"),
-que se arma entera en código y aparece sola al abrir el menú si hoy hay algo para cobrar.
+que se arma entera en código y aparece sola al abrir el menú si hoy hay algo para cobrar (desde la primera partida
+terminada: ver Primera vez).
 
 - **Racha:** sube si el último cobro fue ayer; si se saltó un día vuelve a 1. Paga 150, 250, 400, 600, 900, 1.300 y 2.000
   (`MonedasPorDia`), y del día 7 en adelante sigue pagando lo del 7 mientras no se corte.

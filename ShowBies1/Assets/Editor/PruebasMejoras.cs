@@ -207,6 +207,7 @@ public static class PruebasMejoras
                     ProbarCircuitoDeAnuncios(informe);
                     ProbarRecompensaDiaria(informe);
                     ProbarEstadisticas(informe);
+                    ProbarPrimeraVez(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1458,6 +1459,30 @@ public static class PruebasMejoras
         inf.Igual("estadisticas: jefes negativos en cero", 0, Progreso.JefesMatados);
         inf.Igual("estadisticas: criticos negativos en cero", 0L, Progreso.Criticos);
         inf.Cerca("estadisticas: monedas jugadas negativas en cero", 0, Progreso.MonedasGanadasJugando, 1e-9);
+    }
+
+    // Quien es "alguien que recien instala": lo deciden el progreso y las compras.
+    static void ProbarPrimeraVez(Informe inf)
+    {
+        EmpezarCaso("{\"version\":4,\"monedas\":0}", null);
+        inf.Verdadero("primera vez: progreso vacio, nunca jugo", PrimeraVez.NuncaJugo);
+        inf.Verdadero("primera vez: progreso vacio, no termino partidas", PrimeraVez.NoTerminoPartidas);
+        inf.Verdadero("primera vez: progreso vacio, nunca compro", PrimeraVez.NuncaCompro);
+
+        EmpezarCaso("{\"version\":4,\"oleadaEnCurso\":3}", null);
+        inf.Verdadero("primera vez: con una oleada a medias ya jugo", !PrimeraVez.NuncaJugo);
+        inf.Verdadero("primera vez: pero la guia sigue (no termino partidas)", PrimeraVez.NoTerminoPartidas);
+
+        EmpezarCaso("{\"version\":4,\"partidasTerminadas\":1}", null);
+        inf.Verdadero("primera vez: con una partida terminada ya jugo", !PrimeraVez.NuncaJugo && !PrimeraVez.NoTerminoPartidas);
+
+        EmpezarCaso("{\"version\":2,\"mejorOleada\":2}", null);
+        inf.Verdadero("primera vez: un progreso viejo con oleadas ya jugo", !PrimeraVez.NuncaJugo);
+
+        EmpezarCaso("{\"version\":4,\"mejoras\":[{\"id\":\"dano_bala\",\"nivel\":1}]}", null);
+        inf.Verdadero("primera vez: con una mejora comprada ya compro", !PrimeraVez.NuncaCompro);
+        EmpezarCaso("{\"version\":4,\"mejoras\":[{\"id\":\"dano_bala\",\"nivel\":0}]}", null);
+        inf.Verdadero("primera vez: nivel cero no es una compra", PrimeraVez.NuncaCompro);
     }
 
     static void ProbarRecompensaDiaria(Informe inf)

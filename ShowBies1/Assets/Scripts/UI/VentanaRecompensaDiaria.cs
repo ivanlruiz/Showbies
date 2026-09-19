@@ -79,6 +79,10 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     {
         racha = RecompensaDiaria.RachaDeHoy;
         if (racha <= 0) return;
+        // Espera a la primera partida terminada: si no, alguien que recien instala
+        // cobra 150 monedas y compra antes de haber jugado, y la guia de la primera
+        // compra llega tarde.
+        if (PrimeraVez.NoTerminoPartidas) return;
         Armar();
         panel.SetActive(false);
         // No se abre en el acto: si el menu cargo con la tienda abierta (MEJORAS de la
