@@ -108,6 +108,6 @@ Después:
 2. **Cartas raras y combinaciones**: una dorada de vez en cuando y combos secretos (fuego + rebote = balas de lava).
 3. **Disparar solo al quedarse quieto** como opción de control, para jugar con un pulgar.
 4. **El ángel del jefe**: después de cada jefe, curarse entero o una carta extra.
-5. **Capítulos con mapas**: cada 10 oleadas cambia el escenario (ya pedido en Visual como mapas diferentes).
+5. [x] **Capítulos con mapas** (hecho el 19/9: el cementerio de noche en las oleadas 11-20): cada 10 oleadas cambia el escenario (ya pedido en Visual como mapas diferentes).
 
 No copiar: la energía que limita partidas ni el equipo con cofres y rarezas (monetización agresiva).

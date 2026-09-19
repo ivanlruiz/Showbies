@@ -53,6 +53,7 @@ Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, Efec
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, Volumen, FuenteConVolumen
+Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: pradera de día y cementerio de noche)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
@@ -63,7 +64,7 @@ Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMej
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
-Assets/Editor/              ← ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -379,6 +380,23 @@ por zombi. La fracción sale de la vida con la que apareció el zombi (`vidaMaxi
 por oleada no la rompe mientras se aplique antes del primer golpe. Cuando el zombi muere la barra se apaga y queda
 guardada con él: la aparición siguiente la prende con su primer golpe que no mata, sin crear otra (el pool es por
 prefab, así que la altura sirve). Se destruye con el zombi.
+
+### Capítulos: la pradera y el cementerio
+
+Pedido de Ivan: un segundo escenario. Las oleadas van por **capítulos de 10** (`CapitulosDeEscenario`, objeto `Capitulos`
+de WaveMode): 1-10 la pradera de día, 11-20 el **cementerio de noche**, y después se alternan. El modo libre queda de día.
+Al pasar de capítulo, en el descanso de la oleada: el cartel "CAPÍTULO 2 / EL CEMENTERIO" arriba de todo (al medio está
+el de la oleada) con el jingle; la luz, el cielo, la luz ambiente y la niebla se funden a la noche en 2,5 s; a mitad del
+fundido el piso pasa a tierra (`Escenarios/Cementerio/PisoCementerio.mat`, la textura Brown Stony repetida 45 veces) y
+el decorado sale del suelo de a una pieza; cuando termina, se junta con `StaticBatchingUtility` en pocos draw calls. Al
+volver al día el decorado se va en lo oscuro del fundido. Una partida retomada en la 15 arranca de noche sin fundido.
+Lo del día se lee de la escena al empezar, y al descargarse la escena la niebla se apaga.
+
+**El decorado es un prefab hecho con formas simples** (`Prefabs/Escenarios/Cementerio`: lápidas, cruces, árboles pelados,
+la reja del borde y cuatro faroles con luz puntual cálida), **sin colliders**: los zombis van derecho al jugador y se
+trabarían. No se edita a mano: lo arma **ShowBies > Escenarios > Armar cementerio** (`ConstructorEscenarios`, semilla fija),
+que se vuelve a correr para cambiarlo. La niebla funciona en la build porque el menú la tiene guardada en su escena
+(ver El fondo del menú vivo).
 
 ## Monedas y progreso
 

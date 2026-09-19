@@ -2781,6 +2781,70 @@ MonoBehaviour:
   duracion: 0.35
   escalaInicial: 0.2
   escalaDelRebote: 1.25
+--- !u!1 &1380227713
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1380227715}
+  - component: {fileID: 1380227714}
+  m_Layer: 0
+  m_Name: Capitulos
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1380227714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1380227713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e567559f67e2db47b185d9d7eb9c2d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CapitulosDeEscenario
+  oleadas: {fileID: 1041950196}
+  oleadasPorCapitulo: 10
+  decoradoNoche: {fileID: 2995870159128975959, guid: 39e73bffa27ef314ba83598b0a7b4bdf, type: 3}
+  piso: {fileID: 1398685221}
+  pisoNoche: {fileID: 2100000, guid: a81620f7ccdc22b4e81fc1b09f7f3ca6, type: 2}
+  sol: {fileID: 2110854562}
+  camara: {fileID: 594691210}
+  cieloNoche: {r: 0.07, g: 0.09, b: 0.17, a: 1}
+  luzNoche: {r: 0.55, g: 0.66, b: 1, a: 1}
+  intensidadNoche: 0.45
+  rotacionNoche: {x: 55, y: 200, z: 0}
+  ambienteNoche: {r: 0.2, g: 0.23, b: 0.34, a: 1}
+  nieblaInicio: 16
+  nieblaFin: 52
+  duracionFundido: 2.5
+  canvas: {fileID: 1970546277}
+  fuente: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
+  materialContorno: {fileID: 2100000, guid: f629c6e43dba4bf38cb74d8860150664, type: 2}
+  colorCartel: {r: 1, g: 0.85, b: 0.3, a: 1}
+  duracionCartel: 3.2
+--- !u!4 &1380227715
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1380227713}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1398685219
 GameObject:
   m_ObjectHideFlags: 0
@@ -3369,6 +3433,8 @@ MonoBehaviour:
   sonido: {fileID: 8300000, guid: 2dfb80e7e6c2f19489beb252efd030af, type: 3}
   cadaCuanto: 0.3
   duracion: 2.6
+  colorMision: {r: 0.72, g: 0.56, b: 1, a: 1}
+  colorEstrella: {r: 1, g: 0.8, b: 0.2, a: 1}
 --- !u!4 &1585359846
 Transform:
   m_ObjectHideFlags: 0
@@ -5119,3 +5185,4 @@ SceneRoots:
   - {fileID: 1505294601}
   - {fileID: 2120220200}
   - {fileID: 1585359846}
+  - {fileID: 1380227715}

@@ -68,6 +68,11 @@ zombi_faster	SPRINTER	VELOZ
 zombi_tanque	TANK	TANQUE
 zombi_jefe	BOSS	JEFE
 
+# --- Capitulos de las oleadas (CapitulosDeEscenario)
+capitulo_titulo	CHAPTER {0}	CAPÍTULO {0}
+escenario_pradera	THE MEADOW	LA PRADERA
+escenario_cementerio	THE GRAVEYARD	EL CEMENTERIO
+
 # --- Tienda
 tienda_titulo	UPGRADES	MEJORAS
 tienda_jugar	PLAY!	¡A JUGAR!
