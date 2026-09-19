@@ -109,6 +109,9 @@ public static class Progreso
 
         // Las misiones del dia (MisionesDiarias). Un JSON sin el campo las arma de nuevo.
         public EstadoMisiones misiones = new EstadoMisiones();
+
+        // Las estrellas del bestiario ya cobradas, por tipo de zombi (Bestiario).
+        public List<Conteo> estrellasCobradas = new List<Conteo>();
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
@@ -252,6 +255,24 @@ public static class Progreso
     public static EstadoMisiones Misiones
     {
         get { Cargar(); return datos.misiones; }
+    }
+
+    public static int EstrellasCobradas(string tipo)
+    {
+        Cargar();
+        Conteo conteo = Buscar(datos.estrellasCobradas, tipo);
+        return conteo != null ? conteo.cantidad : 0;
+    }
+
+    // Solo anota la estrella; las monedas entran por CobrarPremio, que guarda.
+    public static void SumarEstrellaCobrada(string tipo)
+    {
+        if (string.IsNullOrEmpty(tipo)) return;
+        Cargar();
+        Conteo conteo = Buscar(datos.estrellasCobradas, tipo);
+        if (conteo == null) datos.estrellasCobradas.Add(new Conteo { id = tipo, cantidad = 1 });
+        else conteo.cantidad++;
+        Revision++;
     }
 
     // Para quien cambia algo de Misiones: la tienda y los botones del menu miran Revision.
@@ -724,6 +745,10 @@ public static class Progreso
         if (d.anuncios.usos == null) d.anuncios.usos = new List<UsoDeLugar>();
         if (d.anuncios.dia < 0) d.anuncios.dia = 0;
         if (d.anuncios.fallasPremiadas < 0) d.anuncios.fallasPremiadas = 0;
+
+        if (d.estrellasCobradas == null) d.estrellasCobradas = new List<Conteo>();
+        d.estrellasCobradas.RemoveAll(c => c == null || string.IsNullOrEmpty(c.id));
+        foreach (Conteo c in d.estrellasCobradas) if (c.cantidad < 0) c.cantidad = 0;
 
         if (d.misiones == null) d.misiones = new EstadoMisiones();
         if (d.misiones.lista == null) d.misiones.lista = new List<MisionDelDia>();

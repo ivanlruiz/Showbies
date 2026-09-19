@@ -56,6 +56,17 @@ misiones_cofre_abierto	OPENED! +{0}	¡ABIERTO! +{0}
 objetivo_mision	NEXT: {0}  {1}/{2}	PRÓXIMO: {0}  {1}/{2}
 objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} PARA {1} NIVEL {2}
 
+# --- Bestiario (Bestiario, VentanaBestiario)
+bestiario_titulo	BESTIARY	BESTIARIO
+bestiario_bajada	Kill zombies to earn stars	Mata zombis para ganar estrellas
+bestiario_siguiente	NEXT {0}	SIGUIENTE {0}
+bestiario_completo	COMPLETE!	¡COMPLETO!
+zombi_normal	WALKER	CAMINANTE
+zombi_rapido	RUNNER	CORREDOR
+zombi_faster	SPRINTER	VELOZ
+zombi_tanque	TANK	TANQUE
+zombi_jefe	BOSS	JEFE
+
 # --- Tienda
 tienda_titulo	UPGRADES	MEJORAS
 tienda_jugar	PLAY!	¡A JUGAR!

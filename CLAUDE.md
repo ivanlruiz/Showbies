@@ -46,9 +46,9 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, ConstructorUI
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, Bestiario
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
@@ -492,6 +492,20 @@ completada en el día y la lista).
   su barra, el premio y COBRAR, y cuánto falta para las nuevas. El atrás de Android la cierra.
 - **En la partida**: `AvisoDeMisiones` (objeto propio en ShowBies1 y WaveMode) muestra "¡MISIÓN CUMPLIDA!" con lo que pedía,
   un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten.
+
+## Bestiario
+
+Una tarjeta por tipo de zombi (`Bestiario`, `Assets/Scripts/Progreso/`) con tres estrellas: 100, 1.000 y 10.000 muertes de
+ese tipo (el jefe: 1, 10 y 50), contadas con los contadores de por vida por el nombre del asset `Enemy`. Cada estrella se
+cobra una vez y paga 200, 1.000 y 5.000 × (1 + 0,1 × mejor oleada), por `CobrarPremio`; lo cobrado va en el progreso
+(`estrellasCobradas`). En el menú, un trofeo redondo arriba a la derecha al lado de las misiones, con la insignia de las
+estrellas por cobrar; la ventana (`VentanaBestiario`) muestra cada tipo con su color, cuántos lleva, sus estrellas (las
+ganadas sin cobrar laten), la barra hasta la siguiente y el botón para cobrar. Los nombres (CAMINANTE, CORREDOR, VELOZ,
+TANQUE, JEFE) salen de la tabla.
+
+**Las ventanas del menú que se arman en código usan `ConstructorUI`** (rectángulos, textos, pildoras con el molde de
+siempre, barras sin sprite, los botones redondos de las esquinas copiados del globo y la insignia copiada de MEJORAS).
+Como escriben sus textos al armarse, **se vuelven a armar al abrirlas si cambió el idioma** (`Idioma.Revision`).
 
 ## Mejoras y tienda
 

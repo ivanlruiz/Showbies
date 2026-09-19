@@ -213,6 +213,7 @@ public static class PruebasMejoras
                     ProbarJugoSonoro(informe);
                     ProbarMisiones(informe);
                     ProbarProximoObjetivo(informe);
+                    ProbarBestiario(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1668,6 +1669,31 @@ public static class PruebasMejoras
         Progreso.Misiones.lista.Clear();
         ProximoObjetivo.Elegir(out texto, out fraccion);
         inf.Verdadero("objetivo: con todo al alcance no elige una mejora que ya alcanza", fraccion < 1f);
+    }
+
+    // El bestiario: las estrellas por muertes de cada tipo, que se cobran una vez cada una.
+    static void ProbarBestiario(Informe inf)
+    {
+        inf.Igual("bestiario: 99 normales, ninguna estrella", 0, Bestiario.AlcanzadasCon(Bestiario.Normal, 99));
+        inf.Igual("bestiario: 100 normales, una", 1, Bestiario.AlcanzadasCon(Bestiario.Normal, 100));
+        inf.Igual("bestiario: 10.000, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Tanque, 10000));
+        inf.Igual("bestiario: un jefe ya es una estrella", 1, Bestiario.AlcanzadasCon(Bestiario.Jefe, 1));
+        inf.Igual("bestiario: 50 jefes, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Jefe, 50));
+        inf.Cerca("bestiario: premio de la primera sin oleadas", 200, Bestiario.Premio(0, 0), 1e-9);
+        inf.Cerca("bestiario: premio de la tercera con oleada 10", 10000, Bestiario.Premio(2, 10), 1e-9);
+
+        EmpezarCaso("{\"version\":4,\"monedas\":0,\"estadisticas\":{\"matados\":[{\"id\":\"ZombiNormal\",\"cantidad\":1500},{\"id\":\"ZombiBOSS\",\"cantidad\":1}]}}", null);
+        inf.Igual("bestiario: dos normales y un jefe para cobrar", 3, Bestiario.PorCobrar);
+        inf.Igual("bestiario: el siguiente de los normales es 10.000", 10000, Bestiario.Siguiente(Bestiario.Normal));
+        inf.Cerca("bestiario: cobra la primera", 200, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
+        inf.Cerca("bestiario: despues la segunda", 1000, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
+        inf.Cerca("bestiario: la tercera no esta ganada", 0, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
+        inf.Cerca("bestiario: sin muertes no paga", 0, Bestiario.Cobrar(Bestiario.Tanque), 1e-9);
+        inf.Cerca("bestiario: las monedas llegaron", 1200, Progreso.Monedas, 1e-9);
+        inf.Cerca("bestiario: no cuentan como jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("bestiario: se releen las cobradas", 2, Bestiario.Cobradas(Bestiario.Normal));
+        inf.Igual("bestiario: queda el jefe para cobrar", 1, Bestiario.PorCobrar);
     }
 
     static void ProbarRecompensaDiaria(Informe inf)

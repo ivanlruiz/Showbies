@@ -81,6 +81,7 @@ public class VentanaMisiones : MonoBehaviour
     private TMP_Text numeroInsignia;
     private int revisionVista = -1;
     private float reloj = -1f;
+    private int idiomaArmado = -1;
     private float relojInsignia;
     private Button cofre;
     private Image fondoCofre;
@@ -109,68 +110,22 @@ public class VentanaMisiones : MonoBehaviour
 
     private void CrearBoton()
     {
-        if (selectorIdioma == null || selectorIdioma.botonGlobo == null) return;
-
         // Una copia del globo, en espejo arriba a la derecha (pedido de Ivan), con el
-        // portapapeles en vez del globo: se hace en Start, cuando SelectorIdioma ya le
-        // puso sus dibujos, como el engranaje de OpcionesSonido.
-        var globo = (RectTransform)selectorIdioma.botonGlobo.transform;
-        var copia = Instantiate(globo.gameObject, globo.parent);
-        copia.name = "BotonMisiones";
-        var rt = (RectTransform)copia.transform;
-        rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
-        rt.pivot = new Vector2(1f, 1f);
-        rt.anchoredPosition = new Vector2(-globo.anchoredPosition.x, globo.anchoredPosition.y);
-
-        if (selectorIdioma.iconoGlobo != null && iconoBoton != null)
-        {
-            var icono = copia.transform.Find(Ruta(selectorIdioma.iconoGlobo.transform, globo));
-            if (icono != null) icono.GetComponent<Image>().sprite = iconoBoton;
-        }
-
-        var boton = copia.GetComponent<Button>();
-        boton.onClick = new Button.ButtonClickedEvent();
-        boton.onClick.AddListener(Abrir);
-
-        // La insignia es una copia de la de MEJORAS, en la esquina del circulo.
-        var molde = botonMejoras != null ? botonMejoras.transform.Find("Insignia") : null;
-        if (molde != null)
-        {
-            insignia = (RectTransform)Instantiate(molde.gameObject, rt).transform;
-            insignia.name = "Insignia";
-            insignia.anchorMin = insignia.anchorMax = new Vector2(1f, 1f);
-            insignia.pivot = new Vector2(0.5f, 0.5f);
-            insignia.anchoredPosition = new Vector2(-10f, -10f);
-            insignia.sizeDelta = new Vector2(48f, 48f);
-            numeroInsignia = insignia.GetComponentInChildren<TMP_Text>(true);
-            if (numeroInsignia != null) numeroInsignia.fontSize = 30f;
-        }
+        // portapapeles en vez del globo.
+        var boton = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonMisiones", DesdeLaDerecha, iconoBoton, Abrir);
+        if (boton != null) insignia = ConstructorUI.Insignia(botonMejoras, (RectTransform)boton.transform, out numeroInsignia);
     }
 
-    // La ruta de un hijo desde un ancestro, para encontrar lo mismo en la copia.
-    private static string Ruta(Transform hijo, Transform ancestro)
+    // A la misma distancia del borde derecho que el globo del izquierdo.
+    private float DesdeLaDerecha
     {
-        string ruta = hijo.name;
-        var t = hijo.parent;
-        while (t != null && t != ancestro)
-        {
-            ruta = t.name + "/" + ruta;
-            t = t.parent;
-        }
-        return ruta;
+        get { return selectorIdioma != null && selectorIdioma.botonGlobo != null ? ((RectTransform)selectorIdioma.botonGlobo.transform).anchoredPosition.x : 36f; }
     }
 
     private void RefrescarInsignia(float dt)
     {
-        if (insignia == null) return;
-        int n = MisionesDiarias.PorCobrar;
-        insignia.gameObject.SetActive(n > 0);
-        if (n <= 0) return;
-        if (numeroInsignia != null) numeroInsignia.text = n.ToString();
-        // Late como la de MEJORAS: hay algo para cobrar.
         relojInsignia += dt;
-        float latido = Mathf.Abs(Mathf.Sin(relojInsignia * Mathf.PI / 1.4f));
-        insignia.localScale = Vector3.one * (1f + 0.25f * latido * latido);
+        ConstructorUI.Latir(insignia, numeroInsignia, MisionesDiarias.PorCobrar, relojInsignia);
     }
 
     // --- La ventana ----------------------------------------------------------------
@@ -178,6 +133,13 @@ public class VentanaMisiones : MonoBehaviour
     public void Abrir()
     {
         if (panel == null) return;
+        // Los textos fijos se escriben al armarla: si cambio el idioma desde el globo, se
+        // vuelve a armar.
+        if (Idioma.Revision != idiomaArmado)
+        {
+            Destroy(panel);
+            Armar();
+        }
         MisionesDiarias.Asegurar();
         Refrescar();
         panel.SetActive(true);
@@ -335,6 +297,7 @@ public class VentanaMisiones : MonoBehaviour
         rtPanel.anchorMax = Vector2.one;
         rtPanel.offsetMin = rtPanel.offsetMax = Vector2.zero;
         panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);   // tapa los toques del menu
+        idiomaArmado = Idioma.Revision;
 
         ventana = Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 660f));
         var fondo = ventana.gameObject.AddComponent<Image>();
@@ -421,77 +384,22 @@ public class VentanaMisiones : MonoBehaviour
     private Button ArmarBoton(RectTransform padre, string nombre, Vector2 posicion, Vector2 tamanio, Color color,
                               Color colorTexto, Sprite dibujo, string texto, float tamanioTexto)
     {
-        var raiz = Rect(padre, nombre, posicion, tamanio);
-        var toque = raiz.gameObject.AddComponent<Image>();
-        toque.color = new Color(1f, 1f, 1f, 0f);
-        var button = raiz.gameObject.AddComponent<Button>();
-        button.targetGraphic = toque;
-
-        // Visual antes que la sombra: BotonJugoso toma en su Awake el primer hijo como visual.
-        var visual = Rect(raiz, "Visual", Vector2.zero, tamanio);
-        var fondo = Rect(visual, "Fondo", Vector2.zero, tamanio);
-        var imgFondo = fondo.gameObject.AddComponent<Image>();
-        imgFondo.sprite = pildora;
-        imgFondo.type = Image.Type.Sliced;
-        imgFondo.color = color;
-        imgFondo.raycastTarget = false;
-
-        var tmp = Texto(visual, "Texto", texto, tamanioTexto, colorTexto, Vector2.zero, tamanio);
-        if (dibujo != null)
-        {
-            var icono = Rect(visual, "Icono", Vector2.zero, new Vector2(tamanio.y * 0.42f, tamanio.y * 0.42f));
-            icono.anchorMin = icono.anchorMax = new Vector2(0f, 0.5f);
-            var imgIcono = icono.gameObject.AddComponent<Image>();
-            imgIcono.sprite = dibujo;
-            imgIcono.color = colorTexto;
-            imgIcono.preserveAspect = true;
-            imgIcono.raycastTarget = false;
-            icono.gameObject.AddComponent<IconoDeBoton>().texto = tmp;
-        }
-
-        var jugoso = raiz.gameObject.AddComponent<BotonJugoso>();
-        jugoso.sonidoClick = sonidoClick;
-
-        var sombra = Rect(raiz, "Sombra", new Vector2(0f, -8f), tamanio);
-        sombra.SetAsFirstSibling();
-        var imgSombra = sombra.gameObject.AddComponent<Image>();
-        imgSombra.sprite = pildora;
-        imgSombra.type = Image.Type.Sliced;
-        imgSombra.color = new Color(0f, 0f, 0f, 0.3f);
-        imgSombra.raycastTarget = false;
-        return button;
+        return ConstructorUI.Boton(padre, nombre, posicion, tamanio, color, colorTexto, dibujo, texto, tamanioTexto,
+                                   fuente, pildora, sonidoClick);
     }
 
     private void Redondear(Image img, float multiplicador)
     {
-        img.sprite = pildora;
-        img.type = Image.Type.Sliced;
-        img.pixelsPerUnitMultiplier = multiplicador;
+        ConstructorUI.Redondear(img, pildora, multiplicador);
     }
 
     private TMP_Text Texto(RectTransform padre, string nombre, string texto, float tamanio, Color color, Vector2 posicion, Vector2 caja)
     {
-        var rt = Rect(padre, nombre, posicion, caja);
-        var tmp = rt.gameObject.AddComponent<TextMeshProUGUI>();
-        if (fuente != null) tmp.font = fuente;
-        tmp.text = texto;
-        tmp.fontSize = tamanio;
-        tmp.color = color;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.textWrappingMode = TextWrappingModes.NoWrap;
-        tmp.raycastTarget = false;
-        return tmp;
+        return ConstructorUI.Texto(padre, nombre, texto, tamanio, color, posicion, caja, fuente);
     }
 
     private static RectTransform Rect(RectTransform padre, string nombre, Vector2 posicion, Vector2 tamanio)
     {
-        var go = new GameObject(nombre, typeof(RectTransform));
-        var rt = (RectTransform)go.transform;
-        rt.SetParent(padre, false);
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = tamanio;
-        rt.anchoredPosition = posicion;
-        return rt;
+        return ConstructorUI.Rect(padre, nombre, posicion, tamanio);
     }
 }

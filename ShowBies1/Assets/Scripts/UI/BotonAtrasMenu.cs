@@ -22,6 +22,7 @@ public class BotonAtrasMenu : MonoBehaviour
     public VentanaRecompensaDiaria recompensaDiaria;
     public ConfirmarSalir confirmarSalir;
     public VentanaMisiones misiones;
+    public VentanaBestiario bestiario;
 
     private void Update()
     {
@@ -46,6 +47,12 @@ public class BotonAtrasMenu : MonoBehaviour
         if (misiones != null && VentanaMisiones.Abierta)
         {
             misiones.Cerrar();
+            return;
+        }
+
+        if (bestiario != null && VentanaBestiario.Abierta)
+        {
+            bestiario.Cerrar();
             return;
         }
 
