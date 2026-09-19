@@ -83,7 +83,7 @@ Seis agentes, uno por ángulo. En orden de prioridad:
    la primera partida terminada. El tutorial viejo enseña la granada, que al principio no se tiene.
 3. [x] **Contadores de por vida** en `Progreso` (matados por tipo, jefes, granadas, furias, monedas ganadas jugando):
    base de misiones, logros y renacer. Subir `VersionActual`.
-4. **Pedido de reseña in-app** (Google Play In-App Review) después del primer jefe; nunca en la derrota, sin premio.
+4. [x] **Pedido de reseña in-app** (Google Play In-App Review) después del primer jefe; nunca en la derrota, sin premio.
    Tiene que estar en el AAB que sale a producción.
 5. **Jugo barato:** combo que toca notas que suben y carteles en x10/x25/x50 (`ContadorCombo`); escalera de monedas
    (las agarradas seguidas suben de grado en vez de sonar al azar, `Moneda`).

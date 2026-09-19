@@ -50,6 +50,7 @@ Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorF
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
+Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
@@ -612,6 +613,20 @@ cuando se integre (AdMob o LevelPlay) es una clase nueva que implemente `IProvee
 está roto en Unity 6000.3.17 y posteriores (issue 4212 del repo), y AdMob sólo sirve anuncios de verdad cuando
 la app ya está publicada y vinculada a su ficha de Play.
 
+## Reseña de Google Play
+
+`PedidoDeResena` (raíz del canvas "Main Menu") pide la ventanita nativa de reseña de Play (In-App Review) **en el menú,
+con todo cerrado**, cuando la mejor oleada llegó a 10 y hay 3 partidas terminadas, y después como mucho cada 60 días
+(`"ResenaPedidaEn"`, y atrasar el reloj no la vuelve a pedir). Nunca en la partida ni en la derrota, sin preguntar antes
+"¿te gusta?" y sin premio: son reglas de Play. Google decide en silencio si la muestra, y fuera de una instalación desde
+Play (una APK a mano) no muestra nada.
+
+**Sin el plugin de Unity de Google:** la librería oficial (`com.google.android.play:review:2.0.1`) entra como dependencia
+en `Assets/Plugins/Android/mainTemplate.gradle` (la plantilla propia está prendida en Player Settings) y se llama por JNI,
+con un `AndroidJavaProxy` para el `OnCompleteListener`. El plugin trae el External Dependency Manager, que se pelea con
+Unity 6. **Si se actualiza Unity, hay que volver a copiar su `mainTemplate.gradle` y sumarle la línea.** Solo en Android,
+decidido en runtime; en el editor loguea "se pediría".
+
 ## Pantallas: idioma, fuente y botones
 
 Todo lo que lee el jugador esta **con Bangers**, la fuente del juego, y **sale de la tabla de textos** (ver Idiomas):
@@ -796,6 +811,7 @@ progreso):
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
 | `"VolumenEfectos"`, `"VolumenMusica"` | `SliderVolumen` (menú y pausa) | `Volumen`; sin nada guardado, 1 |
 | `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
+| `"ResenaPedidaEn"` | `PedidoDeResena`, la fecha `yyyy-MM-dd` del último pedido | `PedidoDeResena` |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.

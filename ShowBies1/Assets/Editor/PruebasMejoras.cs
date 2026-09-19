@@ -208,6 +208,7 @@ public static class PruebasMejoras
                     ProbarRecompensaDiaria(informe);
                     ProbarEstadisticas(informe);
                     ProbarPrimeraVez(informe);
+                    ProbarPedidoDeResena(informe);
                     if (completo)
                     {
                         ProbarGetters(informe, catalogo);
@@ -1483,6 +1484,26 @@ public static class PruebasMejoras
         inf.Verdadero("primera vez: con una mejora comprada ya compro", !PrimeraVez.NuncaCompro);
         EmpezarCaso("{\"version\":4,\"mejoras\":[{\"id\":\"dano_bala\",\"nivel\":0}]}", null);
         inf.Verdadero("primera vez: nivel cero no es una compra", PrimeraVez.NuncaCompro);
+    }
+
+    // Cuando se pide la reseña de Play: con la oleada 10 y 3 partidas, y despues cada 60 dias.
+    static void ProbarPedidoDeResena(Informe inf)
+    {
+        var hoy = new DateTime(2026, 9, 19);
+        inf.Verdadero("resena: oleada 10 y 3 partidas, nunca pedida",
+                      PedidoDeResena.Corresponde(10, 3, "", hoy, 10, 3, 60));
+        inf.Verdadero("resena: sin llegar a la oleada 10 no",
+                      !PedidoDeResena.Corresponde(9, 30, "", hoy, 10, 3, 60));
+        inf.Verdadero("resena: con pocas partidas no",
+                      !PedidoDeResena.Corresponde(12, 2, "", hoy, 10, 3, 60));
+        inf.Verdadero("resena: pedida hace 59 dias no",
+                      !PedidoDeResena.Corresponde(12, 5, "2026-07-22", hoy, 10, 3, 60));
+        inf.Verdadero("resena: pedida hace 60 dias si",
+                      PedidoDeResena.Corresponde(12, 5, "2026-07-21", hoy, 10, 3, 60));
+        inf.Verdadero("resena: reloj atrasado no la vuelve a pedir",
+                      !PedidoDeResena.Corresponde(12, 5, "2026-12-01", hoy, 10, 3, 60));
+        inf.Verdadero("resena: fecha guardada rota, se pide",
+                      PedidoDeResena.Corresponde(12, 5, "ayer", hoy, 10, 3, 60));
     }
 
     static void ProbarRecompensaDiaria(Informe inf)
