@@ -111,3 +111,59 @@ Después:
 5. [x] **Capítulos con mapas** (hecho el 19/9: el cementerio de noche en las oleadas 11-20): cada 10 oleadas cambia el escenario (ya pedido en Visual como mapas diferentes).
 
 No copiar: la energía que limita partidas ni el equipo con cofres y rarezas (monetización agresiva).
+
+## Para mañana (anotado el 19/9 a la noche)
+
+**Estado:** `main` está en `eea0eb5`; `idiomas` tiene además el cementerio (`2bc5a0c`) y esta nota, sin pushear. La
+versión 5 sigue en revisión en Play. Nada de lo de hoy está probado en un teléfono.
+
+**Primero, en este orden:**
+1. [ ] Arreglar lo de la revisión que rompe algo (abajo, "Revisión del jefe y lo nuevo"): el fondo del menú con el
+   jefe (se ve en la primera pantalla) y el balance de las misiones (regalan ~1.850 monedas el primer día).
+2. [ ] Armar la APK de prueba (sale como "ShowBies (prueba)", al lado de la de Play) y probar en el teléfono: guía del
+   jugador nuevo (pulgares en los joysticks), misiones y cofre, bestiario, próximo objetivo, jefe con patrones,
+   cementerio (rendimiento al entrar a la oleada 11), combo que suena, escalera de monedas, SALIR que pregunta.
+3. [ ] Pasar todo a `main`.
+4. [ ] Cuando Google apruebe la 5: publicarla, mandar a revisión el link nuevo de la política y, cuando la ficha lo
+   muestre, pasar el repo a privado.
+5. [ ] Armar el AAB de la 6 (subir `AndroidBundleVersionCode` a 6 y `bundleVersion`) y mandarla.
+
+**Revisión del jefe y lo nuevo** (un agente, 19/9; nada arreglado todavía):
+
+- [ ] **Media — el jefe rompe el fondo del menú.** `JefePatrones` tiene `[RequireComponent(EnemyController)]` y
+  `FondoMenu` no puede borrar el EnemyController del BOSS: el jefe del fondo queda invisible y tira excepciones.
+  Arreglo: en `FondoMenu` borrar los MonoBehaviour en orden inverso (o sacar el RequireComponent).
+- [ ] **Media — las invocaciones ignoran el techo de zombis vivos** (35 en móvil). En el modo libre sale un BOSS cada
+  30 s y se acumulan invocando. Arreglo: techo global `EnemyController.TechoDeZombis` (static con reset) e invocar
+  `min(n, techo - ZombisVivos)`; tope de invocados vivos por jefe; en el libre no sacar otro BOSS si ya hay uno.
+- [ ] **Media — premios de misiones al revés.** Fijos (150/300/600, cofre 800) contra objetivos que escalan: al
+  principio pagan muchísimo (~1.850 el primer día contra ~300 jugando), después poco. Arreglo: premio proporcional a
+  las monedas esperadas del objetivo (×0,3/0,4/0,5), cofre ~50 % de las tres, y sin misiones hasta la primera partida
+  terminada (como la diaria).
+- [ ] **Media — "Completa la oleada N" se cumple retomando.** Cuenta el número absoluto de la oleada: retomar una
+  partida en la 25 cumple las de la 15 y la 24 con una sola oleada. Arreglo: contar las oleadas avanzadas hoy.
+- [ ] **Media — a medianoche se pierden las misiones cumplidas sin cobrar** (y el cofre). Arreglo: cobrarlas solas al
+  cambiar el día, o dejarlas pendientes en la ventana.
+- [ ] Baja — revivir al lado del jefe no da aire: `JefePatrones.Postergar(s)` desde `PlayerHealth.Revivir`. El
+  comentario de `DespejarAlrededor` ("es lento") quedó viejo con la carga.
+- [ ] Baja — la línea de aviso del jefe mira a la cámara y queda medio bajo el piso: `alignment = TransformZ` y la
+  cinta rotada 90° en X.
+- [ ] Baja — `RelojConfiable` hace 4 llamadas JNI por consulta: leer `boot_count` una vez por sesión y no tocar JNI si
+  no hay marca.
+- [ ] Baja — pitch hasta 4 (escalera de monedas, combo, cofre): confirmar que Unity no lo corta en 3; si lo corta,
+  topear a +19 semitonos o bajar la escala una octava.
+- [ ] Baja — el cementerio se instancia entero cada noche y se combina en runtime: instanciarlo una vez apagado y
+  reusarlo, y liberar las mallas combinadas.
+- [ ] Baja — la cuenta regresiva de misiones usa `DateTime.Now` en vez de la hora confiable, y arma el texto cada frame.
+- [ ] Baja — `Sprite.Create` sin `Destroy` en VentanaMisiones, VentanaBestiario, GuiaPrimeraPartida y GuiaPrimeraCompra.
+
+**Mejoras que propuso:**
+- Invocación segura del jefe (lo de arriba, más validar que cada punto del anillo esté dentro del mapa).
+- Carga que castiga y premia: un golpe propio de la carga (×2 o ×3, una vez), frenar en seco al chocar y dejar al jefe
+  aturdido un instante (la ventana para pegarle).
+- Barra de vida del jefe grande arriba al centro, con su nombre y una muesca en la mitad (la furia).
+- Postergar el ataque al revivir y la línea plana (S).
+- Premios de misiones proporcionales al objetivo (lo de arriba).
+
+**Después:** el diseño de las cartas de 1 de 3 por oleada (ideas de Archero), el desafío semanal y un tercer capítulo
+(la ciudad de noche).
