@@ -114,15 +114,17 @@ No copiar: la energía que limita partidas ni el equipo con cofres y rarezas (mo
 
 ## Para mañana (anotado el 19/9 a la noche)
 
-**Estado:** `main` está en `eea0eb5`; `idiomas` tiene además el cementerio (`2bc5a0c`) y esta nota, sin pushear. La
-versión 5 sigue en revisión en Play. Nada de lo de hoy está probado en un teléfono.
+**Estado (al 20/9):** `main` está en `eea0eb5`; `idiomas` tiene además el cementerio (`2bc5a0c`), esta nota y el
+**modo oscuro** (`9aba98a`), sin pushear. La versión 5 sigue en revisión en Play. Nada de esto está probado en un
+teléfono.
 
 **Primero, en este orden:**
-1. [ ] Arreglar lo de la revisión que rompe algo (abajo, "Revisión del jefe y lo nuevo"): el fondo del menú con el
-   jefe (se ve en la primera pantalla) y el balance de las misiones (regalan ~1.850 monedas el primer día).
+1. [ ] Arreglar el balance de las misiones (abajo, "Revisión del jefe y lo nuevo"): regalan ~1.850 monedas el
+   primer día contra ~300 jugando. Lo del jefe en el fondo del menú ya está arreglado (20/9, con el modo oscuro).
 2. [ ] Armar la APK de prueba (sale como "ShowBies (prueba)", al lado de la de Play) y probar en el teléfono: guía del
    jugador nuevo (pulgares en los joysticks), misiones y cofre, bestiario, próximo objetivo, jefe con patrones,
-   cementerio (rendimiento al entrar a la oleada 11), combo que suena, escalera de monedas, SALIR que pregunta.
+   cementerio (rendimiento al entrar a la oleada 11), combo que suena, escalera de monedas, SALIR que pregunta y el
+   **modo oscuro** (el interruptor en OPCIONES, el menú de noche y que todo se lea al sol).
 3. [ ] Pasar todo a `main`.
 4. [ ] Cuando Google apruebe la 5: publicarla, mandar a revisión el link nuevo de la política y, cuando la ficha lo
    muestre, pasar el repo a privado.
@@ -130,9 +132,9 @@ versión 5 sigue en revisión en Play. Nada de lo de hoy está probado en un tel
 
 **Revisión del jefe y lo nuevo** (un agente, 19/9; nada arreglado todavía):
 
-- [ ] **Media — el jefe rompe el fondo del menú.** `JefePatrones` tiene `[RequireComponent(EnemyController)]` y
-  `FondoMenu` no puede borrar el EnemyController del BOSS: el jefe del fondo queda invisible y tira excepciones.
-  Arreglo: en `FondoMenu` borrar los MonoBehaviour en orden inverso (o sacar el RequireComponent).
+- [x] **Media — el jefe rompe el fondo del menú.** `JefePatrones` tenía `[RequireComponent(EnemyController)]` y
+  `FondoMenu` no podía borrar el EnemyController del BOSS: el jefe del fondo quedaba invisible y tiraba excepciones.
+  **Arreglado el 20/9** sacando el RequireComponent (queda anotado en las trampas de CLAUDE.md).
 - [ ] **Media — las invocaciones ignoran el techo de zombis vivos** (35 en móvil). En el modo libre sale un BOSS cada
   30 s y se acumulan invocando. Arreglo: techo global `EnemyController.TechoDeZombis` (static con reset) e invocar
   `min(n, techo - ZombisVivos)`; tope de invocados vivos por jefe; en el libre no sacar otro BOSS si ya hay uno.
