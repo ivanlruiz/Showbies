@@ -12,7 +12,12 @@ using UnityEngine;
 // A la mitad de su vida entra en furia: ataca mas seguido e invoca mas. Los relojes van en
 // tiempo escalado, asi la pausa los congela. Va en el prefab ZombiBOSS; el estado arranca
 // de cero en cada aparicion, por el pool.
-[RequireComponent(typeof(EnemyController))]
+//
+// **Sin RequireComponent(EnemyController)**, aunque lo necesite: FondoMenu le borra los
+// scripts a los zombis que cruzan por detras del menu, y un RequireComponent no deja
+// borrar el componente del que se depende. El EnemyController quedaba vivo sin Rigidbody
+// y el jefe del fondo tiraba una excepcion por aparicion. Sin el atributo, el que falta
+// se chequea en Update como cualquier otra referencia.
 public class JefePatrones : MonoBehaviour, IMovimientoPropio
 {
     [Header("Ritmo")]

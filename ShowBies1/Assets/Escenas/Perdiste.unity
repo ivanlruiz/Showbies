@@ -2397,6 +2397,7 @@ GameObject:
   - component: {fileID: 1349075456}
   - component: {fileID: 1349075458}
   - component: {fileID: 1349075457}
+  - component: {fileID: 1349075459}
   m_Layer: 5
   m_Name: Fondo
   m_TagString: Untagged
@@ -2461,6 +2462,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1349075455}
   m_CullTransparentMesh: 1
+--- !u!114 &1349075459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1349075455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 6
+  colorClaro: {r: 0.06, g: 0.12, b: 0.05, a: 0.45}
 --- !u!1 &1368194092
 GameObject:
   m_ObjectHideFlags: 0
@@ -2547,6 +2562,7 @@ GameObject:
   - component: {fileID: 1427311381}
   - component: {fileID: 1427311383}
   - component: {fileID: 1427311382}
+  - component: {fileID: 1427311384}
   m_Layer: 5
   m_Name: BG
   m_TagString: Untagged
@@ -2621,6 +2637,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1427311380}
   m_CullTransparentMesh: 1
+--- !u!114 &1427311384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1427311380}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 8
+  colorClaro: {r: 0.66, g: 0.86, b: 0.96, a: 1}
 --- !u!1 &1515306596
 GameObject:
   m_ObjectHideFlags: 0
@@ -3092,6 +3122,7 @@ GameObject:
   - component: {fileID: 1751678517}
   - component: {fileID: 1751678516}
   - component: {fileID: 1751678519}
+  - component: {fileID: 1751678520}
   m_Layer: 5
   m_Name: AvisoDescanso
   m_TagString: Untagged
@@ -3231,6 +3262,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextoTraducido
   id: aviso_descanso
+--- !u!114 &1751678520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751678515}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 3
+  colorClaro: {r: 0.3, g: 0.36, b: 0.48, a: 1}
 --- !u!1 &1790788640
 GameObject:
   m_ObjectHideFlags: 0
@@ -3242,6 +3287,7 @@ GameObject:
   - component: {fileID: 1790788643}
   - component: {fileID: 1790788642}
   - component: {fileID: 1790788641}
+  - component: {fileID: 1790788644}
   m_Layer: 5
   m_Name: AvisoCompras
   m_TagString: Untagged
@@ -3368,6 +3414,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -100}
   m_SizeDelta: {x: 1400, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1790788644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790788640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 9
+  colorClaro: {r: 0.18, g: 0.6, b: 0.12, a: 1}
 --- !u!1 &1794449846
 GameObject:
   m_ObjectHideFlags: 0
@@ -3597,6 +3657,7 @@ GameObject:
   - component: {fileID: 1942286122}
   - component: {fileID: 1942286121}
   - component: {fileID: 1942286120}
+  - component: {fileID: 1942286123}
   m_Layer: 5
   m_Name: Score
   m_TagString: Untagged
@@ -3737,6 +3798,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1942286118}
   m_CullTransparentMesh: 1
+--- !u!114 &1942286123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1942286118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 2
+  colorClaro: {r: 0.14, g: 0.2, b: 0.32, a: 1}
 --- !u!1 &2044248975
 GameObject:
   m_ObjectHideFlags: 0
@@ -3839,6 +3914,7 @@ GameObject:
   - component: {fileID: 2047962101}
   - component: {fileID: 2047962100}
   - component: {fileID: 2047962102}
+  - component: {fileID: 2047962103}
   m_Layer: 5
   m_Name: HighScore
   m_TagString: Untagged
@@ -3978,6 +4054,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   texto: {fileID: 2047962100}
+--- !u!114 &2047962103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2047962098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 3
+  colorClaro: {r: 0.3, g: 0.36, b: 0.48, a: 1}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -39,7 +39,11 @@ public class SliderVolumen : MonoBehaviour
         // La barra: fondo, relleno y perilla, como un Slider de Unity de los de siempre.
         var barra = Rect(rt, "Barra", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 22f), new Vector2(0f, 36f));
         var fondo = barra.gameObject.AddComponent<Image>();
-        fondo.color = ColorBarra;
+        // Negro sobre la ventana crema y claro sobre la oscura: con el negro no se veia
+        // donde terminaba la barra. Con el componente, cambia al tocar el modo oscuro,
+        // que esta en la misma ventana.
+        fondo.color = Tema.Elegir(ColorBarra, RolDeTema.Surco);
+        Tema.Pintar(fondo, RolDeTema.Surco, ColorBarra);
 
         var areaRelleno = Rect(barra, "AreaRelleno", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var relleno = Rect(areaRelleno, "Relleno", Vector2.zero, new Vector2(0f, 1f), Vector2.zero, Vector2.zero);

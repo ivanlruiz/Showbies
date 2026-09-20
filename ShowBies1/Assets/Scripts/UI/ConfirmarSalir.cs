@@ -90,7 +90,14 @@ public class ConfirmarSalir : MonoBehaviour
         seguir.sizeDelta = new Vector2(440f, 100f);
         seguir.anchoredPosition = new Vector2(0f, -18f);
         var fondo = seguir.Find("Visual/Fondo");
-        if (fondo != null) fondo.GetComponent<Image>().color = colorSeguir;
+        if (fondo != null)
+        {
+            // Viene del boton VOLVER, que es de vidrio y sigue al tema; este es verde
+            // siempre, asi que se le saca el pintor.
+            var pintor = fondo.GetComponent<PintarConTema>();
+            if (pintor != null) Destroy(pintor);
+            fondo.GetComponent<Image>().color = colorSeguir;
+        }
         var icono = seguir.GetComponentInChildren<IconoDeBoton>(true);
         if (icono != null)
         {
@@ -110,7 +117,10 @@ public class ConfirmarSalir : MonoBehaviour
             aviso.GetComponent<TextoTraducido>().id = "salir_aviso";
             var texto = aviso.GetComponent<TMP_Text>();
             if (textoSeguir != null) texto.fontSharedMaterial = textoSeguir.fontSharedMaterial;
-            texto.color = colorAviso;
+            texto.color = Tema.Elegir(colorAviso, RolDeTema.Texto);
+            // La ventana se arma una sola vez y se abre cuando sea: el componente la
+            // repinta sola si el jugador cambio el tema mientras tanto.
+            Tema.Pintar(texto, RolDeTema.Texto, colorAviso);
             texto.enableVertexGradient = false;
             texto.enableAutoSizing = false;
             texto.fontSize = 36f;

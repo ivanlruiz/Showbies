@@ -8,11 +8,14 @@ using UnityEngine;
 // La niebla de Unity no toca a TextMeshPro (su shader no la tiene), asi que la niebla
 // del titulo es a mano: el color de las letras va hacia el del cielo. Nunca llega a
 // taparlo entero: el nombre tiene que leerse, tambien en las capturas de la ficha.
+//
+// El cielo sale de FondoMenu.CieloActual y no de un color propio: con el modo oscuro el
+// fondo se hace de noche, y unas letras que se esconden hacia el celeste quedarian como
+// un halo claro sobre el cielo oscuro.
 public class TituloEnLaNiebla : MonoBehaviour
 {
     public TextMeshPro texto;
     public Color colorLetras = new Color(1f, 0.83f, 0.2f, 1f);
-    public Color colorCielo = new Color(0.66f, 0.86f, 0.96f, 1f);
     public Color colorContorno = new Color(0.17f, 0.29f, 0.1f, 1f);
     [Range(0f, 0.5f)] public float grosorContorno = 0.2f;
 
@@ -63,7 +66,8 @@ public class TituloEnLaNiebla : MonoBehaviour
     private void Pintar(float niebla)
     {
         if (texto == null) return;
-        texto.color = Color.Lerp(colorLetras, colorCielo, niebla);
-        if (material != null) material.SetColor(ShaderUtilities.ID_OutlineColor, Color.Lerp(colorContorno, colorCielo, niebla));
+        Color cielo = FondoMenu.CieloActual;
+        texto.color = Color.Lerp(colorLetras, cielo, niebla);
+        if (material != null) material.SetColor(ShaderUtilities.ID_OutlineColor, Color.Lerp(colorContorno, cielo, niebla));
     }
 }

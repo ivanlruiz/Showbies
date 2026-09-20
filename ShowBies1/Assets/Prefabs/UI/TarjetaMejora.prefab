@@ -163,6 +163,7 @@ GameObject:
   - component: {fileID: 2548443717819722421}
   - component: {fileID: 1730005024813935976}
   - component: {fileID: 4583822808375699978}
+  - component: {fileID: 7781508570088182943}
   m_Layer: 5
   m_Name: ValorActual
   m_TagString: Untagged
@@ -289,6 +290,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7781508570088182943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1118776023495318914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 2
+  colorClaro: {r: 0.16, g: 0.14, b: 0.2, a: 1}
 --- !u!1 &1478061745884785171
 GameObject:
   m_ObjectHideFlags: 0
@@ -591,6 +606,7 @@ GameObject:
   - component: {fileID: 8332872230185192285}
   - component: {fileID: 3041039646230593187}
   - component: {fileID: 7275717233629534375}
+  - component: {fileID: 7388640488935819306}
   m_Layer: 5
   m_Name: Simbolo
   m_TagString: Untagged
@@ -717,6 +733,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7388640488935819306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2750380490854541973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 2
+  colorClaro: {r: 0.08, g: 0.08, b: 0.12, a: 1}
 --- !u!1 &2945816693375570268
 GameObject:
   m_ObjectHideFlags: 0
@@ -940,6 +970,7 @@ GameObject:
   - component: {fileID: 8296402588242504451}
   - component: {fileID: 1878005869107358328}
   - component: {fileID: 3209903401709740994}
+  - component: {fileID: 1122453383295378594}
   m_Layer: 5
   m_Name: BarraNivel
   m_TagString: Untagged
@@ -1005,6 +1036,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1122453383295378594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3252385465644745482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 5
+  colorClaro: {r: 0, g: 0, b: 0, a: 0.12}
 --- !u!1 &3381707561111431197
 GameObject:
   m_ObjectHideFlags: 0
@@ -1016,6 +1061,7 @@ GameObject:
   - component: {fileID: 1943343136019733209}
   - component: {fileID: 7854145244278609598}
   - component: {fileID: 5227961093027797424}
+  - component: {fileID: 2119785036270702264}
   m_Layer: 5
   m_Name: Fondo
   m_TagString: Untagged
@@ -1080,6 +1126,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2119785036270702264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3381707561111431197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 1
+  colorClaro: {r: 1, g: 0.99, b: 0.95, a: 1}
 --- !u!1 &3754250588808364255
 GameObject:
   m_ObjectHideFlags: 0
@@ -1091,6 +1151,7 @@ GameObject:
   - component: {fileID: 8165047281464416013}
   - component: {fileID: 8876412180025393627}
   - component: {fileID: 5180667677387839171}
+  - component: {fileID: 5813283026078003194}
   m_Layer: 5
   m_Name: Descripcion
   m_TagString: Untagged
@@ -1217,6 +1278,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5813283026078003194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3754250588808364255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 3
+  colorClaro: {r: 0.3, g: 0.3, b: 0.36, a: 0.9}
 --- !u!1 &4116518900327604352
 GameObject:
   m_ObjectHideFlags: 0
@@ -1228,6 +1303,7 @@ GameObject:
   - component: {fileID: 954611226962504954}
   - component: {fileID: 6245745244233143040}
   - component: {fileID: 2809451756752798117}
+  - component: {fileID: 1034980224074308922}
   m_Layer: 5
   m_Name: Nombre
   m_TagString: Untagged
@@ -1354,6 +1430,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1034980224074308922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4116518900327604352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 2
+  colorClaro: {r: 0.16, g: 0.14, b: 0.2, a: 1}
 --- !u!1 &4357462188727610060
 GameObject:
   m_ObjectHideFlags: 0
@@ -1861,6 +1951,7 @@ GameObject:
   - component: {fileID: 6374130758779372878}
   - component: {fileID: 8689639735269016380}
   - component: {fileID: 6729464778946181016}
+  - component: {fileID: 7623162715864250166}
   m_Layer: 5
   m_Name: Flecha
   m_TagString: Untagged
@@ -1945,6 +2036,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &7623162715864250166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6316736844356316801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 9
+  colorClaro: {r: 0.18, g: 0.6, b: 0.12, a: 1}
 --- !u!1 &6395516195132878270
 GameObject:
   m_ObjectHideFlags: 0
@@ -2432,6 +2537,7 @@ GameObject:
   - component: {fileID: 2689314290449032255}
   - component: {fileID: 2128734400717540515}
   - component: {fileID: 1792844774855053485}
+  - component: {fileID: 1650904974832348284}
   m_Layer: 5
   m_Name: Nivel
   m_TagString: Untagged
@@ -2558,6 +2664,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1650904974832348284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7640787483965987817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 3
+  colorClaro: {r: 0.42, g: 0.4, b: 0.46, a: 1}
 --- !u!1 &8721911317471002546
 GameObject:
   m_ObjectHideFlags: 0

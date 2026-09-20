@@ -2,10 +2,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// El engranaje del menu y la ventanita de sonido que abre, con los volumenes de
-// efectos y de musica. No tiene objetos propios en la escena: al arrancar copia el
-// globo y la ventana del idioma (SelectorIdioma) y los adapta, asi se ven igual sin
+// El engranaje del menu y la ventana de opciones que abre: los volumenes de efectos y
+// de musica y el modo oscuro. No tiene objetos propios en la escena: al arrancar copia
+// el globo y la ventana del idioma (SelectorIdioma) y los adapta, asi se ven igual sin
 // mantener dos copias a mano. El engranaje queda a la derecha del globo.
+//
+// Se llamaba "sonido" cuando solo tenia los dos volumenes; el nombre de la clase quedo
+// porque es lo que esta cableado en la escena.
 //
 // Vive en la raiz del canvas "Main Menu", junto a SelectorIdioma. El atras de
 // Android la cierra desde BotonAtrasMenu.
@@ -14,6 +17,10 @@ public class OpcionesSonido : MonoBehaviour
     public SelectorIdioma selectorIdioma;
     public float separacionDelGlobo = 24f;
     public float duracionRebote = 0.3f;
+
+    // La del idioma mide 620 x 480 y tiene dos botones; esta tiene tres controles.
+    private const float AltoVentana = 640f;
+    private const float AnchoControl = 500f;
 
     private GameObject panel;
     private RectTransform ventana;
@@ -74,45 +81,57 @@ public class OpcionesSonido : MonoBehaviour
 
         var ventanaOriginal = selectorIdioma.ventana;
         ventana = (RectTransform)panel.transform.Find(Ruta(ventanaOriginal, (RectTransform)original.transform));
+        // Mas alta que la del idioma: entran tres controles en vez de dos botones.
+        ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana);
 
-        // El titulo pasa a SONIDO.
+        // El titulo pasa a OPCIONES y sube, que la ventana creció.
         foreach (var t in panel.GetComponentsInChildren<TextoTraducido>(true))
         {
-            if (t.id == "idioma_titulo") t.id = "sonido_titulo";
+            if (t.id != "idioma_titulo") continue;
+            t.id = "opciones_titulo";
+            ((RectTransform)t.transform).anchoredPosition = new Vector2(0f, 255f);
         }
 
-        // Los botones de idioma se van; en su lugar, los dos volumenes.
+        // Los botones de idioma se van; en su lugar, los volumenes y el modo oscuro. De
+        // paso, de uno salen la pildora y la fuente con que se arman los controles.
         TMP_FontAsset fuente = null;
-        Vector2 posicionEfectos = new Vector2(0f, 60f), posicionMusica = new Vector2(0f, -70f);
-        float ancho = 560f;
+        Sprite pildora = null;
         var botones = selectorIdioma.botonesIdioma;
         for (int i = 0; i < botones.Length; i++)
         {
             if (botones[i] == null) continue;
             var copiaBoton = panel.transform.Find(Ruta(botones[i].transform, (RectTransform)original.transform));
             if (copiaBoton == null) continue;
-            var rtBoton = (RectTransform)copiaBoton;
-            if (i == 0) { posicionEfectos = rtBoton.anchoredPosition; ancho = rtBoton.rect.width; }
-            if (i == 1) posicionMusica = rtBoton.anchoredPosition;
             var texto = copiaBoton.GetComponentInChildren<TMP_Text>(true);
             if (fuente == null && texto != null) fuente = texto.font;
+            var fondo = copiaBoton.Find("Visual/Fondo");
+            var imagen = fondo != null ? fondo.GetComponent<Image>() : null;
+            if (pildora == null && imagen != null) pildora = imagen.sprite;
             Destroy(copiaBoton.gameObject);
         }
 
-        var perilla = Sprite.Create(texturaPerilla, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
-        SliderVolumen.Crear(ventana, "sonido_efectos", posicionEfectos, ancho, fuente, Volumen.Efectos, Volumen.FijarEfectos, perilla);
-        SliderVolumen.Crear(ventana, "sonido_musica", posicionMusica, ancho, fuente, Volumen.Musica, Volumen.FijarMusica, perilla);
-
-        if (selectorIdioma.botonVolver != null)
+        var volver = selectorIdioma.botonVolver != null
+            ? panel.transform.Find(Ruta(selectorIdioma.botonVolver.transform, (RectTransform)original.transform))
+            : null;
+        AudioClip sonidoClick = null;
+        if (volver != null)
         {
-            var volver = panel.transform.Find(Ruta(selectorIdioma.botonVolver.transform, (RectTransform)original.transform));
-            var boton = volver != null ? volver.GetComponent<Button>() : null;
+            var jugoso = volver.GetComponent<BotonJugoso>();
+            if (jugoso != null) sonidoClick = jugoso.sonidoClick;
+            var boton = volver.GetComponent<Button>();
             if (boton != null)
             {
                 boton.onClick.RemoveAllListeners();
                 boton.onClick.AddListener(Cerrar);
             }
+            ((RectTransform)volver).anchoredPosition = new Vector2(0f, -255f);
         }
+
+        var perilla = Sprite.Create(texturaPerilla, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
+        SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 140f), AnchoControl, fuente, Volumen.Efectos, Volumen.FijarEfectos, perilla);
+        SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, 25f), AnchoControl, fuente, Volumen.Musica, Volumen.FijarMusica, perilla);
+        Interruptor.Crear(ventana, "opciones_tema", new Vector2(0f, -95f), AnchoControl, fuente, Tema.Oscuro, Tema.Fijar,
+                          pildora, perilla, sonidoClick);
     }
 
     public void Abrir()

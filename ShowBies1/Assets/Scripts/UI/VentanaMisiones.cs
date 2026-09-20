@@ -48,6 +48,13 @@ public class VentanaMisiones : MonoBehaviour
         new Color(1f, 0.42f, 0.35f, 1f),
     };
 
+    // Los colores de arriba son los del tema claro, que es como se ve el juego desde
+    // siempre; con el oscuro cada uno pasa a su papel (ver Tema).
+    private Color ColorDeVentana { get { return Tema.Elegir(colorVentana, RolDeTema.Panel); } }
+    private Color ColorDeTexto { get { return Tema.Elegir(colorTextoOscuro, RolDeTema.Texto); } }
+    private Color ColorDeFila { get { return Tema.Elegir(colorFila, RolDeTema.Hueco); } }
+    private Color ColorDeVidrio { get { return Tema.Elegir(colorVidrio, RolDeTema.Vidrio); } }
+
     private static readonly int[] SemitonosFestejo = { -12, -8, -5, 0, 4, 7, 12 };
 
     public static bool Abierta { get; private set; }
@@ -82,6 +89,7 @@ public class VentanaMisiones : MonoBehaviour
     private int revisionVista = -1;
     private float reloj = -1f;
     private int idiomaArmado = -1;
+    private int temaArmado = -1;
     private float relojInsignia;
     private Button cofre;
     private Image fondoCofre;
@@ -133,9 +141,9 @@ public class VentanaMisiones : MonoBehaviour
     public void Abrir()
     {
         if (panel == null) return;
-        // Los textos fijos se escriben al armarla: si cambio el idioma desde el globo, se
-        // vuelve a armar.
-        if (Idioma.Revision != idiomaArmado)
+        // Los textos y los colores se escriben al armarla: si cambio el idioma o el tema
+        // desde el menu, se vuelve a armar.
+        if (Idioma.Revision != idiomaArmado || Tema.Revision != temaArmado)
         {
             Destroy(panel);
             Armar();
@@ -246,7 +254,7 @@ public class VentanaMisiones : MonoBehaviour
             fila.premio.text = FormatoNumeros.Compacto(MisionesDiarias.Monto(mision.dificultad, mejor));
             float fraccion = mision.objetivo > 0 ? Mathf.Clamp01((float)(avance / mision.objetivo)) : 1f;
             fila.relleno.anchorMax = new Vector2(fraccion, 1f);
-            fila.fondo.color = mision.cobrada ? colorCumplida : colorFila;
+            fila.fondo.color = mision.cobrada ? colorCumplida : ColorDeFila;
             fila.cobrar.SetActive(cumplida && !mision.cobrada);
             fila.tilde.enabled = mision.cobrada && tilde != null;
         }
@@ -271,7 +279,7 @@ public class VentanaMisiones : MonoBehaviour
         }
         else
         {
-            fondo = colorVidrio;
+            fondo = ColorDeVidrio;
             texto = Color.white;
             textoCofre.text = Textos.Formato("misiones_cofre_falta", MisionesDiarias.Cobradas);
         }
@@ -298,24 +306,25 @@ public class VentanaMisiones : MonoBehaviour
         rtPanel.offsetMin = rtPanel.offsetMax = Vector2.zero;
         panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);   // tapa los toques del menu
         idiomaArmado = Idioma.Revision;
+        temaArmado = Tema.Revision;
 
         ventana = Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 660f));
         var fondo = ventana.gameObject.AddComponent<Image>();
         Redondear(fondo, 3f);
-        fondo.color = colorVentana;
+        fondo.color = ColorDeVentana;
 
         var titulo = Texto(ventana, "Titulo", Textos.De("misiones_titulo"), 80f, colorTitulo, new Vector2(0f, 250f), new Vector2(1100f, 100f));
         if (materialContorno != null) titulo.fontSharedMaterial = materialContorno;
-        textoNuevas = Texto(ventana, "Nuevas", TextoNuevas(), 36f, colorTextoOscuro, new Vector2(0f, 182f), new Vector2(1100f, 50f));
+        textoNuevas = Texto(ventana, "Nuevas", TextoNuevas(), 36f, ColorDeTexto, new Vector2(0f, 182f), new Vector2(1100f, 50f));
 
         for (int i = 0; i < filas.Length; i++) filas[i] = ArmarFila(i, 85f - 125f * i);
 
         var volver = ArmarBoton(ventana, "Volver", new Vector2(-300f, -262f), new Vector2(340f, 100f),
-                                colorVidrio, Color.white, iconoAtras, Textos.De("comun_volver"), 46f);
+                                ColorDeVidrio, Color.white, iconoAtras, Textos.De("comun_volver"), 46f);
         volver.onClick.AddListener(Cerrar);
 
         cofre = ArmarBoton(ventana, "Cofre", new Vector2(200f, -262f), new Vector2(480f, 100f),
-                           colorVidrio, Color.white, iconoCofre, Textos.Formato("misiones_cofre_falta", 0), 46f);
+                           ColorDeVidrio, Color.white, iconoCofre, Textos.Formato("misiones_cofre_falta", 0), 46f);
         cofre.onClick.AddListener(TocarCofre);
         fondoCofre = cofre.transform.Find("Visual/Fondo").GetComponent<Image>();
         textoCofre = cofre.transform.Find("Visual/Texto").GetComponent<TMP_Text>();
@@ -330,14 +339,14 @@ public class VentanaMisiones : MonoBehaviour
         fila.raiz = Rect(ventana, "Mision" + indice, new Vector2(0f, y), new Vector2(1080f, 110f));
         fila.fondo = fila.raiz.gameObject.AddComponent<Image>();
         Redondear(fila.fondo, 3f);
-        fila.fondo.color = colorFila;
+        fila.fondo.color = ColorDeFila;
 
         var punto = Rect(fila.raiz, "Dificultad", new Vector2(-490f, 0f), new Vector2(46f, 46f));
         var imgPunto = punto.gameObject.AddComponent<Image>();
         imgPunto.sprite = circulo;
         imgPunto.color = coloresDificultad[Mathf.Min(indice, coloresDificultad.Length - 1)];
 
-        fila.descripcion = Texto(fila.raiz, "Descripcion", "", 42f, colorTextoOscuro, new Vector2(-150f, 20f), new Vector2(620f, 56f));
+        fila.descripcion = Texto(fila.raiz, "Descripcion", "", 42f, ColorDeTexto, new Vector2(-150f, 20f), new Vector2(620f, 56f));
         fila.descripcion.alignment = TextAlignmentOptions.Left;
 
         // La barra: un fondo y un relleno que crece con el ancla derecha (sin sprite, un
@@ -345,7 +354,7 @@ public class VentanaMisiones : MonoBehaviour
         var barra = Rect(fila.raiz, "Barra", new Vector2(-230f, -24f), new Vector2(460f, 18f));
         var imgBarra = barra.gameObject.AddComponent<Image>();
         Redondear(imgBarra, 6f);
-        imgBarra.color = new Color(0f, 0f, 0f, 0.12f);
+        imgBarra.color = Tema.Elegir(new Color(0f, 0f, 0f, 0.12f), RolDeTema.Surco);
         fila.relleno = Rect(barra, "Relleno", Vector2.zero, Vector2.zero);
         fila.relleno.anchorMin = Vector2.zero;
         fila.relleno.anchorMax = new Vector2(0f, 1f);
@@ -355,14 +364,14 @@ public class VentanaMisiones : MonoBehaviour
         Redondear(imgRelleno, 6f);
         imgRelleno.color = colorBarra;
 
-        fila.cuenta = Texto(fila.raiz, "Cuenta", "", 32f, colorTextoOscuro, new Vector2(100f, -24f), new Vector2(160f, 40f));
+        fila.cuenta = Texto(fila.raiz, "Cuenta", "", 32f, ColorDeTexto, new Vector2(100f, -24f), new Vector2(160f, 40f));
         fila.cuenta.alignment = TextAlignmentOptions.Left;
 
         var moneda = Rect(fila.raiz, "Moneda", new Vector2(215f, 0f), new Vector2(44f, 44f));
         var imgMoneda = moneda.gameObject.AddComponent<Image>();
         imgMoneda.sprite = circulo;
         imgMoneda.color = colorMoneda;
-        fila.premio = Texto(fila.raiz, "Premio", "", 42f, colorTextoOscuro, new Vector2(305f, 0f), new Vector2(110f, 56f));
+        fila.premio = Texto(fila.raiz, "Premio", "", 42f, ColorDeTexto, new Vector2(305f, 0f), new Vector2(110f, 56f));
         fila.premio.alignment = TextAlignmentOptions.Left;
 
         var cobrar = ArmarBoton(fila.raiz, "Cobrar", new Vector2(440f, 0f), new Vector2(200f, 84f),

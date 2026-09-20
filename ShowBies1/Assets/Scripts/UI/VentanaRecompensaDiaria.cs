@@ -37,6 +37,12 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     public Color colorBordeMoneda = new Color(0.72f, 0.42f, 0.02f, 1f);
     public Color colorTilde = new Color(0.1f, 0.3f, 0.05f, 1f);
 
+    // Los colores de arriba son los del tema claro, que es como se ve el juego desde
+    // siempre; con el oscuro cada uno pasa a su papel (ver Tema).
+    private Color ColorDeVentana { get { return Tema.Elegir(colorVentana, RolDeTema.Panel); } }
+    private Color ColorDeTexto { get { return Tema.Elegir(colorTextoOscuro, RolDeTema.Texto); } }
+    private Color ColorDeFuturo { get { return Tema.Elegir(colorFuturo, RolDeTema.Hueco); } }
+
     private static readonly int[] SemitonosFestejo = { -12, -8, -5, 0, 4, 7, 12 };
     private const float DuracionEntrada = 0.45f;
     private const float DuracionSalida = 0.25f;
@@ -249,13 +255,13 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         ventana = Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 640f));
         var fondo = ventana.gameObject.AddComponent<Image>();
         Redondear(fondo, 3f);
-        fondo.color = colorVentana;
+        fondo.color = ColorDeVentana;
 
         titulo = Texto(ventana, "Titulo", Textos.De("diaria_titulo"), 84f, colorHoy, new Vector2(0f, 235f), new Vector2(1100f, 110f));
         if (materialContorno != null) titulo.fontSharedMaterial = materialContorno;
 
         string textoBajada = racha > 1 ? Textos.Formato("diaria_racha", racha) : Textos.De("diaria_volve");
-        Texto(ventana, "Bajada", textoBajada, 40f, colorTextoOscuro, new Vector2(0f, 158f), new Vector2(1100f, 60f));
+        Texto(ventana, "Bajada", textoBajada, 40f, ColorDeTexto, new Vector2(0f, 158f), new Vector2(1100f, 60f));
 
         int hoy = RecompensaDiaria.Casillero(racha);
         int mejor = Progreso.MejorOleada;
@@ -266,13 +272,13 @@ public class VentanaRecompensaDiaria : MonoBehaviour
             var casillero = Rect(ventana, "Dia" + dia, new Vector2(x, 10f), new Vector2(Ancho, 190f));
             var img = casillero.gameObject.AddComponent<Image>();
             Redondear(img, 3f);
-            img.color = dia < hoy ? colorCobrado : dia == hoy ? colorHoy : colorFuturo;
+            img.color = dia < hoy ? colorCobrado : dia == hoy ? colorHoy : ColorDeFuturo;
 
             // Cada casillero es un dia de racha: el de hoy es la racha actual (del 7 en adelante
             // se queda en el ultimo casillero) y los otros, los dias de al lado. La etiqueta y el
             // monto salen del mismo numero, asi en el dia 8 no dice DIA 7 con el monto del 8.
             int rachaDelCasillero = racha - hoy + dia;
-            Texto(casillero, "Dia", Textos.Formato("diaria_dia", rachaDelCasillero), 30f, colorTextoOscuro, new Vector2(0f, 62f), new Vector2(Ancho, 40f));
+            Texto(casillero, "Dia", Textos.Formato("diaria_dia", rachaDelCasillero), 30f, ColorDeTexto, new Vector2(0f, 62f), new Vector2(Ancho, 40f));
             var circulo = Rect(casillero, "Moneda", new Vector2(0f, 8f), new Vector2(54f, 54f));
             var imgMoneda = circulo.gameObject.AddComponent<Image>();
             imgMoneda.sprite = moneda;
@@ -280,7 +286,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
             ConBorde(circulo, borde);
             // A partir del dia de hoy se muestra lo que se cobraria con la racha intacta.
             string monto = FormatoNumeros.Compacto(RecompensaDiaria.Monto(rachaDelCasillero, mejor));
-            Texto(casillero, "Monto", monto, 36f, colorTextoOscuro, new Vector2(0f, -52f), new Vector2(Ancho, 46f));
+            Texto(casillero, "Monto", monto, 36f, ColorDeTexto, new Vector2(0f, -52f), new Vector2(Ancho, 46f));
 
             var rtTilde = Rect(casillero, "Tilde", new Vector2(0f, 8f), new Vector2(44f, 44f));
             var imgTilde = rtTilde.gameObject.AddComponent<Image>();

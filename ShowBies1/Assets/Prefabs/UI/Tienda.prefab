@@ -803,6 +803,7 @@ GameObject:
   - component: {fileID: 8527458462628719769}
   - component: {fileID: 164149280780875387}
   - component: {fileID: 8789631868794926815}
+  - component: {fileID: 3985391390132420722}
   m_Layer: 5
   m_Name: Fondo
   m_TagString: Untagged
@@ -867,6 +868,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3985391390132420722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4536594750465233005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 6
+  colorClaro: {r: 0.06, g: 0.12, b: 0.05, a: 0.45}
 --- !u!1 &4644893603195831592
 GameObject:
   m_ObjectHideFlags: 0
@@ -1173,6 +1188,7 @@ GameObject:
   - component: {fileID: 2858504889744068077}
   - component: {fileID: 2146534597075775492}
   - component: {fileID: 2307676492929295491}
+  - component: {fileID: 722276597204850975}
   m_Layer: 5
   m_Name: Pista
   m_TagString: Untagged
@@ -1299,6 +1315,20 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &722276597204850975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5089305519410283550}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 3
+  colorClaro: {r: 0.3, g: 0.25, b: 0.18, a: 0.9}
 --- !u!1 &5107721456567272595
 GameObject:
   m_ObjectHideFlags: 0
@@ -2180,6 +2210,7 @@ GameObject:
   - component: {fileID: 2349520405677836772}
   - component: {fileID: 6689973777245714088}
   - component: {fileID: 7847682420175970117}
+  - component: {fileID: 4326721534876054922}
   m_Layer: 5
   m_Name: Fondo
   m_TagString: Untagged
@@ -2244,6 +2275,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4326721534876054922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7141977731969864898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 0
+  colorClaro: {r: 1, g: 0.96, b: 0.86, a: 0.97}
 --- !u!1 &7816167382703433714
 GameObject:
   m_ObjectHideFlags: 0

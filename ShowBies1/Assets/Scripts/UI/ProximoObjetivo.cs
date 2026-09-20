@@ -108,7 +108,7 @@ public class ProximoObjetivo : MonoBehaviour
 
         // La barra, sin sprite: el relleno crece con el ancla derecha (un Image Filled sin
         // sprite no llena, ver las trampas de CLAUDE.md).
-        var barra = Imagen(rt, "Barra", colorFondoBarra);
+        var barra = Imagen(rt, "Barra", Tema.Elegir(colorFondoBarra, RolDeTema.Surco));
         barra.anchoredPosition = new Vector2(0f, -30f);
         barra.sizeDelta = new Vector2(anchoBarra, 10f);
         relleno = Imagen(barra, "Relleno", colorBarra);

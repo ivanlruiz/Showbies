@@ -46,7 +46,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, ConstructorUI
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, ConstructorUI, Tema, PintarConTema, Interruptor
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, Bestiario
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
@@ -737,7 +737,7 @@ reiniciar, mejoras, menu, volver, salir y los modos); los que ya dicen todo con 
 precio de las tarjetas, los idiomas, el video de la derrota, NO, GRACIAS) son solo pildora. Para uno nuevo: la forma de
 `Pildora`, un `Icono` con `IconoDeBoton` y los colores de arriba.
 
-**La paleta es clara, "pasto de dia"** (elegida por Ivan): cielo celeste (0,66; 0,86; 0,96) en las camaras, la niebla del
+**La paleta es clara, "pasto de dia"** (elegida por Ivan; es el **tema claro**, ver Tema claro y oscuro): cielo celeste (0,66; 0,86; 0,96) en las camaras, la niebla del
 menu y el fondo de la derrota; pasto verde claro (`Materiales/PisoGrilla.png` con `prototype_512x512_green2`, que ya no es
 metalico: con `_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas; paneles crema (tienda y
 ventana de idioma) y tarjetas blancas con texto oscuro. **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
@@ -764,6 +764,8 @@ trampa).
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
   (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
 
+**Con el modo oscuro el fondo del menu pasa a la noche** (ver Tema claro y oscuro).
+
 **El fondo del menu esta vivo.** `FondoMenu` (objeto raiz `FondoMenu` de `Menu.unity`) acomoda la camara del menu
 mirando un poco desde arriba, reusa su luz direccional y arma el piso de la partida con niebla del color del cielo,
 para que no se vea donde termina. Por delante cruzan zombis de verdad (los cinco prefabs, con pesos en el
@@ -779,6 +781,42 @@ prendida solo en runtime no tendria variantes en Android.
 Las posiciones de la derrota y de la ventanita de revivir estan **medidas**, no puestas a ojo: cuando muevas algo
 de esas pantallas, revisa que ningun par de elementos se pise, contando los que se prenden solos (la oferta de
 video y el aviso de compras comparten renglon a proposito).
+
+## Tema claro y oscuro
+
+La interfaz tiene **dos temas**: el **claro** de siempre (paneles crema, tarjetas blancas, texto oscuro, el menú
+de día) y el **oscuro** (pedido de Ivan), que se prende con **MODO OSCURO** en la ventana de opciones del engranaje
+y queda guardado. Cambia el menú, la tienda, la derrota y todas las ventanas; **las partidas no se tocan**, que el
+tema es de la interfaz y no del mundo.
+
+- **El tema claro es lo que está guardado en cada escena y prefab**, no una paleta aparte: `PintarConTema` se
+  acuerda del color que traía el objeto (`colorClaro`, que se completa solo al ponerle el componente) y lo devuelve
+  tal cual. `Tema` sólo define la paleta del oscuro. Por eso sumar el modo oscuro no puede cambiar cómo se ve hoy
+  el juego, y por eso un color nuevo del tema claro se toca en la escena, como siempre.
+- **Cada color cumple un papel** (`RolDeTema`): `Panel` (el fondo de una ventana), `Tarjeta`, `Texto`, `TextoSuave`,
+  `Hueco` (el relieve que separa una fila), `Surco` (el fondo de una barra), `Vidrio` (los botones secundarios),
+  `Apagado`, `Fondo` (una pantalla entera, la derrota) y `Acento` (un verde que sobre claro es oscuro y sobre el
+  oscuro no se leería). **Lo que tiene color propio no lleva papel**: el verde de jugar, el dorado de la tienda, el
+  rojo de GAME OVER y el color de cada mejora significan algo y valen en los dos temas.
+- **Un objeto de escena o prefab lleva `PintarConTema`** con su papel: la ventana del idioma (que copian la de
+  opciones y la de salir), el fondo y el pie de la tienda, la tarjeta de mejora, el fondo y los textos de la
+  derrota y los botones de vidrio. **Lo que se arma en código** pasa su color de siempre por `Tema.Elegir(claro,
+  rol)`; si esa ventana no se vuelve a armar, se le pone el componente con `Tema.Pintar(grafico, rol, claro)` y se
+  repinta sola. Las ventanas de misiones y bestiario se rearman al abrirlas si cambió `Tema.Revision`, igual que
+  con `Idioma.Revision`.
+- **Nadie se suscribe a nada**: `Tema.Revision` sube con cada cambio y quien pinta lo mira en su `Update`, como con
+  `Progreso.Revision`. La preferencia va en `PlayerPrefs["TemaOscuro"]`, como el idioma y los volúmenes, porque es
+  del dispositivo y no progreso. **Arranca en claro**, que es como salen las capturas de la ficha.
+- **El menú se hace de noche** (`FondoMenu`): el cielo, la luz, la luz ambiente y la niebla se funden en 0,7 s con
+  la misma paleta que el capítulo del cementerio y el pasto pasa a la tierra (`PisoCementerio.mat`). Se ve mientras
+  se toca el interruptor, con la ventana de opciones abierta encima. El título 3D se esconde en la niebla hacia
+  `FondoMenu.CieloActual` y no hacia un celeste fijo, o de noche quedaría como un halo claro.
+- **El interruptor** (`Interruptor`) es una píldora con una perilla que se corre, armada en código como
+  `SliderVolumen`, y se usa para cualquier sí/no. La ventana del engranaje pasó a llamarse OPCIONES: los dos
+  volúmenes y el modo oscuro.
+- **Si agregás una pantalla**, mirá qué color cumple cada papel y ponele `PintarConTema` a lo que sea crema, blanco
+  o texto oscuro. Lo que no lleva papel se queda igual en los dos temas, que casi siempre es lo que se quiere para
+  un botón de color.
 
 ## Idiomas
 
@@ -880,7 +918,8 @@ a 1). Se cambian desde el **engranaje del menú** (a la derecha del globo) y des
 - **`Sonidos` multiplica por el volumen de efectos** al tocar y al programar, así golpes, monedas, explosiones y la tienda
   responden sin componente.
 - **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
-  (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
+  (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes y el **modo oscuro** (ver Tema claro y
+  oscuro); por eso se llama OPCIONES y no SONIDO, aunque la clase conserve el nombre. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
   los arma debajo de los botones de la pausa. El atrás de Android cierra la ventana de sonido primero.
 - Se escribe a disco medio segundo después de soltar el control o al cerrarse la ventana, no en cada movimiento.
 
@@ -897,6 +936,7 @@ progreso):
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
 | `"VolumenEfectos"`, `"VolumenMusica"` | `SliderVolumen` (menú y pausa) | `Volumen`; sin nada guardado, 1 |
 | `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
+| `"TemaOscuro"` | el interruptor de la ventana de opciones, 0 o 1 | `Tema`; sin nada guardado, el tema claro |
 | `"ResenaPedidaEn"` | `PedidoDeResena`, la fecha `yyyy-MM-dd` del último pedido | `PedidoDeResena` |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
@@ -1084,6 +1124,11 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
   granada es hija del prefab. Hay que despegarla (`SetParent(null)`) antes de destruir la granada, y
   entonces se limpia sola.
 
+- **Ningún script de un zombi puede llevar `RequireComponent` de otro script suyo.** `FondoMenu` le borra los
+  scripts a los zombis que cruzan por detrás del menú, y un `RequireComponent` no deja borrar el componente del que
+  se depende: el `EnemyController` quedaba vivo sin Rigidbody y el jefe del fondo tiraba una excepción por
+  aparición, con el zombi invisible. `JefePatrones` lo necesita y no lo declara a propósito.
+
 - **Los índices de escena están hardcodeados.** Ver la tabla de arriba.
 
 - **Las cajas no tienen techo de cantidad, sólo caducidad.** `PowerUp` spawnea cada 8 s (balas y vida) y cada
@@ -1189,8 +1234,9 @@ enterrado.
   (premio una sola vez aunque el SDK avise dos, cerrar sin castigo, topes del día, falla premiada, el x2
   completo), con un proveedor de mentira que se enchufa con `ServicioAnuncios.UsarParaPruebas`, y **los idiomas**
   (que cada texto tenga los dos idiomas y los mismos `{n}`, y que existan todos los ids que piden el código, las
-  mejoras, los prefabs y las escenas). Las pruebas fijan el idioma en español al empezar y lo devuelven al
-  terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+  mejoras, los prefabs y las escenas) y **el tema** (que el claro devuelva el color de la escena, que cada papel del
+  oscuro tenga su color y que lo que se escribe encima se lea: el contraste se mide con la fórmula de la WCAG, no se
+  mira). Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata
   a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
   aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe
@@ -1214,7 +1260,8 @@ enterrado.
    donde se produce el daño.
 5. ¿Guarda algo entre partidas? Si es progreso (monedas, mejoras), va en `Progreso` y su JSON. Los
    `PlayerPrefs` quedan para el récord y el último modo, en el bloque de `PlayerHealth.TakeDamage`.
-6. ¿Tiene UI? Los cuatro canvas usan `ScaleWithScreenSize`. Las escenas de juego tienen la referencia
+6. ¿Tiene UI? Lo que sea crema, blanco o texto oscuro lleva `PintarConTema` con su papel, o pasa por
+   `Tema.Elegir` si se arma en código (ver Tema claro y oscuro). Los cuatro canvas usan `ScaleWithScreenSize`. Las escenas de juego tienen la referencia
    en 1080x1920 (vertical, herencia de móvil): parece un error pero con `match = 0.5` la escala sale de
    la raíz del producto ancho × alto, así que da lo mismo que 1920x1080.
 7. ¿Toca una escena o un prefab? Verificá el diff: Unity re-hornea bastante al guardar, y desde Unity 6

@@ -43,6 +43,14 @@ public class VentanaBestiario : MonoBehaviour
         new Color(0.65f, 0.4f, 0.95f, 1f),    // jefe, violeta
     };
 
+    // Los colores de arriba son los del tema claro, que es como se ve el juego desde
+    // siempre; con el oscuro cada uno pasa a su papel (ver Tema).
+    private Color ColorDeVentana { get { return Tema.Elegir(colorVentana, RolDeTema.Panel); } }
+    private Color ColorDeTexto { get { return Tema.Elegir(colorTextoOscuro, RolDeTema.Texto); } }
+    private Color ColorDeTarjeta { get { return Tema.Elegir(colorTarjeta, RolDeTema.Hueco); } }
+    private Color ColorDeEstrellaApagada { get { return Tema.Elegir(colorEstrellaApagada, RolDeTema.Surco); } }
+    private Color ColorDeVidrio { get { return Tema.Elegir(colorVidrio, RolDeTema.Vidrio); } }
+
     private static readonly int[] SemitonosFestejo = { -12, -8, -5, 0, 4, 7, 12 };
 
     public static bool Abierta { get; private set; }
@@ -76,6 +84,7 @@ public class VentanaBestiario : MonoBehaviour
     private int revisionVista = -1;
     private float reloj = -1f;
     private int idiomaArmado = -1;
+    private int temaArmado = -1;
     private float relojInsignia;
 
     private void Start()
@@ -108,9 +117,9 @@ public class VentanaBestiario : MonoBehaviour
     public void Abrir()
     {
         if (panel == null) return;
-        // Los textos fijos se escriben al armarla: si cambio el idioma desde el globo, se
-        // vuelve a armar.
-        if (Idioma.Revision != idiomaArmado)
+        // Los textos y los colores se escriben al armarla: si cambio el idioma o el tema
+        // desde el menu, se vuelve a armar.
+        if (Idioma.Revision != idiomaArmado || Tema.Revision != temaArmado)
         {
             Destroy(panel);
             Armar();
@@ -177,7 +186,7 @@ public class VentanaBestiario : MonoBehaviour
             tarjeta.cuenta.text = FormatoNumeros.Compacto(muertes);
             for (int e = 0; e < tarjeta.estrellas.Length; e++)
             {
-                var color = colorEstrellaApagada;
+                var color = ColorDeEstrellaApagada;
                 if (e < cobradas) color = colorEstrella;
                 else if (e < alcanzadas) color = Color.Lerp(colorEstrella, Color.white, 0.35f);
                 tarjeta.estrellas[e].color = color;
@@ -211,21 +220,22 @@ public class VentanaBestiario : MonoBehaviour
         panel = rtPanel.gameObject;
         panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);   // tapa los toques del menu
         idiomaArmado = Idioma.Revision;
+        temaArmado = Tema.Revision;
 
         ventana = ConstructorUI.Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 660f));
         var fondo = ventana.gameObject.AddComponent<Image>();
         ConstructorUI.Redondear(fondo, pildora, 3f);
-        fondo.color = colorVentana;
+        fondo.color = ColorDeVentana;
 
         var titulo = ConstructorUI.Texto(ventana, "Titulo", Textos.De("bestiario_titulo"), 80f, colorTitulo,
                                          new Vector2(0f, 250f), new Vector2(1100f, 100f), fuente);
         if (materialContorno != null) titulo.fontSharedMaterial = materialContorno;
-        ConstructorUI.Texto(ventana, "Bajada", Textos.De("bestiario_bajada"), 36f, colorTextoOscuro,
+        ConstructorUI.Texto(ventana, "Bajada", Textos.De("bestiario_bajada"), 36f, ColorDeTexto,
                             new Vector2(0f, 186f), new Vector2(1100f, 50f), fuente);
 
         for (int i = 0; i < tarjetas.Length; i++) tarjetas[i] = ArmarTarjeta(i, (i - (tarjetas.Length - 1) * 0.5f) * 216f);
 
-        var volver = ConstructorUI.Boton(ventana, "Volver", new Vector2(0f, -266f), new Vector2(340f, 100f), colorVidrio,
+        var volver = ConstructorUI.Boton(ventana, "Volver", new Vector2(0f, -266f), new Vector2(340f, 100f), ColorDeVidrio,
                                          Color.white, iconoAtras, Textos.De("comun_volver"), 46f, fuente, pildora, sonidoClick);
         volver.onClick.AddListener(Cerrar);
     }
@@ -236,25 +246,25 @@ public class VentanaBestiario : MonoBehaviour
         tarjeta.raiz = ConstructorUI.Rect(ventana, tarjeta.tipo, new Vector2(x, -20f), new Vector2(200f, 390f));
         var fondo = tarjeta.raiz.gameObject.AddComponent<Image>();
         ConstructorUI.Redondear(fondo, pildora, 3f);
-        fondo.color = colorTarjeta;
+        fondo.color = ColorDeTarjeta;
 
         string nombre = Bestiario.Nombre(tarjeta.tipo);
         ConstructorUI.Imagen(tarjeta.raiz, "Color", new Vector2(0f, 130f), new Vector2(84f, 84f), circulo,
                              coloresTipo[Mathf.Min(indice, coloresTipo.Length - 1)]);
-        ConstructorUI.Texto(tarjeta.raiz, "Inicial", nombre.Substring(0, 1), 52f, colorTextoOscuro,
+        ConstructorUI.Texto(tarjeta.raiz, "Inicial", nombre.Substring(0, 1), 52f, ColorDeTexto,
                             new Vector2(0f, 130f), new Vector2(84f, 84f), fuente);
-        ConstructorUI.Texto(tarjeta.raiz, "Nombre", nombre, 34f, colorTextoOscuro, new Vector2(0f, 64f), new Vector2(190f, 44f), fuente);
-        tarjeta.cuenta = ConstructorUI.Texto(tarjeta.raiz, "Cuenta", "", 48f, colorTextoOscuro, new Vector2(0f, 20f), new Vector2(190f, 56f), fuente);
+        ConstructorUI.Texto(tarjeta.raiz, "Nombre", nombre, 34f, ColorDeTexto, new Vector2(0f, 64f), new Vector2(190f, 44f), fuente);
+        tarjeta.cuenta = ConstructorUI.Texto(tarjeta.raiz, "Cuenta", "", 48f, ColorDeTexto, new Vector2(0f, 20f), new Vector2(190f, 56f), fuente);
 
         tarjeta.estrellas = new Image[Bestiario.Estrellas];
         for (int e = 0; e < tarjeta.estrellas.Length; e++)
             tarjeta.estrellas[e] = ConstructorUI.Imagen(tarjeta.raiz, "Estrella" + e, new Vector2((e - 1) * 54f, -34f),
-                                                        new Vector2(46f, 46f), iconoEstrella, colorEstrellaApagada);
+                                                        new Vector2(46f, 46f), iconoEstrella, ColorDeEstrellaApagada);
 
-        tarjeta.siguiente = ConstructorUI.Texto(tarjeta.raiz, "Siguiente", "", 28f, colorTextoOscuro,
+        tarjeta.siguiente = ConstructorUI.Texto(tarjeta.raiz, "Siguiente", "", 28f, ColorDeTexto,
                                                 new Vector2(0f, -78f), new Vector2(190f, 36f), fuente);
         tarjeta.relleno = ConstructorUI.Barra(tarjeta.raiz, "Barra", new Vector2(0f, -104f), new Vector2(160f, 10f), pildora,
-                                              new Color(0f, 0f, 0f, 0.12f), colorBarra);
+                                              Tema.Elegir(new Color(0f, 0f, 0f, 0.12f), RolDeTema.Surco), colorBarra);
 
         var cobrar = ConstructorUI.Boton(tarjeta.raiz, "Cobrar", new Vector2(0f, -152f), new Vector2(170f, 70f),
                                          new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255), null,

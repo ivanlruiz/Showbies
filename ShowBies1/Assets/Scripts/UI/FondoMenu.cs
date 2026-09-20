@@ -13,6 +13,13 @@ using UnityEngine;
 //
 // La camara del menu se acomoda aca (mirando un poco desde arriba, fondo del color
 // del piso): la imagen BG del canvas quedo transparente para que esto se vea.
+//
+// **Con el modo oscuro el fondo pasa a la noche** (pedido de Ivan: si no, el menu
+// quedaba igual y el interruptor parecia no hacer nada): el cielo, la luz, la luz
+// ambiente y la niebla se funden en 0,7 s y el pasto pasa a la tierra del cementerio,
+// con la misma paleta que el capitulo 2 de las oleadas (CapitulosDeEscenario). Las
+// partidas siguen de dia. El color del cielo de ahora queda en CieloActual, que es lo
+// que usa el titulo para esconderse en la niebla.
 public class FondoMenu : MonoBehaviour
 {
     [System.Serializable]
@@ -25,6 +32,15 @@ public class FondoMenu : MonoBehaviour
     public ZombiDelFondo[] zombis;
     public Material materialPiso;
     public Color colorCielo = new Color(0.66f, 0.86f, 0.96f, 1f);
+
+    [Header("La noche, con el modo oscuro")]
+    public Material materialPisoNoche;
+    public Color colorCieloNoche = new Color(0.07f, 0.09f, 0.17f, 1f);
+    public Color colorLuzNoche = new Color(0.55f, 0.66f, 1f, 1f);
+    public float intensidadLuzNoche = 0.5f;
+    public Vector3 rotacionLuzNoche = new Vector3(55f, 200f, 0f);
+    public Color ambienteNoche = new Color(0.2f, 0.23f, 0.34f, 1f);
+    public float duracionFundido = 0.7f;
 
     [Header("Camara")]
     public Vector3 posicionCamara = new Vector3(0f, 3.4f, -6.5f);
@@ -50,12 +66,33 @@ public class FondoMenu : MonoBehaviour
 
     private readonly List<Caminante> caminantes = new List<Caminante>();
     private float proximo;
+
+    // El cielo de ahora, para el titulo: la niebla de TextMeshPro es a mano y tiene que
+    // ir al mismo color (ver TituloEnLaNiebla).
+    public static Color CieloActual { get; private set; }
+
+    private Camera camara;
+    private Light luz;
+    private Renderer pisoRenderer;
+    private Color luzDia = Color.white;
+    private float intensidadDia = 1.25f;
+    private Quaternion rotacionDia = Quaternion.identity;
+    private Color ambienteDia = Color.gray;
+    private float mezcla;          // 0 de dia, 1 de noche
+    private float objetivo;
+    private int revisionTema = -1;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        CieloActual = new Color(0.66f, 0.86f, 0.96f, 1f);
+    }
     private static readonly FieldInfo campoAnimacion =
         typeof(EnemyController).GetField("velocidadDeAnimacion", BindingFlags.NonPublic | BindingFlags.Instance);
 
     private void Start()
     {
-        var camara = Camera.main;
+        camara = Camera.main;
         if (camara != null)
         {
             camara.transform.position = posicionCamara;
@@ -73,7 +110,7 @@ public class FondoMenu : MonoBehaviour
         RenderSettings.fogEndDistance = 45f;
 
         // La luz direccional de la escena se reacomoda para los zombis; si no hay, una propia.
-        Light luz = null;
+        luz = null;
         foreach (var l in FindObjectsByType<Light>(FindObjectsSortMode.None))
             if (l.type == LightType.Directional) { luz = l; break; }
         if (luz == null)
@@ -94,8 +131,23 @@ public class FondoMenu : MonoBehaviour
             piso.transform.SetParent(transform, false);
             piso.transform.localScale = new Vector3(12f, 1f, 12f);
             piso.transform.position = new Vector3(0f, 0f, 45f);
-            piso.GetComponent<Renderer>().sharedMaterial = materialPiso;
+            pisoRenderer = piso.GetComponent<Renderer>();
+            pisoRenderer.sharedMaterial = materialPiso;
         }
+
+        // Lo del dia, para volver: la luz ya quedo acomodada arriba.
+        if (luz != null)
+        {
+            luzDia = luz.color;
+            intensidadDia = luz.intensity;
+            rotacionDia = luz.transform.rotation;
+        }
+        ambienteDia = RenderSettings.ambientLight;
+
+        // Si ya estaba en modo oscuro, el menu abre de noche, sin fundido.
+        revisionTema = Tema.Revision;
+        mezcla = objetivo = Tema.Oscuro ? 1f : 0f;
+        Aplicar();
 
         // Unos cuantos ya en camino, para que el menu no arranque vacio.
         for (int i = 0; i < 4; i++) Soltar(Random.Range(-0.7f, 0.7f));
@@ -106,6 +158,19 @@ public class FondoMenu : MonoBehaviour
     {
         // Tiempo sin escalar: el menu no se pausa, pero timeScale puede venir tocado.
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+
+        // El modo oscuro se toca en la ventana de opciones, con el menu detras: el
+        // fondo se hace de noche mientras se mira.
+        if (revisionTema != Tema.Revision)
+        {
+            revisionTema = Tema.Revision;
+            objetivo = Tema.Oscuro ? 1f : 0f;
+        }
+        if (!Mathf.Approximately(mezcla, objetivo))
+        {
+            mezcla = Mathf.MoveTowards(mezcla, objetivo, dt / Mathf.Max(0.01f, duracionFundido));
+            Aplicar();
+        }
         for (int i = caminantes.Count - 1; i >= 0; i--)
         {
             var c = caminantes[i];
@@ -126,6 +191,33 @@ public class FondoMenu : MonoBehaviour
     }
 
     // arrancaEn: -1 = desde el borde; entre -1 y 1 = ya en esa fraccion del recorrido.
+    // El cielo, la luz, la luz ambiente, la niebla y el piso, mezclados entre el dia y
+    // la noche. El piso cambia a la mitad, que es cuando esta mas oscuro.
+    private void Aplicar()
+    {
+        Color cielo = Color.Lerp(colorCielo, colorCieloNoche, mezcla);
+        CieloActual = cielo;
+        if (camara != null) camara.backgroundColor = cielo;
+        RenderSettings.fogColor = cielo;
+        if (luz != null)
+        {
+            luz.color = Color.Lerp(luzDia, colorLuzNoche, mezcla);
+            luz.intensity = Mathf.Lerp(intensidadDia, intensidadLuzNoche, mezcla);
+            luz.transform.rotation = Quaternion.Slerp(rotacionDia, Quaternion.Euler(rotacionLuzNoche), mezcla);
+        }
+        RenderSettings.ambientLight = Color.Lerp(ambienteDia, ambienteNoche, mezcla);
+        if (pisoRenderer != null)
+            pisoRenderer.sharedMaterial = mezcla >= 0.5f && materialPisoNoche != null ? materialPisoNoche : materialPiso;
+    }
+
+    private void OnDestroy()
+    {
+        // La niebla y la luz ambiente son de la aplicacion: la partida no hereda la noche
+        // del menu (lo mismo hace CapitulosDeEscenario).
+        RenderSettings.fog = false;
+        RenderSettings.ambientLight = ambienteDia;
+    }
+
     private void Soltar(float arrancaEn)
     {
         var prefab = Elegir();
@@ -159,6 +251,8 @@ public class FondoMenu : MonoBehaviour
             zombi.transform.position += Vector3.up * -fondo;
         }
 
+        // Ningun script de un zombi puede llevar RequireComponent de otro script suyo: eso
+        // impide borrarlo aca y el zombi del fondo queda con logica a medias (ver JefePatrones).
         foreach (var s in zombi.GetComponentsInChildren<MonoBehaviour>(true)) DestroyImmediate(s);
         foreach (var co in zombi.GetComponentsInChildren<Collider>(true)) DestroyImmediate(co);
         foreach (var rb in zombi.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(rb);

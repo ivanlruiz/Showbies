@@ -44,6 +44,13 @@ public class TarjetaMejora : MonoBehaviour
     public Mejora Mejora { get; private set; }
     public EstadoMejora Estado { get; private set; }
 
+    // El color al que vuelve el texto del nivel despues de festejar. Lo decide su
+    // pintor, que es el que sabe si el tema es claro u oscuro; sin pintor, el del prefab.
+    private Color ColorNivel
+    {
+        get { return pintorNivel != null ? pintorNivel.Actual() : colorBaseNivel; }
+    }
+
     // Adonde vuelan las monedas de la compra y donde salen las chispas.
     public RectTransform DestinoMonedas
     {
@@ -58,6 +65,7 @@ public class TarjetaMejora : MonoBehaviour
     private Vector2 posicionBaseContenido;
     private Vector3 escalaBaseContenido = Vector3.one;
     private Color colorBaseNivel = Color.white;
+    private PintarConTema pintorNivel;      // el del texto del nivel, que sabe del tema
     private Vector3 escalaBaseNivel = Vector3.one;
     private Vector3 escalaBaseValor = Vector3.one;
     private Vector3 escalaBaseFaltan = Vector3.one;
@@ -98,6 +106,7 @@ public class TarjetaMejora : MonoBehaviour
         }
         if (nivel != null)
         {
+            pintorNivel = nivel.GetComponent<PintarConTema>();
             colorBaseNivel = nivel.color;
             escalaBaseNivel = nivel.rectTransform.localScale;
         }
@@ -300,7 +309,7 @@ public class TarjetaMejora : MonoBehaviour
         PonerAlfaDestello(0f);
         if (nivel != null)
         {
-            nivel.color = colorBaseNivel;
+            nivel.color = ColorNivel;
             nivel.rectTransform.localScale = escalaBaseNivel;
         }
         if (valorActual != null) valorActual.rectTransform.localScale = escalaBaseValor;
@@ -394,7 +403,7 @@ public class TarjetaMejora : MonoBehaviour
         if (nivel != null)
         {
             nivel.rectTransform.localScale = escalaBaseNivel * (1f + 0.5f * golpe);
-            nivel.color = Color.Lerp(colorBaseNivel, colorTope, golpe);
+            nivel.color = Color.Lerp(ColorNivel, colorTope, golpe);
         }
         if (valorActual != null)
         {

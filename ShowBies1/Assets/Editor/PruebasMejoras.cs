@@ -192,6 +192,7 @@ public static class PruebasMejoras
             }
             ProbarFormatoNumeros(informe);
             ProbarIdiomas(informe);
+            ProbarTema(informe);
             ProbarEscalado(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
@@ -238,6 +239,7 @@ public static class PruebasMejoras
                 if (m != null) Object.DestroyImmediate(m);
             }
             Idioma.UsarParaPruebas(null);
+            Tema.UsarParaPruebas(null);
         }
 
         return informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
@@ -647,6 +649,83 @@ public static class PruebasMejoras
 
     // 4. Escalado por oleada: la cuenta de Escalado.PorOleada, con los crecimientos que
     // tenian las oleadas al escribirla (vida 1,15, daño 1,07, monedas 1,05).
+    // El tema de la interfaz: que el claro devuelva lo de siempre, que el oscuro cambie
+    // por rol y que lo que se escribe encima se lea. El contraste se mide y no se mira:
+    // un color oscuro de mas en la paleta se vería en el telefono y no en el editor.
+    static void ProbarTema(Informe inf)
+    {
+        int antes = Tema.Revision;
+        Tema.UsarParaPruebas(false);
+        inf.Verdadero("tema: arranca en claro", !Tema.Oscuro);
+
+        var propio = new Color(0.12f, 0.34f, 0.56f, 0.78f);
+        inf.Verdadero("tema claro: Elegir devuelve el color de la escena",
+                      Tema.Elegir(propio, RolDeTema.Panel) == propio);
+
+        Tema.UsarParaPruebas(true);
+        inf.Verdadero("tema oscuro: Elegir devuelve el del rol",
+                      Tema.Elegir(propio, RolDeTema.Panel) == Tema.PanelOscuro);
+
+        // Cada rol tiene su color: dos roles iguales serian un rol de mas.
+        var roles = (RolDeTema[])Enum.GetValues(typeof(RolDeTema));
+        int repetidos = 0;
+        for (int i = 0; i < roles.Length; i++)
+        {
+            for (int j = i + 1; j < roles.Length; j++)
+            {
+                if (Tema.ColorOscuro(roles[i]) == Tema.ColorOscuro(roles[j])) repetidos++;
+            }
+        }
+        inf.Igual("tema oscuro: ningun rol repite color", 0, repetidos);
+
+        // Lo que se lee sobre cada fondo. 4,5 es el minimo de la WCAG para texto normal
+        // y 3 para texto grande, que es lo que son los secundarios con Bangers.
+        Contraste(inf, "texto sobre el panel", Tema.TextoClaro, Tema.PanelOscuro, 4.5);
+        Contraste(inf, "texto sobre la tarjeta", Tema.TextoClaro, Tema.TarjetaOscura, 4.5);
+        Contraste(inf, "texto sobre el fondo de la derrota", Tema.TextoClaro, Tema.FondoOscuro, 4.5);
+        Contraste(inf, "texto suave sobre el panel", Tema.TextoSuaveClaro, Tema.PanelOscuro, 3.0);
+        Contraste(inf, "texto suave sobre la tarjeta", Tema.TextoSuaveClaro, Tema.TarjetaOscura, 3.0);
+        Contraste(inf, "acento sobre el fondo de la derrota", Tema.AcentoClaro, Tema.FondoOscuro, 3.0);
+
+        // Lo mismo en claro, con los colores que traen las ventanas: la crema y el texto
+        // oscuro de VentanaMisiones y la tarjeta de la tienda.
+        var crema = new Color(1f, 0.96f, 0.86f, 1f);
+        var textoOscuro = new Color(0.16f, 0.14f, 0.2f, 1f);
+        Contraste(inf, "texto oscuro sobre la crema", textoOscuro, crema, 4.5);
+
+        // Fijar solo mueve Revision cuando cambia de verdad.
+        int revision = Tema.Revision;
+        Tema.Fijar(true);
+        inf.Igual("tema: fijar lo mismo no cambia la revision", revision, Tema.Revision);
+        Tema.Fijar(false);
+        inf.Verdadero("tema: fijar el otro sube la revision", Tema.Revision > revision);
+        inf.Verdadero("tema: quedo en claro", !Tema.Oscuro);
+
+        Tema.UsarParaPruebas(null);
+        inf.Verdadero("tema: la revision avanza con cada cambio", Tema.Revision > antes);
+    }
+
+    static void Contraste(Informe inf, string caso, Color frente, Color fondo, double minimo)
+    {
+        double a = Luminancia(frente), b = Luminancia(fondo);
+        double claro = Math.Max(a, b), oscuro = Math.Min(a, b);
+        double razon = (claro + 0.05) / (oscuro + 0.05);
+        if (razon >= minimo) inf.Ok("tema contraste: " + caso + " (" + razon.ToString("0.0", Invariante) + ":1)");
+        else inf.Falla("tema contraste: " + caso, minimo.ToString("0.0", Invariante) + ":1",
+                       razon.ToString("0.0", Invariante) + ":1");
+    }
+
+    // La luminancia relativa de la WCAG, con el canal linealizado como sRGB.
+    static double Luminancia(Color c)
+    {
+        return 0.2126 * Canal(c.r) + 0.7152 * Canal(c.g) + 0.0722 * Canal(c.b);
+    }
+
+    static double Canal(double v)
+    {
+        return v <= 0.03928 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
+    }
+
     static void ProbarEscalado(Informe inf)
     {
         inf.Cerca("escalado: PorOleada(1,15; 1)", 1, Escalado.PorOleada(1.15f, 1), 1e-6);
