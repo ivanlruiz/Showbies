@@ -145,7 +145,15 @@ public class EnemyController : MonoBehaviour
         get { IniciarVida(); return vidaActual; }
     }
 
-    public float DanoPorGolpe => enemyType.daño * multiplicadorDano;
+    public float DanoPorGolpe => enemyType.daño * multiplicadorDano * multiplicadorGolpe;
+
+    // Lo sube quien quiera un golpe mas fuerte por un rato: el jefe mientras carga
+    // (JefePatrones). Vuelve a 1 en cada aparicion.
+    [System.NonSerialized] public float multiplicadorGolpe = 1f;
+
+    // Cuantas veces le pego al jugador en esta aparicion. La carga del jefe la mira para
+    // saber si llego a chocarlo, sin meterse en como pega un zombi.
+    public int GolpesDados { get; private set; }
 
     // Hace aparecer un zombi de ese prefab: uno apagado del pool si hay, o uno
     // nuevo. Quien lo llama le pone despues los multiplicadores, como antes con
@@ -253,6 +261,8 @@ public class EnemyController : MonoBehaviour
         vidaIniciada = false;
         estaMuerto = false;
         proximoGolpe = 0f;
+        multiplicadorGolpe = 1f;
+        GolpesDados = 0;
         multiplicadorMonedas = 1f;
         monedaPrefab = null;
         multiplicadorVida = 1f;
@@ -632,6 +642,7 @@ public class EnemyController : MonoBehaviour
         if (PlayerHealth.instance == null) return;
 
         proximoGolpe = Time.time + intervaloDeGolpe;
+        GolpesDados++;
         PlayerHealth.instance.TakeDamage(DanoPorGolpe);
     }
 }

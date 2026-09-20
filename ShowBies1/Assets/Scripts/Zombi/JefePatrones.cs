@@ -5,7 +5,10 @@ using UnityEngine;
 // oleada 10 no se sentia como un evento. Alterna dos ataques, los dos con aviso:
 //
 // - CARGA: se frena, marca en el piso una linea roja hacia el jugador, ruge y embiste en
-//   linea recta sin corregir. Se esquiva moviendose de costado durante el aviso.
+//   linea recta sin corregir. Se esquiva moviendose de costado durante el aviso. Embistiendo
+//   pega mucho mas fuerte, y al terminar -haya chocado o no- **queda aturdido un rato**,
+//   tambaleandose y sin atacar: esa es la ventana para castigarlo. Asi la carga es una
+//   apuesta del jefe y no solo un golpe gratis.
 // - INVOCACION: se frena, marca un anillo rojo alrededor y hace aparecer zombis normales
 //   con sus mismos multiplicadores. En WaveMode cuentan en la oleada (SumarALaOleada), asi
 //   no termina con ellos vivos.
@@ -32,6 +35,10 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     public float velocidadCarga = 16f;
     public float duracionCarga = 1f;
     public float anchoLinea = 1.4f;
+    [Tooltip("Lo que multiplica su golpe mientras embiste.")]
+    public float golpeDeLaCarga = 2.5f;
+    [Tooltip("Lo que queda quieto y tambaleandose despues de embestir.")]
+    public float duracionAturdido = 1.3f;
 
     [Header("Invocacion")]
     public GameObject invocado;
@@ -51,7 +58,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     public Color colorAviso = new Color(1f, 0.2f, 0.15f, 0.85f);
     public AudioClip rugido;
 
-    private enum Estado { Persiguiendo, AvisandoCarga, Cargando, AvisandoInvocar }
+    private enum Estado { Persiguiendo, AvisandoCarga, Cargando, AvisandoInvocar, Aturdido }
 
     private EnemyController zombi;
     private LineRenderer linea;
@@ -61,6 +68,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private float aparecio;
     private bool tocaCarga;
     private bool enFuria;
+    private int golpesAlCargar;
+    private Quaternion rotacionAlAturdirse;
     private Vector3 direccion;
     private WaveManager oleadas;
     // Los que invoco, para no pasarse: un zombi muerto vuelve al pool y se prende de
@@ -101,6 +110,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private void OnDisable()
     {
         if (linea != null) linea.enabled = false;
+        if (zombi != null) zombi.multiplicadorGolpe = 1f;
     }
 
     private void OnDestroy()
@@ -117,6 +127,14 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                 Vector3 v = direccion * velocidadCarga;
                 v.y = rb.linearVelocity.y;
                 rb.linearVelocity = v;
+                return true;
+            }
+            case Estado.Aturdido:
+            {
+                // Quieto y tambaleandose: se ve que esta expuesto.
+                float balanceo = Mathf.Sin((Time.time - desde) * 22f) * 9f;
+                transform.rotation = rotacionAlAturdirse * Quaternion.Euler(0f, 0f, balanceo);
+                rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
                 return true;
             }
             case Estado.AvisandoCarga:
@@ -153,12 +171,29 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                     estado = Estado.Cargando;
                     desde = ahora;
                     linea.enabled = false;
+                    // Embistiendo pega mucho mas fuerte: el golpe lo sigue dando
+                    // EnemyController, con su intervalo, asi no hay dos daños.
+                    golpesAlCargar = zombi.GolpesDados;
+                    zombi.multiplicadorGolpe = golpeDeLaCarga;
                     CamaraJugador.Temblar(0.3f);
                 }
                 break;
 
             case Estado.Cargando:
-                if (ahora - desde >= duracionCarga) Terminar(ahora);
+                // Choco: frena en seco, con mas temblor.
+                if (zombi.GolpesDados > golpesAlCargar)
+                {
+                    CamaraJugador.Temblar(0.55f);
+                    Aturdir(ahora);
+                }
+                else if (ahora - desde >= duracionCarga)
+                {
+                    Aturdir(ahora);
+                }
+                break;
+
+            case Estado.Aturdido:
+                if (ahora - desde >= duracionAturdido) Terminar(ahora);
                 break;
 
             case Estado.AvisandoInvocar:
@@ -194,6 +229,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         {
             estado = Estado.Persiguiendo;
             if (linea != null) linea.enabled = false;
+            if (zombi != null) zombi.multiplicadorGolpe = 1f;
         }
         proximoAtaque = Mathf.Max(proximoAtaque, Time.time + Mathf.Max(0f, segundos));
     }
@@ -205,9 +241,21 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         return d.sqrMagnitude <= distanciaParaAtacar * distanciaParaAtacar;
     }
 
+    // Despues de embestir queda expuesto un rato, haya chocado o no: es la ventana para
+    // pegarle, y lo que hace que esquivar valga la pena.
+    private void Aturdir(float ahora)
+    {
+        estado = Estado.Aturdido;
+        desde = ahora;
+        zombi.multiplicadorGolpe = 1f;
+        rotacionAlAturdirse = transform.rotation;
+    }
+
     private void Terminar(float ahora)
     {
         estado = Estado.Persiguiendo;
+        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+        zombi.multiplicadorGolpe = 1f;
         tocaCarga = !tocaCarga;
         proximoAtaque = ahora + cadaCuanto * (enFuria ? ritmoEnFuria : 1f);
     }

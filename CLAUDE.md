@@ -351,7 +351,9 @@ tutorial sigue haciendo `Instantiate`: esos zombis no tienen prefab de origen y 
 
 **El jefe tiene patrones propios** (`JefePatrones`, en el prefab ZombiBOSS; pedido de Ivan: antes era un zombi grande y
 lento). Alterna dos ataques con aviso cuando el jugador está a menos de `distanciaParaAtacar` (15 m): la **carga** (se
-frena, marca en el piso una línea roja hacia el jugador 0,9 s, ruge y embiste en línea recta a 16 m/s) y la **invocación**
+frena, marca en el piso una línea roja hacia el jugador 0,9 s, ruge y embiste en línea recta a 16 m/s, pegando ×2,5
+mientras embiste, y al terminar —haya chocado o no— **queda aturdido 1,3 s**, tambaleándose y sin atacar: esa es la
+ventana para castigarlo, y es lo que hace que esquivar valga la pena) y la **invocación**
 (se frena, un anillo rojo que se achica y aparecen 4 zombis normales con sus multiplicadores). A la mitad de su vida
 entra en furia: ataca más seguido e invoca 6. Los invocados cuentan en la oleada y en el total del HUD
 (`WaveManager.SumarALaOleada`). Para moverse por su cuenta usa `IMovimientoPropio`: `EnemyController` lo busca en su
