@@ -1824,21 +1824,63 @@ public static class PruebasMejoras
         inf.Igual("bestiario: 10.000, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Tanque, 10000));
         inf.Igual("bestiario: un jefe ya es una estrella", 1, Bestiario.AlcanzadasCon(Bestiario.Jefe, 1));
         inf.Igual("bestiario: 50 jefes, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Jefe, 50));
-        inf.Cerca("bestiario: premio de la primera sin oleadas", 200, Bestiario.Premio(0, 0), 1e-9);
-        inf.Cerca("bestiario: premio de la tercera con oleada 10", 10000, Bestiario.Premio(2, 10), 1e-9);
+        inf.Cerca("bestiario: premio de la primera del caminante sin oleadas", 110, Bestiario.Premio(Bestiario.Normal, 0, 0), 1e-9);
+        inf.Cerca("bestiario: premio de la tercera del caminante con oleada 10", 14700, Bestiario.Premio(Bestiario.Normal, 2, 10), 1e-9);
+        ProbarPremiosDelBestiario(inf);
 
         EmpezarCaso("{\"version\":4,\"monedas\":0,\"estadisticas\":{\"matados\":[{\"id\":\"ZombiNormal\",\"cantidad\":1500},{\"id\":\"ZombiBOSS\",\"cantidad\":1}]}}", null);
         inf.Igual("bestiario: dos normales y un jefe para cobrar", 3, Bestiario.PorCobrar);
         inf.Igual("bestiario: el siguiente de los normales es 10.000", 10000, Bestiario.Siguiente(Bestiario.Normal));
-        inf.Cerca("bestiario: cobra la primera", 200, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
-        inf.Cerca("bestiario: despues la segunda", 1000, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
+        // Lo que paga es lo que muestra la tarjeta para ese tipo y esa estrella.
+        double primera = Bestiario.Premio(Bestiario.Normal, 0, Progreso.MejorOleada);
+        double segunda = Bestiario.Premio(Bestiario.Normal, 1, Progreso.MejorOleada);
+        inf.Cerca("bestiario: cobra la primera", primera, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
+        inf.Cerca("bestiario: despues la segunda", segunda, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
         inf.Cerca("bestiario: la tercera no esta ganada", 0, Bestiario.Cobrar(Bestiario.Normal), 1e-9);
         inf.Cerca("bestiario: sin muertes no paga", 0, Bestiario.Cobrar(Bestiario.Tanque), 1e-9);
-        inf.Cerca("bestiario: las monedas llegaron", 1200, Progreso.Monedas, 1e-9);
+        inf.Cerca("bestiario: las monedas llegaron", primera + segunda, Progreso.Monedas, 1e-9);
         inf.Cerca("bestiario: no cuentan como jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Igual("bestiario: se releen las cobradas", 2, Bestiario.Cobradas(Bestiario.Normal));
         inf.Igual("bestiario: queda el jefe para cobrar", 1, Bestiario.PorCobrar);
+    }
+
+    // Los premios del bestiario salen de lo que dejan las muertes del escalon, no de un
+    // monto fijo: con los fijos, 100 caminantes pagaban lo mismo que 100 tanques y la
+    // primera estrella era un regalo temprano.
+    static void ProbarPremiosDelBestiario(Informe inf)
+    {
+        bool crecePorEscalon = true, elMasDuroPagaMas = true, proporcion = true, creceConLaOleada = true;
+        foreach (int m in new[] { 0, 5, 10, 20, 40 })
+        {
+            foreach (string tipo in Bestiario.Tipos)
+            {
+                var escalones = Bestiario.Escalones(tipo);
+                double anterior = 0;
+                for (int e = 0; e < Bestiario.Estrellas; e++)
+                {
+                    double premio = Bestiario.Premio(tipo, e, m);
+                    if (premio <= anterior) crecePorEscalon = false;
+                    anterior = premio;
+
+                    // Nunca mas que lo que dejan esas muertes: si no, conviene cobrar
+                    // estrellas antes que jugar.
+                    double dejan = escalones[e] * Bestiario.MonedasQueDeja(tipo, m);
+                    if (premio > dejan) proporcion = false;
+                }
+            }
+
+            // El tanque cuesta tres veces mas que el caminante y paga mas por el mismo
+            // escalon de muertes; el jefe, mas todavia.
+            if (Bestiario.Premio(Bestiario.Tanque, 0, m) <= Bestiario.Premio(Bestiario.Normal, 0, m)) elMasDuroPagaMas = false;
+            if (Bestiario.Premio(Bestiario.Jefe, 0, m) <= 0) elMasDuroPagaMas = false;
+            if (m > 0 && Bestiario.Premio(Bestiario.Normal, 0, m) <= Bestiario.Premio(Bestiario.Normal, 0, 0)) creceConLaOleada = false;
+        }
+
+        inf.Verdadero("bestiario: cada estrella paga mas que la anterior", crecePorEscalon);
+        inf.Verdadero("bestiario: el zombi mas duro paga mas por el mismo escalon", elMasDuroPagaMas);
+        inf.Verdadero("bestiario: el premio no pasa lo que dejan esas muertes", proporcion);
+        inf.Verdadero("bestiario: el premio crece con la mejor oleada", creceConLaOleada);
     }
 
     static void ProbarRecompensaDiaria(Informe inf)

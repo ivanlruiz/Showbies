@@ -2,9 +2,14 @@ using System;
 
 // El bestiario: una tarjeta por tipo de zombi con tres estrellas, que se ganan matando
 // 100, 1.000 y 10.000 de ese tipo (el jefe: 1, 10 y 50). Cada estrella se cobra una vez
-// en el menu (VentanaBestiario) y paga 200, 1.000 y 5.000 monedas, que crecen con la
-// mejor oleada como todo lo demas. Llenar colecciones funciona sin fecha: explica para
+// en el menu (VentanaBestiario). Llenar colecciones funciona sin fecha: explica para
 // que sirve seguir jugando cuando ya no hay misiones.
+//
+// **El premio sale de lo que dejan esas muertes**, como el de las misiones: la mitad de
+// lo que sueltan los zombis del escalon, con el multiplicador de la oleada. Eran 200,
+// 1.000 y 5.000 fijos mas un 10 % por oleada, y pagaban lo mismo por 100 caminantes que
+// por 100 tanques, que cuestan tres veces mas; de paso, las primeras estrellas eran un
+// regalo temprano y las ultimas, calderilla.
 //
 // Las muertes salen de los contadores de por vida (Progreso.Matados, por el nombre del
 // asset Enemy, que por eso no se renombra) y lo cobrado se guarda en el progreso. El
@@ -22,8 +27,18 @@ public static class Bestiario
 
     private static readonly int[] EscalonesComunes = { 100, 1000, 10000 };
     private static readonly int[] EscalonesJefe = { 1, 10, 50 };
-    public static readonly double[] Premios = { 200, 1000, 5000 };
-    public const double CrecimientoPorOleada = 0.1;
+
+    // Lo que suelta cada tipo al morir, el promedio de monedasMin y monedasMax de su
+    // asset Enemy. No se lee del asset para poder probar esto sin escena: si cambia el
+    // balance de un zombi, se cambia aca. En el orden de Tipos.
+    private static readonly double[] MonedasPorTipo = { 2, 2, 3, 6.5, 35 };
+
+    // El jefe suelta 35 monedas pero cuesta 500 balas: sin esto su primera estrella
+    // pagaria menos que la de un caminante.
+    private const double EsfuerzoDelJefe = 6.0;
+
+    // Que parte de lo que dejan esas muertes se paga de premio.
+    public const double FraccionDelEscalon = 0.5;
 
     public static int[] Escalones(string tipo)
     {
@@ -66,10 +81,24 @@ public static class Bestiario
         return 0;
     }
 
-    public static double Premio(int estrella, int mejorOleada)
+    // Lo que deja un zombi de ese tipo a esa altura del juego: lo que suelta por el
+    // multiplicador de monedas de la oleada, tomado a mitad de camino, igual que en las
+    // misiones.
+    public static double MonedasQueDeja(string tipo, int mejorOleada)
     {
-        double base_ = Premios[Math.Max(0, Math.Min(estrella, Premios.Length - 1))];
-        return Math.Floor(base_ * (1.0 + CrecimientoPorOleada * Math.Max(0, mejorOleada)) + 0.5 + 1e-9);
+        int i = Array.IndexOf(Tipos, tipo);
+        double monedas = i >= 0 ? MonedasPorTipo[i] : 2.0;
+        if (tipo == Jefe) monedas *= EsfuerzoDelJefe;
+        return monedas * Math.Pow(1.08, Math.Max(3, mejorOleada) * 0.5);
+    }
+
+    // La mitad de lo que dejan las muertes del escalon, en numeros redondos (el mismo
+    // redondeo que las misiones, para que los premios se lean igual).
+    public static double Premio(string tipo, int estrella, int mejorOleada)
+    {
+        var escalones = Escalones(tipo);
+        int e = Math.Max(0, Math.Min(estrella, escalones.Length - 1));
+        return MisionesDiarias.Redondo(FraccionDelEscalon * escalones[e] * MonedasQueDeja(tipo, mejorOleada));
     }
 
     // Cobra la siguiente estrella ganada de ese tipo; devuelve cuanto dio (0 si no hay).
@@ -77,7 +106,7 @@ public static class Bestiario
     {
         int cobradas = Cobradas(tipo);
         if (cobradas >= Alcanzadas(tipo)) return 0;
-        double monto = Premio(cobradas, Progreso.MejorOleada);
+        double monto = Premio(tipo, cobradas, Progreso.MejorOleada);
         Progreso.SumarEstrellaCobrada(tipo);
         Progreso.CobrarPremio("bestiario_" + tipo, monto, false);
         return monto;

@@ -211,7 +211,7 @@ public class VentanaBestiario : MonoBehaviour
 
             bool hayParaCobrar = alcanzadas > cobradas;
             tarjeta.cobrar.SetActive(hayParaCobrar);
-            if (hayParaCobrar) tarjeta.textoCobrar.text = "+" + FormatoNumeros.Compacto(Bestiario.Premio(cobradas, mejor));
+            if (hayParaCobrar) tarjeta.textoCobrar.text = "+" + FormatoNumeros.Compacto(Bestiario.Premio(tipo, cobradas, mejor));
         }
     }
 

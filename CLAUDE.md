@@ -551,7 +551,11 @@ completada en el día y la lista).
 
 Una tarjeta por tipo de zombi (`Bestiario`, `Assets/Scripts/Progreso/`) con tres estrellas: 100, 1.000 y 10.000 muertes de
 ese tipo (el jefe: 1, 10 y 50), contadas con los contadores de por vida por el nombre del asset `Enemy`. Cada estrella se
-cobra una vez y paga 200, 1.000 y 5.000 × (1 + 0,1 × mejor oleada), por `CobrarPremio`; lo cobrado va en el progreso
+cobra una vez y **paga la mitad de lo que dejan esas muertes** (`MonedasQueDeja`: lo que suelta ese tipo por el
+multiplicador de la oleada, a mitad de camino, como en las misiones), por `CobrarPremio`. Eran 200, 1.000 y 5.000 fijos
+× (1 + 0,1 × oleada): 100 caminantes pagaban lo mismo que 100 tanques, que cuestan tres veces más, las primeras
+estrellas eran un regalo temprano y las últimas, calderilla. El jefe cuenta con un esfuerzo ×6, porque suelta 35
+monedas pero cuesta 500 balas. Lo cobrado va en el progreso
 (`estrellasCobradas`). En el menú, un trofeo redondo arriba a la derecha al lado de las misiones, con la insignia de las
 estrellas por cobrar; la ventana (`VentanaBestiario`) muestra cada tipo con su color, cuántos lleva, sus estrellas (las
 ganadas sin cobrar laten), la barra hasta la siguiente y el botón para cobrar. Los nombres (CAMINANTE, CORREDOR, VELOZ,

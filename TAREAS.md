@@ -143,9 +143,8 @@ teléfono.
   jugarlo en toda la curva (medido en las pruebas). **No** se hizo lo de esconder las misiones hasta la primera
   partida terminada: sin jugar no se cobra nada, y el objetivo de la función es justamente darle un objetivo a la
   primera partida.
-- [ ] Ver si el bestiario tiene el mismo problema: paga 200/1.000/5.000 × (1 + 0,1 × oleada) fijos, así que las
-  primeras estrellas (100 muertes de cada tipo) dan ~1.000 monedas temprano. Es una vez en la vida y no por día, así
-  que no rompe la economía igual, pero conviene mirarlo con la misma vara.
+- [x] El bestiario, con la misma vara. **Hecho el 20/9**: cada estrella paga la mitad de lo que dejan esas muertes, así
+  que el tanque paga más que el caminante por el mismo escalón y la primera estrella baja de 200 a 110.
 - [x] **Media — "Completa la oleada N" se cumple retomando.** **Arreglado el 20/9**: ahora cuenta cuántas oleadas se
   completaron hoy ("Completa 5 oleadas") y no a cuál se llegó.
 - [x] **Media — a medianoche se pierden las misiones cumplidas sin cobrar.** **Arreglado el 20/9**: al cambiar el día
