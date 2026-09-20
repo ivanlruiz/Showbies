@@ -46,7 +46,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, ConstructorUI, Tema, PintarConTema, Interruptor
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, Bestiario
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
@@ -356,7 +356,19 @@ frena, marca en el piso una línea roja hacia el jugador 0,9 s, ruge y embiste e
 entra en furia: ataca más seguido e invoca 6. Los invocados cuentan en la oleada y en el total del HUD
 (`WaveManager.SumarALaOleada`). Para moverse por su cuenta usa `IMovimientoPropio`: `EnemyController` lo busca en su
 `Awake` y en cada paso de física le pregunta primero; si devuelve verdadero, la persecución de siempre no corre ese paso.
-Las líneas usan el material del indicador de la granada y el rugido es `explosion.wav` más grave.
+Las líneas usan el material del indicador de la granada y el rugido es `explosion.wav` más grave, y van **planas
+sobre el piso** (`LineAlignment.TransformZ` con el objeto rotado −90° en X): con la alineación de siempre, que mira a
+la cámara, la cinta quedaba parada y medio enterrada.
+
+**Las invocaciones respetan el techo de población.** El generador de cada escena lo fija al empezar
+(`EnemyController.FijarTecho`, 60 o 35 en móvil) y el jefe saca `min(los suyos, maxInvocadosVivos,
+EnemyController.LugarParaZombis)`: sin eso, en el modo libre se juntaban jefes invocando y el teléfono se trababa.
+En el libre, además, **no sale otro jefe mientras haya uno vivo** (`GeneradorZombis` lo sigue con su número de
+aparición). `EnemyController.Jefes` es la lista de los que hay, que se lleva desde el setter de `EsJefe` (se marca
+después de aparecer, así que `OnEnable` no sirve) y la mira la barra de arriba.
+
+**Al revivir, el jefe posterga su ataque** (`JefePatrones.Postergar`, desde `PlayerHealth.Revivir`): el jefe no se
+despeja, y volver justo cuando terminaba de avisar la carga es morir de nuevo sin llegar a jugar.
 
 **Los zombis escalan con la oleada.** `WaveManager.Aparecer` pone `multiplicadorVida` = `crecimientoVida`^(o−1)
 (1,11) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) apenas sale el zombi, antes de su primer golpe, jefe
@@ -507,7 +519,11 @@ completada en el día y la lista).
   la mejor oleada en 9). Tres tipos distintos por día. Los objetivos se ajustan a la mejor oleada (`Objetivo`, en números
   redondos).
 - **El avance sale de los contadores de por vida**: al armarlas se anota cuánto marcaba cada uno (`inicio`) y el avance es
-  la diferencia. "Completa la oleada N" mira la mejor oleada del día, que avisa `WaveManager` (`RegistrarOleada`).
+  la diferencia. La de oleadas cuenta **cuántas se completaron hoy** (`oleadasDelDia`, que avisa `WaveManager` con
+  `RegistrarOleada`), no a cuál se llegó: contando el número de la oleada, retomar una partida guardada en la 25
+  cumplía de una las de "llega a la 15" y "llega a la 24".
+- **Lo cumplido y sin cobrar no se pierde a medianoche**: al cambiar el día se cobra solo (`CerrarElDia`) antes de
+  armar las nuevas, cofre incluido. No avisa en pantalla; las monedas aparecen en el contador.
 - **Premio: una fracción de lo que dan las partidas que cuesta el objetivo** (0,4, 0,5 y 0,6 de 0,4, 1 y 2,5
   partidas), no un monto fijo. `MonedasPorPartida` estima lo que deja una partida que llega a la mejor oleada —los
   zombis que se matan por las ~2 monedas que suelta cada uno, con el multiplicador de la oleada a mitad de camino,
@@ -770,6 +786,12 @@ trampa).
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
   (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
+- **La barra del jefe** (`BarraDelJefe`, pedido de Ivan: como la de los jefes de Minecraft) va arriba al centro
+  mientras hay un jefe vivo, con su nombre, la muesca de la mitad (donde entra en furia, y ahí late en naranja) y una
+  barra blanca detrás que baja despacio, para que cada bala se vea. Se arma en código y vive en el canvas del prefab
+  `MenuPausa`, que está en las tres escenas de juego (como `CursorMira`), colgando del área segura y antes del panel
+  de la pausa, que la tapa. Espera un segundo desde que el jefe aparece: la vida definitiva se la pone quien lo saca,
+  con los multiplicadores de la oleada, y preguntarla antes la fijaría sin ellos.
 
 **Con el modo oscuro el fondo del menu pasa a la noche** (ver Tema claro y oscuro).
 

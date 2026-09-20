@@ -88,6 +88,7 @@ public class GeneradorZombis : MonoBehaviour
     void Start()
     {
         if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
+        EnemyController.FijarTecho(maxZombisVivos);
 
         StartCoroutine(spawnEnemy(intervaloZombi, Zombi));
         StartCoroutine(spawnEnemy(intervaloZombiRapido, ZombiRapido));
@@ -143,6 +144,10 @@ public class GeneradorZombis : MonoBehaviour
         return posicion;
     }
 
+    // El jefe que anda dando vueltas, para no sacar otro hasta que muera.
+    private EnemyController jefeVivo;
+    private int numeroDelJefe;
+
     private IEnumerator spawnEnemy(float interval, GameObject enemy)
     {
         // Antes esto se rellamaba a si mismo con un StartCoroutine al final, lo que
@@ -152,6 +157,10 @@ public class GeneradorZombis : MonoBehaviour
             yield return new WaitForSeconds(interval);                   //X                         //Y                     //Z
 
             if (EnemyController.ZombisVivos >= maxZombisVivos) continue;
+
+            // Un jefe por vez: con su corrutina cada 30 s se juntaban varios, y cada uno
+            // invoca. El que hay se sigue con su numero de aparicion, que no se reusa.
+            if (enemy == ZombiBOSS && EnemyController.SigueVivo(jefeVivo, numeroDelJefe)) continue;
 
             var enemigo = EnemyController.Aparecer(enemy, PosicionLejosDelJugador());
             if (enemigo != null)
@@ -163,6 +172,11 @@ public class GeneradorZombis : MonoBehaviour
                 enemigo.multiplicadorMonedas = MultiplicadorMonedasActual;
                 enemigo.monedaPrefab = monedaPrefab;
                 enemigo.EsJefe = enemy == ZombiBOSS;
+                if (enemigo.EsJefe)
+                {
+                    jefeVivo = enemigo;
+                    numeroDelJefe = enemigo.NumeroDeAparicion;
+                }
             }
         }
     }

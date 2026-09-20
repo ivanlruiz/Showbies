@@ -22,6 +22,7 @@ public class GuiaPrimeraCompra : MonoBehaviour
     private enum Paso { Nada, Comprar, Jugar }
 
     private Texture2D texturaFlecha;
+    private Sprite spriteFlecha;
     private RectTransform raiz;
     private RectTransform flecha, sombra;
     private float desplazarDesde = -1f;
@@ -46,7 +47,8 @@ public class GuiaPrimeraCompra : MonoBehaviour
         grupo.interactable = false;
 
         // La flecha es el triangulo de PLAY girado para apuntar hacia abajo, con su sombra.
-        var sprite = Sprite.Create(texturaFlecha, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        spriteFlecha = Sprite.Create(texturaFlecha, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        var sprite = spriteFlecha;
         sombra = Imagen("Sombra", sprite, new Color(0f, 0f, 0f, 0.35f), new Vector2(0f, -6f));
         flecha = Imagen("Flecha", sprite, colorFlecha, Vector2.zero);
 
@@ -86,6 +88,8 @@ public class GuiaPrimeraCompra : MonoBehaviour
 
     private void OnDestroy()
     {
+        // El sprite tambien es un objeto de Unity: con destruir la textura no alcanza.
+        if (spriteFlecha != null) Destroy(spriteFlecha);
         if (texturaFlecha != null) Destroy(texturaFlecha);
     }
 

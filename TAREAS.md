@@ -134,9 +134,9 @@ teléfono.
 - [x] **Media — el jefe rompe el fondo del menú.** `JefePatrones` tenía `[RequireComponent(EnemyController)]` y
   `FondoMenu` no podía borrar el EnemyController del BOSS: el jefe del fondo quedaba invisible y tiraba excepciones.
   **Arreglado el 20/9** sacando el RequireComponent (queda anotado en las trampas de CLAUDE.md).
-- [ ] **Media — las invocaciones ignoran el techo de zombis vivos** (35 en móvil). En el modo libre sale un BOSS cada
-  30 s y se acumulan invocando. Arreglo: techo global `EnemyController.TechoDeZombis` (static con reset) e invocar
-  `min(n, techo - ZombisVivos)`; tope de invocados vivos por jefe; en el libre no sacar otro BOSS si ya hay uno.
+- [x] **Media — las invocaciones ignoran el techo de zombis vivos.** **Arreglado el 20/9**: el generador fija
+  `EnemyController.FijarTecho` y el jefe invoca `min(los suyos, maxInvocadosVivos, LugarParaZombis)`; en el modo libre
+  no sale otro jefe mientras haya uno vivo.
 - [x] **Media — premios de misiones al revés.** Eran fijos (150/300/600, cofre 800) contra objetivos que escalan.
   **Arreglado el 20/9**: el premio es una fracción (0,4/0,5/0,6) de lo que dan las partidas que cuesta el objetivo, y
   el cofre la mitad de las tres. El primer día pasa de 1.850 a 350 monedas, y el día entero paga ~2/3 de lo que da
@@ -146,28 +146,32 @@ teléfono.
 - [ ] Ver si el bestiario tiene el mismo problema: paga 200/1.000/5.000 × (1 + 0,1 × oleada) fijos, así que las
   primeras estrellas (100 muertes de cada tipo) dan ~1.000 monedas temprano. Es una vez en la vida y no por día, así
   que no rompe la economía igual, pero conviene mirarlo con la misma vara.
-- [ ] **Media — "Completa la oleada N" se cumple retomando.** Cuenta el número absoluto de la oleada: retomar una
-  partida en la 25 cumple las de la 15 y la 24 con una sola oleada. Arreglo: contar las oleadas avanzadas hoy.
-- [ ] **Media — a medianoche se pierden las misiones cumplidas sin cobrar** (y el cofre). Arreglo: cobrarlas solas al
-  cambiar el día, o dejarlas pendientes en la ventana.
-- [ ] Baja — revivir al lado del jefe no da aire: `JefePatrones.Postergar(s)` desde `PlayerHealth.Revivir`. El
-  comentario de `DespejarAlrededor` ("es lento") quedó viejo con la carga.
-- [ ] Baja — la línea de aviso del jefe mira a la cámara y queda medio bajo el piso: `alignment = TransformZ` y la
-  cinta rotada 90° en X.
-- [ ] Baja — `RelojConfiable` hace 4 llamadas JNI por consulta: leer `boot_count` una vez por sesión y no tocar JNI si
-  no hay marca.
-- [ ] Baja — pitch hasta 4 (escalera de monedas, combo, cofre): confirmar que Unity no lo corta en 3; si lo corta,
-  topear a +19 semitonos o bajar la escala una octava.
-- [ ] Baja — el cementerio se instancia entero cada noche y se combina en runtime: instanciarlo una vez apagado y
-  reusarlo, y liberar las mallas combinadas.
-- [ ] Baja — la cuenta regresiva de misiones usa `DateTime.Now` en vez de la hora confiable, y arma el texto cada frame.
-- [ ] Baja — `Sprite.Create` sin `Destroy` en VentanaMisiones, VentanaBestiario, GuiaPrimeraPartida y GuiaPrimeraCompra.
+- [x] **Media — "Completa la oleada N" se cumple retomando.** **Arreglado el 20/9**: ahora cuenta cuántas oleadas se
+  completaron hoy ("Completa 5 oleadas") y no a cuál se llegó.
+- [x] **Media — a medianoche se pierden las misiones cumplidas sin cobrar.** **Arreglado el 20/9**: al cambiar el día
+  se cobran solas antes de armar las nuevas, cofre incluido.
+- [x] Baja — revivir al lado del jefe no daba aire. **Arreglado el 20/9** con `JefePatrones.Postergar` desde
+  `PlayerHealth.Revivir` (2,5 s o los segundos de gracia, lo que sea más).
+- [x] Baja — la línea de aviso del jefe quedaba medio bajo el piso. **Arreglado el 20/9**: `TransformZ` con el objeto
+  rotado −90° en X; se ve plana sobre el piso, comprobado en el editor.
+- [x] Baja — `RelojConfiable` hacía llamadas JNI de más. **Arreglado el 20/9**: `boot_count` una vez por sesión, sin
+  reintentos si una lectura falla, y `Progreso.HoraConfiable` no toca JNI si no hay marca guardada.
+- [x] Baja — pitch hasta 4. **Comprobado el 20/9 en el editor: Unity no lo corta** (acepta 4 y 5 por código; el 3 es
+  el tope del slider del inspector). No hay nada que arreglar.
+- [x] Baja — el cementerio se instanciaba entero cada noche. **Arreglado el 20/9**: se arma una sola vez y después
+  se prende y se apaga. Como al combinarlo las piezas ya no se mueven solas, la primera noche sale cada lápida del
+  piso y las siguientes sale el cementerio entero.
+- [x] Baja — la cuenta regresiva de misiones. **Arreglado el 20/9**: usa `Progreso.AhoraConfiable()` y sólo arma el
+  texto cuando cambia el minuto.
+- [x] Baja — `Sprite.Create` sin `Destroy`. **Arreglado el 20/9** en las cuatro; la guía de la primera partida usa un
+  solo sprite para los dos pulgares.
 
 **Mejoras que propuso:**
 - Invocación segura del jefe (lo de arriba, más validar que cada punto del anillo esté dentro del mapa).
 - Carga que castiga y premia: un golpe propio de la carga (×2 o ×3, una vez), frenar en seco al chocar y dejar al jefe
   aturdido un instante (la ventana para pegarle).
-- Barra de vida del jefe grande arriba al centro, con su nombre y una muesca en la mitad (la furia).
+- [x] Barra de vida del jefe grande arriba al centro, con su nombre y la muesca de la mitad. **Hecha el 20/9**
+  (pedido de Ivan, "como en Minecraft"): `BarraDelJefe`, en el canvas del prefab MenuPausa.
 - Postergar el ataque al revivir y la línea plana (S).
 - Premios de misiones proporcionales al objetivo (lo de arriba).
 

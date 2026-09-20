@@ -89,6 +89,7 @@ public class VentanaMisiones : MonoBehaviour
     private int revisionVista = -1;
     private float reloj = -1f;
     private int idiomaArmado = -1;
+    private int minutoMostrado = -1;
     private int temaArmado = -1;
     private float relojInsignia;
     private Button cofre;
@@ -111,6 +112,7 @@ public class VentanaMisiones : MonoBehaviour
     private void OnDestroy()
     {
         if (panel != null) Abierta = false;
+        if (circulo != null) Destroy(circulo);
         if (texturaCirculo != null) Destroy(texturaCirculo);
     }
 
@@ -222,7 +224,15 @@ public class VentanaMisiones : MonoBehaviour
             }
         }
         if (Progreso.Revision != revisionVista) Refrescar();
-        textoNuevas.text = TextoNuevas();
+
+        // El texto se arma solo cuando cambia el minuto: esto corre en cada frame y
+        // armarlo aloca una cadena por frame para mostrar lo mismo.
+        int minutos = MinutosParaLasNuevas();
+        if (minutos != minutoMostrado)
+        {
+            minutoMostrado = minutos;
+            textoNuevas.text = TextoNuevas(minutos);
+        }
 
         foreach (var fila in filas)
         {
@@ -289,11 +299,18 @@ public class VentanaMisiones : MonoBehaviour
         if (jugoCofre != null) jugoCofre.respirar = MisionesDiarias.CofreDisponible;
     }
 
-    private static string TextoNuevas()
+    // Con la hora confiable, la misma con que cambian las misiones: con DateTime.Now, un
+    // reloj movido mostraba una cuenta que no se correspondia con nada.
+    private static int MinutosParaLasNuevas()
     {
-        TimeSpan falta = DateTime.Today.AddDays(1) - DateTime.Now;
-        if (falta < TimeSpan.Zero) falta = TimeSpan.Zero;
-        return Textos.Formato("misiones_nuevas", (int)falta.TotalHours, falta.Minutes);
+        DateTime ahora = Progreso.AhoraConfiable();
+        TimeSpan falta = ahora.Date.AddDays(1) - ahora;
+        return falta > TimeSpan.Zero ? (int)falta.TotalMinutes : 0;
+    }
+
+    private static string TextoNuevas(int minutos)
+    {
+        return Textos.Formato("misiones_nuevas", minutos / 60, minutos % 60);
     }
 
     private void Armar()
@@ -315,7 +332,8 @@ public class VentanaMisiones : MonoBehaviour
 
         var titulo = Texto(ventana, "Titulo", Textos.De("misiones_titulo"), 80f, colorTitulo, new Vector2(0f, 250f), new Vector2(1100f, 100f));
         if (materialContorno != null) titulo.fontSharedMaterial = materialContorno;
-        textoNuevas = Texto(ventana, "Nuevas", TextoNuevas(), 36f, ColorDeTexto, new Vector2(0f, 182f), new Vector2(1100f, 50f));
+        minutoMostrado = MinutosParaLasNuevas();
+        textoNuevas = Texto(ventana, "Nuevas", TextoNuevas(minutoMostrado), 36f, ColorDeTexto, new Vector2(0f, 182f), new Vector2(1100f, 50f));
 
         for (int i = 0; i < filas.Length; i++) filas[i] = ArmarFila(i, 85f - 125f * i);
 

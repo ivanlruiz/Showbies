@@ -11,8 +11,10 @@ using UnityEngine;
 //
 // El decorado es un prefab hecho con formas simples (ConstructorEscenarios, en el editor),
 // sin colliders. Cuando termina de salir se junta en pocos draw calls
-// (StaticBatchingUtility), asi en el telefono cuesta casi nada. Lo del dia (la luz, el
-// color del cielo, el piso) se lee de la escena al empezar. Va en WaveMode.
+// (StaticBatchingUtility), asi en el telefono cuesta casi nada; desde ahi las piezas ya
+// no se mueven por separado, asi que **la primera noche sale cada lapida sola del piso y
+// las siguientes sale el cementerio entero**, que ya esta armado y solo se prende. Lo del
+// dia (la luz, el color del cielo, el piso) se lee de la escena al empezar. Va en WaveMode.
 public class CapitulosDeEscenario : MonoBehaviour
 {
     public WaveManager oleadas;
@@ -49,11 +51,17 @@ public class CapitulosDeEscenario : MonoBehaviour
     private int capitulo = -1;
     private float mezcla;              // 0 dia, 1 noche
     private float objetivo;
+    // El decorado se instancia una sola vez en toda la partida: son ~250 objetos y una
+    // malla combinada, y rehacerlo cada vez que vuelve la noche es un tiron en el
+    // telefono. Despues solo se prende y se apaga.
     private GameObject decorado;
+    private bool combinado;
     private readonly List<Transform> piezas = new List<Transform>();
     private readonly List<float> alturas = new List<float>();
     private readonly List<float> demoras = new List<float>();
     private float saliendoDesde = -1f;
+
+    private const float Hundido = 2.5f;      // cuanto se hunde para salir del piso
     private TMP_Text cartel;
     private float cartelDesde;
 
@@ -76,6 +84,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         // La niebla y la luz ambiente son de la aplicacion: el menu no hereda la noche.
         RenderSettings.fog = false;
         RenderSettings.ambientLight = ambienteDia;
+        if (decorado != null) Destroy(decorado);
     }
 
     public static int CapituloDe(int oleada, int oleadasPorCapitulo)
@@ -145,19 +154,46 @@ public class CapitulosDeEscenario : MonoBehaviour
 
     private void PonerDecorado(bool saliendo)
     {
-        SacarDecorado();
         if (decoradoNoche == null) return;
-        decorado = Instantiate(decoradoNoche);
-        piezas.Clear();
-        alturas.Clear();
-        demoras.Clear();
+        if (decorado == null) Armar();
+        decorado.SetActive(true);
+
         if (!saliendo)
         {
-            StaticBatchingUtility.Combine(decorado);
+            // Una partida retomada de noche: ya esta puesto, sin salir del piso.
+            Aterrizar();
             return;
         }
 
-        // Cada pieza (una lapida, un arbol, un poste) sale del piso con su demora.
+        if (combinado)
+        {
+            // Ya esta pegado en una sola malla y las piezas no se pueden mover por
+            // separado: sale el cementerio entero de una.
+            var p = decorado.transform.position;
+            p.y = -Hundido;
+            decorado.transform.position = p;
+        }
+        else
+        {
+            // La primera vez, cada lapida sale del piso con su demora.
+            for (int i = 0; i < piezas.Count; i++)
+            {
+                var p = piezas[i].localPosition;
+                p.y = alturas[i] - Hundido;
+                piezas[i].localPosition = p;
+            }
+        }
+        saliendoDesde = Time.time;
+        CamaraJugador.Temblar(0.35f);
+    }
+
+    private void Armar()
+    {
+        decorado = Instantiate(decoradoNoche);
+        decorado.SetActive(false);
+        piezas.Clear();
+        alturas.Clear();
+        demoras.Clear();
         foreach (Transform grupo in decorado.transform)
         {
             foreach (Transform pieza in grupo)
@@ -165,20 +201,33 @@ public class CapitulosDeEscenario : MonoBehaviour
                 piezas.Add(pieza);
                 alturas.Add(pieza.localPosition.y);
                 demoras.Add(Random.Range(0f, 1.4f));
-                var p = pieza.localPosition;
-                p.y -= 2.5f;
-                pieza.localPosition = p;
             }
         }
-        saliendoDesde = Time.time;
-        CamaraJugador.Temblar(0.35f);
+    }
+
+    // Todo en su lugar y, la primera vez, pegado en una sola malla.
+    private void Aterrizar()
+    {
+        saliendoDesde = -1f;
+        var raiz = decorado.transform.position;
+        raiz.y = 0f;
+        decorado.transform.position = raiz;
+        if (combinado) return;
+
+        for (int i = 0; i < piezas.Count; i++)
+        {
+            var p = piezas[i].localPosition;
+            p.y = alturas[i];
+            piezas[i].localPosition = p;
+        }
+        // Pocos draw calls en el telefono. Desde aca las piezas ya no se mueven solas.
+        StaticBatchingUtility.Combine(decorado);
+        combinado = true;
     }
 
     private void SacarDecorado()
     {
-        if (decorado != null) Destroy(decorado);
-        decorado = null;
-        piezas.Clear();
+        if (decorado != null) decorado.SetActive(false);
         saliendoDesde = -1f;
     }
 
@@ -186,18 +235,27 @@ public class CapitulosDeEscenario : MonoBehaviour
     {
         if (saliendoDesde < 0f || decorado == null) return;
         float t = Time.time - saliendoDesde;
+
+        if (combinado)
+        {
+            float f = Mathf.Clamp01(t / 1.2f);
+            var p = decorado.transform.position;
+            p.y = -Hundido * (1f - CurvasUI.SalidaAtras(f));
+            decorado.transform.position = p;
+            if (f >= 1f) Aterrizar();
+            return;
+        }
+
         bool termino = true;
         for (int i = 0; i < piezas.Count; i++)
         {
             float f = Mathf.Clamp01((t - demoras[i]) / 0.5f);
             if (f < 1f) termino = false;
             var p = piezas[i].localPosition;
-            p.y = alturas[i] - 2.5f * (1f - CurvasUI.SalidaAtras(f));
+            p.y = alturas[i] - Hundido * (1f - CurvasUI.SalidaAtras(f));
             piezas[i].localPosition = p;
         }
-        if (!termino) return;
-        saliendoDesde = -1f;
-        StaticBatchingUtility.Combine(decorado);
+        if (termino) Aterrizar();
     }
 
     private void MostrarCartel()

@@ -465,13 +465,23 @@ public static class Progreso
         return ahora.Year * 10000 + ahora.Month * 100 + ahora.Day;
     }
 
+    // La hora de ahora, con el reloj confiable y en la zona del telefono. La usa la
+    // cuenta regresiva de las misiones, que si no mostraria lo que diga el reloj movido.
+    public static DateTime AhoraConfiable()
+    {
+        return HoraConfiable().ToLocalTime();
+    }
+
     private static DateTime HoraConfiable()
     {
         DateTime utc = DateTime.UtcNow;
+        // Sin marca guardada no hay nada que comparar: vale el reloj y no se toca JNI.
+        Cargar();
+        if (datos.relojUtc <= 0) return utc;
+
         long ms;
         int arranques;
         if (!RelojConfiable.Leer(out ms, out arranques)) return utc;
-        Cargar();
         return RelojConfiable.Confiable(utc, ms, arranques, datos.relojUtc, datos.relojMs, datos.relojArranques);
     }
 
@@ -753,7 +763,7 @@ public static class Progreso
         if (d.misiones == null) d.misiones = new EstadoMisiones();
         if (d.misiones.lista == null) d.misiones.lista = new List<MisionDelDia>();
         d.misiones.lista.RemoveAll(m => m == null || string.IsNullOrEmpty(m.tipo));
-        if (d.misiones.mejorOleadaDelDia < 0) d.misiones.mejorOleadaDelDia = 0;
+        if (d.misiones.oleadasDelDia < 0) d.misiones.oleadasDelDia = 0;
 
         if (d.estadisticas == null) d.estadisticas = new Estadisticas();
         Estadisticas e = d.estadisticas;

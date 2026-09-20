@@ -1689,10 +1689,12 @@ public static class PruebasMejoras
         inf.Igual("misiones: sin avance no hay nada para cobrar", 0, MisionesDiarias.PorCobrar);
         inf.Cerca("misiones: sin cumplir no paga", 0, MisionesDiarias.Cobrar(0), 1e-9);
         for (int i = 0; i < 3; i++) Progreso.ContarMuerte("ZombiNormal", false);
-        MisionesDiarias.RegistrarOleada(4);
+        // La de oleadas cuenta cuantas se completaron hoy, no a cual se llego: cuatro
+        // oleadas no cumplen "completa 5", aunque la cuarta sea la numero 25.
+        for (int i = 0; i < 4; i++) MisionesDiarias.RegistrarOleada(25);
         inf.Igual("misiones: matar 3 cumplida, la oleada no", 1, MisionesDiarias.PorCobrar);
-        MisionesDiarias.RegistrarOleada(5);
-        inf.Igual("misiones: la oleada 5 la cumple", 2, MisionesDiarias.PorCobrar);
+        MisionesDiarias.RegistrarOleada(26);
+        inf.Igual("misiones: con las cinco oleadas la cumple", 2, MisionesDiarias.PorCobrar);
         // Lo que paga es lo que muestra la ventana para esa dificultad y esa mejor oleada.
         double esperado = MisionesDiarias.Monto(0, Progreso.MejorOleada);
         inf.Cerca("misiones: cobrar paga lo que dice la ventana", esperado, MisionesDiarias.Cobrar(0), 1e-9);
@@ -1717,12 +1719,35 @@ public static class PruebasMejoras
         int diaGuardado = estado.dia;
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Verdadero("misiones: se relee la cobrada", MisionesDiarias.DeHoy.Count == 3 && MisionesDiarias.DeHoy[0].cobrada);
-        inf.Igual("misiones: se relee la oleada del dia", 5, Progreso.Misiones.mejorOleadaDelDia);
+        inf.Igual("misiones: se releen las oleadas del dia", 5, Progreso.Misiones.oleadasDelDia);
 
         // Un reloj atrasado no las cambia: el dia guardado es mayor que hoy.
         Progreso.Misiones.dia = diaGuardado + 1;
         MisionesDiarias.Asegurar();
         inf.Verdadero("misiones: con el reloj atrasado siguen las mismas", MisionesDiarias.DeHoy[0].cobrada);
+
+        // A medianoche no se pierde lo que quedo cumplido sin cobrar: se cobra solo antes
+        // de armar las del dia nuevo, cofre incluido.
+        EmpezarCaso("{\"version\":4,\"monedas\":0}", null);
+        MisionesDiarias.Asegurar();
+        var ayer = Progreso.Misiones;
+        ayer.dia = Progreso.DiaDeHoy() - 1;
+        ayer.cofreCobrado = false;
+        ayer.lista = new List<MisionDelDia>
+        {
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 0, objetivo = 1, inicio = Progreso.MatadosEnTotal },
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 1, objetivo = 1, inicio = Progreso.MatadosEnTotal },
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 2, objetivo = 1, inicio = Progreso.MatadosEnTotal },
+        };
+        Progreso.ContarMuerte("ZombiNormal", false);
+        double esperadoDeAyer = MisionesDiarias.MontoCofre(Progreso.MejorOleada);
+        for (int d = 0; d < MisionesDiarias.Cantidad; d++) esperadoDeAyer += MisionesDiarias.Monto(d, Progreso.MejorOleada);
+        double antesDeMedianoche = Progreso.Monedas;
+        MisionesDiarias.Asegurar();
+        inf.Cerca("misiones: a medianoche se cobra lo cumplido y el cofre",
+                  esperadoDeAyer, Progreso.Monedas - antesDeMedianoche, 1e-9);
+        inf.Verdadero("misiones: y despues hay tres nuevas sin cobrar",
+                      MisionesDiarias.DeHoy.Count == 3 && MisionesDiarias.Cobradas == 0 && !MisionesDiarias.CofreCobrado);
     }
 
     // Los premios de las misiones salen de lo que cuesta cumplirlas, no de un monto fijo:

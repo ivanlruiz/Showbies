@@ -111,6 +111,7 @@ public class VentanaBestiario : MonoBehaviour
     private void OnDestroy()
     {
         if (panel != null) Abierta = false;
+        if (circulo != null) Destroy(circulo);
         if (texturaCirculo != null) Destroy(texturaCirculo);
     }
 

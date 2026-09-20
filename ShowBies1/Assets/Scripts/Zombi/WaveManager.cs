@@ -94,6 +94,7 @@ public class WaveManager : MonoBehaviour
     private void Start()
     {
         if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
+        EnemyController.FijarTecho(maxZombisVivos);
         if (cartelOleada != null) cartelOleada.gameObject.SetActive(false);
         botin = CatalogoMejoras.MultiplicadorBotin;
 

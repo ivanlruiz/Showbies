@@ -25,12 +25,22 @@ public static class RelojConfiable
     private static bool leido;
     private static long msLeidos;
     private static int arranquesLeidos;
+    // El numero de arranque no cambia en toda la sesion: si cambiara, el juego se
+    // habria reiniciado con el telefono. Se lee una vez y no en cada consulta.
+    private static bool hayArranques;
+    private static int arranquesDeLaSesion;
+    // Si no se pudo leer una vez (no es Android, o la lectura tiro), no se vuelve a
+    // intentar: eran llamadas por JNI en cada consulta, para nada.
+    private static bool imposible;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
         frameLeido = -1;
         leido = false;
+        hayArranques = false;
+        arranquesDeLaSesion = 0;
+        imposible = false;
     }
 
     // La hora que vale, en UTC. Estatica y sin nada del telefono para probarla: la marca
@@ -47,13 +57,21 @@ public static class RelojConfiable
     }
 
     // Los dos contadores del telefono. Falso fuera de Android o si no se pudieron leer.
-    // Se leen una vez por frame como mucho: son dos llamadas por JNI.
+    // El tiempo desde el arranque se lee una vez por frame como mucho; el numero de
+    // arranque, una sola vez en toda la sesion, y si una lectura falla no se reintenta.
     public static bool Leer(out long msDesdeArranque, out int arranques)
     {
+        if (imposible)
+        {
+            msDesdeArranque = 0;
+            arranques = 0;
+            return false;
+        }
         if (Time.frameCount != frameLeido)
         {
             frameLeido = Time.frameCount;
             leido = LeerDelTelefono(out msLeidos, out arranquesLeidos);
+            if (!leido) imposible = true;
         }
         msDesdeArranque = msLeidos;
         arranques = arranquesLeidos;
@@ -71,11 +89,16 @@ public static class RelojConfiable
             using (var reloj = new AndroidJavaClass("android.os.SystemClock"))
                 ms = reloj.CallStatic<long>("elapsedRealtime");
 
-            using (var jugador = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-            using (var actividad = jugador.GetStatic<AndroidJavaObject>("currentActivity"))
-            using (var resolvedor = actividad.Call<AndroidJavaObject>("getContentResolver"))
-            using (var global = new AndroidJavaClass("android.provider.Settings$Global"))
-                arranques = global.CallStatic<int>("getInt", resolvedor, "boot_count", 0);
+            if (!hayArranques)
+            {
+                using (var jugador = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+                using (var actividad = jugador.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var resolvedor = actividad.Call<AndroidJavaObject>("getContentResolver"))
+                using (var global = new AndroidJavaClass("android.provider.Settings$Global"))
+                    arranquesDeLaSesion = global.CallStatic<int>("getInt", resolvedor, "boot_count", 0);
+                hayArranques = arranquesDeLaSesion > 0;
+            }
+            arranques = arranquesDeLaSesion;
 
             return ms > 0 && arranques > 0;
         }

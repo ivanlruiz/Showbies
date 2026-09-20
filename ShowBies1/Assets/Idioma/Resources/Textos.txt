@@ -43,7 +43,7 @@ menu_misiones	MISSIONS	MISIONES
 misiones_titulo	DAILY MISSIONS	MISIONES DEL DÍA
 misiones_nuevas	New missions in {0}h {1}m	Misiones nuevas en {0} h {1} min
 mision_matar	Kill {0} zombies	Mata {0} zombis
-mision_oleada	Complete wave {0}	Completa la oleada {0}
+mision_oleada	Complete {0} waves	Completa {0} oleadas
 mision_monedas	Earn {0} coins	Gana {0} monedas
 mision_furia	Use the fury {0} times	Usa la furia {0} veces
 mision_granadas	Throw {0} grenades	Lanza {0} granadas

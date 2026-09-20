@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // El jefe con patrones propios, pedido de Ivan: antes era un zombi grande y lento, y la
@@ -35,6 +36,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     [Header("Invocacion")]
     public GameObject invocado;
     public int cantidadInvocados = 4;
+    [Tooltip("Cuantos invocados suyos pueden estar vivos a la vez.")]
+    public int maxInvocadosVivos = 8;
     public float radioInvocacion = 3.5f;
     public float avisoInvocar = 0.8f;
 
@@ -60,6 +63,10 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private bool enFuria;
     private Vector3 direccion;
     private WaveManager oleadas;
+    // Los que invoco, para no pasarse: un zombi muerto vuelve al pool y se prende de
+    // nuevo, asi que se guarda con su numero de aparicion (ver EnemyController.SigueVivo).
+    private readonly List<EnemyController> invocados = new List<EnemyController>();
+    private readonly List<int> numerosInvocados = new List<int>();
 
     private void Awake()
     {
@@ -71,12 +78,18 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         linea.startColor = linea.endColor = colorAviso;
         linea.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         linea.receiveShadows = false;
+        // Plana sobre el piso y no mirando a la camara: con Alignment.View la cinta queda
+        // parada y, con la camara desde arriba, medio enterrada en el piso.
+        linea.alignment = LineAlignment.TransformZ;
+        go.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
         linea.enabled = false;
     }
 
     private void OnEnable()
     {
         estado = Estado.Persiguiendo;
+        invocados.Clear();
+        numerosInvocados.Clear();
         aparecio = Time.time;
         proximoAtaque = Time.time + esperaInicial;
         tocaCarga = true;
@@ -172,6 +185,19 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         CamaraJugador.Temblar(0.15f);
     }
 
+    // Le corta el ataque que estaba por hacer y lo deja quieto un rato. Lo llama el
+    // revivir: volver justo cuando el jefe termina de avisar la carga es morir de nuevo
+    // sin poder hacer nada.
+    public void Postergar(float segundos)
+    {
+        if (estado != Estado.Persiguiendo)
+        {
+            estado = Estado.Persiguiendo;
+            if (linea != null) linea.enabled = false;
+        }
+        proximoAtaque = Mathf.Max(proximoAtaque, Time.time + Mathf.Max(0f, segundos));
+    }
+
     private bool CercaDelJugador()
     {
         Vector3 d = zombi.thePlayer.transform.position - transform.position;
@@ -197,16 +223,38 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         if (rugido != null) Sonidos.Tocar(rugido, 1f, 0.45f);
     }
 
+    // Cuantos de los suyos siguen vivos, limpiando la lista de paso.
+    private int InvocadosVivos()
+    {
+        int vivos = 0;
+        for (int i = invocados.Count - 1; i >= 0; i--)
+        {
+            if (EnemyController.SigueVivo(invocados[i], numerosInvocados[i])) { vivos++; continue; }
+            invocados.RemoveAt(i);
+            numerosInvocados.RemoveAt(i);
+        }
+        return vivos;
+    }
+
     private void Invocar()
     {
         if (invocado == null) return;
         int n = cantidadInvocados + (enFuria ? invocadosExtraEnFuria : 0);
+        // Ni mas de los suyos de los que se banca, ni mas de los que entran en la escena:
+        // el techo lo fija el generador (60, o 35 en movil) y sin mirarlo el modo libre
+        // junta una pantalla de zombis y el telefono se traba.
+        n = Mathf.Min(n, Mathf.Max(0, maxInvocadosVivos - InvocadosVivos()));
+        n = Mathf.Min(n, EnemyController.LugarParaZombis);
+        if (n <= 0) return;
+
         for (int i = 0; i < n; i++)
         {
             float angulo = i * Mathf.PI * 2f / n;
             Vector3 punto = transform.position + new Vector3(Mathf.Cos(angulo), 0f, Mathf.Sin(angulo)) * radioInvocacion;
             var nuevo = EnemyController.Aparecer(invocado, punto);
             if (nuevo == null) continue;
+            invocados.Add(nuevo);
+            numerosInvocados.Add(nuevo.NumeroDeAparicion);
             // Los mismos multiplicadores que el jefe: son zombis de esta oleada.
             nuevo.multiplicadorVida = zombi.multiplicadorVida;
             nuevo.multiplicadorDano = zombi.multiplicadorDano;

@@ -73,11 +73,29 @@ public class EnemyController : MonoBehaviour
     // zombis prendidos (OnEnable/OnDisable), salgan o no del pool.
     public static int ZombisVivos { get; private set; }
 
+    // El techo de poblacion de la escena, que fija el generador en su Start (60, o 35 en
+    // movil). Quien haga aparecer zombis fuera del generador -el jefe cuando invoca- lo
+    // tiene que mirar con LugarParaZombis: sin eso, en el modo libre se juntan jefes
+    // invocando y el telefono se traba. 0 es sin techo.
+    public static int TechoDeZombis { get; private set; }
+
+    public static void FijarTecho(int techo)
+    {
+        TechoDeZombis = Mathf.Max(0, techo);
+    }
+
+    // Cuantos mas entran sin pasarse del techo.
+    public static int LugarParaZombis
+    {
+        get { return TechoDeZombis <= 0 ? int.MaxValue : Mathf.Max(0, TechoDeZombis - ZombisVivos); }
+    }
+
     // Los zombis se reusan, como las balas y las monedas: con decenas muriendo por
     // minuto, crear y destruir cada uno era basura para el recolector y trabajo
     // para la fisica en cada aparicion, y en los telefonos flojos se notaba en
     // tirones. El pool es por prefab: un tanque no vuelve como zombi normal.
     private static readonly Dictionary<GameObject, Stack<EnemyController>> pool = new Dictionary<GameObject, Stack<EnemyController>>();
+    private static readonly List<EnemyController> jefes = new List<EnemyController>();
     private static int ultimaAparicion;
 
     private GameObject prefabDeOrigen;   // null si no salio del pool (el tutorial): al morir se destruye
@@ -106,6 +124,8 @@ public class EnemyController : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         ZombisVivos = 0;
+        TechoDeZombis = 0;
+        jefes.Clear();
         pool.Clear();
         ultimaAparicion = 0;
         jugadorCache = null;
@@ -132,7 +152,40 @@ public class EnemyController : MonoBehaviour
     // Instantiate: la vida se calcula perezosa, con los que tenga en el primer golpe.
     // Lo marca quien lo hace aparecer (el jefe de la oleada o el BOSS del modo libre).
     // Vuelve a falso en cada aparicion.
-    public bool EsJefe { get; set; }
+    //
+    // La lista de los que hay se lleva desde aca y no desde OnEnable porque el zombi se
+    // marca despues de aparecer: la mira BarraDelJefe para saber a quien mostrar.
+    public bool EsJefe
+    {
+        get { return esJefe; }
+        set
+        {
+            if (esJefe == value) return;
+            esJefe = value;
+            if (value)
+            {
+                if (!jefes.Contains(this)) jefes.Add(this);
+            }
+            else
+            {
+                jefes.Remove(this);
+            }
+        }
+    }
+
+    public static IReadOnlyList<EnemyController> Jefes
+    {
+        get { return jefes; }
+    }
+
+    // Si ya se le calculo la vida con sus multiplicadores (ver IniciarVida): preguntar
+    // la vida antes de tiempo la fijaria sin ellos.
+    public bool VidaEmpezada
+    {
+        get { return vidaIniciada; }
+    }
+
+    private bool esJefe;
 
     public static EnemyController Aparecer(GameObject prefab, Vector3 posicion)
     {
@@ -221,6 +274,7 @@ public class EnemyController : MonoBehaviour
     {
         if (!enUso) return;
         enUso = false;
+        EsJefe = false;
         ZombisVivos--;
 
         // La barra se apaga en el acto, no en su LateUpdate: el zombi puede volver a

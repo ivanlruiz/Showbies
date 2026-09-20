@@ -220,6 +220,11 @@ public class PlayerHealth : MonoBehaviour
         danoPendiente = 0f;
         invulnerableHasta = Time.time + Mathf.Max(0f, segundosDeGracia);
 
+        // El jefe no se despeja (la oleada lo contaria como muerto), asi que se le corta
+        // el ataque: volver con la carga a medio avisar es morir de nuevo sin jugar.
+        foreach (var jefe in FindObjectsByType<JefePatrones>(FindObjectsSortMode.None))
+            jefe.Postergar(Mathf.Max(segundosDeGracia, 2.5f));
+
         int despejados = EnemyController.DespejarAlrededor(transform.position, radioDespeje);
         Efectos.Explosion(transform.position);
         if (despejados > 0) Efectos.CartelOleada();

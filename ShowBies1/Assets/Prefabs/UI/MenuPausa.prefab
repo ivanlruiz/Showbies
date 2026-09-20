@@ -29,6 +29,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 987863784219474987}
   - {fileID: 2311784743544825957}
   m_Father: {fileID: 1562932709356616390}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2231,6 +2232,67 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::IconoDeBoton
   texto: {fileID: 279888535133491956}
   separacion: 9.599999
+--- !u!1 &8601338339842182823
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 987863784219474987}
+  - component: {fileID: 4592325448904379916}
+  m_Layer: 0
+  m_Name: BarraDelJefe
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &987863784219474987
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8601338339842182823}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8859336559701943357}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &4592325448904379916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8601338339842182823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26a1d25a7ce86ad49852c755bf5f33ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BarraDelJefe
+  fuente: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
+  materialContorno: {fileID: 2100000, guid: f629c6e43dba4bf38cb74d8860150664, type: 2}
+  pildora: {fileID: 21300000, guid: 0f913b6593a72244dac6d78bf50adbd0, type: 3}
+  ancho: 820
+  alto: 26
+  desdeArriba: 100
+  colorFondo: {r: 0, g: 0, b: 0, a: 0.55}
+  colorVida: {r: 0.87, g: 0.18, b: 0.2, a: 1}
+  colorFuria: {r: 1, g: 0.45, b: 0.1, a: 1}
+  colorGolpe: {r: 1, g: 1, b: 1, a: 0.75}
+  colorMuesca: {r: 1, g: 1, b: 1, a: 0.5}
+  esperaAlAparecer: 1
+  velocidadDelGolpe: 0.4
 --- !u!1 &8668526712939682011
 GameObject:
   m_ObjectHideFlags: 0

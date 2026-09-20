@@ -7,8 +7,13 @@ using System.Collections.Generic;
 // siempre las mismas: se sortean con el dia de semilla.
 //
 // El avance sale de los contadores de por vida del progreso: al armar las misiones se
-// anota cuanto marcaba cada uno, y el avance es la diferencia. "Completa la oleada N"
-// mira la mejor oleada completada en el dia (WaveManager avisa con RegistrarOleada).
+// anota cuanto marcaba cada uno, y el avance es la diferencia. La de oleadas cuenta
+// **cuantas oleadas se completaron hoy** (WaveManager avisa con RegistrarOleada): antes
+// miraba el numero de la oleada mas alta del dia, y retomar una partida guardada en la 25
+// cumplia de una las de "llega a la 15" y "llega a la 24".
+//
+// Lo cumplido que no se cobro **no se pierde a medianoche**: al cambiar el dia se cobra
+// solo (CerrarElDia) antes de armar las nuevas, cofre incluido.
 // Los objetivos se ajustan a la mejor oleada del jugador, para que no sean ni regalados
 // ni imposibles, y las misiones de la furia, la granada y los criticos solo salen si
 // estan comprados.
@@ -64,13 +69,36 @@ public static class MisionesDiarias
         int hoy = Progreso.DiaDeHoy();
         if (estado.dia != 0 && !Progreso.EsDiaNuevo(estado.dia, hoy) && estado.lista.Count == Cantidad) return;
 
+        if (estado.dia != 0) CerrarElDia(estado);
+
         estado.dia = hoy;
-        estado.mejorOleadaDelDia = 0;
+        estado.oleadasDelDia = 0;
         estado.cofreCobrado = false;
         estado.lista = Armar(hoy, Progreso.MejorOleada, Progreso.Nivel("furia") > 0,
                              Progreso.Nivel("granada") > 0, Progreso.Nivel("criticos") > 0);
         foreach (var mision in estado.lista) mision.inicio = Contador(mision.tipo);
         Progreso.AvisarCambio();
+    }
+
+    // Cobra lo que quedo cumplido y sin cobrar del dia que termina, cofre incluido: el
+    // jugador ya hizo el trabajo, y perderlo por dormirse es de las cosas que hacen
+    // desinstalar. No avisa en pantalla: las monedas aparecen en el contador.
+    private static void CerrarElDia(EstadoMisiones estado)
+    {
+        int cobradas = 0;
+        foreach (var mision in estado.lista)
+        {
+            if (mision.cobrada) { cobradas++; continue; }
+            if (!Cumplida(mision)) continue;
+            mision.cobrada = true;
+            cobradas++;
+            Progreso.CobrarPremio("mision_" + mision.tipo, Monto(mision.dificultad, Progreso.MejorOleada), false);
+        }
+        if (cobradas >= Cantidad && !estado.cofreCobrado && estado.lista.Count == Cantidad)
+        {
+            estado.cofreCobrado = true;
+            Progreso.CobrarPremio("mision_cofre", MontoCofre(Progreso.MejorOleada), false);
+        }
     }
 
     // Las tres del dia, sin contadores: un tipo distinto por dificultad, sorteados con
@@ -105,7 +133,9 @@ public static class MisionesDiarias
         {
             case Matar: return Redondo(partidas * zombisPorPartida);
             case Monedas: return Redondo(partidas * MonedasPorPartida(mejorOleada));
-            case Oleada: return Math.Max(2, Math.Round(m * (dificultad == 0 ? 0.5 : dificultad == 1 ? 0.8 : 1.0)));
+            // Cuantas oleadas completar hoy: las que da la partida que cuesta esa
+            // dificultad. Sin Redondo, que son numeros chicos y redondear de a 5 se pasa.
+            case Oleada: return Math.Max(2, Math.Round(partidas * m));
             case Furia: return dificultad == 0 ? 2 : dificultad == 1 ? 3 : 5;
             case Granadas: return dificultad == 0 ? 5 : dificultad == 1 ? 12 : 25;
             case Criticos: return Redondo(partidas * 60.0 * (1.0 + m / 10.0));
@@ -166,7 +196,7 @@ public static class MisionesDiarias
     public static double Avance(MisionDelDia mision)
     {
         if (mision == null) return 0;
-        if (mision.tipo == Oleada) return Progreso.Misiones.mejorOleadaDelDia;
+        if (mision.tipo == Oleada) return Progreso.Misiones.oleadasDelDia;
         return Math.Max(0, Contador(mision.tipo) - mision.inicio);
     }
 
@@ -240,12 +270,13 @@ public static class MisionesDiarias
         return monto;
     }
 
-    // Desde WaveManager, al completar una oleada.
+    // Desde WaveManager, al completar una oleada: cuenta una, sea la que sea. El numero
+    // no importa a proposito (ver la cabecera): asi retomar una partida avanzada no cumple
+    // de un saque las misiones de las oleadas de abajo.
     public static void RegistrarOleada(int oleada)
     {
         Asegurar();
-        var estado = Progreso.Misiones;
-        if (oleada > estado.mejorOleadaDelDia) estado.mejorOleadaDelDia = oleada;
+        Progreso.Misiones.oleadasDelDia++;
     }
 
     public static string Descripcion(MisionDelDia mision)
@@ -280,7 +311,7 @@ public class MisionDelDia
 public class EstadoMisiones
 {
     public int dia;                 // aaaammdd de las misiones guardadas; 0 = ninguna
-    public int mejorOleadaDelDia;   // para "completa la oleada N"
+    public int oleadasDelDia;       // cuantas oleadas se completaron hoy
     public bool cofreCobrado;       // el cofre de las tres, uno por dia
     public List<MisionDelDia> lista = new List<MisionDelDia>();
 }

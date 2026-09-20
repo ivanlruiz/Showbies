@@ -20,6 +20,7 @@ public class GuiaPrimeraPartida : MonoBehaviour
     public float segundosCartelMonedas = 5f;
 
     private Texture2D texturaPulgar;
+    private Sprite spritePulgar;
     private Guia mover, disparar;
     private TMP_Text cartelPC, cartelMonedas;
     private bool movio, disparo;
@@ -63,6 +64,8 @@ public class GuiaPrimeraPartida : MonoBehaviour
 
     private void OnDestroy()
     {
+        // El sprite tambien es un objeto de Unity: con destruir la textura no alcanza.
+        if (spritePulgar != null) Destroy(spritePulgar);
         if (texturaPulgar != null) Destroy(texturaPulgar);
     }
 
@@ -86,7 +89,9 @@ public class GuiaPrimeraPartida : MonoBehaviour
         pulgar.SetParent(rt, false);
         pulgar.sizeDelta = Vector2.one * lado * 0.42f;
         var imagen = pulgarGo.GetComponent<Image>();
-        imagen.sprite = Sprite.Create(texturaPulgar, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        // Uno solo para los dos pulgares, y se destruye con la guia.
+        if (spritePulgar == null) spritePulgar = Sprite.Create(texturaPulgar, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        imagen.sprite = spritePulgar;
         imagen.color = new Color(1f, 1f, 1f, 0.6f);
         imagen.raycastTarget = false;
 
