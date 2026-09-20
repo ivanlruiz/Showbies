@@ -38,6 +38,8 @@ public class SelectorIdioma : MonoBehaviour
 
     private Texture2D texturaCirculo;
     private Texture2D texturaGlobo;
+    private Sprite spriteCirculo;
+    private Sprite spriteGlobo;
     private float abiertaDesde = -1f;
 
     public bool Abierto
@@ -53,9 +55,12 @@ public class SelectorIdioma : MonoBehaviour
         // de las texturas y las destruye.
         texturaCirculo = TexturasUI.Circulo(128);
         texturaGlobo = TexturasUI.Globo(128);
-        Vestir(fondoGlobo, texturaCirculo);
-        Vestir(sombraGlobo, texturaCirculo);
-        Vestir(iconoGlobo, texturaGlobo);
+        spriteCirculo = SpriteDe(texturaCirculo);
+        spriteGlobo = SpriteDe(texturaGlobo);
+        // El fondo y la sombra son el mismo dibujo: un solo sprite para los dos.
+        Vestir(fondoGlobo, spriteCirculo);
+        Vestir(sombraGlobo, spriteCirculo);
+        Vestir(iconoGlobo, spriteGlobo);
 
         if (botonGlobo != null) botonGlobo.onClick.AddListener(Abrir);
         if (botonVolver != null) botonVolver.onClick.AddListener(Cerrar);
@@ -70,15 +75,25 @@ public class SelectorIdioma : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (spriteCirculo != null) Destroy(spriteCirculo);
+        if (spriteGlobo != null) Destroy(spriteGlobo);
         if (texturaCirculo != null) Destroy(texturaCirculo);
         if (texturaGlobo != null) Destroy(texturaGlobo);
     }
 
-    private static void Vestir(Image imagen, Texture2D textura)
+    // El sprite tambien es un objeto que hay que destruir, no solo la textura: son dos
+    // por vuelta al menu y se acumulaban.
+    private static Sprite SpriteDe(Texture2D textura)
     {
-        if (imagen == null || textura == null) return;
-        imagen.sprite = Sprite.Create(textura, new Rect(0f, 0f, textura.width, textura.height),
-                                      new Vector2(0.5f, 0.5f), 100f, 0u, SpriteMeshType.FullRect);
+        if (textura == null) return null;
+        return Sprite.Create(textura, new Rect(0f, 0f, textura.width, textura.height),
+                             new Vector2(0.5f, 0.5f), 100f, 0u, SpriteMeshType.FullRect);
+    }
+
+    private static void Vestir(Image imagen, Sprite sprite)
+    {
+        if (imagen == null || sprite == null) return;
+        imagen.sprite = sprite;
     }
 
     public void Abrir()

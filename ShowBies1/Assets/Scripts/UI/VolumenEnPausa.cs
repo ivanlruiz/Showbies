@@ -13,13 +13,15 @@ public class VolumenEnPausa : MonoBehaviour
     public float separacion = 160f;
 
     private Texture2D texturaPerilla;
+    private Sprite spritePerilla;
 
     private void Start()
     {
         if (menuPausa == null || menuPausa.panel == null) return;
 
         texturaPerilla = TexturasUI.Circulo(64);
-        var perilla = Sprite.Create(texturaPerilla, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
+        // La textura y el sprite son de esta clase: los dos se destruyen al descargarse.
+        spritePerilla = Sprite.Create(texturaPerilla, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
         var padre = (RectTransform)menuPausa.panel.transform;
         var fuente = titulo != null ? titulo.font : null;
         float x = (ancho + separacion) * 0.5f;
@@ -27,13 +29,14 @@ public class VolumenEnPausa : MonoBehaviour
         // El panel de la pausa es negro con cualquier tema: texto blanco y el surco
         // claro, que el negro sobre negro no se ve.
         SliderVolumen.Crear(padre, "sonido_efectos", new Vector2(-x, alturaFila), ancho, fuente, Volumen.Efectos, Volumen.FijarEfectos,
-                            perilla, Color.white, SliderVolumen.ColorBarraClara);
+                            spritePerilla, Color.white, SliderVolumen.ColorBarraClara);
         SliderVolumen.Crear(padre, "sonido_musica", new Vector2(x, alturaFila), ancho, fuente, Volumen.Musica, Volumen.FijarMusica,
-                            perilla, Color.white, SliderVolumen.ColorBarraClara);
+                            spritePerilla, Color.white, SliderVolumen.ColorBarraClara);
     }
 
     private void OnDestroy()
     {
+        if (spritePerilla != null) Destroy(spritePerilla);
         if (texturaPerilla != null) Destroy(texturaPerilla);
     }
 }

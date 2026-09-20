@@ -91,6 +91,9 @@ public class OfertaDeRevivir : MonoBehaviour
     private Texture2D texturaCirculo;
     private Texture2D texturaAnillo;
     private Texture2D texturaIcono;
+    private Sprite spriteCirculo;
+    private Sprite spriteAnillo;
+    private Sprite spriteIcono;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
@@ -116,9 +119,12 @@ public class OfertaDeRevivir : MonoBehaviour
         texturaAnillo = TexturasUI.Anillo(256, 0.18f);
         texturaIcono = TexturasUI.Claqueta(160);
 
-        Vestir(circulo, texturaCirculo);
-        Vestir(anillo, texturaAnillo);
-        Vestir(icono, texturaIcono);
+        spriteCirculo = SpriteDe(texturaCirculo);
+        spriteAnillo = SpriteDe(texturaAnillo);
+        spriteIcono = SpriteDe(texturaIcono);
+        Vestir(circulo, spriteCirculo);
+        Vestir(anillo, spriteAnillo);
+        Vestir(icono, spriteIcono);
 
         if (botonVideo != null) botonVideo.onClick.AddListener(Aceptar);
         if (botonNo != null) botonNo.onClick.AddListener(Rechazar);
@@ -136,16 +142,26 @@ public class OfertaDeRevivir : MonoBehaviour
             if (!MenuPausa.Pausado) Time.timeScale = 1f;
         }
         if (instancia == this) instancia = null;
+        if (spriteCirculo != null) Destroy(spriteCirculo);
+        if (spriteAnillo != null) Destroy(spriteAnillo);
+        if (spriteIcono != null) Destroy(spriteIcono);
         if (texturaCirculo != null) Destroy(texturaCirculo);
         if (texturaAnillo != null) Destroy(texturaAnillo);
         if (texturaIcono != null) Destroy(texturaIcono);
     }
 
-    private static void Vestir(Image imagen, Texture2D textura)
+    // El sprite tambien hay que destruirlo, no solo la textura.
+    private static Sprite SpriteDe(Texture2D textura)
     {
-        if (imagen == null || textura == null) return;
-        imagen.sprite = Sprite.Create(textura, new Rect(0f, 0f, textura.width, textura.height),
-                                      new Vector2(0.5f, 0.5f), 100f, 0u, SpriteMeshType.FullRect);
+        if (textura == null) return null;
+        return Sprite.Create(textura, new Rect(0f, 0f, textura.width, textura.height),
+                             new Vector2(0.5f, 0.5f), 100f, 0u, SpriteMeshType.FullRect);
+    }
+
+    private static void Vestir(Image imagen, Sprite sprite)
+    {
+        if (imagen == null || sprite == null) return;
+        imagen.sprite = sprite;
     }
 
     private bool Mostrar(PlayerHealth quienMurio)

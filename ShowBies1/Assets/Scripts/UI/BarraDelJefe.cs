@@ -37,6 +37,19 @@ public class BarraDelJefe : MonoBehaviour
     public float esperaAlAparecer = 1f;
     public float velocidadDelGolpe = 0.4f;    // fracciones de barra por segundo
 
+    // El bloque es el nombre y, debajo, la barra. `desdeArriba` apunta al techo del
+    // bloque y el nombre empieza un poco mas abajo, que es el aire contra el boton de
+    // pausa.
+    private const float AltoNombre = 52f;
+    private const float MargenSuperior = 42f;
+    private const float SeparacionNombreMarco = 1f;   // el texto ya trae su propio aire
+
+    // Donde queda la raiz cuando termino de entrar. El techo del nombre, no el del rect.
+    private float YEnReposo
+    {
+        get { return -(desdeArriba + MargenSuperior); }
+    }
+
     private RectTransform raiz;
     private RectTransform relleno;
     private RectTransform golpe;
@@ -59,16 +72,22 @@ public class BarraDelJefe : MonoBehaviour
 
     private void Armar()
     {
+        // Los hijos cuelgan del techo de la raiz y la raiz mide lo que ocupan los dos:
+        // antes el marco caia entero por debajo del rect de su propia raiz. No se veia
+        // porque nada recorta, pero cualquier mascara o layout que se sume lo cortaria.
         var padre = (RectTransform)transform;
-        raiz = ConstructorUI.Rect(padre, "BarraDelJefe", Vector2.zero, new Vector2(ancho + 40f, alto + 66f));
+        raiz = ConstructorUI.Rect(padre, "BarraDelJefe", Vector2.zero,
+                                  new Vector2(ancho, AltoNombre + SeparacionNombreMarco + alto));
         raiz.anchorMin = raiz.anchorMax = new Vector2(0.5f, 1f);
         raiz.pivot = new Vector2(0.5f, 1f);
-        raiz.anchoredPosition = new Vector2(0f, -desdeArriba);
+        raiz.anchoredPosition = new Vector2(0f, YEnReposo);
 
-        nombre = ConstructorUI.Texto(raiz, "Nombre", "", 44f, Color.white, new Vector2(0f, -22f), new Vector2(ancho, 52f), fuente);
+        nombre = ConstructorUI.Texto(raiz, "Nombre", "", 44f, Color.white, Vector2.zero, new Vector2(ancho, AltoNombre), fuente);
+        DesdeElTecho((RectTransform)nombre.transform, 0f);
         if (materialContorno != null) nombre.fontSharedMaterial = materialContorno;
 
-        var marco = ConstructorUI.Rect(raiz, "Marco", new Vector2(0f, -62f), new Vector2(ancho, alto));
+        var marco = ConstructorUI.Rect(raiz, "Marco", Vector2.zero, new Vector2(ancho, alto));
+        DesdeElTecho(marco, AltoNombre + SeparacionNombreMarco);
         var imgMarco = marco.gameObject.AddComponent<Image>();
         ConstructorUI.Redondear(imgMarco, pildora, 8f);
         imgMarco.color = colorFondo;
@@ -84,6 +103,15 @@ public class BarraDelJefe : MonoBehaviour
         var imgMuesca = muesca.gameObject.AddComponent<Image>();
         imgMuesca.color = colorMuesca;
         imgMuesca.raycastTarget = false;
+    }
+
+    // Cuelga un hijo del techo de su padre, a `y` de distancia: asi donde queda no
+    // depende de cuanto mida el padre.
+    private static void DesdeElTecho(RectTransform rt, float y)
+    {
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, -y);
     }
 
     private RectTransform Relleno(RectTransform marco, string nombreHijo, Color color)
@@ -138,7 +166,7 @@ public class BarraDelJefe : MonoBehaviour
 
         // Entra deslizando desde arriba y se va igual.
         float suave = CurvasUI.SalidaAtras(visible);
-        raiz.anchoredPosition = new Vector2(0f, -desdeArriba + (1f - suave) * 90f);
+        raiz.anchoredPosition = new Vector2(0f, YEnReposo + (1f - suave) * 90f);
         grupo.alpha = visible;
 
         // Con la mitad de la vida el jefe entra en furia: la barra lo dice latiendo.

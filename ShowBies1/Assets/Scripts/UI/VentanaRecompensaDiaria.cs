@@ -66,7 +66,11 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private Texture2D texturaMoneda;
     private Texture2D texturaClaqueta;
     private Texture2D texturaBorde;
+    private Sprite spriteMoneda;
+    private Sprite spriteClaqueta;
     private Sprite bordeMoneda;
+    private int idiomaArmado = -1;
+    private int temaArmado = -1;
 
     private int racha;
     private bool pendiente;                 // armada, esperando a que se cierre la tienda
@@ -89,6 +93,15 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         // cobra 150 monedas y compra antes de haber jugado, y la guia de la primera
         // compra llega tarde.
         if (PrimeraVez.NoTerminoPartidas) return;
+        // Los dibujos se hacen una sola vez y no en Armar, que puede correr de nuevo si
+        // cambia el idioma o el tema. Esta clase es duenia de las texturas y de sus
+        // sprites, y destruye las dos cosas.
+        texturaMoneda = TexturasUI.Circulo(64);
+        spriteMoneda = Sprite.Create(texturaMoneda, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
+        texturaBorde = TexturasUI.Anillo(64, 0.2f);
+        bordeMoneda = Sprite.Create(texturaBorde, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
+        texturaClaqueta = TexturasUI.Claqueta(128);
+        spriteClaqueta = Sprite.Create(texturaClaqueta, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
         Armar();
         panel.SetActive(false);
         // No se abre en el acto: si el menu cargo con la tienda abierta (MEJORAS de la
@@ -101,6 +114,9 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private void OnDestroy()
     {
         if (panel != null) Abierta = false;
+        if (spriteMoneda != null) Destroy(spriteMoneda);
+        if (spriteClaqueta != null) Destroy(spriteClaqueta);
+        if (bordeMoneda != null) Destroy(bordeMoneda);
         if (texturaMoneda != null) Destroy(texturaMoneda);
         if (texturaClaqueta != null) Destroy(texturaClaqueta);
         if (texturaBorde != null) Destroy(texturaBorde);
@@ -108,6 +124,16 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
     private void Abrir()
     {
+        // Los textos y los colores se escriben al armarla, como en misiones y bestiario:
+        // si cambio el idioma o el tema, se vuelve a armar. Hoy no llega a pasar (se abre
+        // sola al cargar el menu, antes de que se pueda tocar opciones), pero si algun dia
+        // se puede volver a abrir, no tiene que salir con el tema viejo. Aca todavia no se
+        // cobro nada: Abrir corre una sola vez, con `pendiente`.
+        if (Idioma.Revision != idiomaArmado || Tema.Revision != temaArmado)
+        {
+            Destroy(panel);
+            Armar();
+        }
         panel.SetActive(true);
         panel.transform.SetAsLastSibling();
         Abierta = true;
@@ -242,10 +268,10 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
     private void Armar()
     {
-        texturaMoneda = TexturasUI.Circulo(64);
-        var moneda = Sprite.Create(texturaMoneda, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
-        texturaBorde = TexturasUI.Anillo(64, 0.2f);
-        var borde = Sprite.Create(texturaBorde, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
+        var moneda = spriteMoneda;
+        var borde = bordeMoneda;
+        idiomaArmado = Idioma.Revision;
+        temaArmado = Tema.Revision;
 
         panel = new GameObject("RecompensaDiaria", typeof(RectTransform));
         var rtPanel = Estirar((RectTransform)panel.transform, (RectTransform)transform);
@@ -309,13 +335,11 @@ public class VentanaRecompensaDiaria : MonoBehaviour
             }
         }
 
-        bordeMoneda = borde;
         montoHoy = RecompensaDiaria.Monto(racha, mejor);
         boton = ArmarBoton(ventana, "BotonCobrar", 560f, new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255),
                            moneda, colorMoneda, true, Textos.Formato("diaria_cobrar", FormatoNumeros.Compacto(montoHoy)), Cobrar);
 
-        texturaClaqueta = TexturasUI.Claqueta(128);
-        var claqueta = Sprite.Create(texturaClaqueta, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        var claqueta = spriteClaqueta;
         botonVideo = ArmarBoton(ventana, "BotonVideo", 620f, colorVideo, new Color32(0x3a, 0x1a, 0x00, 255),
                                 claqueta, new Color32(0x3a, 0x1a, 0x00, 255), false,
                                 Textos.Formato("diaria_video", FormatoNumeros.Compacto(montoHoy)), PedirVideo);

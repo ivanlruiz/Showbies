@@ -29,6 +29,8 @@ public class OpcionesSonido : MonoBehaviour
     private RectTransform ventana;
     private Texture2D texturaEngranaje;
     private Texture2D texturaPerilla;
+    private Sprite spriteEngranaje;
+    private Sprite spritePerilla;
     private float abiertaDesde = -1f;
 
     public bool Abierto
@@ -44,6 +46,9 @@ public class OpcionesSonido : MonoBehaviour
 
         texturaEngranaje = TexturasUI.Engranaje(128);
         texturaPerilla = TexturasUI.Circulo(64);
+        // Esta clase es duenia de las texturas y de sus sprites, y destruye las dos cosas.
+        spriteEngranaje = Sprite.Create(texturaEngranaje, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        spritePerilla = Sprite.Create(texturaPerilla, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
 
         CrearEngranaje();
         CrearVentana();
@@ -51,6 +56,8 @@ public class OpcionesSonido : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (spriteEngranaje != null) Destroy(spriteEngranaje);
+        if (spritePerilla != null) Destroy(spritePerilla);
         if (texturaEngranaje != null) Destroy(texturaEngranaje);
         if (texturaPerilla != null) Destroy(texturaPerilla);
     }
@@ -67,7 +74,7 @@ public class OpcionesSonido : MonoBehaviour
         {
             var icono = copia.transform.Find(Ruta(selectorIdioma.iconoGlobo.transform, globo));
             var imagen = icono != null ? icono.GetComponent<Image>() : null;
-            if (imagen != null) imagen.sprite = Sprite.Create(texturaEngranaje, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+            if (imagen != null) imagen.sprite = spriteEngranaje;
         }
 
         var boton = copia.GetComponent<Button>();
@@ -130,18 +137,17 @@ public class OpcionesSonido : MonoBehaviour
             ((RectTransform)volver).anchoredPosition = new Vector2(0f, -255f);
         }
 
-        var perilla = Sprite.Create(texturaPerilla, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
         // Sobre la ventana crema el texto va oscuro (con el tema oscuro, claro), y el
         // surco al reves. El interruptor del tema esta en esta misma ventana, asi que
         // todo esto tiene que cambiar mientras se mira: por eso el pintor.
         Color colorDelTexto = Tema.Elegir(colorTexto, RolDeTema.Texto);
         Color colorDelSurco = Tema.Elegir(SliderVolumen.ColorBarra, RolDeTema.Surco);
         SeguirElTema(SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 140f), AnchoControl, fuente,
-                                         Volumen.Efectos, Volumen.FijarEfectos, perilla, colorDelTexto, colorDelSurco));
+                                         Volumen.Efectos, Volumen.FijarEfectos, spritePerilla, colorDelTexto, colorDelSurco));
         SeguirElTema(SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, 25f), AnchoControl, fuente,
-                                         Volumen.Musica, Volumen.FijarMusica, perilla, colorDelTexto, colorDelSurco));
+                                         Volumen.Musica, Volumen.FijarMusica, spritePerilla, colorDelTexto, colorDelSurco));
         SeguirElTema(Interruptor.Crear(ventana, "opciones_tema", new Vector2(0f, -95f), AnchoControl, fuente,
-                                       Tema.Oscuro, Tema.Fijar, pildora, perilla, sonidoClick, colorDelTexto));
+                                       () => Tema.Oscuro, Tema.Fijar, pildora, spritePerilla, sonidoClick, colorDelTexto));
     }
 
     // Le pone su papel a los textos y al surco de un control recien armado, para que

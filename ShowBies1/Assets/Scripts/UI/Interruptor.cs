@@ -30,6 +30,7 @@ public class Interruptor : MonoBehaviour
 
     private Image fondo;
     private RectTransform perilla;
+    private Func<bool> leer;
     private Action<bool> alCambiar;
     private bool encendido;
     private float desde = -1f;      // cuando se toco, para el deslizado
@@ -38,8 +39,12 @@ public class Interruptor : MonoBehaviour
 
     // `colorTexto` lo pone quien lo crea: depende de sobre que fondo esta, como en
     // SliderVolumen.
+    //
+    // `leer` es de donde sale lo que muestra, y no una foto del valor al crearlo: si
+    // alguien mas lo cambia, la perilla se corre igual. Hoy el unico que cambia el tema
+    // es este mismo interruptor, pero una foto se queda vieja en silencio.
     public static Interruptor Crear(RectTransform padre, string idTexto, Vector2 posicion, float ancho,
-                                    TMP_FontAsset fuente, bool encendido, Action<bool> alCambiar,
+                                    TMP_FontAsset fuente, Func<bool> leer, Action<bool> alCambiar,
                                     Sprite pildora, Sprite circulo, AudioClip sonidoClick, Color colorTexto)
     {
         var raiz = new GameObject("Interruptor_" + idTexto, typeof(RectTransform));
@@ -82,8 +87,9 @@ public class Interruptor : MonoBehaviour
         var control = raiz.AddComponent<Interruptor>();
         control.fondo = imgFondo;
         control.perilla = perillaRt;
+        control.leer = leer;
         control.alCambiar = alCambiar;
-        control.encendido = encendido;
+        control.encendido = leer != null && leer();
         control.Acomodar(1f);
 
         var boton = llave.gameObject.AddComponent<Button>();
@@ -109,6 +115,16 @@ public class Interruptor : MonoBehaviour
         // con el nuevo, y quieto se repinta cuando cambia.
         bool cambioElTema = revisionVista != Tema.Revision;
         revisionVista = Tema.Revision;
+
+        // Si lo que muestra cambio desde afuera, la perilla se corre igual que si lo
+        // hubieran tocado, pero sin volver a avisar.
+        if (desde < 0f && leer != null && leer() != encendido)
+        {
+            encendido = !encendido;
+            origen = perilla != null ? perilla.anchoredPosition.x : 0f;
+            desde = Time.unscaledTime;
+        }
+
         if (desde < 0f)
         {
             if (cambioElTema) Acomodar(1f);

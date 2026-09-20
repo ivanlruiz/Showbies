@@ -32,15 +32,18 @@ public class MonedasDelFondo : MonoBehaviour
     private Moneda[] monedas;
     private Texture2D textura;
     private Texture2D texturaBorde;
+    private Sprite sprite;
+    private Sprite spriteBorde;
     private RectTransform canvas;
 
     private void Start()
     {
         canvas = (RectTransform)transform;
+        // Los sprites, como las texturas, son de esta clase: se destruyen los cuatro.
         textura = TexturasUI.Circulo(96);
-        var sprite = Sprite.Create(textura, new Rect(0, 0, 96, 96), new Vector2(0.5f, 0.5f));
+        sprite = Sprite.Create(textura, new Rect(0, 0, 96, 96), new Vector2(0.5f, 0.5f));
         texturaBorde = TexturasUI.Anillo(96, 0.2f);
-        var spriteBorde = Sprite.Create(texturaBorde, new Rect(0, 0, 96, 96), new Vector2(0.5f, 0.5f));
+        spriteBorde = Sprite.Create(texturaBorde, new Rect(0, 0, 96, 96), new Vector2(0.5f, 0.5f));
 
         var capa = new GameObject("MonedasDelFondo", typeof(RectTransform));
         var rtCapa = (RectTransform)capa.transform;
@@ -77,6 +80,8 @@ public class MonedasDelFondo : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (sprite != null) Destroy(sprite);
+        if (spriteBorde != null) Destroy(spriteBorde);
         if (textura != null) Destroy(textura);
         if (texturaBorde != null) Destroy(texturaBorde);
     }
