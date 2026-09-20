@@ -119,8 +119,7 @@ No copiar: la energía que limita partidas ni el equipo con cofres y rarezas (mo
 teléfono.
 
 **Primero, en este orden:**
-1. [ ] Arreglar el balance de las misiones (abajo, "Revisión del jefe y lo nuevo"): regalan ~1.850 monedas el
-   primer día contra ~300 jugando. Lo del jefe en el fondo del menú ya está arreglado (20/9, con el modo oscuro).
+1. [x] Los dos que rompían algo están arreglados (20/9): el jefe en el fondo del menú y el balance de las misiones.
 2. [ ] Armar la APK de prueba (sale como "ShowBies (prueba)", al lado de la de Play) y probar en el teléfono: guía del
    jugador nuevo (pulgares en los joysticks), misiones y cofre, bestiario, próximo objetivo, jefe con patrones,
    cementerio (rendimiento al entrar a la oleada 11), combo que suena, escalera de monedas, SALIR que pregunta y el
@@ -138,10 +137,15 @@ teléfono.
 - [ ] **Media — las invocaciones ignoran el techo de zombis vivos** (35 en móvil). En el modo libre sale un BOSS cada
   30 s y se acumulan invocando. Arreglo: techo global `EnemyController.TechoDeZombis` (static con reset) e invocar
   `min(n, techo - ZombisVivos)`; tope de invocados vivos por jefe; en el libre no sacar otro BOSS si ya hay uno.
-- [ ] **Media — premios de misiones al revés.** Fijos (150/300/600, cofre 800) contra objetivos que escalan: al
-  principio pagan muchísimo (~1.850 el primer día contra ~300 jugando), después poco. Arreglo: premio proporcional a
-  las monedas esperadas del objetivo (×0,3/0,4/0,5), cofre ~50 % de las tres, y sin misiones hasta la primera partida
-  terminada (como la diaria).
+- [x] **Media — premios de misiones al revés.** Eran fijos (150/300/600, cofre 800) contra objetivos que escalan.
+  **Arreglado el 20/9**: el premio es una fracción (0,4/0,5/0,6) de lo que dan las partidas que cuesta el objetivo, y
+  el cofre la mitad de las tres. El primer día pasa de 1.850 a 350 monedas, y el día entero paga ~2/3 de lo que da
+  jugarlo en toda la curva (medido en las pruebas). **No** se hizo lo de esconder las misiones hasta la primera
+  partida terminada: sin jugar no se cobra nada, y el objetivo de la función es justamente darle un objetivo a la
+  primera partida.
+- [ ] Ver si el bestiario tiene el mismo problema: paga 200/1.000/5.000 × (1 + 0,1 × oleada) fijos, así que las
+  primeras estrellas (100 muertes de cada tipo) dan ~1.000 monedas temprano. Es una vez en la vida y no por día, así
+  que no rompe la economía igual, pero conviene mirarlo con la misma vara.
 - [ ] **Media — "Completa la oleada N" se cumple retomando.** Cuenta el número absoluto de la oleada: retomar una
   partida en la 25 cumple las de la 15 y la 24 con una sola oleada. Arreglo: contar las oleadas avanzadas hoy.
 - [ ] **Media — a medianoche se pierden las misiones cumplidas sin cobrar** (y el cofre). Arreglo: cobrarlas solas al

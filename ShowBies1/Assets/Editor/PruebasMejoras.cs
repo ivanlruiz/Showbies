@@ -1671,8 +1671,9 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: con la furia comprada alguna la pide", hayFuria);
         inf.Verdadero("misiones: todos los objetivos son positivos", objetivosBien);
         inf.Cerca("misiones: numeros redondos", 1250, MisionesDiarias.Redondo(1234), 1e-9);
-        inf.Cerca("misiones: premio facil sin oleadas", 150, MisionesDiarias.Monto(0, 0), 1e-9);
-        inf.Cerca("misiones: premio dificil con oleada 10", 1200, MisionesDiarias.Monto(2, 10), 1e-9);
+        inf.Cerca("misiones: premio facil sin oleadas", 15, MisionesDiarias.Monto(0, 0), 1e-9);
+        inf.Cerca("misiones: premio dificil con oleada 10", 1300, MisionesDiarias.Monto(2, 10), 1e-9);
+        ProbarPremiosDeMisiones(inf);
 
         // Con el progreso: una de matar 3, se matan 3, se cobra una sola vez y se guarda.
         EmpezarCaso("{\"version\":4,\"monedas\":0}", null);
@@ -1692,9 +1693,11 @@ public static class PruebasMejoras
         inf.Igual("misiones: matar 3 cumplida, la oleada no", 1, MisionesDiarias.PorCobrar);
         MisionesDiarias.RegistrarOleada(5);
         inf.Igual("misiones: la oleada 5 la cumple", 2, MisionesDiarias.PorCobrar);
-        inf.Cerca("misiones: cobrar paga el premio", 150, MisionesDiarias.Cobrar(0), 1e-9);
+        // Lo que paga es lo que muestra la ventana para esa dificultad y esa mejor oleada.
+        double esperado = MisionesDiarias.Monto(0, Progreso.MejorOleada);
+        inf.Cerca("misiones: cobrar paga lo que dice la ventana", esperado, MisionesDiarias.Cobrar(0), 1e-9);
         inf.Cerca("misiones: no paga dos veces", 0, MisionesDiarias.Cobrar(0), 1e-9);
-        inf.Cerca("misiones: las monedas llegaron", 150, Progreso.Monedas, 1e-9);
+        inf.Cerca("misiones: las monedas llegaron", esperado, Progreso.Monedas, 1e-9);
         inf.Cerca("misiones: no cuentan como jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
 
         // El cofre: con las tres cobradas, una sola vez.
@@ -1705,10 +1708,11 @@ public static class PruebasMejoras
         MisionesDiarias.Cobrar(2);
         inf.Verdadero("cofre: con las tres cobradas se abre", MisionesDiarias.CofreDisponible);
         inf.Igual("cofre: cuenta en la insignia", 1, MisionesDiarias.PorCobrar);
-        inf.Cerca("cofre: paga el premio", 800, MisionesDiarias.CobrarCofre(), 1e-9);
+        double esperadoCofre = MisionesDiarias.MontoCofre(Progreso.MejorOleada);
+        inf.Cerca("cofre: paga lo que dice la ventana", esperadoCofre, MisionesDiarias.CobrarCofre(), 1e-9);
         inf.Cerca("cofre: no paga dos veces", 0, MisionesDiarias.CobrarCofre(), 1e-9);
         inf.Verdadero("cofre: queda cobrado", MisionesDiarias.CofreCobrado && MisionesDiarias.PorCobrar == 0);
-        inf.Cerca("cofre: con oleada 10 paga mas", 1600, MisionesDiarias.MontoCofre(10), 1e-9);
+        inf.Cerca("cofre: con oleada 10 paga mas", 940, MisionesDiarias.MontoCofre(10), 1e-9);
 
         int diaGuardado = estado.dia;
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
@@ -1719,6 +1723,43 @@ public static class PruebasMejoras
         Progreso.Misiones.dia = diaGuardado + 1;
         MisionesDiarias.Asegurar();
         inf.Verdadero("misiones: con el reloj atrasado siguen las mismas", MisionesDiarias.DeHoy[0].cobrada);
+    }
+
+    // Los premios de las misiones salen de lo que cuesta cumplirlas, no de un monto fijo:
+    // con los fijos, el primer dia regalaban ~1.850 monedas contra ~300 de jugar (seis
+    // veces lo que costaba) y en las oleadas altas no se notaban. Se mide en toda la curva.
+    static void ProbarPremiosDeMisiones(Informe inf)
+    {
+        double cuestan = 0;
+        for (int d = 0; d < MisionesDiarias.Cantidad; d++) cuestan += MisionesDiarias.Partidas(d);
+
+        bool proporcion = true, ordenado = true, crece = true, vale = true;
+        double anterior = 0;
+        foreach (int m in new[] { 0, 3, 5, 10, 20, 40 })
+        {
+            double total = MisionesDiarias.MontoCofre(m);
+            for (int d = 0; d < MisionesDiarias.Cantidad; d++) total += MisionesDiarias.Monto(d, m);
+
+            // Lo que dan las partidas que cuesta el dia entero. El premio es un extra de
+            // eso: si lo pasara, convendria cobrar misiones antes que jugar.
+            double jugando = cuestan * MisionesDiarias.MonedasPorPartida(m);
+            double parte = total / jugando;
+            if (parte > 1.0) proporcion = false;
+            // Y tiene que valer la pena: menos de un tercio no mueve a nadie.
+            if (parte < 0.33) vale = false;
+            if (!(MisionesDiarias.Monto(0, m) < MisionesDiarias.Monto(1, m)
+                  && MisionesDiarias.Monto(1, m) < MisionesDiarias.Monto(2, m))) ordenado = false;
+            if (m > 3 && total <= anterior) crece = false;
+            anterior = total;
+        }
+
+        inf.Verdadero("misiones: el premio del dia no pasa lo que da jugarlo", proporcion);
+        inf.Verdadero("misiones: el premio del dia es al menos un tercio de eso", vale);
+        inf.Verdadero("misiones: la facil paga menos que la media y esta menos que la dificil", ordenado);
+        inf.Verdadero("misiones: el premio crece con la mejor oleada", crece);
+        inf.Verdadero("misiones: el primer dia no regala (menos de 500 en total)",
+                      MisionesDiarias.Monto(0, 0) + MisionesDiarias.Monto(1, 0)
+                      + MisionesDiarias.Monto(2, 0) + MisionesDiarias.MontoCofre(0) < 500);
     }
 
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.

@@ -508,9 +508,16 @@ completada en el día y la lista).
   redondos).
 - **El avance sale de los contadores de por vida**: al armarlas se anota cuánto marcaba cada uno (`inicio`) y el avance es
   la diferencia. "Completa la oleada N" mira la mejor oleada del día, que avisa `WaveManager` (`RegistrarOleada`).
-- **Premio**: 150, 300 y 600 × (1 + 0,1 × mejor oleada), por `CobrarPremio` (no cuenta como jugado). Se cobra en el menú.
+- **Premio: una fracción de lo que dan las partidas que cuesta el objetivo** (0,4, 0,5 y 0,6 de 0,4, 1 y 2,5
+  partidas), no un monto fijo. `MonedasPorPartida` estima lo que deja una partida que llega a la mejor oleada —los
+  zombis que se matan por las ~2 monedas que suelta cada uno, con el multiplicador de la oleada a mitad de camino,
+  sin el bono ni el botín— y es la misma cuenta con la que se arma el objetivo de "gana N monedas". Se cobra en el
+  menú, por `CobrarPremio` (no cuenta como jugado). Eran 150, 300 y 600 fijos × (1 + 0,1 × oleada), y el primer día
+  regalaban ~1.850 monedas contra ~300 de jugar: el jugador nuevo se saltaba la parte de arrancar flojo, que es el
+  juego, y en las oleadas altas el premio no se notaba. Ahora el día entero paga ~2/3 de lo que da jugarlo, en toda
+  la curva, y las pruebas lo miden en las oleadas 0, 3, 5, 10, 20 y 40.
 - **El cofre del día**: con las tres cobradas se abre uno (`CobrarCofre`, `cofreCobrado` en el progreso, vuelve con las
-  misiones nuevas) que paga 800 × (1 + 0,1 × mejor oleada). En la ventana, al lado de VOLVER: gris con "COFRE 1/3"
+  misiones nuevas) que paga la mitad de las tres juntas: es lo que se lleva quien vuelve a cerrar el día. En la ventana, al lado de VOLVER: gris con "COFRE 1/3"
   (tocarlo tiembla), dorado y latiendo cuando se puede abrir (cuenta en la insignia), y al tocarlo tiembla, estalla con
   el arpegio doble y queda verde. El ícono es `Sprites/UI/IconoCofre`, dibujado en blanco.
 - **En el menú**: un botón redondo **arriba a la derecha** (pedido de Ivan), en espejo con el globo y el engranaje, con el

@@ -16,6 +16,13 @@ using System.Collections.Generic;
 // Cobradas las tres, se abre el cofre del dia (CobrarCofre), uno por dia: empuja a jugar
 // la segunda y la tercera partida.
 //
+// El premio **sale de lo que cuesta el objetivo**, no de un monto fijo: cada dificultad
+// vale unas partidas (PartidasPorDificultad) y el premio es una fraccion de lo que dan
+// esas partidas. Con montos fijos (150/300/600 y 800 el cofre, mas un 10 % por oleada) el
+// primer dia regalaban ~1.850 monedas contra ~300 de jugar, y el jugador nuevo se saltaba
+// la parte de arrancar flojo, que es el juego; mas adelante, al reves, no se notaban. Asi
+// el premio siempre es un extra de la mitad de lo que ya ganaste cumpliendolo.
+//
 // El premio entra por Progreso.CobrarPremio: no cuenta como monedas ganadas jugando.
 // Lo que se puede probar sin escena es estatico y recibe lo que necesita (Armar, Monto).
 public static class MisionesDiarias
@@ -30,9 +37,11 @@ public static class MisionesDiarias
     public const string Jefe = "jefe";
 
     public const int Cantidad = 3;
-    public static readonly double[] PremioBase = { 150, 300, 600 };   // facil, media, dificil
-    public const double CrecimientoPorOleada = 0.1;                   // como la diaria
-    public const double PremioCofre = 800;
+
+    // Que parte de lo que dan esas partidas se paga de premio: la facil paga menos
+    // porque tambien cuesta menos. Mas de 1 seria cobrar dos veces lo mismo.
+    public static readonly double[] FraccionPorDificultad = { 0.4, 0.5, 0.6 };
+    public const double FraccionCofre = 0.5;    // de las tres juntas: es la segunda vuelta
 
     // Lo que avanza cada partida de la mejor oleada: los zombis que se matan llegando
     // a la oleada m (10 + 4n por oleada), por dificultad.
@@ -90,12 +99,12 @@ public static class MisionesDiarias
     public static double Objetivo(string tipo, int dificultad, int mejorOleada)
     {
         int m = Math.Max(3, mejorOleada);
-        double partidas = PartidasPorDificultad[Math.Max(0, Math.Min(dificultad, 2))];
-        double zombisPorPartida = 10.0 * m + 2.0 * m * m;
+        double partidas = Partidas(dificultad);
+        double zombisPorPartida = ZombisPorPartida(m);
         switch (tipo)
         {
             case Matar: return Redondo(partidas * zombisPorPartida);
-            case Monedas: return Redondo(partidas * zombisPorPartida * 2.0 * Math.Pow(1.08, m * 0.5));
+            case Monedas: return Redondo(partidas * MonedasPorPartida(mejorOleada));
             case Oleada: return Math.Max(2, Math.Round(m * (dificultad == 0 ? 0.5 : dificultad == 1 ? 0.8 : 1.0)));
             case Furia: return dificultad == 0 ? 2 : dificultad == 1 ? 3 : 5;
             case Granadas: return dificultad == 0 ? 5 : dificultad == 1 ? 12 : 25;
@@ -112,10 +121,31 @@ public static class MisionesDiarias
         return Math.Max(paso, Math.Round(x / paso) * paso);
     }
 
+    // Los zombis que se matan en una partida que llega a la oleada m: 10 + 4n por oleada.
+    private static double ZombisPorPartida(int m)
+    {
+        return 10.0 * m + 2.0 * m * m;
+    }
+
+    // Lo que deja de monedas esa partida: cada zombi suelta unas 2 y el multiplicador de
+    // la oleada (1,08 por oleada) se toma a mitad de camino. No cuenta el bono de cada
+    // oleada ni el botin: es de menos a proposito, que el premio no se pase.
+    public static double MonedasPorPartida(int mejorOleada)
+    {
+        int m = Math.Max(3, mejorOleada);
+        return ZombisPorPartida(m) * 2.0 * Math.Pow(1.08, m * 0.5);
+    }
+
+    public static double Partidas(int dificultad)
+    {
+        return PartidasPorDificultad[Math.Max(0, Math.Min(dificultad, Cantidad - 1))];
+    }
+
+    // Una fraccion de lo que dan las partidas que cuesta cumplirla, en numeros redondos.
     public static double Monto(int dificultad, int mejorOleada)
     {
-        double base_ = PremioBase[Math.Max(0, Math.Min(dificultad, PremioBase.Length - 1))];
-        return Math.Floor(base_ * (1.0 + CrecimientoPorOleada * Math.Max(0, mejorOleada)) + 0.5 + 1e-9);
+        int d = Math.Max(0, Math.Min(dificultad, Cantidad - 1));
+        return Redondo(FraccionPorDificultad[d] * Partidas(d) * MonedasPorPartida(mejorOleada));
     }
 
     // Cuanto marca hoy el contador de un tipo (Oleada no usa contador).
@@ -191,9 +221,13 @@ public static class MisionesDiarias
         get { Asegurar(); return Progreso.Misiones.cofreCobrado; }
     }
 
+    // La mitad de las tres juntas: es lo que se lleva quien vuelve a jugar hasta cerrar
+    // el dia, no un premio aparte.
     public static double MontoCofre(int mejorOleada)
     {
-        return Math.Floor(PremioCofre * (1.0 + CrecimientoPorOleada * Math.Max(0, mejorOleada)) + 0.5 + 1e-9);
+        double total = 0;
+        for (int d = 0; d < Cantidad; d++) total += Monto(d, mejorOleada);
+        return Redondo(FraccionCofre * total);
     }
 
     // Lo abre si estan las tres cobradas y no se abrio hoy; devuelve cuanto dio.
