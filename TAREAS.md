@@ -186,9 +186,9 @@ capítulo; la niebla quedaba prendida al volver al día; el reloj se apagaba par
 
 Lo que quedó anotado, de mayor a menor:
 
-- [ ] **La recompensa diaria quedó en la escala vieja.** Misiones y bestiario pasan a `1,08^(m/2)` y la diaria sigue en
-  `1 + 0,1 × m`: en la oleada 45 paga 825 contra las decenas de miles de una misión difícil, así que el gancho de volver
-  cada día deja de tirar. Conviene pasarla a la misma vara.
+- [x] **La recompensa diaria quedó en la escala vieja.** **Arreglado el 20/9**: paga las partidas de `PartidasPorDia`
+  con la vara de `Economia` (que ahora es de las tres), con los montos viejos de piso para que el arranque no cambie. En
+  la oleada 45 el primer día pasa de 825 a 12.700.
 - [ ] **Las estrellas del bestiario conviene no cobrarlas nunca**: el premio se resuelve al cobrar y crece con la mejor
   oleada, mientras los escalones son muertes absolutas. Arreglo: anotar la marca al ganar la estrella y pagar con esa,
   como ahora hacen las misiones.

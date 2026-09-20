@@ -7,8 +7,12 @@ using System.Globalization;
 //
 // - La racha sube si el ultimo cobro fue AYER; si se salto un dia, vuelve a 1.
 // - Del dia 7 en adelante se cobra lo del dia 7 mientras no se corte la racha.
-// - El monto crece con la mejor oleada, para que no quede chico cuando las mejoras
-//   ya cuestan miles.
+// - El monto crece con la mejor oleada: paga las partidas que dice PartidasPorDia, con
+//   la vara de Economia, igual que las misiones y el bestiario. Antes era un monto fijo
+//   con un +10 % por oleada, y en las oleadas altas quedaba en calderilla al lado de lo
+//   que da jugar, justo cuando mas hace falta la razon para volver. Los montos de
+//   MonedasPorDia quedaron como **piso**: en el arranque, donde 150 monedas son la
+//   primera mejora, la diaria paga lo mismo de siempre.
 // - Atrasar el reloj del telefono no da otra recompensa: solo cuenta un dia mayor al
 //   guardado (Progreso.EsDiaNuevo), igual que los topes de los anuncios. Adelantarlo
 //   tampoco, mientras no se reinicie el telefono (RelojConfiable).
@@ -19,8 +23,12 @@ using System.Globalization;
 // Lo que se puede probar sin escena es estatico y recibe el dia (RachaParaHoy, Monto).
 public static class RecompensaDiaria
 {
+    // El piso de cada dia de racha, que es lo que se paga en el arranque.
     public static readonly int[] MonedasPorDia = { 150, 250, 400, 600, 900, 1300, 2000 };   // Ivan: "que sean mas monedas"
-    public const double CrecimientoPorOleada = 0.1;   // +10 % por cada oleada de la mejor marca
+
+    // Y lo que paga cada dia medido en partidas, que es lo que manda en cuanto el jugador
+    // avanza: del cuarto de partida del primer dia a las dos del septimo.
+    public static readonly double[] PartidasPorDia = { 0.25, 0.35, 0.5, 0.7, 1.0, 1.4, 2.0 };
 
     public static int DiasDelCiclo => MonedasPorDia.Length;
 
@@ -50,8 +58,10 @@ public static class RecompensaDiaria
 
     public static double Monto(int racha, int mejorOleada)
     {
-        double base_ = MonedasPorDia[Casillero(racha) - 1];
-        return Math.Floor(base_ * (1.0 + CrecimientoPorOleada * Math.Max(0, mejorOleada)) + 0.5 + 1e-9);
+        int casillero = Casillero(racha);
+        double piso = MonedasPorDia[casillero - 1];
+        double porLoQueDaJugar = PartidasPorDia[casillero - 1] * Economia.MonedasPorPartida(mejorOleada);
+        return Economia.Redondo(Math.Max(piso, porLoQueDaJugar));
     }
 
     public static int RachaDeHoy

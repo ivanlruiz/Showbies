@@ -92,13 +92,12 @@ public static class Bestiario
         return monedas * Math.Pow(1.08, Math.Max(3, mejorOleada) * 0.5);
     }
 
-    // La mitad de lo que dejan las muertes del escalon, en numeros redondos (el mismo
-    // redondeo que las misiones, para que los premios se lean igual).
+    // La mitad de lo que dejan las muertes del escalon, en numeros redondos.
     public static double Premio(string tipo, int estrella, int mejorOleada)
     {
         var escalones = Escalones(tipo);
         int e = Math.Max(0, Math.Min(estrella, escalones.Length - 1));
-        return MisionesDiarias.Redondo(FraccionDelEscalon * escalones[e] * MonedasQueDeja(tipo, mejorOleada));
+        return Economia.Redondo(FraccionDelEscalon * escalones[e] * MonedasQueDeja(tipo, mejorOleada));
     }
 
     // Cobra la siguiente estrella ganada de ese tipo; devuelve cuanto dio (0 si no hay).

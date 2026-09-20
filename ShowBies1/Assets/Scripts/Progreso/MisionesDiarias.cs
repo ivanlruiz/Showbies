@@ -149,11 +149,11 @@ public static class MisionesDiarias
     {
         int m = Math.Max(3, mejorOleada);
         double partidas = Partidas(dificultad);
-        double zombisPorPartida = ZombisPorPartida(m);
+        double zombisPorPartida = Economia.ZombisPorPartida(m);
         switch (tipo)
         {
-            case Matar: return Redondo(partidas * zombisPorPartida);
-            case Monedas: return Redondo(partidas * MonedasPorPartida(mejorOleada));
+            case Matar: return Economia.Redondo(partidas * zombisPorPartida);
+            case Monedas: return Economia.Redondo(partidas * Economia.MonedasPorPartida(mejorOleada));
             // Cuantas oleadas completar hoy: las que da la partida que cuesta esa
             // dificultad. Sin Redondo, que son numeros chicos y redondear de a 5 se pasa.
             case Oleada: return Math.Max(2, Math.Round(partidas * m));
@@ -161,34 +161,12 @@ public static class MisionesDiarias
             // que dure la partida, que crece con la oleada. Con numeros fijos, el premio
             // -que si escala- se cobraba tirando 25 granadas parado en un rincon.
             case Furia: return Math.Max(2, Math.Round(partidas * Math.Max(2.0, m / 3.5)));
-            case Granadas: return Math.Max(5, Redondo(partidas * m * 1.2));
-            case Criticos: return Redondo(partidas * 60.0 * (1.0 + m / 10.0));
+            case Granadas: return Math.Max(5, Economia.Redondo(partidas * m * 1.2));
+            case Criticos: return Economia.Redondo(partidas * 60.0 * (1.0 + m / 10.0));
             // Un jefe cada 10 oleadas: los que entran en las partidas que cuesta.
             case Jefe: return Math.Max(1, Math.Round(partidas * m / 10.0));
             default: return 1;
         }
-    }
-
-    // Numeros redondos para leer de un vistazo: de a 5, de a 10 o de a 50.
-    public static double Redondo(double x)
-    {
-        double paso = x < 100 ? 5 : x < 1000 ? 10 : 50;
-        return Math.Max(paso, Math.Round(x / paso) * paso);
-    }
-
-    // Los zombis que se matan en una partida que llega a la oleada m: 10 + 4n por oleada.
-    private static double ZombisPorPartida(int m)
-    {
-        return 10.0 * m + 2.0 * m * m;
-    }
-
-    // Lo que deja de monedas esa partida: cada zombi suelta unas 2 y el multiplicador de
-    // la oleada (1,08 por oleada) se toma a mitad de camino. No cuenta el bono de cada
-    // oleada ni el botin: es de menos a proposito, que el premio no se pase.
-    public static double MonedasPorPartida(int mejorOleada)
-    {
-        int m = Math.Max(3, mejorOleada);
-        return ZombisPorPartida(m) * 2.0 * Math.Pow(1.08, m * 0.5);
     }
 
     public static double Partidas(int dificultad)
@@ -200,7 +178,7 @@ public static class MisionesDiarias
     public static double Monto(int dificultad, int mejorOleada)
     {
         int d = Math.Max(0, Math.Min(dificultad, Cantidad - 1));
-        return Redondo(FraccionPorDificultad[d] * Partidas(d) * MonedasPorPartida(mejorOleada));
+        return Economia.Redondo(FraccionPorDificultad[d] * Partidas(d) * Economia.MonedasPorPartida(mejorOleada));
     }
 
     // Cuanto marca hoy el contador de un tipo (Oleada no usa contador).
@@ -282,7 +260,7 @@ public static class MisionesDiarias
     {
         double total = 0;
         for (int d = 0; d < Cantidad; d++) total += Monto(d, mejorOleada);
-        return Redondo(FraccionCofre * total);
+        return Economia.Redondo(FraccionCofre * total);
     }
 
     // Lo abre si estan las tres cobradas y no se abrio hoy; devuelve cuanto dio.

@@ -1670,7 +1670,7 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: el jefe solo en la dificil y con la oleada 9", jefeBien);
         inf.Verdadero("misiones: con la furia comprada alguna la pide", hayFuria);
         inf.Verdadero("misiones: todos los objetivos son positivos", objetivosBien);
-        inf.Cerca("misiones: numeros redondos", 1250, MisionesDiarias.Redondo(1234), 1e-9);
+        inf.Cerca("economia: numeros redondos", 1250, Economia.Redondo(1234), 1e-9);
         inf.Cerca("misiones: premio facil sin oleadas", 15, MisionesDiarias.Monto(0, 0), 1e-9);
         inf.Cerca("misiones: premio dificil con oleada 10", 1300, MisionesDiarias.Monto(2, 10), 1e-9);
         ProbarPremiosDeMisiones(inf);
@@ -1778,7 +1778,7 @@ public static class PruebasMejoras
 
             // Lo que dan las partidas que cuesta el dia entero. El premio es un extra de
             // eso: si lo pasara, convendria cobrar misiones antes que jugar.
-            double jugando = cuestan * MisionesDiarias.MonedasPorPartida(m);
+            double jugando = cuestan * Economia.MonedasPorPartida(m);
             double parte = total / jugando;
             if (parte > 1.0) proporcion = false;
             // Y tiene que valer la pena: menos de un tercio no mueve a nadie.
@@ -1929,26 +1929,69 @@ public static class PruebasMejoras
         inf.Cerca("diaria: monto dia 1 sin oleadas", 150, RecompensaDiaria.Monto(1, 0), 1e-9);
         inf.Cerca("diaria: monto dia 7", 2000, RecompensaDiaria.Monto(7, 0), 1e-9);
         inf.Cerca("diaria: monto dia 12 queda en el 7", 2000, RecompensaDiaria.Monto(12, 0), 1e-9);
-        inf.Cerca("diaria: monto con mejor oleada 10", 800, RecompensaDiaria.Monto(3, 10), 1e-9);
+        inf.Cerca("diaria: monto con mejor oleada 10", 440, RecompensaDiaria.Monto(3, 10), 1e-9);
+        ProbarMontosDeLaDiaria(inf);
 
         EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);
         inf.Igual("diaria: sin campos, dia 0", 0, Progreso.DiaUltimaRecompensa);
-        inf.Cerca("diaria: cobro dia 1 con oleada 5", 225, RecompensaDiaria.CobrarEl(20260917), 1e-9);
-        inf.Cerca("diaria: monedas tras cobrar", 235, Progreso.Monedas, 1e-9);
+        double esperadoDelDia1 = RecompensaDiaria.Monto(1, Progreso.MejorOleada);
+        inf.Cerca("diaria: cobro dia 1 paga lo que dice la ventana", esperadoDelDia1, RecompensaDiaria.CobrarEl(20260917), 1e-9);
+        inf.Cerca("diaria: monedas tras cobrar", 10 + esperadoDelDia1, Progreso.Monedas, 1e-9);
         inf.Cerca("diaria: no cuenta como partida", 0, Progreso.MonedasDeLaPartida, 1e-9);
         inf.Cerca("diaria: el mismo dia no paga", 0, RecompensaDiaria.CobrarEl(20260917), 1e-9);
-        inf.Cerca("diaria: al otro dia paga el 2", 375, RecompensaDiaria.CobrarEl(20260918), 1e-9);
+        double esperadoDelDia2 = RecompensaDiaria.Monto(2, Progreso.MejorOleada);
+        inf.Cerca("diaria: al otro dia paga el 2", esperadoDelDia2, RecompensaDiaria.CobrarEl(20260918), 1e-9);
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Igual("diaria: se relee el dia", 20260918, Progreso.DiaUltimaRecompensa);
         inf.Igual("diaria: se relee la racha", 2, Progreso.RachaRecompensa);
-        inf.Cerca("diaria: se releen las monedas", 610, Progreso.Monedas, 1e-9);
-        inf.Cerca("diaria: dia 3 paga", 600, RecompensaDiaria.CobrarEl(20260919), 1e-9);
-        inf.Cerca("diaria: queda para duplicar lo cobrado", 600, RecompensaDiaria.ParaDuplicar, 1e-9);
-        inf.Cerca("diaria: el video paga lo mismo otra vez", 600, RecompensaDiaria.CobrarDuplicado(), 1e-9);
+        inf.Cerca("diaria: se releen las monedas", 10 + esperadoDelDia1 + esperadoDelDia2, Progreso.Monedas, 1e-9);
+        double esperadoDelDia3 = RecompensaDiaria.Monto(3, Progreso.MejorOleada);
+        inf.Cerca("diaria: dia 3 paga", esperadoDelDia3, RecompensaDiaria.CobrarEl(20260919), 1e-9);
+        inf.Cerca("diaria: queda para duplicar lo cobrado", esperadoDelDia3, RecompensaDiaria.ParaDuplicar, 1e-9);
+        inf.Cerca("diaria: el video paga lo mismo otra vez", esperadoDelDia3, RecompensaDiaria.CobrarDuplicado(), 1e-9);
         inf.Cerca("diaria: el video no paga dos veces", 0, RecompensaDiaria.CobrarDuplicado(), 1e-9);
         inf.Igual("diaria: el video no toca la racha", 3, Progreso.RachaRecompensa);
-        inf.Cerca("diaria: monedas tras el video", 1810, Progreso.Monedas, 1e-9);
+        inf.Cerca("diaria: monedas tras el video",
+                  10 + esperadoDelDia1 + esperadoDelDia2 + esperadoDelDia3 * 2, Progreso.Monedas, 1e-9);
         inf.Cerca("diaria: sin cobro no hay video", 0, RecompensaDiaria.CobrarDuplicado(), 1e-9);
+    }
+
+    // La diaria paga con la misma vara que las misiones y el bestiario: un monto fijo
+    // servia en la oleada 5, regalaba en la 1 y era calderilla en la 40, justo cuando mas
+    // hace falta la razon para volver. Los montos viejos quedaron como piso del arranque.
+    static void ProbarMontosDeLaDiaria(Informe inf)
+    {
+        // En el arranque manda el piso: el primer dia sigue comprando la primera mejora.
+        inf.Cerca("diaria: en el arranque paga el piso de siempre", 150, RecompensaDiaria.Monto(1, 0), 1e-9);
+        inf.Cerca("diaria: y el dia 7 tambien", 2000, RecompensaDiaria.Monto(7, 0), 1e-9);
+
+        bool creceConLaRacha = true, creceConLaOleada = true, seNota = true, noSePasa = true;
+        double anteriorPorOleada = 0;
+        foreach (int m in new[] { 0, 5, 11, 20, 30, 45 })
+        {
+            double anterior = 0;
+            for (int racha = 1; racha <= RecompensaDiaria.DiasDelCiclo; racha++)
+            {
+                double monto = RecompensaDiaria.Monto(racha, m);
+                if (monto < anterior) creceConLaRacha = false;
+                anterior = monto;
+            }
+            // El dia 7 tiene que valer mas que una partida (si no, no mueve a nadie) y
+            // menos que tres (si no, entrar paga mas que jugar).
+            double partida = Economia.MonedasPorPartida(m);
+            double dia7 = RecompensaDiaria.Monto(7, m);
+            if (m >= 11 && dia7 < partida) seNota = false;
+            // En el arranque manda el piso (2.000 contra una partida de 108) y eso es a
+            // proposito: el tope vale desde que el premio lo decide lo que da jugar.
+            if (m >= 11 && dia7 > partida * 3.0) noSePasa = false;
+            if (m > 0 && RecompensaDiaria.Monto(7, m) < anteriorPorOleada) creceConLaOleada = false;
+            anteriorPorOleada = RecompensaDiaria.Monto(7, m);
+        }
+
+        inf.Verdadero("diaria: el monto crece con la racha", creceConLaRacha);
+        inf.Verdadero("diaria: y con la mejor oleada", creceConLaOleada);
+        inf.Verdadero("diaria: el dia 7 vale al menos una partida", seNota);
+        inf.Verdadero("diaria: pero nunca mas de tres", noSePasa);
     }
 
     static void ProbarComprasPosibles(Informe inf)

@@ -48,7 +48,7 @@ Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), Gener
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, Bestiario
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, Bestiario, Economia
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
@@ -512,7 +512,10 @@ terminada: ver Primera vez).
 
 - **Racha:** sube si el último cobro fue ayer; si se saltó un día vuelve a 1. Paga 150, 250, 400, 600, 900, 1.300 y 2.000
   (`MonedasPorDia`), y del día 7 en adelante sigue pagando lo del 7 mientras no se corte.
-- **Crece con la mejor oleada:** × (1 + 0,1 × `MejorOleada`), para que no quede chica cuando las mejoras cuestan miles.
+- **Crece con la mejor oleada, con la vara de `Economia`**: paga las partidas que dice `PartidasPorDia` (de un cuarto
+  de partida el primer día a dos el séptimo), y **los montos de arriba quedan como piso**. Así en el arranque —donde 150
+  monedas son la primera mejora— paga lo mismo de siempre, y en la oleada 45 pasa de 825 monedas a unas 12.700 el primer
+  día: con el +10 % lineal de antes quedaba en calderilla justo cuando más hace falta la razón para volver.
 - **Se guarda en el progreso** (`diaRecompensa` aaaammdd y `rachaRecompensa`, sin cambiar la versión) y entra por
   `CobrarPremio`: no son monedas ganadas jugando. **Atrasar el reloj no da otra**: sólo cuenta un día mayor al guardado
   (`Progreso.EsDiaNuevo`), como los topes de los anuncios. **Adelantarlo tampoco**, mientras no se reinicie el teléfono:
@@ -528,6 +531,18 @@ terminada: ver Primera vez).
   arma en `Start` y se abre en el primer `Update` con `TiendaMejoras.Abierta` en falso.
 - Cada casillero se etiqueta con el mismo día de racha que usa su monto: desde el día 8 el casillero de hoy dice DÍA 8.
 - Las pruebas cubren racha, corte, reloj atrasado, fin de mes y de año, bisiesto, montos y el cobro guardado.
+
+## La vara: `Economia`
+
+Los tres premios que no se ganan jugando —las misiones del día, las estrellas del bestiario y la recompensa diaria— se
+miden contra **lo que deja jugar**, y esa cuenta vive en un solo lugar (`Economia`): `ZombisPorPartida` (los zombis que
+se matan llegando a la oleada m, que son 10 + 4n por oleada) y `MonedasPorPartida` (esos zombis por las ~2 monedas que
+suelta cada uno, con el multiplicador de la oleada a mitad de camino). Es **de menos a propósito**: no suma el bono de
+cada oleada ni el botín, así un premio calculado con esto nunca se pasa de lo que da jugarlo. `Redondo` está ahí también,
+para que todos los premios se lean igual (de a 5, de a 10 o de a 50).
+
+Con montos fijos, un premio que servía en la oleada 5 regalaba en la 1 y era calderilla en la 40; hubo que arreglarlo
+por separado en los tres sistemas antes de juntar la cuenta acá.
 
 ## Misiones del día
 
