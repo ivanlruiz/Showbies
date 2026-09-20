@@ -23,7 +23,8 @@ public class BarraDelJefe : MonoBehaviour
     [Header("Medidas")]
     public float ancho = 820f;
     public float alto = 26f;
-    public float desdeArriba = 100f;
+    [Tooltip("Debajo del boton de pausa, que en movil va arriba al centro.")]
+    public float desdeArriba = 170f;
 
     [Header("Colores")]
     public Color colorFondo = new Color(0f, 0f, 0f, 0.55f);
@@ -39,8 +40,9 @@ public class BarraDelJefe : MonoBehaviour
     private RectTransform raiz;
     private RectTransform relleno;
     private RectTransform golpe;
-    private RectTransform muesca;
     private TMP_Text nombre;
+    private Image imagenRelleno;
+    private CanvasGroup grupo;
 
     private EnemyController jefe;
     private int numeroDelJefe;
@@ -74,9 +76,11 @@ public class BarraDelJefe : MonoBehaviour
 
         golpe = Relleno(marco, "Golpe", colorGolpe);
         relleno = Relleno(marco, "Relleno", colorVida);
+        imagenRelleno = relleno.GetComponent<Image>();
+        grupo = raiz.gameObject.AddComponent<CanvasGroup>();
 
         // La mitad, que es donde entra en furia.
-        muesca = ConstructorUI.Rect(marco, "Muesca", Vector2.zero, new Vector2(4f, alto));
+        var muesca = ConstructorUI.Rect(marco, "Muesca", Vector2.zero, new Vector2(4f, alto));
         var imgMuesca = muesca.gameObject.AddComponent<Image>();
         imgMuesca.color = colorMuesca;
         imgMuesca.raycastTarget = false;
@@ -102,7 +106,9 @@ public class BarraDelJefe : MonoBehaviour
         {
             // La vida definitiva la pone quien lo saca, en el frame siguiente al que
             // aparece: preguntarla antes la fijaria sin los multiplicadores de la oleada.
-            if (Time.time - desdeQueAparecio < esperaAlAparecer) return;
+            // Solo se saltea la lectura, no el resto: cortar el Update entero dejaba la
+            // barra congelada un segundo cada vez que cambiaba el jefe que se muestra.
+            if (!actual.VidaEmpezada && Time.time - desdeQueAparecio < esperaAlAparecer) return;
 
             float maxima = actual.VidaMaxima;
             fraccion = maxima > 0f ? Mathf.Clamp01(actual.VidaActual / maxima) : 0f;
@@ -129,25 +135,21 @@ public class BarraDelJefe : MonoBehaviour
 
         relleno.anchorMax = new Vector2(fraccion, 1f);
         golpe.anchorMax = new Vector2(fraccionGolpe, 1f);
-        muesca.anchoredPosition = Vector2.zero;   // la mitad del marco
 
         // Entra deslizando desde arriba y se va igual.
         float suave = CurvasUI.SalidaAtras(visible);
         raiz.anchoredPosition = new Vector2(0f, -desdeArriba + (1f - suave) * 90f);
-        var grupo = raiz.GetComponent<CanvasGroup>();
-        if (grupo == null) grupo = raiz.gameObject.AddComponent<CanvasGroup>();
         grupo.alpha = visible;
 
         // Con la mitad de la vida el jefe entra en furia: la barra lo dice latiendo.
-        var img = relleno.GetComponent<Image>();
         if (fraccion <= 0.5f)
         {
             float latido = 0.5f + 0.5f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 5f));
-            img.color = Color.Lerp(colorVida, colorFuria, latido);
+            imagenRelleno.color = Color.Lerp(colorVida, colorFuria, latido);
         }
         else
         {
-            img.color = colorVida;
+            imagenRelleno.color = colorVida;
         }
     }
 

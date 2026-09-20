@@ -252,7 +252,9 @@ public class VentanaBestiario : MonoBehaviour
         string nombre = Bestiario.Nombre(tarjeta.tipo);
         ConstructorUI.Imagen(tarjeta.raiz, "Color", new Vector2(0f, 130f), new Vector2(84f, 84f), circulo,
                              coloresTipo[Mathf.Min(indice, coloresTipo.Length - 1)]);
-        ConstructorUI.Texto(tarjeta.raiz, "Inicial", nombre.Substring(0, 1), 52f, ColorDeTexto,
+        // La inicial va encima del circulo del color del zombi, que no cambia con el
+        // tema: oscura siempre, o en el oscuro quedaba blanca sobre lima.
+        ConstructorUI.Texto(tarjeta.raiz, "Inicial", nombre.Substring(0, 1), 52f, colorTextoOscuro,
                             new Vector2(0f, 130f), new Vector2(84f, 84f), fuente);
         ConstructorUI.Texto(tarjeta.raiz, "Nombre", nombre, 34f, ColorDeTexto, new Vector2(0f, 64f), new Vector2(190f, 44f), fuente);
         tarjeta.cuenta = ConstructorUI.Texto(tarjeta.raiz, "Cuenta", "", 48f, ColorDeTexto, new Vector2(0f, 20f), new Vector2(190f, 56f), fuente);

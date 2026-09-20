@@ -1726,6 +1726,17 @@ public static class PruebasMejoras
         MisionesDiarias.Asegurar();
         inf.Verdadero("misiones: con el reloj atrasado siguen las mismas", MisionesDiarias.DeHoy[0].cobrada);
 
+        // El premio no cambia por mejorar la marca durante el dia: si no, guardar las
+        // misiones sin cobrar hasta llegar mas lejos era la jugada optima.
+        EmpezarCaso("{\"version\":4,\"monedas\":0}", null);
+        MisionesDiarias.Asegurar();
+        double premioAlArmar = MisionesDiarias.Monto(2, MisionesDiarias.OleadaDeHoy);
+        Progreso.RegistrarOleadaCompletada(30);
+        inf.Igual("misiones: la marca del dia no se mueve al mejorar la mejor oleada",
+                  0, MisionesDiarias.OleadaDeHoy);
+        inf.Cerca("misiones: el premio tampoco", premioAlArmar,
+                  MisionesDiarias.Monto(2, MisionesDiarias.OleadaDeHoy), 1e-9);
+
         // A medianoche no se pierde lo que quedo cumplido sin cobrar: se cobra solo antes
         // de armar las del dia nuevo, cofre incluido.
         EmpezarCaso("{\"version\":4,\"monedas\":0}", null);
@@ -1782,6 +1793,26 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: el premio del dia es al menos un tercio de eso", vale);
         inf.Verdadero("misiones: la facil paga menos que la media y esta menos que la dificil", ordenado);
         inf.Verdadero("misiones: el premio crece con la mejor oleada", crece);
+        // Ningun objetivo puede quedarse fijo mientras el premio crece con la oleada: con
+        // 25 granadas fijas se cobraba en la oleada 45 el premio de la oleada 45 tirandolas
+        // paradas en un rincon, mas de lo que da una partida entera.
+        bool escalan = true;
+        string elQueNoEscala = "";
+        string[] tipos = { MisionesDiarias.Matar, MisionesDiarias.Oleada, MisionesDiarias.Monedas,
+                           MisionesDiarias.Furia, MisionesDiarias.Granadas, MisionesDiarias.Criticos,
+                           MisionesDiarias.Jefe };
+        foreach (string tipo in tipos)
+        {
+            for (int d = 0; d < MisionesDiarias.Cantidad; d++)
+            {
+                if (MisionesDiarias.Objetivo(tipo, d, 40) > MisionesDiarias.Objetivo(tipo, d, 5)) continue;
+                escalan = false;
+                elQueNoEscala += tipo + "/" + d + " ";
+            }
+        }
+        inf.Verdadero("misiones: todos los objetivos crecen con la oleada" +
+                      (escalan ? "" : " (" + elQueNoEscala.Trim() + ")"), escalan);
+
         inf.Verdadero("misiones: el primer dia no regala (menos de 500 en total)",
                       MisionesDiarias.Monto(0, 0) + MisionesDiarias.Monto(1, 0)
                       + MisionesDiarias.Monto(2, 0) + MisionesDiarias.MontoCofre(0) < 500);

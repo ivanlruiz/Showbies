@@ -174,6 +174,39 @@ teléfono.
 - Postergar el ataque al revivir y la línea plana (S).
 - Premios de misiones proporcionales al objetivo (lo de arriba).
 
+## Revisión de lo del 20/9 (dos agentes, esa misma tarde)
+
+Arreglado en el momento: las misiones de furia, granadas y jefe tenían objetivo fijo y premio creciente (se cobraba el
+premio de la oleada 45 tirando 25 granadas); el premio se calculaba con la mejor oleada del momento de cobrar, así que
+convenía no cobrar nunca; en modo oscuro había texto casi blanco sobre la fila verde de una misión cobrada, sobre el
+casillero dorado de la diaria y sobre el círculo del bestiario; los controles de la ventana de opciones eran blancos
+sobre la crema; la barra del jefe se congelaba un segundo al cambiar de jefe; la cuenta regresiva hacía una llamada JNI
+por frame; la ciudad salía con 16 luces en vez de 6; el decorado se instanciaba entero en el frame del cambio de
+capítulo; la niebla quedaba prendida al volver al día; el reloj se apagaba para siempre con una falla puntual.
+
+Lo que quedó anotado, de mayor a menor:
+
+- [ ] **La recompensa diaria quedó en la escala vieja.** Misiones y bestiario pasan a `1,08^(m/2)` y la diaria sigue en
+  `1 + 0,1 × m`: en la oleada 45 paga 825 contra las decenas de miles de una misión difícil, así que el gancho de volver
+  cada día deja de tirar. Conviene pasarla a la misma vara.
+- [ ] **Las estrellas del bestiario conviene no cobrarlas nunca**: el premio se resuelve al cobrar y crece con la mejor
+  oleada, mientras los escalones son muertes absolutas. Arreglo: anotar la marca al ganar la estrella y pagar con esa,
+  como ahora hacen las misiones.
+- [ ] `Bestiario.MonedasPorTipo` copia a mano el promedio de `monedasMin/monedasMax` de los `.asset`. Si se toca el
+  balance de un zombi, el premio miente en silencio: una prueba que cargue los `Enemy` con `AssetDatabase` y compare.
+- [ ] Quedan `Sprite.Create` sin `Destroy` en `OpcionesSonido` (2), `VentanaRecompensaDiaria` (3), `MonedasDelFondo` (2),
+  `SelectorIdioma`, `VolumenEnPausa` y `OfertaDeRevivir`: ~8 objetos por vuelta al menú.
+- [ ] El campo del JSON pasó de `mejorOleadaDelDia` a `oleadasDelDia` sin subir la versión: al actualizar se pierde, en
+  silencio, el avance de la misión de oleadas del día en curso.
+- [ ] `PintarConTema.OnValidate` toma el color del `Graphic` como "el claro" cada vez que carga la escena en el editor:
+  si alguien deja un color pisado, se sobrescribe el de siempre sin avisar.
+- [ ] La ventana de la diaria no se rearma al cambiar el tema (`temaArmado`), a diferencia de misiones y bestiario. No
+  se nota porque se abre antes de que se pueda tocar opciones, pero es una asimetría que confunde.
+- [ ] El `Interruptor` no refleja un cambio de tema hecho desde afuera (sólo los suyos): hoy no pasa, porque el único
+  que lo cambia es él.
+- [ ] La barra del jefe: el "Marco" queda fuera del rect de su propia raíz (`ancho + 40 / alto + 66` no describe el
+  contenido). No se ve porque no hay máscara.
+
 **Después:** el diseño de las cartas de 1 de 3 por oleada (ideas de Archero) y el desafío semanal. El tercer capítulo
 (la ciudad de noche, oleadas 21-30) se hizo el 20/9: `CapitulosDeEscenario` pasó a una lista de escenarios, así sumar un
 cuarto es un elemento más en el array y su prefab.

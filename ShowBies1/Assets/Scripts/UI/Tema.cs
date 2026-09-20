@@ -126,7 +126,9 @@ public static class Tema
     public static void Pintar(Graphic grafico, RolDeTema rol, Color claro)
     {
         if (grafico == null) return;
-        var pintor = grafico.gameObject.AddComponent<PintarConTema>();
+        // Reusa el que haya: las ventanas se copian unas de otras y podria venir puesto.
+        var pintor = grafico.GetComponent<PintarConTema>();
+        if (pintor == null) pintor = grafico.gameObject.AddComponent<PintarConTema>();
         pintor.rol = rol;
         pintor.colorClaro = claro;
     }

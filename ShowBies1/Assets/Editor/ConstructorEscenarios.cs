@@ -16,6 +16,8 @@ public static class ConstructorEscenarios
     const string Carpeta = "Assets/Escenarios/Cementerio";
     const string RutaPrefab = "Assets/Prefabs/Escenarios/Cementerio.prefab";
     const string CarpetaCiudad = "Assets/Escenarios/Ciudad";
+    // Cuantos faroles de la ciudad llevan luz de verdad; el resto, solo el vidrio brillante.
+    const int MaxLuces = 6;
     const string RutaPrefabCiudad = "Assets/Prefabs/Escenarios/Ciudad.prefab";
 
     [MenuItem("ShowBies/Escenarios/Armar cementerio")]
@@ -194,7 +196,9 @@ public static class ConstructorEscenarios
                     // Los de la manzana del centro van siempre: son los que alumbran
                     // donde se juega. Los de afuera, la mitad de las veces.
                     if (!esElCentro && azar.NextDouble() < 0.45) continue;
-                    bool conLuz = esElCentro || (luces < 8 && donde.magnitude < 28f);
+                    // El tope vale para todos: cada luz puntual cuesta en el telefono, y
+                    // dejando pasar las del centro sin contarlas salian dieciseis.
+                    bool conLuz = luces < MaxLuces && (esElCentro || donde.magnitude < 28f);
                     Farol(faroles, donde, poste, luzFarol, conLuz);
                     if (conLuz) luces++;
                 }
@@ -230,7 +234,7 @@ public static class ConstructorEscenarios
         PrefabUtility.SaveAsPrefabAsset(raiz, RutaPrefabCiudad);
         Object.DestroyImmediate(raiz);
         AssetDatabase.SaveAssets();
-        Debug.Log("ConstructorEscenarios: ciudad armada en " + RutaPrefabCiudad);
+        Debug.Log("ConstructorEscenarios: ciudad armada en " + RutaPrefabCiudad + " con " + luces + " faroles con luz");
     }
 
     // La manzana: la vereda elevada y su cordon.

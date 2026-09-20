@@ -29,8 +29,9 @@ public static class RelojConfiable
     // habria reiniciado con el telefono. Se lee una vez y no en cada consulta.
     private static bool hayArranques;
     private static int arranquesDeLaSesion;
-    // Si no se pudo leer una vez (no es Android, o la lectura tiro), no se vuelve a
-    // intentar: eran llamadas por JNI en cada consulta, para nada.
+    // Fuera de Android no hay nada que leer y no se vuelve a intentar. Una falla de la
+    // lectura en Android si se reintenta: puede ser la actividad recreandose, y dejarlo
+    // apagado para siempre apagaria en silencio lo que cuida el reloj.
     private static bool imposible;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -71,7 +72,7 @@ public static class RelojConfiable
         {
             frameLeido = Time.frameCount;
             leido = LeerDelTelefono(out msLeidos, out arranquesLeidos);
-            if (!leido) imposible = true;
+            if (!leido && Application.platform != RuntimePlatform.Android) imposible = true;
         }
         msDesdeArranque = msLeidos;
         arranques = arranquesLeidos;

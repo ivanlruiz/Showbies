@@ -18,6 +18,9 @@ public class OpcionesSonido : MonoBehaviour
     public float separacionDelGlobo = 24f;
     public float duracionRebote = 0.3f;
 
+    [Tooltip("El texto de los controles sobre la ventana crema; con el tema oscuro lo cambia Tema.")]
+    public Color colorTexto = new Color(0.16f, 0.14f, 0.2f, 1f);
+
     // La del idioma mide 620 x 480 y tiene dos botones; esta tiene tres controles.
     private const float AltoVentana = 640f;
     private const float AnchoControl = 500f;
@@ -128,10 +131,28 @@ public class OpcionesSonido : MonoBehaviour
         }
 
         var perilla = Sprite.Create(texturaPerilla, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
-        SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 140f), AnchoControl, fuente, Volumen.Efectos, Volumen.FijarEfectos, perilla);
-        SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, 25f), AnchoControl, fuente, Volumen.Musica, Volumen.FijarMusica, perilla);
-        Interruptor.Crear(ventana, "opciones_tema", new Vector2(0f, -95f), AnchoControl, fuente, Tema.Oscuro, Tema.Fijar,
-                          pildora, perilla, sonidoClick);
+        // Sobre la ventana crema el texto va oscuro (con el tema oscuro, claro), y el
+        // surco al reves. El interruptor del tema esta en esta misma ventana, asi que
+        // todo esto tiene que cambiar mientras se mira: por eso el pintor.
+        Color colorDelTexto = Tema.Elegir(colorTexto, RolDeTema.Texto);
+        Color colorDelSurco = Tema.Elegir(SliderVolumen.ColorBarra, RolDeTema.Surco);
+        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 140f), AnchoControl, fuente,
+                                         Volumen.Efectos, Volumen.FijarEfectos, perilla, colorDelTexto, colorDelSurco));
+        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, 25f), AnchoControl, fuente,
+                                         Volumen.Musica, Volumen.FijarMusica, perilla, colorDelTexto, colorDelSurco));
+        SeguirElTema(Interruptor.Crear(ventana, "opciones_tema", new Vector2(0f, -95f), AnchoControl, fuente,
+                                       Tema.Oscuro, Tema.Fijar, pildora, perilla, sonidoClick, colorDelTexto));
+    }
+
+    // Le pone su papel a los textos y al surco de un control recien armado, para que
+    // cambien en el acto al tocar el modo oscuro.
+    private void SeguirElTema(Component control)
+    {
+        if (control == null) return;
+        foreach (var t in control.GetComponentsInChildren<TMP_Text>(true))
+            Tema.Pintar(t, RolDeTema.Texto, colorTexto);
+        var barra = control.transform.Find("Barra");
+        if (barra != null) Tema.Pintar(barra.GetComponent<Image>(), RolDeTema.Surco, SliderVolumen.ColorBarra);
     }
 
     public void Abrir()

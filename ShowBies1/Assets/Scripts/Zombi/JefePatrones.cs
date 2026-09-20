@@ -70,6 +70,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private bool enFuria;
     private int golpesAlCargar;
     private Quaternion rotacionAlAturdirse;
+    private float rumboAlAturdirse;
     private Vector3 direccion;
     private WaveManager oleadas;
     // Los que invoco, para no pasarse: un zombi muerto vuelve al pool y se prende de
@@ -249,12 +250,15 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         desde = ahora;
         zombi.multiplicadorGolpe = 1f;
         rotacionAlAturdirse = transform.rotation;
+        rumboAlAturdirse = transform.eulerAngles.y;
     }
 
     private void Terminar(float ahora)
     {
         estado = Estado.Persiguiendo;
-        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+        // El rumbo de antes del tambaleo: con el balanceo en Z puesto, eulerAngles.y ya
+        // no es el mismo angulo.
+        transform.rotation = Quaternion.Euler(0f, rumboAlAturdirse, 0f);
         zombi.multiplicadorGolpe = 1f;
         tocaCarga = !tocaCarga;
         proximoAtaque = ahora + cadaCuanto * (enFuria ? ritmoEnFuria : 1f);

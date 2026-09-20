@@ -43,7 +43,13 @@ public class EscenarioDeCapitulo
 // arma una sola vez en la partida y despues se prende y se apaga, que son cientos de
 // objetos. Cuando termina de salir se junta en pocos draw calls (StaticBatchingUtility) y
 // desde ahi las piezas ya no se mueven por separado, asi que **la primera vez sale cada
-// pieza sola del piso y las siguientes sale el decorado entero**. Va en WaveMode.
+// pieza sola del piso y las siguientes sale el decorado entero**.
+//
+// El decorado del capitulo que viene se arma **apagado, unos segundos despues de entrar
+// al anterior** (PrepararElSiguiente): instanciar ochocientos objetos en el frame del
+// cambio era un tiron justo en el momento del evento.
+//
+// Va en WaveMode.
 public class CapitulosDeEscenario : MonoBehaviour
 {
     public WaveManager oleadas;
@@ -159,6 +165,9 @@ public class CapitulosDeEscenario : MonoBehaviour
                 mezcla = 0f;
             }
             if (capitulo > 0) MostrarCartel(destino);
+            // El que viene, armado y apagado, para que el cambio no cueste nada.
+            StopAllCoroutines();
+            StartCoroutine(PrepararElSiguiente());
         }
 
         if (mezcla < 1f)
@@ -176,6 +185,19 @@ public class CapitulosDeEscenario : MonoBehaviour
 
         AnimarDecorado();
         AnimarCartel();
+    }
+
+    // Arma (apagado) el decorado del capitulo siguiente, un rato despues de entrar al
+    // actual: asi el Instantiate no cae en el frame del cambio, con el cartel y el fundido.
+    private System.Collections.IEnumerator PrepararElSiguiente()
+    {
+        yield return new WaitForSeconds(6f);
+        int siguiente = EscenarioDe(capitulo + 1);
+        if (siguiente == indiceHacia) yield break;
+        var escenario = escenarios[siguiente];
+        var puesta = puestas[siguiente];
+        if (escenario.decorado == null || puesta.objeto != null) yield break;
+        Armar(escenario, puesta);
     }
 
     private void Aplicar()
@@ -196,7 +218,9 @@ public class CapitulosDeEscenario : MonoBehaviour
 
         // El que no tiene niebla la manda lejisimos, asi pasar de uno con niebla a uno sin
         // ella se ve como que se abre, y no como un corte.
-        RenderSettings.fog = a.conNiebla || b.conNiebla;
+        // Con el fundido terminado manda el de destino: si no, al volver a un capitulo
+        // de dia la niebla quedaba prendida con el rango lejisimos, al pedo.
+        RenderSettings.fog = m >= 1f ? b.conNiebla : (a.conNiebla || b.conNiebla);
         RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogColor = cielo;
         RenderSettings.fogStartDistance = Mathf.Lerp(a.conNiebla ? a.nieblaInicio : 300f, b.conNiebla ? b.nieblaInicio : 300f, m);

@@ -13,14 +13,20 @@ public class SliderVolumen : MonoBehaviour
 {
     public static readonly Color ColorBarra = new Color(0f, 0f, 0f, 0.45f);
     public static readonly Color ColorRelleno = new Color(1f, 0.78f, 0.22f, 1f);
+    // El surco sobre un panel oscuro: el negro de arriba ahi no se ve.
+    public static readonly Color ColorBarraClara = new Color(1f, 1f, 1f, 0.16f);
 
     private Slider slider;
     private TMP_Text porcentaje;
     private Action<float> alCambiar;
     private float cambioSinGuardar = -1f;
 
+    // `colorTexto` y `colorSurco` los pone quien lo crea, porque dependen de sobre que
+    // esta: la ventana del menu es crema (o el panel del tema oscuro) y el panel de la
+    // pausa es negro con cualquier tema.
     public static SliderVolumen Crear(RectTransform padre, string idTexto, Vector2 posicion, float ancho,
-                                      TMP_FontAsset fuente, float valor, Action<float> alCambiar, Sprite perilla)
+                                      TMP_FontAsset fuente, float valor, Action<float> alCambiar, Sprite perilla,
+                                      Color colorTexto, Color colorSurco)
     {
         var raiz = new GameObject("Volumen_" + idTexto, typeof(RectTransform));
         var rt = (RectTransform)raiz.transform;
@@ -28,22 +34,18 @@ public class SliderVolumen : MonoBehaviour
         rt.sizeDelta = new Vector2(ancho, 110f);
         rt.anchoredPosition = posicion;
 
-        var nombre = Texto(rt, "Nombre", fuente, 46f, TextAlignmentOptions.Left);
+        var nombre = Texto(rt, "Nombre", fuente, 46f, TextAlignmentOptions.Left, colorTexto);
         // Apagado mientras se le pone el id: TextoTraducido escribe en OnEnable, y sin id
         // mostraria "[]" y avisaria un texto que falta.
         nombre.gameObject.SetActive(false);
         nombre.gameObject.AddComponent<TextoTraducido>().id = idTexto;
         nombre.gameObject.SetActive(true);
-        var pct = Texto(rt, "Porcentaje", fuente, 46f, TextAlignmentOptions.Right);
+        var pct = Texto(rt, "Porcentaje", fuente, 46f, TextAlignmentOptions.Right, colorTexto);
 
         // La barra: fondo, relleno y perilla, como un Slider de Unity de los de siempre.
         var barra = Rect(rt, "Barra", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 22f), new Vector2(0f, 36f));
         var fondo = barra.gameObject.AddComponent<Image>();
-        // Negro sobre la ventana crema y claro sobre la oscura: con el negro no se veia
-        // donde terminaba la barra. Con el componente, cambia al tocar el modo oscuro,
-        // que esta en la misma ventana.
-        fondo.color = Tema.Elegir(ColorBarra, RolDeTema.Surco);
-        Tema.Pintar(fondo, RolDeTema.Surco, ColorBarra);
+        fondo.color = colorSurco;
 
         var areaRelleno = Rect(barra, "AreaRelleno", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
         var relleno = Rect(areaRelleno, "Relleno", Vector2.zero, new Vector2(0f, 1f), Vector2.zero, Vector2.zero);
@@ -108,14 +110,15 @@ public class SliderVolumen : MonoBehaviour
         if (porcentaje != null) porcentaje.SetText("{0}%", Mathf.RoundToInt(valor * 100f));
     }
 
-    private static TMP_Text Texto(RectTransform padre, string nombre, TMP_FontAsset fuente, float tamanio, TextAlignmentOptions alineacion)
+    private static TMP_Text Texto(RectTransform padre, string nombre, TMP_FontAsset fuente, float tamanio,
+                                  TextAlignmentOptions alineacion, Color color)
     {
         var rt = Rect(padre, nombre, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -28f), new Vector2(0f, 56f));
         var t = rt.gameObject.AddComponent<TextMeshProUGUI>();
         if (fuente != null) t.font = fuente;
         t.fontSize = tamanio;
         t.alignment = alineacion;
-        t.color = Color.white;
+        t.color = color;
         t.raycastTarget = false;
         return t;
     }

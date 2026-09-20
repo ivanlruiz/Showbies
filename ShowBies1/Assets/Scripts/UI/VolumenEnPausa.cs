@@ -24,8 +24,12 @@ public class VolumenEnPausa : MonoBehaviour
         var fuente = titulo != null ? titulo.font : null;
         float x = (ancho + separacion) * 0.5f;
 
-        SliderVolumen.Crear(padre, "sonido_efectos", new Vector2(-x, alturaFila), ancho, fuente, Volumen.Efectos, Volumen.FijarEfectos, perilla);
-        SliderVolumen.Crear(padre, "sonido_musica", new Vector2(x, alturaFila), ancho, fuente, Volumen.Musica, Volumen.FijarMusica, perilla);
+        // El panel de la pausa es negro con cualquier tema: texto blanco y el surco
+        // claro, que el negro sobre negro no se ve.
+        SliderVolumen.Crear(padre, "sonido_efectos", new Vector2(-x, alturaFila), ancho, fuente, Volumen.Efectos, Volumen.FijarEfectos,
+                            perilla, Color.white, SliderVolumen.ColorBarraClara);
+        SliderVolumen.Crear(padre, "sonido_musica", new Vector2(x, alturaFila), ancho, fuente, Volumen.Musica, Volumen.FijarMusica,
+                            perilla, Color.white, SliderVolumen.ColorBarraClara);
     }
 
     private void OnDestroy()

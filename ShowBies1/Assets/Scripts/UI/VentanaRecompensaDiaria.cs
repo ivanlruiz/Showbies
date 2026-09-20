@@ -273,12 +273,17 @@ public class VentanaRecompensaDiaria : MonoBehaviour
             var img = casillero.gameObject.AddComponent<Image>();
             Redondear(img, 3f);
             img.color = dia < hoy ? colorCobrado : dia == hoy ? colorHoy : ColorDeFuturo;
+            // Los casilleros de color (el de hoy, dorado, y los cobrados, verdes) no
+            // cambian con el tema: su texto va oscuro siempre. El de los dias que faltan
+            // es un hueco sobre el panel, asi que ese si sigue al tema.
+            bool sobreColor = dia <= hoy;
+            Color textoDelCasillero = sobreColor ? colorTextoOscuro : ColorDeTexto;
 
             // Cada casillero es un dia de racha: el de hoy es la racha actual (del 7 en adelante
             // se queda en el ultimo casillero) y los otros, los dias de al lado. La etiqueta y el
             // monto salen del mismo numero, asi en el dia 8 no dice DIA 7 con el monto del 8.
             int rachaDelCasillero = racha - hoy + dia;
-            Texto(casillero, "Dia", Textos.Formato("diaria_dia", rachaDelCasillero), 30f, ColorDeTexto, new Vector2(0f, 62f), new Vector2(Ancho, 40f));
+            Texto(casillero, "Dia", Textos.Formato("diaria_dia", rachaDelCasillero), 30f, textoDelCasillero, new Vector2(0f, 62f), new Vector2(Ancho, 40f));
             var circulo = Rect(casillero, "Moneda", new Vector2(0f, 8f), new Vector2(54f, 54f));
             var imgMoneda = circulo.gameObject.AddComponent<Image>();
             imgMoneda.sprite = moneda;
@@ -286,7 +291,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
             ConBorde(circulo, borde);
             // A partir del dia de hoy se muestra lo que se cobraria con la racha intacta.
             string monto = FormatoNumeros.Compacto(RecompensaDiaria.Monto(rachaDelCasillero, mejor));
-            Texto(casillero, "Monto", monto, 36f, ColorDeTexto, new Vector2(0f, -52f), new Vector2(Ancho, 46f));
+            Texto(casillero, "Monto", monto, 36f, textoDelCasillero, new Vector2(0f, -52f), new Vector2(Ancho, 46f));
 
             var rtTilde = Rect(casillero, "Tilde", new Vector2(0f, 8f), new Vector2(44f, 44f));
             var imgTilde = rtTilde.gameObject.AddComponent<Image>();

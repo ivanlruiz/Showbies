@@ -26,7 +26,11 @@ using System.Collections.Generic;
 // esas partidas. Con montos fijos (150/300/600 y 800 el cofre, mas un 10 % por oleada) el
 // primer dia regalaban ~1.850 monedas contra ~300 de jugar, y el jugador nuevo se saltaba
 // la parte de arrancar flojo, que es el juego; mas adelante, al reves, no se notaban. Asi
-// el premio siempre es un extra de la mitad de lo que ya ganaste cumpliendolo.
+// el premio siempre es un extra de la mitad de lo que ya ganaste cumpliendolo. Se paga
+// con la **mejor oleada del dia en que se armaron** (mejorOleadaAlArmar) y no con la de
+// ahora: el objetivo tambien quedo dimensionado con esa, y si no, guardar las misiones
+// sin cobrar hasta mejorar la marca era la jugada optima -y a medianoche se cobraban
+// solas al precio mas alto del dia-.
 //
 // El premio entra por Progreso.CobrarPremio: no cuenta como monedas ganadas jugando.
 // Lo que se puede probar sin escena es estatico y recibe lo que necesita (Armar, Monto).
@@ -57,6 +61,13 @@ public static class MisionesDiarias
         get { Asegurar(); return Progreso.Misiones.lista; }
     }
 
+    // La mejor oleada con que se armaron las de hoy: es la que paga, para que el premio
+    // no dependa de cuando se cobra.
+    public static int OleadaDeHoy
+    {
+        get { Asegurar(); return Math.Max(0, Progreso.Misiones.mejorOleadaAlArmar); }
+    }
+
     public static IReadOnlyList<MisionDelDia> DeHoy
     {
         get { return Lista; }
@@ -67,13 +78,22 @@ public static class MisionesDiarias
     {
         var estado = Progreso.Misiones;
         int hoy = Progreso.DiaDeHoy();
-        if (estado.dia != 0 && !Progreso.EsDiaNuevo(estado.dia, hoy) && estado.lista.Count == Cantidad) return;
+        if (estado.dia != 0 && !Progreso.EsDiaNuevo(estado.dia, hoy) && estado.lista.Count == Cantidad)
+        {
+            // Un progreso guardado antes de que el premio se congelara no trae la marca: se
+            // completa una sola vez. El centinela es -1 y no 0, que 0 es una marca valida
+            // (nadie completo una oleada todavia) y volver a asignarla cada vez haria que
+            // el premio siguiera a la mejor oleada, que es justo lo que se quiso sacar.
+            if (estado.mejorOleadaAlArmar < 0) estado.mejorOleadaAlArmar = Progreso.MejorOleada;
+            return;
+        }
 
         if (estado.dia != 0) CerrarElDia(estado);
 
         estado.dia = hoy;
         estado.oleadasDelDia = 0;
         estado.cofreCobrado = false;
+        estado.mejorOleadaAlArmar = Progreso.MejorOleada;
         estado.lista = Armar(hoy, Progreso.MejorOleada, Progreso.Nivel("furia") > 0,
                              Progreso.Nivel("granada") > 0, Progreso.Nivel("criticos") > 0);
         foreach (var mision in estado.lista) mision.inicio = Contador(mision.tipo);
@@ -85,6 +105,7 @@ public static class MisionesDiarias
     // desinstalar. No avisa en pantalla: las monedas aparecen en el contador.
     private static void CerrarElDia(EstadoMisiones estado)
     {
+        int marca = Math.Max(0, estado.mejorOleadaAlArmar);
         int cobradas = 0;
         foreach (var mision in estado.lista)
         {
@@ -92,12 +113,12 @@ public static class MisionesDiarias
             if (!Cumplida(mision)) continue;
             mision.cobrada = true;
             cobradas++;
-            Progreso.CobrarPremio("mision_" + mision.tipo, Monto(mision.dificultad, Progreso.MejorOleada), false);
+            Progreso.CobrarPremio("mision_" + mision.tipo, Monto(mision.dificultad, marca), false);
         }
         if (cobradas >= Cantidad && !estado.cofreCobrado && estado.lista.Count == Cantidad)
         {
             estado.cofreCobrado = true;
-            Progreso.CobrarPremio("mision_cofre", MontoCofre(Progreso.MejorOleada), false);
+            Progreso.CobrarPremio("mision_cofre", MontoCofre(marca), false);
         }
     }
 
@@ -136,10 +157,14 @@ public static class MisionesDiarias
             // Cuantas oleadas completar hoy: las que da la partida que cuesta esa
             // dificultad. Sin Redondo, que son numeros chicos y redondear de a 5 se pasa.
             case Oleada: return Math.Max(2, Math.Round(partidas * m));
-            case Furia: return dificultad == 0 ? 2 : dificultad == 1 ? 3 : 5;
-            case Granadas: return dificultad == 0 ? 5 : dificultad == 1 ? 12 : 25;
+            // La furia sale cada 120 s y la granada cada 5: cuantas entran depende de lo
+            // que dure la partida, que crece con la oleada. Con numeros fijos, el premio
+            // -que si escala- se cobraba tirando 25 granadas parado en un rincon.
+            case Furia: return Math.Max(2, Math.Round(partidas * Math.Max(2.0, m / 3.5)));
+            case Granadas: return Math.Max(5, Redondo(partidas * m * 1.2));
             case Criticos: return Redondo(partidas * 60.0 * (1.0 + m / 10.0));
-            case Jefe: return 1;
+            // Un jefe cada 10 oleadas: los que entran en las partidas que cuesta.
+            case Jefe: return Math.Max(1, Math.Round(partidas * m / 10.0));
             default: return 1;
         }
     }
@@ -225,7 +250,7 @@ public static class MisionesDiarias
         if (mision.cobrada || !Cumplida(mision)) return 0;
 
         mision.cobrada = true;
-        double monto = Monto(mision.dificultad, Progreso.MejorOleada);
+        double monto = Monto(mision.dificultad, OleadaDeHoy);
         Progreso.CobrarPremio("mision_" + mision.tipo, monto, false);
         return monto;
     }
@@ -265,7 +290,7 @@ public static class MisionesDiarias
     {
         if (!CofreDisponible) return 0;
         Progreso.Misiones.cofreCobrado = true;
-        double monto = MontoCofre(Progreso.MejorOleada);
+        double monto = MontoCofre(OleadaDeHoy);
         Progreso.CobrarPremio("mision_cofre", monto, false);
         return monto;
     }
@@ -312,6 +337,7 @@ public class EstadoMisiones
 {
     public int dia;                 // aaaammdd de las misiones guardadas; 0 = ninguna
     public int oleadasDelDia;       // cuantas oleadas se completaron hoy
+    public int mejorOleadaAlArmar = -1;   // la mejor oleada del dia en que se armaron: es la que paga (-1: sin marca)
     public bool cofreCobrado;       // el cofre de las tres, uno por dia
     public List<MisionDelDia> lista = new List<MisionDelDia>();
 }

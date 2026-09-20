@@ -90,6 +90,7 @@ public class VentanaMisiones : MonoBehaviour
     private float reloj = -1f;
     private int idiomaArmado = -1;
     private int minutoMostrado = -1;
+    private float relojCuenta;
     private int temaArmado = -1;
     private float relojInsignia;
     private Button cofre;
@@ -225,13 +226,19 @@ public class VentanaMisiones : MonoBehaviour
         }
         if (Progreso.Revision != revisionVista) Refrescar();
 
-        // El texto se arma solo cuando cambia el minuto: esto corre en cada frame y
-        // armarlo aloca una cadena por frame para mostrar lo mismo.
-        int minutos = MinutosParaLasNuevas();
-        if (minutos != minutoMostrado)
+        // La hora se pregunta una vez por segundo y el texto se arma solo cuando cambia
+        // el minuto: en Android preguntarla es una llamada por JNI, y armar el texto,
+        // una cadena; las dos cosas en cada frame para mostrar lo mismo.
+        relojCuenta -= dt;
+        if (relojCuenta <= 0f)
         {
-            minutoMostrado = minutos;
-            textoNuevas.text = TextoNuevas(minutos);
+            relojCuenta = 1f;
+            int minutos = MinutosParaLasNuevas();
+            if (minutos != minutoMostrado)
+            {
+                minutoMostrado = minutos;
+                textoNuevas.text = TextoNuevas(minutos);
+            }
         }
 
         foreach (var fila in filas)
@@ -261,10 +268,17 @@ public class VentanaMisiones : MonoBehaviour
             double avance = Math.Min(MisionesDiarias.Avance(mision), mision.objetivo);
             fila.descripcion.text = MisionesDiarias.Descripcion(mision);
             fila.cuenta.text = FormatoNumeros.Compacto(avance) + " / " + FormatoNumeros.Compacto(mision.objetivo);
-            fila.premio.text = FormatoNumeros.Compacto(MisionesDiarias.Monto(mision.dificultad, mejor));
+            fila.premio.text = FormatoNumeros.Compacto(MisionesDiarias.Monto(mision.dificultad, MisionesDiarias.OleadaDeHoy));
             float fraccion = mision.objetivo > 0 ? Mathf.Clamp01((float)(avance / mision.objetivo)) : 1f;
             fila.relleno.anchorMax = new Vector2(fraccion, 1f);
+            // Una mision cobrada pinta su fila de verde: ahi el texto va oscuro con
+            // cualquier tema, que el verde no cambia. Con el claro del tema oscuro
+            // quedaba blanco sobre verde.
             fila.fondo.color = mision.cobrada ? colorCumplida : ColorDeFila;
+            Color textoDeLaFila = mision.cobrada ? colorTextoOscuro : ColorDeTexto;
+            fila.descripcion.color = textoDeLaFila;
+            fila.cuenta.color = textoDeLaFila;
+            fila.premio.color = textoDeLaFila;
             fila.cobrar.SetActive(cumplida && !mision.cobrada);
             fila.tilde.enabled = mision.cobrada && tilde != null;
         }
@@ -279,13 +293,13 @@ public class VentanaMisiones : MonoBehaviour
         {
             fondo = colorCumplida;
             texto = colorTextoAbierto;
-            textoCofre.text = Textos.Formato("misiones_cofre_abierto", FormatoNumeros.Compacto(MisionesDiarias.MontoCofre(mejor)));
+            textoCofre.text = Textos.Formato("misiones_cofre_abierto", FormatoNumeros.Compacto(MisionesDiarias.MontoCofre(MisionesDiarias.OleadaDeHoy)));
         }
         else if (MisionesDiarias.CofreDisponible)
         {
             fondo = colorCofre;
             texto = colorTextoCofre;
-            textoCofre.text = Textos.Formato("misiones_cofre", FormatoNumeros.Compacto(MisionesDiarias.MontoCofre(mejor)));
+            textoCofre.text = Textos.Formato("misiones_cofre", FormatoNumeros.Compacto(MisionesDiarias.MontoCofre(MisionesDiarias.OleadaDeHoy)));
         }
         else
         {

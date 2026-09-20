@@ -36,9 +36,11 @@ public class Interruptor : MonoBehaviour
     private float origen;
     private int revisionVista = -1;
 
+    // `colorTexto` lo pone quien lo crea: depende de sobre que fondo esta, como en
+    // SliderVolumen.
     public static Interruptor Crear(RectTransform padre, string idTexto, Vector2 posicion, float ancho,
                                     TMP_FontAsset fuente, bool encendido, Action<bool> alCambiar,
-                                    Sprite pildora, Sprite circulo, AudioClip sonidoClick)
+                                    Sprite pildora, Sprite circulo, AudioClip sonidoClick, Color colorTexto)
     {
         var raiz = new GameObject("Interruptor_" + idTexto, typeof(RectTransform));
         var rt = (RectTransform)raiz.transform;
@@ -53,7 +55,7 @@ public class Interruptor : MonoBehaviour
         if (fuente != null) nombre.font = fuente;
         nombre.fontSize = 46f;
         nombre.alignment = TextAlignmentOptions.Left;
-        nombre.color = Color.white;
+        nombre.color = colorTexto;
         nombre.raycastTarget = false;
         nombre.gameObject.SetActive(false);
         nombre.gameObject.AddComponent<TextoTraducido>().id = idTexto;

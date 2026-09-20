@@ -221,9 +221,14 @@ public class PlayerHealth : MonoBehaviour
         invulnerableHasta = Time.time + Mathf.Max(0f, segundosDeGracia);
 
         // El jefe no se despeja (la oleada lo contaria como muerto), asi que se le corta
-        // el ataque: volver con la carga a medio avisar es morir de nuevo sin jugar.
-        foreach (var jefe in FindObjectsByType<JefePatrones>(FindObjectsSortMode.None))
-            jefe.Postergar(Mathf.Max(segundosDeGracia, 2.5f));
+        // el ataque: volver con la carga a medio avisar es morir de nuevo sin jugar. La
+        // lista de jefes ya la lleva EnemyController, y no incluye a los del pool.
+        var jefes = EnemyController.Jefes;
+        for (int i = 0; i < jefes.Count; i++)
+        {
+            var patrones = jefes[i] != null ? jefes[i].GetComponent<JefePatrones>() : null;
+            if (patrones != null) patrones.Postergar(Mathf.Max(segundosDeGracia, 2.5f));
+        }
 
         int despejados = EnemyController.DespejarAlrededor(transform.position, radioDespeje);
         Efectos.Explosion(transform.position);

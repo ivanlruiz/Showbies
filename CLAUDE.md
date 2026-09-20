@@ -425,6 +425,10 @@ primera vez sale cada pieza sola del piso y las siguientes sale el decorado ente
   taparía la partida), autos contra el cordón, contenedores, canteros y faroles con luz naranja en las cuatro esquinas
   del cruce. El piso es `PisoCiudad.mat` (Grey Stones repetida 70 veces).
 
+El decorado del capítulo que viene **se arma apagado unos segundos después de entrar al anterior**
+(`PrepararElSiguiente`): instanciar ochocientos objetos en el frame del cambio era un tirón justo en el momento del
+evento, con el cartel y el fundido.
+
 Ninguno se edita a mano: los arman **ShowBies > Escenarios > Armar cementerio** y **Armar ciudad**
 (`ConstructorEscenarios`, con semilla fija), que se vuelven a correr para cambiarlos. La niebla funciona en la build
 porque el menú la tiene guardada en su escena (ver El fondo del menú vivo).
@@ -533,10 +537,12 @@ completada en el día y la lista).
 
 - **Cambian a medianoche** con el día confiable (`Progreso.DiaDeHoy`), y el mismo día salen siempre las mismas: se sortean
   con el día de semilla (`Armar`). Un reloj atrasado no las cambia.
-- **Tipos** (el nombre se guarda en el JSON: no se renombra): matar N zombis, completar la oleada N, ganar N monedas, usar
-  la furia, tirar granadas y hacer críticos (estas tres solo si están compradas) y derrotar un jefe (solo la difícil, con
-  la mejor oleada en 9). Tres tipos distintos por día. Los objetivos se ajustan a la mejor oleada (`Objetivo`, en números
-  redondos).
+- **Tipos** (el nombre se guarda en el JSON: no se renombra): matar N zombis, completar N oleadas, ganar N monedas, usar
+  la furia, tirar granadas y hacer críticos (estas tres solo si están compradas) y derrotar N jefes (solo la difícil, con
+  la mejor oleada en 9). Tres tipos distintos por día. **Todos los objetivos se ajustan a la mejor oleada** (`Objetivo`,
+  en números redondos), sin excepción: con la furia, las granadas y el jefe en números fijos, el premio —que sí escala—
+  se cobraba tirando 25 granadas parado en un rincón, y en la oleada 45 eso pagaba más que una partida entera. Una prueba
+  verifica que ninguno se quede quieto entre la oleada 5 y la 40.
 - **El avance sale de los contadores de por vida**: al armarlas se anota cuánto marcaba cada uno (`inicio`) y el avance es
   la diferencia. La de oleadas cuenta **cuántas se completaron hoy** (`oleadasDelDia`, que avisa `WaveManager` con
   `RegistrarOleada`), no a cuál se llegó: contando el número de la oleada, retomar una partida guardada en la 25
@@ -551,6 +557,10 @@ completada en el día y la lista).
   regalaban ~1.850 monedas contra ~300 de jugar: el jugador nuevo se saltaba la parte de arrancar flojo, que es el
   juego, y en las oleadas altas el premio no se notaba. Ahora el día entero paga ~2/3 de lo que da jugarlo, en toda
   la curva, y las pruebas lo miden en las oleadas 0, 3, 5, 10, 20 y 40.
+- **El premio se congela con la mejor oleada del día en que se armaron** (`mejorOleadaAlArmar`, y `OleadaDeHoy` es lo
+  que lo lee), no con la de ahora: el objetivo también quedó dimensionado con esa, y si no, guardar las misiones sin
+  cobrar hasta mejorar la marca era la jugada óptima —y encima el cierre de medianoche las pagaba al precio más alto del
+  día—. El centinela del campo es −1 y no 0, porque 0 es una marca válida (todavía no completó ninguna oleada).
 - **El cofre del día**: con las tres cobradas se abre uno (`CobrarCofre`, `cofreCobrado` en el progreso, vuelve con las
   misiones nuevas) que paga la mitad de las tres juntas: es lo que se lleva quien vuelve a cerrar el día. En la ventana, al lado de VOLVER: gris con "COFRE 1/3"
   (tocarlo tiembla), dorado y latiendo cuando se puede abrir (cuenta en la insignia), y al tocarlo tiembla, estalla con
@@ -866,6 +876,12 @@ tema es de la interfaz y no del mundo.
 - **El interruptor** (`Interruptor`) es una píldora con una perilla que se corre, armada en código como
   `SliderVolumen`, y se usa para cualquier sí/no. La ventana del engranaje pasó a llamarse OPCIONES: los dos
   volúmenes y el modo oscuro.
+- **Un texto sobre un fondo de color fijo no lleva el papel `Texto`**: la fila de una misión cobrada (verde), el
+  casillero de hoy de la diaria (dorado) y la inicial del bestiario (el círculo del color del zombi) no cambian con el
+  tema, así que su texto va oscuro siempre. Con el papel puesto quedaban casi blancos sobre verde o sobre lima.
+- **Lo que se arma en código sobre un panel recibe su color de quien lo crea** (`SliderVolumen.Crear` e
+  `Interruptor.Crear` toman el color del texto y el del surco): el mismo control va sobre la ventana crema del menú y
+  sobre el panel negro de la pausa, y ahí el blanco y el negro se dan vuelta.
 - **Si agregás una pantalla**, mirá qué color cumple cada papel y ponele `PintarConTema` a lo que sea crema, blanco
   o texto oscuro. Lo que no lleva papel se queda igual en los dos temas, que casi siempre es lo que se quiere para
   un botón de color.
