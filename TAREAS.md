@@ -194,18 +194,20 @@ Lo que quedó anotado, de mayor a menor:
   como ahora hacen las misiones.
 - [ ] `Bestiario.MonedasPorTipo` copia a mano el promedio de `monedasMin/monedasMax` de los `.asset`. Si se toca el
   balance de un zombi, el premio miente en silencio: una prueba que cargue los `Enemy` con `AssetDatabase` y compare.
-- [ ] Quedan `Sprite.Create` sin `Destroy` en `OpcionesSonido` (2), `VentanaRecompensaDiaria` (3), `MonedasDelFondo` (2),
-  `SelectorIdioma`, `VolumenEnPausa` y `OfertaDeRevivir`: ~8 objetos por vuelta al menú.
+- [x] Quedaban `Sprite.Create` sin `Destroy` en seis pantallas: ~8 objetos por vuelta al menú. **Arreglado el 20/9**:
+  cada una guarda sus sprites y los destruye con las texturas. El globo del idioma usa uno solo para el fondo y la
+  sombra, que son el mismo dibujo.
 - [ ] El campo del JSON pasó de `mejorOleadaDelDia` a `oleadasDelDia` sin subir la versión: al actualizar se pierde, en
   silencio, el avance de la misión de oleadas del día en curso.
 - [ ] `PintarConTema.OnValidate` toma el color del `Graphic` como "el claro" cada vez que carga la escena en el editor:
   si alguien deja un color pisado, se sobrescribe el de siempre sin avisar.
-- [ ] La ventana de la diaria no se rearma al cambiar el tema (`temaArmado`), a diferencia de misiones y bestiario. No
-  se nota porque se abre antes de que se pueda tocar opciones, pero es una asimetría que confunde.
-- [ ] El `Interruptor` no refleja un cambio de tema hecho desde afuera (sólo los suyos): hoy no pasa, porque el único
-  que lo cambia es él.
-- [ ] La barra del jefe: el "Marco" queda fuera del rect de su propia raíz (`ancho + 40 / alto + 66` no describe el
-  contenido). No se ve porque no hay máscara.
+- [x] La ventana de la diaria no se rearmaba al cambiar el tema, a diferencia de misiones y bestiario. **Arreglado el
+  20/9**: se rearma en `Abrir`, y para poder armarla dos veces los dibujos se hacen una sola vez en `Start`.
+- [x] El `Interruptor` no reflejaba un cambio hecho desde afuera. **Arreglado el 20/9**: en vez de una foto del valor
+  recibe de dónde leerlo, y si no coincide corre la perilla sin volver a avisar.
+- [x] La barra del jefe: el "Marco" quedaba entero fuera del rect de su propia raíz. **Arreglado el 20/9**: los hijos
+  cuelgan del techo y la raíz mide lo que ocupan. Medido en play, el nombre y el marco quedan en los mismos píxeles
+  que antes (−142…−194 y −195…−221), así que en pantalla no se movió nada.
 
 - [x] **El desafío semanal.** **Hecho el 20/9**: `DesafioSemanal`, uno por semana de lunes a domingo, que cuesta
   quince partidas y paga la mitad de lo que dan esas quince (la vara de `Economia`, como todo lo demás). Se ve en una
