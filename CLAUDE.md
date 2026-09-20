@@ -395,22 +395,39 @@ por oleada no la rompe mientras se aplique antes del primer golpe. Cuando el zom
 guardada con él: la aparición siguiente la prende con su primer golpe que no mata, sin crear otra (el pool es por
 prefab, así que la altura sirve). Se destruye con el zombi.
 
-### Capítulos: la pradera y el cementerio
+### Capítulos: la pradera, el cementerio y la ciudad
 
-Pedido de Ivan: un segundo escenario. Las oleadas van por **capítulos de 10** (`CapitulosDeEscenario`, objeto `Capitulos`
-de WaveMode): 1-10 la pradera de día, 11-20 el **cementerio de noche**, y después se alternan. El modo libre queda de día.
-Al pasar de capítulo, en el descanso de la oleada: el cartel "CAPÍTULO 2 / EL CEMENTERIO" arriba de todo (al medio está
-el de la oleada) con el jingle; la luz, el cielo, la luz ambiente y la niebla se funden a la noche en 2,5 s; a mitad del
-fundido el piso pasa a tierra (`Escenarios/Cementerio/PisoCementerio.mat`, la textura Brown Stony repetida 45 veces) y
-el decorado sale del suelo de a una pieza; cuando termina, se junta con `StaticBatchingUtility` en pocos draw calls. Al
-volver al día el decorado se va en lo oscuro del fundido. Una partida retomada en la 15 arranca de noche sin fundido.
-Lo del día se lee de la escena al empezar, y al descargarse la escena la niebla se apaga.
+Pedido de Ivan: escenarios que cambien. Las oleadas van por **capítulos de 10** (`CapitulosDeEscenario`, objeto
+`Capitulos` de WaveMode), que recorren la lista `escenarios` y vuelven a empezar: 1-10 la **pradera de día**, 11-20 el
+**cementerio de noche**, 21-30 la **ciudad de noche**, 31-40 otra vez la pradera. El modo libre queda de día.
 
-**El decorado es un prefab hecho con formas simples** (`Prefabs/Escenarios/Cementerio`: lápidas, cruces, árboles pelados,
-la reja del borde y cuatro faroles con luz puntual cálida), **sin colliders**: los zombis van derecho al jugador y se
-trabarían. No se edita a mano: lo arma **ShowBies > Escenarios > Armar cementerio** (`ConstructorEscenarios`, semilla fija),
-que se vuelve a correr para cambiarlo. La niebla funciona en la build porque el menú la tiene guardada en su escena
-(ver El fondo del menú vivo).
+Cada escenario es un `EscenarioDeCapitulo`: el id de su nombre en la tabla, su decorado, su piso, el cielo, la luz (color,
+intensidad y ángulo), la luz ambiente y la niebla. **El primero de la lista es lo que trae la escena**: sus colores y su
+piso se leen en el `Start` en vez de cargarse a mano, así el capítulo 1 se ve igual que siempre. Para sumar un escenario
+nuevo alcanza con un elemento más en el array, su prefab y su fila en la tabla de textos.
+
+Al pasar de capítulo, en el descanso de la oleada: el cartel "CAPÍTULO 3 / LA CIUDAD" arriba de todo (al medio está el de
+la oleada) con el jingle; el cielo, la luz, la luz ambiente y la niebla se funden de un escenario al otro en 2,5 s; a
+mitad del fundido —que es lo más oscuro— cambia el piso, se va el decorado viejo y sale el nuevo. El que no tiene niebla
+la manda lejísimos, así entrar o salir de la noche se ve como que se cierra o se abre, y no como un corte. Una partida
+retomada en la 25 arranca directamente en la ciudad, sin fundido. Al descargarse la escena la niebla se apaga.
+
+**Los decorados son prefabs hechos con formas simples**, sin colliders (los zombis van derecho al jugador y se
+trabarían), y **cada uno se arma una sola vez por partida**: después se prende y se apaga. Cuando termina de salir se
+junta con `StaticBatchingUtility` en pocos draw calls, y desde ahí las piezas ya no se mueven por separado, así que **la
+primera vez sale cada pieza sola del piso y las siguientes sale el decorado entero**.
+
+- `Prefabs/Escenarios/Cementerio`: lápidas, cruces, árboles pelados, la reja del borde y cuatro faroles con luz cálida,
+  sobre tierra (`PisoCementerio.mat`, la textura Brown Stony repetida 45 veces).
+- `Prefabs/Escenarios/Ciudad`: una cuadrícula de manzanas de 14 m con vereda y cordón, **corrida media manzana para que
+  el cruce quede en el centro** (el jugador arranca en la calle: parado sobre una vereda lisa no se entendía que fuera
+  una ciudad), las líneas blancas del medio de cada calle, edificios bajos sólo a más de 30 m (desde arriba, uno cerca
+  taparía la partida), autos contra el cordón, contenedores, canteros y faroles con luz naranja en las cuatro esquinas
+  del cruce. El piso es `PisoCiudad.mat` (Grey Stones repetida 70 veces).
+
+Ninguno se edita a mano: los arman **ShowBies > Escenarios > Armar cementerio** y **Armar ciudad**
+(`ConstructorEscenarios`, con semilla fija), que se vuelven a correr para cambiarlos. La niebla funciona en la build
+porque el menú la tiene guardada en su escena (ver El fondo del menú vivo).
 
 ## Monedas y progreso
 

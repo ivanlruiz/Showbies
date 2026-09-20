@@ -2812,19 +2812,44 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CapitulosDeEscenario
   oleadas: {fileID: 1041950196}
   oleadasPorCapitulo: 10
-  decoradoNoche: {fileID: 2995870159128975959, guid: 39e73bffa27ef314ba83598b0a7b4bdf, type: 3}
+  escenarios:
+  - idTexto: escenario_pradera
+    decorado: {fileID: 0}
+    piso: {fileID: 0}
+    cielo: {r: 0.66, g: 0.86, b: 0.96, a: 1}
+    luz: {r: 1, g: 1, b: 1, a: 1}
+    intensidadLuz: 1.25
+    rotacionLuz: {x: 50, y: -30, z: 0}
+    ambiente: {r: 0.55, g: 0.55, b: 0.55, a: 1}
+    conNiebla: 0
+    nieblaInicio: 16
+    nieblaFin: 52
+  - idTexto: escenario_cementerio
+    decorado: {fileID: 2995870159128975959, guid: 39e73bffa27ef314ba83598b0a7b4bdf, type: 3}
+    piso: {fileID: 2100000, guid: a81620f7ccdc22b4e81fc1b09f7f3ca6, type: 2}
+    cielo: {r: 0.07, g: 0.09, b: 0.17, a: 1}
+    luz: {r: 0.55, g: 0.66, b: 1, a: 1}
+    intensidadLuz: 0.45
+    rotacionLuz: {x: 55, y: 200, z: 0}
+    ambiente: {r: 0.2, g: 0.23, b: 0.34, a: 1}
+    conNiebla: 1
+    nieblaInicio: 16
+    nieblaFin: 52
+  - idTexto: escenario_ciudad
+    decorado: {fileID: 2001044297356243866, guid: 3a3ab234661307b4e88c79317717c974, type: 3}
+    piso: {fileID: 2100000, guid: 4bb76aa082c31db4582c6c3af43f8016, type: 2}
+    cielo: {r: 0.06, g: 0.065, b: 0.115, a: 1}
+    luz: {r: 0.52, g: 0.58, b: 0.85, a: 1}
+    intensidadLuz: 0.6
+    rotacionLuz: {x: 62, y: 150, z: 0}
+    ambiente: {r: 0.26, g: 0.27, b: 0.34, a: 1}
+    conNiebla: 1
+    nieblaInicio: 18
+    nieblaFin: 55
+  duracionFundido: 2.5
   piso: {fileID: 1398685221}
-  pisoNoche: {fileID: 2100000, guid: a81620f7ccdc22b4e81fc1b09f7f3ca6, type: 2}
   sol: {fileID: 2110854562}
   camara: {fileID: 594691210}
-  cieloNoche: {r: 0.07, g: 0.09, b: 0.17, a: 1}
-  luzNoche: {r: 0.55, g: 0.66, b: 1, a: 1}
-  intensidadNoche: 0.45
-  rotacionNoche: {x: 55, y: 200, z: 0}
-  ambienteNoche: {r: 0.2, g: 0.23, b: 0.34, a: 1}
-  nieblaInicio: 16
-  nieblaFin: 52
-  duracionFundido: 2.5
   canvas: {fileID: 1970546277}
   fuente: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
   materialContorno: {fileID: 2100000, guid: f629c6e43dba4bf38cb74d8860150664, type: 2}

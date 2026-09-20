@@ -174,5 +174,6 @@ teléfono.
 - Postergar el ataque al revivir y la línea plana (S).
 - Premios de misiones proporcionales al objetivo (lo de arriba).
 
-**Después:** el diseño de las cartas de 1 de 3 por oleada (ideas de Archero), el desafío semanal y un tercer capítulo
-(la ciudad de noche).
+**Después:** el diseño de las cartas de 1 de 3 por oleada (ideas de Archero) y el desafío semanal. El tercer capítulo
+(la ciudad de noche, oleadas 21-30) se hizo el 20/9: `CapitulosDeEscenario` pasó a una lista de escenarios, así sumar un
+cuarto es un elemento más en el array y su prefab.

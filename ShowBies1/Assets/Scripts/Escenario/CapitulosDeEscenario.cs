@@ -2,38 +2,62 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-// Los capitulos de las oleadas, pedido de Ivan: cada 10 oleadas cambia el escenario. Las
-// oleadas 1-10 son la pradera de dia, 11-20 el cementerio de noche, y despues se alternan.
-// Al pasar de capitulo, en el descanso de la oleada: el cartel "CAPITULO 2: EL CEMENTERIO",
-// la luz, el cielo y la niebla se funden a la noche, el piso pasa a tierra y las lapidas
-// salen del suelo de a una. Al volver al dia el decorado se va en lo oscuro del fundido.
-// Una partida retomada en la oleada 15 arranca directamente de noche.
+// Un escenario de los capitulos: como se ve el mundo y que decorado tiene. El primero de
+// la lista es "lo que trae la escena" (la pradera de dia): sus colores y su piso se leen
+// al empezar y no se cargan a mano.
+[System.Serializable]
+public class EscenarioDeCapitulo
+{
+    [Tooltip("El id del nombre en la tabla: escenario_pradera, escenario_cementerio, escenario_ciudad.")]
+    public string idTexto = "escenario_pradera";
+
+    [Tooltip("El prefab que sale del piso al entrar. Vacio: el capitulo no tiene decorado.")]
+    public GameObject decorado;
+
+    [Tooltip("El piso. Vacio: el que trae la escena.")]
+    public Material piso;
+
+    public Color cielo = new Color(0.66f, 0.86f, 0.96f, 1f);
+    public Color luz = Color.white;
+    public float intensidadLuz = 1.25f;
+    public Vector3 rotacionLuz = new Vector3(50f, -30f, 0f);
+    public Color ambiente = new Color(0.55f, 0.55f, 0.55f, 1f);
+
+    [Tooltip("De dia la niebla queda lejisimos; de noche se acerca y tapa el borde del mapa.")]
+    public bool conNiebla;
+    public float nieblaInicio = 16f;
+    public float nieblaFin = 52f;
+}
+
+// Los capitulos de las oleadas, pedido de Ivan: cada 10 oleadas cambia el escenario. Van
+// en el orden de `escenarios` y despues vuelven a empezar: 1-10 la pradera de dia, 11-20
+// el cementerio de noche, 21-30 la ciudad de noche y 31-40 otra vez la pradera.
 //
-// El decorado es un prefab hecho con formas simples (ConstructorEscenarios, en el editor),
-// sin colliders. Cuando termina de salir se junta en pocos draw calls
-// (StaticBatchingUtility), asi en el telefono cuesta casi nada; desde ahi las piezas ya
-// no se mueven por separado, asi que **la primera noche sale cada lapida sola del piso y
-// las siguientes sale el cementerio entero**, que ya esta armado y solo se prende. Lo del
-// dia (la luz, el color del cielo, el piso) se lee de la escena al empezar. Va en WaveMode.
+// Al pasar de capitulo, en el descanso de la oleada: el cartel "CAPITULO 3 / LA CIUDAD",
+// la luz, el cielo, la luz ambiente y la niebla se funden de un escenario al otro, el
+// piso cambia a mitad del fundido y el decorado nuevo sale del suelo mientras el viejo se
+// va en lo oscuro. Una partida retomada en la 25 arranca directamente en la ciudad.
+//
+// Los decorados son prefabs hechos con formas simples (ConstructorEscenarios, en el
+// editor), sin colliders: los zombis van derecho al jugador y se trabarian. Cada uno se
+// arma una sola vez en la partida y despues se prende y se apaga, que son cientos de
+// objetos. Cuando termina de salir se junta en pocos draw calls (StaticBatchingUtility) y
+// desde ahi las piezas ya no se mueven por separado, asi que **la primera vez sale cada
+// pieza sola del piso y las siguientes sale el decorado entero**. Va en WaveMode.
 public class CapitulosDeEscenario : MonoBehaviour
 {
     public WaveManager oleadas;
     public int oleadasPorCapitulo = 10;
 
-    [Header("La noche")]
-    public GameObject decoradoNoche;
+    [Tooltip("En orden. El primero es lo que trae la escena: sus colores y su piso se leen al empezar.")]
+    public EscenarioDeCapitulo[] escenarios;
+
+    public float duracionFundido = 2.5f;
+
+    [Header("Lo que se pinta")]
     public Renderer piso;
-    public Material pisoNoche;
     public Light sol;
     public Camera camara;
-    public Color cieloNoche = new Color(0.07f, 0.09f, 0.17f);
-    public Color luzNoche = new Color(0.55f, 0.66f, 1f);
-    public float intensidadNoche = 0.45f;
-    public Vector3 rotacionNoche = new Vector3(55f, 200f, 0f);
-    public Color ambienteNoche = new Color(0.2f, 0.23f, 0.34f);
-    public float nieblaInicio = 16f;
-    public float nieblaFin = 52f;
-    public float duracionFundido = 2.5f;
 
     [Header("El cartel")]
     public Canvas canvas;
@@ -42,49 +66,58 @@ public class CapitulosDeEscenario : MonoBehaviour
     public Color colorCartel = new Color(1f, 0.85f, 0.3f);
     public float duracionCartel = 3.2f;
 
-    // Lo del dia, leido de la escena.
-    private Color cieloDia, luzDia, ambienteDia;
-    private float intensidadDia;
-    private Quaternion rotacionDia;
-    private Material pisoDia;
+    private const float Hundido = 2.5f;      // cuanto se hunde el decorado para salir del piso
 
+    // Lo puesto de cada escenario: se arma la primera vez que toca y se reusa.
+    private class Puesta
+    {
+        public GameObject objeto;
+        public bool combinado;
+        public readonly List<Transform> piezas = new List<Transform>();
+        public readonly List<float> alturas = new List<float>();
+        public readonly List<float> demoras = new List<float>();
+        public float saliendoDesde = -1f;
+    }
+
+    private Puesta[] puestas;
     private int capitulo = -1;
-    private float mezcla;              // 0 dia, 1 noche
-    private float objetivo;
-    // El decorado se instancia una sola vez en toda la partida: son ~250 objetos y una
-    // malla combinada, y rehacerlo cada vez que vuelve la noche es un tiron en el
-    // telefono. Despues solo se prende y se apaga.
-    private GameObject decorado;
-    private bool combinado;
-    private readonly List<Transform> piezas = new List<Transform>();
-    private readonly List<float> alturas = new List<float>();
-    private readonly List<float> demoras = new List<float>();
-    private float saliendoDesde = -1f;
-
-    private const float Hundido = 2.5f;      // cuanto se hunde para salir del piso
+    private int indiceDesde, indiceHacia;
+    private float mezcla = 1f;               // 0 = el de indiceDesde, 1 = el de indiceHacia
     private TMP_Text cartel;
     private float cartelDesde;
+    private Color ambienteDeLaEscena = Color.gray;
 
     private void Start()
     {
         if (camara == null) camara = Camera.main;
-        if (camara != null) cieloDia = camara.backgroundColor;
+        ambienteDeLaEscena = RenderSettings.ambientLight;
+        if (escenarios == null || escenarios.Length == 0) return;
+
+        // El primero es lo que ya hay en la escena: asi el capitulo 1 se ve igual que
+        // siempre sin cargar los mismos colores dos veces.
+        var dia = escenarios[0];
+        if (camara != null) dia.cielo = camara.backgroundColor;
         if (sol != null)
         {
-            luzDia = sol.color;
-            intensidadDia = sol.intensity;
-            rotacionDia = sol.transform.rotation;
+            dia.luz = sol.color;
+            dia.intensidadLuz = sol.intensity;
+            dia.rotacionLuz = sol.transform.rotation.eulerAngles;
         }
-        ambienteDia = RenderSettings.ambientLight;
-        if (piso != null) pisoDia = piso.sharedMaterial;
+        dia.ambiente = ambienteDeLaEscena;
+        if (piso != null) dia.piso = piso.sharedMaterial;
+        dia.conNiebla = false;
+
+        puestas = new Puesta[escenarios.Length];
+        for (int i = 0; i < puestas.Length; i++) puestas[i] = new Puesta();
     }
 
     private void OnDestroy()
     {
         // La niebla y la luz ambiente son de la aplicacion: el menu no hereda la noche.
         RenderSettings.fog = false;
-        RenderSettings.ambientLight = ambienteDia;
-        if (decorado != null) Destroy(decorado);
+        RenderSettings.ambientLight = ambienteDeLaEscena;
+        if (puestas == null) return;
+        foreach (var puesta in puestas) if (puesta.objeto != null) Destroy(puesta.objeto);
     }
 
     public static int CapituloDe(int oleada, int oleadasPorCapitulo)
@@ -92,39 +125,52 @@ public class CapitulosDeEscenario : MonoBehaviour
         return oleada <= 0 ? 0 : (oleada - 1) / Mathf.Max(1, oleadasPorCapitulo);
     }
 
-    public static bool EsNoche(int capitulo)
+    // Que escenario le toca a ese capitulo: van en orden y vuelven a empezar.
+    public int EscenarioDe(int capituloDeLaOleada)
     {
-        return capitulo % 2 == 1;
+        if (escenarios == null || escenarios.Length == 0) return 0;
+        int largo = escenarios.Length;
+        return ((capituloDeLaOleada % largo) + largo) % largo;
     }
 
     private void Update()
     {
-        if (oleadas == null || oleadas.OleadaActual <= 0) return;
+        if (oleadas == null || oleadas.OleadaActual <= 0 || puestas == null) return;
 
         int nuevo = CapituloDe(oleadas.OleadaActual, oleadasPorCapitulo);
         if (nuevo != capitulo)
         {
             bool primero = capitulo < 0;
             capitulo = nuevo;
-            objetivo = EsNoche(capitulo) ? 1f : 0f;
+            int destino = EscenarioDe(capitulo);
+
             if (primero)
             {
-                // Retomada o recien empezada: sin fundido ni lapidas saliendo.
-                mezcla = objetivo;
-                if (objetivo > 0f) PonerDecorado(false);
+                // Retomada o recien empezada: sin fundido ni piezas saliendo.
+                indiceDesde = indiceHacia = destino;
+                mezcla = 1f;
+                if (escenarios[destino].decorado != null) Poner(destino, false);
                 Aplicar();
             }
-            if (capitulo > 0) MostrarCartel();
+            else if (destino != indiceHacia)
+            {
+                indiceDesde = indiceHacia;
+                indiceHacia = destino;
+                mezcla = 0f;
+            }
+            if (capitulo > 0) MostrarCartel(destino);
         }
 
-        if (!Mathf.Approximately(mezcla, objetivo))
+        if (mezcla < 1f)
         {
             bool antes = mezcla >= 0.5f;
-            mezcla = Mathf.MoveTowards(mezcla, objetivo, Time.deltaTime / Mathf.Max(0.01f, duracionFundido));
-            bool despues = mezcla >= 0.5f;
+            mezcla = Mathf.MoveTowards(mezcla, 1f, Time.deltaTime / Mathf.Max(0.01f, duracionFundido));
             // El cambio de piso y de decorado pasa en lo oscuro, a mitad del fundido.
-            if (!antes && despues) PonerDecorado(true);
-            if (antes && !despues) SacarDecorado();
+            if (!antes && mezcla >= 0.5f)
+            {
+                Sacar(indiceDesde);
+                Poner(indiceHacia, true);
+            }
             Aplicar();
         }
 
@@ -134,131 +180,146 @@ public class CapitulosDeEscenario : MonoBehaviour
 
     private void Aplicar()
     {
+        var a = escenarios[indiceDesde];
+        var b = escenarios[indiceHacia];
         float m = mezcla;
-        if (camara != null) camara.backgroundColor = Color.Lerp(cieloDia, cieloNoche, m);
+
+        Color cielo = Color.Lerp(a.cielo, b.cielo, m);
+        if (camara != null) camara.backgroundColor = cielo;
         if (sol != null)
         {
-            sol.color = Color.Lerp(luzDia, luzNoche, m);
-            sol.intensity = Mathf.Lerp(intensidadDia, intensidadNoche, m);
-            sol.transform.rotation = Quaternion.Slerp(rotacionDia, Quaternion.Euler(rotacionNoche), m);
+            sol.color = Color.Lerp(a.luz, b.luz, m);
+            sol.intensity = Mathf.Lerp(a.intensidadLuz, b.intensidadLuz, m);
+            sol.transform.rotation = Quaternion.Slerp(Quaternion.Euler(a.rotacionLuz), Quaternion.Euler(b.rotacionLuz), m);
         }
-        RenderSettings.ambientLight = Color.Lerp(ambienteDia, ambienteNoche, m);
-        RenderSettings.fog = m > 0.001f;
+        RenderSettings.ambientLight = Color.Lerp(a.ambiente, b.ambiente, m);
+
+        // El que no tiene niebla la manda lejisimos, asi pasar de uno con niebla a uno sin
+        // ella se ve como que se abre, y no como un corte.
+        RenderSettings.fog = a.conNiebla || b.conNiebla;
         RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogColor = cieloNoche;
-        // De dia la niebla queda lejisimos; se acerca con la noche.
-        RenderSettings.fogStartDistance = Mathf.Lerp(300f, nieblaInicio, m);
-        RenderSettings.fogEndDistance = Mathf.Lerp(600f, nieblaFin, m);
-        if (piso != null) piso.sharedMaterial = m >= 0.5f && pisoNoche != null ? pisoNoche : pisoDia;
+        RenderSettings.fogColor = cielo;
+        RenderSettings.fogStartDistance = Mathf.Lerp(a.conNiebla ? a.nieblaInicio : 300f, b.conNiebla ? b.nieblaInicio : 300f, m);
+        RenderSettings.fogEndDistance = Mathf.Lerp(a.conNiebla ? a.nieblaFin : 600f, b.conNiebla ? b.nieblaFin : 600f, m);
+
+        if (piso != null)
+        {
+            var material = (m >= 0.5f ? b : a).piso;
+            if (material != null) piso.sharedMaterial = material;
+        }
     }
 
-    private void PonerDecorado(bool saliendo)
+    // --- Los decorados ---------------------------------------------------------------
+
+    private void Poner(int indice, bool saliendo)
     {
-        if (decoradoNoche == null) return;
-        if (decorado == null) Armar();
-        decorado.SetActive(true);
+        var escenario = escenarios[indice];
+        var puesta = puestas[indice];
+        if (escenario.decorado == null) return;
+        if (puesta.objeto == null) Armar(escenario, puesta);
+        puesta.objeto.SetActive(true);
 
         if (!saliendo)
         {
-            // Una partida retomada de noche: ya esta puesto, sin salir del piso.
-            Aterrizar();
+            Aterrizar(puesta);
             return;
         }
 
-        if (combinado)
+        if (puesta.combinado)
         {
-            // Ya esta pegado en una sola malla y las piezas no se pueden mover por
-            // separado: sale el cementerio entero de una.
-            var p = decorado.transform.position;
+            // Ya esta pegado en una sola malla y las piezas no se mueven por separado:
+            // sale el decorado entero de una.
+            var p = puesta.objeto.transform.position;
             p.y = -Hundido;
-            decorado.transform.position = p;
+            puesta.objeto.transform.position = p;
         }
         else
         {
-            // La primera vez, cada lapida sale del piso con su demora.
-            for (int i = 0; i < piezas.Count; i++)
+            for (int i = 0; i < puesta.piezas.Count; i++)
             {
-                var p = piezas[i].localPosition;
-                p.y = alturas[i] - Hundido;
-                piezas[i].localPosition = p;
+                var p = puesta.piezas[i].localPosition;
+                p.y = puesta.alturas[i] - Hundido;
+                puesta.piezas[i].localPosition = p;
             }
         }
-        saliendoDesde = Time.time;
+        puesta.saliendoDesde = Time.time;
         CamaraJugador.Temblar(0.35f);
     }
 
-    private void Armar()
+    private static void Armar(EscenarioDeCapitulo escenario, Puesta puesta)
     {
-        decorado = Instantiate(decoradoNoche);
-        decorado.SetActive(false);
-        piezas.Clear();
-        alturas.Clear();
-        demoras.Clear();
-        foreach (Transform grupo in decorado.transform)
+        puesta.objeto = Instantiate(escenario.decorado);
+        puesta.objeto.SetActive(false);
+        foreach (Transform grupo in puesta.objeto.transform)
         {
             foreach (Transform pieza in grupo)
             {
-                piezas.Add(pieza);
-                alturas.Add(pieza.localPosition.y);
-                demoras.Add(Random.Range(0f, 1.4f));
+                puesta.piezas.Add(pieza);
+                puesta.alturas.Add(pieza.localPosition.y);
+                puesta.demoras.Add(Random.Range(0f, 1.4f));
             }
         }
     }
 
     // Todo en su lugar y, la primera vez, pegado en una sola malla.
-    private void Aterrizar()
+    private static void Aterrizar(Puesta puesta)
     {
-        saliendoDesde = -1f;
-        var raiz = decorado.transform.position;
+        puesta.saliendoDesde = -1f;
+        var raiz = puesta.objeto.transform.position;
         raiz.y = 0f;
-        decorado.transform.position = raiz;
-        if (combinado) return;
+        puesta.objeto.transform.position = raiz;
+        if (puesta.combinado) return;
 
-        for (int i = 0; i < piezas.Count; i++)
+        for (int i = 0; i < puesta.piezas.Count; i++)
         {
-            var p = piezas[i].localPosition;
-            p.y = alturas[i];
-            piezas[i].localPosition = p;
+            var p = puesta.piezas[i].localPosition;
+            p.y = puesta.alturas[i];
+            puesta.piezas[i].localPosition = p;
         }
-        // Pocos draw calls en el telefono. Desde aca las piezas ya no se mueven solas.
-        StaticBatchingUtility.Combine(decorado);
-        combinado = true;
+        StaticBatchingUtility.Combine(puesta.objeto);
+        puesta.combinado = true;
     }
 
-    private void SacarDecorado()
+    private void Sacar(int indice)
     {
-        if (decorado != null) decorado.SetActive(false);
-        saliendoDesde = -1f;
+        var puesta = puestas[indice];
+        if (puesta.objeto != null) puesta.objeto.SetActive(false);
+        puesta.saliendoDesde = -1f;
     }
 
     private void AnimarDecorado()
     {
-        if (saliendoDesde < 0f || decorado == null) return;
-        float t = Time.time - saliendoDesde;
-
-        if (combinado)
+        foreach (var puesta in puestas)
         {
-            float f = Mathf.Clamp01(t / 1.2f);
-            var p = decorado.transform.position;
-            p.y = -Hundido * (1f - CurvasUI.SalidaAtras(f));
-            decorado.transform.position = p;
-            if (f >= 1f) Aterrizar();
-            return;
-        }
+            if (puesta.saliendoDesde < 0f || puesta.objeto == null) continue;
+            float t = Time.time - puesta.saliendoDesde;
 
-        bool termino = true;
-        for (int i = 0; i < piezas.Count; i++)
-        {
-            float f = Mathf.Clamp01((t - demoras[i]) / 0.5f);
-            if (f < 1f) termino = false;
-            var p = piezas[i].localPosition;
-            p.y = alturas[i] - Hundido * (1f - CurvasUI.SalidaAtras(f));
-            piezas[i].localPosition = p;
+            if (puesta.combinado)
+            {
+                float f = Mathf.Clamp01(t / 1.2f);
+                var p = puesta.objeto.transform.position;
+                p.y = -Hundido * (1f - CurvasUI.SalidaAtras(f));
+                puesta.objeto.transform.position = p;
+                if (f >= 1f) Aterrizar(puesta);
+                continue;
+            }
+
+            bool termino = true;
+            for (int i = 0; i < puesta.piezas.Count; i++)
+            {
+                float f = Mathf.Clamp01((t - puesta.demoras[i]) / 0.5f);
+                if (f < 1f) termino = false;
+                var p = puesta.piezas[i].localPosition;
+                p.y = puesta.alturas[i] - Hundido * (1f - CurvasUI.SalidaAtras(f));
+                puesta.piezas[i].localPosition = p;
+            }
+            if (termino) Aterrizar(puesta);
         }
-        if (termino) Aterrizar();
     }
 
-    private void MostrarCartel()
+    // --- El cartel -------------------------------------------------------------------
+
+    private void MostrarCartel(int indiceEscenario)
     {
         if (canvas == null) return;
         if (cartel != null) Destroy(cartel.gameObject);
@@ -272,7 +333,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         cartel = go.GetComponent<TextMeshProUGUI>();
         if (fuente != null) cartel.font = fuente;
         if (materialContorno != null) cartel.fontSharedMaterial = materialContorno;
-        string nombre = EsNoche(capitulo) ? Textos.De("escenario_cementerio") : Textos.De("escenario_pradera");
+        string nombre = Textos.De(escenarios[indiceEscenario].idTexto);
         cartel.text = Textos.Formato("capitulo_titulo", capitulo + 1) + "\n<size=60%>" + nombre + "</size>";
         cartel.fontSize = 84f;
         cartel.color = colorCartel;

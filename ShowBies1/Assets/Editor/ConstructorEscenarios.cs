@@ -2,16 +2,21 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-// Arma el decorado del cementerio (el capitulo de noche de las oleadas, ver
-// CapitulosDeEscenario) con formas simples, sin modelos: lapidas, cruces, arboles pelados,
-// la reja del borde y cuatro faroles con luz calida. Todo sin colliders: los zombis van
-// derecho al jugador y se trabarian con cualquier obstaculo. Se guarda como prefab y sus
-// materiales en Assets/Escenarios/Cementerio; volver a correrlo lo rehace igual (la
-// semilla es fija).
+// Arma los decorados de los capitulos de las oleadas (ver CapitulosDeEscenario) con
+// formas simples, sin modelos: el **cementerio** (lapidas, cruces, arboles pelados, la
+// reja del borde y faroles) y la **ciudad de noche** (manzanas con vereda, edificios en
+// el borde, autos, faroles, contenedores y semaforos). Todo sin colliders: los zombis van
+// derecho al jugador y se trabarian con cualquier obstaculo, y los edificios van lejos del
+// centro, que la camara mira desde arriba y taparian la partida.
+//
+// Cada uno se guarda como prefab con sus materiales en Assets/Escenarios/<nombre>; volver
+// a correrlo lo rehace igual, porque la semilla es fija.
 public static class ConstructorEscenarios
 {
     const string Carpeta = "Assets/Escenarios/Cementerio";
     const string RutaPrefab = "Assets/Prefabs/Escenarios/Cementerio.prefab";
+    const string CarpetaCiudad = "Assets/Escenarios/Ciudad";
+    const string RutaPrefabCiudad = "Assets/Prefabs/Escenarios/Ciudad.prefab";
 
     [MenuItem("ShowBies/Escenarios/Armar cementerio")]
     public static void ArmarCementerio()
@@ -113,6 +118,250 @@ public static class ConstructorEscenarios
         Object.DestroyImmediate(raiz);
         AssetDatabase.SaveAssets();
         Debug.Log("ConstructorEscenarios: cementerio armado en " + RutaPrefab);
+    }
+
+    // --- La ciudad de noche: el capitulo 3 (oleadas 21-30) ----------------------------
+
+    [MenuItem("ShowBies/Escenarios/Armar ciudad")]
+    public static void ArmarCiudad()
+    {
+        Directory.CreateDirectory(CarpetaCiudad);
+        Directory.CreateDirectory(Path.GetDirectoryName(RutaPrefabCiudad));
+
+        var vereda = MaterialEn(CarpetaCiudad, "Vereda", new Color(0.42f, 0.42f, 0.45f), 0.1f);
+        var cordon = MaterialEn(CarpetaCiudad, "Cordon", new Color(0.62f, 0.62f, 0.64f), 0.1f);
+        var linea = MaterialEn(CarpetaCiudad, "LineaBlanca", new Color(0.85f, 0.83f, 0.7f), 0.05f);
+        var pared = MaterialEn(CarpetaCiudad, "Pared", new Color(0.26f, 0.26f, 0.32f), 0.05f);
+        var ventana = MaterialEn(CarpetaCiudad, "Ventana", new Color(1f, 0.82f, 0.45f), 0.2f);
+        Emitir(ventana, new Color(1f, 0.72f, 0.3f) * 1.6f);
+        var poste = MaterialEn(CarpetaCiudad, "Poste", new Color(0.14f, 0.14f, 0.16f), 0.3f);
+        var luzFarol = MaterialEn(CarpetaCiudad, "LuzFarol", new Color(1f, 0.88f, 0.6f), 0.2f);
+        Emitir(luzFarol, new Color(1f, 0.66f, 0.28f) * 2.4f);
+        var contenedor = MaterialEn(CarpetaCiudad, "Contenedor", new Color(0.16f, 0.35f, 0.2f), 0.15f);
+        var rojo = MaterialEn(CarpetaCiudad, "AutoRojo", new Color(0.5f, 0.12f, 0.12f), 0.35f);
+        var azul = MaterialEn(CarpetaCiudad, "AutoAzul", new Color(0.13f, 0.24f, 0.45f), 0.35f);
+        var blanco = MaterialEn(CarpetaCiudad, "AutoBlanco", new Color(0.62f, 0.62f, 0.6f), 0.35f);
+        var vidrio = MaterialEn(CarpetaCiudad, "Vidrio", new Color(0.1f, 0.14f, 0.18f), 0.6f);
+        var rueda = MaterialEn(CarpetaCiudad, "Rueda", new Color(0.07f, 0.07f, 0.08f), 0.1f);
+        var autos = new[] { rojo, azul, blanco };
+        PisoDeAsfalto();
+
+        var raiz = new GameObject("Ciudad");
+        var azar = new System.Random(11);
+        float Azar(float min, float max) => min + (float)azar.NextDouble() * (max - min);
+
+        // La cuadricula: manzanas de 14 x 14 con calles de 10 en el medio, corridas media
+        // manzana para que **el cruce quede en el centro**: ahi arranca el jugador, en la
+        // calle y con cuatro esquinas alrededor. Parado sobre una vereda lisa de 14 x 14
+        // no se entendia que fuera una ciudad.
+        const float Paso = 24f, Manzana = 14f;
+        var manzanas = Grupo(raiz, "Manzanas");
+        var faroles = Grupo(raiz, "Faroles");
+        var cosas = Grupo(raiz, "Cosas");
+        int luces = 0;
+
+        for (int ix = -2; ix <= 1; ix++)
+        {
+            for (int iz = -2; iz <= 1; iz++)
+            {
+                var centro = new Vector3(ix * Paso + Paso * 0.5f, 0f, iz * Paso + Paso * 0.5f);
+                bool esElCentro = centro.magnitude < Paso;   // las cuatro esquinas del cruce
+                Vereda(manzanas, centro, Manzana, vereda, cordon);
+
+                // Los edificios, solo lejos: desde arriba, uno cerca taparia la partida.
+                if (centro.magnitude > 30f)
+                {
+                    Edificio(manzanas, centro, Manzana, Azar(3.5f, 6.5f), pared, ventana, azar);
+                }
+                else
+                {
+                    // Cerca del centro, cosas bajas que no tapan.
+                    int cuantas = azar.Next(3, 6);
+                    for (int i = 0; i < cuantas; i++)
+                    {
+                        var donde = centro + new Vector3(Azar(-5.5f, 5.5f), 0f, Azar(-5.5f, 5.5f));
+                        if (donde.magnitude < 7f) continue;    // nada encima del jugador
+                        if (azar.NextDouble() < 0.5) Contenedor(cosas, donde, Azar(0f, 360f), contenedor);
+                        else Cantero(cosas, donde, Azar(0f, 360f), cordon, contenedor);
+                    }
+                }
+
+                // Un farol en cada esquina de manzana, mirando a la calle. Solo los seis
+                // mas cercanos llevan luz de verdad: en el telefono cada una cuesta.
+                foreach (var esquina in new[] { new Vector2(-1, -1), new Vector2(1, -1), new Vector2(-1, 1), new Vector2(1, 1) })
+                {
+                    var donde = centro + new Vector3(esquina.x * (Manzana * 0.5f + 1.2f), 0f, esquina.y * (Manzana * 0.5f + 1.2f));
+                    // Los de la manzana del centro van siempre: son los que alumbran
+                    // donde se juega. Los de afuera, la mitad de las veces.
+                    if (!esElCentro && azar.NextDouble() < 0.45) continue;
+                    bool conLuz = esElCentro || (luces < 8 && donde.magnitude < 28f);
+                    Farol(faroles, donde, poste, luzFarol, conLuz);
+                    if (conLuz) luces++;
+                }
+            }
+        }
+
+        // Las lineas blancas del medio de cada calle.
+        var lineas = Grupo(raiz, "Lineas");
+        for (int i = -2; i <= 2; i++)
+        {
+            float fijo = i * Paso;
+            if (Mathf.Abs(fijo) > 50f) continue;
+            for (float t2 = -48f; t2 <= 48f; t2 += 4f)
+            {
+                Pieza(lineas, PrimitiveType.Cube, new Vector3(t2, 0.02f, fijo), Quaternion.identity, new Vector3(2f, 0.04f, 0.22f), linea);
+                Pieza(lineas, PrimitiveType.Cube, new Vector3(fijo, 0.02f, t2), Quaternion.identity, new Vector3(0.22f, 0.04f, 2f), linea);
+            }
+        }
+
+        // Autos estacionados contra el cordon.
+        var flota = Grupo(raiz, "Autos");
+        for (int i = 0; i < 22; i++)
+        {
+            bool enX = azar.NextDouble() < 0.5;
+            float calle = azar.Next(-2, 3) * Paso;
+            float largo = Azar(-44f, 44f);
+            var donde = enX ? new Vector3(largo, 0f, calle + (azar.NextDouble() < 0.5 ? -3.2f : 3.2f))
+                            : new Vector3(calle + (azar.NextDouble() < 0.5 ? -3.2f : 3.2f), 0f, largo);
+            if (donde.magnitude < 12f) continue;   // no encima del jugador
+            Auto(flota, donde, enX ? 90f : 0f, autos[azar.Next(autos.Length)], vidrio, rueda);
+        }
+
+        PrefabUtility.SaveAsPrefabAsset(raiz, RutaPrefabCiudad);
+        Object.DestroyImmediate(raiz);
+        AssetDatabase.SaveAssets();
+        Debug.Log("ConstructorEscenarios: ciudad armada en " + RutaPrefabCiudad);
+    }
+
+    // La manzana: la vereda elevada y su cordon.
+    static void Vereda(GameObject padre, Vector3 centro, float lado, Material vereda, Material cordon)
+    {
+        var g = Grupo(padre, "Manzana");
+        g.transform.position = centro;
+        Local(g, PrimitiveType.Cube, new Vector3(0f, 0.07f, 0f), Quaternion.identity, new Vector3(lado, 0.14f, lado), vereda);
+        float mitad = lado * 0.5f;
+        foreach (var lado2 in new[] { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) })
+        {
+            var pos = new Vector3(lado2.x * mitad, 0.09f, lado2.y * mitad);
+            var escala = lado2.x != 0 ? new Vector3(0.3f, 0.18f, lado + 0.3f) : new Vector3(lado + 0.3f, 0.18f, 0.3f);
+            Local(g, PrimitiveType.Cube, pos, Quaternion.identity, escala, cordon);
+        }
+    }
+
+    // Un edificio bajo con sus ventanas encendidas.
+    static void Edificio(GameObject padre, Vector3 centro, float lado, float alto, Material pared, Material ventana, System.Random azar)
+    {
+        var g = Grupo(padre, "Edificio");
+        g.transform.position = centro;
+        float ancho = lado - 3f;
+        Local(g, PrimitiveType.Cube, new Vector3(0f, alto * 0.5f, 0f), Quaternion.identity, new Vector3(ancho, alto, ancho), pared);
+        // Unas ventanas prendidas en las cuatro caras, a la altura de cada piso.
+        int pisos = Mathf.Max(1, Mathf.FloorToInt(alto / 1.6f));
+        for (int piso = 0; piso < pisos; piso++)
+        {
+            float y = 0.9f + piso * 1.6f;
+            if (y > alto - 0.4f) break;
+            for (int cara = 0; cara < 4; cara++)
+            {
+                if (azar.NextDouble() < 0.45) continue;
+                float angulo = cara * 90f * Mathf.Deg2Rad;
+                var normal = new Vector3(Mathf.Sin(angulo), 0f, Mathf.Cos(angulo));
+                var lateral = new Vector3(normal.z, 0f, -normal.x);
+                float corrimiento = (float)(azar.NextDouble() - 0.5) * (ancho - 2.4f);
+                var pos = normal * (ancho * 0.5f + 0.03f) + lateral * corrimiento + Vector3.up * y;
+                var escala = Vector3.Scale(new Vector3(1.1f, 0.8f, 1.1f), new Vector3(Mathf.Abs(lateral.x) + 0.06f, 1f, Mathf.Abs(lateral.z) + 0.06f));
+                Local(g, PrimitiveType.Cube, pos, Quaternion.identity, escala, ventana);
+            }
+        }
+    }
+
+    static void Farol(GameObject padre, Vector3 pos, Material poste, Material luzMat, bool conLuz)
+    {
+        var g = Grupo(padre, "Farol");
+        g.transform.position = pos;
+        Local(g, PrimitiveType.Cube, new Vector3(0f, 2f, 0f), Quaternion.identity, new Vector3(0.16f, 4f, 0.16f), poste);
+        Local(g, PrimitiveType.Cube, new Vector3(0.5f, 3.95f, 0f), Quaternion.identity, new Vector3(1.1f, 0.14f, 0.14f), poste);
+        Local(g, PrimitiveType.Cube, new Vector3(1f, 3.82f, 0f), Quaternion.identity, new Vector3(0.6f, 0.2f, 0.4f), luzMat);
+        if (!conLuz) return;
+
+        var luzGo = new GameObject("Luz");
+        luzGo.transform.SetParent(g.transform, false);
+        luzGo.transform.localPosition = new Vector3(1f, 3.5f, 0f);
+        var luz = luzGo.AddComponent<Light>();
+        luz.type = LightType.Point;
+        luz.color = new Color(1f, 0.72f, 0.42f);
+        luz.range = 18f;
+        luz.intensity = 3.2f;
+        luz.shadows = LightShadows.None;
+    }
+
+    static void Auto(GameObject padre, Vector3 pos, float rumbo, Material color, Material vidrio, Material rueda)
+    {
+        var g = Grupo(padre, "Auto");
+        g.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rumbo, 0f));
+        Local(g, PrimitiveType.Cube, new Vector3(0f, 0.55f, 0f), Quaternion.identity, new Vector3(1.8f, 0.7f, 4.2f), color);
+        Local(g, PrimitiveType.Cube, new Vector3(0f, 1.1f, -0.2f), Quaternion.identity, new Vector3(1.6f, 0.6f, 2.2f), vidrio);
+        foreach (var r in new[] { new Vector2(-0.95f, 1.3f), new Vector2(0.95f, 1.3f), new Vector2(-0.95f, -1.3f), new Vector2(0.95f, -1.3f) })
+            Local(g, PrimitiveType.Cylinder, new Vector3(r.x, 0.33f, r.y), Quaternion.Euler(0f, 0f, 90f), new Vector3(0.66f, 0.12f, 0.66f), rueda);
+    }
+
+    static void Contenedor(GameObject padre, Vector3 pos, float rumbo, Material material)
+    {
+        var g = Grupo(padre, "Contenedor");
+        g.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rumbo, 0f));
+        Local(g, PrimitiveType.Cube, new Vector3(0f, 0.55f, 0f), Quaternion.identity, new Vector3(1.6f, 1.1f, 1.1f), material);
+        Local(g, PrimitiveType.Cube, new Vector3(0f, 1.15f, 0f), Quaternion.Euler(0f, 0f, 4f), new Vector3(1.7f, 0.12f, 1.2f), material);
+    }
+
+    static void Cantero(GameObject padre, Vector3 pos, float rumbo, Material borde, Material planta)
+    {
+        var g = Grupo(padre, "Cantero");
+        g.transform.SetPositionAndRotation(pos, Quaternion.Euler(0f, rumbo, 0f));
+        Local(g, PrimitiveType.Cube, new Vector3(0f, 0.2f, 0f), Quaternion.identity, new Vector3(2.2f, 0.4f, 2.2f), borde);
+        Local(g, PrimitiveType.Sphere, new Vector3(0f, 0.75f, 0f), Quaternion.identity, new Vector3(1.6f, 1.1f, 1.6f), planta);
+    }
+
+    static void PisoDeAsfalto()
+    {
+        string ruta = CarpetaCiudad + "/PisoCiudad.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(ruta);
+        if (mat == null)
+        {
+            mat = new Material(Shader.Find("Standard"));
+            AssetDatabase.CreateAsset(mat, ruta);
+        }
+        mat.mainTexture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Five Seamless Tileable Ground Textures/Textures/Grey Stones.png");
+        // Mas repetida que la del cementerio: el asfalto es de grano mas fino.
+        mat.mainTextureScale = new Vector2(70f, 70f);
+        mat.color = new Color(0.46f, 0.46f, 0.5f);
+        mat.SetFloat("_Glossiness", 0.12f);
+        mat.SetFloat("_Metallic", 0f);
+        EditorUtility.SetDirty(mat);
+    }
+
+    static void Emitir(Material mat, Color color)
+    {
+        mat.EnableKeyword("_EMISSION");
+        mat.SetColor("_EmissionColor", color);
+        mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+        EditorUtility.SetDirty(mat);
+    }
+
+    static Material MaterialEn(string carpeta, string nombre, Color color, float brillo)
+    {
+        string ruta = carpeta + "/" + nombre + ".mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(ruta);
+        if (mat == null)
+        {
+            mat = new Material(Shader.Find("Standard"));
+            AssetDatabase.CreateAsset(mat, ruta);
+        }
+        mat.color = color;
+        mat.SetFloat("_Glossiness", brillo);
+        mat.SetFloat("_Metallic", 0f);
+        mat.enableInstancing = true;
+        EditorUtility.SetDirty(mat);
+        return mat;
     }
 
     static void PisoDeTierra()

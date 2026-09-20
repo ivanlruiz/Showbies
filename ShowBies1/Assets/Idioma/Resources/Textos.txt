@@ -73,6 +73,7 @@ zombi_jefe	BOSS	JEFE
 capitulo_titulo	CHAPTER {0}	CAPÍTULO {0}
 escenario_pradera	THE MEADOW	LA PRADERA
 escenario_cementerio	THE GRAVEYARD	EL CEMENTERIO
+escenario_ciudad	THE CITY	LA CIUDAD
 
 # --- Tienda
 tienda_titulo	UPGRADES	MEJORAS
