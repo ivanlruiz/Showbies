@@ -163,6 +163,7 @@ public class WaveManager : MonoBehaviour
             Progreso.Sumar(bonoDeLaOleadaAnterior);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
             MisionesDiarias.RegistrarOleada(OleadaActual);
+            DesafioSemanal.RegistrarOleada();
             Progreso.Guardar();
         }
     }

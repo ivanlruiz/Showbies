@@ -48,7 +48,7 @@ Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), Gener
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, Bestiario, Economia
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
@@ -437,9 +437,9 @@ porque el menú la tiene guardada en su escena (ver El fondo del menú vivo).
 
 Lo que el jugador conserva entre partidas vive en `Progreso` (`Assets/Scripts/Progreso/`): un JSON en
 `Application.persistentDataPath/progreso.json` con las monedas, la mejor oleada completada, el nivel de cada
-mejora y lo que necesitan los anuncios (versión 4: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
+mejora y lo que necesitan los anuncios (versión 5: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
 guarda diccionarios, desde la 3 se suman `partidasTerminadas`, `segundosJugados`, `ofrecerVideos` y los topes
-del día, y desde la 4 los contadores de por vida). No usa PlayerPrefs a propósito: es estado estructurado.
+del día, desde la 4 los contadores de por vida y desde la 5 el desafío de la semana). No usa PlayerPrefs a propósito: es estado estructurado.
 
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
@@ -588,6 +588,32 @@ completada en el día y la lista).
   un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten. Avisa
   también, en dorado, las estrellas del bestiario que se ganan jugando ("¡ESTRELLA! CAMINANTE x100"); si llegan dos a
   la vez, salen una después de otra.
+
+## Desafío semanal
+
+Uno solo, grande, que dura de lunes a domingo y paga bastante más que una misión del día (pedido de Ivan). Las
+diarias dan una razón para entrar hoy; este da una para volver toda la semana, que es otra escala de tiempo. La
+lógica es `DesafioSemanal` (`Assets/Scripts/Progreso/`), guardada en el progreso (`semanal`), y se ve en la fila
+dorada de arriba de la ventana de misiones.
+
+- **Cambia el lunes**, con el mismo día confiable que las misiones (`LunesDe(Progreso.DiaDeHoy())`), y el mismo
+  lunes sale siempre el mismo: se sortea con el lunes de semilla. Un reloj atrasado no lo cambia, porque sólo
+  cuenta un lunes mayor al guardado.
+- **Tipos** (el nombre se guarda en el JSON: no se renombra): matar N zombis, completar N oleadas, ganar N monedas
+  y derrotar N jefes (este último sólo con la mejor oleada en 9). El avance sale de los contadores de por vida,
+  como las misiones; las oleadas se cuentan aparte (`oleadasDeLaSemana`, que avisa `WaveManager` con
+  `RegistrarOleada`) porque no hay contador de por vida de oleadas.
+- **Cuesta quince partidas y paga la mitad de lo que dan esas quince** (`PartidasQueCuesta`, `FraccionDelPremio`),
+  con la vara de `Economia`, la misma de las misiones, el bestiario y la recompensa diaria. Una prueba verifica que
+  pague más que la misión difícil del día —dura siete veces más— y que no pase de lo que cuesta.
+- **El objetivo y el premio se congelan con la mejor oleada del lunes** (`mejorOleadaAlArmar`, centinela −1),
+  igual que las misiones y por la misma razón: si no, guardarlo sin cobrar hasta mejorar la marca sería la jugada
+  óptima.
+- **Al cambiar de semana, lo cumplido sin cobrar se cobra solo** (`CerrarLaSemana`), como el cierre de medianoche
+  de las misiones. Entra por `CobrarPremio`: no cuenta como monedas ganadas jugando.
+- **En la ventana de misiones**: una fila dorada arriba de las tres del día, con la etiqueta DESAFÍO SEMANAL, su
+  barra, el premio y los días que faltan ("TERMINA EN N DÍAS", y "¡ÚLTIMO DÍA!" el domingo). Cobrarlo salta y suena
+  como una misión. Cuenta en la insignia del botón.
 
 ## Bestiario
 

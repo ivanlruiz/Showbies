@@ -207,6 +207,10 @@ Lo que quedó anotado, de mayor a menor:
 - [ ] La barra del jefe: el "Marco" queda fuera del rect de su propia raíz (`ancho + 40 / alto + 66` no describe el
   contenido). No se ve porque no hay máscara.
 
-**Después:** el diseño de las cartas de 1 de 3 por oleada (ideas de Archero) y el desafío semanal. El tercer capítulo
+- [x] **El desafío semanal.** **Hecho el 20/9**: `DesafioSemanal`, uno por semana de lunes a domingo, que cuesta
+  quince partidas y paga la mitad de lo que dan esas quince (la vara de `Economia`, como todo lo demás). Se ve en una
+  fila dorada arriba de las tres diarias, con los días que faltan; el progreso pasó a versión 5.
+
+**Después:** el diseño de las cartas de 1 de 3 por oleada (ideas de Archero). El tercer capítulo
 (la ciudad de noche, oleadas 21-30) se hizo el 20/9: `CapitulosDeEscenario` pasó a una lista de escenarios, así sumar un
 cuarto es un elemento más en el array y su prefab.

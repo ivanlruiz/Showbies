@@ -213,6 +213,7 @@ public static class PruebasMejoras
                     ProbarRelojConfiable(informe);
                     ProbarJugoSonoro(informe);
                     ProbarMisiones(informe);
+                    ProbarDesafioSemanal(informe);
                     ProbarProximoObjetivo(informe);
                     ProbarBestiario(informe);
                     if (completo)
@@ -1816,6 +1817,89 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: el primer dia no regala (menos de 500 en total)",
                       MisionesDiarias.Monto(0, 0) + MisionesDiarias.Monto(1, 0)
                       + MisionesDiarias.Monto(2, 0) + MisionesDiarias.MontoCofre(0) < 500);
+    }
+
+    // El desafio de la semana: la semana que le toca, el objetivo, el premio y el cobro.
+    static void ProbarDesafioSemanal(Informe inf)
+    {
+        // El lunes de la semana de cada dia (el 21/9/2026 es lunes).
+        inf.Igual("semanal: el lunes es su propio lunes", 20260921, DesafioSemanal.LunesDe(20260921));
+        inf.Igual("semanal: el miercoles cae en ese lunes", 20260921, DesafioSemanal.LunesDe(20260923));
+        inf.Igual("semanal: el domingo tambien", 20260921, DesafioSemanal.LunesDe(20260927));
+        inf.Igual("semanal: el lunes siguiente ya es otro", 20260928, DesafioSemanal.LunesDe(20260928));
+        inf.Igual("semanal: cruza el fin de mes", 20260928, DesafioSemanal.LunesDe(20261002));
+        inf.Igual("semanal: una fecha rota da 0", 0, DesafioSemanal.LunesDe(20260899));
+
+        // El mismo lunes da siempre el mismo desafio, y sin la oleada 9 no pide jefes.
+        bool estable = true, sinJefes = true;
+        foreach (int lunes in new[] { 20260921, 20260928, 20261005, 20261012 })
+        {
+            if (DesafioSemanal.Elegir(lunes, 20) != DesafioSemanal.Elegir(lunes, 20)) estable = false;
+            if (DesafioSemanal.Elegir(lunes, 3) == DesafioSemanal.Jefes) sinJefes = false;
+        }
+        inf.Verdadero("semanal: el mismo lunes da el mismo desafio", estable);
+        inf.Verdadero("semanal: sin la oleada 9 no pide jefes", sinJefes);
+
+        // El objetivo crece con la oleada y el premio no se pasa de lo que cuesta.
+        bool crecen = true, proporcion = true, valeMasQueUnaDiaria = true;
+        foreach (int m in new[] { 0, 5, 11, 20, 40 })
+        {
+            foreach (string tipo in new[] { DesafioSemanal.Matar, DesafioSemanal.Oleadas,
+                                            DesafioSemanal.Monedas, DesafioSemanal.Jefes })
+            {
+                if (m > 5 && DesafioSemanal.Objetivo(tipo, m) <= DesafioSemanal.Objetivo(tipo, 5)) crecen = false;
+            }
+            double cuestan = DesafioSemanal.PartidasQueCuesta * Economia.MonedasPorPartida(m);
+            if (DesafioSemanal.Monto(m) > cuestan) proporcion = false;
+            // Tiene que pagar mas que la mision dificil del dia: dura toda la semana.
+            if (DesafioSemanal.Monto(m) <= MisionesDiarias.Monto(2, m)) valeMasQueUnaDiaria = false;
+        }
+        inf.Verdadero("semanal: los objetivos crecen con la oleada", crecen);
+        inf.Verdadero("semanal: el premio no pasa lo que cuesta", proporcion);
+        inf.Verdadero("semanal: paga mas que la mision dificil del dia", valeMasQueUnaDiaria);
+
+        // Con el progreso: se arma, se avanza, se cobra una sola vez.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":0}", null);
+        DesafioSemanal.Asegurar();
+        var estado = Progreso.Semanal;
+        inf.Verdadero("semanal: un progreso nuevo arma uno", estado.lunes > 0 && estado.objetivo > 0);
+        inf.Verdadero("semanal: arranca sin cobrar y sin avance",
+                      !estado.cobrado && DesafioSemanal.Avance < 0.001);
+
+        // Se fuerza uno de matar tres zombis para probar el circuito.
+        estado.tipo = DesafioSemanal.Matar;
+        estado.objetivo = 3;
+        estado.inicio = Progreso.MatadosEnTotal;
+        inf.Cerca("semanal: sin cumplir no paga", 0, DesafioSemanal.Cobrar(), 1e-9);
+        for (int i = 0; i < 3; i++) Progreso.ContarMuerte("ZombiNormal", false);
+        inf.Verdadero("semanal: con las tres muertes queda cumplido", DesafioSemanal.Cumplido);
+        inf.Verdadero("semanal: y cuenta para la insignia", DesafioSemanal.PorCobrar);
+        double esperado = DesafioSemanal.MontoDeEstaSemana;
+        inf.Cerca("semanal: cobra lo que dice la ventana", esperado, DesafioSemanal.Cobrar(), 1e-9);
+        inf.Cerca("semanal: no paga dos veces", 0, DesafioSemanal.Cobrar(), 1e-9);
+        inf.Cerca("semanal: las monedas llegaron", esperado, Progreso.Monedas, 1e-9);
+        inf.Cerca("semanal: no cuenta como jugado", 0, Progreso.MonedasGanadasJugando, 1e-9);
+
+        // Un reloj atrasado no lo cambia: el lunes guardado es mayor que el de hoy.
+        int lunesGuardado = estado.lunes;
+        estado.lunes = lunesGuardado + 7;
+        DesafioSemanal.Asegurar();
+        inf.Verdadero("semanal: con el reloj atrasado sigue el mismo", Progreso.Semanal.cobrado);
+
+        // Al cambiar de semana, lo cumplido sin cobrar se cobra solo.
+        estado.lunes = lunesGuardado - 7;
+        estado.tipo = DesafioSemanal.Matar;
+        estado.objetivo = 1;
+        estado.inicio = 0;
+        estado.cobrado = false;
+        estado.mejorOleadaAlArmar = 0;
+        double antes = Progreso.Monedas;
+        double esperadoDeLaSemanaVieja = DesafioSemanal.Monto(0);
+        DesafioSemanal.Asegurar();
+        inf.Cerca("semanal: al cambiar de semana se cobra lo cumplido",
+                  esperadoDeLaSemanaVieja, Progreso.Monedas - antes, 1e-9);
+        inf.Verdadero("semanal: y queda uno nuevo sin cobrar",
+                      Progreso.Semanal.lunes == lunesGuardado && !Progreso.Semanal.cobrado);
     }
 
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.

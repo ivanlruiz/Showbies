@@ -110,6 +110,9 @@ public static class Progreso
         // Las misiones del dia (MisionesDiarias). Un JSON sin el campo las arma de nuevo.
         public EstadoMisiones misiones = new EstadoMisiones();
 
+        // El desafio de la semana (DesafioSemanal), igual.
+        public EstadoSemanal semanal = new EstadoSemanal();
+
         // Las estrellas del bestiario ya cobradas, por tipo de zombi (Bestiario).
         public List<Conteo> estrellasCobradas = new List<Conteo>();
     }
@@ -118,7 +121,7 @@ public static class Progreso
     // necesitan los anuncios (partidas, tiempo jugado, interruptor y topes del dia).
     // 4: suma los contadores de por vida. Sube aunque migrar no pida nada, para que
     // un build viejo abra el archivo en solo lectura y no borre los contadores.
-    public const int VersionActual = 4;
+    public const int VersionActual = 5;
 
     private const string NombreArchivo = "progreso.json";
 
@@ -249,6 +252,12 @@ public static class Progreso
         datos.oleadaEnCurso = 0;
         datos.puntosEnCurso = 0;
         Revision++;
+    }
+
+    // El desafio de la semana: lo arma y lo cobra DesafioSemanal.
+    public static EstadoSemanal Semanal
+    {
+        get { Cargar(); return datos.semanal; }
     }
 
     // Las misiones del dia: las arma y las cobra MisionesDiarias.
@@ -764,6 +773,10 @@ public static class Progreso
         if (d.misiones.lista == null) d.misiones.lista = new List<MisionDelDia>();
         d.misiones.lista.RemoveAll(m => m == null || string.IsNullOrEmpty(m.tipo));
         if (d.misiones.oleadasDelDia < 0) d.misiones.oleadasDelDia = 0;
+
+        if (d.semanal == null) d.semanal = new EstadoSemanal();
+        if (d.semanal.tipo == null) d.semanal.tipo = "";
+        if (d.semanal.oleadasDeLaSemana < 0) d.semanal.oleadasDeLaSemana = 0;
 
         if (d.estadisticas == null) d.estadisticas = new Estadisticas();
         Estadisticas e = d.estadisticas;

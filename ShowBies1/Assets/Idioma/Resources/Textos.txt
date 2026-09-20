@@ -53,6 +53,13 @@ mision_cobrar	CLAIM	COBRAR
 mision_cumplida	MISSION COMPLETE!	¡MISIÓN CUMPLIDA!
 misiones_cofre	CHEST +{0}	COFRE +{0}
 misiones_cofre_falta	CHEST {0}/3	COFRE {0}/3
+semanal_titulo	WEEKLY CHALLENGE	DESAFÍO SEMANAL
+semanal_matar	Kill {0} zombies	Mata {0} zombis
+semanal_oleadas	Complete {0} waves	Completa {0} oleadas
+semanal_monedas	Earn {0} coins	Gana {0} monedas
+semanal_jefes	Defeat {0} bosses	Derrota {0} jefes
+semanal_termina	ENDS IN {0} DAYS	TERMINA EN {0} DÍAS
+semanal_termina_hoy	LAST DAY!	¡ÚLTIMO DÍA!
 misiones_cofre_abierto	OPENED! +{0}	¡ABIERTO! +{0}
 objetivo_mision	NEXT: {0}  {1}/{2}	PRÓXIMO: {0}  {1}/{2}
 objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} PARA {1} NIVEL {2}

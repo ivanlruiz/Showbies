@@ -3,7 +3,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// El boton MISIONES del menu y la ventana que abre, con las tres misiones del dia
+// El boton MISIONES del menu y la ventana que abre, con el desafio de la semana arriba
+// (DesafioSemanal, pedido de Ivan: un objetivo grande que dura de lunes a domingo, con su
+// propio premio) y las tres misiones del dia
 // (MisionesDiarias): cada una con su dificultad (verde, amarilla, roja), lo que pide,
 // una barra de avance, el premio y COBRAR cuando esta cumplida. Al cobrar, el arpegio
 // de la diaria y la fila se pone verde con su tilde. Abajo, VOLVER y el cofre del dia:
@@ -40,6 +42,8 @@ public class VentanaMisiones : MonoBehaviour
     public Color colorTextoCofre = new Color(0.23f, 0.15f, 0f, 1f);
     public Color colorVidrio = new Color(0.06f, 0.12f, 0.05f, 0.45f);
     public Color colorTextoAbierto = new Color(0.06f, 0.14f, 0.05f, 1f);
+    [Tooltip("El fondo de la fila del desafio semanal: dorado translucido, para que se lea como el especial.")]
+    public Color colorSemanal = new Color(1f, 0.79f, 0.2f, 0.18f);
     public float esperaDelCofre = 0.6f;
     public Color[] coloresDificultad =
     {
@@ -78,9 +82,26 @@ public class VentanaMisiones : MonoBehaviour
         public RectTransform raiz;
     }
 
+    // La fila del desafio de la semana, arriba de las tres del dia.
+    private class Semana
+    {
+        public RectTransform raiz;
+        public Image fondo;
+        public TMP_Text etiqueta;
+        public TMP_Text descripcion;
+        public TMP_Text cuenta;
+        public TMP_Text premio;
+        public TMP_Text termina;
+        public RectTransform relleno;
+        public GameObject cobrar;
+        public Image tilde;
+        public float golpe = -1f;
+    }
+
     private GameObject panel;
     private RectTransform ventana;
     private TMP_Text textoNuevas;
+    private Semana semana;
     private readonly Fila[] filas = new Fila[MisionesDiarias.Cantidad];
     private Texture2D texturaCirculo;
     private Sprite circulo;
@@ -136,7 +157,8 @@ public class VentanaMisiones : MonoBehaviour
     private void RefrescarInsignia(float dt)
     {
         relojInsignia += dt;
-        ConstructorUI.Latir(insignia, numeroInsignia, MisionesDiarias.PorCobrar, relojInsignia);
+        ConstructorUI.Latir(insignia, numeroInsignia,
+                            MisionesDiarias.PorCobrar + (DesafioSemanal.PorCobrar ? 1 : 0), relojInsignia);
     }
 
     // --- La ventana ----------------------------------------------------------------
@@ -152,6 +174,7 @@ public class VentanaMisiones : MonoBehaviour
             Armar();
         }
         MisionesDiarias.Asegurar();
+        DesafioSemanal.Asegurar();
         Refrescar();
         panel.SetActive(true);
         panel.transform.SetAsLastSibling();
@@ -241,6 +264,13 @@ public class VentanaMisiones : MonoBehaviour
             }
         }
 
+        if (semana != null && semana.golpe >= 0f)
+        {
+            semana.golpe += dt;
+            float saltoSemanal = 0.08f * CurvasUI.Campana(Mathf.Clamp01(semana.golpe / 0.4f));
+            semana.raiz.localScale = Vector3.one * (1f + saltoSemanal);
+        }
+
         foreach (var fila in filas)
         {
             if (fila == null) continue;
@@ -282,7 +312,35 @@ public class VentanaMisiones : MonoBehaviour
             fila.cobrar.SetActive(cumplida && !mision.cobrada);
             fila.tilde.enabled = mision.cobrada && tilde != null;
         }
+        PintarSemana();
         PintarCofre(mejor);
+    }
+
+    private void PintarSemana()
+    {
+        if (semana == null) return;
+        var estado = DesafioSemanal.Estado;
+        bool cumplido = DesafioSemanal.Cumplido;
+        double avance = Math.Min(DesafioSemanal.Avance, estado.objetivo);
+
+        semana.descripcion.text = DesafioSemanal.Descripcion(estado);
+        semana.cuenta.text = FormatoNumeros.Compacto(avance) + " / " + FormatoNumeros.Compacto(estado.objetivo);
+        semana.premio.text = FormatoNumeros.Compacto(DesafioSemanal.MontoDeEstaSemana);
+        float fraccion = estado.objetivo > 0 ? Mathf.Clamp01((float)(avance / estado.objetivo)) : 1f;
+        semana.relleno.anchorMax = new Vector2(fraccion, 1f);
+
+        int dias = DesafioSemanal.DiasQueFaltan();
+        semana.termina.text = dias <= 1 ? Textos.De("semanal_termina_hoy") : Textos.Formato("semanal_termina", dias);
+
+        semana.fondo.color = estado.cobrado ? colorCumplida : colorSemanal;
+        Color textoDeLaFila = estado.cobrado ? colorTextoOscuro : ColorDeTexto;
+        semana.descripcion.color = textoDeLaFila;
+        semana.cuenta.color = textoDeLaFila;
+        semana.premio.color = textoDeLaFila;
+        semana.termina.color = textoDeLaFila;
+        semana.etiqueta.color = estado.cobrado ? colorTextoOscuro : colorTitulo;
+        semana.cobrar.SetActive(cumplido && !estado.cobrado);
+        semana.tilde.enabled = estado.cobrado && tilde != null;
     }
 
     private void PintarCofre(int mejor)
@@ -339,23 +397,24 @@ public class VentanaMisiones : MonoBehaviour
         idiomaArmado = Idioma.Revision;
         temaArmado = Tema.Revision;
 
-        ventana = Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 660f));
+        ventana = Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 820f));
         var fondo = ventana.gameObject.AddComponent<Image>();
         Redondear(fondo, 3f);
         fondo.color = ColorDeVentana;
 
-        var titulo = Texto(ventana, "Titulo", Textos.De("misiones_titulo"), 80f, colorTitulo, new Vector2(0f, 250f), new Vector2(1100f, 100f));
+        var titulo = Texto(ventana, "Titulo", Textos.De("misiones_titulo"), 80f, colorTitulo, new Vector2(0f, 330f), new Vector2(1100f, 100f));
         if (materialContorno != null) titulo.fontSharedMaterial = materialContorno;
         minutoMostrado = MinutosParaLasNuevas();
-        textoNuevas = Texto(ventana, "Nuevas", TextoNuevas(minutoMostrado), 36f, ColorDeTexto, new Vector2(0f, 182f), new Vector2(1100f, 50f));
+        textoNuevas = Texto(ventana, "Nuevas", TextoNuevas(minutoMostrado), 36f, ColorDeTexto, new Vector2(0f, 262f), new Vector2(1100f, 50f));
 
-        for (int i = 0; i < filas.Length; i++) filas[i] = ArmarFila(i, 85f - 125f * i);
+        semana = ArmarSemana(160f);
+        for (int i = 0; i < filas.Length; i++) filas[i] = ArmarFila(i, 20f - 125f * i);
 
-        var volver = ArmarBoton(ventana, "Volver", new Vector2(-300f, -262f), new Vector2(340f, 100f),
+        var volver = ArmarBoton(ventana, "Volver", new Vector2(-300f, -340f), new Vector2(340f, 100f),
                                 ColorDeVidrio, Color.white, iconoAtras, Textos.De("comun_volver"), 46f);
         volver.onClick.AddListener(Cerrar);
 
-        cofre = ArmarBoton(ventana, "Cofre", new Vector2(200f, -262f), new Vector2(480f, 100f),
+        cofre = ArmarBoton(ventana, "Cofre", new Vector2(200f, -340f), new Vector2(480f, 100f),
                            ColorDeVidrio, Color.white, iconoCofre, Textos.Formato("misiones_cofre_falta", 0), 46f);
         cofre.onClick.AddListener(TocarCofre);
         fondoCofre = cofre.transform.Find("Visual/Fondo").GetComponent<Image>();
@@ -363,6 +422,78 @@ public class VentanaMisiones : MonoBehaviour
         var icono = cofre.transform.Find("Visual/Icono");
         if (icono != null) iconoDelCofre = icono.GetComponent<Image>();
         jugoCofre = cofre.GetComponent<BotonJugoso>();
+    }
+
+    // La fila del desafio de la semana: como las del dia pero mas alta, dorada y con su
+    // etiqueta y los dias que faltan.
+    private Semana ArmarSemana(float y)
+    {
+        var s = new Semana();
+        s.raiz = Rect(ventana, "Semanal", new Vector2(0f, y), new Vector2(1080f, 140f));
+        s.fondo = s.raiz.gameObject.AddComponent<Image>();
+        Redondear(s.fondo, 3f);
+        s.fondo.color = colorSemanal;
+
+        s.etiqueta = Texto(s.raiz, "Etiqueta", Textos.De("semanal_titulo"), 30f, colorTitulo,
+                           new Vector2(-235f, 46f), new Vector2(620f, 40f));
+        s.etiqueta.alignment = TextAlignmentOptions.Left;
+
+        s.descripcion = Texto(s.raiz, "Descripcion", "", 44f, ColorDeTexto, new Vector2(-150f, 6f), new Vector2(620f, 56f));
+        s.descripcion.alignment = TextAlignmentOptions.Left;
+
+        var barra = Rect(s.raiz, "Barra", new Vector2(-230f, -44f), new Vector2(460f, 18f));
+        var imgBarra = barra.gameObject.AddComponent<Image>();
+        Redondear(imgBarra, 6f);
+        imgBarra.color = Tema.Elegir(new Color(0f, 0f, 0f, 0.12f), RolDeTema.Surco);
+        s.relleno = Rect(barra, "Relleno", Vector2.zero, Vector2.zero);
+        s.relleno.anchorMin = Vector2.zero;
+        s.relleno.anchorMax = new Vector2(0f, 1f);
+        s.relleno.pivot = new Vector2(0f, 0.5f);
+        s.relleno.offsetMin = s.relleno.offsetMax = Vector2.zero;
+        var imgRelleno = s.relleno.gameObject.AddComponent<Image>();
+        Redondear(imgRelleno, 6f);
+        imgRelleno.color = colorMoneda;
+
+        s.cuenta = Texto(s.raiz, "Cuenta", "", 32f, ColorDeTexto, new Vector2(100f, -44f), new Vector2(200f, 40f));
+        s.cuenta.alignment = TextAlignmentOptions.Left;
+
+        s.termina = Texto(s.raiz, "Termina", "", 28f, ColorDeTexto, new Vector2(300f, 46f), new Vector2(300f, 40f));
+        s.termina.alignment = TextAlignmentOptions.Right;
+
+        var moneda = Rect(s.raiz, "Moneda", new Vector2(190f, 4f), new Vector2(48f, 48f));
+        var imgMoneda = moneda.gameObject.AddComponent<Image>();
+        imgMoneda.sprite = circulo;
+        imgMoneda.color = colorMoneda;
+        // El premio de la semana es un numero grande: mas lugar y separado de la moneda.
+        s.premio = Texto(s.raiz, "Premio", "", 44f, ColorDeTexto, new Vector2(335f, 4f), new Vector2(200f, 56f));
+        s.premio.alignment = TextAlignmentOptions.Left;
+
+        var cobrar = ArmarBoton(s.raiz, "Cobrar", new Vector2(440f, 0f), new Vector2(200f, 84f),
+                                new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255), null,
+                                Textos.De("mision_cobrar"), 40f);
+        cobrar.onClick.AddListener(CobrarSemana);
+        cobrar.GetComponent<BotonJugoso>().respirar = true;
+        s.cobrar = cobrar.gameObject;
+
+        var rtTilde = Rect(s.raiz, "Tilde", new Vector2(440f, 0f), new Vector2(64f, 64f));
+        s.tilde = rtTilde.gameObject.AddComponent<Image>();
+        s.tilde.sprite = tilde;
+        s.tilde.color = new Color(0.1f, 0.3f, 0.05f, 1f);
+        s.tilde.raycastTarget = false;
+        s.tilde.enabled = false;
+        return s;
+    }
+
+    private void CobrarSemana()
+    {
+        double monto = DesafioSemanal.Cobrar();
+        if (monto <= 0) return;
+        for (int k = 0; k < SemitonosFestejo.Length; k++)
+            Sonidos.Programar(nota, 0.05 * k, 0.8f, Sonidos.PitchDe(SemitonosFestejo[k] + 5));
+        Sonidos.Tocar(sonidoFestejo, 0.8f);
+        CamaraJugador.Temblar(0.25f);
+        semana.golpe = 0f;
+        Refrescar();
     }
 
     private Fila ArmarFila(int indice, float y)
