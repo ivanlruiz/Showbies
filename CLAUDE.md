@@ -65,6 +65,14 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú)
+Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
+```
+
+Y **fuera del proyecto de Unity**, en la raíz del repo:
+
+```
+Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -874,10 +882,14 @@ mirando un poco desde arriba, reusa su luz direccional y arma el piso de la part
 para que no se vea donde termina. Por delante cruzan zombis de verdad (los cinco prefabs, con pesos en el
 inspector): se instancian dentro de un padre apagado y se les borran scripts, colliders y rigidbodies antes de
 prenderlos, asi **no cuentan en `ZombisVivos`** ni buscan al jugador. `MonedasDelFondo` (en la raiz del canvas
-"Main Menu") deja caer monedas doradas girando justo encima de `BG`, que quedo con alfa 0. **El nombre del juego tambien es
-parte del fondo:** un `TextMeshPro` 3D (`FondoMenu/Titulo`) detras de los zombis, que `TituloEnLaNiebla` esconde a
-medias y vuelve a mostrar llevando el color de las letras hacia el del cielo (la niebla de Unity no toca a
-TextMeshPro). Nunca lo tapa entero: tiene que leerse en las capturas de la ficha. **La niebla esta
+"Main Menu") deja caer monedas doradas girando justo encima de `BG`, que quedo con alfa 0. **El logo tambien es
+parte del fondo:** `FondoMenu/Titulo` es un quad con `Materiales/LogoMenu.mat` detras de los zombis, que
+`TituloEnLaNiebla` esconde a medias y vuelve a mostrar llevando la imagen hacia el color del cielo. Nunca lo tapa
+entero: tiene que leerse en las capturas de la ficha. La niebla es a mano y no la de Unity, porque tiene que ir al
+cielo de `FondoMenu` (que con el modo oscuro se hace de noche) y no al de la escena: la hace el shader
+`ShowBies/LogoEnLaNiebla`, que mezcla la textura con `_ColorNiebla` segun `_Niebla` **sin tocar el alfa**, asi lo
+que se esconde es el color y no la silueta. **Antes era el nombre escrito con un `TextMeshPro` 3D**, y ese camino
+sigue en el componente por si `logo` esta vacio. **La niebla esta
 guardada en la escena y no solo en el codigo:** el stripping de shaders mira la niebla de las escenas del build, y
 prendida solo en runtime no tendria variantes en Android.
 

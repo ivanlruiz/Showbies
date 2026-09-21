@@ -50,3 +50,6 @@ ShowBies1/Assets/TextMesh Pro/Examples & Extras.meta
 *.keystore
 *.jks
 keystore.local
+
+# Vistas previas que genera Marketing/logo.py (el logo del juego si se versiona)
+Marketing/vista_*.png
