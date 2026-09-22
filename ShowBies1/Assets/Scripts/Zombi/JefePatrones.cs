@@ -156,6 +156,17 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private void Update()
     {
         if (zombi == null || zombi.thePlayer == null) return;
+
+        // Un jefe muerto no invoca ni embiste. Su objeto se queda prendido mientras
+        // se desploma (ver EnemyController.Morir), y sin esto el cadaver seguia
+        // dibujando la linea de la carga y sacando invocados un segundo y medio
+        // despues de que la barra de arriba ya habia llegado a cero.
+        if (!zombi.Vivo)
+        {
+            if (linea != null) linea.enabled = false;
+            estado = Estado.Persiguiendo;
+            return;
+        }
         float ahora = Time.time;
         RevisarFuria(ahora);
 

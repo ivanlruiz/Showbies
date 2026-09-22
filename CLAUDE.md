@@ -64,7 +64,8 @@ Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMej
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAndroid (builds de Android), PruebasMejoras, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir)
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma el controller de los zombis), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado y PruebaMuerteAnimada (bancos en play), GrabarAnimaciones, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
 ```
@@ -393,6 +394,44 @@ Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
 
 Antes las oleadas eran por tiempo (salía la siguiente aunque quedaran zombis) y cada 5 oleadas el tipo de
 zombi se reemplazaba en vez de sumarse: desde la oleada 20 sólo salían jefes.
+
+### Las animaciones de los zombis
+
+Los cinco usan el mismo esqueleto (el modelo de ToonyTinyPeople, ver Rendimiento en móvil) y el mismo Animator
+Controller, `Assets/Animaciones/Zombi.controller`, que **no se edita a mano**: lo arma **ShowBies > Animaciones >
+Armar el controller de los zombis** (`ConstructorAnimaciones`), que se vuelve a correr para cambiarlo. Tiene tres
+estados —**Correr** (`Z_run_rm`, en loop, el de entrada), **Atacar** (`Z_attack_A`) y **Morir** (`Z_death_A`)— y tres
+parámetros: el float `Paso` y los gatillos `Atacar` y `Morir`. Los nombres los comparte `EnemyController`, como hashes.
+
+Hasta el 22/9 el controller tenía **un solo estado** y un parámetro que no usaba nadie: los cinco zombis corrían para
+siempre, te pegaban corriendo y se morían corriendo, aunque `Z_attack_A` y `Z_death_A` estaban en el proyecto desde el
+principio, sin usar. El controller además vivía en la carpeta del pack; se movió con `AssetDatabase.MoveAsset`, que
+conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m_Controller`) siguieron apuntando solos.
+
+- **El ritmo del paso es el parámetro `Paso`** y ya no `animador.speed`: es el multiplicador del estado de correr, y
+  atacar y morir van siempre a 1. Con el Animator entero, el jefe (`velocidadDeAnimacion` 0,3) tardaba cuatro segundos
+  y medio en morirse y el tanque (0,45) pegaba en cámara lenta.
+- **Pegar** lo dispara `EnemyController.Golpear`, donde ya estaba el daño, así que cubre a los cinco y al jefe. El clip
+  dura 1,33 s y `intervaloDeGolpe` es 0,8: pegado al jugador el zombi encadena golpes sin volver a correr, porque la
+  transición desde AnyState se reinicia a sí misma.
+- **Morir dejó de ser "apagar el objeto".** `EnemyController.Morir` saca al zombi de la cuenta en el acto
+  (`DejarDeContar`: `ZombisVivos--`, deja de ser jefe, se esconde la barra) y **deja el GameObject prendido
+  `duracionDeLaMuerte` (1,4 s)** mientras se desploma, con los colliders apagados y el Rigidbody kinematic; recién
+  entonces llama a `Devolver`. El estado Morir va a velocidad 1,35 para que los 1,83 s del clip entren en esa ventana.
+  **Para todo el resto del juego el cadáver ya no existe**: `Vivo` (que es `enUso`) da falso, la oleada lo cuenta
+  muerto, las balas lo atraviesan y su lugar en el techo de población queda libre.
+- **Hay techo de cadáveres** (`MaxCadaveres` 12, `MaxCadaveresMovil` 5): un cadáver es una malla con huesos
+  animándose y cuesta lo mismo que un zombi vivo, así que una granada que mata a diez dejaría diez animándose encima de
+  los que siguen saliendo. Pasado el techo el zombi se va de golpe, como antes.
+- **Un jefe muerto no ataca**: `JefePatrones.Update` corre sobre el cadáver hasta que se va, y sin la guarda de `Vivo`
+  seguía dibujando la línea de la carga e invocando un segundo y medio después de que la barra llegó a cero.
+- **El kill-Z y el despeje del revivir no animan nada**: llaman a `Devolver` directo. El despeje saca a los zombis
+  "sin puntos, monedas ni mancha", y una muerte en cámara ahí sería justo lo contrario.
+- **Dos bancos en play lo verifican**, porque esto toca lo más fácil de romper en silencio del juego:
+  **ShowBies > Pruebas > Golpe animado** mide en qué estado está el Animator en el medio segundo posterior a cada golpe
+  (99 % en Atacar), y **Muerte animada** mata zombis por el mismo camino que una bala y comprueba que `ZombisVivos` no
+  se despegue ni un solo frame de los que de verdad están vivos, que los cadáveres se vayan solos y que la oleada siga
+  terminando y avanzando. Escriben `Builds/prueba_golpe.txt` y `Builds/prueba_muerte.txt`.
 
 **Barras de vida.** `EnemyController` crea una `BarraDeVida` con el primer golpe que no mata, así que los
 zombis que mueren de un tiro nunca la muestran. Es un objeto aparte que sigue al zombi y mira a la cámara, no
@@ -1183,7 +1222,8 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   `ZombiFasterPiel` celeste y `ZombiJefePiel` violeta. **La cápsula y los dos cubos de cada prefab son sólo
   colliders**, con los renderers apagados: los cubos son las hitboxes y no se borran (con la cabeza grande y los
   brazos de la animación, el modelo cubre casi toda la cápsula). `EnemyController.velocidadDeAnimacion` ajusta el paso del modelo a lo que camina
-  cada uno (1 el normal y el rápido, 0,45 el tanque, 2,5 el FASTER, 0,3 el jefe). Antes el tanque, el jefe y el
+  cada uno (1 el normal y el rápido, 0,45 el tanque, 2,5 el FASTER, 0,3 el jefe), por el parámetro `Paso` del
+  controller y no por `animador.speed` (ver Las animaciones de los zombis). Antes el tanque, el jefe y el
   FASTER eran la cápsula y los cubos a la vista.
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
   Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí.

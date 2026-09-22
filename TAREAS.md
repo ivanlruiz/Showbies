@@ -174,6 +174,25 @@ teléfono.
 - Postergar el ataque al revivir y la línea plana (S).
 - Premios de misiones proporcionales al objetivo (lo de arriba).
 
+## Animaciones de los zombis (22/9)
+
+- [x] **Los zombis te pegan y se mueren con su animación.** Hasta hoy el `Zombi.controller` tenía **un solo estado**
+  (correr en loop, sin transiciones) y un parámetro que no usaba nadie: los cinco zombis corrían para siempre, te
+  pegaban corriendo y se morían corriendo, aunque `Z_attack_A` y `Z_death_A` venían en el pack, en el proyecto, sin
+  usar. Ahora el controller lo arma **ShowBies > Animaciones > Armar el controller de los zombis**, y vive en
+  `Assets/Animaciones/` (se movió con `MoveAsset`, que conserva el guid, así que los cinco prefabs no se tocaron).
+  Lo difícil fue la muerte: el zombi volvía al pool en el mismo frame, así que hubo que separar "morir" de "apagarse"
+  (`DejarDeContar` + `Morir`) para que el cadáver se quede 1,4 s desplomándose sin contar en `ZombisVivos` ni en la
+  oleada. Dos bancos en play lo verifican: el golpe (99 % de los frames en Atacar después de pegar) y la muerte
+  (`ZombisVivos` sin despegarse ni un frame, cadáveres que se van solos, oleada que sigue avanzando).
+- [ ] **El jefe todavía no tiene animación propia.** Sus patrones —la carga con aviso, el aturdimiento de 1,3 s que es
+  la ventana para castigarlo, la invocación— se leen sólo por la línea roja y el anillo: el modelo sigue haciendo el
+  ciclo de correr. Va por animación procedural sobre el transform (agacharse en el aviso, tambalear aturdido, brazos
+  arriba al invocar), no por clips nuevos, que no hay.
+- [ ] Quedan sin usar `Z_idle_A` (quieto) y `Z_walk` (caminar, más lento que correr). El idle no tiene dónde ir
+  mientras los zombis vayan siempre derecho al jugador; el walk podría ser el del tanque en vez de bajarle el `Paso`
+  al de correr.
+
 ## Revisión del 22/9 (diez agentes, en `REVISION.md`)
 
 47 hallazgos, 32 sobrevivieron al verificador. El informe completo con archivo y línea está en `REVISION.md`.

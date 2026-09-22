@@ -51,8 +51,32 @@ public class EnemyController : MonoBehaviour
     private float proximoGolpe;
 
     [Header("Animacion")]
-    [Tooltip("Velocidad del Animator del modelo. Todos usan el modelo del zombi normal a distinta escala: el paso tiene que ir con lo que camina cada uno (el tanque pesado, el FASTER frenetico).")]
+    [Tooltip("Ritmo del paso. Todos usan el modelo del zombi normal a distinta escala: el paso tiene que ir con lo que camina cada uno (el tanque pesado, el FASTER frenetico). Solo afecta a correr; atacar y morir van siempre a 1.")]
     [SerializeField] private float velocidadDeAnimacion = 1f;
+
+    // Los del controller que arma ConstructorAnimaciones. Como hash, que es lo que
+    // usa el Animator por dentro: si van por string, los convierte en cada llamada.
+    private static readonly int idPaso = Animator.StringToHash("Paso");
+    private static readonly int idAtacar = Animator.StringToHash("Atacar");
+    private static readonly int idMorir = Animator.StringToHash("Morir");
+    private static readonly int idCorrer = Animator.StringToHash("Correr");
+
+    [Tooltip("Lo que se queda el cadaver en escena mientras se desploma, antes de volver al pool. El clip de morir dura 1,36 s con la velocidad del estado.")]
+    [SerializeField] private float duracionDeLaMuerte = 1.4f;
+
+    // Un cadaver es una malla con huesos animandose: cuesta lo mismo que un zombi
+    // vivo. Sin techo, una granada que mata a diez deja diez animandose encima de
+    // los que siguen saliendo, justo en el momento de mas carga. Pasado el techo
+    // se muere como antes, de golpe, que es lo que se veia hasta ahora.
+    private const int MaxCadaveres = 12;
+    private const int MaxCadaveresMovil = 5;
+    private static int cadaveres;
+
+    // El cadaver ya no cuenta como vivo ni se le puede pegar, pero el GameObject
+    // sigue prendido hasta que termina de caerse.
+    private bool desplomandose;
+    private float sacarloEn;
+    private Collider[] colliders;
 
     [Header("Golpe visual")]
     [SerializeField] private Vector3 aplastadoAlGolpear = new Vector3(1.15f, 0.85f, 1.15f);
@@ -100,7 +124,14 @@ public class EnemyController : MonoBehaviour
 
     private GameObject prefabDeOrigen;   // null si no salio del pool (el tutorial): al morir se destruye
     private bool enUso;
+    // Los que tienen controller. El zombi rapido tiene DOS Animator (ver la trampa
+    // del zombi invisible) y uno esta sin controller: mandarle un trigger a ese
+    // loguea un warning por golpe.
     private Animator[] animadores;
+
+    // Si sigue en juego. Un cadaver desplomandose dice que no: el objeto esta
+    // prendido y visible, pero para el resto del juego el zombi ya murio.
+    public bool Vivo { get { return enUso; } }
 
     // Distinto en cada aparicion aunque el objeto sea el mismo: lo anotan los que
     // guardan zombis para preguntar despues si murieron (ver SigueVivo).
@@ -124,6 +155,7 @@ public class EnemyController : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         ZombisVivos = 0;
+        cadaveres = 0;
         TechoDeZombis = 0;
         jefes.Clear();
         pool.Clear();
@@ -244,7 +276,8 @@ public class EnemyController : MonoBehaviour
         // lo inclinen entre un paso y otro.
         rb.freezeRotation = true;
         escalaBase = transform.localScale;
-        animadores = GetComponentsInChildren<Animator>(true);
+        animadores = ConControlador(GetComponentsInChildren<Animator>(true));
+        colliders = GetComponentsInChildren<Collider>(true);
         movimientoPropio = GetComponent<IMovimientoPropio>();
         PrepararDestello();
     }
@@ -268,19 +301,56 @@ public class EnemyController : MonoBehaviour
         multiplicadorVida = 1f;
         multiplicadorDano = 1f;
 
+        // Uno que sale del pool puede venir de desplomarse: colliders de vuelta y
+        // fisica de vuelta.
+        if (desplomandose)
+        {
+            desplomandose = false;
+            cadaveres--;
+        }
+        foreach (var c in colliders) c.enabled = true;
+        rb.isKinematic = false;
+
         transform.localScale = escalaBase;
         aplastado = false;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
         thePlayer = ObtenerJugador();
-        foreach (var animador in animadores) animador.speed = velocidadDeAnimacion;
+        // El ritmo va como multiplicador del estado de correr y no del Animator
+        // entero: con animador.speed, el jefe (0,3) tardaba cuatro segundos y medio
+        // en morirse y el tanque (0,45) pegaba en camara lenta.
+        // Y cada aparicion arranca corriendo: uno que salio del pool puede venir de
+        // morirse, o con un golpe a medias y su gatillo sin consumir.
+        foreach (var animador in animadores)
+        {
+            animador.speed = 1f;
+            animador.SetFloat(idPaso, velocidadDeAnimacion);
+            animador.ResetTrigger(idAtacar);
+            animador.ResetTrigger(idMorir);
+            animador.Play(idCorrer, 0, 0f);
+        }
         SubirSobreElPiso();
     }
 
     // Al morir, al caerse o al descargarse la escena. Lo que quedo a mitad de un
     // golpe (el destello, la barra) no puede pasar a la aparicion siguiente.
     private void OnDisable()
+    {
+        if (desplomandose)
+        {
+            desplomandose = false;
+            cadaveres--;
+        }
+        DejarDeContar();
+    }
+
+    // Todo lo que deja de valer apenas muere, y que hasta el 22/9 estaba dentro de
+    // OnDisable porque morir y apagarse eran lo mismo. Ahora el cadaver se queda
+    // prendido mientras se desploma, pero para el resto del juego ya no existe: no
+    // cuenta en ZombisVivos (o el generador quedaria tapado), la oleada lo cuenta
+    // muerto y deja de ser jefe (o la barra de arriba seguiria ahi).
+    private void DejarDeContar()
     {
         if (!enUso) return;
         enUso = false;
@@ -297,6 +367,42 @@ public class EnemyController : MonoBehaviour
             destellando = false;
             for (int i = 0; i < renderersVisibles.Length; i++) renderersVisibles[i].sharedMaterials = materialesOriginales[i];
         }
+    }
+
+    // El cadaver lleva su propio reloj, como ManchaDeSangre: una corrutina no
+    // sobrevive a que el objeto se apague por otro lado (el final de la escena).
+    // Time.time es tiempo escalado, asi que la pausa lo congela.
+    private void Update()
+    {
+        if (desplomandose && Time.time >= sacarloEn) Devolver();
+    }
+
+    // Morir con la animacion de morir. El zombi sale de la cuenta en el acto y el
+    // objeto se queda prendido lo que dura el desplome. Si no hay lugar para otro
+    // cadaver -o no hay Animator, como los zombis del fondo del menu- se va de
+    // golpe, que es como se veia hasta ahora.
+    private void Morir()
+    {
+        int techo = Plataforma.EsMovil ? MaxCadaveresMovil : MaxCadaveres;
+        if (animadores.Length == 0 || cadaveres >= techo || duracionDeLaMuerte <= 0f)
+        {
+            Devolver();
+            return;
+        }
+
+        DejarDeContar();
+        desplomandose = true;
+        cadaveres++;
+        sacarloEn = Time.time + duracionDeLaMuerte;
+
+        // Sin colliders no frena balas ni empuja al jugador, y kinematic para que no
+        // resbale por el empujon del ultimo tiro mientras se cae.
+        foreach (var c in colliders) c.enabled = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true;
+
+        foreach (var animador in animadores) animador.SetTrigger(idMorir);
     }
 
     // La barra es un objeto aparte y, apagada, no se entera de que el zombi ya no
@@ -342,7 +448,9 @@ public class EnemyController : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        if (!enUso) return;
+        // El cadaver ya solto enUso al morir (para que la oleada lo cuente y deje
+        // de contar en ZombisVivos) y tiene que poder volver al pool igual.
+        if (!enUso && !desplomandose) return;
 
         gameObject.SetActive(false);
         Stack<EnemyController> pila;
@@ -416,6 +524,9 @@ public class EnemyController : MonoBehaviour
 
        ActualizarGolpeVisual();
 
+       // Un cadaver no persigue a nadie ni se aplasta: solo se esta cayendo.
+       if (desplomandose) return;
+
        if (thePlayer == null) return;
        if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform)) return;
 
@@ -485,7 +596,7 @@ public class EnemyController : MonoBehaviour
             Efectos.Muerte(transform.position, enemyType.hp);
 
             // Al final: todo lo de arriba usa su posicion.
-            Devolver();
+            Morir();
         }
     }
 
@@ -644,5 +755,22 @@ public class EnemyController : MonoBehaviour
         proximoGolpe = Time.time + intervaloDeGolpe;
         GolpesDados++;
         PlayerHealth.instance.TakeDamage(DanoPorGolpe);
+        foreach (var animador in animadores) animador.SetTrigger(idAtacar);
+    }
+
+    // Los que pueden animar de verdad. Se filtra una vez, en el Awake, y no en cada
+    // golpe.
+    private static Animator[] ConControlador(Animator[] todos)
+    {
+        int cuantos = 0;
+        for (int i = 0; i < todos.Length; i++)
+            if (todos[i].runtimeAnimatorController != null) cuantos++;
+        if (cuantos == todos.Length) return todos;
+
+        var buenos = new Animator[cuantos];
+        int n = 0;
+        for (int i = 0; i < todos.Length; i++)
+            if (todos[i].runtimeAnimatorController != null) buenos[n++] = todos[i];
+        return buenos;
     }
 }
