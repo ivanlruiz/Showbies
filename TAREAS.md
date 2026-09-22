@@ -213,6 +213,12 @@ Lo que quedó anotado, de mayor a menor:
   quince partidas y paga la mitad de lo que dan esas quince (la vara de `Economia`, como todo lo demás). Se ve en una
   fila dorada arriba de las tres diarias, con los días que faltan; el progreso pasó a versión 5.
 
+- [ ] **Co-op online.** Investigado el 21/9, está en `COOP.md`: se puede, el hosting es barato
+  (~3.800 partidas de 4 jugadores gratis por mes en Relay), pero son 2-3 meses y hay que reescribir el 19 % del
+  código — sobre todo los trece lugares que congelan el mundo con `Time.timeScale`, que en co-op no se puede.
+  **El próximo paso es la prueba de rendimiento (fase 0, 1-2 días)**: 35 cápsulas con `NetworkTransform` entre dos
+  teléfonos, a ver si el aparato aguanta. Esa medición decide todo y no caduca.
+
 **Después:** el diseño de las cartas de 1 de 3 por oleada (ideas de Archero). El tercer capítulo
 (la ciudad de noche, oleadas 21-30) se hizo el 20/9: `CapitulosDeEscenario` pasó a una lista de escenarios, así sumar un
 cuarto es un elemento más en el array y su prefab.
