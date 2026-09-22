@@ -96,6 +96,11 @@ public static class Progreso
         // estos campos los lee como 0 y no cambia la version.
         public int diaRecompensa;
         public int rachaRecompensa;
+        // Con que mejor oleada se paga la recompensa de hoy. Se anota la primera vez que
+        // queda disponible y no cambia hasta cobrarla: si no, cerrar la ventana, jugar y
+        // volver pagaba mas, que es la jugada optima que ya se cerro en misiones y semanal.
+        public int diaOleadaRecompensa;
+        public int oleadaRecompensa = -1;   // -1 = sin anotar; 0 es una marca valida
 
         // La marca del reloj del ultimo cobro de la diaria (RelojConfiable): la hora en
         // ticks UTC, los milisegundos desde que arranco el telefono y el numero de
@@ -298,6 +303,19 @@ public static class Progreso
     public static int RachaRecompensa
     {
         get { Cargar(); return datos.rachaRecompensa; }
+    }
+
+    // La mejor oleada con la que se paga la recompensa de `hoy`, congelada la primera vez
+    // que se pregunta ese dia.
+    public static int OleadaDeLaRecompensa(int hoy)
+    {
+        Cargar();
+        if (datos.diaOleadaRecompensa != hoy || datos.oleadaRecompensa < 0)
+        {
+            datos.diaOleadaRecompensa = hoy;
+            datos.oleadaRecompensa = datos.mejorOleada;
+        }
+        return datos.oleadaRecompensa;
     }
 
     // Solo anota el dia y la racha; las monedas entran por CobrarPremio, que guarda.
@@ -509,6 +527,20 @@ public static class Progreso
         PonerAlDiaLosAnuncios();
         UsoDeLugar uso = BuscarUso(lugar);
         return uso != null ? uso.cantidad : 0;
+    }
+
+    // Todos los videos de hoy, sumando los lugares. El tope diario es global y no por
+    // lugar: con el de por lugar, 3 por dia eran 3 de revivir + 3 del x2 de la derrota +
+    // 3 del x2 de la diaria, o sea nueve.
+    public static int UsosDeHoyEnTotal()
+    {
+        Cargar();
+        PonerAlDiaLosAnuncios();
+        int total = 0;
+        List<UsoDeLugar> usos = datos.anuncios.usos;
+        for (int i = 0; i < usos.Count; i++)
+            if (usos[i] != null) total += usos[i].cantidad;
+        return total;
     }
 
     public static void RegistrarUsoDeAnuncio(string lugar)
@@ -777,6 +809,9 @@ public static class Progreso
         if (d.semanal == null) d.semanal = new EstadoSemanal();
         if (d.semanal.tipo == null) d.semanal.tipo = "";
         if (d.semanal.oleadasDeLaSemana < 0) d.semanal.oleadasDeLaSemana = 0;
+
+        if (d.oleadaRecompensa < -1) d.oleadaRecompensa = -1;
+        if (d.diaOleadaRecompensa < 0) d.diaOleadaRecompensa = 0;
 
         if (d.estadisticas == null) d.estadisticas = new Estadisticas();
         Estadisticas e = d.estadisticas;

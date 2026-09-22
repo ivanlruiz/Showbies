@@ -141,7 +141,10 @@ public static class ServicioAnuncios
         ConfigAnuncios config = ConfigEnUso;
         return PuedeOfrecerConDatos(config, Progreso.OfrecerVideos, MostrandoAnuncio,
                                     Progreso.PartidasTerminadas, Progreso.SegundosJugados,
-                                    Progreso.UsosDeHoy(lugar), SegundosDesdeElUltimo,
+                                    // En TOTAL, no por lugar: el tope de "3 videos por dia"
+                                    // es global. Contandolo por lugar eran 3 de revivir mas
+                                    // 3 del x2 de la derrota mas 3 del x2 de la diaria: nueve.
+                                    Progreso.UsosDeHoyEnTotal(), SegundosDesdeElUltimo,
                                     Proveedor.Listo(lugar),
                                     // El tope por partida es para la derrota y el revivir; la diaria
                                     // se cobra en el menu, entre partidas.

@@ -524,6 +524,12 @@ terminada: ver Primera vez).
   de partida el primer día a dos el séptimo), y **los montos de arriba quedan como piso**. Así en el arranque —donde 150
   monedas son la primera mejora— paga lo mismo de siempre, y en la oleada 45 pasa de 825 monedas a unas 12.700 el primer
   día: con el +10 % lineal de antes quedaba en calderilla justo cuando más hace falta la razón para volver.
+- **Paga con la mejor oleada del día, congelada** (`Progreso.OleadaDeLaRecompensa(hoy)`, campos
+  `diaOleadaRecompensa` y `oleadaRecompensa`, que se anotan la primera vez que se pregunta ese día), igual que las
+  misiones y el desafío semanal y por la misma razón: con la marca de ahora, dejar la ventana sin cobrar, jugar hasta
+  mejorar la marca y recién ahí tocar COBRAR era la jugada óptima —en la prueba, 8.400 monedas en vez de 1.100— y
+  encima pagaba la marca nueva por un día que ya venía corriendo. `RecompensaDiaria.OleadaDeHoy` es lo que lo lee, y
+  el centinela del campo es −1 porque 0 es una marca válida.
 - **Se guarda en el progreso** (`diaRecompensa` aaaammdd y `rachaRecompensa`, sin cambiar la versión) y entra por
   `CobrarPremio`: no son monedas ganadas jugando. **Atrasar el reloj no da otra**: sólo cuenta un día mayor al guardado
   (`Progreso.EsDiaNuevo`), como los topes de los anuncios. **Adelantarlo tampoco**, mientras no se reinicie el teléfono:
@@ -545,7 +551,11 @@ terminada: ver Primera vez).
 Los tres premios que no se ganan jugando —las misiones del día, las estrellas del bestiario y la recompensa diaria— se
 miden contra **lo que deja jugar**, y esa cuenta vive en un solo lugar (`Economia`): `ZombisPorPartida` (los zombis que
 se matan llegando a la oleada m, que son 10 + 4n por oleada) y `MonedasPorPartida` (esos zombis por las ~2 monedas que
-suelta cada uno, con el multiplicador de la oleada a mitad de camino). Es **de menos a propósito**: no suma el bono de
+suelta cada uno, con el multiplicador de la oleada a mitad de camino). Para los objetivos que no se cumplen matando
+están además `SegundosPorPartida` (cuánto dura esa partida: un tercio de segundo largo por zombi más los 3 s de
+descanso entre oleadas, ~1.400 s para una que llega a la 40) y `BalasPorPartida` (los zombis por lo que cuesta
+matarlos, que **no** es constante: el daño comprable crece con el logaritmo de las monedas y la vida de los zombis,
+exponencial, así que cada vez hacen falta más balas por zombi). Es **de menos a propósito**: no suma el bono de
 cada oleada ni el botín, así un premio calculado con esto nunca se pasa de lo que da jugarlo. `Redondo` está ahí también,
 para que todos los premios se lean igual (de a 5, de a 10 o de a 50).
 
@@ -564,8 +574,15 @@ completada en el día y la lista).
   la furia, tirar granadas y hacer críticos (estas tres solo si están compradas) y derrotar N jefes (solo la difícil, con
   la mejor oleada en 9). Tres tipos distintos por día. **Todos los objetivos se ajustan a la mejor oleada** (`Objetivo`,
   en números redondos), sin excepción: con la furia, las granadas y el jefe en números fijos, el premio —que sí escala—
-  se cobraba tirando 25 granadas parado en un rincón, y en la oleada 45 eso pagaba más que una partida entera. Una prueba
-  verifica que ninguno se quede quieto entre la oleada 5 y la 40.
+  se cobraba tirando 25 granadas parado en un rincón, y en la oleada 45 eso pagaba más que una partida entera.
+  **Y cada uno sale de lo que de verdad lo hace costar**, no del número de oleada: los que se cumplen matando, de
+  `Economia.ZombisPorPartida`; los que se cumplen con el reloj (la furia cada 120 s, la granada cada 5), de
+  `Economia.SegundosPorPartida`; y los críticos, de `Economia.BalasPorPartida` por la probabilidad que tenga comprada
+  el jugador. Atados al número de oleada, cumplir la de granadas costaba 0,43 partidas con el premio de 2,5 (tirarlas
+  al aire rendía más monedas por segundo que jugar bien desde la oleada ~10) y la de críticos, 0,26 —y además pedía
+  200 críticos a quien recién los compraba y le salían 7 por partida—. **La prueba mide el costo de cada tipo, en
+  partidas, contra `Partidas(dificultad)`**: verificar sólo que el objetivo crezca con la oleada dejaba pasar los dos,
+  porque crecer crecían.
 - **El avance sale de los contadores de por vida**: al armarlas se anota cuánto marcaba cada uno (`inicio`) y el avance es
   la diferencia. La de oleadas cuenta **cuántas se completaron hoy** (`oleadasDelDia`, que avisa `WaveManager` con
   `RegistrarOleada`), no a cuál se llegó: contando el número de la oleada, retomar una partida guardada en la 25
@@ -732,7 +749,10 @@ Recompensa diaria). **Un solo video premiado por partida**
 | `OfertaDeRevivir` | la ventanita de "¡HAS MUERTO!" (prefab `Prefabs/UI/OfertaRevivir` en ShowBies1 y WaveMode). |
 
 **Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada, con 180 s jugados en total, hasta
-3 veces por día, 1 por partida y con 60 s entre un video y otro. El x2 pide además una partida de 90 s y 20
+3 veces por día, 1 por partida y con 60 s entre un video y otro. **El tope del día es global y se cuenta con
+`Progreso.UsosDeHoyEnTotal()`, sumando los lugares**: contándolo por lugar (`UsosDeHoy(lugar)`), "3 por día" eran
+3 de revivir más 3 del x2 de la derrota más 3 del x2 de la diaria, o sea nueve. Si sumás un lugar nuevo, no le des
+su propio tope. El x2 pide además una partida de 90 s y 20
 monedas; revivir, una partida de 30 s.
 El día es un `aaaammdd` local guardado en el progreso, y **atrasar el reloj del teléfono no reinicia los topes**
 (sólo cuenta un día mayor al guardado).

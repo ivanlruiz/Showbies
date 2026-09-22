@@ -181,9 +181,24 @@ teléfono.
 - [x] **Cerrar el vídeo del revivir mandaba a la derrota en el acto.** **Arreglado el 22/9**: el callback de "sin
   premio" ya no es `Rechazar` sino `SinPremio`, que devuelve la ventanita con su tiempo. Verificado en play, y
   verificado también que la prueba detecta el bug (revirtiendo el arreglo a propósito da `escena=Perdiste`).
+- [x] **Los tres exploits de economía.** **Arreglados el 22/9**, los tres con su prueba de regresión, y las tres
+  verificadas volviendo a poner el bug (con los tres de vuelta, la suite da 4 fallas; sin ellos, 704 OK):
+  - El tope de 3 vídeos por día se contaba **por lugar**, así que eran 3 de revivir + 3 del x2 de la derrota + 3
+    del x2 de la diaria: nueve. `PuedeOfrecer` ahora pasa `Progreso.UsosDeHoyEnTotal()`.
+  - La **recompensa diaria** resolvía el monto al cobrarla con la mejor oleada del momento, así que dejar la ventana
+    sin cobrar, jugar hasta mejorar la marca y recién ahí tocar COBRAR era la jugada óptima: en la prueba, 8.400
+    monedas en vez de 1.100. Ahora se congela con `Progreso.OleadaDeLaRecompensa(hoy)`, como las misiones y el
+    desafío semanal.
+  - Las misiones de **granadas y críticos** salían del número de oleada y no de lo que cuesta cumplirlas: la de
+    granadas costaba 0,43 partidas con el premio de 2,5 (desde la oleada ~10, tirarlas al aire rendía más monedas
+    por segundo que jugar bien) y la de críticos, 0,26 —y encima pedía 200 críticos a quien recién los compraba y le
+    salían 7 por partida—. Ahora salen de `Economia.SegundosPorPartida` y `Economia.BalasPorPartida`, dos varas
+    nuevas al lado de las que ya estaban.
+  - La prueba que faltaba y que los habría visto: **comparar el costo de cada objetivo, en partidas, contra
+    `Partidas(dificultad)`**. La que había sólo miraba que el objetivo creciera con la oleada, y los dos crecían.
 - [ ] El resto de lo confirmado está en `REVISION.md`, ordenado por impacto sobre esfuerzo. Lo próximo por tamaño:
-  el tope de 3 vídeos por día se cuenta por lugar (o sea 9 en total), las misiones de granadas y críticos que se
-  cumplen sin jugar, y la recompensa diaria que resuelve el monto al cobrarla en vez de congelarlo.
+  la vida del HUD en negativo durante el ¡HAS MUERTO!, la misión del jefe que dice "Derrota a un jefe" pero pide 2 o
+  más, la animación de disparo que en móvil no corre nunca, y los faroles que en Android no alumbran.
 
 ## Revisión de lo del 20/9 (dos agentes, esa misma tarde)
 

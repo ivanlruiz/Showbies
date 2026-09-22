@@ -13,6 +13,11 @@ cada hallazgo paso por un verificador aparte que trato de refutarlo leyendo el c
 
 ## Si sólo vas a hacer una cosa hoy
 
+**ARREGLADO (22/9).** Ya están el revivir y los tres exploits de economía (el tope de vídeos, la
+recompensa diaria y los objetivos de misiones), cada uno con su prueba de regresión en
+**ShowBies > Pruebas > Logica de mejoras**, verificada volviendo a poner el bug. Lo que sigue es el informe
+como salió.
+
 Arreglá **el revivir**: cerrar el vídeo (o que la red falle al mostrarlo) manda a la pantalla de derrota en el acto, sin devolver la ventanita ni los segundos que quedaban. Es lo único de esta lista que le rompe la partida al jugador en el momento en que le pedís que mire un anuncio, contradice la regla escrita de "cerrar el vídeo antes no castiga" y el arreglo es separar un callback. Con el proveedor en Nulo hoy no se ve en Play, pero la APK de prueba ya lo tiene y la red real lo va a agravar.
 
 Si te sobra un rato después, las dos líneas de `health = Mathf.Max(0, ...)` y el tope de vídeos por día (que hoy es 3 por lugar, o sea 9) son arreglos de minutos.
@@ -21,7 +26,7 @@ Si te sobra un rato después, las dos líneas de `health = Mathf.Max(0, ...)` y 
 
 ## BUGS
 
-### 1. Cerrar el vídeo del revivir manda a la derrota en el acto
+### 1. Cerrar el vídeo del revivir manda a la derrota en el acto — **ARREGLADO**
 **`Assets/Scripts/Anuncios/OfertaDeRevivir.cs:276`** — media
 
 El callback "sin premio" que se le pasa a `ServicioAnuncios.Mostrar` es `Rechazar`, el mismo método del botón NO, GRACIAS: llama a `PlayerHealth.Terminar()` y carga la derrota. Así `Cerrado`, `NoDisponible` y una `FallaAlMostrar` no premiable terminan la partida. Además el reloj queda congelado por `esperandoVideo`, así que los segundos que le quedaban al jugador se pierden sin correr.
@@ -34,7 +39,7 @@ El callback "sin premio" que se le pasa a `ServicioAnuncios.Mostrar` es `Rechaza
 
 ---
 
-### 2. El tope de 3 vídeos por día se aplica por lugar, no en total
+### 2. El tope de 3 vídeos por día se aplica por lugar, no en total — **ARREGLADO**
 **`Assets/Scripts/Anuncios/ServicioAnuncios.cs:144`** — media
 
 `PuedeOfrecer` compara `config.vecesPorDia` (3) contra `Progreso.UsosDeHoy(lugar)`, que cuenta sólo ese lugar. El tope real es 3 revivir + 3 duplicar_derrota + 3 regalo_x2 = hasta 9 vídeos por día. `vecesPorPartida = 1` sólo limita revivir+duplicar dentro de una partida, no por día.
@@ -58,7 +63,7 @@ El callback "sin premio" que se le pasa a `ServicioAnuncios.Mostrar` es `Rechaza
 
 ---
 
-### 4. La misión de granadas se cumple sin matar un zombi y cuesta menos de la mitad de lo que paga
+### 4. La misión de granadas se cumple sin matar un zombi y cuesta menos de la mitad de lo que paga — **ARREGLADO**
 **`Assets/Scripts/Progreso/MisionesDiarias.cs:164`** — media
 
 `Progreso.ContarGranada()` cuenta cada lanzamiento, pegue o no, y el único freno es `granadaCooldown` = 5 s, que no escala. El objetivo difícil es `Redondo(2,5 · m · 1,2)`: 120 granadas en la oleada 40 = 600 s de reloj, contra una partida que llega ahí que dura como mínimo 1.400 s. Coste real: 0,43 partidas contra las 2,5 que se le cobran al premio. Desde la oleada ~10, tirar granadas al aire rinde más monedas por segundo que jugar bien (83,9 vs 24,3 en m=40).
@@ -71,7 +76,7 @@ Nota: `granadaDisponibleEn` es un campo de instancia que arranca en 0 mientras `
 
 ---
 
-### 5. La misión de críticos está desacoplada de lo que cuesta
+### 5. La misión de críticos está desacoplada de lo que cuesta — **ARREGLADO**
 **`Assets/Scripts/Progreso/MisionesDiarias.cs:165`** — media
 
 El objetivo es `partidas * 60 * (1 + m/10)`: crece ×3,75 en toda la curva, mientras el premio crece ×315. `ContarCritico()` se llama por bala crítica, y las balas por partida crecen con la vida total (exponencial) dividida por el daño comprable (logarítmico). El pago por crítico pasa de 0,8 monedas (m=3) a 67 (m=40). Y no mira el nivel de la mejora: con nivel 1 (5 %) y mejor oleada 3 salen ~7 críticos por partida contra un objetivo de 200.
@@ -82,7 +87,7 @@ El objetivo es `partidas * 60 * (1 + m/10)`: crece ×3,75 en toda la curva, mien
 
 ---
 
-### 6. La recompensa diaria es la única que resuelve el monto al cobrarla
+### 6. La recompensa diaria es la única que resuelve el monto al cobrarla — **ARREGLADO**
 **`Assets/Scripts/Progreso/RecompensaDiaria.cs:102`** — baja
 
 `CobrarEl` usa `Monto(racha, Progreso.MejorOleada)` con la marca del momento del cobro. Misiones y desafío semanal congelan `mejorOleadaAlArmar` justamente para que postergar no sea la jugada óptima. Acá sí se puede postergar: el atrás de Android (y Escape en PC) cierra la ventana sin cobrar y `VentanaRecompensaDiaria.Start` la vuelve a abrir la próxima vez que se carga el menú ese día.

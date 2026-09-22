@@ -95,11 +95,21 @@ public static class RecompensaDiaria
         return CobrarEl(Progreso.DiaDeHoy());
     }
 
+    // La mejor oleada con la que se paga hoy: congelada la primera vez que la recompensa
+    // queda disponible, no la de ahora. Si no, la jugada optima era cerrar la ventana sin
+    // cobrar (el atras de Android lo hace), ir a mejorar la marca y volver al menu: de la
+    // oleada 20 a la 25 el premio pasaba de 8.650 a 15.700. Es la misma regla que ya tienen
+    // las misiones y el desafio semanal.
+    public static int OleadaDeHoy
+    {
+        get { return Progreso.OleadaDeLaRecompensa(Progreso.DiaDeHoy()); }
+    }
+
     public static double CobrarEl(int hoy)
     {
         int racha = RachaParaHoy(hoy, Progreso.DiaUltimaRecompensa, Progreso.RachaRecompensa);
         if (racha <= 0) return 0;
-        double monto = Monto(racha, Progreso.MejorOleada);
+        double monto = Monto(racha, Progreso.OleadaDeLaRecompensa(hoy));
         Progreso.RegistrarRecompensaDiaria(hoy, racha);
         Progreso.CobrarPremio("recompensa_diaria", monto, false);
         paraDuplicar = monto;

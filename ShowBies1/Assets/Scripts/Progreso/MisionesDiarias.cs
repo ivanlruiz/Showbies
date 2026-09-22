@@ -157,12 +157,23 @@ public static class MisionesDiarias
             // Cuantas oleadas completar hoy: las que da la partida que cuesta esa
             // dificultad. Sin Redondo, que son numeros chicos y redondear de a 5 se pasa.
             case Oleada: return Math.Max(2, Math.Round(partidas * m));
-            // La furia sale cada 120 s y la granada cada 5: cuantas entran depende de lo
-            // que dure la partida, que crece con la oleada. Con numeros fijos, el premio
-            // -que si escala- se cobraba tirando 25 granadas parado en un rincon.
-            case Furia: return Math.Max(2, Math.Round(partidas * Math.Max(2.0, m / 3.5)));
-            case Granadas: return Math.Max(5, Economia.Redondo(partidas * m * 1.2));
-            case Criticos: return Economia.Redondo(partidas * 60.0 * (1.0 + m / 10.0));
+            // La furia sale cada 120 s y la granada cada 5: cuantas entran sale del TIEMPO
+            // que dura la partida, no del numero de oleada. Con el numero de oleada, tirar
+            // 120 granadas eran 600 s de reloj contra una partida de 1.400, o sea que se
+            // cobraba el premio de 2,5 partidas parado en un rincon tirando granadas al
+            // aire, y desde la oleada ~10 rendia mas monedas por segundo que jugar bien.
+            case Furia: return Math.Max(2, Math.Round(partidas * Economia.SegundosPorPartida(m) / 120.0));
+            case Granadas: return Math.Max(5, Economia.Redondo(partidas * Economia.SegundosPorPartida(m) / 5.0));
+            // Los criticos salen por bala, asi que crecen con las balas de la partida (que
+            // crecen mas que lineal) por la probabilidad que tenga comprada el jugador. Con
+            // 60 * (1 + m/10) el objetivo crecia x3,75 en toda la curva mientras el premio
+            // crecia x315, y ademas no miraba el nivel de la mejora: con criticos recien
+            // comprados (5 %) pedia 200 cuando salian 7 por partida.
+            case Criticos:
+            {
+                double prob = Math.Max(0.05, CatalogoMejoras.ProbabilidadCritico);
+                return Economia.Redondo(partidas * Economia.BalasPorPartida(m) * prob);
+            }
             // Un jefe cada 10 oleadas: los que entran en las partidas que cuesta.
             case Jefe: return Math.Max(1, Math.Round(partidas * m / 10.0));
             default: return 1;

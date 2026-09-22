@@ -1454,6 +1454,35 @@ public static class PruebasMejoras
             inf.Igual("circuito: el tope del dia corta en 3", 3, premios);
             inf.Igual("circuito: y los usos quedan en 3", 3, Progreso.UsosDeHoy(lugar));
 
+            // --- el tope del dia es global, no uno por lugar ----------------------
+            // Se gastan los tres repartidos entre los tres lugares. Contandolos por
+            // lugar, "3 videos por dia" eran 3 de revivir mas 3 del x2 de la derrota
+            // mas 3 del x2 de la diaria: nueve.
+            string[] lugares = { LugarAnuncio.Revivir, LugarAnuncio.DuplicarDerrota,
+                                 LugarAnuncio.DuplicarRegalo };
+            EmpezarConMonedas(0);
+            premios = 0;
+            foreach (string uno in lugares)
+            {
+                Progreso.EmpezarPartida();
+                ServicioAnuncios.UsarParaPruebas(proveedor, config);
+                ServicioAnuncios.Mostrar(uno, alPremiar, alCerrar);
+                ServicioAnuncios.AtenderAvisos();
+            }
+            inf.Igual("circuito: tres videos repartidos entre los tres lugares", 3, premios);
+            inf.Igual("circuito: cada lugar gasto uno solo", 1, Progreso.UsosDeHoy(LugarAnuncio.Revivir));
+            inf.Igual("circuito: y el tope los suma a todos", 3, Progreso.UsosDeHoyEnTotal());
+
+            bool algunoOfrece = false;
+            foreach (string uno in lugares)
+            {
+                Progreso.EmpezarPartida();
+                ServicioAnuncios.UsarParaPruebas(proveedor, config);
+                if (ServicioAnuncios.PuedeOfrecer(uno)) algunoOfrece = true;
+            }
+            inf.Verdadero("circuito: gastado el tope entre lugares, ninguno ofrece un cuarto",
+                          !algunoOfrece);
+
             // --- un solo video por partida ---------------------------------------
             EmpezarConMonedas(0);
             ServicioAnuncios.UsarParaPruebas(proveedor, config);
@@ -1814,6 +1843,53 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: todos los objetivos crecen con la oleada" +
                       (escalan ? "" : " (" + elQueNoEscala.Trim() + ")"), escalan);
 
+        // Que crezca no alcanza: lo que importa es cuanto CUESTA cumplir cada objetivo
+        // contra las partidas que se le cobran al premio. Sin esta cuenta, el objetivo de
+        // granadas costaba 0,43 partidas con el premio de 2,5 (tirarlas al aire rendia mas
+        // monedas por segundo que jugar bien desde la oleada ~10) y el de criticos, 0,26.
+        // Los dos pasaban la prueba de arriba, porque crecer con la oleada crecian.
+        //
+        // El costo se estima en partidas para cada tipo: los que se cumplen matando salen
+        // de los zombis de la partida, los que se cumplen con el reloj (la furia cada
+        // 120 s, la granada cada 5) de lo que dura, y los criticos de las balas que se
+        // disparan por la probabilidad que tenga comprada el jugador.
+        double probCritico = Math.Max(0.05, CatalogoMejoras.ProbabilidadCritico);
+        bool valenLoQuePagan = true;
+        string elBarato = "";
+        foreach (int m in new[] { 0, 3, 5, 10, 20, 40 })
+        {
+            int mm = Math.Max(3, m);
+            for (int d = 0; d < MisionesDiarias.Cantidad; d++)
+            {
+                foreach (string tipo in tipos)
+                {
+                    double objetivo = MisionesDiarias.Objetivo(tipo, d, m);
+                    double enPartidas;
+                    switch (tipo)
+                    {
+                        case MisionesDiarias.Matar: enPartidas = objetivo / Economia.ZombisPorPartida(mm); break;
+                        case MisionesDiarias.Monedas: enPartidas = objetivo / Economia.MonedasPorPartida(m); break;
+                        case MisionesDiarias.Oleada: enPartidas = objetivo / mm; break;
+                        case MisionesDiarias.Furia: enPartidas = objetivo * 120.0 / Economia.SegundosPorPartida(mm); break;
+                        case MisionesDiarias.Granadas: enPartidas = objetivo * 5.0 / Economia.SegundosPorPartida(mm); break;
+                        case MisionesDiarias.Criticos: enPartidas = objetivo / (Economia.BalasPorPartida(mm) * probCritico); break;
+                        case MisionesDiarias.Jefe: enPartidas = objetivo / (mm / 10.0); break;
+                        default: continue;
+                    }
+                    // El 0,75 es por los pisos y el redondeo, que mueven los objetivos
+                    // chicos: el peor de los siete queda en 0,80 (el jefe en la oleada 5,
+                    // donde pedir "un jefe" ya son 2 partidas contra 2,5 que se pagan).
+                    // Pasarse para arriba no es un exploit sino una mision dura, asi que
+                    // no se mira.
+                    if (enPartidas >= MisionesDiarias.Partidas(d) * 0.75) continue;
+                    valenLoQuePagan = false;
+                    elBarato += tipo + "/" + d + "@" + m + " ";
+                }
+            }
+        }
+        inf.Verdadero("misiones: cumplir cada objetivo cuesta las partidas que se le pagan" +
+                      (valenLoQuePagan ? "" : " (" + elBarato.Trim() + ")"), valenLoQuePagan);
+
         inf.Verdadero("misiones: el primer dia no regala (menos de 500 en total)",
                       MisionesDiarias.Monto(0, 0) + MisionesDiarias.Monto(1, 0)
                       + MisionesDiarias.Monto(2, 0) + MisionesDiarias.MontoCofre(0) < 500);
@@ -2076,6 +2152,31 @@ public static class PruebasMejoras
         inf.Verdadero("diaria: y con la mejor oleada", creceConLaOleada);
         inf.Verdadero("diaria: el dia 7 vale al menos una partida", seNota);
         inf.Verdadero("diaria: pero nunca mas de tres", noSePasa);
+
+        // Con que oleada paga hoy se congela la primera vez que se pregunta, como el
+        // premio de las misiones: si no, dejar la ventana sin cobrar, jugar hasta mejorar
+        // la marca y recien ahi tocar COBRAR era la jugada optima, y pagaba el premio de
+        // la marca nueva por el dia que ya venia corriendo.
+        int hoy = 20260922;
+        EmpezarConMonedas(0);
+        Progreso.RegistrarOleadaCompletada(20);
+        inf.Igual("diaria: anota la marca la primera vez que se pregunta",
+                  20, Progreso.OleadaDeLaRecompensa(hoy));
+
+        Progreso.RegistrarOleadaCompletada(40);
+        inf.Igual("diaria: mejorar la marca no sube lo que paga hoy",
+                  20, Progreso.OleadaDeLaRecompensa(hoy));
+        inf.Igual("diaria: pero el progreso si la registra", 40, Progreso.MejorOleada);
+
+        // Y el cobro de verdad paga con la congelada, no con la de ahora.
+        double cobrado = RecompensaDiaria.CobrarEl(hoy);
+        inf.Cerca("diaria: y cobra con la congelada", RecompensaDiaria.Monto(1, 20), cobrado, 1e-9);
+        inf.Verdadero("diaria: que no es lo que pagaria la marca nueva",
+                      RecompensaDiaria.Monto(1, 40) > cobrado);
+        inf.Cerca("diaria: las monedas que entraron son las cobradas", cobrado, Progreso.Monedas, 1e-9);
+
+        inf.Igual("diaria: maniana ya paga con la marca nueva",
+                  40, Progreso.OleadaDeLaRecompensa(hoy + 1));
     }
 
     static void ProbarComprasPosibles(Informe inf)

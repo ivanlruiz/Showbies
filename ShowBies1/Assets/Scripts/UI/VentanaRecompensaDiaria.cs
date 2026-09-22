@@ -290,7 +290,9 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         Texto(ventana, "Bajada", textoBajada, 40f, ColorDeTexto, new Vector2(0f, 158f), new Vector2(1100f, 60f));
 
         int hoy = RecompensaDiaria.Casillero(racha);
-        int mejor = Progreso.MejorOleada;
+        // La misma marca congelada con la que se va a pagar, no la de ahora: si no, la
+        // ventana prometeria un numero y cobraria otro.
+        int mejor = RecompensaDiaria.OleadaDeHoy;
         const float Ancho = 138f, Paso = 154f;
         for (int dia = 1; dia <= RecompensaDiaria.DiasDelCiclo; dia++)
         {
