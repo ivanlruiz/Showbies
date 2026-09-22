@@ -185,10 +185,11 @@ teléfono.
   (`DejarDeContar` + `Morir`) para que el cadáver se quede 1,4 s desplomándose sin contar en `ZombisVivos` ni en la
   oleada. Dos bancos en play lo verifican: el golpe (99 % de los frames en Atacar después de pegar) y la muerte
   (`ZombisVivos` sin despegarse ni un frame, cadáveres que se van solos, oleada que sigue avanzando).
-- [ ] **El jefe todavía no tiene animación propia.** Sus patrones —la carga con aviso, el aturdimiento de 1,3 s que es
-  la ventana para castigarlo, la invocación— se leen sólo por la línea roja y el anillo: el modelo sigue haciendo el
-  ciclo de correr. Va por animación procedural sobre el transform (agacharse en el aviso, tambalear aturdido, brazos
-  arriba al invocar), no por clips nuevos, que no hay.
+- [x] **El jefe tiene pose propia en cada patrón.** **Hecho el 22/9**, procedural sobre el hijo del modelo y en
+  `LateUpdate` (después del Animator): se agazapa avisando la carga, va echado adelante embistiendo, se tambalea
+  aturdido y se arquea hacia atrás al invocar. Lo que faltaba era justamente el aturdimiento: son 1,3 s en los que
+  el jefe está indefenso y no lo decía nada. **ShowBies > Pruebas > Grabar al jefe** lo saca al lado del jugador para
+  verlo sin llegar a la oleada 10.
 - [ ] Quedan sin usar `Z_idle_A` (quieto) y `Z_walk` (caminar, más lento que correr). El idle no tiene dónde ir
   mientras los zombis vayan siempre derecho al jugador; el walk podría ser el del tanque en vez de bajarle el `Paso`
   al de correr.

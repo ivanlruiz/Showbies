@@ -53,6 +53,21 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     public float ritmoEnFuria = 0.65f;       // multiplica cadaCuanto
     public int invocadosExtraEnFuria = 2;
 
+    [Header("Pose")]
+    [Tooltip("Cuanto se agacha y se echa atras mientras avisa la carga, en grados.")]
+    public float gradosAlAgazaparse = 20f;
+    [Tooltip("Cuanto se inclina hacia adelante mientras embiste, en grados.")]
+    public float gradosAlEmbestir = 24f;
+    [Tooltip("Cuanto se tambalea de lado a lado aturdido, en grados.")]
+    public float gradosAlTambalearse = 16f;
+    public float vaivenDelTambaleo = 3.2f;     // veces por segundo
+    [Tooltip("Cuanto se arquea hacia atras al invocar, en grados.")]
+    public float gradosAlInvocar = 26f;
+    [Tooltip("Cuanto sube o baja el cuerpo, como fraccion de su alto.")]
+    public float fraccionQueSeAgacha = 0.14f;
+    [Tooltip("Lo que tarda en llegar a la pose. Bajo es seco; alto, blando.")]
+    public float suavidadDeLaPose = 12f;
+
     [Header("Aviso")]
     public Material materialAviso;
     public Color colorAviso = new Color(1f, 0.2f, 0.15f, 0.85f);
@@ -73,6 +88,21 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private float rumboAlAturdirse;
     private Vector3 direccion;
     private WaveManager oleadas;
+
+    // La pose va sobre el modelo (el hijo con el Animator) y no sobre la raiz: la
+    // raiz la maneja EnemyController -mira al jugador en cada paso de fisica y le
+    // aplasta la escala al recibir un tiro- y escribirle encima se pelearia con eso.
+    // Se aplica en LateUpdate, despues de que el Animator escribio los huesos, que
+    // es como se hace cualquier pose por codigo encima de un clip.
+    //
+    // No hay clips de agazaparse, embestir ni tambalearse: el pack trae correr,
+    // pegar, morir, quieto y caminar. Esto es lo que se puede hacer sin modelar, y
+    // alcanza porque lo que hay que leer de un vistazo es la silueta.
+    private Transform modelo;
+    private Vector3 posicionBaseDelModelo;
+    private Quaternion rotacionBaseDelModelo;
+    private float altoDelModelo = 1f;
+    private float inclinacion, balanceo, altura;
     // Los que invoco, para no pasarse: un zombi muerto vuelve al pool y se prende de
     // nuevo, asi que se guarda con su numero de aparicion (ver EnemyController.SigueVivo).
     private readonly List<EnemyController> invocados = new List<EnemyController>();
@@ -81,6 +111,28 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private void Awake()
     {
         zombi = GetComponent<EnemyController>();
+
+        // El hijo que se ve: el del Animator con controller. Su transform local esta
+        // libre porque los prefabs tienen Apply Root Motion apagado.
+        foreach (var animador in GetComponentsInChildren<Animator>(true))
+        {
+            if (animador.runtimeAnimatorController == null || animador.transform == transform) continue;
+            modelo = animador.transform;
+            break;
+        }
+        if (modelo != null)
+        {
+            posicionBaseDelModelo = modelo.localPosition;
+            rotacionBaseDelModelo = modelo.localRotation;
+            // El alto en unidades locales del modelo, para que agacharse se vea igual
+            // con cualquier escala. Sale de los renderers y no de un numero a mano.
+            var renderers = modelo.GetComponentsInChildren<Renderer>(true);
+            float alto = 0f;
+            foreach (var r in renderers) alto = Mathf.Max(alto, r.bounds.size.y);
+            float escala = Mathf.Abs(modelo.lossyScale.y);
+            altoDelModelo = escala > 0.0001f ? Mathf.Max(0.1f, alto / escala) : 1f;
+        }
+
         var go = new GameObject("AvisoJefe");
         linea = go.AddComponent<LineRenderer>();
         linea.useWorldSpace = true;
@@ -105,18 +157,88 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         tocaCarga = true;
         enFuria = false;
         if (linea != null) linea.enabled = false;
+        inclinacion = balanceo = altura = 0f;
+        if (modelo != null) modelo.SetLocalPositionAndRotation(posicionBaseDelModelo, rotacionBaseDelModelo);
         oleadas = FindAnyObjectByType<WaveManager>();
     }
 
     private void OnDisable()
     {
         if (linea != null) linea.enabled = false;
+        // Que no se lo lleve al pool torcido: la aparicion siguiente sale de aca.
+        inclinacion = balanceo = altura = 0f;
+        if (modelo != null) modelo.SetLocalPositionAndRotation(posicionBaseDelModelo, rotacionBaseDelModelo);
         if (zombi != null) zombi.multiplicadorGolpe = 1f;
     }
 
     private void OnDestroy()
     {
         if (linea != null) Destroy(linea.gameObject);
+    }
+
+    // La pose de cada patron, encima del ciclo de correr. Va en LateUpdate porque el
+    // Animator escribe los huesos en el paso de animacion y lo que se ponga antes se
+    // pierde. Sin tiempo escalado no seria: la pausa tiene que congelarla como a todo
+    // lo demas.
+    private void LateUpdate()
+    {
+        if (modelo == null) return;
+
+        float inclinacionQueVa = 0f, balanceoQueVa = 0f, alturaQueVa = 0f;
+        if (zombi != null && zombi.Vivo)
+        {
+            switch (estado)
+            {
+                // Se agazapa: baja el cuerpo y se echa atras, como el que toma carrera.
+                case Estado.AvisandoCarga:
+                {
+                    float cuanto = avisoCarga > 0f ? Mathf.Clamp01((Time.time - desde) / avisoCarga) : 1f;
+                    inclinacionQueVa = -gradosAlAgazaparse * cuanto;
+                    alturaQueVa = -fraccionQueSeAgacha * altoDelModelo * cuanto;
+                    break;
+                }
+
+                // Embiste echado hacia adelante, que es lo que dice "no me pares".
+                case Estado.Cargando:
+                    inclinacionQueVa = gradosAlEmbestir;
+                    alturaQueVa = -fraccionQueSeAgacha * altoDelModelo * 0.4f;
+                    break;
+
+                // Aturdido se tambalea de lado a lado, cada vez menos: es la ventana
+                // para castigarlo y hasta ahora no se leia en ninguna parte.
+                case Estado.Aturdido:
+                {
+                    float queda = duracionAturdido > 0f
+                        ? Mathf.Clamp01(1f - (Time.time - desde) / duracionAturdido) : 1f;
+                    balanceoQueVa = gradosAlTambalearse * queda
+                                    * Mathf.Sin((Time.time - desde) * vaivenDelTambaleo * Mathf.PI * 2f);
+                    inclinacionQueVa = gradosAlEmbestir * 0.35f * queda;
+                    alturaQueVa = -fraccionQueSeAgacha * altoDelModelo * 0.3f * queda;
+                    break;
+                }
+
+                // Invocando se arquea hacia atras y se estira hacia arriba.
+                case Estado.AvisandoInvocar:
+                {
+                    float cuanto = avisoInvocar > 0f ? Mathf.Clamp01((Time.time - desde) / avisoInvocar) : 1f;
+                    inclinacionQueVa = -gradosAlInvocar * cuanto;
+                    alturaQueVa = fraccionQueSeAgacha * altoDelModelo * 0.5f * cuanto;
+                    break;
+                }
+            }
+        }
+
+        // Suavizado independiente de los FPS: en un telefono a 30 y en el editor a 200
+        // tarda lo mismo en llegar a la pose.
+        float paso = 1f - Mathf.Exp(-suavidadDeLaPose * Time.deltaTime);
+        inclinacion = Mathf.Lerp(inclinacion, inclinacionQueVa, paso);
+        altura = Mathf.Lerp(altura, alturaQueVa, paso);
+        // El tambaleo no se suaviza: es un vaiven y suavizarlo lo aplanaria.
+        balanceo = balanceoQueVa;
+
+        modelo.SetLocalPositionAndRotation(
+            posicionBaseDelModelo + Vector3.up * altura,
+            rotacionBaseDelModelo * Quaternion.Euler(inclinacion, 0f, balanceo));
     }
 
     public bool Mover(Rigidbody rb, Transform jugador)

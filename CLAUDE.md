@@ -367,6 +367,17 @@ ventana para castigarlo, y es lo que hace que esquivar valga la pena) y la **inv
 entra en furia: ataca más seguido e invoca 6. Los invocados cuentan en la oleada y en el total del HUD
 (`WaveManager.SumarALaOleada`). Para moverse por su cuenta usa `IMovimientoPropio`: `EnemyController` lo busca en su
 `Awake` y en cada paso de física le pregunta primero; si devuelve verdadero, la persecución de siempre no corre ese paso.
+**Cada patrón tiene su pose** (`JefePatrones.LateUpdate`): se agazapa y baja el cuerpo mientras avisa la carga, va
+echado hacia adelante mientras embiste, se tambalea de lado a lado —cada vez menos— mientras está aturdido, y se
+arquea hacia atrás al invocar. No hay clips para nada de eso (el pack trae correr, pegar, morir, quieto y caminar),
+así que es rotación y altura sobre el **hijo del modelo**, no sobre la raíz, que la maneja `EnemyController`
+(mira al jugador en cada paso de física y le aplasta la escala al recibir un tiro). Va en `LateUpdate` porque el
+Animator escribe los huesos en el paso de animación y lo que se ponga antes se pierde, y el suavizado es
+`1 - exp(-k·dt)` para que tarde lo mismo a 30 FPS que a 200. La altura sale del alto real del modelo, medido de sus
+renderers, así se ve igual con cualquier escala. Es lo que hace legible el aturdimiento de 1,3 s, que es la ventana
+para castigarlo y hasta ahora no se leía en ninguna parte. **ShowBies > Pruebas > Grabar al jefe** lo saca al lado
+del jugador y graba los patrones, sin tener que llegar a la oleada 10 jugando.
+
 Las líneas usan el material del indicador de la granada y el rugido es `explosion.wav` más grave, y van **planas
 sobre el piso** (`LineAlignment.TransformZ` con el objeto rotado −90° en X): con la alineación de siempre, que mira a
 la cámara, la cinta quedaba parada y medio enterrada.
@@ -1399,6 +1410,13 @@ enterrado.
 - **Construir UI en el editor ensucia el atlas dinámico de Bangers** (`Bangers SDF.asset`) y el fallback de
   LiberationSans. Si aparecen modificados en git sin haber tocado fuentes, se restauran. Bangers no tiene `→`: la
   flecha de las tarjetas es un sprite.
+
+- **Entrar y salir de play re-serializa `ProjectSettings/`, y `QualitySettings.asset` pierde
+  `m_PerPlatformDefaultQuality`** — el bloque que pone **Android en el nivel Medium** (ver Rendimiento en móvil).
+  Pasa en cada sesión de play manejada desde el editor y no avisa nada: la build de Android saldría en el nivel por
+  defecto y el teléfono iría mucho más lento, sin que nada lo delate. Después de correr cualquier banco en play,
+  mirá el `git status` de `ProjectSettings/` y revertí lo que no hayas tocado a propósito. `TimeManager.asset` también
+  se re-serializa a un formato nuevo (el `Fixed Timestep` pasa a un racional) sin cambiar de valor.
 
 - **Con la ventana de Unity en segundo plano, el juego en play NO corre** (`Run In Background` está apagado en
   ProjectSettings). No corren `Update` ni `OnRenderImage`, no se renderizan frames y
