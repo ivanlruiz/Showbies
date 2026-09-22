@@ -190,9 +190,12 @@ teléfono.
   aturdido y se arquea hacia atrás al invocar. Lo que faltaba era justamente el aturdimiento: son 1,3 s en los que
   el jefe está indefenso y no lo decía nada. **ShowBies > Pruebas > Grabar al jefe** lo saca al lado del jugador para
   verlo sin llegar a la oleada 10.
-- [ ] Quedan sin usar `Z_idle_A` (quieto) y `Z_walk` (caminar, más lento que correr). El idle no tiene dónde ir
-  mientras los zombis vayan siempre derecho al jugador; el walk podría ser el del tanque en vez de bajarle el `Paso`
-  al de correr.
+- [x] **El tanque y el jefe caminan de verdad, y los cadáveres caen hacia donde les pegaste.** **Hecho el 22/9**: el
+  estado de andar pasó a ser un blend de `Z_walk_rm` a `Z_run_rm` con el float `Ritmo` que fija cada prefab, y los
+  lentos van en 0. Con el ciclo de correr a `Paso` 0,45 el tanque se veía como alguien corriendo en cámara lenta, no
+  como algo pesado. Y `DanoZombi` recibe la dirección del golpe (la bala su forward, la granada del centro hacia
+  afuera), así el cadáver sale despedido hacia allá en vez de caer siempre igual.
+- [ ] Sigue sin usar `Z_idle_A` (quieto), que no tiene dónde ir mientras los zombis vayan siempre derecho al jugador.
 
 ## Revisión del 22/9 (diez agentes, en `REVISION.md`)
 

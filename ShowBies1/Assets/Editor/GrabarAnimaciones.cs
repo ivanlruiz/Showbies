@@ -36,7 +36,10 @@ public static class GrabarAnimaciones
     }
 
     [MenuItem("ShowBies/Pruebas/Grabar las animaciones")]
-    static void Arrancar()
+    // Publico para poder correrlo por codigo y no solo por el menu: despues de
+    // una sesion de play el registro de menus de Unity tarda en rehacerse y la
+    // entrada no se encuentra, aunque la clase este cargada.
+    public static void Arrancar()
     {
         PlayerSettings.runInBackground = true;
         string carpeta = Path.GetFullPath(Carpeta);

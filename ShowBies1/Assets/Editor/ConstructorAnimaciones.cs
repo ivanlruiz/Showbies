@@ -27,6 +27,7 @@ public static class ConstructorAnimaciones
 
     // Los nombres los comparte EnemyController: si cambian, cambian en los dos lados.
     public const string ParametroPaso = "Paso";
+    public const string ParametroRitmo = "Ritmo";
     public const string GatilloAtacar = "Atacar";
     public const string GatilloMorir = "Morir";
 
@@ -60,8 +61,9 @@ public static class ConstructorAnimaciones
             return;
         }
 
-        AnimationClip correr = Clip("Z_run_rm"), atacar = Clip("Z_attack_A"), morir = Clip("Z_death_A");
-        if (correr == null || atacar == null || morir == null)
+        AnimationClip correr = Clip("Z_run_rm"), caminar = Clip("Z_walk_rm");
+        AnimationClip atacar = Clip("Z_attack_A"), morir = Clip("Z_death_A");
+        if (correr == null || caminar == null || atacar == null || morir == null)
         {
             Debug.LogError("Faltan clips del zombi en " + ClipsZombi);
             return;
@@ -81,23 +83,55 @@ public static class ConstructorAnimaciones
         foreach (var p in new List<AnimatorControllerParameter>(ctrl.parameters))
             ctrl.RemoveParameter(p);
 
+        // El blend tree es un sub-asset del .controller y quitar su estado no lo
+        // borra: sin esto, cada vez que se corre esta herramienta queda uno colgado
+        // adentro del archivo.
+        foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(RutaControlador))
+            if (o is BlendTree) AssetDatabase.RemoveObjectFromAsset(o);
+
         // "Paso" es lo que antes era animador.speed: cada tipo camina a su ritmo (el
         // tanque pesado, el FASTER frenetico). Va como multiplicador del estado de
         // correr y no del Animator entero, porque con el Animator entero el jefe
         // (0,3) tardaba cuatro segundos y medio en morirse y el tanque pegaba en
         // camara lenta. Atacar y morir van siempre a velocidad 1.
         ctrl.AddParameter(ParametroPaso, AnimatorControllerParameterType.Float);
+        // 0 es caminar y 1 correr. Arranca en 1: lo que hacian todos hasta ahora.
+        ctrl.AddParameter(ParametroRitmo, AnimatorControllerParameterType.Float);
         var parametros = ctrl.parameters;
         parametros[0].defaultFloat = 1f;
+        parametros[1].defaultFloat = 1f;
         ctrl.parameters = parametros;
         ctrl.AddParameter(GatilloAtacar, AnimatorControllerParameterType.Trigger);
         ctrl.AddParameter(GatilloMorir, AnimatorControllerParameterType.Trigger);
 
-        var eCorrer = maquina.AddState("Correr", new Vector3(260, 0, 0));
-        eCorrer.motion = correr;
-        eCorrer.speedParameterActive = true;
-        eCorrer.speedParameter = ParametroPaso;
-        maquina.defaultState = eCorrer;
+        // Andar es un blend de caminar a correr, y no dos estados con su transicion:
+        // asi el volver-de-atacar y el sale-de-cualquier-estado-a-morir siguen siendo
+        // uno solo, y el tipo que va entre los dos ritmos se mezcla en vez de saltar.
+        //
+        // Antes era un unico Z_run_rm con el Paso bajado, y el tanque (0,45) y el
+        // jefe (0,3) se veian como alguien corriendo en camara lenta, no como algo
+        // pesado: el ciclo de correr tiene los dos pies en el aire y a esa velocidad
+        // eso se lee como que el video va lento.
+        BlendTree mezcla;
+        var eAndar = ctrl.CreateBlendTreeInController("Andar", out mezcla, 0);
+        mezcla.blendParameter = ParametroRitmo;
+        mezcla.useAutomaticThresholds = false;
+        mezcla.AddChild(caminar, 0f);
+        mezcla.AddChild(correr, 1f);
+        eAndar.speedParameterActive = true;
+        eAndar.speedParameter = ParametroPaso;
+        maquina.defaultState = eAndar;
+
+        // CreateBlendTreeInController agrega un parametro "Blend" suyo si el arbol no
+        // tenia otro; ya no lo usa nadie.
+        foreach (var p in new List<AnimatorControllerParameter>(ctrl.parameters))
+            if (p.name == "Blend") ctrl.RemoveParameter(p);
+
+        // Lo deja donde caiga; que quede alineado con los otros dos.
+        var estados = maquina.states;
+        for (int i = 0; i < estados.Length; i++)
+            if (estados[i].state == eAndar) estados[i].position = new Vector3(260, 0, 0);
+        maquina.states = estados;
 
         var eAtacar = maquina.AddState("Atacar", new Vector3(520, 90, 0));
         eAtacar.motion = atacar;
@@ -121,13 +155,13 @@ public static class ConstructorAnimaciones
         aAtacar.duration = 0.06f;
         aAtacar.canTransitionToSelf = true;
 
-        // Vuelve a correr antes de que termine del todo: el ultimo tramo del clip es
+        // Vuelve a andar antes de que termine del todo: el ultimo tramo del clip es
         // el brazo bajando y se mezcla bien con el paso.
-        var volverACorrer = eAtacar.AddTransition(eCorrer);
-        volverACorrer.hasExitTime = true;
-        volverACorrer.exitTime = 0.82f;
-        volverACorrer.hasFixedDuration = true;
-        volverACorrer.duration = 0.15f;
+        var volverAAndar = eAtacar.AddTransition(eAndar);
+        volverAAndar.hasExitTime = true;
+        volverAAndar.exitTime = 0.82f;
+        volverAAndar.hasFixedDuration = true;
+        volverAAndar.duration = 0.15f;
 
         // Morir no vuelve de ningun lado: el cadaver se apaga por su cuenta. Y no
         // puede interrumpirse a si mismo, o dos balas en el mismo paso de fisica lo
@@ -143,9 +177,9 @@ public static class ConstructorAnimaciones
         AssetDatabase.SaveAssets();
 
         Debug.Log(string.Format(
-            "Controller de los zombis armado en {0}: Correr ({1:0.00} s, loop, x{2}) / Atacar ({3:0.00} s) / Morir ({4:0.00} s a x{5} = {6:0.00} s).",
-            RutaControlador, correr.length, ParametroPaso, atacar.length, morir.length,
-            VelocidadDeLaMuerte, morir.length / VelocidadDeLaMuerte));
+            "Controller de los zombis armado en {0}: Andar (caminar {1:0.00} s <-> correr {2:0.00} s por {3}, a x{4}) / Atacar ({5:0.00} s) / Morir ({6:0.00} s a x{7} = {8:0.00} s).",
+            RutaControlador, caminar.length, correr.length, ParametroRitmo, ParametroPaso,
+            atacar.length, morir.length, VelocidadDeLaMuerte, morir.length / VelocidadDeLaMuerte));
     }
 
     static AnimationClip Clip(string nombre)

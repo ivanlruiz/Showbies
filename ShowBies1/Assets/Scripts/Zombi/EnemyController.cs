@@ -51,18 +51,31 @@ public class EnemyController : MonoBehaviour
     private float proximoGolpe;
 
     [Header("Animacion")]
-    [Tooltip("Ritmo del paso. Todos usan el modelo del zombi normal a distinta escala: el paso tiene que ir con lo que camina cada uno (el tanque pesado, el FASTER frenetico). Solo afecta a correr; atacar y morir van siempre a 1.")]
+    [Tooltip("Ritmo del paso. Todos usan el modelo del zombi normal a distinta escala: el paso tiene que ir con lo que camina cada uno (el tanque pesado, el FASTER frenetico). Solo afecta a andar; atacar y morir van siempre a 1.")]
     [SerializeField] private float velocidadDeAnimacion = 1f;
+
+    [Tooltip("0 camina y 1 corre, y en el medio se mezclan. Los lentos (el tanque, el jefe) caminan: con el ciclo de correr a media velocidad parecen alguien corriendo en camara lenta, porque tiene los dos pies en el aire.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float ritmoDeAndar = 1f;
 
     // Los del controller que arma ConstructorAnimaciones. Como hash, que es lo que
     // usa el Animator por dentro: si van por string, los convierte en cada llamada.
     private static readonly int idPaso = Animator.StringToHash("Paso");
+    private static readonly int idRitmo = Animator.StringToHash("Ritmo");
     private static readonly int idAtacar = Animator.StringToHash("Atacar");
     private static readonly int idMorir = Animator.StringToHash("Morir");
-    private static readonly int idCorrer = Animator.StringToHash("Correr");
+    private static readonly int idAndar = Animator.StringToHash("Andar");
 
     [Tooltip("Lo que se queda el cadaver en escena mientras se desploma, antes de volver al pool. El clip de morir dura 1,36 s con la velocidad del estado.")]
     [SerializeField] private float duracionDeLaMuerte = 1.4f;
+
+    [Header("Empujon al morir")]
+    [Tooltip("A que velocidad sale despedido el cadaver en la direccion del tiro, en m/s. Se divide por la escala del zombi: el tanque y el jefe casi no se mueven.")]
+    [SerializeField] private float empujeAlMorir = 5f;
+    [Tooltip("Cuanto frena ese empujon, en m/s2. Con 5 y 14 el cadaver recorre unos 90 cm en un tercio de segundo.")]
+    [SerializeField] private float frenadoDelEmpuje = 14f;
+    [Tooltip("Cuanto se va de espaldas el cadaver al salir despedido, en grados. Se endereza con el empujon.")]
+    [SerializeField] private float inclinacionDelEmpuje = 12f;
 
     // Un cadaver es una malla con huesos animandose: cuesta lo mismo que un zombi
     // vivo. Sin techo, una granada que mata a diez deja diez animandose encima de
@@ -77,6 +90,13 @@ public class EnemyController : MonoBehaviour
     private bool desplomandose;
     private float sacarloEn;
     private Collider[] colliders;
+
+    // De donde vino el golpe que lo mato, para que caiga hacia alla y no siempre
+    // igual. Lo pasan la bala (su direccion) y la granada (del centro hacia afuera);
+    // el kill-Z y el despeje no pasan nada y el cadaver cae donde esta.
+    private Vector3 direccionDelEmpuje;
+    private float velocidadDelEmpuje;
+    private Quaternion rotacionAlMorir;
 
     [Header("Golpe visual")]
     [SerializeField] private Vector3 aplastadoAlGolpear = new Vector3(1.15f, 0.85f, 1.15f);
@@ -310,6 +330,12 @@ public class EnemyController : MonoBehaviour
         }
         foreach (var c in colliders) c.enabled = true;
         rb.isKinematic = false;
+        velocidadDelEmpuje = 0f;
+        direccionDelEmpuje = Vector3.zero;
+        // Uno que se desplomo inclinado vuelve derecho: la rotacion la pisa
+        // FixedUpdate con el LookAt, pero recien en el primer paso de fisica, y
+        // hasta ahi se veria torcido.
+        transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
 
         transform.localScale = escalaBase;
         aplastado = false;
@@ -326,9 +352,10 @@ public class EnemyController : MonoBehaviour
         {
             animador.speed = 1f;
             animador.SetFloat(idPaso, velocidadDeAnimacion);
+            animador.SetFloat(idRitmo, ritmoDeAndar);
             animador.ResetTrigger(idAtacar);
             animador.ResetTrigger(idMorir);
-            animador.Play(idCorrer, 0, 0f);
+            animador.Play(idAndar, 0, 0f);
         }
         SubirSobreElPiso();
     }
@@ -374,14 +401,35 @@ public class EnemyController : MonoBehaviour
     // Time.time es tiempo escalado, asi que la pausa lo congela.
     private void Update()
     {
-        if (desplomandose && Time.time >= sacarloEn) Devolver();
+        if (!desplomandose) return;
+
+        // El cadaver sale despedido hacia donde apuntaba el tiro y frena solo. Sin
+        // esto todos caian igual, en la direccion que tiene el clip, y un tiro por
+        // la espalda se veia como uno de frente.
+        if (velocidadDelEmpuje > 0f)
+        {
+            float dt = Time.deltaTime;
+            transform.position += direccionDelEmpuje * (velocidadDelEmpuje * dt);
+            velocidadDelEmpuje = Mathf.Max(0f, velocidadDelEmpuje - frenadoDelEmpuje * dt);
+
+            // Y se va de espaldas, enderezandose a medida que frena. El eje es el
+            // perpendicular al empujon, asi se inclina hacia donde lo empujaron sin
+            // importar hacia donde este mirando.
+            float cuanto = empujeAlMorir > 0f ? velocidadDelEmpuje / empujeAlMorir : 0f;
+            Vector3 eje = Vector3.Cross(Vector3.up, direccionDelEmpuje);
+            transform.rotation = eje.sqrMagnitude > 0.0001f
+                ? Quaternion.AngleAxis(inclinacionDelEmpuje * cuanto, eje) * rotacionAlMorir
+                : rotacionAlMorir;
+        }
+
+        if (Time.time >= sacarloEn) Devolver();
     }
 
     // Morir con la animacion de morir. El zombi sale de la cuenta en el acto y el
     // objeto se queda prendido lo que dura el desplome. Si no hay lugar para otro
     // cadaver -o no hay Animator, como los zombis del fondo del menu- se va de
     // golpe, que es como se veia hasta ahora.
-    private void Morir()
+    private void Morir(Vector3 empuje)
     {
         int techo = Plataforma.EsMovil ? MaxCadaveresMovil : MaxCadaveres;
         if (animadores.Length == 0 || cadaveres >= techo || duracionDeLaMuerte <= 0f)
@@ -401,6 +449,20 @@ public class EnemyController : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
+
+        // Los grandes casi no se mueven: el mismo empujon dividido por su escala.
+        rotacionAlMorir = transform.rotation;
+        empuje.y = 0f;
+        if (empuje.sqrMagnitude > 0.0001f)
+        {
+            direccionDelEmpuje = empuje.normalized;
+            velocidadDelEmpuje = empujeAlMorir / Mathf.Max(1f, escalaBase.y);
+        }
+        else
+        {
+            direccionDelEmpuje = Vector3.zero;
+            velocidadDelEmpuje = 0f;
+        }
 
         foreach (var animador in animadores) animador.SetTrigger(idMorir);
     }
@@ -552,7 +614,9 @@ public class EnemyController : MonoBehaviour
     // Awake: .name arma un string nuevo en cada llamada.
     private string nombreTipo;
 
-    public void DanoZombi(float daño, bool critico = false)
+    // "empuje" es hacia donde iba el golpe, para que el cadaver caiga hacia alla.
+    // Es opcional: quien no la sabe (el medidor, las pruebas) lo deja caer donde esta.
+    public void DanoZombi(float daño, bool critico = false, Vector3 empuje = default(Vector3))
     {
         // Dos golpes en el mismo paso de fisica llaman a esto dos veces con la vida
         // ya en cero (los eventos de colision del paso se despachan aunque el zombi
@@ -596,7 +660,7 @@ public class EnemyController : MonoBehaviour
             Efectos.Muerte(transform.position, enemyType.hp);
 
             // Al final: todo lo de arriba usa su posicion.
-            Morir();
+            Morir(empuje);
         }
     }
 

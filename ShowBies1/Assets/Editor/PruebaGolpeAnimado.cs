@@ -31,7 +31,7 @@ public static class PruebaGolpeAnimado
     // segundo tiene que estar atacando, sin margen para discutir.
     const float VentanaDelGolpe = 0.5f;
 
-    static readonly int IdCorrer = Animator.StringToHash("Correr");
+    static readonly int IdAndar = Animator.StringToHash("Andar");
     static readonly int IdAtacar = Animator.StringToHash("Atacar");
     static readonly int IdMorir = Animator.StringToHash("Morir");
 
@@ -118,7 +118,7 @@ public static class PruebaGolpeAnimado
                 if (animador.runtimeAnimatorController == null) continue;
                 int estado = animador.GetCurrentAnimatorStateInfo(0).shortNameHash;
                 if (estado == IdAtacar) framesAtacando++;
-                else if (estado == IdCorrer) framesCorriendo++;
+                else if (estado == IdAndar) framesCorriendo++;
                 else if (estado == IdMorir) framesMuriendo++;
                 else framesEnOtra++;
             }

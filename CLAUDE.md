@@ -411,17 +411,25 @@ zombi se reemplazaba en vez de sumarse: desde la oleada 20 sólo salían jefes.
 Los cinco usan el mismo esqueleto (el modelo de ToonyTinyPeople, ver Rendimiento en móvil) y el mismo Animator
 Controller, `Assets/Animaciones/Zombi.controller`, que **no se edita a mano**: lo arma **ShowBies > Animaciones >
 Armar el controller de los zombis** (`ConstructorAnimaciones`), que se vuelve a correr para cambiarlo. Tiene tres
-estados —**Correr** (`Z_run_rm`, en loop, el de entrada), **Atacar** (`Z_attack_A`) y **Morir** (`Z_death_A`)— y tres
-parámetros: el float `Paso` y los gatillos `Atacar` y `Morir`. Los nombres los comparte `EnemyController`, como hashes.
+estados —**Andar** (el de entrada, un blend de `Z_walk_rm` a `Z_run_rm`), **Atacar** (`Z_attack_A`) y **Morir**
+(`Z_death_A`)— y cuatro parámetros: los floats `Paso` y `Ritmo` y los gatillos `Atacar` y `Morir`. Los nombres los
+comparte `EnemyController`, como hashes.
 
 Hasta el 22/9 el controller tenía **un solo estado** y un parámetro que no usaba nadie: los cinco zombis corrían para
 siempre, te pegaban corriendo y se morían corriendo, aunque `Z_attack_A` y `Z_death_A` estaban en el proyecto desde el
 principio, sin usar. El controller además vivía en la carpeta del pack; se movió con `AssetDatabase.MoveAsset`, que
 conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m_Controller`) siguieron apuntando solos.
 
-- **El ritmo del paso es el parámetro `Paso`** y ya no `animador.speed`: es el multiplicador del estado de correr, y
+- **El ritmo del paso es el parámetro `Paso`** y ya no `animador.speed`: es el multiplicador del estado de andar, y
   atacar y morir van siempre a 1. Con el Animator entero, el jefe (`velocidadDeAnimacion` 0,3) tardaba cuatro segundos
   y medio en morirse y el tanque (0,45) pegaba en cámara lenta.
+- **Los lentos caminan, los rápidos corren**, con el float `Ritmo` (0 caminar, 1 correr, y en el medio se mezclan) que
+  cada prefab fija en `ritmoDeAndar`. Es un blend tree y no dos estados con su transición, así el volver-de-atacar y el
+  a-morir-desde-cualquier-estado siguen siendo uno solo. Hoy caminan el **tanque** (`Ritmo` 0, `Paso` 0,8) y el **jefe**
+  (0 y 0,55); los otros tres corren. Con un único `Z_run_rm` y el `Paso` bajado, los dos se veían como alguien corriendo
+  en cámara lenta y no como algo pesado: el ciclo de correr tiene los dos pies en el aire, y a esa velocidad eso se lee
+  como que el vídeo va lento. Caminar dura 1,00 s contra los 0,67 de correr, así que al pasar de uno al otro hay que
+  reajustar el `Paso`.
 - **Pegar** lo dispara `EnemyController.Golpear`, donde ya estaba el daño, así que cubre a los cinco y al jefe. El clip
   dura 1,33 s y `intervaloDeGolpe` es 0,8: pegado al jugador el zombi encadena golpes sin volver a correr, porque la
   transición desde AnyState se reinicia a sí misma.
@@ -431,6 +439,13 @@ conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m
   entonces llama a `Devolver`. El estado Morir va a velocidad 1,35 para que los 1,83 s del clip entren en esa ventana.
   **Para todo el resto del juego el cadáver ya no existe**: `Vivo` (que es `enUso`) da falso, la oleada lo cuenta
   muerto, las balas lo atraviesan y su lugar en el techo de población queda libre.
+- **El cadáver sale despedido hacia donde iba el golpe.** `DanoZombi` recibe un `empuje` opcional —la bala pasa su
+  `transform.forward` y la granada, del centro de la explosión hacia afuera— y el cadáver se desliza en esa dirección
+  frenando solo (`empujeAlMorir` 5 m/s, `frenadoDelEmpuje` 14 m/s²: unos 90 cm en un tercio de segundo), inclinándose de
+  espaldas y enderezándose a medida que frena. **Se divide por la escala del zombi**, así el tanque y el jefe casi no se
+  mueven. Quien no pasa dirección —el kill-Z, el despeje del revivir, el medidor— lo deja caer donde está. Sin esto
+  todos caían igual, en la dirección que trae el clip, y un tiro por la espalda se veía como uno de frente. Se mueve la
+  **raíz** y no el modelo: durante el desplome `FixedUpdate` no corre, así que nadie más la está tocando.
 - **Hay techo de cadáveres** (`MaxCadaveres` 12, `MaxCadaveresMovil` 5): un cadáver es una malla con huesos
   animándose y cuesta lo mismo que un zombi vivo, así que una granada que mata a diez dejaría diez animándose encima de
   los que siguen saliendo. Pasado el techo el zombi se va de golpe, como antes.
@@ -438,6 +453,8 @@ conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m
   seguía dibujando la línea de la carga e invocando un segundo y medio después de que la barra llegó a cero.
 - **El kill-Z y el despeje del revivir no animan nada**: llaman a `Devolver` directo. El despeje saca a los zombis
   "sin puntos, monedas ni mancha", y una muerte en cámara ahí sería justo lo contrario.
+- **Quedan sin usar `Z_idle_A`** (quieto: no tiene dónde ir mientras los zombis vayan siempre derecho al jugador) y
+  `Z_run` / `Z_walk` sin root motion (se usan los `_rm`, que es lo que ya hacía el controller viejo).
 - **Dos bancos en play lo verifican**, porque esto toca lo más fácil de romper en silencio del juego:
   **ShowBies > Pruebas > Golpe animado** mide en qué estado está el Animator en el medio segundo posterior a cada golpe
   (99 % en Atacar), y **Muerte animada** mata zombis por el mismo camino que una bala y comprueba que `ZombisVivos` no
@@ -1410,6 +1427,11 @@ enterrado.
 - **Construir UI en el editor ensucia el atlas dinámico de Bangers** (`Bangers SDF.asset`) y el fallback de
   LiberationSans. Si aparecen modificados en git sin haber tocado fuentes, se restauran. Bangers no tiene `→`: la
   flecha de las tarjetas es un sprite.
+
+- **Después de una sesión de play, el registro de menús del editor tarda en rehacerse**: `ExecuteMenuItem` contesta
+  "no menu named …" y `Menu.GetEnabled` da falso hasta para entradas que acaban de correr, aunque la clase esté cargada
+  y el `[MenuItem]` esté ahí. Por eso los bancos que se manejan desde afuera tienen su `Arrancar` **público**, para
+  poder llamarlos por código; si agregás otro, hacé lo mismo.
 
 - **Entrar y salir de play re-serializa `ProjectSettings/`, y `QualitySettings.asset` pierde
   `m_PerPlatformDefaultQuality`** — el bloque que pone **Android en el nivel Medium** (ver Rendimiento en móvil).

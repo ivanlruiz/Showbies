@@ -139,7 +139,10 @@ public class Granade : MonoBehaviour
                 // mejora de daño de bala: la granada es un recurso con cooldown que
                 // tiene que seguir matando lo mismo en la oleada 20 que en la 1, y
                 // la mejora de bala ya se paga con monedas por su lado.
-                enemyController.DanoZombi(damage * enemyController.multiplicadorVida);
+                // Del centro de la explosion hacia afuera: los cadaveres se abren
+                // en abanico en vez de caer todos para el mismo lado.
+                enemyController.DanoZombi(damage * enemyController.multiplicadorVida, false,
+                                          enemyController.transform.position - transform.position);
             }
         }
 

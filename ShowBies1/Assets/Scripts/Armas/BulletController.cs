@@ -113,7 +113,9 @@ public class BulletController : MonoBehaviour
         EnemyController zombi = other.gameObject.GetComponentInParent<EnemyController>(true);
         if (zombi == null) return;
 
-        zombi.DanoZombi(danoAplicado, critico);
+        // La direccion de la bala, para que el cadaver salga despedido hacia donde
+        // iba el tiro y no siempre igual.
+        zombi.DanoZombi(danoAplicado, critico, transform.forward);
         Devolver();
     }
 }

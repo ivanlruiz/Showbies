@@ -147,7 +147,12 @@ MonoBehaviour:
   - {fileID: 2800000, guid: eb68a545b98b039419d6a0bd6982f09d, type: 3}
   duracionMancha: 2
   intervaloDeGolpe: 0.8
-  velocidadDeAnimacion: 0.3
+  velocidadDeAnimacion: 0.55
+  ritmoDeAndar: 0
+  duracionDeLaMuerte: 1.4
+  empujeAlMorir: 5
+  frenadoDelEmpuje: 14
+  inclinacionDelEmpuje: 12
   aplastadoAlGolpear: {x: 1.15, y: 0.85, z: 1.15}
   recuperacionDelAplastado: 0.35
 --- !u!54 &6352431393070222262
@@ -191,17 +196,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::JefePatrones
   esperaInicial: 3
   cadaCuanto: 5
+  distanciaParaAtacar: 15
   avisoCarga: 0.9
   velocidadCarga: 16
   duracionCarga: 1
   anchoLinea: 1.4
+  golpeDeLaCarga: 2.5
+  duracionAturdido: 1.3
   invocado: {fileID: 6952442577594072745, guid: 69f91a5ee7b7abd40bea94e8b386fc10, type: 3}
   cantidadInvocados: 4
+  maxInvocadosVivos: 8
   radioInvocacion: 3.5
   avisoInvocar: 0.8
   fraccionFuria: 0.5
   ritmoEnFuria: 0.65
   invocadosExtraEnFuria: 2
+  gradosAlAgazaparse: 20
+  gradosAlEmbestir: 24
+  gradosAlTambalearse: 16
+  vaivenDelTambaleo: 3.2
+  gradosAlInvocar: 26
+  fraccionQueSeAgacha: 0.14
+  suavidadDeLaPose: 12
   materialAviso: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   colorAviso: {r: 1, g: 0.2, b: 0.15, a: 0.85}
   rugido: {fileID: 8300000, guid: 0a7fea0764885f340945d537f6d113d2, type: 3}
