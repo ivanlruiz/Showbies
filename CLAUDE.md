@@ -774,6 +774,12 @@ o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarParti
   Android mata la app durante el video, `Terminar` no llega a correr.
 - **Que se venza el reloj es exactamente lo mismo que decir que no**, y el botón NO, GRACIAS está desde el
   primer segundo y se lee igual de bien que el otro.
+- **Cerrar el vídeo no termina la partida**, que es el caso que hay que mirar con más cuidado acá: el callback de
+  "sin premio" es `SinPremio` y **no** `Rechazar`. Vuelve a la ventanita con los botones habilitados y, sobre todo,
+  **corre el origen del reloj** (`desde += lo que duró el vídeo`): mientras se mira, `Update` corta con
+  `esperandoVideo` pero `Time.unscaledTime` sigue, así que sin eso la cuenta atrás se vence en el acto al volver y
+  la partida termina igual por otro camino. Lo mismo vale si el vídeo no se pudo mostrar. Antes los dos caminos
+  llamaban a `Rechazar`, o sea que cerrar el anuncio mandaba derecho a la derrota.
 - Mientras la ventana está abierta, `OfertaDeRevivir.Activa` es cierto y **`MenuPausa` no pausa**: reanudar
   desde el menú de pausa devolvería el `timeScale` a 1 con el jugador muerto. **`MenuPausa.JuegoCongelado`**
   (pausa u oferta abierta) es lo que miran el input (`PlayerController`, `PlayerJS`, la granada, la furia) y la pausa

@@ -174,6 +174,17 @@ teléfono.
 - Postergar el ataque al revivir y la línea plana (S).
 - Premios de misiones proporcionales al objetivo (lo de arriba).
 
+## Revisión del 22/9 (diez agentes, en `REVISION.md`)
+
+47 hallazgos, 32 sobrevivieron al verificador. El informe completo con archivo y línea está en `REVISION.md`.
+
+- [x] **Cerrar el vídeo del revivir mandaba a la derrota en el acto.** **Arreglado el 22/9**: el callback de "sin
+  premio" ya no es `Rechazar` sino `SinPremio`, que devuelve la ventanita con su tiempo. Verificado en play, y
+  verificado también que la prueba detecta el bug (revirtiendo el arreglo a propósito da `escena=Perdiste`).
+- [ ] El resto de lo confirmado está en `REVISION.md`, ordenado por impacto sobre esfuerzo. Lo próximo por tamaño:
+  el tope de 3 vídeos por día se cuenta por lugar (o sea 9 en total), las misiones de granadas y críticos que se
+  cumplen sin jugar, y la recompensa diaria que resuelve el monto al cobrarla en vez de congelarlo.
+
 ## Revisión de lo del 20/9 (dos agentes, esa misma tarde)
 
 Arreglado en el momento: las misiones de furia, granadas y jefe tenían objetivo fijo y premio creciente (se cobraba el

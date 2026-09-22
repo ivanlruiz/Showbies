@@ -72,6 +72,7 @@ public class OfertaDeRevivir : MonoBehaviour
     // derrota a alguien que lo miro entero, y encima le gastaria el video.
     private bool esperandoVideo;
     private float desde;
+    private float aceptadoEn = -1f;   // cuando toco el video, para devolverle su tiempo
     private float duracion;
     private float agrisado;
     private float radioDespeje;
@@ -273,12 +274,38 @@ public class OfertaDeRevivir : MonoBehaviour
         if (botonVideo != null) botonVideo.interactable = false;
         if (botonNo != null) botonNo.interactable = false;
 
-        if (!ServicioAnuncios.Mostrar(LugarAnuncio.Revivir, Volver, Rechazar))
+        aceptadoEn = Time.unscaledTime;
+
+        if (!ServicioAnuncios.Mostrar(LugarAnuncio.Revivir, Volver, SinPremio))
         {
-            // Dejó de haber video entre que murió y que tocó: no se le cobra la duda.
-            esperandoVideo = false;
-            Rechazar();
+            // Dejó de haber video entre que murió y que tocó: no se le cobra la duda, pero
+            // tampoco tiene sentido volver a ofrecérselo.
+            SinPremio();
+            if (botonVideo != null) botonVideo.interactable = false;
         }
+    }
+
+    // El video se cerró antes, no había, o falló sin premio. **No termina la partida**: el
+    // jugador vuelve a la ventanita con los segundos que le quedaban y decide él.
+    //
+    // Antes esto era `Rechazar`, o sea que cerrar el video —o que la red fallara al
+    // mostrarlo— mandaba derecho a la pantalla de derrota. Va contra la regla de que cerrar
+    // el video antes no castiga, y es el peor momento para romperle la partida a alguien:
+    // justo cuando se le pidió que mirara un anuncio.
+    private void SinPremio()
+    {
+        if (!corriendo) return;
+        esperandoVideo = false;
+
+        // Mientras se miraba el video el reloj estaba congelado (Update corta con
+        // `esperandoVideo`) pero `Time.unscaledTime` no: sin correr el origen, `pasado`
+        // pega un salto del largo del video, la cuenta atras se vence en el acto y termina
+        // la partida igual, por otro camino.
+        if (aceptadoEn >= 0f) desde += Time.unscaledTime - aceptadoEn;
+        aceptadoEn = -1f;
+
+        if (botonVideo != null) botonVideo.interactable = true;
+        if (botonNo != null) botonNo.interactable = true;
     }
 
     private void Volver()
@@ -286,6 +313,7 @@ public class OfertaDeRevivir : MonoBehaviour
         if (!corriendo) return;
         corriendo = false;
         esperandoVideo = false;
+        aceptadoEn = -1f;
 
         Esconder();
         Time.timeScale = 1f;
@@ -298,6 +326,7 @@ public class OfertaDeRevivir : MonoBehaviour
         if (!corriendo) return;
         corriendo = false;
         esperandoVideo = false;
+        aceptadoEn = -1f;
 
         Esconder();
         // El timeScale vuelve antes de cambiar de escena: es global y cruza escenas.
