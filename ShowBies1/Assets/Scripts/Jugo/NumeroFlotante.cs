@@ -10,12 +10,14 @@ public class NumeroFlotante : MonoBehaviour
     public float duracion = 0.7f;
     public float velocidadInicial = 5f;       // hacia arriba, en m/s
     public float gravedad = 10f;
-    public float escalaBase = 1f;
+    public float escalaBase = 0.55f;          // achicados a pedido de Ivan: tapaban la partida
     public float dañoParaEscalaMaxima = 50f;  // desde este daño sale al doble de tamaño y con colorFuerte
     public Color colorDebil = Color.white;
     public Color colorFuerte = new Color(1f, 0.8f, 0.1f);
     public Color colorCritico = new Color(1f, 0.22f, 0.12f);
-    public float escalaCritico = 1.3f;              // sobre la escala que le toca por el daño
+    [Tooltip("Cuanto crece el numero entre el danio mas chico y el mas grande. Era 1 (el doble).")]
+    public float crecimientoPorDanio = 0.6f;
+    public float escalaCritico = 1.1f;              // sobre la escala que le toca por el daño
 
     [System.NonSerialized] public System.Action<NumeroFlotante> alTerminar;
 
@@ -34,7 +36,10 @@ public class NumeroFlotante : MonoBehaviour
     {
         float fuerza = Mathf.Clamp01(valor / dañoParaEscalaMaxima);
         color = critico ? colorCritico : Color.Lerp(colorDebil, colorFuerte, fuerza);
-        escala = escalaBase * (1f + fuerza) * (critico ? escalaCritico : 1f);
+        // El crecimiento por danio ya no llega al doble: con las mejoras, el danio pasa
+        // enseguida de danioParaEscalaMaxima y TODOS los numeros salian del tamanio maximo,
+        // asi que lo unico que hacia era tapar la partida.
+        escala = escalaBase * (1f + crecimientoPorDanio * fuerza) * (critico ? escalaCritico : 1f);
 
         transform.position = punto + new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f));
         velocidad = new Vector3(Random.Range(-1.2f, 1.2f), velocidadInicial, 0f);
@@ -64,7 +69,7 @@ public class NumeroFlotante : MonoBehaviour
     private void Animar(float t)
     {
         // Golpe de escala al nacer y achique en el ultimo tercio.
-        float golpe = t < 0.1f ? Mathf.Lerp(0.3f, 1.5f, t / 0.1f) : Mathf.Lerp(1.5f, 1f, Mathf.Clamp01((t - 0.1f) / 0.15f));
+        float golpe = t < 0.1f ? Mathf.Lerp(0.3f, 1.35f, t / 0.1f) : Mathf.Lerp(1.35f, 1f, Mathf.Clamp01((t - 0.1f) / 0.15f));
         float final = t > 0.65f ? 1f - (t - 0.65f) / 0.35f : 1f;
         transform.localScale = Vector3.one * (escala * golpe * Mathf.Lerp(0.5f, 1f, final));
 

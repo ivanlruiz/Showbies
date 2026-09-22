@@ -197,7 +197,7 @@ MonoBehaviour:
   duracion: 0.7
   velocidadInicial: 5
   gravedad: 10
-  escalaBase: 1
+  escalaBase: 0.55
   "da\xF1oParaEscalaMaxima": 50
   colorDebil: {r: 1, g: 1, b: 1, a: 1}
   colorFuerte: {r: 1, g: 0.8, b: 0.1, a: 1}
