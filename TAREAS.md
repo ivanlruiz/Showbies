@@ -183,10 +183,9 @@ teléfono.
 - [x] **La horda festeja cuando el jugador muere** (elegido por Ivan). Se abre a los costados de la pantalla —el
   centro lo tapa la derrota, medido con la cámara— y salta con el puño en alto en oleadas, rugiendo las primeras tres.
   Del primer intento, festejando alrededor del cuerpo con saltitos, no se veía nada: todo quedaba detrás del texto.
-- [ ] **Los textos chicos de la derrota quedan sobre la horda**: el cuerpo está en el centro de la pantalla y los
-  zombis se amontonan justo detrás de PUNTOS, RÉCORD y "te faltan N para…". Se leen por el contorno, pero en el
-  teléfono puede costar. Si molesta: una sombra suave detrás de esa columna, o correr la cámara para que el cuerpo
-  quede más abajo.
+- [x] **Los textos chicos de la derrota quedaban sobre la horda**: el cuerpo está en el centro de la pantalla y los
+  zombis se amontonaban justo detrás de PUNTOS, RÉCORD y "te faltan N para…". **Resuelto con el festejo**: la horda
+  se abre a los costados, más allá del renglón más ancho, y detrás de los textos queda sólo el cuerpo.
 - [ ] Al rechazar el revivir, el velo oscuro de la ventanita se va de golpe y el mundo gris se aclara un poco antes de
   la derrota. Con el proveedor en `Nulo` (la versión de Play) no pasa; con la APK de prueba sí.
 - [ ] Mirar en el teléfono cuánto gasta la derrota: antes era una escena de pura UI y ahora la partida sigue andando
@@ -242,9 +241,31 @@ teléfono.
     nuevas al lado de las que ya estaban.
   - La prueba que faltaba y que los habría visto: **comparar el costo de cada objetivo, en partidas, contra
     `Partidas(dificultad)`**. La que había sólo miraba que el objetivo creciera con la oleada, y los dos crecían.
-- [ ] El resto de lo confirmado está en `REVISION.md`, ordenado por impacto sobre esfuerzo. Lo próximo por tamaño:
-  la vida del HUD en negativo durante el ¡HAS MUERTO!, la misión del jefe que dice "Derrota a un jefe" pero pide 2 o
-  más, la animación de disparo que en móvil no corre nunca, y los faroles que en Android no alumbran.
+- [x] **Los cuatro que seguían por tamaño.** **Arreglados el 23/9**, cada uno con su prueba, verificada volviendo a
+  poner el bug:
+  - La vida del HUD quedaba en negativo durante el ¡HAS MUERTO!: ya no baja de cero. El banco de la derrota lo mira con
+    un golpe que se pasa (con el bug, el HUD decía −999920).
+  - La misión del jefe decía "Derrota a un jefe" y pedía 2 o más: ahora dice cuántos. La prueba de lógica mira que el
+    texto de cada misión diga cuánto pide.
+  - En el teléfono el muñeco no disparaba nunca, porque la animación sólo la prendía el camino de PC. Ahora las dos
+    plataformas pasan por `PlayerController.FijarDisparo`, y de paso en PC apretar sin balas y agarrar una caja sin
+    soltar ya dispara (el 9 de la revisión). Banco nuevo, **Disparo con el joystick**: con el bug, 4 fallas de 8.
+  - Los faroles no alumbraban el piso en Android: ahora cada uno pinta un charco de luz en el piso y su luz va sólo por
+    vértice, igual en el editor que en el teléfono. **Fotos de los faroles** lo mide renderizando con la calidad del
+    teléfono: bajo cada farol del cementerio el piso pasó de +0,005 a +0,12 de brillo.
+  - Y uno que salió probando: al morir, el cuerpo seguía corriendo (y disparando) en el lugar detrás de la derrota,
+    porque nadie apagaba la animación. Lo apaga `PlayerController.Soltar`, y lo mira el banco de la derrota.
+- [ ] Lo que queda en `REVISION.md`: el cierre de medianoche que paga al precio de la oleada 0 (10), los carteles de
+  misión y de capítulo que se pisan (12), el globo del idioma sin `PintarConTema` (13), el valor siguiente de la tarjeta
+  en modo oscuro (14), el salto de rotación del jefe al terminar de invocar (15) y la suma de `ZombisPorPartida` (16).
+- [ ] **Disparar corriendo no se ve.** El controller del muñeco (`TT_demo_male_A`, del pack) pasa a disparar sólo desde
+  quieto, y de disparar no vuelve a correr hasta soltar: en el teléfono, donde se corre y se dispara a la vez, casi no se
+  ve. Para que se vea siempre, una capa del torso y los brazos con el disparo (el avatar es humanoide, así que la máscara
+  sale sola). Ojo al mirarlo: en el teléfono el cuerpo mira hacia donde camina y lo que gira hacia donde se apunta es el
+  arma (`Gun`, un cubo chico), y el muñeco tiene prendido un bate en la mano (`w_baseballbat`).
+- [ ] **El jugador no se cae al morir**: queda parado detrás de la derrota mientras la horda festeja. El pack trae
+  `m_death_A`.
+- [ ] Ver los faroles en el teléfono: están medidos con la calidad de Android, pero en el editor.
 
 ## Revisión de lo del 20/9 (dos agentes, esa misma tarde)
 

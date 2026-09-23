@@ -49,6 +49,7 @@ mision_furia	Use the fury {0} times	Usa la furia {0} veces
 mision_granadas	Throw {0} grenades	Lanza {0} granadas
 mision_criticos	Land {0} critical hits	Haz {0} golpes críticos
 mision_jefe	Defeat a boss	Derrota a un jefe
+mision_jefes	Defeat {0} bosses	Derrota {0} jefes
 mision_cobrar	CLAIM	COBRAR
 mision_cumplida	MISSION COMPLETE!	¡MISIÓN CUMPLIDA!
 misiones_cofre	CHEST +{0}	COFRE +{0}

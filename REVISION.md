@@ -15,8 +15,9 @@ cada hallazgo paso por un verificador aparte que trato de refutarlo leyendo el c
 
 **ARREGLADO (22/9).** Ya están el revivir y los tres exploits de economía (el tope de vídeos, la
 recompensa diaria y los objetivos de misiones), cada uno con su prueba de regresión en
-**ShowBies > Pruebas > Logica de mejoras**, verificada volviendo a poner el bug. Lo que sigue es el informe
-como salió.
+**ShowBies > Pruebas > Logica de mejoras**, verificada volviendo a poner el bug. El 23/9, lo mismo con la vida en
+negativo (3), la misión del jefe (7), el disparo en el teléfono (8, y con él el de PC sin balas, 9) y los faroles
+(11): el detalle está en TAREAS. Lo que sigue es el informe como salió.
 
 Arreglá **el revivir**: cerrar el vídeo (o que la red falle al mostrarlo) manda a la pantalla de derrota en el acto, sin devolver la ventanita ni los segundos que quedaban. Es lo único de esta lista que le rompe la partida al jugador en el momento en que le pedís que mire un anuncio, contradice la regla escrita de "cerrar el vídeo antes no castiga" y el arreglo es separar un callback. Con el proveedor en Nulo hoy no se ve en Play, pero la APK de prueba ya lo tiene y la red real lo va a agravar.
 
@@ -52,7 +53,7 @@ El callback "sin premio" que se le pasa a `ServicioAnuncios.Mostrar` es `Rechaza
 
 ---
 
-### 3. La vida del HUD se queda en negativo durante la oferta de revivir
+### 3. La vida del HUD se queda en negativo durante la oferta de revivir — **ARREGLADO**
 **`Assets/Scripts/Jugador/PlayerHealth.cs:157`** — baja
 
 `health -= dano;` no clampea a 0. Cuando el golpe que mata saca más de lo que quedaba (la carga del jefe pega `daño` × multiplicador × 2,5), `health` queda negativo, y si hay vídeo la partida no termina: `Update` sigue corriendo con `timeScale` 0 y el número grande de abajo muestra "-17" en rojo durante los 10 s en que le pedís que decida.
@@ -98,7 +99,7 @@ El objetivo es `partidas * 60 * (1 + m/10)`: crece ×3,75 en toda la curva, mien
 
 ---
 
-### 7. La misión diaria del jefe dice "Derrota a un jefe" pero pide 2 o más
+### 7. La misión diaria del jefe dice "Derrota a un jefe" pero pide 2 o más — **ARREGLADO**
 **`Assets/Scripts/Progreso/MisionesDiarias.cs:296`** — media
 
 `Descripcion` es el único caso que ignora `mision.objetivo`: devuelve `Textos.De("mision_jefe")` (fila 51: "Defeat a boss" / "Derrota a un jefe", singular, sin `{0}`). Pero `Objetivo` devuelve `Max(1, Round(2,5 · m / 10))` con `m ≥ 9`: mínimo 2, y 10 en la oleada 40. El `Math.Max(1, …)` es letra muerta.
@@ -109,7 +110,7 @@ El objetivo es `partidas * 60 * (1 + m/10)`: crece ×3,75 en toda la curva, mien
 
 ---
 
-### 8. En móvil el jugador nunca reproduce la animación de disparo
+### 8. En móvil el jugador nunca reproduce la animación de disparo — **ARREGLADO**
 **`Assets/Scripts/Jugador/PlayerJS.cs:68`** — media
 
 El parámetro `"shoot"` del Animator sólo se escribe en `PlayerController.HandleShooting` (líneas 198 y 204), y ese método no corre nunca en móvil (`PlayerController.Update` hace `if (Plataforma.EsMovil) return;` en la 86). `PlayerJS.UpdateShootJoystick` prende `thegun.isFiring` pero no toca el Animator. El controller `TT_demo_male_A` sí tiene el parámetro, el estado `m_pistol_shoot` y sus transiciones.
@@ -122,7 +123,7 @@ Detalle: en el controller la transición a `m_pistol_shoot` sale sólo de `m_pis
 
 ---
 
-### 9. En PC, apretar disparo sin balas y agarrar una caja sin soltar no dispara
+### 9. En PC, apretar disparo sin balas y agarrar una caja sin soltar no dispara — **ARREGLADO**
 **`Assets/Scripts/Jugador/PlayerController.cs:196`** — baja
 
 `theGun.isFiring` sólo se prende en el frame del `GetMouseButtonDown` y sólo si `cantBalas > 0`. En móvil no pasa: `PlayerJS` reevalúa `thegun.isFiring = player.cantBalas > 0` en cada frame. Las dos plataformas se comportan distinto.
@@ -146,7 +147,7 @@ Alcance real: sólo archivos escritos en una ventana de ~un día de builds de de
 
 ---
 
-### 11. En Android los faroles del cementerio y la ciudad no alumbran
+### 11. En Android los faroles del cementerio y la ciudad no alumbran — **ARREGLADO**
 **`Assets/Editor/ConstructorEscenarios.cs`** (bloque de faroles del cementerio, líneas 101-116, y `Farol()` en 294) — media
 
 Las 10 luces de los decorados (4 + 6) son Point con `renderMode` en Auto (`m_RenderMode: 0` en los dos prefabs). El proyecto renderiza en forward y Android usa Medium, con `pixelLightCount: 1`; la direccional siempre se lleva ese lugar, así que las 10 puntuales caen a luz por vértice. El piso es el Plane built-in (121 vértices) escalado ×10: un vértice cada 10 m, donde la luz por vértice no se ve. En el teléfono, en los capítulos de noche el suelo bajo cada farol queda igual de oscuro; lo único que se ve son los cuadros emisivos.

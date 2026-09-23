@@ -65,8 +65,8 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir)
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma el controller de los zombis), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada y PruebaDerrota (bancos en play), GrabarAnimaciones, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
-Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú)
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma el controller de los zombis), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
 ```
 
@@ -222,7 +222,13 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
 
 ## Pipeline de disparo
 
-1. `PlayerController.HandleShooting` prende `theGun.isFiring` con el click, si `cantBalas > 0`.
+1. Querer disparar es `PlayerController.FijarDisparo(bool)`, **en cada cuadro y desde las dos plataformas**: el clic en
+   PC (`HandleShooting`, con `GetMouseButton`) y el joystick de disparo en el teléfono (`PlayerJS`). Prende
+   `theGun.isFiring` y la animación de disparo juntos; las balas las decide el arma, que no tira sin munición. Hasta
+   el 23/9 la animación sólo la prendía el camino de PC, así que en el teléfono el muñeco no disparaba nunca aunque
+   salieran balas, y en PC el arma se prendía sólo al apretar y si había balas: apretar sin balas y agarrar una caja
+   sin soltar no disparaba. El controller del muñeco (`TT_demo_male_A`, del pack) pasa a disparar sólo desde quieto:
+   corriendo no se ve (ver TAREAS).
 2. `GunController.Update` calcula cuántos tiros tocan en el frame con `TirosDelFrame` y por cada uno pide una
    bala al pool: `BulletController.Obtener(bala, firePoint.position, firePoint.rotation)`.
 3. `BulletController.Update` se mueve con `transform.Translate` y descuenta `lifeTime`.
@@ -516,6 +522,20 @@ primera vez sale cada pieza sola del piso y las siguientes sale el decorado ente
   una ciudad), las líneas blancas del medio de cada calle, edificios bajos sólo a más de 30 m (desde arriba, uno cerca
   taparía la partida), autos contra el cordón, contenedores, canteros y faroles con luz naranja en las cuatro esquinas
   del cruce. El piso es `PisoCiudad.mat` (Grey Stones repetida 70 veces).
+
+**Los faroles alumbran el piso con un charco de luz, no con su luz.** Cada farol lleva en el piso un cuadrado aditivo
+(`Charco`, con el shader `ShowBies/CharcoDeLuz`, que se apaga como la luz puntual que cuelga encima, calculado en el
+shader y sin textura) y su luz va **sólo por vértice** (`LightRenderMode.ForceVertex`): tiñe a los zombis y al jugador
+que pasan cerca. Hasta el 23/9 las luces iban en Auto: en Android (calidad Medium, una sola luz por píxel, que se lleva
+la luna) caían a vértice, y el piso, un plano con un vértice cada diez metros, quedaba oscuro; en el editor, en Ultra,
+alumbraban por píxel y se veían bien, que es por lo que nadie lo notó. Así se ven igual en las dos calidades, y cada
+farol cuesta un cuadrado en vez de una pasada de luz. Llevan charco todos, también los de la ciudad sin luz de verdad; en
+la ciudad va a 0,2 m del piso, por encima del cordón, para que la vereda no corte la luz. **ShowBies > Escenarios >
+Fotos de los faroles** (`FotosDeLosFaroles`) arma cada capítulo de noche en una escena de vista previa, con la cámara del
+juego, y mide cuánto sube el brillo del piso bajo cada farol con la calidad del teléfono y con la del editor (en
+`Builds/prueba_faroles.txt`, con las fotos al lado): en el cementerio, con las luces de antes, era +0,005 en el teléfono
+contra +0,08 en el editor, y con el charco es +0,12 en los dos. La prueba de lógica verifica que cada farol tenga su
+charco bajo su luz y que ninguna luz vaya por píxel.
 
 El decorado del capítulo que viene **se arma apagado unos segundos después de entrar al anterior**
 (`PrepararElSiguiente`): instanciar ochocientos objetos en el frame del cambio era un tirón justo en el momento del
@@ -868,6 +888,8 @@ partida y la descongela: ver La derrota encima de la partida).
 
 - **Una sola vez por partida** (`PlayerHealth.yaRevivio`): con un revivir por video sin límite la partida no
   termina nunca y la tienda deja de tener sentido.
+- **La vida no baja de cero** (`TakeDamage`): el golpe que mata suele sacar más de lo que quedaba (la carga del jefe
+  pega ×2,5), y el HUD, que se sigue viendo durante el ¡HAS MUERTO!, mostraba el negativo en rojo.
 - **Volver no regala nada más que seguir jugando**: `EnemyController.DespejarAlrededor` saca del mapa a los
   zombis que estén a `radioDeDespeje` (7 m) **sin puntos, monedas ni mancha**, como el kill-Z, y el jugador
   vuelve con la vida llena y `segundosDeGracia` (2,5 s) sin recibir daño. Si esos zombis dieran monedas, el
@@ -1206,7 +1228,8 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   congela, y una pausa de impacto a medias lo dejaría en cámara lenta).
 - **Que la partida siga andando obliga a que nada la cambie después de morir**, y todo mira `PlayerHealth.EstaMuerto`:
   `PlayerHealth.QuedarseQuieto` apaga el control, los joysticks y el arma y deja el cuerpo kinematic (seguía caminando
-  con la última dirección, y si murió disparando el arma tiraba sola); `EnemyController.DanoZombi` no hace nada (las
+  con la última dirección, y si murió disparando el arma tiraba sola), y con `PlayerController.Soltar` apaga también
+  las animaciones de correr y de disparar (el que moría caminando seguía corriendo en el lugar); `EnemyController.DanoZombi` no hace nada (las
   balas y la granada que quedaron en el aire seguían matando, con puntos y monedas); las monedas no vuelan a un muerto
   (`Moneda.Jugador`); las cajas no se agarran (los triggers llegan igual a los componentes apagados); el jefe no ataca
   a un muerto (`JefePatrones.CercaDelJugador`: seguía embistiendo y rugiendo encima de la pantalla) y el modo libre no
@@ -1232,7 +1255,7 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   oleadas: después festejan callados, que la derrota sigue en pantalla. `Golpear` no arranca zarpazos a un jugador
   muerto, y `JefePatrones` deja de moverse y de posar mientras festeja.
 - **ShowBies > Pruebas > Derrota encima de la partida** mata al jugador con horda encima y verifica todo esto cuadro a
-  cuadro (22 chequeos, en `Builds/prueba_derrota.txt`, que además anota cualquier excepción que salte); **Grabar la derrota** además la graba en
+  cuadro (24 chequeos, en `Builds/prueba_derrota.txt`, que además anota cualquier excepción que salte); **Grabar la derrota** además la graba en
   `Builds/derrota_video/`. El camino de rechazar el revivir no lo recorre: en el editor el proveedor es `Nulo` y no hay
   oferta.
 
@@ -1515,6 +1538,12 @@ enterrado.
   derrota encima de la partida apaga las cuatro (ver esa sección); la luz fue la que costó ver, porque no avisa: sólo
   sobreexpone el mundo de abajo.
 
+- **Lo que dependa de una luz por píxel no se ve en el teléfono.** Android va en Medium con `pixelLightCount` 1, y esa
+  luz se la lleva la direccional: cualquier otra cae a vértice, y el piso es un plano con un vértice cada diez metros.
+  En el editor (Ultra, cuatro por píxel) se ve bien y no avisa nada. Les pasó a los faroles (ver Capítulos): para
+  iluminar el piso, un charco pintado, y mirarlo con **ShowBies > Escenarios > Fotos de los faroles**, que renderiza
+  con la calidad del teléfono.
+
 - **Con la ventana de Unity en segundo plano, el juego en play NO corre** (`Run In Background` está apagado en
   ProjectSettings). No corren `Update` ni `OnRenderImage`, no se renderizan frames y
   `ScreenCapture.CaptureScreenshot` no escribe nada, pero el editor sí sigue vivo: una prueba manejada desde
@@ -1538,7 +1567,14 @@ enterrado.
   (que cada texto tenga los dos idiomas y los mismos `{n}`, y que existan todos los ids que piden el código, las
   mejoras, los prefabs y las escenas) y **el tema** (que el claro devuelva el color de la escena, que cada papel del
   oscuro tenga su color y que lo que se escribe encima se lea: el contraste se mide con la fórmula de la WCAG, no se
-  mira). Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+  mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, y que el texto de cada
+  misión diga cuánto pide. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+- **ShowBies > Pruebas > Disparo con el joystick (play)** (`PruebaDisparo`): el camino del teléfono, con los joysticks
+  de verdad (los eventos de un dedo sobre el `FixedJoystick`): que apuntar dispare y prenda la animación, que soltar la
+  apague, que sin balas no la haga y que con una caja dispare sin soltar. Apaga "Teclado y mouse en el editor" mientras
+  dura y la deja como estaba. Escribe `Builds/prueba_disparo.txt`.
+- **ShowBies > Escenarios > Fotos de los faroles** (`FotosDeLosFaroles`), sin play: los capítulos de noche con la
+  calidad del teléfono y con la del editor (ver Capítulos).
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata
   a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
   aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe

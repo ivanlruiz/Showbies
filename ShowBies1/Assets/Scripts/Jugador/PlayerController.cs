@@ -74,9 +74,9 @@ public class PlayerController : MonoBehaviour
     {
         if (MenuPausa.JuegoCongelado)
         {
-            // Lo que se suelte durante la pausa no llega como GetMouseButtonUp:
-            // sin esto el arma quedaria disparando sola al reanudar.
-            theGun.isFiring = false;
+            // Con el juego congelado no se dispara, y la animacion tampoco queda
+            // disparando.
+            FijarDisparo(false);
             OcultarPunteroGranada();
             return;
         }
@@ -195,19 +195,32 @@ public class PlayerController : MonoBehaviour
             ThrowGranade();
         }
 
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (cantBalas > 0)
-            {
-                trans.anim.SetBool("shoot", true);
-                theGun.isFiring = true;
-            }
-        }
-        else if (Input.GetMouseButtonUp(0))
-        {
-            trans.anim.SetBool("shoot", false);
-            theGun.isFiring = false;
-        }
+        // Mientras se mantenga apretado, en cada cuadro: con GetMouseButtonDown y la
+        // condicion de tener balas, apretar sin balas y agarrar una caja sin soltar no
+        // disparaba hasta volver a apretar.
+        FijarDisparo(Input.GetMouseButton(0));
+    }
+
+    // Querer disparar, desde las dos plataformas: el clic en PC y el joystick de disparo
+    // en movil (PlayerJS). Prende el arma y la animacion juntas. Hasta el 23/9 la
+    // animacion solo la tocaba el camino de PC, y en el telefono el muñeco no disparaba
+    // nunca aunque salieran balas. Las balas las decide el arma (GunController), que no
+    // tira sin municion; la animacion, lo mismo.
+    public void FijarDisparo(bool quiere)
+    {
+        if (theGun != null) theGun.isFiring = quiere;
+        if (trans != null && trans.anim != null) trans.anim.SetBool("shoot", quiere && cantBalas > 0);
+    }
+
+    // Al morir: quieto y sin disparar, tambien en la animacion. La partida sigue andando
+    // detras de la derrota y el cuerpo se ve: el que moria caminando seguia corriendo en
+    // el lugar, porque nadie volvia a apagar "run".
+    public void Soltar()
+    {
+        moveInput = Vector3.zero;
+        moveVelocity = Vector3.zero;
+        FijarDisparo(false);
+        if (trans != null && trans.anim != null) trans.anim.SetBool("run", false);
     }
 
     // Publico porque en movil lo llama el boton de granada del Canvas (Espacio no

@@ -304,7 +304,10 @@ public static class MisionesDiarias
             case Furia: return Textos.Formato("mision_furia", n);
             case Granadas: return Textos.Formato("mision_granadas", n);
             case Criticos: return Textos.Formato("mision_criticos", n);
-            case Jefe: return Textos.De("mision_jefe");
+            // Con el numero, como las demas: sale en la dificil con la mejor oleada en 9 o
+            // mas, asi que pide 2 o mas, y el texto fijo "Derrota a un jefe" iba al lado de
+            // un contador "0 / 2". El singular queda por si algun dia pide uno solo.
+            case Jefe: return mision.objetivo > 1 ? Textos.Formato("mision_jefes", n) : Textos.De("mision_jefe");
             default: return mision.tipo;
         }
     }

@@ -55,7 +55,7 @@ public class PlayerJS : MonoBehaviour
 
         if (hoz == 0 && ver == 0)
         {
-            thegun.isFiring = false;
+            player.FijarDisparo(false);
             return;
         }
 
@@ -65,6 +65,8 @@ public class PlayerJS : MonoBehaviour
         Vector3 lookAtPosition = transform.position + new Vector3(hoz, 0, ver);
         thegun.transform.LookAt(lookAtPosition);
 
-        thegun.isFiring = player.cantBalas > 0;
+        // Por el mismo camino que el clic de PC, que ademas prende la animacion de
+        // disparo: aca solo se prendia el arma y el muñeco no disparaba nunca.
+        player.FijarDisparo(true);
     }
 }

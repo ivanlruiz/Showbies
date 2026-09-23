@@ -63,6 +63,9 @@ public static class PruebaDerrota
     static float timeScaleAlSalir = -1f;
     static int escenasAlSalir = -1;
     static bool activaAlSalir = true, sobreLaPartidaAlSalir = true;
+    static bool midioElCuerpo, corriendoMuerto, disparandoMuerto;
+    static int vidaTrasElGolpe;
+    static string vidaEnElHud;
 
     // Las excepciones que salten mientras corre: un banco que falla sin decir por que
     // obliga a ir a buscar la consola, que con dos editores abiertos ni siquiera es la
@@ -133,6 +136,9 @@ public static class PruebaDerrota
             opacidadDelFondo = timeScaleAlSalir = -1f;
             escenasAlSalir = -1;
             activaAlSalir = sobreLaPartidaAlSalir = true;
+            midioElCuerpo = corriendoMuerto = disparandoMuerto = false;
+            vidaTrasElGolpe = int.MinValue;
+            vidaEnElHud = null;
             partidasAntes = Progreso.PartidasTerminadas;
             excepciones.Length = 0;
             cuantasExcepciones = 0;
@@ -150,6 +156,15 @@ public static class PruebaDerrota
                     return;
                 }
                 escenaDelJuego = SceneManager.GetActiveScene().buildIndex;
+                // Muere corriendo y disparando, que es como se muere de verdad: el cuerpo
+                // tiene que quedar quieto tambien en la animacion. Y de un golpe que saca
+                // mucho mas de lo que le queda: la vida no puede quedar en negativo.
+                var control = PlayerHealth.instance.GetComponent<PlayerController>();
+                if (control != null)
+                {
+                    control.Move(new Vector2(1f, 0f));
+                    control.FijarDisparo(true);
+                }
                 PlayerHealth.instance.TakeDamage(999999f);
                 murioEn = ahora;
                 jugadorAlMorir = PlayerHealth.instance.transform.position;
@@ -166,6 +181,7 @@ public static class PruebaDerrota
                 GrabarCuadro(ahora);
                 Vigilar();
                 if (aparecioEn < 0 && DerrotaCargada()) aparecioEn = ahora;
+                if (!midioElCuerpo && pasado >= 0.5) MedirElCuerpo();
                 // La horda sigue: la suma de las posiciones de los zombis cambia.
                 if (!midioZombisA && pasado >= 1.5) { midioZombisA = true; zombisA = SumaDeZombis(); }
                 if (!midioZombisB && pasado >= 4.0) { midioZombisB = true; zombisB = SumaDeZombis(); }
@@ -258,6 +274,22 @@ public static class PruebaDerrota
             jugadorQuieto = false;
     }
 
+    // Medio segundo despues del golpe: la vida y lo que dice el HUD (que durante el ¡HAS
+    // MUERTO! se ve), y si el cuerpo sigue corriendo o disparando en el lugar.
+    static void MedirElCuerpo()
+    {
+        midioElCuerpo = true;
+        var vida = PlayerHealth.instance;
+        if (vida == null) return;
+        vidaTrasElGolpe = vida.health;
+        vidaEnElHud = vida.healthTMP != null ? vida.healthTMP.text : null;
+        var control = vida.GetComponent<PlayerController>();
+        var animador = control != null && control.trans != null ? control.trans.GetComponent<Animator>() : null;
+        if (animador == null) return;
+        corriendoMuerto = animador.GetBool("run");
+        disparandoMuerto = animador.GetBool("shoot");
+    }
+
     static bool DerrotaCargada()
     {
         for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -318,6 +350,8 @@ public static class PruebaDerrota
                        + ", canvas raiz del juego prendidos: " + canvasDelJuegoPrendidos);
         inf.AppendLine("Opacidad del fondo de la derrota: " + opacidadDelFondo.ToString("0.00"));
         inf.AppendLine("Partidas contadas al morir: " + partidasDeMas);
+        inf.AppendLine("Vida despues del golpe: " + vidaTrasElGolpe + " (el HUD dice \"" + vidaEnElHud + "\"); el cuerpo corre: "
+                       + corriendoMuerto + ", dispara: " + disparandoMuerto);
         inf.AppendLine("Festejando a los 5,5 s: " + festejandoA4 + " de " + vivosA4 + " zombis vivos; rugidos hasta los 6 s: " + rugidos);
         inf.AppendLine("Al salir con OTRA VEZ: timeScale " + timeScaleAlSalir + ", escenas cargadas " + escenasAlSalir);
         inf.AppendLine("Errores y excepciones durante la prueba: " + cuantasExcepciones);
@@ -332,6 +366,8 @@ public static class PruebaDerrota
             !sePauso,
             midioZombisB && (zombisB - zombisA).sqrMagnitude > 1f,
             jugadorQuieto,
+            midioElCuerpo && vidaTrasElGolpe == 0 && vidaEnElHud == "0",
+            midioElCuerpo && !corriendoMuerto && !disparandoMuerto,
             puntosQuietos,
             vivosA4 > 0 && festejandoA4 * 2 >= vivosA4,
             rugidos >= 2,
@@ -357,6 +393,8 @@ public static class PruebaDerrota
             "la partida sigue andando detras (timeScale 1 todo el tiempo)",
             "los zombis se siguen moviendo detras de la derrota",
             "el jugador muerto no se mueve (ni camina ni lo arrastra la horda)",
+            "un golpe que se pasa deja la vida en 0 y el HUD no muestra negativos",
+            "el cuerpo no queda corriendo ni disparando en el lugar",
             "los puntos no cambian despues de morir (lo que quedo en el aire no mata)",
             "la horda festeja: a los 5,5 s festejan la mitad o mas",
             "rugen en las primeras oleadas del festejo",

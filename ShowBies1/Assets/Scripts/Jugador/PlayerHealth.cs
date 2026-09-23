@@ -154,7 +154,10 @@ public class PlayerHealth : MonoBehaviour
         int dano = AcumularDano(ref danoPendiente, amount);
         if (dano <= 0) return;
 
-        health -= dano;
+        // Sin bajar de cero: el golpe que mata suele sacar mas de lo que quedaba (la
+        // carga del jefe pega x2,5), y con la oferta de revivir la partida no termina:
+        // el HUD mostraba "-17" en rojo durante los diez segundos del ¡HAS MUERTO!.
+        health = Mathf.Max(0, health - dano);
         if (health > 0) Efectos.DanioJugador();
         if (health > 0) return;
 
@@ -214,11 +217,8 @@ public class PlayerHealth : MonoBehaviour
         var control = GetComponent<PlayerController>();
         if (control != null)
         {
-            if (control.theGun != null)
-            {
-                control.theGun.isFiring = false;
-                control.theGun.enabled = false;
-            }
+            control.Soltar();
+            if (control.theGun != null) control.theGun.enabled = false;
             control.enabled = false;
         }
         var joysticks = GetComponent<PlayerJS>();

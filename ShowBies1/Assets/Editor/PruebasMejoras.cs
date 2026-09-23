@@ -196,6 +196,7 @@ public static class PruebasMejoras
             ProbarEscalado(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
+            ProbarFaroles(informe);
 
             // Todo lo que toca Progreso va contra una carpeta temporal, y el
             // finally devuelve el progreso a persistentDataPath pase lo que pase.
@@ -944,6 +945,49 @@ public static class PruebasMejoras
     }
 
     // 7. Migracion desde v1, archivos rotos y normalizacion.
+    // Los faroles de noche alumbran el piso tambien en el telefono. Hasta el 23/9 sus luces
+    // iban en Auto: en Android (calidad Medium, una sola luz por pixel, que se lleva la luna)
+    // caian a luz por vertice, y el piso tiene un vertice cada diez metros, asi que no se
+    // alumbraba nada; en el editor, en Ultra, se veian bien. Ahora el piso lo pinta un charco
+    // de luz bajo cada farol y la luz va solo por vertice, que es lo mismo en las dos
+    // calidades. Lo que se ve lo mide ShowBies > Escenarios > Fotos de los faroles.
+    static void ProbarFaroles(Informe inf)
+    {
+        foreach (string ruta in new[] { "Assets/Prefabs/Escenarios/Cementerio.prefab", "Assets/Prefabs/Escenarios/Ciudad.prefab" })
+        {
+            string nombre = Path.GetFileNameWithoutExtension(ruta);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ruta);
+            if (!inf.Verdadero("faroles: esta el prefab " + nombre, prefab != null)) continue;
+
+            int faroles = 0, conCharco = 0, lucesPorPixel = 0, charcosCorridos = 0;
+            foreach (Transform farol in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (farol.name != "Farol") continue;
+                faroles++;
+                Renderer charco = null;
+                foreach (var render in farol.GetComponentsInChildren<Renderer>(true))
+                {
+                    var material = render.sharedMaterial;
+                    if (material != null && material.shader != null && material.shader.name == "ShowBies/CharcoDeLuz") charco = render;
+                }
+                if (charco != null) conCharco++;
+
+                foreach (var luz in farol.GetComponentsInChildren<Light>(true))
+                {
+                    if (luz.renderMode != LightRenderMode.ForceVertex) lucesPorPixel++;
+                    if (charco == null) continue;
+                    // En el piso (el cordon de la ciudad mide 0,18) y justo debajo de la luz.
+                    Vector3 a = luz.transform.position, b = charco.transform.position;
+                    if (new Vector2(a.x - b.x, a.z - b.z).magnitude > 0.3f || b.y < 0f || b.y > 0.25f) charcosCorridos++;
+                }
+            }
+            inf.Verdadero("faroles: el " + nombre + " tiene faroles", faroles > 0);
+            inf.Igual("faroles: cada farol del " + nombre + " tiene su charco de luz en el piso", faroles, conCharco);
+            inf.Igual("faroles: las luces del " + nombre + " van solo por vertice (asi el editor ve lo del telefono)", 0, lucesPorPixel);
+            inf.Igual("faroles: el charco del " + nombre + " esta en el piso, debajo de su luz", 0, charcosCorridos);
+        }
+    }
+
     static void ProbarGuardado(Informe inf)
     {
         // La oleada a medias: un JSON sin los campos la lee como 0, se guarda y se
@@ -1889,6 +1933,28 @@ public static class PruebasMejoras
         }
         inf.Verdadero("misiones: cumplir cada objetivo cuesta las partidas que se le pagan" +
                       (valenLoQuePagan ? "" : " (" + elBarato.Trim() + ")"), valenLoQuePagan);
+
+        // Lo que se lee tiene que decir lo que se pide. La del jefe era un texto fijo, "Derrota
+        // a un jefe", y pedia 2 o mas: la fila mostraba ese texto con "0 / 2" al lado, y la
+        // derrota "PROXIMO: Derrota a un jefe 1/2". Con uno solo el texto puede ir sin numero.
+        bool dicenElObjetivo = true;
+        string elQueNoLoDice = "";
+        foreach (int m in new[] { 9, 20, 40 })
+        {
+            for (int d = 0; d < MisionesDiarias.Cantidad; d++)
+            {
+                foreach (string tipo in tipos)
+                {
+                    var mision = new MisionDelDia { tipo = tipo, dificultad = d, objetivo = MisionesDiarias.Objetivo(tipo, d, m) };
+                    if (mision.objetivo <= 1) continue;
+                    if (MisionesDiarias.Descripcion(mision).Contains(FormatoNumeros.Compacto(mision.objetivo))) continue;
+                    dicenElObjetivo = false;
+                    elQueNoLoDice += tipo + "/" + d + "@" + m + " ";
+                }
+            }
+        }
+        inf.Verdadero("misiones: el texto de cada una dice cuanto pide" +
+                      (dicenElObjetivo ? "" : " (" + elQueNoLoDice.Trim() + ")"), dicenElObjetivo);
 
         inf.Verdadero("misiones: el primer dia no regala (menos de 500 en total)",
                       MisionesDiarias.Monto(0, 0) + MisionesDiarias.Monto(1, 0)

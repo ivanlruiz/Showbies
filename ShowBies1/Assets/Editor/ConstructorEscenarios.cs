@@ -16,9 +16,26 @@ public static class ConstructorEscenarios
     const string Carpeta = "Assets/Escenarios/Cementerio";
     const string RutaPrefab = "Assets/Prefabs/Escenarios/Cementerio.prefab";
     const string CarpetaCiudad = "Assets/Escenarios/Ciudad";
-    // Cuantos faroles de la ciudad llevan luz de verdad; el resto, solo el vidrio brillante.
+    // Cuantos faroles de la ciudad llevan luz de verdad; el resto, el vidrio brillante y
+    // el charco en el piso.
     const int MaxLuces = 6;
     const string RutaPrefabCiudad = "Assets/Prefabs/Escenarios/Ciudad.prefab";
+
+    // Los faroles: su luz y el charco que pintan en el piso (ver Charco).
+    static readonly Color ColorFarolCementerio = new Color(1f, 0.72f, 0.4f);
+    const float AlturaLuzCementerio = 3.1f, AlcanceLuzCementerio = 11f;
+    static readonly Color ColorFarolCiudad = new Color(1f, 0.72f, 0.42f);
+    const float AlturaLuzCiudad = 3.5f, AlcanceLuzCiudad = 18f;
+    // El radio del charco, en alcances de la luz: mas afuera casi no alumbra, y cada
+    // charco es un cuadrado que se pinta encima del piso.
+    public const float CharcoPorAlcance = 0.45f;
+    // Cuanto alumbra cada charco. Medido contra la luz por pixel de antes, en el editor
+    // (ShowBies > Escenarios > Fotos de los faroles): lo que sube el brillo del piso a metro
+    // y medio del pie del farol.
+    const float IntensidadCharcoCementerio = 0.6f, IntensidadCharcoCiudad = 0.8f;
+    // A que altura del piso va el charco. En la ciudad, por encima del cordon (0,18 m): si
+    // no, la vereda lo tapa y la luz se corta en la esquina.
+    const float AlturaCharcoCementerio = 0.03f, AlturaCharcoCiudad = 0.2f;
 
     [MenuItem("ShowBies/Escenarios/Armar cementerio")]
     public static void ArmarCementerio()
@@ -99,21 +116,18 @@ public static class ConstructorEscenarios
 
         // Cuatro faroles con luz calida, en diagonal alrededor del centro.
         var faroles = Grupo(raiz, "Faroles");
+        var charco = MaterialDeCharco(Carpeta, ColorFarolCementerio, IntensidadCharcoCementerio, AlturaLuzCementerio, AlcanceLuzCementerio);
         foreach (var p in new[] { new Vector2(-9, -7), new Vector2(9, -7), new Vector2(-9, 7), new Vector2(9, 7) })
         {
             var f = Grupo(faroles, "Farol");
             f.transform.position = new Vector3(p.x, 0f, p.y);
             Pieza(f, PrimitiveType.Cube, f.transform.position + Vector3.up * 1.6f, Quaternion.identity, new Vector3(0.18f, 3.2f, 0.18f), hierro);
             Pieza(f, PrimitiveType.Sphere, f.transform.position + Vector3.up * 3.3f, Quaternion.identity, Vector3.one * 0.55f, farol);
+            Charco(f, new Vector3(0f, AlturaCharcoCementerio, 0f), AlcanceLuzCementerio, charco);
             var luzGo = new GameObject("Luz");
             luzGo.transform.SetParent(f.transform, false);
-            luzGo.transform.localPosition = Vector3.up * 3.1f;
-            var luz = luzGo.AddComponent<Light>();
-            luz.type = LightType.Point;
-            luz.color = new Color(1f, 0.72f, 0.4f);
-            luz.range = 11f;
-            luz.intensity = 1.6f;
-            luz.shadows = LightShadows.None;
+            luzGo.transform.localPosition = Vector3.up * AlturaLuzCementerio;
+            Luz(luzGo, ColorFarolCementerio, AlcanceLuzCementerio, 1.6f);
         }
 
         PrefabUtility.SaveAsPrefabAsset(raiz, RutaPrefab);
@@ -139,6 +153,7 @@ public static class ConstructorEscenarios
         var poste = MaterialEn(CarpetaCiudad, "Poste", new Color(0.14f, 0.14f, 0.16f), 0.3f);
         var luzFarol = MaterialEn(CarpetaCiudad, "LuzFarol", new Color(1f, 0.88f, 0.6f), 0.2f);
         Emitir(luzFarol, new Color(1f, 0.66f, 0.28f) * 2.4f);
+        var charco = MaterialDeCharco(CarpetaCiudad, ColorFarolCiudad, IntensidadCharcoCiudad, AlturaLuzCiudad, AlcanceLuzCiudad);
         var contenedor = MaterialEn(CarpetaCiudad, "Contenedor", new Color(0.16f, 0.35f, 0.2f), 0.15f);
         var rojo = MaterialEn(CarpetaCiudad, "AutoRojo", new Color(0.5f, 0.12f, 0.12f), 0.35f);
         var azul = MaterialEn(CarpetaCiudad, "AutoAzul", new Color(0.13f, 0.24f, 0.45f), 0.35f);
@@ -199,7 +214,7 @@ public static class ConstructorEscenarios
                     // El tope vale para todos: cada luz puntual cuesta en el telefono, y
                     // dejando pasar las del centro sin contarlas salian dieciseis.
                     bool conLuz = luces < MaxLuces && (esElCentro || donde.magnitude < 28f);
-                    Farol(faroles, donde, poste, luzFarol, conLuz);
+                    Farol(faroles, donde, poste, luzFarol, charco, conLuz);
                     if (conLuz) luces++;
                 }
             }
@@ -279,24 +294,85 @@ public static class ConstructorEscenarios
         }
     }
 
-    static void Farol(GameObject padre, Vector3 pos, Material poste, Material luzMat, bool conLuz)
+    static void Farol(GameObject padre, Vector3 pos, Material poste, Material luzMat, Material charco, bool conLuz)
     {
         var g = Grupo(padre, "Farol");
         g.transform.position = pos;
         Local(g, PrimitiveType.Cube, new Vector3(0f, 2f, 0f), Quaternion.identity, new Vector3(0.16f, 4f, 0.16f), poste);
         Local(g, PrimitiveType.Cube, new Vector3(0.5f, 3.95f, 0f), Quaternion.identity, new Vector3(1.1f, 0.14f, 0.14f), poste);
         Local(g, PrimitiveType.Cube, new Vector3(1f, 3.82f, 0f), Quaternion.identity, new Vector3(0.6f, 0.2f, 0.4f), luzMat);
+        // El charco va en todos, con luz o sin ella: es lo que se ve alumbrado en el piso, y
+        // no cuesta como una luz.
+        Charco(g, new Vector3(1f, AlturaCharcoCiudad, 0f), AlcanceLuzCiudad, charco);
         if (!conLuz) return;
 
         var luzGo = new GameObject("Luz");
         luzGo.transform.SetParent(g.transform, false);
-        luzGo.transform.localPosition = new Vector3(1f, 3.5f, 0f);
-        var luz = luzGo.AddComponent<Light>();
+        luzGo.transform.localPosition = new Vector3(1f, AlturaLuzCiudad, 0f);
+        Luz(luzGo, ColorFarolCiudad, AlcanceLuzCiudad, 3.2f);
+    }
+
+    // La luz de un farol, **solo por vertice** (ForceVertex): tiñe a los zombis y al jugador
+    // que pasan cerca, igual en el editor que en el telefono. El piso no lo alumbra ella sino
+    // su charco. Con el modo en Auto, en el telefono (calidad Medium, una luz por pixel, que
+    // se lleva la luna) ya caia a vertice, y el piso tiene un vertice cada diez metros: no
+    // se veia nada. En el editor, en Ultra, alumbraba por pixel y se veia bien, que es por
+    // lo que no se noto.
+    static void Luz(GameObject go, Color color, float alcance, float intensidad)
+    {
+        var luz = go.AddComponent<Light>();
         luz.type = LightType.Point;
-        luz.color = new Color(1f, 0.72f, 0.42f);
-        luz.range = 18f;
-        luz.intensity = 3.2f;
+        luz.color = color;
+        luz.range = alcance;
+        luz.intensity = intensidad;
         luz.shadows = LightShadows.None;
+        luz.renderMode = LightRenderMode.ForceVertex;
+    }
+
+    // El charco de luz de un farol en el piso: un cuadrado acostado con el shader
+    // ShowBies/CharcoDeLuz, que se apaga como la luz puntual que cuelga encima. Es lo que
+    // hace que el farol alumbre el piso en el telefono, y cuesta un cuadrado aditivo sin
+    // textura. Va adentro del grupo del farol, asi sale del piso con el.
+    static void Charco(GameObject farol, Vector3 bajoLaLuz, float alcance, Material material)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        go.name = "Charco";
+        Object.DestroyImmediate(go.GetComponent<Collider>());
+        go.transform.SetParent(farol.transform, false);
+        go.transform.localPosition = bajoLaLuz;
+        go.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        float diametro = alcance * CharcoPorAlcance * 2f;
+        go.transform.localScale = new Vector3(diametro, diametro, 1f);
+        var render = go.GetComponent<MeshRenderer>();
+        render.sharedMaterial = material;
+        render.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        render.receiveShadows = false;
+        render.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+        render.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+    }
+
+    // Uno por escenario, con la luz de sus faroles: la altura y la caida se miden en radios
+    // del charco, que es la unidad del shader.
+    static Material MaterialDeCharco(string carpeta, Color color, float intensidad, float alturaLuz, float alcance)
+    {
+        var shader = Shader.Find("ShowBies/CharcoDeLuz");
+        string ruta = carpeta + "/CharcoDeLuz.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(ruta);
+        if (mat == null)
+        {
+            mat = new Material(shader);
+            AssetDatabase.CreateAsset(mat, ruta);
+        }
+        mat.shader = shader;
+        float radio = alcance * CharcoPorAlcance;
+        mat.SetColor("_Color", color);
+        mat.SetFloat("_Intensidad", intensidad);
+        mat.SetFloat("_Altura", alturaLuz / radio);
+        // La caida de las luces puntuales de Unity, 1 / (1 + 25 (d / alcance)^2), con la
+        // distancia en radios del charco.
+        mat.SetFloat("_Caida", 25f * CharcoPorAlcance * CharcoPorAlcance);
+        EditorUtility.SetDirty(mat);
+        return mat;
     }
 
     static void Auto(GameObject padre, Vector3 pos, float rumbo, Material color, Material vidrio, Material rueda)
