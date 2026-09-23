@@ -187,6 +187,17 @@ public class Efectos : MonoBehaviour
         e.Emitir(punto, e.chispasPorDisparo);
     }
 
+    // La horda festejando que el jugador murio (ver el festejo en EnemyController): el
+    // estruendo bien grave, como el rugido del jefe, a dos voces para que suene a muchos.
+    public static void FestejoZombis()
+    {
+        var e = instance;
+        if (e == null || e.explosion == null) return;
+
+        Sonidos.Tocar(e.explosion, 0.5f, 0.5f, 0.05f, 0f);
+        Sonidos.Tocar(e.explosion, 0.35f, 0.64f, 0.05f, 0f);
+    }
+
     public static void CartelOleada()
     {
         var e = instance;

@@ -29,6 +29,8 @@ public static class ConstructorAnimaciones
     public const string ParametroPaso = "Paso";
     public const string ParametroRitmo = "Ritmo";
     public const string GatilloMorir = "Morir";
+    // El punto del clip de atacar en el festejo (ver el estado Festejar).
+    public const string ParametroFestejo = "Festejo";
 
     // Ver el estado Morir, mas abajo.
     const float VelocidadDeLaMuerte = 1.35f;
@@ -101,6 +103,7 @@ public static class ConstructorAnimaciones
         parametros[1].defaultFloat = 1f;
         ctrl.parameters = parametros;
         ctrl.AddParameter(GatilloMorir, AnimatorControllerParameterType.Trigger);
+        ctrl.AddParameter(ParametroFestejo, AnimatorControllerParameterType.Float);
 
         // Andar es un blend de caminar a correr, y no dos estados con su transicion:
         // asi el volver-de-atacar y el sale-de-cualquier-estado-a-morir siguen siendo
@@ -141,6 +144,15 @@ public static class ConstructorAnimaciones
         // EnemyController deja al cadaver, que es lo que se le puede pedir a un
         // telefono cuando una granada mata a diez de una.
         eMorir.speed = VelocidadDeLaMuerte;
+
+        // El festejo, cuando el jugador muere: el clip de atacar con el tiempo manejado
+        // a mano desde EnemyController (Motion Time), para quedarse en el tramo en que
+        // la mano derecha sube por encima de la cabeza y bajar al hombro, como un puño
+        // en alto. Tampoco se entra por transicion: lo arranca el codigo.
+        var eFestejar = maquina.AddState("Festejar", new Vector3(780, 0, 0));
+        eFestejar.motion = atacar;
+        eFestejar.timeParameterActive = true;
+        eFestejar.timeParameter = ParametroFestejo;
 
         // A Atacar no se entra por una transicion: lo arranca EnemyController con
         // CrossFadeInFixedTime, adelantado dentro del clip para que la mano llegue

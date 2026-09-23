@@ -80,9 +80,21 @@ public class EnemyController : MonoBehaviour
     private static readonly int idAtacar = Animator.StringToHash("Atacar");
     private static readonly int idMorir = Animator.StringToHash("Morir");
     private static readonly int idAndar = Animator.StringToHash("Andar");
+    private static readonly int idFestejar = Animator.StringToHash("Festejar");
+    private static readonly int idFestejo = Animator.StringToHash("Festejo");
 
     [Tooltip("Lo que se queda el cadaver en escena mientras se desploma, antes de volver al pool. El clip de morir dura 1,36 s con la velocidad del estado.")]
     [SerializeField] private float duracionDeLaMuerte = 1.4f;
+
+    [Header("Festejo (cuando el jugador muere)")]
+    [Tooltip("Hasta donde se abren a cada costado para festejar, en metros desde el cuerpo. La derrota tapa el centro: medido con la camara del juego, el renglon mas ancho llega a 6,8 m del cuerpo en 16:9 y a 8,5 m en 20:9, y la pantalla termina a 13,1 m en 16:9. Festejando alrededor del cuerpo quedaban todos detras de los textos.")]
+    [SerializeField] private Vector2 costadoDelFestejo = new Vector2(9f, 12.5f);
+    [Tooltip("Como se reparten hacia arriba y hacia abajo de la pantalla, en metros desde el cuerpo sobre el piso: la pantalla va de 6,5 m atras a 9,9 m adelante.")]
+    [SerializeField] private Vector2 alturaDelFestejo = new Vector2(-4.5f, 7.5f);
+    [Tooltip("Cuanto se arquea hacia atras en cada festejo, en grados.")]
+    [SerializeField] private float gradosDelFestejo = 22f;
+    [Tooltip("Cuanto salta en cada puño en alto, como fraccion de su alto. Es lo unico que se lee desde la camara del juego: a esa distancia un zombi mide unos 40 px, el puño levantado apunta a la camara y el arco casi no cambia la silueta; lo que se ve es el zombi separandose de su sombra. Con 0,12 no se notaba.")]
+    [SerializeField] private float saltoDelFestejo = 0.5f;
 
     [Header("Empujon al morir")]
     [Tooltip("A que velocidad sale despedido el cadaver en la direccion del tiro, en m/s. Se divide por la escala del zombi: el tanque y el jefe casi no se mueven.")]
@@ -105,6 +117,48 @@ public class EnemyController : MonoBehaviour
     private bool desplomandose;
     private float sacarloEn;
     private Collider[] colliders;
+
+    // El festejo, pedido de Ivan: con el jugador muerto la partida sigue andando detras
+    // de la derrota (DerrotaEnLaPartida), y la horda festeja. Cada zombi se abre al
+    // costado de la pantalla que le queda mas cerca (el centro lo tapa la derrota), se
+    // da vuelta a mirar el cuerpo y, en oleadas cada PeriodoDelFestejo, salta tres veces
+    // con el puño en alto y el cuerpo arqueado hacia atras. Los primeros rugidos los
+    // tira el primero que entra en cada oleada.
+    const float PeriodoDelFestejo = 2.4f;
+    const float DuracionDelFestejo = 1.3f;
+    const int PuñosPorFestejo = 3;
+    const int OleadasConRugido = 3;          // despues festejan callados: la derrota sigue en pantalla
+    const float DesfaseMaximo = 0.45f;       // para que no sea un baile sincronizado
+    // Del muestreo de Z_attack_A (ver momentoDelImpacto): la mano derecha abajo al
+    // principio, a la altura del hombro a los 0,15 s y por encima de la cabeza a los
+    // 0,29 s, en un clip de 1,33 s. Normalizado, que es lo que pide el Motion Time.
+    const float LargoDelZarpazo = 1.3333f;
+    const float ManoAbajo = 0.02f / LargoDelZarpazo;
+    const float ManoAlHombro = 0.15f / LargoDelZarpazo;
+    const float ManoArriba = 0.29f / LargoDelZarpazo;
+
+    private static float festejoDesde;
+    private static int ultimaOleadaRugida;
+    public static int RugidosDelFestejo { get; private set; }   // para las pruebas
+
+    private bool festejando;
+    private bool tieneLugarDelFestejo;
+    private Vector3 lugarDelFestejo;
+    private float desfaseDelFestejo;
+    private Transform modelo;
+    private Vector3 posicionBaseDelModelo;
+    private Quaternion rotacionBaseDelModelo;
+    private Vector3 escalaBaseDelModelo;
+    private float altoDelModelo = 1f;
+
+    // Lo llama la derrota cuando aparece: desde ahi se cuentan las oleadas.
+    public static void EmpezarFestejo()
+    {
+        festejoDesde = Time.time;
+        ultimaOleadaRugida = -1;
+    }
+
+    public bool Festejando => festejando;
 
     // De donde vino el golpe que lo mato, para que caiga hacia alla y no siempre
     // igual. Lo pasan la bala (su direccion) y la granada (del centro hacia afuera);
@@ -206,6 +260,9 @@ public class EnemyController : MonoBehaviour
         MuertesConBotin = 0;
         ZarpazosEmpezados = 0;
         ZarpazosQuePegaron = 0;
+        festejoDesde = 0f;
+        ultimaOleadaRugida = -1;
+        RugidosDelFestejo = 0;
         MonedasEsperadas = 0;
         MonedasSoltadas = 0;
     }
@@ -330,6 +387,7 @@ public class EnemyController : MonoBehaviour
         escalaBase = transform.localScale;
         animadores = ConControlador(GetComponentsInChildren<Animator>(true));
         colliders = GetComponentsInChildren<Collider>(true);
+        BuscarElModelo();
         movimientoPropio = GetComponent<IMovimientoPropio>();
         PrepararDestello();
     }
@@ -350,6 +408,15 @@ public class EnemyController : MonoBehaviour
         golpeaAlChocar = false;
         golpeEnCurso = false;
         GolpesDados = 0;
+        festejando = false;
+        tieneLugarDelFestejo = false;
+        desfaseDelFestejo = Random.Range(0f, DesfaseMaximo);
+        if (modelo != null)
+        {
+            modelo.localPosition = posicionBaseDelModelo;
+            modelo.localRotation = rotacionBaseDelModelo;
+            modelo.localScale = escalaBaseDelModelo;
+        }
         multiplicadorMonedas = 1f;
         monedaPrefab = null;
         multiplicadorVida = 1f;
@@ -627,6 +694,15 @@ public class EnemyController : MonoBehaviour
        ResolverGolpe();
 
        if (thePlayer == null) return;
+
+       // Con el jugador muerto no hay a quien perseguir: festejan (tambien el jefe, antes
+       // que sus patrones).
+       if (DerrotaEnLaPartida.Activa)
+       {
+           MoverseAlFestejo();
+           return;
+       }
+
        if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform)) return;
 
        // Mira y camina en horizontal, y la velocidad vertical queda en manos de la
@@ -856,6 +932,8 @@ public class EnemyController : MonoBehaviour
     {
         // Un muerto no pega: los eventos del paso en que murio llegan igual.
         if (estaMuerto || !enUso) return;
+        // Y a un jugador muerto no se le pega: festejan (ver MoverseAlFestejo).
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
         if (Time.time < proximoGolpe || !collision.gameObject.CompareTag("Player")) return;
         if (PlayerHealth.instance == null) return;
 
@@ -909,6 +987,123 @@ public class EnemyController : MonoBehaviour
         Vector3 d = thePlayer.transform.position - transform.position;
         d.y = 0f;
         return d.magnitude;
+    }
+
+    // Camina hasta su lugar al costado y ahi se da vuelta a mirar el cuerpo y festeja.
+    private void MoverseAlFestejo()
+    {
+        Vector3 cuerpo = thePlayer.transform.position;
+        if (!tieneLugarDelFestejo) ElegirLugarDelFestejo(cuerpo);
+
+        Vector3 falta = lugarDelFestejo - transform.position;
+        falta.y = 0f;
+        Vector3 velocidad = Vector3.zero;
+        if (!festejando && falta.sqrMagnitude > 0.6f * 0.6f)
+        {
+            transform.rotation = Quaternion.LookRotation(falta);
+            velocidad = transform.forward * enemyType.velocidad;
+        }
+        else
+        {
+            Vector3 alCuerpo = cuerpo - transform.position;
+            alCuerpo.y = 0f;
+            if (alCuerpo.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(alCuerpo);
+            if (!festejando) EmpezarAFestejar();
+        }
+
+        velocidad.y = rb.linearVelocity.y;
+        rb.linearVelocity = velocidad;
+    }
+
+    // Al costado de la pantalla del lado en que esta, repartido de arriba a abajo. Los
+    // costados salen de la camara y no de los ejes del mundo, por si algun dia gira.
+    private void ElegirLugarDelFestejo(Vector3 cuerpo)
+    {
+        tieneLugarDelFestejo = true;
+        Transform camara = Camera.main != null ? Camera.main.transform : null;
+        Vector3 derecha = camara != null ? camara.right : Vector3.right;
+        derecha.y = 0f;
+        derecha = derecha.sqrMagnitude > 0.0001f ? derecha.normalized : Vector3.right;
+        Vector3 adelante = Vector3.Cross(derecha, Vector3.up);
+
+        float lado = Vector3.Dot(transform.position - cuerpo, derecha);
+        float signo = Mathf.Abs(lado) > 0.1f ? Mathf.Sign(lado) : (Random.value < 0.5f ? -1f : 1f);
+        lugarDelFestejo = cuerpo
+                          + derecha * (signo * Random.Range(costadoDelFestejo.x, costadoDelFestejo.y))
+                          + adelante * Random.Range(alturaDelFestejo.x, alturaDelFestejo.y);
+    }
+
+    private void EmpezarAFestejar()
+    {
+        festejando = true;
+        golpeEnCurso = false;
+        foreach (var animador in animadores)
+        {
+            animador.SetFloat(idFestejo, ManoAbajo);
+            animador.CrossFadeInFixedTime(idFestejar, 0.25f, 0, 0f);
+        }
+    }
+
+    // La pose del festejo, sobre el modelo y en LateUpdate como la del jefe: despues de
+    // que el Animator escribio los huesos. El brazo va por el Motion Time del estado
+    // Festejar y el cuerpo (el arco y el salto) por codigo.
+    private void LateUpdate()
+    {
+        if (!festejando || desplomandose || modelo == null) return;
+
+        float t = Time.time - festejoDesde - desfaseDelFestejo;
+        float envolvente = 0f, puño = 0f;
+        if (t >= 0f)
+        {
+            int oleada = Mathf.FloorToInt(t / PeriodoDelFestejo);
+            float enLaOleada = t - oleada * PeriodoDelFestejo;
+            if (enLaOleada < DuracionDelFestejo)
+            {
+                float u = enLaOleada / DuracionDelFestejo;
+                envolvente = Mathf.Sin(u * Mathf.PI);
+                puño = Mathf.Abs(Mathf.Sin(u * PuñosPorFestejo * Mathf.PI));
+
+                if (oleada > ultimaOleadaRugida && oleada < OleadasConRugido)
+                {
+                    ultimaOleadaRugida = oleada;
+                    RugidosDelFestejo++;
+                    Efectos.FestejoZombis();
+                }
+            }
+        }
+
+        float mano = envolvente > 0f ? Mathf.Lerp(ManoAlHombro, ManoArriba, puño) : ManoAbajo;
+        foreach (var animador in animadores) animador.SetFloat(idFestejo, mano);
+
+        // El salto con un estiron, que desde arriba se ve mas que el brazo: el brazo
+        // levantado apunta a la camara y casi no cambia la silueta.
+        float salto = puño * envolvente;
+        modelo.localPosition = posicionBaseDelModelo + Vector3.up * (saltoDelFestejo * altoDelModelo * salto);
+        modelo.localRotation = rotacionBaseDelModelo * Quaternion.Euler(-gradosDelFestejo * envolvente, 0f, 0f);
+        float estiron = 1f + 0.2f * salto;
+        modelo.localScale = new Vector3(escalaBaseDelModelo.x / Mathf.Sqrt(estiron),
+                                        escalaBaseDelModelo.y * estiron,
+                                        escalaBaseDelModelo.z / Mathf.Sqrt(estiron));
+    }
+
+    // El hijo que se ve, como en JefePatrones: el del Animator con controller. Su
+    // transform local esta libre porque los prefabs no usan root motion.
+    private void BuscarElModelo()
+    {
+        foreach (var animador in animadores)
+        {
+            if (animador.transform == transform) continue;
+            modelo = animador.transform;
+            break;
+        }
+        if (modelo == null) return;
+        posicionBaseDelModelo = modelo.localPosition;
+        rotacionBaseDelModelo = modelo.localRotation;
+        escalaBaseDelModelo = modelo.localScale;
+        float alto = 0f;
+        foreach (var r in modelo.GetComponentsInChildren<Renderer>(true)) alto = Mathf.Max(alto, r.bounds.size.y);
+        float escala = Mathf.Abs(modelo.lossyScale.y);
+        altoDelModelo = escala > 0.0001f ? Mathf.Max(0.1f, alto / escala) : 1f;
     }
 
     // Los que pueden animar de verdad. Se filtra una vez, en el Awake, y no en cada

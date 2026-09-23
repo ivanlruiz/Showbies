@@ -51,6 +51,8 @@ public static class PruebaDerrota
     static Vector3 jugadorAlMorir, zombisA, zombisB;
     static int puntosAlMorir;
     static bool puntosQuietos = true, jugadorQuieto = true, midioZombisA, midioZombisB;
+    static int zarpazosAlMorir, festejandoA4, vivosA4 = -1, rugidos = -1;
+    static bool zarpazosQuietos = true, midioFestejo;
     static bool derrotaAMitadDelGris;
     static double monedasAlMorir;
     static int oleadaAlMorir, partidasAntes;
@@ -62,9 +64,24 @@ public static class PruebaDerrota
     static int escenasAlSalir = -1;
     static bool activaAlSalir = true, sobreLaPartidaAlSalir = true;
 
+    // Las excepciones que salten mientras corre: un banco que falla sin decir por que
+    // obliga a ir a buscar la consola, que con dos editores abiertos ni siquiera es la
+    // de este proyecto.
+    static readonly StringBuilder excepciones = new StringBuilder();
+    static int cuantasExcepciones;
+
     static PruebaDerrota()
     {
         EditorApplication.update += Tick;
+        Application.logMessageReceived += AnotarExcepcion;
+    }
+
+    static void AnotarExcepcion(string mensaje, string pila, LogType tipo)
+    {
+        if (!SessionState.GetBool(Clave, false)) return;
+        if (tipo != LogType.Exception && tipo != LogType.Error) return;
+        cuantasExcepciones++;
+        if (cuantasExcepciones <= 3) excepciones.AppendLine("  " + mensaje + System.Environment.NewLine + pila);
     }
 
     [MenuItem("ShowBies/Pruebas/Derrota encima de la partida (play)")]
@@ -108,14 +125,17 @@ public static class PruebaDerrota
             proximoCuadro = 0;
             aparecioEn = grisCompletoEn = -1;
             cambioDeEscena = sePauso = capturoMitad = capturoGris = derrotaAMitadDelGris = false;
-            puntosQuietos = jugadorQuieto = true;
-            midioZombisA = midioZombisB = false;
+            puntosQuietos = jugadorQuieto = zarpazosQuietos = true;
+            midioZombisA = midioZombisB = midioFestejo = false;
+            vivosA4 = rugidos = -1;
             progresoQuieto = true;
             camarasDeLaDerrota = canvasDelJuegoPrendidos = lucesDeLaDerrota = -1;
             opacidadDelFondo = timeScaleAlSalir = -1f;
             escenasAlSalir = -1;
             activaAlSalir = sobreLaPartidaAlSalir = true;
             partidasAntes = Progreso.PartidasTerminadas;
+            excepciones.Length = 0;
+            cuantasExcepciones = 0;
             return;
         }
 
@@ -134,6 +154,7 @@ public static class PruebaDerrota
                 murioEn = ahora;
                 jugadorAlMorir = PlayerHealth.instance.transform.position;
                 puntosAlMorir = Puntaje.instance != null ? Puntaje.instance.contadorKill : 0;
+                zarpazosAlMorir = EnemyController.ZarpazosEmpezados;
                 monedasAlMorir = Progreso.Monedas;
                 oleadaAlMorir = Progreso.MejorOleada;
                 paso = Paso.Muerto;
@@ -148,6 +169,19 @@ public static class PruebaDerrota
                 // La horda sigue: la suma de las posiciones de los zombis cambia.
                 if (!midioZombisA && pasado >= 1.5) { midioZombisA = true; zombisA = SumaDeZombis(); }
                 if (!midioZombisB && pasado >= 4.0) { midioZombisB = true; zombisB = SumaDeZombis(); }
+                // El festejo: a los 5,5 s la mayoria ya llego a su costado y festeja (el
+                // tanque, a 3 m/s, tarda unos 4 s en abrirse 12 m).
+                if (!midioFestejo && pasado >= 5.5)
+                {
+                    midioFestejo = true;
+                    festejandoA4 = vivosA4 = 0;
+                    foreach (var z in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+                    {
+                        if (!z.Vivo) continue;
+                        vivosA4++;
+                        if (z.Festejando) festejandoA4++;
+                    }
+                }
                 if (grisCompletoEn < 0 && DerrotaEnLaPartida.Avance >= 0.999f) grisCompletoEn = ahora;
 
                 // A mitad del gris: la pantalla ya tiene que estar encima.
@@ -217,6 +251,8 @@ public static class PruebaDerrota
         if (Time.timeScale != 1f) sePauso = true;
         if (Progreso.Monedas != monedasAlMorir || Progreso.MejorOleada != oleadaAlMorir) progresoQuieto = false;
         if (Puntaje.instance != null && Puntaje.instance.contadorKill != puntosAlMorir) puntosQuietos = false;
+        // A un muerto no le tiran zarpazos: festejan.
+        if (EnemyController.ZarpazosEmpezados != zarpazosAlMorir) zarpazosQuietos = false;
         if (PlayerHealth.instance != null &&
             (PlayerHealth.instance.transform.position - jugadorAlMorir).sqrMagnitude > 0.05f * 0.05f)
             jugadorQuieto = false;
@@ -262,6 +298,7 @@ public static class PruebaDerrota
         }
         // Nadie juega (el input esta cortado y la pausa no se mete), pero el tiempo corre.
         congeladoEncima = MenuPausa.JuegoCongelado && Time.timeScale == 1f;
+        rugidos = EnemyController.RugidosDelFestejo;
     }
 
     static void Terminar(string error)
@@ -281,18 +318,24 @@ public static class PruebaDerrota
                        + ", canvas raiz del juego prendidos: " + canvasDelJuegoPrendidos);
         inf.AppendLine("Opacidad del fondo de la derrota: " + opacidadDelFondo.ToString("0.00"));
         inf.AppendLine("Partidas contadas al morir: " + partidasDeMas);
+        inf.AppendLine("Festejando a los 5,5 s: " + festejandoA4 + " de " + vivosA4 + " zombis vivos; rugidos hasta los 6 s: " + rugidos);
         inf.AppendLine("Al salir con OTRA VEZ: timeScale " + timeScaleAlSalir + ", escenas cargadas " + escenasAlSalir);
+        inf.AppendLine("Errores y excepciones durante la prueba: " + cuantasExcepciones);
+        if (cuantasExcepciones > 0) inf.Append(excepciones);
         inf.AppendLine();
 
         float t = DerrotaEnLaPartida.SegundosDeTransicion;
         bool[] ok =
         {
-            error == null,
+            error == null && cuantasExcepciones == 0,
             !cambioDeEscena,
             !sePauso,
             midioZombisB && (zombisB - zombisA).sqrMagnitude > 1f,
             jugadorQuieto,
             puntosQuietos,
+            vivosA4 > 0 && festejandoA4 * 2 >= vivosA4,
+            rugidos >= 2,
+            zarpazosQuietos,
             enAparecer >= 0 && enAparecer <= 0.6,
             enQuedarGris >= t - 0.3 && enQuedarGris <= t + 1.0,
             derrotaAMitadDelGris,
@@ -309,12 +352,15 @@ public static class PruebaDerrota
         };
         string[] que =
         {
-            "el banco llego hasta el final",
+            "el banco llego hasta el final, sin errores ni excepciones",
             "morir no cambia la escena: la derrota va encima",
             "la partida sigue andando detras (timeScale 1 todo el tiempo)",
             "los zombis se siguen moviendo detras de la derrota",
             "el jugador muerto no se mueve (ni camina ni lo arrastra la horda)",
             "los puntos no cambian despues de morir (lo que quedo en el aire no mata)",
+            "la horda festeja: a los 5,5 s festejan la mitad o mas",
+            "rugen en las primeras oleadas del festejo",
+            "nadie le tira zarpazos al cuerpo",
             "la pantalla sale enseguida al morir",
             "el mundo queda gris del todo en " + t + " s",
             "la pantalla y el gris van a la vez: a mitad del gris la pantalla ya esta encima",

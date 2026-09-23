@@ -186,7 +186,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     // lo demas.
     private void LateUpdate()
     {
-        if (modelo == null) return;
+        // Festejando, la pose la pone EnemyController.
+        if (modelo == null || DerrotaEnLaPartida.Activa) return;
 
         float inclinacionQueVa = 0f, balanceoQueVa = 0f, alturaQueVa = 0f;
         if (zombi != null && zombi.Vivo)
@@ -282,6 +283,15 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private void Update()
     {
         if (zombi == null || zombi.thePlayer == null) return;
+
+        // Con el jugador muerto festeja con la horda (EnemyController), y lo que quedaba
+        // a medias (el aviso de la carga, la linea roja) se corta.
+        if (DerrotaEnLaPartida.Activa)
+        {
+            if (linea != null) linea.enabled = false;
+            estado = Estado.Persiguiendo;
+            return;
+        }
 
         // Un jefe muerto no invoca ni embiste. Su objeto se queda prendido mientras
         // se desploma (ver EnemyController.Morir), y sin esto el cadaver seguia

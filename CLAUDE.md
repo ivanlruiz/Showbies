@@ -411,9 +411,10 @@ zombi se reemplazaba en vez de sumarse: desde la oleada 20 sólo salían jefes.
 Los cinco usan el mismo esqueleto (el modelo de ToonyTinyPeople, ver Rendimiento en móvil) y el mismo Animator
 Controller, `Assets/Animaciones/Zombi.controller`, que **no se edita a mano**: lo arma **ShowBies > Animaciones >
 Armar el controller de los zombis** (`ConstructorAnimaciones`), que se vuelve a correr para cambiarlo. Tiene tres
-estados —**Andar** (el de entrada, un blend de `Z_walk_rm` a `Z_run_rm`), **Atacar** (`Z_attack_A`) y **Morir**
-(`Z_death_A`)— y tres parámetros: los floats `Paso` y `Ritmo` y el gatillo `Morir`. A **Atacar no se entra por una
-transición**: lo arranca el código (ver el zarpazo, abajo), y por eso no hay gatillo `Atacar`. Los nombres los comparte
+estados —**Andar** (el de entrada, un blend de `Z_walk_rm` a `Z_run_rm`), **Atacar** (`Z_attack_A`), **Morir**
+(`Z_death_A`) y **Festejar** (`Z_attack_A` con el tiempo manejado a mano, ver el festejo en La derrota encima de la
+partida)— y cuatro parámetros: los floats `Paso`, `Ritmo` y `Festejo` y el gatillo `Morir`. A **Atacar y a Festejar no
+se entra por una transición**: los arranca el código (ver el zarpazo, abajo), y por eso no hay gatillo `Atacar`. Los nombres los comparte
 `EnemyController`, como hashes.
 
 Hasta el 22/9 el controller tenía **un solo estado** y un parámetro que no usaba nadie: los cinco zombis corrían para
@@ -1185,8 +1186,7 @@ La tecla R hace lo mismo por otro camino: recarga la escena activa.
 ## La derrota encima de la partida
 
 Pedido de Ivan: al morir no se cambia de escena. **La pantalla de siempre (`Perdiste.unity`) aparece enseguida encima de
-la partida, y detrás de ella el mundo se va a blanco y negro en 5 s sin detenerse**: los zombis siguen caminando y
-dando zarpazos sobre el cuerpo. Lo arma `DerrotaEnLaPartida` (`Assets/Scripts/UI/`), que llama `PlayerHealth.Terminar`
+la partida, y detrás de ella el mundo se va a blanco y negro en 5 s sin detenerse**: la horda festeja (ver abajo). Lo arma `DerrotaEnLaPartida` (`Assets/Scripts/UI/`), que llama `PlayerHealth.Terminar`
 después de guardar todo, en vez del `LoadScene(2)` de antes.
 
 - **Salió así después de probarlo con Ivan, en dos vueltas.** La primera versión dejaba cinco segundos de gris sin
@@ -1217,8 +1217,22 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
 - **`MenuPausa.JuegoCongelado` incluye la derrota** aunque el tiempo corra (el nombre es de cuando congelaba): corta el
   input, la furia y la pausa de impacto, y la pausa no se abre, ni con Escape ni al perder el foco. Escape es de
   `MenuPerdiste`, que vuelve al menú. Sus tres botones devuelven el `timeScale` a 1 antes de cargar.
+- **La horda festeja** (pedido de Ivan, elegido entre levantarse zombi, comerse el cuerpo, dispersarse o festejar).
+  Con `DerrotaEnLaPartida.Activa`, `EnemyController.MoverseAlFestejo` reemplaza la persecución (también la del jefe,
+  antes que sus patrones): **cada zombi se abre al costado de la pantalla que le queda más cerca**, a 9-12,5 m del cuerpo
+  y repartido de arriba a abajo, se da vuelta a mirarlo y festeja. **Los costados son porque la derrota tapa el
+  centro**: medido con la cámara del juego (12 m de alto, 70°, FOV 60), el renglón más ancho llega a 6,8 m del cuerpo en
+  16:9 y a 8,5 m en 20:9, y la pantalla termina a 13,1 m; festejando alrededor del cuerpo, a 3,5-6,5 m, quedaban todos
+  detrás del texto. El festejo va **en oleadas cada 2,4 s**: tres saltos con el puño en alto (el estado `Festejar`,
+  que es el zarpazo con el Motion Time entre la mano al hombro, 0,15 s, y sobre la cabeza, 0,29 s), el cuerpo
+  arqueado hacia atrás como el jefe al invocar, y un desfase de hasta 0,45 s por zombi para que no sea un baile
+  sincronizado. **Lo que se lee desde la cámara es el salto** (medio alto del zombi, con estirón): a esa distancia un
+  zombi mide unos 40 px, el puño apunta a la cámara y el arco casi no cambia la silueta; con un salto del 12 % no se
+  notaba nada. **Rugen** (`Efectos.FestejoZombis`: el estruendo grave del jefe, a dos voces) sólo en las tres primeras
+  oleadas: después festejan callados, que la derrota sigue en pantalla. `Golpear` no arranca zarpazos a un jugador
+  muerto, y `JefePatrones` deja de moverse y de posar mientras festeja.
 - **ShowBies > Pruebas > Derrota encima de la partida** mata al jugador con horda encima y verifica todo esto cuadro a
-  cuadro (19 chequeos, en `Builds/prueba_derrota.txt`); **Grabar la derrota** además la graba en
+  cuadro (22 chequeos, en `Builds/prueba_derrota.txt`, que además anota cualquier excepción que salte); **Grabar la derrota** además la graba en
   `Builds/derrota_video/`. El camino de rechazar el revivir no lo recorre: en el editor el proveedor es `Nulo` y no hay
   oferta.
 

@@ -91,6 +91,10 @@ public class DerrotaEnLaPartida : MonoBehaviour
 
         EsconderElHud();
 
+        // La horda festeja desde ahora (EnemyController, el festejo): de aca se cuentan
+        // sus oleadas.
+        EnemyController.EmpezarFestejo();
+
         // La pantalla sale enseguida: se carga ya, y MenuPerdiste lee esto en su Awake.
         MenuPerdiste.SobreLaPartida = true;
         if (SceneManager.LoadSceneAsync(EscenaDerrota, LoadSceneMode.Additive) == null) CargarComoAntes();

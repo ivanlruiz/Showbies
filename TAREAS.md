@@ -179,7 +179,10 @@ teléfono.
 - [x] **Morir ya no cambia de escena** (pedido de Ivan): la pantalla de la derrota sale enseguida encima de la partida,
   que sigue andando, y detrás el mundo se va a gris en 5 s. Salió en dos vueltas con él: primero dejaba cinco segundos
   de gris sin pantalla y el fondo celeste tapaba el gris, y además congelaba el juego. Detalle en CLAUDE.md, La
-  derrota encima de la partida; lo verifica el banco `PruebaDerrota` (19 chequeos).
+  derrota encima de la partida; lo verifica el banco `PruebaDerrota` (22 chequeos).
+- [x] **La horda festeja cuando el jugador muere** (elegido por Ivan). Se abre a los costados de la pantalla —el
+  centro lo tapa la derrota, medido con la cámara— y salta con el puño en alto en oleadas, rugiendo las primeras tres.
+  Del primer intento, festejando alrededor del cuerpo con saltitos, no se veía nada: todo quedaba detrás del texto.
 - [ ] **Los textos chicos de la derrota quedan sobre la horda**: el cuerpo está en el centro de la pantalla y los
   zombis se amontonan justo detrás de PUNTOS, RÉCORD y "te faltan N para…". Se leen por el contorno, pero en el
   teléfono puede costar. Si molesta: una sombra suave detrás de esa columna, o correr la cámara para que el cuerpo
