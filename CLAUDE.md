@@ -42,7 +42,7 @@ los zombis se ponen más duros con cada oleada, y en el modo libre, con los minu
 ## Layout del código
 
 ```
-Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma
+Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma, ArmaEnLaMano (la pistola del muñeco)
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
@@ -58,14 +58,14 @@ Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
-Assets/Prefabs/             ← Bullet, Gun, Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
+Assets/Prefabs/             ← Bullet, Gun, Pistola (la de la mano), Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMejoras
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
-Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir)
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma el controller de los zombis), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
 ```
@@ -227,10 +227,10 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
    `theGun.isFiring` y la animación de disparo juntos; las balas las decide el arma, que no tira sin munición. Hasta
    el 23/9 la animación sólo la prendía el camino de PC, así que en el teléfono el muñeco no disparaba nunca aunque
    salieran balas, y en PC el arma se prendía sólo al apretar y si había balas: apretar sin balas y agarrar una caja
-   sin soltar no disparaba. El controller del muñeco (`TT_demo_male_A`, del pack) pasa a disparar sólo desde quieto:
-   corriendo no se ve (ver TAREAS).
+   sin soltar no disparaba. Corriendo también se ve (ver La pistola en la mano).
 2. `GunController.Update` calcula cuántos tiros tocan en el frame con `TirosDelFrame` y por cada uno pide una
-   bala al pool: `BulletController.Obtener(bala, firePoint.position, firePoint.rotation)`.
+   bala al pool: `BulletController.Obtener(bala, salida, firePoint.rotation)`, donde `salida` es la boca de la pistola
+   (`GunController.boca`) o, sin pistola, `firePoint`.
 3. `BulletController.Update` se mueve con `transform.Translate` y descuenta `lifeTime`.
 4. Al vencer el tiempo o al chocar, la bala **se apaga y vuelve al pool**, no se destruye.
 
@@ -262,6 +262,37 @@ con la cadencia mejorada, no llegaba a oírse.
 
 La bala **no tiene Rigidbody**, sólo un `BoxCollider`: los eventos de colisión llegan porque el zombi
 sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
+
+### La pistola en la mano
+
+Pedido de Ivan, para que se lea que dispara también corriendo. El modelo del jugador (`TT_demo_male_A`, del pack)
+traía **un bate en la mano**, y con las poses de pistola lo levantaba delante de la cara; las balas salían de un cubito
+(el objeto `Gun`) a la altura del pecho, y el controller del pack pasaba a disparar sólo desde quieto (y de disparar no
+volvía a correr hasta soltar: se deslizaba en la pose).
+
+- **`ArmaEnLaMano`** (raíz de `Jugador.prefab`) al arrancar esconde el bate y el cubito, pone la pistola
+  (`Prefabs/Pistola`, que arma **ShowBies > Armas > Armar la pistola**, `ConstructorArmas`, con formas simples: plateada
+  y con la empuñadura marrón, porque oscura no se ve sobre la remera negra) en la mano derecha y le pasa su **boca** al
+  arma (`GunController.boca`): las balas y las chispas salen de ahí, con la dirección de siempre, la de `firePoint`, que
+  es hacia donde se apunta (la mano se mueve con la animación y no sirve para apuntar). **En cada tiro la pistola
+  patea**: el antebrazo se levanta y el arma va hacia atrás, después del Animator (`retroceso`, `levantada` y
+  `recuperacion`, en el componente). El modelo no está en el prefab sino agregado en cada escena, por eso se busca al
+  arrancar.
+- **El controller es `Assets/Animaciones/Jugador.controller`** y no se edita a mano: lo arma **ShowBies > Animaciones >
+  Armar el controller del jugador** (`ConstructorAnimaciones.ArmarJugador`). Salió de la carpeta del pack con
+  `MoveAsset`, que conserva el guid, así las tres escenas de juego siguen apuntando solas. Tiene dos capas: **el cuerpo**
+  (Quieto y Correr, sin tiempo de salida: el del pack esperaba al 63 % del paso para frenar) y **el brazo derecho**
+  (máscara `BrazoDerecho`: el brazo y sus dedos), que apunta con `shoot` corra o no, mientras las piernas, el torso y el
+  otro brazo siguen corriendo. Entra al clip de disparar pasado el tirón que trae al principio: el de cada tiro lo pone
+  `ArmaEnLaMano`. Los parámetros siguen siendo `run` y `shoot`.
+- **En el teléfono el cuerpo mira hacia donde se apunta** mientras se apunta (`PlayerJS`), como en PC con el mouse; si
+  no, hacia donde camina. Antes miraba siempre hacia donde caminaba, y lo que giraba era el cubito.
+- En las poses de pistola del pack la mano está siempre igual: la empuñadura vertical y el frente de la mano hacia
+  adelante (medido muestreando los clips). Por eso la pistola va girada un cuarto de vuelta en el contenedor de la
+  mano (`R_hand_container`). Si se muestrean clips en una escena de vista previa, la primera evaluación del grafo no
+  mueve los huesos hasta que algo renderiza: la medición sale en la pose de reposo.
+- **ShowBies > Pruebas > Disparo con el joystick** lo verifica y **Grabar el disparo** (`GrabarDisparo`) lo graba de
+  cerca, quieto y corriendo, en `Builds/disparo_video/`.
 
 ## Granada
 
@@ -1297,7 +1328,8 @@ control táctil se prueba sin dispositivo. Con target Windows, jugás con teclad
 Antes había dos criterios distintos (defines de compilación vs. `Application.isMobilePlatform`) y
 en el editor con target Android los joysticks se veían pero no respondían.
 
-- `PlayerJS` lee los dos `FixedJoystick` del Canvas y llama a `PlayerController.Move(Vector2)`.
+- `PlayerJS` lee los dos `FixedJoystick` del Canvas y llama a `PlayerController.Move(Vector2)`; mientras se apunta, gira
+  el cuerpo hacia donde apunta el joystick de disparo (ver La pistola en la mano).
 - `PlayerController.Update` **se corta enseguida en móvil** para no pelearse con el joystick por
   `moveVelocity` y por `isFiring`.
 - `ConditionalShow` prende y apaga objetos por plataforma (`showOnAndroid` / `showOnPC`). Los joysticks
@@ -1571,8 +1603,10 @@ enterrado.
   misión diga cuánto pide. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
 - **ShowBies > Pruebas > Disparo con el joystick (play)** (`PruebaDisparo`): el camino del teléfono, con los joysticks
   de verdad (los eventos de un dedo sobre el `FixedJoystick`): que apuntar dispare y prenda la animación, que soltar la
-  apague, que sin balas no la haga y que con una caja dispare sin soltar. Apaga "Teclado y mouse en el editor" mientras
-  dura y la deja como estaba. Escribe `Builds/prueba_disparo.txt`.
+  apague, que sin balas no la haga y que con una caja dispare sin soltar; y la pistola: que esté en la mano sin el bate,
+  que las balas salgan de su boca, que corriendo las piernas corran y el brazo apunte y que el cuerpo mire hacia donde
+  apunta. Apaga "Teclado y mouse en el editor" mientras dura y la deja como estaba. Escribe `Builds/prueba_disparo.txt`.
+  **Grabar el disparo (play)** (`GrabarDisparo`) lo graba de cerca.
 - **ShowBies > Escenarios > Fotos de los faroles** (`FotosDeLosFaroles`), sin play: los capítulos de noche con la
   calidad del teléfono y con la del editor (ver Capítulos).
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata

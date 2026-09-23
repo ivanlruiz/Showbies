@@ -4,7 +4,7 @@ using UnityEditor.Animations;
 using UnityEngine;
 
 // Arma el Animator Controller de los zombis con los clips que ya trae
-// ToonyTinyPeople. Hasta el 22/9 el controller tenia UN solo estado (Z_run_rm en
+// ToonyTinyPeople (y, mas abajo, el del jugador: ArmarJugador). Hasta el 22/9 el controller tenia UN solo estado (Z_run_rm en
 // loop, sin transiciones) y un parametro "runZM" que no usaba nadie: los cinco
 // zombis corrian para siempre, te pegaban corriendo y se morian corriendo, aunque
 // Z_attack_A y Z_death_A estaban en el proyecto sin usar desde el principio.
@@ -189,11 +189,145 @@ public static class ConstructorAnimaciones
 
     static AnimationClip Clip(string nombre)
     {
-        foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(ClipsZombi + nombre + ".FBX"))
+        return ClipEn(ClipsZombi, nombre);
+    }
+
+    static AnimationClip ClipEn(string carpeta, string nombre)
+    {
+        foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(carpeta + nombre + ".FBX"))
         {
             var clip = o as AnimationClip;
             if (clip != null && !clip.name.StartsWith("__preview__")) return clip;
         }
         return null;
+    }
+
+    // --- El jugador -------------------------------------------------------------------
+
+    const string RutaJugadorEnElPack = "Assets/ToonyTinyPeople/TT_demo/animation/male/TT_demo_male_A.controller";
+    public const string RutaControladorJugador = Carpeta + "/Jugador.controller";
+    public const string RutaMascaraBrazo = Carpeta + "/BrazoDerecho.mask";
+    const string ClipsJugador = "Assets/ToonyTinyPeople/TT_demo/animation/male/";
+
+    // Los nombres los comparte PlayerController (vienen del controller del pack).
+    public const string ParametroCorrer = "run";
+    public const string ParametroDisparar = "shoot";
+    public const string CapaDisparo = "Disparo";
+
+    // Arma el controller del jugador, pedido de Ivan: que se vea que dispara tambien
+    // corriendo. El del pack pasaba a disparar solo desde quieto, y de disparar no volvia a
+    // correr hasta soltar: en el telefono, donde se corre y se dispara a la vez, casi no se
+    // veia, y el muñeco se deslizaba en la pose de disparo.
+    //
+    // Ahora son dos capas. La de abajo es el cuerpo: quieto o corriendo. La de arriba es
+    // solo el brazo derecho (la mascara BrazoDerecho), que apunta la pistola mientras se
+    // dispara, corra o no. El tiron de cada tiro lo pone ArmaEnLaMano, despues del Animator.
+    //
+    // Como el de los zombis, sale de la carpeta del pack con MoveAsset, que conserva el
+    // guid: las tres escenas de juego, que lo tienen en el Animator del modelo, siguen
+    // apuntando solas.
+    [MenuItem("ShowBies/Animaciones/Armar el controller del jugador")]
+    public static void ArmarJugador()
+    {
+        if (!AssetDatabase.IsValidFolder(Carpeta))
+            AssetDatabase.CreateFolder("Assets", "Animaciones");
+
+        if (AssetDatabase.LoadAssetAtPath<AnimatorController>(RutaControladorJugador) == null &&
+            AssetDatabase.LoadAssetAtPath<AnimatorController>(RutaJugadorEnElPack) != null)
+        {
+            string error = AssetDatabase.MoveAsset(RutaJugadorEnElPack, RutaControladorJugador);
+            if (!string.IsNullOrEmpty(error))
+            {
+                Debug.LogError("No se pudo mover el controller del jugador: " + error);
+                return;
+            }
+            Debug.Log("TT_demo_male_A.controller salio de la carpeta del pack a " + RutaControladorJugador + " (mismo guid).");
+        }
+
+        var ctrl = AssetDatabase.LoadAssetAtPath<AnimatorController>(RutaControladorJugador);
+        if (ctrl == null)
+        {
+            Debug.LogError("No esta el controller del jugador en " + RutaControladorJugador);
+            return;
+        }
+
+        AnimationClip quieto = ClipEn(ClipsJugador, "m_pistol_idle_A");
+        AnimationClip correr = ClipEn(ClipsJugador, "m_pistol_run");
+        AnimationClip disparar = ClipEn(ClipsJugador, "m_pistol_shoot");
+        if (quieto == null || correr == null || disparar == null)
+        {
+            Debug.LogError("Faltan clips del jugador en " + ClipsJugador);
+            return;
+        }
+
+        // La mascara: el brazo derecho y sus dedos, nada mas. Asi las piernas, el torso y
+        // el otro brazo siguen corriendo mientras la mano apunta.
+        var mascara = AssetDatabase.LoadAssetAtPath<AvatarMask>(RutaMascaraBrazo);
+        if (mascara == null)
+        {
+            mascara = new AvatarMask();
+            AssetDatabase.CreateAsset(mascara, RutaMascaraBrazo);
+        }
+        for (var parte = AvatarMaskBodyPart.Root; parte < AvatarMaskBodyPart.LastBodyPart; parte++)
+            mascara.SetHumanoidBodyPartActive(parte, parte == AvatarMaskBodyPart.RightArm || parte == AvatarMaskBodyPart.RightFingers);
+        EditorUtility.SetDirty(mascara);
+
+        // De cero, como el de los zombis.
+        while (ctrl.layers.Length > 1) ctrl.RemoveLayer(ctrl.layers.Length - 1);
+        var capas = ctrl.layers;
+        capas[0].defaultWeight = 1f;
+        ctrl.layers = capas;
+        var cuerpo = ctrl.layers[0].stateMachine;
+        foreach (var t in new List<AnimatorStateTransition>(cuerpo.anyStateTransitions))
+            cuerpo.RemoveAnyStateTransition(t);
+        foreach (var s in new List<ChildAnimatorState>(cuerpo.states))
+            cuerpo.RemoveState(s.state);
+        foreach (var p in new List<AnimatorControllerParameter>(ctrl.parameters))
+            ctrl.RemoveParameter(p);
+
+        ctrl.AddParameter(ParametroCorrer, AnimatorControllerParameterType.Bool);
+        ctrl.AddParameter(ParametroDisparar, AnimatorControllerParameterType.Bool);
+
+        // El cuerpo. Sin tiempo de salida en ninguna de las dos: el del pack esperaba al 63 %
+        // del paso para frenar, y el muñeco seguia corriendo en el lugar un rato.
+        var eQuieto = cuerpo.AddState("Quieto", new Vector3(260, 0, 0));
+        eQuieto.motion = quieto;
+        var eCorrer = cuerpo.AddState("Correr", new Vector3(520, 0, 0));
+        eCorrer.motion = correr;
+        cuerpo.defaultState = eQuieto;
+        Transicion(eQuieto, eCorrer, ParametroCorrer, true, 0.1f);
+        Transicion(eCorrer, eQuieto, ParametroCorrer, false, 0.15f);
+
+        // El brazo. "Nada" no tiene clip: deja pasar lo de abajo.
+        ctrl.AddLayer(CapaDisparo);
+        capas = ctrl.layers;
+        capas[1].defaultWeight = 1f;
+        capas[1].avatarMask = mascara;
+        capas[1].blendingMode = AnimatorLayerBlendingMode.Override;
+        ctrl.layers = capas;
+        var brazo = ctrl.layers[1].stateMachine;
+        var eNada = brazo.AddState("Nada", new Vector3(260, 0, 0));
+        var eApuntar = brazo.AddState("Apuntar", new Vector3(520, 0, 0));
+        eApuntar.motion = disparar;
+        brazo.defaultState = eNada;
+        // Entra pasado el tiron que trae el clip al principio: el de cada tiro lo pone
+        // ArmaEnLaMano, y el del clip salia una sola vez por rafaga.
+        var aApuntar = Transicion(eNada, eApuntar, ParametroDisparar, true, 0.08f);
+        aApuntar.offset = 0.2f;
+        Transicion(eApuntar, eNada, ParametroDisparar, false, 0.2f);
+
+        EditorUtility.SetDirty(ctrl);
+        AssetDatabase.SaveAssets();
+        Debug.Log("Controller del jugador armado en " + RutaControladorJugador + ": Quieto <-> Correr, y el brazo derecho apunta con " + ParametroDisparar + ".");
+    }
+
+    static AnimatorStateTransition Transicion(AnimatorState desde, AnimatorState hasta, string parametro, bool prendido, float duracion)
+    {
+        var t = desde.AddTransition(hasta);
+        t.AddCondition(prendido ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, parametro);
+        t.hasExitTime = false;
+        t.hasFixedDuration = true;
+        t.duration = duracion;
+        return t;
     }
 }

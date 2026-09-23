@@ -258,11 +258,12 @@ teléfono.
 - [ ] Lo que queda en `REVISION.md`: el cierre de medianoche que paga al precio de la oleada 0 (10), los carteles de
   misión y de capítulo que se pisan (12), el globo del idioma sin `PintarConTema` (13), el valor siguiente de la tarjeta
   en modo oscuro (14), el salto de rotación del jefe al terminar de invocar (15) y la suma de `ZombisPorPartida` (16).
-- [ ] **Disparar corriendo no se ve.** El controller del muñeco (`TT_demo_male_A`, del pack) pasa a disparar sólo desde
-  quieto, y de disparar no vuelve a correr hasta soltar: en el teléfono, donde se corre y se dispara a la vez, casi no se
-  ve. Para que se vea siempre, una capa del torso y los brazos con el disparo (el avatar es humanoide, así que la máscara
-  sale sola). Ojo al mirarlo: en el teléfono el cuerpo mira hacia donde camina y lo que gira hacia donde se apunta es el
-  arma (`Gun`, un cubo chico), y el muñeco tiene prendido un bate en la mano (`w_baseballbat`).
+- [x] **Disparar corriendo se ve** (elegido por Ivan, con la pistola). El muñeco tenía un bate en la mano, que las poses
+  de pistola levantaban delante de la cara, y las balas salían de un cubito en el pecho. Ahora tiene una pistola en la
+  mano (`ArmaEnLaMano`, armada con formas por `ConstructorArmas`), las balas y las chispas salen de su boca, patea en
+  cada tiro, el brazo derecho apunta en una capa aparte mientras las piernas corren (`Jugador.controller`, sacado del
+  pack) y en el teléfono el cuerpo mira hacia donde se apunta. El banco del disparo lo verifica (12 de 12) y **Grabar el
+  disparo** lo graba de cerca.
 - [ ] **El jugador no se cae al morir**: queda parado detrás de la derrota mientras la horda festeja. El pack trae
   `m_death_A`.
 - [ ] Ver los faroles en el teléfono: están medidos con la calidad de Android, pero en el editor.

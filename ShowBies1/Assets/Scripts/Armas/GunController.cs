@@ -41,6 +41,14 @@ public class GunController : MonoBehaviour
 
     public Transform firePoint;
 
+    // La boca de la pistola que el muñeco tiene en la mano (ArmaEnLaMano): si esta, las
+    // balas y el fogonazo salen de ahi. La direccion sigue siendo la de firePoint, que es
+    // hacia donde se apunta; la mano se mueve con la animacion.
+    [System.NonSerialized] public Transform boca;
+
+    // De donde salio la ultima bala. Para las pruebas.
+    public Vector3 UltimaSalida { get; private set; }
+
     // Cuántas balas salieron en toda la partida. Lo usan el medidor y las pruebas
     // para comparar la cadencia medida con la esperada.
     public int TirosDisparados { get; private set; }
@@ -222,6 +230,8 @@ public class GunController : MonoBehaviour
     {
         player.cantBalas--;
         TirosDisparados++;
+        Vector3 salida = boca != null ? boca.position : firePoint.position;
+        UltimaSalida = salida;
 
         // PlayOneShot y no Play: Play reinicia el mismo sonido, y a esta
         // cadencia lo cortaba en cada tiro antes de que llegara a oirse. El
@@ -231,11 +241,11 @@ public class GunController : MonoBehaviour
         {
             AudioSource.PlayOneShot(AudioSource.clip);
             proximoSonido = Time.time + intervaloMinimoSonido;
-            Efectos.Disparo(firePoint.position);
+            Efectos.Disparo(salida);
         }
 
         // Antes era un Instantiate por disparo. Ahora las balas se reusan.
-        BulletController newBullet = BulletController.Obtener(bala, firePoint.position, firePoint.rotation);
+        BulletController newBullet = BulletController.Obtener(bala, salida, firePoint.rotation);
         newBullet.velocidad = velocidadBala;
         bool critico = probabilidadCritico > 0f && EsCritico(probabilidadCritico, Random.value);
         newBullet.critico = critico;

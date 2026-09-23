@@ -62,6 +62,12 @@ public class PlayerJS : MonoBehaviour
         UltimaDireccionApuntada = new Vector3(hoz, 0f, ver).normalized;
         ultimoApuntadoEn = Time.time;
 
+        // El cuerpo mira hacia donde se apunta, como en PC con el mouse: la pistola esta en
+        // la mano y el brazo apunta al frente (ArmaEnLaMano). Hasta el 23/9 el cuerpo miraba
+        // hacia donde caminaba y lo que giraba era el arma sola, un cubito en el pecho.
+        // Move ya puso el rumbo de la caminata en este cuadro; esto lo pisa.
+        player.transform.rotation = Quaternion.LookRotation(UltimaDireccionApuntada);
+
         Vector3 lookAtPosition = transform.position + new Vector3(hoz, 0, ver);
         thegun.transform.LookAt(lookAtPosition);
 
