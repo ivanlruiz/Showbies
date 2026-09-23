@@ -41,6 +41,20 @@ public static class ConstructorArmas
         boca.transform.SetParent(raiz.transform, false);
         boca.transform.localPosition = new Vector3(0f, 0.075f, 0.27f);
 
+        // El fogonazo: apagado, lo prende ArmaEnLaMano en cada tiro y lo pone de frente a
+        // la camara, estirado hacia donde apunta el cañon.
+        var fogonazo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        fogonazo.name = "Fogonazo";
+        Object.DestroyImmediate(fogonazo.GetComponent<Collider>());
+        fogonazo.transform.SetParent(boca.transform, false);
+        var render = fogonazo.GetComponent<MeshRenderer>();
+        render.sharedMaterial = MaterialDelFogonazo();
+        render.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        render.receiveShadows = false;
+        render.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+        render.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+        fogonazo.SetActive(false);
+
         PrefabUtility.SaveAsPrefabAsset(raiz, RutaPistola);
         Object.DestroyImmediate(raiz);
         AssetDatabase.SaveAssets();
@@ -57,6 +71,21 @@ public static class ConstructorArmas
         go.transform.localRotation = rotacion;
         go.transform.localScale = escala;
         go.GetComponent<MeshRenderer>().sharedMaterial = material;
+    }
+
+    static Material MaterialDelFogonazo()
+    {
+        var shader = Shader.Find("ShowBies/Fogonazo");
+        string ruta = CarpetaMateriales + "/Fogonazo.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(ruta);
+        if (mat == null)
+        {
+            mat = new Material(shader);
+            AssetDatabase.CreateAsset(mat, ruta);
+        }
+        mat.shader = shader;
+        EditorUtility.SetDirty(mat);
+        return mat;
     }
 
     static Material Material(string nombre, Color color, float brillo)

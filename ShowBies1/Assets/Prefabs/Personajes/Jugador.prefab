@@ -240,6 +240,8 @@ MonoBehaviour:
   retroceso: 0.1
   levantada: 16
   recuperacion: 22
+  duracionDelFogonazo: 0.05
+  largoDelFogonazo: 0.65
 --- !u!114 &7234699121980140405
 MonoBehaviour:
   m_ObjectHideFlags: 0

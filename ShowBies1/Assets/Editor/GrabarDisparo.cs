@@ -41,7 +41,20 @@ public static class GrabarDisparo
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
+        Arrancar(true);
+    }
+
+    // Con la camara del juego, que es donde tiene que leerse: la pistola mide ahi unos 15 px.
+    [MenuItem("ShowBies/Pruebas/Grabar el disparo con la camara del juego (play)")]
+    public static void ArrancarConLaCamaraDelJuego()
+    {
+        Arrancar(false);
+    }
+
+    static void Arrancar(bool deCerca)
+    {
         if (SessionState.GetBool(Clave, false) || EditorApplication.isPlayingOrWillChangePlaymode) return;
+        SessionState.SetBool(Clave + ".cerca", deCerca);
         string carpeta = Path.GetFullPath(Carpeta);
         if (Directory.Exists(carpeta)) Directory.Delete(carpeta, true);
         Directory.CreateDirectory(carpeta);
@@ -86,14 +99,17 @@ public static class GrabarDisparo
             Mover(joysticks.lookJoystick, Guion[ahora].apunta);
         }
 
-        // Mas cerca que la camara del juego, siguiendo al muñeco.
-        var seguidor = Object.FindFirstObjectByType<CamaraJugador>();
-        if (seguidor != null) seguidor.enabled = false;
-        var camara = Camera.main;
-        if (camara != null)
+        // Mas cerca que la camara del juego, siguiendo al muñeco (o la del juego, tal cual).
+        if (SessionState.GetBool(Clave + ".cerca", true))
         {
-            Vector3 centro = vida.transform.position;
-            camara.transform.SetPositionAndRotation(centro + new Vector3(0f, 4.2f, -3.4f), Quaternion.Euler(50f, 0f, 0f));
+            var seguidor = Object.FindFirstObjectByType<CamaraJugador>();
+            if (seguidor != null) seguidor.enabled = false;
+            var camara = Camera.main;
+            if (camara != null)
+            {
+                Vector3 centro = vida.transform.position;
+                camara.transform.SetPositionAndRotation(centro + new Vector3(0f, 4.2f, -3.4f), Quaternion.Euler(50f, 0f, 0f));
+            }
         }
 
         ScreenCapture.CaptureScreenshot(Path.Combine(Path.GetFullPath(Carpeta), "f" + cuadro.ToString("0000") + ".png"));

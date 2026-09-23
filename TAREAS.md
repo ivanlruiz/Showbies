@@ -274,6 +274,8 @@ teléfono.
   cada tiro, el brazo derecho apunta en una capa aparte mientras las piernas corren (`Jugador.controller`, sacado del
   pack) y en el teléfono el cuerpo mira hacia donde se apunta. El banco del disparo lo verifica (12 de 12) y **Grabar el
   disparo** lo graba de cerca.
+- [x] **El fogonazo** (elegido por Ivan). Una estrella de fuego en la boca de la pistola en cada tiro, de frente a la
+  cámara y estirada hacia donde apunta, que titila con la ráfaga. Con la cámara del juego mide unos 30 px.
 - [x] **El jugador se cae al morir** (elegido por Ivan). Se desploma con `m_death_A`, la cámara lo corre al costado
   izquierdo de la pantalla (quedaba tapado por "+N MONEDAS" y por la ventanita de revivir, que van al centro) y la horda
   festeja alrededor de él, en esa franja libre. Si revive, se levanta y la cámara vuelve.

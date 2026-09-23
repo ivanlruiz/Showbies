@@ -66,7 +66,7 @@ Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
 Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
-Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche)
+Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
 ```
 
@@ -276,7 +276,11 @@ volvía a correr hasta soltar: se deslizaba en la pose).
   arma (`GunController.boca`): las balas y las chispas salen de ahí, con la dirección de siempre, la de `firePoint`, que
   es hacia donde se apunta (la mano se mueve con la animación y no sirve para apuntar). **En cada tiro la pistola
   patea**: el antebrazo se levanta y el arma va hacia atrás, después del Animator (`retroceso`, `levantada` y
-  `recuperacion`, en el componente). El modelo no está en el prefab sino agregado en cada escena, por eso se busca al
+  `recuperacion`, en el componente). **Y echa un fogonazo** (pedido de Ivan, para que el tiro se lea desde la cámara del
+  juego, donde la pistola mide unos 15 px): el hijo `Boca/Fogonazo` de la pistola, un cuadrado con el shader
+  `ShowBies/Fogonazo` (una estrella aditiva calculada sin textura), de frente a la cámara, estirado hacia donde apunta el
+  cañón y con tamaño y puntas al azar. Dura 0,05 s sin escalar: con la cadencia alta titila, que es como se lee una
+  ráfaga. Con 0,5 m medía unos 20 px en la cámara del juego; quedó en 0,65 (`largoDelFogonazo`). El modelo no está en el prefab sino agregado en cada escena, por eso se busca al
   arrancar.
 - **El controller es `Assets/Animaciones/Jugador.controller`** y no se edita a mano: lo arma **ShowBies > Animaciones >
   Armar el controller del jugador** (`ConstructorAnimaciones.ArmarJugador`). Salió de la carpeta del pack con
@@ -1631,9 +1635,9 @@ enterrado.
 - **ShowBies > Pruebas > Disparo con el joystick (play)** (`PruebaDisparo`): el camino del teléfono, con los joysticks
   de verdad (los eventos de un dedo sobre el `FixedJoystick`): que apuntar dispare y prenda la animación, que soltar la
   apague, que sin balas no la haga y que con una caja dispare sin soltar; y la pistola: que esté en la mano sin el bate,
-  que las balas salgan de su boca, que corriendo las piernas corran y el brazo apunte y que el cuerpo mire hacia donde
-  apunta. Apaga "Teclado y mouse en el editor" mientras dura y la deja como estaba. Escribe `Builds/prueba_disparo.txt`.
-  **Grabar el disparo (play)** (`GrabarDisparo`) lo graba de cerca.
+  que las balas salgan de su boca, que cada tiro prenda el fogonazo y se apague al soltar, que corriendo las piernas
+  corran y el brazo apunte y que el cuerpo mire hacia donde apunta. Apaga "Teclado y mouse en el editor" mientras dura y la deja como estaba. Escribe `Builds/prueba_disparo.txt`.
+  **Grabar el disparo (play)** (`GrabarDisparo`) lo graba de cerca, y **con la cámara del juego**, tal cual se ve.
 - **ShowBies > Escenarios > Fotos de los faroles** (`FotosDeLosFaroles`), sin play: los capítulos de noche con la
   calidad del teléfono y con la del editor (ver Capítulos).
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata

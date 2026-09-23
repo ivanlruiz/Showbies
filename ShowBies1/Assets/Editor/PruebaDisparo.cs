@@ -41,6 +41,9 @@ public static class PruebaDisparo
     static bool sinBalasNoAnima, conCajaTira, conCajaAnima;
     static bool corriendoCorre, corriendoDispara, piernasCorren, brazoApuntaCorriendo;
     static bool pistolaEnLaMano, balaDeLaBoca;
+    // El fogonazo: cuantos salieron mientras disparaba y si se apago al soltar.
+    static int fogonazosAntes, fogonazosAlDisparar;
+    static bool fogonazoApagado;
     static float anguloAlApuntar = -1f, distanciaALaBoca = -1f;
     static string estadoCorriendo = "";
     static readonly StringBuilder excepciones = new StringBuilder();
@@ -105,6 +108,8 @@ public static class PruebaDisparo
             sinBalasNoAnima = conCajaTira = conCajaAnima = false;
             corriendoCorre = corriendoDispara = piernasCorren = brazoApuntaCorriendo = false;
             pistolaEnLaMano = balaDeLaBoca = false;
+            fogonazosAntes = fogonazosAlDisparar = 0;
+            fogonazoApagado = false;
             anguloAlApuntar = distanciaALaBoca = -1f;
             estadoCorriendo = "";
             excepciones.Length = 0;
@@ -133,6 +138,7 @@ public static class PruebaDisparo
                 arranco = Plataforma.EsMovil;
                 if (!arranco) { Terminar("el editor no esta en modo telefono: el target tiene que ser Android"); return; }
                 pistolaEnLaMano = PistolaEnLaMano(enLaMano, control);
+                fogonazosAntes = enLaMano != null ? enLaMano.Fogonazos : 0;
                 control.cantBalas = Mathf.Max(control.cantBalas, 100);
                 balasAlApuntar = control.cantBalas;
                 Apretar(joysticks.lookJoystick, new Vector2(1f, 0f));
@@ -143,6 +149,7 @@ public static class PruebaDisparo
                 // Quieto y apuntando: sale el tiro, el muñeco dispara y la bala sale de la boca.
                 if (pasado < 1.2f) return;
                 disparoQuieto = animador.GetBool("shoot") && control.cantBalas < balasAlApuntar;
+                fogonazosAlDisparar = enLaMano != null ? enLaMano.Fogonazos - fogonazosAntes : 0;
                 brazoApunta = EstadoActual(animador, 1) == IdApuntar;
                 if (enLaMano != null && enLaMano.Boca != null)
                 {
@@ -160,6 +167,7 @@ public static class PruebaDisparo
                 if (balasAlSoltar < 0 || pasado < 0.15f) { balasAlSoltar = control.cantBalas; return; }
                 if (pasado < 0.8f) return;
                 soltoLaAnimacion = !animador.GetBool("shoot");
+                fogonazoApagado = enLaMano != null && !enLaMano.FogonazoPrendido;
                 dejoDeTirar = control.cantBalas == balasAlSoltar;
                 brazoBajoAlSoltar = EstadoActual(animador, 1) == IdNada;
                 // Sin balas y apuntando: ni tiros ni animacion.
@@ -260,7 +268,8 @@ public static class PruebaDisparo
         if (error != null) inf.AppendLine("ERROR: " + error);
         inf.AppendLine("Corriendo y apuntando: piernas / brazo \"" + estadoCorriendo + "\", run " + corriendoCorre + ", shoot " + corriendoDispara
                        + "; el cuerpo queda a " + anguloAlApuntar.ToString("0") + " grados de donde apunta");
-        inf.AppendLine("La ultima bala salio a " + distanciaALaBoca.ToString("0.00") + " m de la boca de la pistola");
+        inf.AppendLine("La ultima bala salio a " + distanciaALaBoca.ToString("0.00") + " m de la boca de la pistola; fogonazos mientras disparaba: "
+                       + fogonazosAlDisparar);
         inf.AppendLine("Errores y excepciones durante la prueba: " + cuantasExcepciones);
         if (cuantasExcepciones > 0) inf.Append(excepciones);
         inf.AppendLine();
@@ -272,6 +281,7 @@ public static class PruebaDisparo
             disparoQuieto,
             brazoApunta,
             balaDeLaBoca,
+            fogonazosAlDisparar > 0 && fogonazoApagado,
             soltoLaAnimacion && dejoDeTirar,
             brazoBajoAlSoltar,
             sinBalasNoAnima,
@@ -287,6 +297,7 @@ public static class PruebaDisparo
             "apuntando con el joystick salen balas y la animacion de disparo se prende",
             "el brazo pasa a apuntar",
             "las balas salen de la boca de la pistola",
+            "cada tiro prende el fogonazo, y al soltar se apaga",
             "al soltar el joystick deja de tirar y se apaga la animacion",
             "y el brazo deja de apuntar",
             "sin balas no hace la animacion de disparar",
