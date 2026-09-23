@@ -16,12 +16,21 @@ public class MenuPausa : MonoBehaviour
 
     public static bool Pausado { get; private set; }
 
-    // El juego esta quieto: el menu de pausa o la oferta de revivir abierta (que deja el
-    // timeScale en 0 con el jugador muerto). Lo miran los que leen input y la pausa de
-    // impacto de Efectos, que si no devolvia el timeScale a 1 detras del HAS MUERTO.
+    // Nadie esta jugando: el menu de pausa, la oferta de revivir abierta (que deja el
+    // timeScale en 0 con el jugador muerto) o la derrota encima de la partida (que la
+    // deja andar: el nombre es de cuando todo esto congelaba). Lo miran los que leen
+    // input y la pausa de impacto de Efectos, que si no devolvia el timeScale a 1
+    // detras del HAS MUERTO.
     public static bool JuegoCongelado
     {
-        get { return Pausado || OfertaDeRevivir.Activa; }
+        get { return Pausado || OtroLoCongela; }
+    }
+
+    // Pausar encima de la oferta de revivir o de la derrota solo puede romper el
+    // timeScale: al reanudar volveria a 1 con el jugador muerto.
+    private static bool OtroLoCongela
+    {
+        get { return OfertaDeRevivir.Activa || DerrotaEnLaPartida.Activa; }
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -32,9 +41,9 @@ public class MenuPausa : MonoBehaviour
 
     private void Update()
     {
-        // Con la oferta de revivir en pantalla el juego ya esta congelado y el
-        // jugador, muerto: pausar encima solo puede romper el timeScale.
-        if (OfertaDeRevivir.Activa) return;
+        // Con la oferta de revivir o la derrota en pantalla el juego ya esta congelado y
+        // el jugador, muerto. Escape en la derrota es de MenuPerdiste (vuelve al menu).
+        if (OtroLoCongela) return;
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
 
         if (Pausado) Reanudar();
@@ -54,7 +63,9 @@ public class MenuPausa : MonoBehaviour
 
     public void Pausar()
     {
-        if (OfertaDeRevivir.Activa) return;
+        // Tambien cuando se pierde el foco: con la derrota encima, pausar dejaria el
+        // audio en pausa y un panel invisible (su canvas esta apagado).
+        if (OtroLoCongela) return;
         if (Pausado) return;
 
         Pausado = true;

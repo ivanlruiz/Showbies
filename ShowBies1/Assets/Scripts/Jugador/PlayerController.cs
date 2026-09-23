@@ -114,6 +114,10 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Muerto no agarra cajas: la partida sigue andando detras de la derrota, y este
+        // componente queda apagado pero los triggers le llegan igual.
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
+
         // El jugador tiene dos colliders: el mismo pickup dispara este evento dos
         // veces en el mismo paso de fisica. Aca los efectos son absolutos y no se
         // notaba, pero es el mismo agujero que la cura doble de PlayerHealth.

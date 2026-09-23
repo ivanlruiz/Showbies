@@ -23,6 +23,16 @@ public class PintarConTema : MonoBehaviour
     private Graphic grafico;
     private int revisionVista = -1;
 
+    // Cuanto se ve el grafico: 1 es como siempre. No se guarda. Lo usa la derrota cuando
+    // va encima de la partida congelada, para que su fondo deje ver el mundo gris.
+    [System.NonSerialized] public float opacidad = 1f;
+
+    public void FijarOpacidad(float valor)
+    {
+        opacidad = Mathf.Clamp01(valor);
+        Aplicar();
+    }
+
     // El color que le toca hoy. Lo consulta quien anima ese mismo grafico y necesita
     // saber a que color volver (TarjetaMejora con el texto del nivel).
     public Color Actual()
@@ -58,7 +68,9 @@ public class PintarConTema : MonoBehaviour
         revisionVista = Tema.Revision;
         if (grafico == null) grafico = GetComponent<Graphic>();
         if (grafico == null) return;
-        grafico.color = Tema.Elegir(colorClaro, rol);
+        Color color = Tema.Elegir(colorClaro, rol);
+        color.a *= opacidad;
+        grafico.color = color;
     }
 
     private void TomarColor()

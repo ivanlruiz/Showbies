@@ -328,20 +328,22 @@ public class OfertaDeRevivir : MonoBehaviour
         esperandoVideo = false;
         aceptadoEn = -1f;
 
-        Esconder();
-        // El timeScale vuelve antes de cambiar de escena: es global y cruza escenas.
-        Time.timeScale = 1f;
+        // El gris queda como esta: la derrota va encima de la partida
+        // (DerrotaEnLaPartida), la descongela y sigue el gris desde donde quedo. Si se
+        // soltara el filtro, el mundo volveria al color un cuadro antes de la derrota.
+        Esconder(false);
 
         PlayerHealth quienMurio = jugador;
         jugador = null;
         if (quienMurio != null) quienMurio.Terminar();
+        else Time.timeScale = 1f;
     }
 
-    private void Esconder()
+    private void Esconder(bool soltarElGris = true)
     {
         Activa = false;
         if (panel != null) panel.SetActive(false);
-        if (filtro != null) filtro.Soltar();
+        if (filtro != null && soltarElGris) filtro.Soltar();
         filtro = null;
     }
 }

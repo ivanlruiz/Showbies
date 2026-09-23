@@ -360,6 +360,12 @@ public class Moneda : MonoBehaviour
     // frame y no una vez por moneda.
     private static PlayerController Jugador()
     {
+        // Muerto no junta nada. Antes eso lo resolvia que el jugador se destruia al morir;
+        // ahora se queda en el mundo, que sigue andando detras de la derrota, y las
+        // monedas del piso seguian volando hacia el cuerpo y se cobraban despues de
+        // morir, con la derrota ya mostrando el total.
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return null;
+
         if (jugador == null && frameDeBusqueda != Time.frameCount)
         {
             frameDeBusqueda = Time.frameCount;

@@ -171,9 +171,14 @@ public class PlayerHealth : MonoBehaviour
         Terminar();
     }
 
-    // La muerte de verdad: guarda el récord, cierra la partida y va a la derrota.
+    // La muerte de verdad: guarda el récord, cierra la partida y muestra la derrota.
     public void Terminar()
     {
+        // Una sola vez: el jugador ya no se destruye (ver abajo) y una segunda llamada
+        // contaria la partida dos veces.
+        if (terminada) return;
+        terminada = true;
+
         // Un record por modo: los puntos del modo libre y los de las oleadas
         // no se comparan, y antes compartian una sola clave.
         int modo = SceneManager.GetActiveScene().buildIndex;
@@ -190,9 +195,45 @@ public class PlayerHealth : MonoBehaviour
         if (modo == TiendaMejoras.EscenaOleadas) Progreso.OlvidarOleadaEnCurso();
         Progreso.Guardar();
 
-        SceneManager.LoadScene(2);
-        Destroy(gameObject);
+        // La derrota va encima de la partida, que sigue andando y se pone gris, sin
+        // cambiar de escena. El jugador NO se destruye, aunque antes si: el WaveManager
+        // espera mientras el jugador este muerto (por si revive), y destruido
+        // PlayerHealth.instance pasa a null, el bucle sale y la oleada se da por
+        // completada DESPUES de morir, con su bono y guardada. Queda ahi, muerto y
+        // quieto, hasta que se sale de la derrota.
+        QuedarseQuieto();
+        DerrotaEnLaPartida.Mostrar();
     }
+
+    // Muerto en un mundo que sigue andando: sin control, sin arma y sin que la horda lo
+    // arrastre. Con el tiempo congelado no hacia falta; corriendo, seguia caminando con
+    // la ultima direccion y, si murio disparando, el arma seguia tirando sola y matando
+    // zombis: puntos y monedas despues de morir.
+    private void QuedarseQuieto()
+    {
+        var control = GetComponent<PlayerController>();
+        if (control != null)
+        {
+            if (control.theGun != null)
+            {
+                control.theGun.isFiring = false;
+                control.theGun.enabled = false;
+            }
+            control.enabled = false;
+        }
+        var joysticks = GetComponent<PlayerJS>();
+        if (joysticks != null) joysticks.enabled = false;
+
+        var cuerpo = GetComponent<Rigidbody>();
+        if (cuerpo != null)
+        {
+            cuerpo.linearVelocity = Vector3.zero;
+            cuerpo.angularVelocity = Vector3.zero;
+            cuerpo.isKinematic = true;
+        }
+    }
+
+    private bool terminada;
 
     // El record del modo, que solo puede subir. Lo llaman la muerte (antes de ofrecer
     // revivir) y Terminar.
@@ -236,6 +277,11 @@ public class PlayerHealth : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
+        // Muerto no agarra nada: la partida sigue andando detras de la derrota y una caja
+        // que cae encima del cuerpo lo curaria (los eventos de trigger llegan igual a los
+        // componentes apagados).
+        if (estaMuerto) return;
+
         // El jugador tiene dos colliders, asi que el mismo pickup dispara este
         // evento dos veces en el mismo paso de fisica, y Destroy es diferido: la
         // cura se aplicaba doble (50+100+100 clampeado a 200 en vez de 150). El

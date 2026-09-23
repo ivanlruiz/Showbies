@@ -46,7 +46,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
@@ -65,7 +65,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir)
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma el controller de los zombis), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado y PruebaMuerteAnimada (bancos en play), GrabarAnimaciones, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma el controller de los zombis), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada y PruebaDerrota (bancos en play), GrabarAnimaciones, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
 ```
@@ -89,7 +89,7 @@ Marketing/                  ← logo.py: el logo del juego dibujado en código, 
 | 4 | `Tutorial.unity` | tutorial jugable (opcional, desde el menú) |
 
 **Los índices están hardcodeados en el código** (`MainMenu.PlayGame` y `BotonModoLibre.Jugar` → 1, `MainMenu.GameModes` → 3,
-`MainMenu.Tutorial` → 4, `PlayerHealth` → 2, `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1,
+`MainMenu.Tutorial` → 4, `DerrotaEnLaPartida.EscenaDerrota` → 2 (en modo aditivo, ver La derrota encima de la partida), `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1,
 `TiendaMejoras.Jugar` → 1 o 3 y `TiendaMejoras.AbrirEnMenu` → 0, estos dos con las constantes `EscenaMenu`,
 `EscenaModoLibre` y `EscenaOleadas`).
 Reordenar Build Settings rompe la navegación en silencio.
@@ -862,7 +862,8 @@ Cuando el jugador muere y hay un video, la partida **no termina**: `PlayerHealth
 muerto en el lugar donde cayó. El mundo **se queda en blanco y negro** en 5 s mientras una ventanita chica y semitransparente
 (620 x 340 sobre un canvas de 1920 x 1080) muestra "¡HAS MUERTO!" y un botón con una claqueta y un anillo que
 se cierra en 10 s. Recién cuando el jugador dice que no,
-o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarPartida`, escena de derrota).
+o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarPartida` y la derrota, que va encima de la
+partida y la descongela: ver La derrota encima de la partida).
 
 - **Una sola vez por partida** (`PlayerHealth.yaRevivio`): con un revivir por video sin límite la partida no
   termina nunca y la tienda deja de tener sentido.
@@ -1181,6 +1182,46 @@ incluidos el menú y la derrota, donde no hay menú de pausa que lo haga.
 `"UltimoModo"` es lo que hace que "Retry" vuelva al modo que estabas jugando y no siempre al primero.
 La tecla R hace lo mismo por otro camino: recarga la escena activa.
 
+## La derrota encima de la partida
+
+Pedido de Ivan: al morir no se cambia de escena. **La pantalla de siempre (`Perdiste.unity`) aparece enseguida encima de
+la partida, y detrás de ella el mundo se va a blanco y negro en 5 s sin detenerse**: los zombis siguen caminando y
+dando zarpazos sobre el cuerpo. Lo arma `DerrotaEnLaPartida` (`Assets/Scripts/UI/`), que llama `PlayerHealth.Terminar`
+después de guardar todo, en vez del `LoadScene(2)` de antes.
+
+- **Salió así después de probarlo con Ivan, en dos vueltas.** La primera versión dejaba cinco segundos de gris sin
+  pantalla, la mostraba recién al final y con su fondo celeste tapaba el gris ("la pantalla y el gris", a la vez); y
+  congelaba el juego con `timeScale` en 0 ("que no se freeze el juego, que siga todo").
+- **Perdiste se carga en modo aditivo y sin tocarla.** `DerrotaEnLaPartida` prende `MenuPerdiste.SobreLaPartida` antes
+  de cargarla, y en su `Awake` `MenuPerdiste` apaga lo que sobra de su escena: **la cámara** (taparía el mundo con el
+  cielo), **el `AudioListener` y el `EventSystem`** (dos de cada uno se pelean y avisan en cada cuadro), **la luz** (la
+  escena trae su Directional Light, y cargada encima era un segundo sol: el mundo quedaba casi blanco en vez de gris) y
+  deja **el fondo transparente** (`PintarConTema.FijarOpacidad`, `opacidadDelFondo` en 0). Abierta sola, la escena es
+  la de siempre, y es lo que se carga si no hay cámara.
+- **El HUD del juego se apaga** (todos los canvas raíz de la escena): la UI en overlay no pasa por la cámara y quedaría
+  a color encima del gris.
+- **El gris es `FiltroBlancoYNegro`**, el mismo de la oferta de revivir, que se toma con `Tomar` (no vuelve a cero): si
+  se venía de rechazar el revivir, ya estaba gris o a mitad de camino y sigue desde ahí. Por eso `OfertaDeRevivir.
+  Rechazar` esconde la ventanita **sin soltar el filtro**; `DerrotaEnLaPartida` pone el `timeScale` en 1 (la oferta sí
+  congela, y una pausa de impacto a medias lo dejaría en cámara lenta).
+- **Que la partida siga andando obliga a que nada la cambie después de morir**, y todo mira `PlayerHealth.EstaMuerto`:
+  `PlayerHealth.QuedarseQuieto` apaga el control, los joysticks y el arma y deja el cuerpo kinematic (seguía caminando
+  con la última dirección, y si murió disparando el arma tiraba sola); `EnemyController.DanoZombi` no hace nada (las
+  balas y la granada que quedaron en el aire seguían matando, con puntos y monedas); las monedas no vuelan a un muerto
+  (`Moneda.Jugador`); las cajas no se agarran (los triggers llegan igual a los componentes apagados); el jefe no ataca
+  a un muerto (`JefePatrones.CercaDelJugador`: seguía embistiendo y rugiendo encima de la pantalla) y el modo libre no
+  sigue subiendo de nivel (`GeneradorZombis.Update`: sonaba el jingle cada 45 s). **Si agregás algo que cambie la
+  partida por su cuenta, que mire lo mismo.**
+- **El jugador no se destruye**, aunque antes sí: el `WaveManager` espera mientras el jugador esté muerto (por si
+  revive), y con el jugador destruido el bucle salía y la oleada se daba por completada después de morir, con su bono.
+- **`MenuPausa.JuegoCongelado` incluye la derrota** aunque el tiempo corra (el nombre es de cuando congelaba): corta el
+  input, la furia y la pausa de impacto, y la pausa no se abre, ni con Escape ni al perder el foco. Escape es de
+  `MenuPerdiste`, que vuelve al menú. Sus tres botones devuelven el `timeScale` a 1 antes de cargar.
+- **ShowBies > Pruebas > Derrota encima de la partida** mata al jugador con horda encima y verifica todo esto cuadro a
+  cuadro (19 chequeos, en `Builds/prueba_derrota.txt`); **Grabar la derrota** además la graba en
+  `Builds/derrota_video/`. El camino de rechazar el revivir no lo recorre: en el editor el proveedor es `Nulo` y no hay
+  oferta.
+
 ## Pausa y botón atrás
 
 `MenuPausa` (`Assets/Scripts/UI/`) vive en el prefab `Assets/Prefabs/UI/MenuPausa.prefab`, puesto en
@@ -1202,7 +1243,7 @@ click en otra ventana.
   `OnBackInvokedCallback` y reinyecta `KEYCODE_BACK` a la actividad. Deja de llegar si alguien pone
   `Input.backButtonLeavesApp = true`.
 - Cada pantalla decide qué hace Escape: en juego pausa y reanuda (`MenuPausa`), en la derrota vuelve al
-  menú (`MenuPerdiste`), y en el menú principal cierra primero la ventana de idioma, después la tienda, después el panel de modos o,
+  menú (`MenuPerdiste`; como va encima de la partida, `MenuPausa` la deja pasar), y en el menú principal cierra primero la ventana de idioma, después la tienda, después el panel de modos o,
   en el principal, pregunta si salir del juego sólo en móvil (`ConfirmarSalir`, la misma ventana del botón SALIR; lo
   maneja `BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del menú). `RestartScene` ya no cierra el
   juego con Escape: en PC, para salir está Quit.
@@ -1455,6 +1496,10 @@ enterrado.
   defecto y el teléfono iría mucho más lento, sin que nada lo delate. Después de correr cualquier banco en play,
   mirá el `git status` de `ProjectSettings/` y revertí lo que no hayas tocado a propósito. `TimeManager.asset` también
   se re-serializa a un formato nuevo (el `Fixed Timestep` pasa a un racional) sin cambiar de valor.
+
+- **Una escena cargada en modo aditivo trae todo lo suyo**: cámara, `AudioListener`, `EventSystem` y **luces**. La
+  derrota encima de la partida apaga las cuatro (ver esa sección); la luz fue la que costó ver, porque no avisa: sólo
+  sobreexpone el mundo de abajo.
 
 - **Con la ventana de Unity en segundo plano, el juego en play NO corre** (`Run In Background` está apagado en
   ProjectSettings). No corren `Update` ni `OnRenderImage`, no se renderizan frames y

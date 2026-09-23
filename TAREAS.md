@@ -174,6 +174,21 @@ teléfono.
 - Postergar el ataque al revivir y la línea plana (S).
 - Premios de misiones proporcionales al objetivo (lo de arriba).
 
+## La derrota encima de la partida (23/9)
+
+- [x] **Morir ya no cambia de escena** (pedido de Ivan): la pantalla de la derrota sale enseguida encima de la partida,
+  que sigue andando, y detrás el mundo se va a gris en 5 s. Salió en dos vueltas con él: primero dejaba cinco segundos
+  de gris sin pantalla y el fondo celeste tapaba el gris, y además congelaba el juego. Detalle en CLAUDE.md, La
+  derrota encima de la partida; lo verifica el banco `PruebaDerrota` (19 chequeos).
+- [ ] **Los textos chicos de la derrota quedan sobre la horda**: el cuerpo está en el centro de la pantalla y los
+  zombis se amontonan justo detrás de PUNTOS, RÉCORD y "te faltan N para…". Se leen por el contorno, pero en el
+  teléfono puede costar. Si molesta: una sombra suave detrás de esa columna, o correr la cámara para que el cuerpo
+  quede más abajo.
+- [ ] Al rechazar el revivir, el velo oscuro de la ventanita se va de golpe y el mundo gris se aclara un poco antes de
+  la derrota. Con el proveedor en `Nulo` (la versión de Play) no pasa; con la APK de prueba sí.
+- [ ] Mirar en el teléfono cuánto gasta la derrota: antes era una escena de pura UI y ahora la partida sigue andando
+  detrás, con el techo de zombis y el blit del gris, mientras el jugador decide.
+
 ## Animaciones de los zombis (22/9)
 
 - [x] **Los zombis te pegan y se mueren con su animación.** Hasta hoy el `Zombi.controller` tenía **un solo estado**

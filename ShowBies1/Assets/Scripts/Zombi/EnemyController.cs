@@ -663,6 +663,11 @@ public class EnemyController : MonoBehaviour
         // Uno apagado en el pool tampoco: el que cayo por el kill-Z no llego a morir.
         if (estaMuerto || !enUso || !(daño > 0f)) return;
 
+        // Con el jugador muerto nada le pega a un zombi: la partida sigue andando detras
+        // de la derrota, y las balas y la granada que quedaron en el aire seguian
+        // matando, con puntos, monedas y estadisticas despues de morir.
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
+
         IniciarVida();
         vidaActual -= daño;
         if (critico) Progreso.ContarCritico();

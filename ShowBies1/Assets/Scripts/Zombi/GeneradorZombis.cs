@@ -99,6 +99,10 @@ public class GeneradorZombis : MonoBehaviour
 
     private void Update()
     {
+        // Muerto, el nivel ya no cuenta: la partida sigue andando detras de la derrota, y
+        // sin esto cada 45 s sonaba el jingle del cartel y se guardaba el progreso.
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
+
         int nivel = NivelActual;
         if (nivel == nivelMostrado) return;
 

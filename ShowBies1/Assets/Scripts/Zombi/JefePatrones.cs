@@ -381,6 +381,11 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
 
     private bool CercaDelJugador()
     {
+        // A un muerto no lo ataca: la partida sigue andando detras de la derrota, y sin
+        // esto el jefe seguia embistiendo el cuerpo y rugiendo cada pocos segundos
+        // encima de la pantalla. Camina, nada mas.
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return false;
+
         Vector3 d = zombi.thePlayer.transform.position - transform.position;
         d.y = 0f;
         return d.sqrMagnitude <= distanciaParaAtacar * distanciaParaAtacar;

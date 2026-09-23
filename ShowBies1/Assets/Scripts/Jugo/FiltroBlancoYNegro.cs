@@ -34,6 +34,23 @@ public class FiltroBlancoYNegro : MonoBehaviour
         return filtro;
     }
 
+    // Como Enganchar, pero sin volver a cero: el que ya estaba sigue donde estaba. Lo
+    // usa la derrota, que toma el gris que dejo la oferta de revivir y lo termina, en
+    // vez de volver al color un cuadro y agrisar de nuevo.
+    public static FiltroBlancoYNegro Tomar(Camera camara)
+    {
+        if (camara == null) return null;
+
+        var filtro = camara.GetComponent<FiltroBlancoYNegro>();
+        if (filtro == null)
+        {
+            filtro = camara.gameObject.AddComponent<FiltroBlancoYNegro>();
+            filtro.cantidad = 0f;
+        }
+        filtro.enabled = true;
+        return filtro;
+    }
+
     public void Soltar()
     {
         cantidad = 0f;
