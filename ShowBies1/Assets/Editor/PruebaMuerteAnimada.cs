@@ -42,7 +42,9 @@ public static class PruebaMuerteAnimada
     }
 
     [MenuItem("ShowBies/Pruebas/Muerte animada (play)")]
-    static void Arrancar()
+    // Publico para poder correrlo por codigo: despues de una sesion de play el
+    // registro de menus tarda en rehacerse (ver la trampa en CLAUDE.md).
+    public static void Arrancar()
     {
         PlayerSettings.runInBackground = true;
         EditorSceneManager.OpenScene("Assets/Escenas/WaveMode.unity");

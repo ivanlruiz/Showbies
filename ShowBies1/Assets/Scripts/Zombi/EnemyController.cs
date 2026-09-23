@@ -47,8 +47,23 @@ public class EnemyController : MonoBehaviour
 
     [Header("Golpe")]
     [SerializeField] private float intervaloDeGolpe = 0.8f;   // segundos entre golpes mientras toca al jugador
+    [Tooltip("Segundos dentro de Z_attack_A en que la mano llega adelante del todo: el cuadro en que el zarpazo conecta. Se midio muestreando el clip (la mano derecha va hacia atras hasta 0,27 s, arriba en 0,30 y adelante del todo en 0,37); si se cambia el clip, hay que volver a medirlo.")]
+    [SerializeField] private float momentoDelImpacto = 0.37f;
+    [Tooltip("Cuanto se ve venir el golpe: lo que pasa entre que el zombi toca al jugador y el brazo baja. El clip arranca adelantado para que el impacto caiga justo ahi.")]
+    [SerializeField] private float anticipacionDelGolpe = 0.2f;
+    [Tooltip("Cuanto mas lejos que al empezar el zarpazo puede estar el jugador y que igual le llegue, en metros a escala 1: en el impacto el brazo se estira casi un metro.")]
+    [SerializeField] private float alcanceDelBrazo = 0.5f;
 
     private float proximoGolpe;
+
+    // El zarpazo en curso. Arranca al tocar al jugador y pega cuando el brazo baja, no
+    // al tocarlo: hasta el 23/9 el daño entraba en el acto y recien despues arrancaba
+    // la animacion, asi que el jugador veia el borde rojo y la vida bajar, y el brazo
+    // conectaba 0,37 s mas tarde, contra el aire.
+    private bool golpeEnCurso;
+    private float golpeImpactaEn;
+    private float danoDelGolpe;
+    private float distanciaAlEmpezar;
 
     [Header("Animacion")]
     [Tooltip("Ritmo del paso. Todos usan el modelo del zombi normal a distinta escala: el paso tiene que ir con lo que camina cada uno (el tanque pesado, el FASTER frenetico). Solo afecta a andar; atacar y morir van siempre a 1.")]
@@ -162,6 +177,12 @@ public class EnemyController : MonoBehaviour
     // salio de verdad. Con muchas muertes los dos ultimos tienen que parecerse; si
     // no, el sorteo de monedas o la regla del multiplicador menor a 1 estan mal.
     public static int MuertesConBotin { get; private set; }
+
+    // Cuantos zarpazos arrancaron y cuantos llegaron a pegar, para las pruebas. Con el
+    // jugador quieto tienen que ser casi los mismos: si no, el alcance del brazo quedo
+    // corto y los zombis erran sin que nadie esquive, que los haria mas debiles.
+    public static int ZarpazosEmpezados { get; private set; }
+    public static int ZarpazosQuePegaron { get; private set; }
     public static double MonedasEsperadas { get; private set; }
     public static double MonedasSoltadas { get; private set; }
 
@@ -183,6 +204,8 @@ public class EnemyController : MonoBehaviour
         jugadorCache = null;
         spritesDeSangre.Clear();
         MuertesConBotin = 0;
+        ZarpazosEmpezados = 0;
+        ZarpazosQuePegaron = 0;
         MonedasEsperadas = 0;
         MonedasSoltadas = 0;
     }
@@ -202,6 +225,15 @@ public class EnemyController : MonoBehaviour
     // Lo sube quien quiera un golpe mas fuerte por un rato: el jefe mientras carga
     // (JefePatrones). Vuelve a 1 en cada aparicion.
     [System.NonSerialized] public float multiplicadorGolpe = 1f;
+
+    // Pega en el acto al chocar, sin zarpazo: la embestida del jefe, donde el golpe es
+    // el cuerpo. A 16 m/s, esperar a que baje un brazo lo dejaria pasar de largo sin
+    // pegar, y la carga detecta que choco mirando GolpesDados. Lo prende y lo apaga
+    // JefePatrones junto con multiplicadorGolpe; vuelve a falso en cada aparicion.
+    [System.NonSerialized] public bool golpeaAlChocar;
+
+    // Para las pruebas: donde cae el impacto dentro del clip de atacar.
+    public float MomentoDelImpacto => momentoDelImpacto;
 
     // Cuantas veces le pego al jugador en esta aparicion. La carga del jefe la mira para
     // saber si llego a chocarlo, sin meterse en como pega un zombi.
@@ -315,6 +347,8 @@ public class EnemyController : MonoBehaviour
         estaMuerto = false;
         proximoGolpe = 0f;
         multiplicadorGolpe = 1f;
+        golpeaAlChocar = false;
+        golpeEnCurso = false;
         GolpesDados = 0;
         multiplicadorMonedas = 1f;
         monedaPrefab = null;
@@ -353,7 +387,6 @@ public class EnemyController : MonoBehaviour
             animador.speed = 1f;
             animador.SetFloat(idPaso, velocidadDeAnimacion);
             animador.SetFloat(idRitmo, ritmoDeAndar);
-            animador.ResetTrigger(idAtacar);
             animador.ResetTrigger(idMorir);
             animador.Play(idAndar, 0, 0f);
         }
@@ -379,6 +412,8 @@ public class EnemyController : MonoBehaviour
     // muerto y deja de ser jefe (o la barra de arriba seguiria ahi).
     private void DejarDeContar()
     {
+        // Matarlo a mitad del zarpazo es llegar a tiempo: el golpe que venia no entra.
+        golpeEnCurso = false;
         if (!enUso) return;
         enUso = false;
         EsJefe = false;
@@ -589,6 +624,8 @@ public class EnemyController : MonoBehaviour
        // Un cadaver no persigue a nadie ni se aplasta: solo se esta cayendo.
        if (desplomandose) return;
 
+       ResolverGolpe();
+
        if (thePlayer == null) return;
        if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform)) return;
 
@@ -794,11 +831,12 @@ public class EnemyController : MonoBehaviour
         return sprite;
     }
 
-    // Pega al tocar al jugador y despues cada intervaloDeGolpe mientras lo siga
-    // tocando. Antes pegaba solo en OnCollisionEnter: un zombi pegado al jugador
-    // no volvia a dañar hasta separarse, y el daño dependia de cuanto temblara la
-    // fisica. El intervalo ademas evita que los varios colliders del zombi y del
-    // jugador cuenten el mismo toque mas de una vez.
+    // Arranca un zarpazo al tocar al jugador y despues cada intervaloDeGolpe mientras
+    // lo siga tocando; el daño entra cuando el brazo baja (ver ResolverGolpe). Antes
+    // pegaba solo en OnCollisionEnter: un zombi pegado al jugador no volvia a dañar
+    // hasta separarse, y el daño dependia de cuanto temblara la fisica. El intervalo
+    // ademas evita que los varios colliders del zombi y del jugador cuenten el mismo
+    // toque mas de una vez.
     private void OnCollisionEnter(Collision collision)
     {
         Golpear(collision);
@@ -817,9 +855,55 @@ public class EnemyController : MonoBehaviour
         if (PlayerHealth.instance == null) return;
 
         proximoGolpe = Time.time + intervaloDeGolpe;
+
+        // La embestida del jefe pega con el cuerpo, en el acto.
+        if (golpeaAlChocar)
+        {
+            GolpesDados++;
+            PlayerHealth.instance.TakeDamage(DanoPorGolpe);
+            return;
+        }
+
+        // El zarpazo: el clip arranca adelantado para que la mano llegue adelante justo
+        // cuando entra el daño, anticipacionDelGolpe despues. El daño se anota ahora,
+        // con los multiplicadores que tiene al empezar.
+        float anticipacion = Mathf.Clamp(anticipacionDelGolpe, 0f, momentoDelImpacto);
+        danoDelGolpe = DanoPorGolpe;
+        distanciaAlEmpezar = DistanciaAlJugador();
+        golpeImpactaEn = Time.time + anticipacion;
+        golpeEnCurso = true;
+        ZarpazosEmpezados++;
+        foreach (var animador in animadores)
+            animador.CrossFadeInFixedTime(idAtacar, 0.05f, 0, momentoDelImpacto - anticipacion);
+    }
+
+    // El momento del impacto: pega si el jugador sigue al alcance del brazo. Si se fue
+    // mientras el zombi levantaba el brazo, lo esquivo. Es alcance y no contacto porque
+    // en el impacto la mano se estira casi un metro adelante: exigiendo que siga
+    // tocandolo habria zarpazos que se ven conectar y no hacen daño, que es el mismo
+    // problema que habia al reves.
+    private void ResolverGolpe()
+    {
+        if (!golpeEnCurso || Time.time < golpeImpactaEn) return;
+        golpeEnCurso = false;
+        if (estaMuerto || !enUso || PlayerHealth.instance == null) return;
+
+        float alcance = alcanceDelBrazo * Mathf.Max(0.1f, escalaBase.y);
+        if (DistanciaAlJugador() > distanciaAlEmpezar + alcance) return;
+
         GolpesDados++;
-        PlayerHealth.instance.TakeDamage(DanoPorGolpe);
-        foreach (var animador in animadores) animador.SetTrigger(idAtacar);
+        ZarpazosQuePegaron++;
+        PlayerHealth.instance.TakeDamage(danoDelGolpe);
+    }
+
+    // En el piso: la altura no cuenta, que el jugador y el zombi tienen el pivote en
+    // lugares distintos.
+    private float DistanciaAlJugador()
+    {
+        if (thePlayer == null) return float.MaxValue;
+        Vector3 d = thePlayer.transform.position - transform.position;
+        d.y = 0f;
+        return d.magnitude;
     }
 
     // Los que pueden animar de verdad. Se filtra una vez, en el Awake, y no en cada

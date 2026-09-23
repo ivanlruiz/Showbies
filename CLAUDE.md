@@ -412,8 +412,9 @@ Los cinco usan el mismo esqueleto (el modelo de ToonyTinyPeople, ver Rendimiento
 Controller, `Assets/Animaciones/Zombi.controller`, que **no se edita a mano**: lo arma **ShowBies > Animaciones >
 Armar el controller de los zombis** (`ConstructorAnimaciones`), que se vuelve a correr para cambiarlo. Tiene tres
 estados —**Andar** (el de entrada, un blend de `Z_walk_rm` a `Z_run_rm`), **Atacar** (`Z_attack_A`) y **Morir**
-(`Z_death_A`)— y cuatro parámetros: los floats `Paso` y `Ritmo` y los gatillos `Atacar` y `Morir`. Los nombres los
-comparte `EnemyController`, como hashes.
+(`Z_death_A`)— y tres parámetros: los floats `Paso` y `Ritmo` y el gatillo `Morir`. A **Atacar no se entra por una
+transición**: lo arranca el código (ver el zarpazo, abajo), y por eso no hay gatillo `Atacar`. Los nombres los comparte
+`EnemyController`, como hashes.
 
 Hasta el 22/9 el controller tenía **un solo estado** y un parámetro que no usaba nadie: los cinco zombis corrían para
 siempre, te pegaban corriendo y se morían corriendo, aunque `Z_attack_A` y `Z_death_A` estaban en el proyecto desde el
@@ -430,9 +431,21 @@ conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m
   en cámara lenta y no como algo pesado: el ciclo de correr tiene los dos pies en el aire, y a esa velocidad eso se lee
   como que el vídeo va lento. Caminar dura 1,00 s contra los 0,67 de correr, así que al pasar de uno al otro hay que
   reajustar el `Paso`.
-- **Pegar** lo dispara `EnemyController.Golpear`, donde ya estaba el daño, así que cubre a los cinco y al jefe. El clip
-  dura 1,33 s y `intervaloDeGolpe` es 0,8: pegado al jugador el zombi encadena golpes sin volver a correr, porque la
-  transición desde AnyState se reinicia a sí misma.
+- **El zarpazo: el daño entra cuando el brazo conecta, no al tocar.** Muestreando `Z_attack_A` (con
+  `AnimationMode.SampleAnimationClip` y la mano derecha del esqueleto), la mano va hacia atrás hasta los 0,27 s, llega
+  arriba en 0,30 y **adelante del todo en 0,37 s: ese es el impacto** (`momentoDelImpacto`). Al tocar al jugador,
+  `Golpear` arranca el clip con `CrossFadeInFixedTime` **adelantado**, para que queden `anticipacionDelGolpe` (0,2 s) de
+  brazo levantándose, anota el daño con los multiplicadores de ese momento y `ResolverGolpe` (en `FixedUpdate`) lo
+  aplica en el impacto **si el jugador sigue al alcance del brazo**: el que se aleja mientras el zombi levanta el brazo
+  lo esquiva (decidido con Ivan). Es alcance y no contacto porque en el impacto la mano se estira casi un metro:
+  exigiendo contacto habría zarpazos que se ven conectar y no hacen daño. Un zombi que muere a mitad del zarpazo no lo
+  termina (`DejarDeContar` lo corta). Hasta el 23/9 el daño entraba al tocar y recién después arrancaba el clip desde su
+  cuadro 0: se veía el borde rojo y la vida bajar, y el brazo conectaba 0,37 s más tarde, contra el aire (lo vio Ivan).
+  Con el jugador quieto pegan 9 de cada 10 zarpazos o más; los que erran son zombis empujados por la horda. El clip
+  dura 1,33 s y `intervaloDeGolpe` es 0,8, así que pegado al jugador encadena zarpazos sin volver a andar.
+- **La embestida del jefe no es un zarpazo**: pega con el cuerpo, en el acto al chocar (`golpeaAlChocar`, que
+  `JefePatrones` prende y apaga junto con `multiplicadorGolpe`). A 16 m/s, esperar a que baje el brazo lo dejaría pasar
+  de largo sin pegar, y la carga detecta que chocó mirando `GolpesDados`.
 - **Morir dejó de ser "apagar el objeto".** `EnemyController.Morir` saca al zombi de la cuenta en el acto
   (`DejarDeContar`: `ZombisVivos--`, deja de ser jefe, se esconde la barra) y **deja el GameObject prendido
   `duracionDeLaMuerte` (1,4 s)** mientras se desploma, con los colliders apagados y el Rigidbody kinematic; recién
@@ -456,8 +469,11 @@ conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m
 - **Quedan sin usar `Z_idle_A`** (quieto: no tiene dónde ir mientras los zombis vayan siempre derecho al jugador) y
   `Z_run` / `Z_walk` sin root motion (se usan los `_rm`, que es lo que ya hacía el controller viejo).
 - **Dos bancos en play lo verifican**, porque esto toca lo más fácil de romper en silencio del juego:
-  **ShowBies > Pruebas > Golpe animado** mide en qué estado está el Animator en el medio segundo posterior a cada golpe
-  (99 % en Atacar), y **Muerte animada** mata zombis por el mismo camino que una bala y comprueba que `ZombisVivos` no
+  **ShowBies > Pruebas > Golpe animado** mide, **en el momento en que entra cada golpe, en qué punto del clip de atacar
+  está el zombi** (tiene que ser el impacto: con el arreglo, 207 de 207 con un desfase de un cuadro; con el bug de
+  vuelta, 0 de 171 con 0,36 s, que es lo que tarda el brazo), cuántos zarpazos pegan con el jugador quieto
+  (`EnemyController.ZarpazosEmpezados` y `ZarpazosQuePegaron`) y en qué estado está el Animator después de pegar, y
+  **Muerte animada** mata zombis por el mismo camino que una bala y comprueba que `ZombisVivos` no
   se despegue ni un solo frame de los que de verdad están vivos, que los cadáveres se vayan solos y que la oleada siga
   terminando y avanzando. Escriben `Builds/prueba_golpe.txt` y `Builds/prueba_muerte.txt`.
 

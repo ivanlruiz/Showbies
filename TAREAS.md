@@ -196,14 +196,11 @@ teléfono.
   como algo pesado. Y `DanoZombi` recibe la dirección del golpe (la bala su forward, la granada del centro hacia
   afuera), así el cadáver sale despedido hacia allá en vez de caer siempre igual.
 - [ ] Sigue sin usar `Z_idle_A` (quieto), que no tiene dónde ir mientras los zombis vayan siempre derecho al jugador.
-- [ ] **El daño del zombi entra antes de que el brazo conecte** (lo vio Ivan el 23/9): `Golpear` resta la vida al
-  tocar al jugador y recién después arranca el clip, y en `Z_attack_A` la mano llega adelante recién a los 0,37 s. El
-  arreglo está escrito en la rama local **`zarpazo-en-el-impacto`** (`f0369a4`), **sin compilar ni probar**: el zarpazo
-  arranca al tocar, adelantado en el clip para dejar 0,2 s de anticipación, y el daño entra en el cuadro del impacto si
-  el jugador sigue al alcance del brazo (el que se aleja lo esquiva; decidido con Ivan). La embestida del jefe sigue
-  pegando al chocar. Falta: compilar, rearmar el controller, correr el banco del golpe —que ahora mide en qué punto del
-  clip estaba el zombi cuando entró el daño—, verificarlo volviendo a poner el bug y recién ahí llevarlo a `idiomas`.
-  Se paró porque había dos Unity abiertos (ShowBies y acapella-master) y la conexión saltaba entre los dos.
+- [x] **El daño del zombi entraba antes de que el brazo conectara** (lo vio Ivan el 23/9). **Arreglado el 23/9**: el
+  zarpazo arranca al tocar, adelantado en el clip para dejar 0,2 s de anticipación, y el daño entra en el cuadro del
+  impacto (0,37 s dentro de `Z_attack_A`, medido) si el jugador sigue al alcance del brazo. La embestida del jefe
+  sigue pegando al chocar. El banco del golpe lo verifica: 207 de 207 golpes en el impacto, y con el bug de vuelta 0 de
+  171.
 
 ## Revisión del 22/9 (diez agentes, en `REVISION.md`)
 

@@ -36,6 +36,14 @@ public static class PruebaGolpeAnimado
     static readonly int IdMorir = Animator.StringToHash("Morir");
 
     static int framesCorriendo, framesAtacando, framesMuriendo, framesEnOtra;
+
+    // Donde estaba el clip de atacar en el momento en que entro el daño. Tiene que
+    // estar en el impacto: hasta el 23/9 el daño entraba con el clip en el cuadro 0
+    // (y todavia en Andar) y el brazo conectaba 0,37 s despues.
+    const float ToleranciaDelImpacto = 0.12f;   // un par de cuadros: el banco mira un tick tarde
+    static int golpesEnElImpacto, golpesFueraDelImpacto;
+    static float peorDesfase;
+    static int zarpazosAlEmpezar, pegaronAlEmpezar;
     static int golpesVistos, zombisQuePegaron;
     static int vidaMinima = int.MaxValue;
 
@@ -52,7 +60,9 @@ public static class PruebaGolpeAnimado
     }
 
     [MenuItem("ShowBies/Pruebas/Golpe animado (play)")]
-    static void Arrancar()
+    // Publico para poder correrlo por codigo: despues de una sesion de play el
+    // registro de menus tarda en rehacerse (ver la trampa en CLAUDE.md).
+    public static void Arrancar()
     {
         // Sin esto, con la ventana de Unity atras el juego en play no corre y el
         // banco parece andar mientras no pasa nada.
@@ -73,6 +83,10 @@ public static class PruebaGolpeAnimado
         {
             SessionState.SetFloat(Clave + ".desde", (float)EditorApplication.timeSinceStartup);
             framesCorriendo = framesAtacando = framesMuriendo = framesEnOtra = 0;
+            golpesEnElImpacto = golpesFueraDelImpacto = 0;
+            peorDesfase = 0f;
+            zarpazosAlEmpezar = EnemyController.ZarpazosEmpezados;
+            pegaronAlEmpezar = EnemyController.ZarpazosQuePegaron;
             golpesVistos = zombisQuePegaron = 0;
             vidaMinima = int.MaxValue;
             golpesDeCadaUno.Clear();
@@ -106,6 +120,8 @@ public static class PruebaGolpeAnimado
             {
                 if (!ultimoGolpeDe.ContainsKey(zombi)) zombisQuePegaron++;
                 ultimoGolpeDe[zombi] = ahora;
+                // El jefe embistiendo pega con el cuerpo y sin zarpazo: no cuenta aca.
+                if (!zombi.EsJefe) MedirElImpacto(zombi);
             }
             golpesDeCadaUno[zombi] = zombi.GolpesDados;
 
@@ -125,6 +141,25 @@ public static class PruebaGolpeAnimado
         }
     }
 
+    // En que punto del clip de atacar estaba cuando entro el daño, contra donde tendria
+    // que estar: el cuadro en que la mano llega adelante del todo.
+    static void MedirElImpacto(EnemyController zombi)
+    {
+        foreach (var animador in zombi.GetComponentsInChildren<Animator>(true))
+        {
+            if (animador.runtimeAnimatorController == null) continue;
+            var info = animador.IsInTransition(0) ? animador.GetNextAnimatorStateInfo(0)
+                                                  : animador.GetCurrentAnimatorStateInfo(0);
+            float desfase = info.shortNameHash == IdAtacar
+                ? Mathf.Abs(info.normalizedTime * info.length - zombi.MomentoDelImpacto)
+                : float.MaxValue;
+            if (desfase <= ToleranciaDelImpacto) golpesEnElImpacto++;
+            else golpesFueraDelImpacto++;
+            if (desfase < float.MaxValue) peorDesfase = Mathf.Max(peorDesfase, desfase);
+            return;
+        }
+    }
+
     static void Terminar()
     {
         var inf = new StringBuilder();
@@ -133,6 +168,13 @@ public static class PruebaGolpeAnimado
         inf.AppendLine("Golpes que dio el zombi que mas pego: " + golpesVistos);
         inf.AppendLine("Zombis distintos que llegaron a pegar: " + zombisQuePegaron);
         inf.AppendLine("Vida mas baja del jugador: " + (vidaMinima == int.MaxValue ? "no se midio" : vidaMinima.ToString()));
+        inf.AppendLine();
+        int zarpazos = EnemyController.ZarpazosEmpezados - zarpazosAlEmpezar;
+        int pegaron = EnemyController.ZarpazosQuePegaron - pegaronAlEmpezar;
+        inf.AppendLine("Zarpazos que pegaron con el jugador quieto: " + pegaron + " de " + zarpazos);
+        inf.AppendLine("Golpes que entraron con el brazo en el impacto (+-" + ToleranciaDelImpacto + " s): "
+                       + golpesEnElImpacto + " de " + (golpesEnElImpacto + golpesFueraDelImpacto)
+                       + " (peor desfase " + peorDesfase.ToString("0.000") + " s)");
         inf.AppendLine();
         inf.AppendLine("Frames en el medio segundo POSTERIOR a cada golpe, por estado:");
         inf.AppendLine("  Atacar  " + framesAtacando);
@@ -147,12 +189,24 @@ public static class PruebaGolpeAnimado
         // El arranque de la transicion (0,06 s) y los que mueren de un tiro justo
         // despues de pegar caen fuera, asi que no se pide el 100 %.
         bool casiSiempre = total > 0 && framesAtacando >= total * 0.9f;
+        int golpesMedidos = golpesEnElImpacto + golpesFueraDelImpacto;
+        bool enElImpacto = golpesMedidos > 0 && golpesEnElImpacto >= golpesMedidos * 0.9f;
+        // El jugador no se mueve: si un zarpazo erra, es que el alcance quedo corto (o que
+        // otro zombi lo empujo, que pasa pero poco). Con menos de 9 de cada 10 los zombis
+        // pegarian bastante menos que antes, y eso no se decidio.
+        int zarpazosDelBanco = EnemyController.ZarpazosEmpezados - zarpazosAlEmpezar;
+        int pegaronDelBanco = EnemyController.ZarpazosQuePegaron - pegaronAlEmpezar;
+        bool alcanzan = zarpazosDelBanco > 0 && pegaronDelBanco >= zarpazosDelBanco * 0.9f;
         inf.AppendLine(pego ? "OK  los zombis llegaron y pegaron" : "FALLA  ningun zombi llego a pegar: el banco no midio nada");
         inf.AppendLine(ataco ? "OK  el estado Atacar se reproduce" : "FALLA  nunca entro en Atacar");
         inf.AppendLine(casiSiempre ? "OK  despues de pegar esta atacando (" + (total == 0 ? 0 : framesAtacando * 100 / total) + " % de los frames)"
                                    : "FALLA  despues de pegar no esta atacando (" + (total == 0 ? 0 : framesAtacando * 100 / total) + " % de los frames)");
+        inf.AppendLine(alcanzan ? "OK  con el jugador quieto los zarpazos pegan: el alcance no quedo corto"
+                                : "FALLA  con el jugador quieto erran zarpazos: el alcance quedo corto");
+        inf.AppendLine(enElImpacto ? "OK  el daño entra cuando el brazo conecta, no antes"
+                                   : "FALLA  el daño entra fuera del impacto: el brazo baja antes o despues del golpe");
         inf.AppendLine();
-        inf.AppendLine("RESULTADO: " + (pego && ataco && casiSiempre ? "TODO OK" : "HAY FALLAS"));
+        inf.AppendLine("RESULTADO: " + (pego && ataco && casiSiempre && enElImpacto && alcanzan ? "TODO OK" : "HAY FALLAS"));
 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(Ruta)));
         File.WriteAllText(Ruta, inf.ToString());

@@ -168,7 +168,11 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         // Que no se lo lleve al pool torcido: la aparicion siguiente sale de aca.
         inclinacion = balanceo = altura = 0f;
         if (modelo != null) modelo.SetLocalPositionAndRotation(posicionBaseDelModelo, rotacionBaseDelModelo);
-        if (zombi != null) zombi.multiplicadorGolpe = 1f;
+        if (zombi != null)
+        {
+            zombi.multiplicadorGolpe = 1f;
+            zombi.golpeaAlChocar = false;
+        }
     }
 
     private void OnDestroy()
@@ -309,6 +313,9 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                     // EnemyController, con su intervalo, asi no hay dos daños.
                     golpesAlCargar = zombi.GolpesDados;
                     zombi.multiplicadorGolpe = golpeDeLaCarga;
+                    // Embistiendo pega con el cuerpo y en el acto, no con un zarpazo:
+                    // a 16 m/s, esperar a que baje el brazo lo dejaria pasar de largo.
+                    zombi.golpeaAlChocar = true;
                     CamaraJugador.Temblar(0.3f);
                 }
                 break;
@@ -363,7 +370,11 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         {
             estado = Estado.Persiguiendo;
             if (linea != null) linea.enabled = false;
-            if (zombi != null) zombi.multiplicadorGolpe = 1f;
+            if (zombi != null)
+            {
+                zombi.multiplicadorGolpe = 1f;
+                zombi.golpeaAlChocar = false;
+            }
         }
         proximoAtaque = Mathf.Max(proximoAtaque, Time.time + Mathf.Max(0f, segundos));
     }
@@ -382,6 +393,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         estado = Estado.Aturdido;
         desde = ahora;
         zombi.multiplicadorGolpe = 1f;
+        zombi.golpeaAlChocar = false;
         rotacionAlAturdirse = transform.rotation;
         rumboAlAturdirse = transform.eulerAngles.y;
     }
@@ -393,6 +405,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         // no es el mismo angulo.
         transform.rotation = Quaternion.Euler(0f, rumboAlAturdirse, 0f);
         zombi.multiplicadorGolpe = 1f;
+        zombi.golpeaAlChocar = false;
         tocaCarga = !tocaCarga;
         proximoAtaque = ahora + cadaCuanto * (enFuria ? ritmoEnFuria : 1f);
     }

@@ -28,7 +28,6 @@ public static class ConstructorAnimaciones
     // Los nombres los comparte EnemyController: si cambian, cambian en los dos lados.
     public const string ParametroPaso = "Paso";
     public const string ParametroRitmo = "Ritmo";
-    public const string GatilloAtacar = "Atacar";
     public const string GatilloMorir = "Morir";
 
     // Ver el estado Morir, mas abajo.
@@ -101,7 +100,6 @@ public static class ConstructorAnimaciones
         parametros[0].defaultFloat = 1f;
         parametros[1].defaultFloat = 1f;
         ctrl.parameters = parametros;
-        ctrl.AddParameter(GatilloAtacar, AnimatorControllerParameterType.Trigger);
         ctrl.AddParameter(GatilloMorir, AnimatorControllerParameterType.Trigger);
 
         // Andar es un blend de caminar a correr, y no dos estados con su transicion:
@@ -144,16 +142,11 @@ public static class ConstructorAnimaciones
         // telefono cuando una granada mata a diez de una.
         eMorir.speed = VelocidadDeLaMuerte;
 
-        // Desde cualquier estado, porque el zombi puede estar corriendo o encadenando
-        // golpes. canTransitionToSelf: pegar de nuevo reinicia el golpe en vez de
-        // esperar a que termine el anterior, que con intervaloDeGolpe (0,8 s) mas
-        // corto que el clip es lo que pasa siempre que el zombi esta encima.
-        var aAtacar = maquina.AddAnyStateTransition(eAtacar);
-        aAtacar.AddCondition(AnimatorConditionMode.If, 0f, GatilloAtacar);
-        aAtacar.hasExitTime = false;
-        aAtacar.hasFixedDuration = true;
-        aAtacar.duration = 0.06f;
-        aAtacar.canTransitionToSelf = true;
+        // A Atacar no se entra por una transicion: lo arranca EnemyController con
+        // CrossFadeInFixedTime, adelantado dentro del clip para que la mano llegue
+        // adelante justo cuando entra el daño. Con un gatillo el clip empezaba
+        // siempre en su cuadro 0, y el zarpazo conectaba 0,37 s despues del daño.
+        // Por lo mismo no hay parametro Atacar.
 
         // Vuelve a andar antes de que termine del todo: el ultimo tramo del clip es
         // el brazo bajando y se mezcla bien con el paso.
