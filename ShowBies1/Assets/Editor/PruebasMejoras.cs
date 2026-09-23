@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -198,6 +199,10 @@ public static class PruebasMejoras
             ProbarDanoAlJugador(informe);
             ProbarFaroles(informe);
             ProbarGrisDePocaVida(informe);
+            ProbarZombisPorPartida(informe);
+            ProbarAvisosSinPisarse(informe);
+            ProbarVidriosDelMenu(informe);
+            ProbarJefeAlTerminar(informe);
 
             // Todo lo que toca Progreso va contra una carpeta temporal, y el
             // finally devuelve el progreso a persistentDataPath pase lo que pase.
@@ -223,6 +228,7 @@ public static class PruebasMejoras
                         ProbarGetters(informe, catalogo);
                         ProbarCompras(informe, catalogo, temporales);
                         ProbarComprasPosibles(informe);
+                        ProbarTarjetaConTema(informe, catalogo);
                     }
                 }
             }
@@ -1004,6 +1010,242 @@ public static class PruebasMejoras
                       gris != null && Mathf.Approximately(gris.desde, 0.25f) && Mathf.Approximately(gris.maximo, 0.5f));
     }
 
+    // Abre una escena del juego para leerla, si no estaba abierta, y la cierra despues sin
+    // guardar: las pruebas no escriben escenas.
+    static void LeerEscena(string ruta, Action<Scene> leer)
+    {
+        Scene escena = SceneManager.GetSceneByPath(ruta);
+        bool abrio = false;
+        if (!escena.isLoaded)
+        {
+            escena = EditorSceneManager.OpenScene(ruta, OpenSceneMode.Additive);
+            abrio = true;
+        }
+        try
+        {
+            leer(escena);
+        }
+        finally
+        {
+            if (abrio) EditorSceneManager.CloseScene(escena, true);
+        }
+    }
+
+    static T Buscar<T>(Scene escena) where T : Component
+    {
+        foreach (var raiz in escena.GetRootGameObjects())
+        {
+            var componente = raiz.GetComponentInChildren<T>(true);
+            if (componente != null) return componente;
+        }
+        return null;
+    }
+
+    // Economia.ZombisPorPartida contra la suma de lo que saca de verdad el WaveManager de
+    // WaveMode, oleada por oleada. Hasta el 23/9 le faltaban 2m zombis: el comentario decia
+    // la suma y la cuenta era otra.
+    static void ProbarZombisPorPartida(Informe inf)
+    {
+        int zombisBase = -1, zombisPorOleada = -1;
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (oleadas == null) return;
+            zombisBase = oleadas.zombisBase;
+            zombisPorOleada = oleadas.zombisPorOleada;
+        });
+        if (!inf.Verdadero("economia: WaveMode tiene su WaveManager", zombisBase >= 0)) return;
+
+        bool iguales = true;
+        string cual = "";
+        foreach (int m in new[] { 3, 10, 25, 45 })
+        {
+            double suma = 0;
+            for (int n = 1; n <= m; n++) suma += zombisBase + zombisPorOleada * n;
+            if (Math.Abs(Economia.ZombisPorPartida(m) - suma) < 1e-9) continue;
+            iguales = false;
+            cual += m + ": " + Economia.ZombisPorPartida(m) + " en vez de " + suma + "; ";
+        }
+        inf.Verdadero("economia: ZombisPorPartida es la suma de lo que saca cada oleada" + (iguales ? "" : " (" + cual.Trim() + ")"), iguales);
+    }
+
+    // Los avisos que pueden salir a la vez no se pisan: el de mision cumplida con el cartel
+    // de la oleada ("completa N oleadas" se cumple al terminar una, que es cuando sale el de
+    // la siguiente), con el del capitulo (en la 10, 20 y 30 tambien) y con la barra del
+    // jefe, y ninguno con la vida, abajo. La franja de cada uno sale de su letra y del alto
+    // de linea de la fuente, en 16:9 y en 20:9. Hasta el 23/9 el de mision iba en y = 300 y
+    // se pisaba con el del capitulo y con la barra del jefe.
+    static void ProbarAvisosSinPisarse(Informe inf)
+    {
+        var fuente = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>("Assets/Fuentes/Bangers SDF.asset");
+        if (!inf.Verdadero("avisos: esta la fuente", fuente != null && fuente.faceInfo.pointSize > 0)) return;
+        float linea = fuente.faceInfo.lineHeight / fuente.faceInfo.pointSize;
+
+        float yOleada = float.NaN, letraOleada = 0f, letraVida = 0f;
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (oleadas != null && oleadas.cartelOleada != null)
+            {
+                var texto = oleadas.cartelOleada.GetComponentInChildren<TMPro.TMP_Text>(true);
+                yOleada = ((RectTransform)oleadas.cartelOleada.transform).anchoredPosition.y;
+                letraOleada = texto != null ? texto.fontSize : 0f;
+            }
+            var vida = Buscar<PlayerHealth>(escena);
+            if (vida != null && vida.healthTMP != null)
+                letraVida = vida.healthTMP.enableAutoSizing ? vida.healthTMP.fontSizeMax : vida.healthTMP.fontSize;
+        });
+        var pausa = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/MenuPausa.prefab");
+        var barra = pausa != null ? pausa.GetComponentInChildren<BarraDelJefe>(true) : null;
+        if (!inf.Verdadero("avisos: estan el cartel de la oleada, la vida y la barra del jefe",
+                           !float.IsNaN(yOleada) && letraOleada > 0f && letraVida > 0f && barra != null)) return;
+
+        Vector2 mision = Franja(AvisoDeMisiones.Altura, AvisoDeMisiones.Letra * (1f + AvisoDeMisiones.LetraDelDetalle) * linea);
+        Vector2 capitulo = Franja(CapitulosDeEscenario.AlturaDelCartel, CapitulosDeEscenario.LetraDelCartel * (1f + CapitulosDeEscenario.LetraDelNombre) * linea);
+        Vector2 oleada = Franja(yOleada, letraOleada * linea);
+
+        foreach (var pantalla in new[] { new Vector2(16f, 9f), new Vector2(20f, 9f) })
+        {
+            float medioAlto = MedioAltoDelCanvas(pantalla);
+            // La barra cuelga del borde de arriba; la vida va apoyada en el de abajo.
+            var jefe = new Vector2(medioAlto - barra.PisoDesdeArriba, medioAlto - barra.TechoDesdeArriba);
+            var vidaAbajo = new Vector2(-medioAlto, -medioAlto + letraVida * linea);
+            string en = " (" + pantalla.x + ":" + pantalla.y + ")";
+            inf.Verdadero("avisos: el de mision no pisa el cartel de la oleada" + en, !SePisan(mision, oleada));
+            inf.Verdadero("avisos: el de mision no pisa el del capitulo" + en, !SePisan(mision, capitulo));
+            inf.Verdadero("avisos: el de mision no pisa la barra del jefe" + en, !SePisan(mision, jefe));
+            inf.Verdadero("avisos: el de mision no pisa la vida" + en, !SePisan(mision, vidaAbajo));
+            inf.Verdadero("avisos: el del capitulo no pisa el de la oleada" + en, !SePisan(capitulo, oleada));
+        }
+    }
+
+    // De donde a donde va un texto centrado en y, en unidades del canvas.
+    static Vector2 Franja(float centro, float alto)
+    {
+        return new Vector2(centro - alto * 0.5f, centro + alto * 0.5f);
+    }
+
+    static bool SePisan(Vector2 a, Vector2 b)
+    {
+        return a.x < b.y && b.x < a.y;
+    }
+
+    // El medio alto de los canvas de las escenas de juego, en sus unidades, en una pantalla
+    // de esa proporcion: con match 0,5 la escala es la raiz del ancho por el alto sobre el de
+    // 1920 x 1080 (el del HUD tiene la referencia en vertical, que da lo mismo).
+    static float MedioAltoDelCanvas(Vector2 proporcion)
+    {
+        float alto = 1080f, ancho = alto * proporcion.x / proporcion.y;
+        float escala = Mathf.Sqrt(ancho * alto / (1920f * 1080f));
+        return alto / escala * 0.5f;
+    }
+
+    // Los botones de vidrio del menu cambian con el tema: todo Image del menu con el color
+    // de vidrio lleva PintarConTema con el papel Vidrio. Hasta el 23/9 el globo del idioma no
+    // lo tenia, y sus tres copias (el engranaje, las misiones y el bestiario) tampoco: en
+    // oscuro quedaban discos verde oscuro sobre la noche, y se leia solo el icono.
+    static void ProbarVidriosDelMenu(Informe inf)
+    {
+        var vidrio = new Color(0.06f, 0.12f, 0.05f, 0.45f);
+        int conVidrio = 0, sinPapel = 0;
+        string cuales = "";
+        LeerEscena("Assets/Escenas/Menu.unity", escena =>
+        {
+            foreach (var raiz in escena.GetRootGameObjects())
+            {
+                foreach (var imagen in raiz.GetComponentsInChildren<UnityEngine.UI.Image>(true))
+                {
+                    Color c = imagen.color;
+                    if (Mathf.Abs(c.r - vidrio.r) > 0.01f || Mathf.Abs(c.g - vidrio.g) > 0.01f ||
+                        Mathf.Abs(c.b - vidrio.b) > 0.01f || Mathf.Abs(c.a - vidrio.a) > 0.01f) continue;
+                    conVidrio++;
+                    var papel = imagen.GetComponent<PintarConTema>();
+                    if (papel != null && papel.rol == RolDeTema.Vidrio) continue;
+                    sinPapel++;
+                    cuales += imagen.transform.parent != null ? imagen.transform.parent.parent.name : imagen.name;
+                    cuales += " ";
+                }
+            }
+        });
+        inf.Verdadero("tema: el menu tiene botones de vidrio", conVidrio > 0);
+        inf.Verdadero("tema: todos los botones de vidrio del menu cambian con el tema" + (sinPapel == 0 ? "" : " (" + cuales.Trim() + ")"), sinPapel == 0);
+    }
+
+    // El valor siguiente de la tarjeta de mejora cambia con el tema, como la flecha de al
+    // lado: son el mismo verde. Hasta el 23/9 Refrescar le ponia el color claro en cada
+    // refresco, y en oscuro la flecha iba verde claro y el numero se quedaba en el oscuro.
+    // En una escena de vista previa, para no tocar la abierta.
+    static void ProbarTarjetaConTema(Informe inf, CatalogoMejoras c)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/TarjetaMejora.prefab");
+        if (!inf.Verdadero("tarjeta: esta el prefab", prefab != null)) return;
+        var escena = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var tarjeta = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, escena)).GetComponent<TarjetaMejora>();
+            var flecha = tarjeta != null && tarjeta.flecha != null ? tarjeta.flecha.GetComponentInChildren<PintarConTema>(true) : null;
+            inf.Verdadero("tarjeta: el valor siguiente es el mismo verde que la flecha",
+                          flecha != null && flecha.rol == RolDeTema.Acento && flecha.colorClaro == tarjeta.colorValorSiguiente);
+
+            Tema.UsarParaPruebas(true);
+            // El daño no tiene tope: siempre muestra el valor siguiente.
+            tarjeta.Configurar(c.danoBala, null, 0);
+            Color oscuro = Tema.Elegir(tarjeta.colorValorSiguiente, RolDeTema.Acento);
+            inf.Verdadero("tarjeta: en oscuro el valor siguiente va con el tema",
+                          tarjeta.valorSiguiente != null && tarjeta.valorSiguiente.color == oscuro && oscuro != tarjeta.colorValorSiguiente);
+        }
+        finally
+        {
+            Tema.UsarParaPruebas(null);
+            EditorSceneManager.ClosePreviewScene(escena);
+        }
+    }
+
+    // Al terminar de invocar el jefe no gira: el rumbo que se guarda al aturdirse es el de la
+    // carga anterior. Hasta el 23/9 Terminar lo aplicaba siempre, y al salir de invocar el
+    // jefe pegaba un salto de giro hasta el paso de fisica siguiente. Al terminar el
+    // aturdimiento si se endereza. Los estados son privados: por reflexion, con el prefab en
+    // una escena de vista previa (sin Awake, asi que el EnemyController se le pone a mano).
+    static void ProbarJefeAlTerminar(Informe inf)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
+        if (!inf.Verdadero("jefe: esta el prefab", prefab != null)) return;
+        const System.Reflection.BindingFlags Privado = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        var tipo = typeof(JefePatrones);
+        var campoEstado = tipo.GetField("estado", Privado);
+        var campoZombi = tipo.GetField("zombi", Privado);
+        var campoRumbo = tipo.GetField("rumboAlAturdirse", Privado);
+        var terminar = tipo.GetMethod("Terminar", Privado);
+        var estados = tipo.GetNestedType("Estado", System.Reflection.BindingFlags.NonPublic);
+        if (!inf.Verdadero("jefe: se llega a sus estados", campoEstado != null && campoZombi != null && campoRumbo != null && terminar != null && estados != null)) return;
+
+        var escena = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var jefe = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, escena)).GetComponent<JefePatrones>();
+            campoZombi.SetValue(jefe, jefe.GetComponent<EnemyController>());
+
+            // Saliendo de invocar: mira a 30 grados y lo guardado es de otra carga.
+            jefe.transform.rotation = Quaternion.Euler(0f, 30f, 0f);
+            campoRumbo.SetValue(jefe, 200f);
+            campoEstado.SetValue(jefe, Enum.Parse(estados, "AvisandoInvocar"));
+            terminar.Invoke(jefe, new object[] { 10f });
+            inf.Cerca("jefe: al terminar de invocar no gira", 30, jefe.transform.eulerAngles.y, 0.01);
+
+            // Saliendo del aturdimiento: se saca el tambaleo y vuelve al rumbo de la carga.
+            jefe.transform.rotation = Quaternion.Euler(0f, 90f, 9f);
+            campoRumbo.SetValue(jefe, 90f);
+            campoEstado.SetValue(jefe, Enum.Parse(estados, "Aturdido"));
+            terminar.Invoke(jefe, new object[] { 10f });
+            inf.Verdadero("jefe: al terminar el aturdimiento se endereza",
+                          Quaternion.Angle(jefe.transform.rotation, Quaternion.Euler(0f, 90f, 0f)) < 0.01f);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(escena);
+        }
+    }
+
     static void ProbarGuardado(Informe inf)
     {
         // La oleada a medias: un JSON sin los campos la lee como 0, se guarda y se
@@ -1761,8 +2003,9 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: con la furia comprada alguna la pide", hayFuria);
         inf.Verdadero("misiones: todos los objetivos son positivos", objetivosBien);
         inf.Cerca("economia: numeros redondos", 1250, Economia.Redondo(1234), 1e-9);
-        inf.Cerca("misiones: premio facil sin oleadas", 15, MisionesDiarias.Monto(0, 0), 1e-9);
-        inf.Cerca("misiones: premio dificil con oleada 10", 1300, MisionesDiarias.Monto(2, 10), 1e-9);
+        // Con la suma de zombis corregida (Economia.ZombisPorPartida, 23/9): eran 15 y 1300.
+        inf.Cerca("misiones: premio facil sin oleadas", 20, MisionesDiarias.Monto(0, 0), 1e-9);
+        inf.Cerca("misiones: premio dificil con oleada 10", 1400, MisionesDiarias.Monto(2, 10), 1e-9);
         ProbarPremiosDeMisiones(inf);
 
         // Con el progreso: una de matar 3, se matan 3, se cobra una sola vez y se guarda.
@@ -1804,7 +2047,8 @@ public static class PruebasMejoras
         inf.Cerca("cofre: paga lo que dice la ventana", esperadoCofre, MisionesDiarias.CobrarCofre(), 1e-9);
         inf.Cerca("cofre: no paga dos veces", 0, MisionesDiarias.CobrarCofre(), 1e-9);
         inf.Verdadero("cofre: queda cobrado", MisionesDiarias.CofreCobrado && MisionesDiarias.PorCobrar == 0);
-        inf.Cerca("cofre: con oleada 10 paga mas", 940, MisionesDiarias.MontoCofre(10), 1e-9);
+        // Era 940 hasta que la suma de zombis se corrigio (23/9).
+        inf.Cerca("cofre: con oleada 10 paga mas", 1000, MisionesDiarias.MontoCofre(10), 1e-9);
 
         int diaGuardado = estado.dia;
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
@@ -1849,6 +2093,29 @@ public static class PruebasMejoras
                   esperadoDeAyer, Progreso.Monedas - antesDeMedianoche, 1e-9);
         inf.Verdadero("misiones: y despues hay tres nuevas sin cobrar",
                       MisionesDiarias.DeHoy.Count == 3 && MisionesDiarias.Cobradas == 0 && !MisionesDiarias.CofreCobrado);
+
+        // Un progreso de antes de la marca (sin el campo, que vale -1) que se abre con el dia
+        // ya vencido: lo cumplido sin cobrar se paga con la mejor oleada, no con la 0. Hasta el
+        // 23/9 la marca se completaba solo si seguia siendo el mismo dia, que se mira despues
+        // del cierre: una dificil de la oleada 45 pagaba unas 160 monedas en vez de ~77.600.
+        EmpezarCaso("{\"version\":4,\"monedas\":0}", null);
+        Progreso.RegistrarOleadaCompletada(45);
+        MisionesDiarias.Asegurar();
+        var sinMarca = Progreso.Misiones;
+        sinMarca.dia = Progreso.DiaDeHoy() - 1;
+        sinMarca.mejorOleadaAlArmar = -1;
+        sinMarca.cofreCobrado = true;
+        sinMarca.lista = new List<MisionDelDia>
+        {
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 0, objetivo = 1, cobrada = true },
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 1, objetivo = 1, cobrada = true },
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 2, objetivo = 1, inicio = Progreso.MatadosEnTotal },
+        };
+        Progreso.ContarMuerte("ZombiNormal", false);
+        double antesDelCierre = Progreso.Monedas;
+        MisionesDiarias.Asegurar();
+        inf.Cerca("misiones: sin la marca, a medianoche paga con la mejor oleada y no con la 0",
+                  MisionesDiarias.Monto(2, 45), Progreso.Monedas - antesDelCierre, 1e-9);
     }
 
     // Los premios de las misiones salen de lo que cuesta cumplirlas, no de un monto fijo:
@@ -2171,7 +2438,8 @@ public static class PruebasMejoras
         inf.Cerca("diaria: monto dia 1 sin oleadas", 150, RecompensaDiaria.Monto(1, 0), 1e-9);
         inf.Cerca("diaria: monto dia 7", 2000, RecompensaDiaria.Monto(7, 0), 1e-9);
         inf.Cerca("diaria: monto dia 12 queda en el 7", 2000, RecompensaDiaria.Monto(12, 0), 1e-9);
-        inf.Cerca("diaria: monto con mejor oleada 10", 440, RecompensaDiaria.Monto(3, 10), 1e-9);
+        // Era 440 hasta que la suma de zombis se corrigio (23/9).
+        inf.Cerca("diaria: monto con mejor oleada 10", 470, RecompensaDiaria.Monto(3, 10), 1e-9);
         ProbarMontosDeLaDiaria(inf);
 
         EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);

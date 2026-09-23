@@ -215,7 +215,10 @@ public class TarjetaMejora : MonoBehaviour
         {
             valorSiguiente.gameObject.SetActive(true);
             valorSiguiente.text = Mejora.TextoValor(n + 1);
-            valorSiguiente.color = colorValorSiguiente;
+            // Con el tema: es el mismo verde que la flecha de al lado, que tiene el papel
+            // Acento, y en oscuro la flecha pasaba a verde claro y el numero se quedaba en
+            // el oscuro de siempre.
+            valorSiguiente.color = Tema.Elegir(colorValorSiguiente, RolDeTema.Acento);
         }
         ActivarSiHay(grupoPrecio, true);
         double costo = Mejora.Precio(n);

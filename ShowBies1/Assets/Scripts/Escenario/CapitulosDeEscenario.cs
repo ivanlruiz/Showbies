@@ -74,6 +74,12 @@ public class CapitulosDeEscenario : MonoBehaviour
 
     private const float Hundido = 2.5f;      // cuanto se hunde el decorado para salir del piso
 
+    // El cartel del capitulo: donde sale, desde el centro de la pantalla, y su letra. La
+    // prueba de logica mide que no se pise con los que pueden salir a la vez.
+    public const float AlturaDelCartel = 385f;
+    public const float LetraDelCartel = 84f;
+    public const float LetraDelNombre = 0.6f;   // del titulo
+
     // Lo puesto de cada escenario: se arma la primera vez que toca y se reusa.
     private class Puesta
     {
@@ -352,14 +358,14 @@ public class CapitulosDeEscenario : MonoBehaviour
         rt.SetParent(canvas.transform, false);
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
         // Arriba de todo: al medio sale el cartel de la oleada, al mismo tiempo.
-        rt.anchoredPosition = new Vector2(0f, 385f);
+        rt.anchoredPosition = new Vector2(0f, AlturaDelCartel);
         rt.sizeDelta = new Vector2(1400f, 200f);
         cartel = go.GetComponent<TextMeshProUGUI>();
         if (fuente != null) cartel.font = fuente;
         if (materialContorno != null) cartel.fontSharedMaterial = materialContorno;
         string nombre = Textos.De(escenarios[indiceEscenario].idTexto);
-        cartel.text = Textos.Formato("capitulo_titulo", capitulo + 1) + "\n<size=60%>" + nombre + "</size>";
-        cartel.fontSize = 84f;
+        cartel.text = Textos.Formato("capitulo_titulo", capitulo + 1) + "\n<size=" + Mathf.RoundToInt(LetraDelNombre * 100f) + "%>" + nombre + "</size>";
+        cartel.fontSize = LetraDelCartel;
         cartel.color = colorCartel;
         cartel.alignment = TextAlignmentOptions.Center;
         cartel.textWrappingMode = TextWrappingModes.NoWrap;

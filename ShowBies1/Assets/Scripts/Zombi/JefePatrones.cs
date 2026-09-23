@@ -156,6 +156,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         proximoAtaque = Time.time + esperaInicial;
         tocaCarga = true;
         enFuria = false;
+        rumboAlAturdirse = 0f;
+        rotacionAlAturdirse = Quaternion.identity;
         if (linea != null) linea.enabled = false;
         inclinacion = balanceo = altura = 0f;
         if (modelo != null) modelo.SetLocalPositionAndRotation(posicionBaseDelModelo, rotacionBaseDelModelo);
@@ -415,10 +417,12 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
 
     private void Terminar(float ahora)
     {
+        // Saliendo del aturdimiento, el rumbo de antes del tambaleo: con el balanceo en Z
+        // puesto, eulerAngles.y ya no es el mismo angulo. Solo ahi: saliendo de invocar,
+        // rumboAlAturdirse es el de la carga anterior, de hace unos nueve segundos, y hasta
+        // el 23/9 el jefe pegaba un salto de giro hasta el paso de fisica siguiente.
+        if (estado == Estado.Aturdido) transform.rotation = Quaternion.Euler(0f, rumboAlAturdirse, 0f);
         estado = Estado.Persiguiendo;
-        // El rumbo de antes del tambaleo: con el balanceo en Z puesto, eulerAngles.y ya
-        // no es el mismo angulo.
-        transform.rotation = Quaternion.Euler(0f, rumboAlAturdirse, 0f);
         zombi.multiplicadorGolpe = 1f;
         zombi.golpeaAlChocar = false;
         tocaCarga = !tocaCarga;

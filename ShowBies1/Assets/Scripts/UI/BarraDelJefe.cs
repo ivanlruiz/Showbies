@@ -50,6 +50,11 @@ public class BarraDelJefe : MonoBehaviour
         get { return -(desdeArriba + MargenSuperior); }
     }
 
+    // La franja que ocupa, medida desde el borde de arriba: del techo del nombre al piso de
+    // la barra. La prueba de logica la usa para que el aviso de mision no se le pise.
+    public float TechoDesdeArriba { get { return desdeArriba + MargenSuperior; } }
+    public float PisoDesdeArriba { get { return TechoDesdeArriba + AltoNombre + SeparacionNombreMarco + alto; } }
+
     private RectTransform raiz;
     private RectTransform relleno;
     private RectTransform golpe;

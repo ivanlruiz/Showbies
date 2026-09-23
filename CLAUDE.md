@@ -724,7 +724,10 @@ completada en el día y la lista).
   `RegistrarOleada`), no a cuál se llegó: contando el número de la oleada, retomar una partida guardada en la 25
   cumplía de una las de "llega a la 15" y "llega a la 24".
 - **Lo cumplido y sin cobrar no se pierde a medianoche**: al cambiar el día se cobra solo (`CerrarElDia`) antes de
-  armar las nuevas, cofre incluido. No avisa en pantalla; las monedas aparecen en el contador.
+  armar las nuevas, cofre incluido, con la marca del día en que se armaron. No avisa en pantalla; las monedas aparecen
+  en el contador. Un progreso de antes de la marca la completa **antes** del cierre: hasta el 23/9 se completaba solo
+  si seguía siendo el mismo día, y lo cumplido se pagaba al precio de la oleada 0 (160 monedas en vez de 76.250 en la
+  45).
 - **Premio: una fracción de lo que dan las partidas que cuesta el objetivo** (0,4, 0,5 y 0,6 de 0,4, 1 y 2,5
   partidas), no un monto fijo. `MonedasPorPartida` estima lo que deja una partida que llega a la mejor oleada —los
   zombis que se matan por las ~2 monedas que suelta cada uno, con el multiplicador de la oleada a mitad de camino,
@@ -748,7 +751,10 @@ completada en el día y la lista).
 - **En la partida**: `AvisoDeMisiones` (objeto propio en ShowBies1 y WaveMode) muestra "¡MISIÓN CUMPLIDA!" con lo que pedía,
   un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten. Avisa
   también, en dorado, las estrellas del bestiario que se ganan jugando ("¡ESTRELLA! CAMINANTE x100"); si llegan dos a
-  la vez, salen una después de otra.
+  la vez, salen una después de otra. **Sale debajo del jugador** (`AvisoDeMisiones.Altura`, −225 desde el centro):
+  arriba van el cartel de la oleada, la barra del jefe y el del capítulo, y los tres pueden salir a la vez que este
+  ("completa N oleadas" se cumple al terminar una, cuando sale el de la siguiente). Hasta el 23/9 iba en 300 y se
+  pisaba con los dos últimos. La prueba de lógica mide las franjas de los cuatro, y la de la vida, en 16:9 y en 20:9.
 
 ## Desafío semanal
 
@@ -1617,8 +1623,11 @@ enterrado.
   (que cada texto tenga los dos idiomas y los mismos `{n}`, y que existan todos los ids que piden el código, las
   mejoras, los prefabs y las escenas) y **el tema** (que el claro devuelva el color de la escena, que cada papel del
   oscuro tenga su color y que lo que se escribe encima se lea: el contraste se mide con la fórmula de la WCAG, no se
-  mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, y que el texto de cada
-  misión diga cuánto pide. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+  mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, que el texto de cada
+  misión diga cuánto pide, que `Economia.ZombisPorPartida` sea la suma de lo que saca el `WaveManager` de WaveMode, que
+  los avisos de la partida no se pisen, que todo botón de vidrio del menú lleve su `PintarConTema`, que la tarjeta de
+  mejora siga el tema y que el jefe no gire al terminar de invocar (por reflexión, con el prefab en una escena de vista
+  previa). Lo que abre escenas las lee y las cierra sin guardar. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
 - **ShowBies > Pruebas > Disparo con el joystick (play)** (`PruebaDisparo`): el camino del teléfono, con los joysticks
   de verdad (los eventos de un dedo sobre el `FixedJoystick`): que apuntar dispare y prenda la animación, que soltar la
   apague, que sin balas no la haga y que con una caja dispare sin soltar; y la pistola: que esté en la mano sin el bate,

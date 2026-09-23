@@ -255,9 +255,19 @@ teléfono.
     teléfono: bajo cada farol del cementerio el piso pasó de +0,005 a +0,12 de brillo.
   - Y uno que salió probando: al morir, el cuerpo seguía corriendo (y disparando) en el lugar detrás de la derrota,
     porque nadie apagaba la animación. Lo apaga `PlayerController.Soltar`, y lo mira el banco de la derrota.
-- [ ] Lo que queda en `REVISION.md`: el cierre de medianoche que paga al precio de la oleada 0 (10), los carteles de
-  misión y de capítulo que se pisan (12), el globo del idioma sin `PintarConTema` (13), el valor siguiente de la tarjeta
-  en modo oscuro (14), el salto de rotación del jefe al terminar de invocar (15) y la suma de `ZombisPorPartida` (16).
+- [x] **Los seis bugs chicos que quedaban en `REVISION.md`.** **Arreglados el 23/9**, cada uno con su prueba en la de
+  lógica, y todas verificadas volviendo a poner el bug:
+  - El cierre de medianoche pagaba al precio de la oleada 0 con un progreso de antes de la marca: la marca se completa
+    antes del cierre. Con el bug, la difícil de la oleada 45 pagaba 160 monedas en vez de 76.250.
+  - El aviso de misión cumplida se pisaba con el cartel del capítulo y con la barra del jefe: ahora sale debajo del
+    jugador. La prueba mide las franjas de los avisos que pueden salir a la vez, en 16:9 y en 20:9.
+  - El globo del idioma (y sus tres copias) no cambiaba con el tema: tiene su `PintarConTema`. La prueba revisa todos
+    los botones de vidrio del menú.
+  - El valor siguiente de la tarjeta de mejora no seguía el tema, y la tienda no se refrescaba al cambiarlo.
+  - Al terminar de invocar, el jefe pegaba un salto de giro: solo se endereza al salir del aturdimiento.
+  - `Economia.ZombisPorPartida` contaba 2m zombis de menos. Corregida, los premios que se miden con ella suben un poco
+    (la difícil en la oleada 10 pasa de 1.300 a 1.400, el cofre de 940 a 1.000 y la diaria del tercer día de 440 a
+    470); las pruebas de proporción siguen pasando.
 - [x] **Disparar corriendo se ve** (elegido por Ivan, con la pistola). El muñeco tenía un bate en la mano, que las poses
   de pistola levantaban delante de la cara, y las balas salían de un cubito en el pecho. Ahora tiene una pistola en la
   mano (`ArmaEnLaMano`, armada con formas por `ConstructorArmas`), las balas y las chispas salen de su boca, patea en

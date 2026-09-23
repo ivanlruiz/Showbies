@@ -10,11 +10,13 @@ using System;
 public static class Economia
 {
     // Los zombis que se matan en una partida que llega a la oleada m: la oleada n saca
-    // 10 + 4n, y esto es la suma hasta m.
+    // 10 + 4n, y esto es la suma hasta m, 12m + 2m². Hasta el 23/9 devolvia 10m + 2m²: le
+    // faltaban 2m (6 de 54 en la oleada 3). La prueba la compara con la suma hecha con los
+    // numeros del WaveManager de WaveMode, asi no se desincroniza si se tocan.
     public static double ZombisPorPartida(int mejorOleada)
     {
         int m = Math.Max(3, mejorOleada);
-        return 10.0 * m + 2.0 * m * m;
+        return 12.0 * m + 2.0 * m * m;
     }
 
     // Lo que deja de monedas esa partida: cada zombi suelta unas 2 y el multiplicador de

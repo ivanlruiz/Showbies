@@ -101,6 +101,7 @@ public class TiendaMejoras : MonoBehaviour
     private float fade;
     private int revisionVista;
     private int idiomaVisto = -1;
+    private int temaVisto = -1;
 
     private bool musicaBajada;
     private float volumenMusicaOriginal;
@@ -301,6 +302,7 @@ public class TiendaMejoras : MonoBehaviour
         for (int i = 0; i < tarjetas.Count; i++) tarjetas[i].Refrescar();
         revisionVista = Progreso.Revision;
         idiomaVisto = Idioma.Revision;
+        temaVisto = Tema.Revision;
         EscribirPista();
     }
 
@@ -340,7 +342,9 @@ public class TiendaMejoras : MonoBehaviour
         // Sin eventos: la tienda mira el contador de cambios de Progreso. Así se
         // entera también de las monedas y niveles que cambian las herramientas
         // del editor con la tienda abierta.
-        if (Progreso.Revision != revisionVista || Idioma.Revision != idiomaVisto) RefrescarTodas();
+        // Y del tema: lo que pinta cada tarjeta en su refresco (el valor siguiente) cambia
+        // con el.
+        if (Progreso.Revision != revisionVista || Idioma.Revision != idiomaVisto || Tema.Revision != temaVisto) RefrescarTodas();
 
         ActualizarScroll();
         ActualizarGolpesPendientes(dt);

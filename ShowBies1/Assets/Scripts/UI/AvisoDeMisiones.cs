@@ -24,6 +24,16 @@ public class AvisoDeMisiones : MonoBehaviour
     public Color colorMision = new Color(0.72f, 0.56f, 1f);
     public Color colorEstrella = new Color(1f, 0.8f, 0.2f);
 
+    // Donde sale, desde el centro de la pantalla, y su letra. Debajo del jugador: arriba
+    // estan el cartel de la oleada (170), la barra del jefe (arriba de 320) y el cartel del
+    // capitulo (385), y los tres pueden salir a la vez que este. Hasta el 23/9 iba en 300 y
+    // se pisaba con los dos ultimos; "completa N oleadas" se cumple justo al terminar la
+    // oleada, que es cuando sale el cartel de la siguiente, y en la 10, 20 y 30 tambien el
+    // del capitulo. Mas abajo esta la vida. La prueba de logica mide que no se pisen.
+    public const float Altura = -225f;
+    public const float Letra = 72f;
+    public const float LetraDelDetalle = 0.55f;   // del titulo
+
     private struct Aviso
     {
         public string titulo;
@@ -124,13 +134,13 @@ public class AvisoDeMisiones : MonoBehaviour
         var rt = (RectTransform)go.transform;
         rt.SetParent(canvas.transform, false);
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = new Vector2(0f, 300f);
+        rt.anchoredPosition = new Vector2(0f, Altura);
         rt.sizeDelta = new Vector2(1200f, 180f);
         cartel = go.GetComponent<TextMeshProUGUI>();
         if (fuente != null) cartel.font = fuente;
         if (materialContorno != null) cartel.fontSharedMaterial = materialContorno;
-        cartel.text = aviso.titulo + "\n<size=55%>" + aviso.detalle + "</size>";
-        cartel.fontSize = 72f;
+        cartel.text = aviso.titulo + "\n<size=" + Mathf.RoundToInt(LetraDelDetalle * 100f) + "%>" + aviso.detalle + "</size>";
+        cartel.fontSize = Letra;
         cartel.color = aviso.color;
         cartel.alignment = TextAlignmentOptions.Center;
         cartel.textWrappingMode = TextWrappingModes.NoWrap;

@@ -1440,6 +1440,7 @@ GameObject:
   - component: {fileID: 564648172}
   - component: {fileID: 564648174}
   - component: {fileID: 564648173}
+  - component: {fileID: 564648175}
   m_Layer: 0
   m_Name: Fondo
   m_TagString: Untagged
@@ -1504,6 +1505,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 564648171}
   m_CullTransparentMesh: 1
+--- !u!114 &564648175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 564648171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d381b2ae27cafac48b5929e88b142e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PintarConTema
+  rol: 6
+  colorClaro: {r: 0.06, g: 0.12, b: 0.05, a: 0.45}
 --- !u!1 &583088212
 GameObject:
   m_ObjectHideFlags: 0

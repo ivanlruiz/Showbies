@@ -78,15 +78,17 @@ public static class MisionesDiarias
     {
         var estado = Progreso.Misiones;
         int hoy = Progreso.DiaDeHoy();
-        if (estado.dia != 0 && !Progreso.EsDiaNuevo(estado.dia, hoy) && estado.lista.Count == Cantidad)
-        {
-            // Un progreso guardado antes de que el premio se congelara no trae la marca: se
-            // completa una sola vez. El centinela es -1 y no 0, que 0 es una marca valida
-            // (nadie completo una oleada todavia) y volver a asignarla cada vez haria que
-            // el premio siguiera a la mejor oleada, que es justo lo que se quiso sacar.
-            if (estado.mejorOleadaAlArmar < 0) estado.mejorOleadaAlArmar = Progreso.MejorOleada;
-            return;
-        }
+
+        // Un progreso guardado antes de que el premio se congelara no trae la marca: se
+        // completa una sola vez. El centinela es -1 y no 0, que 0 es una marca valida
+        // (nadie completo una oleada todavia) y volver a asignarla cada vez haria que
+        // el premio siguiera a la mejor oleada, que es justo lo que se quiso sacar. Va
+        // antes del cierre del dia: hasta el 23/9 se completaba solo si seguia siendo el
+        // mismo dia, y si el primer Asegurar ya caia en un dia nuevo, lo cumplido sin
+        // cobrar se pagaba al precio de la oleada 0.
+        if (estado.dia != 0 && estado.mejorOleadaAlArmar < 0) estado.mejorOleadaAlArmar = Progreso.MejorOleada;
+
+        if (estado.dia != 0 && !Progreso.EsDiaNuevo(estado.dia, hoy) && estado.lista.Count == Cantidad) return;
 
         if (estado.dia != 0) CerrarElDia(estado);
 

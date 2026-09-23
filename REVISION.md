@@ -17,7 +17,8 @@ cada hallazgo paso por un verificador aparte que trato de refutarlo leyendo el c
 recompensa diaria y los objetivos de misiones), cada uno con su prueba de regresión en
 **ShowBies > Pruebas > Logica de mejoras**, verificada volviendo a poner el bug. El 23/9, lo mismo con la vida en
 negativo (3), la misión del jefe (7), el disparo en el teléfono (8, y con él el de PC sin balas, 9) y los faroles
-(11): el detalle está en TAREAS. Lo que sigue es el informe como salió.
+(11): el detalle está en TAREAS. Y después los seis que quedaban (10, 12, 13, 14, 15 y 16), también con sus
+pruebas. Todos los bugs de esta lista están arreglados. Lo que sigue es el informe como salió.
 
 Arreglá **el revivir**: cerrar el vídeo (o que la red falle al mostrarlo) manda a la pantalla de derrota en el acto, sin devolver la ventanita ni los segundos que quedaban. Es lo único de esta lista que le rompe la partida al jugador en el momento en que le pedís que mire un anuncio, contradice la regla escrita de "cerrar el vídeo antes no castiga" y el arreglo es separar un callback. Con el proveedor en Nulo hoy no se ve en Play, pero la APK de prueba ya lo tiene y la red real lo va a agravar.
 
@@ -134,7 +135,7 @@ Detalle: en el controller la transición a `m_pistol_shoot` sale sólo de `m_pis
 
 ---
 
-### 10. El cierre de medianoche paga las misiones al precio de la oleada 0
+### 10. El cierre de medianoche paga las misiones al precio de la oleada 0 — **ARREGLADO**
 **`Assets/Scripts/Progreso/MisionesDiarias.cs:108`** — baja
 
 `CerrarElDia` usa `Math.Max(0, estado.mejorOleadaAlArmar)`, y el centinela −1 sólo se completa en la rama de "mismo día" de `Asegurar` (línea 87), que corre **después** de `CerrarElDia` (línea 91). Si el progreso trae misiones de un build anterior al campo y la primera vez que corre `Asegurar` ya cambió el día, las cumplidas sin cobrar se auto-cobran al mínimo de toda la curva, y no avisa en pantalla.
@@ -160,7 +161,7 @@ Las 10 luces de los decorados (4 + 6) son Point con `renderMode` en Auto (`m_Ren
 
 ---
 
-### 12. El cartel de misión cumplida y el de capítulo se pisan
+### 12. El cartel de misión cumplida y el de capítulo se pisan — **ARREGLADO**
 **`Assets/Scripts/UI/AvisoDeMisiones.cs:127`** — baja
 
 `AvisoDeMisiones.Mostrar` pone su cartel en `(0, 300)` y `CapitulosDeEscenario.MostrarCartel` (línea 355) el suyo en `(0, 385)`, los dos anclados al centro del mismo Canvas (el del HUD, fileID 1970546277 en WaveMode). Los centros están a 85 px y los dos bloques suman bastante más: se solapan ~40-46 px, o sea "LA CIUDAD" cae encima de "¡MISIÓN CUMPLIDA!". No depende de la resolución.
@@ -171,7 +172,7 @@ Las 10 luces de los decorados (4 + 6) son Point con `renderMode` en Auto (`m_Ren
 
 ---
 
-### 13. El globo del idioma (y sus tres copias) es el único botón de vidrio del menú sin `PintarConTema`
+### 13. El globo del idioma (y sus tres copias) es el único botón de vidrio del menú sin `PintarConTema` — **ARREGLADO**
 **`Assets/Escenas/Menu.unity:7334`** — baja
 
 De los cinco Image con el color de vidrio (0.06, 0.12, 0.05, 0.45), cuatro llevan `PintarConTema` con rol `Vidrio` y el del globo (`AreaSeguraMenu/BotonIdioma/Visual/Fondo`) no. Como el engranaje, misiones y bestiario son copias del globo hechas con `Instantiate`, los cuatro botones redondos de las esquinas heredan la falta: con el tema oscuro quedan discos verde oscuro sobre el fondo nocturno (contraste ~1,03 contra el cielo), sólo se ve el icono.
@@ -184,7 +185,7 @@ De los cinco Image con el color de vidrio (0.06, 0.12, 0.05, 0.45), cuatro lleva
 
 ---
 
-### 14. El valor siguiente de la tarjeta de mejora no sigue el tema
+### 14. El valor siguiente de la tarjeta de mejora no sigue el tema — **ARREGLADO**
 **`Assets/Scripts/Tienda/TarjetaMejora.cs:218`** — baja (bajada de media: no rompe contraste)
 
 `Refrescar()` escribe `valorSiguiente.color = colorValorSiguiente` en cada refresco, con el verde del prefab (0.18, 0.6, 0.12), que es bit a bit el mismo `colorClaro` que la Flecha lleva en su `PintarConTema` con rol `Acento`. `ValorSiguiente` es el único texto del prefab sin `PintarConTema`, y aunque se lo pusieran el script lo pisaría. En oscuro la flecha pasa a verde claro (8,58:1) y el número de al lado se queda en el verde oscuro (3,93:1): dos verdes que nacieron iguales y se separan.
@@ -197,7 +198,7 @@ Nota: no falla `ProbarTema` (que sólo mide rol contra rol) y a 56 px cuenta com
 
 ---
 
-### 15. Al terminar de invocar, el jefe pega un salto de rotación
+### 15. Al terminar de invocar, el jefe pega un salto de rotación — **ARREGLADO**
 **`Assets/Scripts/Zombi/JefePatrones.cs:261`** — baja
 
 `Terminar()` siempre escribe `transform.rotation = Quaternion.Euler(0f, rumboAlAturdirse, 0f)`, pero ese campo sólo se carga en `Aturdir()`, que es el final de la **carga**. `Terminar()` también se llama desde `AvisandoInvocar` (línea 206), donde el campo conserva el rumbo del final de la embestida anterior (~9 s antes). El error dura hasta el `FixedUpdate` siguiente, donde `EnemyController` vuelve a hacer `LookAt`: uno o dos frames.
@@ -210,7 +211,7 @@ Nota: no falla `ProbarTema` (que sólo mide rol contra rol) y a 56 px cuenta com
 
 ---
 
-### 16. `Economia.ZombisPorPartida` le faltan 2m zombis
+### 16. `Economia.ZombisPorPartida` le faltan 2m zombis — **ARREGLADO**
 **`Assets/Scripts/Progreso/Economia.cs:17`** — baja
 
 El comentario dice "la oleada n saca 10 + 4n, y esto es la suma hasta m". Esa suma es Σ(10+4n) para n=1..m = **2m² + 12m**, pero la función devuelve `10.0 * m + 2.0 * m * m` = 2m² + 10m. Con m=3: real 54, devuelto 48. Con m=45: 4.590 vs 4.500.
