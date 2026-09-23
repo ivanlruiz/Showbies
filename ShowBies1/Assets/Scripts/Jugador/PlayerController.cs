@@ -223,6 +223,36 @@ public class PlayerController : MonoBehaviour
         if (trans != null && trans.anim != null) trans.anim.SetBool("run", false);
     }
 
+    // Se desploma con la animacion de morir del pack (pedido de Ivan: quedaba parado detras
+    // de la derrota mientras la horda festejaba). Lo llama PlayerHealth en el golpe que
+    // mata, antes de la oferta de revivir: el Animator pasa a tiempo sin escalar para que
+    // la caida se vea aunque la oferta congele el juego. Levantarse lo deshace.
+    private AnimatorUpdateMode modoAntesDeCaer;
+    private bool caido;
+
+    public void Caer()
+    {
+        Soltar();
+        if (caido || trans == null || trans.anim == null) return;
+        caido = true;
+        modoAntesDeCaer = trans.anim.updateMode;
+        trans.anim.updateMode = AnimatorUpdateMode.UnscaledTime;
+        trans.anim.SetBool("muerto", true);
+        // Que se vea: la derrota y la ventanita de revivir van al centro de la pantalla,
+        // justo donde cae. La camara lo corre a un costado.
+        CamaraJugador.MostrarElCuerpo(true);
+    }
+
+    // Al revivir: de pie otra vez, y el Animator vuelve al tiempo del juego.
+    public void Levantarse()
+    {
+        if (!caido || trans == null || trans.anim == null) return;
+        caido = false;
+        trans.anim.SetBool("muerto", false);
+        trans.anim.updateMode = modoAntesDeCaer;
+        CamaraJugador.MostrarElCuerpo(false);
+    }
+
     // Publico porque en movil lo llama el boton de granada del Canvas (Espacio no
     // existe ahi). El cooldown vive aca adentro, asi que el boton no puede spamear.
     public void ThrowGranade()

@@ -42,7 +42,9 @@ public static class PruebaDerrota
     const double TocarOtraVez = 6.8;
     const double CadaCuanto = 0.1;   // la grabacion: un cuadro cada decimo de segundo real
 
-    enum Paso { Esperando, Muerto, Saliendo }
+    // Antes de morir, el gris de poca vida: un rato con la vida al 10 % y otro curado.
+    enum Paso { PocaVida, Curado, Esperando, Muerto, Saliendo }
+    const double SegundosConPocaVida = 1.2, SegundosCurado = 1.8;
 
     static Paso paso;
     static double murioEn, aparecioEn, grisCompletoEn, salioEn, proximoCuadro;
@@ -64,6 +66,15 @@ public static class PruebaDerrota
     static int escenasAlSalir = -1;
     static bool activaAlSalir = true, sobreLaPartidaAlSalir = true;
     static bool midioElCuerpo, corriendoMuerto, disparandoMuerto;
+    // La caida: la altura de la cabeza de pie, justo antes del golpe, y tirado en el piso.
+    static float cabezaDePie = -1f, cabezaCaida = -1f;
+    static bool midioLaCaida, enElEstadoDeMorir;
+    // El gris de poca vida y donde queda el cuerpo en la pantalla.
+    static double faseDesde;
+    static float grisConPocaVida = -1f, grisCurado = -1f;
+    static bool filtroApagadoAlCurarse;
+    static Vector3 cuerpoEnLaPantalla;
+    static int alrededorDelCuerpo;
     static int vidaTrasElGolpe;
     static string vidaEnElHud;
 
@@ -123,7 +134,12 @@ public static class PruebaDerrota
         if (desde < 0f)
         {
             SessionState.SetFloat(Clave + ".desde", (float)ahora);
-            paso = Paso.Esperando;
+            paso = Paso.PocaVida;
+            faseDesde = ahora;
+            grisConPocaVida = grisCurado = -1f;
+            filtroApagadoAlCurarse = false;
+            cuerpoEnLaPantalla = new Vector3(-1f, -1f, 0f);
+            alrededorDelCuerpo = 0;
             cuadro = 0;
             proximoCuadro = 0;
             aparecioEn = grisCompletoEn = -1;
@@ -137,6 +153,8 @@ public static class PruebaDerrota
             escenasAlSalir = -1;
             activaAlSalir = sobreLaPartidaAlSalir = true;
             midioElCuerpo = corriendoMuerto = disparandoMuerto = false;
+            midioLaCaida = enElEstadoDeMorir = false;
+            cabezaDePie = cabezaCaida = -1f;
             vidaTrasElGolpe = int.MinValue;
             vidaEnElHud = null;
             partidasAntes = Progreso.PartidasTerminadas;
@@ -147,6 +165,34 @@ public static class PruebaDerrota
 
         switch (paso)
         {
+            case Paso.PocaVida:
+            {
+                var vida = PlayerHealth.instance;
+                if (vida == null || ahora - faseDesde < 1.0) return;
+                // Al 10 % de la vida: le toca 0,3 de gris (de 0 en un cuarto a 0,5 en cero).
+                vida.health = Mathf.Max(1, Mathf.RoundToInt(vida.maxHealth * 0.1f));
+                if (ahora - faseDesde < 1.0 + SegundosConPocaVida) return;
+                var gris = vida.GetComponent<GrisDePocaVida>();
+                grisConPocaVida = gris != null ? gris.Actual : -1f;
+                paso = Paso.Curado;
+                faseDesde = ahora;
+                return;
+            }
+
+            case Paso.Curado:
+            {
+                var vida = PlayerHealth.instance;
+                if (vida == null) return;
+                vida.health = vida.maxHealth;
+                if (ahora - faseDesde < SegundosCurado) return;
+                var gris = vida.GetComponent<GrisDePocaVida>();
+                grisCurado = gris != null ? gris.Actual : -1f;
+                var filtro = Camera.main != null ? Camera.main.GetComponent<FiltroBlancoYNegro>() : null;
+                filtroApagadoAlCurarse = filtro == null || !filtro.enabled;
+                paso = Paso.Esperando;
+                return;
+            }
+
             case Paso.Esperando:
                 if (ahora - desde < SegundosAntesDeMorir || PlayerHealth.instance == null) return;
                 if (ahora - desde < EsperaMaxima && ZombisAlrededor() < ZombisCerca)
@@ -165,6 +211,7 @@ public static class PruebaDerrota
                     control.Move(new Vector2(1f, 0f));
                     control.FijarDisparo(true);
                 }
+                cabezaDePie = AlturaDeLaCabeza();
                 PlayerHealth.instance.TakeDamage(999999f);
                 murioEn = ahora;
                 jugadorAlMorir = PlayerHealth.instance.transform.position;
@@ -182,6 +229,8 @@ public static class PruebaDerrota
                 Vigilar();
                 if (aparecioEn < 0 && DerrotaCargada()) aparecioEn = ahora;
                 if (!midioElCuerpo && pasado >= 0.5) MedirElCuerpo();
+                // La caida dura 1,83 s: a los 2,5 s ya esta en el piso.
+                if (!midioLaCaida && pasado >= 2.5) MedirLaCaida();
                 // La horda sigue: la suma de las posiciones de los zombis cambia.
                 if (!midioZombisA && pasado >= 1.5) { midioZombisA = true; zombisA = SumaDeZombis(); }
                 if (!midioZombisB && pasado >= 4.0) { midioZombisB = true; zombisB = SumaDeZombis(); }
@@ -191,11 +240,20 @@ public static class PruebaDerrota
                 {
                     midioFestejo = true;
                     festejandoA4 = vivosA4 = 0;
+                    var camaraDelJuego = Camera.main;
                     foreach (var z in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
                     {
                         if (!z.Vivo) continue;
                         vivosA4++;
-                        if (z.Festejando) festejandoA4++;
+                        if (!z.Festejando) continue;
+                        festejandoA4++;
+                        // Alrededor del cuerpo y a la vista: a menos de 7 m y a la izquierda
+                        // de los textos de la derrota, que empiezan en el 31 % del ancho.
+                        if (camaraDelJuego == null) continue;
+                        Vector3 enPantalla = camaraDelJuego.WorldToViewportPoint(z.transform.position);
+                        Vector3 alCuerpo = z.transform.position - jugadorAlMorir;
+                        alCuerpo.y = 0f;
+                        if (enPantalla.x < 0.34f && alCuerpo.magnitude < 7f) alrededorDelCuerpo++;
                     }
                 }
                 if (grisCompletoEn < 0 && DerrotaEnLaPartida.Avance >= 0.999f) grisCompletoEn = ahora;
@@ -290,6 +348,30 @@ public static class PruebaDerrota
         disparandoMuerto = animador.GetBool("shoot");
     }
 
+    static Animator AnimadorDelJugador()
+    {
+        var control = PlayerHealth.instance != null ? PlayerHealth.instance.GetComponent<PlayerController>() : null;
+        return control != null && control.trans != null ? control.trans.GetComponent<Animator>() : null;
+    }
+
+    // Sobre el piso, que en WaveMode esta en Y = 0.
+    static float AlturaDeLaCabeza()
+    {
+        var animador = AnimadorDelJugador();
+        Transform cabeza = animador != null && animador.isHuman ? animador.GetBoneTransform(HumanBodyBones.Head) : null;
+        return cabeza != null ? cabeza.position.y : -1f;
+    }
+
+    static void MedirLaCaida()
+    {
+        midioLaCaida = true;
+        cabezaCaida = AlturaDeLaCabeza();
+        if (Camera.main != null && PlayerHealth.instance != null)
+            cuerpoEnLaPantalla = Camera.main.WorldToViewportPoint(PlayerHealth.instance.transform.position);
+        var animador = AnimadorDelJugador();
+        enElEstadoDeMorir = animador != null && animador.GetCurrentAnimatorStateInfo(0).shortNameHash == Animator.StringToHash("Morir");
+    }
+
     static bool DerrotaCargada()
     {
         for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -350,6 +432,12 @@ public static class PruebaDerrota
                        + ", canvas raiz del juego prendidos: " + canvasDelJuegoPrendidos);
         inf.AppendLine("Opacidad del fondo de la derrota: " + opacidadDelFondo.ToString("0.00"));
         inf.AppendLine("Partidas contadas al morir: " + partidasDeMas);
+        inf.AppendLine("Gris con el 10 % de la vida: " + grisConPocaVida.ToString("0.00") + "; curado: " + grisCurado.ToString("0.00")
+                       + " (filtro apagado: " + filtroApagadoAlCurarse + ")");
+        inf.AppendLine("El cuerpo en la pantalla a los 2,5 s: x " + cuerpoEnLaPantalla.x.ToString("0.00") + ", y " + cuerpoEnLaPantalla.y.ToString("0.00")
+                       + "; festejando alrededor del cuerpo y a la vista: " + alrededorDelCuerpo + " de " + festejandoA4);
+        inf.AppendLine("La cabeza del jugador: " + cabezaDePie.ToString("0.00") + " m de pie, " + cabezaCaida.ToString("0.00")
+                       + " m a los 2,5 s; en el estado Morir: " + enElEstadoDeMorir);
         inf.AppendLine("Vida despues del golpe: " + vidaTrasElGolpe + " (el HUD dice \"" + vidaEnElHud + "\"); el cuerpo corre: "
                        + corriendoMuerto + ", dispara: " + disparandoMuerto);
         inf.AppendLine("Festejando a los 5,5 s: " + festejandoA4 + " de " + vivosA4 + " zombis vivos; rugidos hasta los 6 s: " + rugidos);
@@ -368,6 +456,11 @@ public static class PruebaDerrota
             jugadorQuieto,
             midioElCuerpo && vidaTrasElGolpe == 0 && vidaEnElHud == "0",
             midioElCuerpo && !corriendoMuerto && !disparandoMuerto,
+            midioLaCaida && enElEstadoDeMorir && cabezaDePie > 0f && cabezaCaida >= 0f && cabezaCaida < cabezaDePie * 0.5f,
+            cuerpoEnLaPantalla.x >= 0.12f && cuerpoEnLaPantalla.x <= 0.32f && cuerpoEnLaPantalla.y >= 0.25f && cuerpoEnLaPantalla.y <= 0.75f,
+            festejandoA4 > 0 && alrededorDelCuerpo * 10 >= festejandoA4 * 7,
+            grisConPocaVida >= 0.2f && grisConPocaVida <= 0.5f,
+            grisCurado == 0f && filtroApagadoAlCurarse,
             puntosQuietos,
             vivosA4 > 0 && festejandoA4 * 2 >= vivosA4,
             rugidos >= 2,
@@ -395,6 +488,11 @@ public static class PruebaDerrota
             "el jugador muerto no se mueve (ni camina ni lo arrastra la horda)",
             "un golpe que se pasa deja la vida en 0 y el HUD no muestra negativos",
             "el cuerpo no queda corriendo ni disparando en el lugar",
+            "el jugador se desploma: a los 2,5 s tiene la cabeza a menos de la mitad de la altura de pie",
+            "la camara corre el cuerpo al costado izquierdo, fuera de los textos de la derrota",
+            "la horda festeja alrededor del cuerpo y a la vista (7 de cada 10 o mas)",
+            "con poca vida el mundo pierde color, sin pasar de medio gris",
+            "al curarse vuelve el color y el filtro se apaga",
             "los puntos no cambian despues de morir (lo que quedo en el aire no mata)",
             "la horda festeja: a los 5,5 s festejan la mitad o mas",
             "rugen en las primeras oleadas del festejo",

@@ -163,6 +163,11 @@ public class PlayerHealth : MonoBehaviour
 
         estaMuerto = true;
 
+        // Se desploma ya, tambien si despues sale la oferta de revivir (que congela el
+        // juego: la caida va en tiempo sin escalar). Revivir lo levanta.
+        var control = GetComponent<PlayerController>();
+        if (control != null) control.Caer();
+
         // Antes de dar la partida por terminada: si hay un video para revivir, el
         // juego queda congelado con la oferta en pantalla y la derrota espera. Es
         // la oferta la que después llama a Revivir o a Terminar.
@@ -260,6 +265,10 @@ public class PlayerHealth : MonoBehaviour
         health = maxHealth;
         danoPendiente = 0f;
         invulnerableHasta = Time.time + Mathf.Max(0f, segundosDeGracia);
+
+        // Se habia desplomado en el golpe que lo mato.
+        var control = GetComponent<PlayerController>();
+        if (control != null) control.Levantarse();
 
         // El jefe no se despeja (la oleada lo contaria como muerto), asi que se le corta
         // el ataque: volver con la carga a medio avisar es morir de nuevo sin jugar. La

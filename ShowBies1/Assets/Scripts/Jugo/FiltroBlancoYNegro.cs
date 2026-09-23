@@ -1,8 +1,10 @@
 using UnityEngine;
 
-// Le saca el color a lo que ve la camara, de a poco. Lo usa la oferta de revivir:
-// al morir, el mundo se va quedando en blanco y negro mientras la ventanita, que
-// es UI en overlay, queda a todo color.
+// Le saca el color a lo que ve la camara, de a poco. Lo usan la oferta de revivir y
+// la derrota (al morir, el mundo se va quedando en blanco y negro mientras la UI, que
+// va en overlay, queda a todo color) y la poca vida (GrisDePocaVida, hasta medio gris).
+// Los tres lo toman como esta (Tomar), asi el gris sigue de uno al otro sin volver al
+// color.
 //
 // Se engancha a la camara en el momento y se suelta al terminar: es un blit de
 // pantalla completa y en un telefono no vale la pena tenerlo prendido toda la

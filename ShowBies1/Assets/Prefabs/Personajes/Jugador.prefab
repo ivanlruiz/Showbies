@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 5501336992948043566}
   - component: {fileID: 6253859910329683683}
   - component: {fileID: 497599620843726464}
+  - component: {fileID: 7234699121980140405}
   m_Layer: 0
   m_Name: Jugador
   m_TagString: Player
@@ -239,6 +240,21 @@ MonoBehaviour:
   retroceso: 0.1
   levantada: 16
   recuperacion: 22
+--- !u!114 &7234699121980140405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3275518440274919472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7e92c3270faa264f9bcdd27381defe4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrisDePocaVida
+  desde: 0.25
+  maximo: 0.5
+  seguimiento: 5
 --- !u!1001 &2889558694542059521
 PrefabInstance:
   m_ObjectHideFlags: 0

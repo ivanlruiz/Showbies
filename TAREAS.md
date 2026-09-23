@@ -264,8 +264,13 @@ teléfono.
   cada tiro, el brazo derecho apunta en una capa aparte mientras las piernas corren (`Jugador.controller`, sacado del
   pack) y en el teléfono el cuerpo mira hacia donde se apunta. El banco del disparo lo verifica (12 de 12) y **Grabar el
   disparo** lo graba de cerca.
-- [ ] **El jugador no se cae al morir**: queda parado detrás de la derrota mientras la horda festeja. El pack trae
-  `m_death_A`.
+- [x] **El jugador se cae al morir** (elegido por Ivan). Se desploma con `m_death_A`, la cámara lo corre al costado
+  izquierdo de la pantalla (quedaba tapado por "+N MONEDAS" y por la ventanita de revivir, que van al centro) y la horda
+  festeja alrededor de él, en esa franja libre. Si revive, se levanta y la cámara vuelve.
+- [x] **Con poca vida el mundo pierde color** (idea de Ivan, desde el 5 %; quedó desde el 25 % y hasta medio gris, que
+  con el 5 % era un golpe y no se llegaba a ver). El mismo filtro que toman la oferta de revivir y la derrota.
+- [ ] Ver en el teléfono el revivir entero: la caída con el juego congelado, el gris que sigue desde el de poca vida y
+  la cámara que vuelve al revivir. En el editor el proveedor de anuncios es `Nulo` y no hay oferta.
 - [ ] Ver los faroles en el teléfono: están medidos con la calidad de Android, pero en el editor.
 
 ## Revisión de lo del 20/9 (dos agentes, esa misma tarde)

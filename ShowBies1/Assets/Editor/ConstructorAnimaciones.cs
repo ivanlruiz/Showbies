@@ -212,6 +212,7 @@ public static class ConstructorAnimaciones
     // Los nombres los comparte PlayerController (vienen del controller del pack).
     public const string ParametroCorrer = "run";
     public const string ParametroDisparar = "shoot";
+    public const string ParametroMuerto = "muerto";
     public const string CapaDisparo = "Disparo";
 
     // Arma el controller del jugador, pedido de Ivan: que se vea que dispara tambien
@@ -254,7 +255,8 @@ public static class ConstructorAnimaciones
         AnimationClip quieto = ClipEn(ClipsJugador, "m_pistol_idle_A");
         AnimationClip correr = ClipEn(ClipsJugador, "m_pistol_run");
         AnimationClip disparar = ClipEn(ClipsJugador, "m_pistol_shoot");
-        if (quieto == null || correr == null || disparar == null)
+        AnimationClip morir = ClipEn(ClipsJugador, "m_death_A");
+        if (quieto == null || correr == null || disparar == null || morir == null)
         {
             Debug.LogError("Faltan clips del jugador en " + ClipsJugador);
             return;
@@ -287,6 +289,7 @@ public static class ConstructorAnimaciones
 
         ctrl.AddParameter(ParametroCorrer, AnimatorControllerParameterType.Bool);
         ctrl.AddParameter(ParametroDisparar, AnimatorControllerParameterType.Bool);
+        ctrl.AddParameter(ParametroMuerto, AnimatorControllerParameterType.Bool);
 
         // El cuerpo. Sin tiempo de salida en ninguna de las dos: el del pack esperaba al 63 %
         // del paso para frenar, y el muñeco seguia corriendo en el lugar un rato.
@@ -297,6 +300,20 @@ public static class ConstructorAnimaciones
         cuerpo.defaultState = eQuieto;
         Transicion(eQuieto, eCorrer, ParametroCorrer, true, 0.1f);
         Transicion(eCorrer, eQuieto, ParametroCorrer, false, 0.15f);
+
+        // Al morir se desploma (pedido de Ivan: antes quedaba parado detras de la derrota
+        // mientras la horda festejaba). Es un bool y no un gatillo porque revivir lo
+        // levanta. El clip trae el movimiento horneado en la pose: cae en el lugar, sin
+        // mover al muñeco. No puede empezar de nuevo sobre si mismo.
+        var eMorir = cuerpo.AddState("Morir", new Vector3(390, -110, 0));
+        eMorir.motion = morir;
+        var aMorir = cuerpo.AddAnyStateTransition(eMorir);
+        aMorir.AddCondition(AnimatorConditionMode.If, 0f, ParametroMuerto);
+        aMorir.hasExitTime = false;
+        aMorir.hasFixedDuration = true;
+        aMorir.duration = 0.1f;
+        aMorir.canTransitionToSelf = false;
+        Transicion(eMorir, eQuieto, ParametroMuerto, false, 0.25f);
 
         // El brazo. "Nada" no tiene clip: deja pasar lo de abajo.
         ctrl.AddLayer(CapaDisparo);

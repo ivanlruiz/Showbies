@@ -87,10 +87,12 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float duracionDeLaMuerte = 1.4f;
 
     [Header("Festejo (cuando el jugador muere)")]
-    [Tooltip("Hasta donde se abren a cada costado para festejar, en metros desde el cuerpo. La derrota tapa el centro: medido con la camara del juego, el renglon mas ancho llega a 6,8 m del cuerpo en 16:9 y a 8,5 m en 20:9, y la pantalla termina a 13,1 m en 16:9. Festejando alrededor del cuerpo quedaban todos detras de los textos.")]
-    [SerializeField] private Vector2 costadoDelFestejo = new Vector2(9f, 12.5f);
-    [Tooltip("Como se reparten hacia arriba y hacia abajo de la pantalla, en metros desde el cuerpo sobre el piso: la pantalla va de 6,5 m atras a 9,9 m adelante.")]
-    [SerializeField] private Vector2 alturaDelFestejo = new Vector2(-4.5f, 7.5f);
+    [Tooltip("Donde festejan a los costados del cuerpo, en metros sobre el piso a lo ancho de la pantalla (negativo es a la izquierda). Al morir la camara corre el cuerpo al costado izquierdo (CamaraJugador), fuera de la derrota: la pantalla termina a unos 5,8 m a su izquierda y los textos empiezan a unos 2,4 m a su derecha, en 16:9.")]
+    [SerializeField] private Vector2 costadoDelFestejo = new Vector2(-5f, 1.8f);
+    [Tooltip("Y a lo alto de la pantalla, en metros sobre el piso desde el cuerpo.")]
+    [SerializeField] private Vector2 alturaDelFestejo = new Vector2(-4.5f, 4.5f);
+    [Tooltip("Lo mas cerca del cuerpo que se paran a festejar.")]
+    [SerializeField] private float cercaDelCuerpo = 1.6f;
     [Tooltip("Cuanto se arquea hacia atras en cada festejo, en grados.")]
     [SerializeField] private float gradosDelFestejo = 22f;
     [Tooltip("Cuanto salta en cada puño en alto, como fraccion de su alto. Es lo unico que se lee desde la camara del juego: a esa distancia un zombi mide unos 40 px, el puño levantado apunta a la camara y el arco casi no cambia la silueta; lo que se ve es el zombi separandose de su sombra. Con 0,12 no se notaba.")]
@@ -1015,8 +1017,11 @@ public class EnemyController : MonoBehaviour
         rb.linearVelocity = velocidad;
     }
 
-    // Al costado de la pantalla del lado en que esta, repartido de arriba a abajo. Los
-    // costados salen de la camara y no de los ejes del mundo, por si algun dia gira.
+    // Alrededor del cuerpo, en la franja de la pantalla que la derrota deja libre: la
+    // camara corrio el cuerpo al costado izquierdo, asi que es mas lugar a su izquierda que a
+    // su derecha, donde empiezan los textos. Hasta el 23/9 el cuerpo quedaba en el centro,
+    // tapado, y la horda festejaba a los costados de la pantalla, lejos de el. Los ejes salen
+    // de la camara y no del mundo, por si algun dia gira.
     private void ElegirLugarDelFestejo(Vector3 cuerpo)
     {
         tieneLugarDelFestejo = true;
@@ -1026,11 +1031,17 @@ public class EnemyController : MonoBehaviour
         derecha = derecha.sqrMagnitude > 0.0001f ? derecha.normalized : Vector3.right;
         Vector3 adelante = Vector3.Cross(derecha, Vector3.up);
 
-        float lado = Vector3.Dot(transform.position - cuerpo, derecha);
-        float signo = Mathf.Abs(lado) > 0.1f ? Mathf.Sign(lado) : (Random.value < 0.5f ? -1f : 1f);
-        lugarDelFestejo = cuerpo
-                          + derecha * (signo * Random.Range(costadoDelFestejo.x, costadoDelFestejo.y))
-                          + adelante * Random.Range(alturaDelFestejo.x, alturaDelFestejo.y);
+        Vector2 lugar = Vector2.zero;
+        for (int intento = 0; intento < 8; intento++)
+        {
+            lugar = new Vector2(Random.Range(costadoDelFestejo.x, costadoDelFestejo.y),
+                                Random.Range(alturaDelFestejo.x, alturaDelFestejo.y));
+            if (lugar.sqrMagnitude >= cercaDelCuerpo * cercaDelCuerpo) break;
+        }
+        // Si ninguno quedo lejos del cuerpo, el ultimo se corre hasta la distancia minima.
+        if (lugar.sqrMagnitude < cercaDelCuerpo * cercaDelCuerpo)
+            lugar = (lugar.sqrMagnitude > 0.0001f ? lugar.normalized : Vector2.left) * cercaDelCuerpo;
+        lugarDelFestejo = cuerpo + derecha * lugar.x + adelante * lugar.y;
     }
 
     private void EmpezarAFestejar()

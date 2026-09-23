@@ -197,6 +197,7 @@ public static class PruebasMejoras
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
             ProbarFaroles(informe);
+            ProbarGrisDePocaVida(informe);
 
             // Todo lo que toca Progreso va contra una carpeta temporal, y el
             // finally devuelve el progreso a persistentDataPath pase lo que pase.
@@ -986,6 +987,21 @@ public static class PruebasMejoras
             inf.Igual("faroles: las luces del " + nombre + " van solo por vertice (asi el editor ve lo del telefono)", 0, lucesPorPixel);
             inf.Igual("faroles: el charco del " + nombre + " esta en el piso, debajo de su luz", 0, charcosCorridos);
         }
+    }
+
+    // El gris de poca vida (pedido de Ivan): nada hasta un cuarto de la vida y de ahi, en
+    // linea recta, hasta medio gris con la vida en cero. Al gris total llega recien al morir.
+    static void ProbarGrisDePocaVida(Informe inf)
+    {
+        inf.Cerca("gris: con la vida llena, nada", 0, GrisDePocaVida.CantidadDeGris(1f, 0.25f, 0.5f), 1e-6);
+        inf.Cerca("gris: justo con un cuarto, nada", 0, GrisDePocaVida.CantidadDeGris(0.25f, 0.25f, 0.5f), 1e-6);
+        inf.Cerca("gris: con un octavo, un cuarto de gris", 0.25, GrisDePocaVida.CantidadDeGris(0.125f, 0.25f, 0.5f), 1e-6);
+        inf.Cerca("gris: con la vida en cero, medio gris", 0.5, GrisDePocaVida.CantidadDeGris(0f, 0.25f, 0.5f), 1e-6);
+        inf.Cerca("gris: con vida de menos no se pasa", 0.5, GrisDePocaVida.CantidadDeGris(-0.2f, 0.25f, 0.5f), 1e-6);
+        var jugador = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/Jugador.prefab");
+        var gris = jugador != null ? jugador.GetComponent<GrisDePocaVida>() : null;
+        inf.Verdadero("gris: el jugador lo tiene, desde un cuarto de la vida y hasta medio gris",
+                      gris != null && Mathf.Approximately(gris.desde, 0.25f) && Mathf.Approximately(gris.maximo, 0.5f));
     }
 
     static void ProbarGuardado(Informe inf)

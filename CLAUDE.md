@@ -52,7 +52,7 @@ Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
-Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, Volumen, FuenteConVolumen
+Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
 Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: pradera de día y cementerio de noche)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
@@ -284,7 +284,8 @@ volvía a correr hasta soltar: se deslizaba en la pose).
   (Quieto y Correr, sin tiempo de salida: el del pack esperaba al 63 % del paso para frenar) y **el brazo derecho**
   (máscara `BrazoDerecho`: el brazo y sus dedos), que apunta con `shoot` corra o no, mientras las piernas, el torso y el
   otro brazo siguen corriendo. Entra al clip de disparar pasado el tirón que trae al principio: el de cada tiro lo pone
-  `ArmaEnLaMano`. Los parámetros siguen siendo `run` y `shoot`.
+  `ArmaEnLaMano`. Los parámetros siguen siendo `run` y `shoot`, más el bool `muerto` del estado Morir (ver La derrota
+  encima de la partida).
 - **En el teléfono el cuerpo mira hacia donde se apunta** mientras se apunta (`PlayerJS`), como en PC con el mouse; si
   no, hacia donde camina. Antes miraba siempre hacia donde caminaba, y lo que giraba era el cubito.
 - En las poses de pistola del pack la mano está siempre igual: la empuñadura vertical y el frente de la mano hacia
@@ -921,6 +922,10 @@ partida y la descongela: ver La derrota encima de la partida).
   termina nunca y la tienda deja de tener sentido.
 - **La vida no baja de cero** (`TakeDamage`): el golpe que mata suele sacar más de lo que quedaba (la carga del jefe
   pega ×2,5), y el HUD, que se sigue viendo durante el ¡HAS MUERTO!, mostraba el negativo en rojo.
+- **El jugador se desploma en el golpe que lo mata**, antes de la oferta, y la cámara lo corre a un costado de la
+  ventanita (ver La derrota encima de la partida): las dos cosas van en tiempo sin escalar, así se ven con el juego
+  congelado. Si revive, se levanta y la cámara vuelve (`PlayerController.Levantarse`). El gris de la oferta sale del
+  que haya (`FiltroBlancoYNegro.Tomar`): con poca vida el mundo ya venía perdiendo color.
 - **Volver no regala nada más que seguir jugando**: `EnemyController.DespejarAlrededor` saca del mapa a los
   zombis que estén a `radioDeDespeje` (7 m) **sin puntos, monedas ni mancha**, como el kill-Z, y el jugador
   vuelve con la vida llena y `segundosDeGracia` (2,5 s) sin recibir daño. Si esos zombis dieran monedas, el
@@ -1187,6 +1192,12 @@ que sin `Efectos` instancia las partículas del zombi como antes.
   distancia, tamaño y velocidad contra el prefab original, que se ve igual. **Si un prefab de explosión deja de ser
   una sola ráfaga fija sin loop** (emisión continua, sistemas hijos, gravedad, ruido, fuerzas, colisiones, escala
   despareja) `CrearCopiaDeMuerte` no lo acepta y se instancia como antes; si le cambiás otra cosa, volvé a comparar.
+- **Con poca vida el mundo pierde color** (`GrisDePocaVida`, en la raíz de `Jugador.prefab`; pedido de Ivan): desde un
+  cuarto de la vida, en línea recta, hasta medio gris con la vida en cero. No llega al gris total mientras se juega
+  porque los zombis se distinguen por el color, y el filtro sólo se prende con poca vida, que es una pasada de pantalla
+  completa. Al morir, la oferta de revivir y la derrota toman ese mismo filtro donde quedó y lo terminan; al curarse,
+  vuelve el color y el filtro se apaga. Ivan lo pidió desde el 5 %: con 80 de vida eso es un golpe, y el gris salía
+  medio segundo antes de morir.
 - **Sin música en la partida** (pedido de Ivan): el `AudioSource` del prefab quedó sin clip. `Assets/otros/musica.wav`
   (el loop de 32 s en la bemol mayor) sigue en el proyecto sin uso. Los sonidos nuevos están sintetizados y son provisorios.
 
@@ -1271,13 +1282,20 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
 - **`MenuPausa.JuegoCongelado` incluye la derrota** aunque el tiempo corra (el nombre es de cuando congelaba): corta el
   input, la furia y la pausa de impacto, y la pausa no se abre, ni con Escape ni al perder el foco. Escape es de
   `MenuPerdiste`, que vuelve al menú. Sus tres botones devuelven el `timeScale` a 1 antes de cargar.
-- **La horda festeja** (pedido de Ivan, elegido entre levantarse zombi, comerse el cuerpo, dispersarse o festejar).
-  Con `DerrotaEnLaPartida.Activa`, `EnemyController.MoverseAlFestejo` reemplaza la persecución (también la del jefe,
-  antes que sus patrones): **cada zombi se abre al costado de la pantalla que le queda más cerca**, a 9-12,5 m del cuerpo
-  y repartido de arriba a abajo, se da vuelta a mirarlo y festeja. **Los costados son porque la derrota tapa el
-  centro**: medido con la cámara del juego (12 m de alto, 70°, FOV 60), el renglón más ancho llega a 6,8 m del cuerpo en
-  16:9 y a 8,5 m en 20:9, y la pantalla termina a 13,1 m; festejando alrededor del cuerpo, a 3,5-6,5 m, quedaban todos
-  detrás del texto. El festejo va **en oleadas cada 2,4 s**: tres saltos con el puño en alto (el estado `Festejar`,
+- **El jugador se desploma** (pedido de Ivan): el estado Morir de `Jugador.controller` (el clip `m_death_A` del pack, que
+  cae en el lugar: el movimiento viene horneado en la pose), con el bool `muerto` que prende `PlayerController.Caer` en
+  el golpe que mata. Antes quedaba parado detrás de la derrota mientras la horda festejaba.
+- **La cámara corre el cuerpo a un costado** (`CamaraJugador.MostrarElCuerpo`, elegido por Ivan): la derrota y la
+  ventanita de revivir van al centro de la pantalla, y el cuerpo caía justo debajo de "+N MONEDAS". Se desliza en 0,8 s
+  hasta que el cuerpo queda en el 22 % del ancho (`cuerpoEnLaPantalla`), a la izquierda, donde no hay nada en ninguna de
+  las dos: los textos de la derrota empiezan en el 31 % y la ventanita en el 33 %. El corrimiento sale de la cámara
+  (la distancia sobre el piso entre el centro de la pantalla y ese punto), así vale en 16:9 y en 20:9.
+- **La horda festeja alrededor del cuerpo** (pedido de Ivan, elegido entre levantarse zombi, comerse el cuerpo,
+  dispersarse o festejar). Con `DerrotaEnLaPartida.Activa`, `EnemyController.MoverseAlFestejo` reemplaza la persecución
+  (también la del jefe, antes que sus patrones): cada zombi va a un lugar en esa franja libre, alrededor del cuerpo
+  (de 5 m a su izquierda a 1,8 m a su derecha, donde empiezan los textos, y 4,5 m hacia arriba y hacia abajo, nunca a
+  menos de 1,6 m de él), se da vuelta a mirarlo y festeja. Antes, con el cuerpo tapado en el centro, se abrían a los
+  costados de la pantalla, a 9-12,5 m, lejos de él. El festejo va **en oleadas cada 2,4 s**: tres saltos con el puño en alto (el estado `Festejar`,
   que es el zarpazo con el Motion Time entre la mano al hombro, 0,15 s, y sobre la cabeza, 0,29 s), el cuerpo
   arqueado hacia atrás como el jefe al invocar, y un desfase de hasta 0,45 s por zombi para que no sea un baile
   sincronizado. **Lo que se lee desde la cámara es el salto** (medio alto del zombi, con estirón): a esa distancia un
@@ -1286,7 +1304,7 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   oleadas: después festejan callados, que la derrota sigue en pantalla. `Golpear` no arranca zarpazos a un jugador
   muerto, y `JefePatrones` deja de moverse y de posar mientras festeja.
 - **ShowBies > Pruebas > Derrota encima de la partida** mata al jugador con horda encima y verifica todo esto cuadro a
-  cuadro (24 chequeos, en `Builds/prueba_derrota.txt`, que además anota cualquier excepción que salte); **Grabar la derrota** además la graba en
+  cuadro (29 chequeos, en `Builds/prueba_derrota.txt`, que además anota cualquier excepción que salte); **Grabar la derrota** además la graba en
   `Builds/derrota_video/`. El camino de rechazar el revivir no lo recorre: en el editor el proveedor es `Nulo` y no hay
   oferta.
 

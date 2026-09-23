@@ -82,6 +82,7 @@ public class OfertaDeRevivir : MonoBehaviour
     // La pantalla se queda en blanco y negro mientras dura la oferta. Es un filtro
     // en la camara, asi que la ventanita (UI en overlay) sigue a color.
     private FiltroBlancoYNegro filtro;
+    private float grisInicial;
 
     // Para devolver el anillo como estaba: lo late el apuro y lo tiñe de rojo.
     private Color colorDelAnillo;
@@ -184,7 +185,10 @@ public class OfertaDeRevivir : MonoBehaviour
         ultimoSegundoEscrito = -1;
 
         if (velo != null) velo.color = ColorDelVelo(0f);
-        filtro = FiltroBlancoYNegro.Enganchar(Camera.main);
+        // Como este: con poca vida el mundo ya venia perdiendo color (GrisDePocaVida), y
+        // volver al color un cuadro para agrisar de nuevo se ve como un parpadeo.
+        filtro = FiltroBlancoYNegro.Tomar(Camera.main);
+        grisInicial = filtro != null ? filtro.cantidad : 0f;
         if (anillo != null) anillo.fillAmount = 1f;
         if (ventana != null) ventana.localScale = Vector3.zero;
         if (botonVideo != null) botonVideo.interactable = true;
@@ -217,7 +221,7 @@ public class OfertaDeRevivir : MonoBehaviour
 
         float grisado = agrisado > 0f ? Mathf.Clamp01(pasado / agrisado) : 1f;
         if (velo != null) velo.color = ColorDelVelo(grisado);
-        if (filtro != null) filtro.cantidad = grisado;
+        if (filtro != null) filtro.cantidad = Mathf.Lerp(grisInicial, 1f, grisado);
 
         if (ventana != null)
         {
