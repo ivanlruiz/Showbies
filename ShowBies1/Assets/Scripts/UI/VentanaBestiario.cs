@@ -225,7 +225,7 @@ public class VentanaBestiario : MonoBehaviour
 
         ventana = ConstructorUI.Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 660f));
         var fondo = ventana.gameObject.AddComponent<Image>();
-        ConstructorUI.Redondear(fondo, pildora, 3f);
+        ConstructorUI.VentanaNeon(ventana, fondo, pildora);
         fondo.color = ColorDeVentana;
 
         var titulo = ConstructorUI.Texto(ventana, "Titulo", Textos.De("bestiario_titulo"), 80f, colorTitulo,
@@ -270,7 +270,7 @@ public class VentanaBestiario : MonoBehaviour
                                               Tema.Elegir(new Color(0f, 0f, 0f, 0.12f), RolDeTema.Surco), colorBarra);
 
         var cobrar = ConstructorUI.Boton(tarjeta.raiz, "Cobrar", new Vector2(0f, -152f), new Vector2(170f, 70f),
-                                         new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255), null,
+                                         ConstructorUI.Verde, ConstructorUI.VerdeTexto, null,
                                          "", 38f, fuente, pildora, sonidoClick);
         cobrar.onClick.AddListener(() => Cobrar(indice));
         cobrar.GetComponent<BotonJugoso>().respirar = true;

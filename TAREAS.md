@@ -344,6 +344,13 @@ Lo que quedó anotado, de mayor a menor:
   borde celeste que brilla, botones con halo verde neón, sin los adornos de antes; la arma `ConstructorTienda` y no
   sigue el tema. Falta verla en el teléfono (las capturas son con el juego quieto, ver la trampa del editor en segundo
   plano).
+- [x] **Todo el juego de carbón neón, fase 1: el menú** (Ivan: "la idea es que todo el juego tenga esa temática").
+  Un solo tema (el claro y el interruptor de Opciones se fueron), el menú siempre de noche, los botones rellenos de neón
+  con su halo, los botones redondos con su anillo celeste y las ventanas con borde celeste y título rosa. Lo viste
+  `ConstructorNeon` en la escena y `ConstructorUI` en lo que se arma en código.
+- [ ] **Fase 2: las pantallas de la partida**: la derrota, la pausa, el revivir, el tutorial y el HUD.
+- [ ] **Fase 3: el mundo de noche** (elegido por Ivan): todas las oleadas y el modo libre de noche, con luces de neón en
+  el escenario.
 - [ ] Ver en el teléfono la ventana de logros y el botón del nivel: se verificaron con capturas en 16:9 y 20:9, pero con
   el juego quieto en el primer cuadro (ver la trampa del editor en segundo plano).
 

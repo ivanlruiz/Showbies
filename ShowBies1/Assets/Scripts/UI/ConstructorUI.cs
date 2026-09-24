@@ -8,6 +8,79 @@ using UnityEngine.UI;
 // todas iguales sin repetir el mismo codigo en cada una.
 public static class ConstructorUI
 {
+    // --- Carbón neón (ver Tema): la paleta de los botones y los bordes, la misma de la
+    // tienda (ConstructorTienda) y de las escenas (ConstructorNeon).
+    public static readonly Color Celeste = new Color(0f, 0.898f, 1f, 1f);            // #00E5FF, los bordes
+    public static readonly Color Magenta = new Color(1f, 0.169f, 0.839f, 1f);        // #FF2BD6, el halo de los titulos
+    public static readonly Color TituloNeon = new Color(1f, 0.702f, 0.949f, 1f);     // #FFB3F2, la cara de los titulos
+    public static readonly Color Verde = new Color(0.224f, 1f, 0.533f, 1f);          // #39FF88: jugar, cobrar
+    public static readonly Color VerdeTexto = new Color(0.012f, 0.125f, 0.059f, 1f);
+    public static readonly Color Amarillo = new Color(1f, 0.882f, 0.302f, 1f);       // #FFE14D: la tienda, el tope
+    public static readonly Color AmarilloTexto = new Color(0.102f, 0.086f, 0f, 1f);
+    public static readonly Color Naranja = new Color(1f, 0.624f, 0.11f, 1f);         // #FF9F1C: las oleadas, el video
+    public static readonly Color NaranjaTexto = new Color(0.165f, 0.078f, 0f, 1f);
+    public static readonly Color Rojo = new Color(1f, 0.231f, 0.361f, 1f);           // #FF3B5C
+
+    // El radio de las puntas de la linea de NeonBorde: las ventanas se redondean igual
+    // para que la linea les quede justa.
+    public const float RadioNeon = 26f;
+
+    // Una ventana de carbón neón: el fondo con las puntas del radio del neón y el borde
+    // celeste que brilla, que sobresale 40 de cada lado (el margen que tiene el dibujo).
+    // Los brillos estan en Sprites/UI/Resources para que lo armado en codigo los tenga
+    // sin cablear nada.
+    public static void VentanaNeon(RectTransform ventana, Image fondo, Sprite pildora)
+    {
+        if (fondo != null && pildora != null) Redondear(fondo, pildora, 127f / RadioNeon);
+        var borde = Resources.Load<Sprite>("NeonBorde");
+        if (ventana == null || borde == null) return;
+        var halo = Estirar(ventana, "Neon");
+        halo.SetAsFirstSibling();
+        halo.offsetMin = new Vector2(-40f, -40f);
+        halo.offsetMax = new Vector2(40f, 40f);
+        var img = halo.gameObject.AddComponent<Image>();
+        img.sprite = borde;
+        img.type = Image.Type.Sliced;
+        img.color = new Color(Celeste.r, Celeste.g, Celeste.b, 0.85f);
+        img.raycastTarget = false;
+    }
+
+    // El halo que va detras de un boton del color del boton; uno de vidrio (translucido o
+    // gris) lo lleva celeste y tenue.
+    public static Color ColorDeHalo(Color boton)
+    {
+        float h, s, v;
+        Color.RGBToHSV(boton, out h, out s, out v);
+        bool vidrio = boton.a < 0.95f || s < 0.35f;
+        return vidrio ? new Color(Celeste.r, Celeste.g, Celeste.b, 0.3f) : new Color(boton.r, boton.g, boton.b, 0.5f);
+    }
+
+    // La sombra de un boton pasa a ser su halo de neón: la pildora borrosa, 34 mas grande
+    // de cada lado y sin correrse. Sin el sprite, la sombra oscura de antes.
+    public static void HaloDeBoton(Image sombra, Color colorDelBoton)
+    {
+        if (sombra == null) return;
+        var halo = Resources.Load<Sprite>("NeonPildora");
+        if (halo == null) return;
+        var rt = sombra.rectTransform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = new Vector2(-34f, -34f);
+        rt.offsetMax = new Vector2(34f, 34f);
+        sombra.sprite = halo;
+        sombra.type = Image.Type.Sliced;
+        sombra.pixelsPerUnitMultiplier = 1f;
+        sombra.color = ColorDeHalo(colorDelBoton);
+    }
+
+    // Para un boton que cambia de color (el cofre de las misiones): el halo lo sigue.
+    public static void PintarHalo(Button boton, Color colorDelBoton)
+    {
+        var sombra = boton != null ? boton.transform.Find("Sombra") : null;
+        var img = sombra != null ? sombra.GetComponent<Image>() : null;
+        if (img != null && img.sprite != null && img.sprite.name == "NeonPildora") img.color = ColorDeHalo(colorDelBoton);
+    }
+
     public static RectTransform Rect(RectTransform padre, string nombre, Vector2 posicion, Vector2 tamanio)
     {
         var go = new GameObject(nombre, typeof(RectTransform));
@@ -128,6 +201,7 @@ public static class ConstructorUI
         imgSombra.type = Image.Type.Sliced;
         imgSombra.color = new Color(0f, 0f, 0f, 0.3f);
         imgSombra.raycastTarget = false;
+        HaloDeBoton(imgSombra, color);
         return button;
     }
 

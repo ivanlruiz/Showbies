@@ -366,6 +366,7 @@ public class VentanaMisiones : MonoBehaviour
             textoCofre.text = Textos.Formato("misiones_cofre_falta", MisionesDiarias.Cobradas);
         }
         fondoCofre.color = fondo;
+        ConstructorUI.PintarHalo(cofre, fondo);
         textoCofre.color = texto;
         if (iconoDelCofre != null) iconoDelCofre.color = texto;
         if (jugoCofre != null) jugoCofre.respirar = MisionesDiarias.CofreDisponible;
@@ -399,7 +400,7 @@ public class VentanaMisiones : MonoBehaviour
 
         ventana = Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 820f));
         var fondo = ventana.gameObject.AddComponent<Image>();
-        Redondear(fondo, 3f);
+        ConstructorUI.VentanaNeon(ventana, fondo, pildora);
         fondo.color = ColorDeVentana;
 
         var titulo = Texto(ventana, "Titulo", Textos.De("misiones_titulo"), 80f, colorTitulo, new Vector2(0f, 330f), new Vector2(1100f, 100f));
@@ -469,7 +470,7 @@ public class VentanaMisiones : MonoBehaviour
         s.premio.alignment = TextAlignmentOptions.Left;
 
         var cobrar = ArmarBoton(s.raiz, "Cobrar", new Vector2(440f, 0f), new Vector2(200f, 84f),
-                                new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255), null,
+                                ConstructorUI.Verde, ConstructorUI.VerdeTexto, null,
                                 Textos.De("mision_cobrar"), 40f);
         cobrar.onClick.AddListener(CobrarSemana);
         cobrar.GetComponent<BotonJugoso>().respirar = true;
@@ -538,7 +539,7 @@ public class VentanaMisiones : MonoBehaviour
         fila.premio.alignment = TextAlignmentOptions.Left;
 
         var cobrar = ArmarBoton(fila.raiz, "Cobrar", new Vector2(440f, 0f), new Vector2(200f, 84f),
-                                new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255), null,
+                                ConstructorUI.Verde, ConstructorUI.VerdeTexto, null,
                                 Textos.De("mision_cobrar"), 40f);
         cobrar.onClick.AddListener(() => Cobrar(indice));
         cobrar.GetComponent<BotonJugoso>().respirar = true;

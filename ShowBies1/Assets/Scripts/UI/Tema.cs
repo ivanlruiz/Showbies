@@ -18,38 +18,35 @@ public enum RolDeTema
     Acento       // un verde que sobre el fondo claro es oscuro y sobre el oscuro no se leeria
 }
 
-// El tema de la interfaz: **claro** (el de siempre, "pasto de dia") u **oscuro**
-// (pedido de Ivan). Cambia los paneles, las tarjetas y los textos de las pantallas:
-// el menu, la tienda, la derrota y las ventanas. El pasto, el cielo y la partida no
-// se tocan, porque el tema es de la interfaz y no del mundo.
+// El tema de la interfaz. Desde el 24/9 hay uno solo, **carbón neón** (pedido de Ivan:
+// eligió esa paleta para la tienda y "la idea es que todo el juego tenga esa temática"):
+// paneles casi negros, textos blancos y grises azulados, y el neón en los bordes y los
+// botones. Antes había un claro ("pasto de día", paneles crema) y un oscuro que se
+// prendía en Opciones; el claro se fue y el oscuro pasó a ser el neón, que queda siempre.
 //
-// El tema claro es lo que ya esta guardado en cada escena y prefab: PintarConTema se
-// acuerda del color que traia el objeto y lo devuelve tal cual, y las ventanas que se
-// arman en codigo pasan su color de siempre por Elegir. La paleta de aca es solo la
-// del oscuro, asi que sumar el modo oscuro no puede cambiar como se ve hoy el juego.
+// El mecanismo de papeles sigue igual: los colores de las escenas y los prefabs son los
+// del claro de antes (PintarConTema los guarda y Elegir los recibe), y con el tema fijo
+// en oscuro cada papel toma el suyo de acá. Así no hubo que tocar cada escena. El claro
+// solo lo usan las pruebas, para ver que el mecanismo sigue devolviendo lo de la escena.
 //
-// Va en PlayerPrefs y no en el progreso porque es una preferencia del dispositivo,
-// como el idioma y los volumenes. Nadie se suscribe a nada: quien pinta mira Revision
-// en su Update, igual que con Progreso.Revision y con Idioma.Revision.
+// Nadie se suscribe a nada: quien pinta mira Revision en su Update, igual que con
+// Progreso.Revision y con Idioma.Revision.
 public static class Tema
 {
-    public const string ClavePreferencia = "TemaOscuro";
+    // La paleta de carbón neón, la de la tienda (ConstructorTienda). Los grises tiran a
+    // azul: al lado del neón, un gris neutro se ve sucio.
+    public static readonly Color PanelOscuro = new Color(0.043f, 0.051f, 0.075f, 0.98f);    // #0B0D13
+    public static readonly Color TarjetaOscura = new Color(0.071f, 0.086f, 0.133f, 1f);     // #121622
+    public static readonly Color TextoClaro = new Color(0.949f, 0.957f, 0.973f, 1f);        // #F2F4F8
+    public static readonly Color TextoSuaveClaro = new Color(0.541f, 0.58f, 0.678f, 1f);    // #8A94AD
+    public static readonly Color HuecoClaro = new Color(1f, 1f, 1f, 0.06f);
+    public static readonly Color SurcoClaro = new Color(1f, 1f, 1f, 0.14f);
+    public static readonly Color VidrioClaro = new Color(0.067f, 0.078f, 0.114f, 0.92f);   // #11141D
+    public static readonly Color ApagadoOscuro = new Color(0.086f, 0.102f, 0.141f, 1f);    // #161A24
+    public static readonly Color FondoOscuro = new Color(0.024f, 0.027f, 0.043f, 1f);      // #06070B
+    public static readonly Color AcentoClaro = new Color(0.224f, 1f, 0.533f, 1f);          // #39FF88, el verde neón
 
-    // La paleta del tema oscuro. Los grises tiran a azul: un gris neutro al lado del
-    // dorado de la tienda y del verde de los botones se ve sucio.
-    public static readonly Color PanelOscuro = new Color(0.094f, 0.106f, 0.149f, 0.98f);
-    public static readonly Color TarjetaOscura = new Color(0.141f, 0.161f, 0.22f, 1f);
-    public static readonly Color TextoClaro = new Color(0.937f, 0.945f, 0.969f, 1f);
-    public static readonly Color TextoSuaveClaro = new Color(0.64f, 0.67f, 0.75f, 0.95f);
-    public static readonly Color HuecoClaro = new Color(1f, 1f, 1f, 0.07f);
-    public static readonly Color SurcoClaro = new Color(1f, 1f, 1f, 0.16f);
-    public static readonly Color VidrioClaro = new Color(1f, 1f, 1f, 0.14f);
-    public static readonly Color ApagadoOscuro = new Color(0.231f, 0.255f, 0.322f, 1f);
-    public static readonly Color FondoOscuro = new Color(0.067f, 0.09f, 0.149f, 1f);
-    public static readonly Color AcentoClaro = new Color(0.435f, 0.878f, 0.31f, 1f);
-
-    private static bool cargado;
-    private static bool oscuro;
+    private static bool oscuroDePrueba;
     private static bool fijadoParaPruebas;
 
     public static int Revision { get; private set; }
@@ -57,41 +54,16 @@ public static class Tema
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
-        cargado = false;
-        oscuro = false;
+        oscuroDePrueba = false;
         fijadoParaPruebas = false;
         Revision = 0;
     }
 
-    // Arranca en claro: es como se ve el juego desde siempre y como salen las capturas
-    // de la ficha. Quien quiera el oscuro lo prende una vez y queda.
+    // Siempre: el neón es el único tema. La preferencia vieja ("TemaOscuro" en
+    // PlayerPrefs) ya no se lee.
     public static bool Oscuro
     {
-        get
-        {
-            if (!cargado)
-            {
-                cargado = true;
-                oscuro = PlayerPrefs.GetInt(ClavePreferencia, 0) != 0;
-            }
-            return oscuro;
-        }
-    }
-
-    public static void Fijar(bool nuevo)
-    {
-        if (Oscuro == nuevo) return;
-        oscuro = nuevo;
-        Revision++;
-
-        if (fijadoParaPruebas) return;
-        PlayerPrefs.SetInt(ClavePreferencia, nuevo ? 1 : 0);
-        PlayerPrefs.Save();
-    }
-
-    public static void Alternar()
-    {
-        Fijar(!Oscuro);
+        get { return fijadoParaPruebas ? oscuroDePrueba : true; }
     }
 
     // El color que le toca a un rol en el tema oscuro.
@@ -137,21 +109,13 @@ public static class Tema
         pintor.Repintar();
     }
 
-    // Solo para las pruebas del editor: fija el tema sin escribir PlayerPrefs.
-    // Con null vuelve al guardado.
+    // Solo para las pruebas del editor: con false se ve el claro de antes (lo que traen
+    // las escenas), para probar que el mecanismo lo devuelve tal cual. Con null, el de
+    // siempre.
     public static void UsarParaPruebas(bool? tema)
     {
-        if (tema.HasValue)
-        {
-            fijadoParaPruebas = true;
-            cargado = true;
-            oscuro = tema.Value;
-        }
-        else
-        {
-            fijadoParaPruebas = false;
-            cargado = false;
-        }
+        fijadoParaPruebas = tema.HasValue;
+        oscuroDePrueba = tema ?? true;
         Revision++;
     }
 }

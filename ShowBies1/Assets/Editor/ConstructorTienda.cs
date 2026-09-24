@@ -16,13 +16,13 @@ using UnityEngine.UI;
 //
 // No se edita a mano: se vuelve a correr (ShowBies > Tienda > Vestir de carbón neón),
 // y correrlo dos veces deja lo mismo. Arregla también la importación de los dos brillos
-// (Sprites/UI/NeonBorde y NeonPildora) y arma el material del título.
+// (Sprites/UI/Resources/NeonBorde y NeonPildora) y arma el material del título.
 public static class ConstructorTienda
 {
     const string RutaTienda = "Assets/Prefabs/UI/Tienda.prefab";
     const string RutaTarjeta = "Assets/Prefabs/UI/TarjetaMejora.prefab";
-    const string RutaBorde = "Assets/Sprites/UI/NeonBorde.png";
-    const string RutaPildora = "Assets/Sprites/UI/NeonPildora.png";
+    const string RutaBorde = "Assets/Sprites/UI/Resources/NeonBorde.png";
+    const string RutaPildora = "Assets/Sprites/UI/Resources/NeonPildora.png";
     const string RutaPildoraRedonda = "Assets/Sprites/UI/Pildora.png";
     const string RutaMaterialBase = "Assets/Fuentes/Bangers SDF - Outline.mat";
     const string RutaMaterialNeon = "Assets/Fuentes/Bangers SDF - Neon.mat";

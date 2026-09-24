@@ -53,8 +53,8 @@ public class VentanaLogros : MonoBehaviour
     private Color ColorApagado { get { return Tema.Elegir(colorApagado, RolDeTema.Surco); } }
     private Color ColorDeVidrio { get { return Tema.Elegir(colorVidrio, RolDeTema.Vidrio); } }
 
-    private static readonly Color ColorVerde = new Color32(0x7d, 0xe0, 0x4a, 255);
-    private static readonly Color ColorTextoVerde = new Color32(0x10, 0x24, 0x0e, 255);
+    private static readonly Color ColorVerde = ConstructorUI.Verde;
+    private static readonly Color ColorTextoVerde = ConstructorUI.VerdeTexto;
     private static readonly int[] SemitonosFestejo = { -12, -8, -5, 0, 4, 7, 12 };
 
     // Las medidas de la lista: alto de cada fila y de la vista que se desplaza.
@@ -447,7 +447,7 @@ public class VentanaLogros : MonoBehaviour
 
         ventana = ConstructorUI.Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 820f));
         var fondo = ventana.gameObject.AddComponent<Image>();
-        ConstructorUI.Redondear(fondo, pildora, 3f);
+        ConstructorUI.VentanaNeon(ventana, fondo, pildora);
         fondo.color = ColorDeVentana;
 
         var titulo = ConstructorUI.Texto(ventana, "Titulo", Textos.De("logros_titulo"), 80f, colorTitulo,

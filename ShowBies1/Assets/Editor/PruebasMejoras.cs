@@ -671,8 +671,10 @@ public static class PruebasMejoras
     static void ProbarTema(Informe inf)
     {
         int antes = Tema.Revision;
+        Tema.UsarParaPruebas(null);
+        inf.Verdadero("tema: el de siempre es el neon (el oscuro)", Tema.Oscuro);
         Tema.UsarParaPruebas(false);
-        inf.Verdadero("tema: arranca en claro", !Tema.Oscuro);
+        inf.Verdadero("tema: el claro de antes queda para las pruebas", !Tema.Oscuro);
 
         var propio = new Color(0.12f, 0.34f, 0.56f, 0.78f);
         inf.Verdadero("tema claro: Elegir devuelve el color de la escena",
@@ -708,14 +710,6 @@ public static class PruebasMejoras
         var crema = new Color(1f, 0.96f, 0.86f, 1f);
         var textoOscuro = new Color(0.16f, 0.14f, 0.2f, 1f);
         Contraste(inf, "texto oscuro sobre la crema", textoOscuro, crema, 4.5);
-
-        // Fijar solo mueve Revision cuando cambia de verdad.
-        int revision = Tema.Revision;
-        Tema.Fijar(true);
-        inf.Igual("tema: fijar lo mismo no cambia la revision", revision, Tema.Revision);
-        Tema.Fijar(false);
-        inf.Verdadero("tema: fijar el otro sube la revision", Tema.Revision > revision);
-        inf.Verdadero("tema: quedo en claro", !Tema.Oscuro);
 
         Tema.UsarParaPruebas(null);
         inf.Verdadero("tema: la revision avanza con cada cambio", Tema.Revision > antes);

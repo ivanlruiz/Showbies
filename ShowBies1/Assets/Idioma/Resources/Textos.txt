@@ -27,7 +27,6 @@ comun_volver	BACK	VOLVER
 opciones_titulo	OPTIONS	OPCIONES
 sonido_efectos	EFFECTS	EFECTOS
 sonido_musica	MUSIC	MÚSICA
-opciones_tema	DARK MODE	MODO OSCURO
 idioma_titulo	LANGUAGE	IDIOMA
 
 # --- Primera vez (GuiaPrimeraPartida y GuiaPrimeraCompra)

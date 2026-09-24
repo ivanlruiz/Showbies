@@ -66,9 +66,9 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
-Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
+Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón
 ```
 
 Y **fuera del proyecto de Unity**, en la raíz del repo:
@@ -1065,9 +1065,9 @@ Boton            <- Button + BotonJugoso (la raiz recibe el toque y no se anima)
     Texto        <- TMP centrado, oscuro
 ```
 
-El color dice que hace cada uno: **verde** lo que te devuelve al juego (PLAY, PLAY AGAIN, RESUME, ENDLESS),
-**dorado** la tienda (UPGRADES) y el idioma elegido, **azul** lo que cambia de modo (RESTART),
-**naranja** las oleadas, **gris** lo secundario (TUTORIAL, QUIT, MENU, BACK, NO THANKS).
+El color dice que hace cada uno, en neón y con su halo (ver Tema: carbón neón): **verde** lo que te devuelve al juego
+(PLAY, PLAY AGAIN, RESUME, ENDLESS), **amarillo** la tienda (UPGRADES) y el idioma elegido, **celeste** lo que cambia de
+modo (RESTART), **naranja** las oleadas, **vidrio oscuro** lo secundario (TUTORIAL, QUIT, MENU, BACK, NO THANKS).
 
 **Todos los botones son pildoras con icono** (estilo elegido por Ivan): el mismo molde, pero `Fondo` y `Sombra`
 usan `Sprites/UI/Pildora` en Sliced (un circulo con bordes de 127 px: Unity achica los bordes al alto del boton y
@@ -1079,11 +1079,10 @@ reiniciar, mejoras, menu, volver, salir y los modos); los que ya dicen todo con 
 precio de las tarjetas, los idiomas, el video de la derrota, NO, GRACIAS) son solo pildora. Para uno nuevo: la forma de
 `Pildora`, un `Icono` con `IconoDeBoton` y los colores de arriba.
 
-**La paleta es clara, "pasto de dia"** (elegida por Ivan; es el **tema claro**, ver Tema claro y oscuro): cielo celeste (0,66; 0,86; 0,96) en las camaras, la niebla del
-menu y el fondo de la derrota; pasto verde claro (`Materiales/PisoGrilla.png` con `prototype_512x512_green2`, que ya no es
-metalico: con `_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas; paneles crema (las
-ventanas del menú) y tarjetas blancas con texto oscuro. La tienda no: es de carbón neón con los dos temas (ver Mejoras y
-tienda). **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
+**El mundo de las partidas es claro, "pasto de dia"** (elegido por Ivan): cielo celeste (0,66; 0,86; 0,96) en las
+camaras; pasto verde claro (`Materiales/PisoGrilla.png` con `prototype_512x512_green2`, que ya no es metalico: con
+`_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas. La interfaz es de carbón neón (ver
+Tema: carbón neón), y Ivan pidió el mundo de noche también: está en TAREAS. **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
 contorno** con el material `Bangers SDF - Outline` (HUD, derrota, titulos): sin contorno, el blanco y el amarillo se pierden.
 La pausa, el revivir y los
 paneles del tutorial siguen oscuros a proposito: tapan la partida.
@@ -1113,7 +1112,7 @@ trampa).
   de la pausa, que la tapa. Espera un segundo desde que el jefe aparece: la vida definitiva se la pone quien lo saca,
   con los multiplicadores de la oleada, y preguntarla antes la fijaría sin ellos.
 
-**Con el modo oscuro el fondo del menu pasa a la noche** (ver Tema claro y oscuro).
+**El fondo del menu es de noche** (ver Tema: carbón neón).
 
 **El fondo del menu esta vivo.** `FondoMenu` (objeto raiz `FondoMenu` de `Menu.unity`) acomoda la camara del menu
 mirando un poco desde arriba, reusa su luz direccional y arma el piso de la partida con niebla del color del cielo,
@@ -1135,49 +1134,64 @@ Las posiciones de la derrota y de la ventanita de revivir estan **medidas**, no 
 de esas pantallas, revisa que ningun par de elementos se pise, contando los que se prenden solos (la oferta de
 video y el aviso de compras comparten renglon a proposito).
 
-## Tema claro y oscuro
+## Tema: carbón neón
 
-La interfaz tiene **dos temas**: el **claro** de siempre (paneles crema, tarjetas blancas, texto oscuro, el menú
-de día) y el **oscuro** (pedido de Ivan), que se prende con **MODO OSCURO** en la ventana de opciones del engranaje
-y queda guardado. Cambia el menú, la tienda, la derrota y todas las ventanas; **las partidas no se tocan**, que el
-tema es de la interfaz y no del mundo.
+Desde el 24/9 la interfaz tiene **un solo tema, carbón neón** (pedido de Ivan: eligió esa paleta para la tienda entre
+seis maquetas, y "la idea es que todo el juego tenga esa temática"). Son paneles casi negros, textos blancos y grises
+azulados, bordes celestes que brillan, títulos rosa con halo magenta y botones rellenos de neón con su halo. Antes había
+un claro ("pasto de día", paneles crema) y un oscuro que se prendía en Opciones; el claro se fue, el oscuro pasó a ser el
+neón y el interruptor se sacó (`PlayerPrefs["TemaOscuro"]` ya no se lee). Faltan las pantallas de la partida y el mundo
+(ver TAREAS).
 
-- **El tema claro es lo que está guardado en cada escena y prefab**, no una paleta aparte: `PintarConTema` se
-  acuerda del color que traía el objeto (`colorClaro`, que se completa solo al ponerle el componente) y lo devuelve
-  tal cual. `Tema` sólo define la paleta del oscuro. Por eso sumar el modo oscuro no puede cambiar cómo se ve hoy
-  el juego, y por eso un color nuevo del tema claro se toca en la escena, como siempre.
+- **El mecanismo de papeles sigue igual.** Los colores guardados en las escenas y los prefabs son los del claro de
+  antes: `PintarConTema` se acuerda de ese color (`colorClaro`) y las ventanas que se arman en código lo pasan por
+  `Tema.Elegir(claro, rol)`. Con `Tema.Oscuro` fijo en verdadero, cada papel toma su color de la paleta de `Tema`. Así no
+  hubo que tocar cada escena, y el claro queda solo para las pruebas (`Tema.UsarParaPruebas(false)`).
 - **Cada color cumple un papel** (`RolDeTema`): `Panel` (el fondo de una ventana), `Tarjeta`, `Texto`, `TextoSuave`,
   `Hueco` (el relieve que separa una fila), `Surco` (el fondo de una barra), `Vidrio` (los botones secundarios),
-  `Apagado`, `Fondo` (una pantalla entera, la derrota) y `Acento` (un verde que sobre claro es oscuro y sobre el
-  oscuro no se leería). **Lo que tiene color propio no lleva papel**: el verde de jugar, el dorado de la tienda, el
-  rojo de GAME OVER y el color de cada mejora significan algo y valen en los dos temas.
+  `Apagado`, `Fondo` (una pantalla entera, la derrota) y `Acento` (el verde neón). **Lo que tiene color propio no lleva
+  papel**: el verde de jugar, el amarillo de la tienda, el rojo de GAME OVER y el color de cada mejora significan algo.
 - **Un objeto de escena o prefab lleva `PintarConTema`** con su papel: la ventana del idioma (que copian la de
   opciones y la de salir), el fondo y los textos de la derrota y los botones de vidrio. La tienda y su tarjeta no llevan
-  ninguno desde el 24/9: son de carbón neón en los dos temas. **Lo que se arma en código** pasa su color de siempre por `Tema.Elegir(claro,
-  rol)`; si esa ventana no se vuelve a armar, se le pone el componente con `Tema.Pintar(grafico, rol, claro)` y se
-  repinta sola. `Tema.Pintar` pinta en el acto: sobre un objeto prendido, `AddComponent` ya lo había pintado en su
-  `OnEnable` con el blanco de fábrica, y hasta el 24/9 quedaba blanco hasta el próximo cambio de tema (le pasó al botón
-  del nivel). Las ventanas de misiones y bestiario se rearman al abrirlas si cambió `Tema.Revision`, igual que
-  con `Idioma.Revision`.
+  ninguno: tienen su paleta propia (ver Mejoras y tienda). **Lo que se arma en código** pasa su color por
+  `Tema.Elegir(claro, rol)`; si esa ventana no se vuelve a armar, se le pone el componente con
+  `Tema.Pintar(grafico, rol, claro)`. `Tema.Pintar` pinta en el acto: sobre un objeto prendido, `AddComponent` ya lo había
+  pintado en su `OnEnable` con el blanco de fábrica, y hasta el 24/9 quedaba blanco hasta el próximo cambio de tema (le
+  pasó al botón del nivel).
 - **Nadie se suscribe a nada**: `Tema.Revision` sube con cada cambio y quien pinta lo mira en su `Update`, como con
-  `Progreso.Revision`. La preferencia va en `PlayerPrefs["TemaOscuro"]`, como el idioma y los volúmenes, porque es
-  del dispositivo y no progreso. **Arranca en claro**, que es como salen las capturas de la ficha.
-- **El menú se hace de noche** (`FondoMenu`): el cielo, la luz, la luz ambiente y la niebla se funden en 0,7 s con
-  la misma paleta que el capítulo del cementerio y el pasto pasa a la tierra (`PisoCementerio.mat`). Se ve mientras
-  se toca el interruptor, con la ventana de opciones abierta encima. El título 3D se esconde en la niebla hacia
-  `FondoMenu.CieloActual` y no hacia un celeste fijo, o de noche quedaría como un halo claro.
-- **El interruptor** (`Interruptor`) es una píldora con una perilla que se corre, armada en código como
-  `SliderVolumen`, y se usa para cualquier sí/no. La ventana del engranaje pasó a llamarse OPCIONES: los dos
-  volúmenes y el modo oscuro.
+  `Progreso.Revision`. Hoy solo cambia en las pruebas.
+- **El menú es de noche siempre** (`FondoMenu`, que con `Tema.Oscuro` arranca en la noche): el cielo, la luz, la luz
+  ambiente y la niebla del capítulo del cementerio, y la tierra (`PisoCementerio.mat`) en vez del pasto. El título 3D se
+  esconde en la niebla hacia `FondoMenu.CieloActual` y no hacia un celeste fijo, o de noche quedaría como un halo claro.
+- **Los brillos son tres sprites blancos que se tiñen**, en `Sprites/UI/Resources` para que lo armado en código los
+  cargue sin cablear nada:
+  - `NeonBorde`: el borde de las ventanas y las tarjetas, en Sliced, con 40 de margen afuera de la línea y las puntas de
+    radio 26. Las ventanas se redondean igual (`ConstructorUI.RadioNeon`) para que la línea les quede justa.
+  - `NeonPildora`: el halo detrás de un botón.
+  - `NeonAnillo`: el de los botones redondos.
+- **Lo que se arma en código lo viste `ConstructorUI`**:
+  - `VentanaNeon`: el fondo redondeado y el borde.
+  - `HaloDeBoton`: la sombra de cada botón pasa a ser su halo, del color del botón, o celeste y tenue si es de vidrio.
+  - La paleta de los botones: `Verde` (jugar, cobrar), `Amarillo` (la tienda, el tope), `Naranja` (las oleadas, el
+    vídeo), `Celeste` (los bordes) y `Rojo`.
+- **Lo que está en las escenas lo viste `ConstructorNeon`** (ShowBies > Neón > Vestir el menú), que no se edita a mano:
+  - Pasa cada botón del molde de siempre a su neón según el color que tenía, con el texto oscuro. El vidrio queda oscuro
+    con un halo celeste.
+  - Le pone el anillo al globo; el engranaje, las misiones, el bestiario y la medalla son copias suyas y lo heredan.
+  - Le pone el borde y el título neón a la ventana del idioma, y lo heredan sus copias, las ventanas de opciones y de
+    salir.
+  - Les da los colores y el material del título a las ventanas del menú que se arman en código.
+
+  La tienda la viste `ConstructorTienda`.
+- **El título de neón** es el material `Bangers SDF - Neon`: el underlay del shader móvil de Bangers, magenta y
+  desenfocado, hace de halo, porque el glow es del shader de escritorio.
 - **Un texto sobre un fondo de color fijo no lleva el papel `Texto`**: la fila de una misión cobrada (verde), el
-  casillero de hoy de la diaria (dorado) y la inicial del bestiario (el círculo del color del zombi) no cambian con el
-  tema, así que su texto va oscuro siempre. Con el papel puesto quedaban casi blancos sobre verde o sobre lima.
-- **Lo que se arma en código sobre un panel recibe su color de quien lo crea** (`SliderVolumen.Crear` e
-  `Interruptor.Crear` toman el color del texto y el del surco): el mismo control va sobre la ventana crema del menú y
-  sobre el panel negro de la pausa, y ahí el blanco y el negro se dan vuelta.
-- **Si agregás una pantalla**, mirá qué color cumple cada papel y ponele `PintarConTema` a lo que sea crema, blanco
-  o texto oscuro. Lo que no lleva papel se queda igual en los dos temas, que casi siempre es lo que se quiere para
-  un botón de color.
+  casillero de hoy de la diaria (amarillo) y la inicial del bestiario (el círculo del color del zombi) no cambian con el
+  tema, así que su texto va oscuro siempre.
+- **Lo que se arma en código sobre un panel recibe su color de quien lo crea** (`SliderVolumen.Crear` toma el color del
+  texto y el del surco). El interruptor (`Interruptor`) quedó sin uso al irse el modo oscuro.
+- **Si agregás una pantalla**: negra, con los papeles puestos a lo que sea panel, fila o texto; los botones del molde de
+  siempre, y se corre el constructor (o `ConstructorUI` si se arma en código).
 
 ## Idiomas
 
@@ -1285,8 +1299,8 @@ a 1). Se cambian desde el **engranaje del menú** (a la derecha del globo) y des
 - **`Sonidos` multiplica por el volumen de efectos** al tocar y al programar, así golpes, monedas, explosiones y la tienda
   responden sin componente.
 - **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
-  (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes y el **modo oscuro** (ver Tema claro y
-  oscuro); por eso se llama OPCIONES y no SONIDO, aunque la clase conserve el nombre. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
+  (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes. Se llama OPCIONES y no SONIDO porque tuvo
+  el modo oscuro, que se fue con el neón (ver Tema: carbón neón); la clase conserva el nombre de antes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
   los arma debajo de los botones de la pausa. El atrás de Android cierra la ventana de sonido primero.
 - Se escribe a disco medio segundo después de soltar el control o al cerrarse la ventana, no en cada movimiento.
 
@@ -1303,7 +1317,7 @@ progreso):
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
 | `"VolumenEfectos"`, `"VolumenMusica"` | `SliderVolumen` (menú y pausa) | `Volumen`; sin nada guardado, 1 |
 | `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
-| `"TemaOscuro"` | el interruptor de la ventana de opciones, 0 o 1 | `Tema`; sin nada guardado, el tema claro |
+| `"TemaOscuro"` | nadie desde el 24/9 (era el interruptor del modo oscuro) | nadie: el neón es el único tema |
 | `"ResenaPedidaEn"` | `PedidoDeResena`, la fecha `yyyy-MM-dd` del último pedido | `PedidoDeResena` |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
@@ -1701,7 +1715,7 @@ enterrado.
   (premio una sola vez aunque el SDK avise dos, cerrar sin castigo, topes del día, falla premiada, el x2
   completo), con un proveedor de mentira que se enchufa con `ServicioAnuncios.UsarParaPruebas`, y **los idiomas**
   (que cada texto tenga los dos idiomas y los mismos `{n}`, y que existan todos los ids que piden el código, las
-  mejoras, los prefabs y las escenas) y **el tema** (que el claro devuelva el color de la escena, que cada papel del
+  mejoras, los prefabs y las escenas) y **el tema** (que el de siempre sea el neón, que el claro de prueba devuelva el color de la escena, que cada papel del
   oscuro tenga su color y que lo que se escribe encima se lea: el contraste se mide con la fórmula de la WCAG, no se
   mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, que el texto de cada
   misión diga cuánto pide, que `Economia.ZombisPorPartida` sea la suma de lo que saca el `WaveManager` de WaveMode, que
@@ -1742,7 +1756,7 @@ enterrado.
 5. ¿Guarda algo entre partidas? Si es progreso (monedas, mejoras), va en `Progreso` y su JSON. Los
    `PlayerPrefs` quedan para el récord y el último modo, en el bloque de `PlayerHealth.TakeDamage`.
 6. ¿Tiene UI? Lo que sea crema, blanco o texto oscuro lleva `PintarConTema` con su papel, o pasa por
-   `Tema.Elegir` si se arma en código (ver Tema claro y oscuro). Los cuatro canvas usan `ScaleWithScreenSize`. Las escenas de juego tienen la referencia
+   `Tema.Elegir` si se arma en código, y los botones van de neón (ver Tema: carbón neón). Los cuatro canvas usan `ScaleWithScreenSize`. Las escenas de juego tienen la referencia
    en 1080x1920 (vertical, herencia de móvil): parece un error pero con `match = 0.5` la escala sale de
    la raíz del producto ancho × alto, así que da lo mismo que 1920x1080.
 7. ¿Toca una escena o un prefab? Verificá el diff: Unity re-hornea bastante al guardar, y desde Unity 6

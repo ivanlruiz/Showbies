@@ -97,6 +97,8 @@ public class ConfirmarSalir : MonoBehaviour
             var pintor = fondo.GetComponent<PintarConTema>();
             if (pintor != null) Destroy(pintor);
             fondo.GetComponent<Image>().color = colorSeguir;
+            // Y su halo de neón, que venía celeste del de vidrio.
+            ConstructorUI.PintarHalo(seguir.GetComponent<Button>(), colorSeguir);
         }
         var icono = seguir.GetComponentInChildren<IconoDeBoton>(true);
         if (icono != null)

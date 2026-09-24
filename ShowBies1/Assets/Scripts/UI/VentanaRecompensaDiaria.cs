@@ -280,7 +280,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
         ventana = Rect(rtPanel, "Ventana", new Vector2(0f, 10f), new Vector2(1180f, 640f));
         var fondo = ventana.gameObject.AddComponent<Image>();
-        Redondear(fondo, 3f);
+        ConstructorUI.VentanaNeon(ventana, fondo, pildora);
         fondo.color = ColorDeVentana;
 
         titulo = Texto(ventana, "Titulo", Textos.De("diaria_titulo"), 84f, colorHoy, new Vector2(0f, 235f), new Vector2(1100f, 110f));
@@ -338,7 +338,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         }
 
         montoHoy = RecompensaDiaria.Monto(racha, mejor);
-        boton = ArmarBoton(ventana, "BotonCobrar", 560f, new Color32(0x7d, 0xe0, 0x4a, 255), new Color32(0x10, 0x24, 0x0e, 255),
+        boton = ArmarBoton(ventana, "BotonCobrar", 560f, ConstructorUI.Verde, ConstructorUI.VerdeTexto,
                            moneda, colorMoneda, true, Textos.Formato("diaria_cobrar", FormatoNumeros.Compacto(montoHoy)), Cobrar);
 
         var claqueta = spriteClaqueta;
@@ -400,6 +400,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         imgSombra.sprite = pildora; imgSombra.type = Image.Type.Sliced;
         imgSombra.color = new Color(0f, 0f, 0f, 0.3f);
         imgSombra.raycastTarget = false;
+        ConstructorUI.HaloDeBoton(imgSombra, color);
         return raiz.gameObject;
     }
 
