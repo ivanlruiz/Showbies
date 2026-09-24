@@ -1490,6 +1490,22 @@ public static class PruebasMejoras
         Progreso.Guardar();
         inf.Igual("guardado roto sin .tmp: el .roto sigue despues de Guardar", roto, LeerSiExiste(ruta + ".roto"));
 
+        // Guardar escribe el .tmp, aparta el principal como .anterior y pone el .tmp en su
+        // lugar: en disco queda siempre una copia entera. Un corte despues de apartar el
+        // principal deja solo el .anterior, y se carga ese en vez de arrancar de cero.
+        ruta = EmpezarCaso(null, null);
+        File.WriteAllText(ruta + ".anterior", "{\"version\":" + Progreso.VersionActual + ",\"monedas\":77}");
+        inf.Cerca("guardado cortado: sin principal ni .tmp carga el .anterior", 77, Progreso.Monedas, 1e-9);
+
+        ruta = EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":10}", null);
+        _ = Progreso.Monedas;
+        Progreso.DepurarFijarMonedas(20);
+        var principalGuardado = LeerGuardado(ruta);
+        var anteriorGuardado = LeerGuardado(ruta + ".anterior");
+        inf.Verdadero("guardado: el principal queda con lo nuevo", principalGuardado != null && Math.Abs(principalGuardado.monedas - 20) < 1e-9);
+        inf.Verdadero("guardado: el .anterior queda con lo de antes", anteriorGuardado != null && Math.Abs(anteriorGuardado.monedas - 10) < 1e-9);
+        inf.Verdadero("guardado: no queda .tmp", !File.Exists(ruta + ".tmp"));
+
         // Normalizacion: monedas negativas, ids repetidos, vacios y desconocidos.
         string sucio = "{\"version\":2,\"monedas\":-5,\"mejorOleada\":3,\"mejoras\":[" +
                        "{\"id\":\"dano_bala\",\"nivel\":2},{\"id\":\"dano_bala\",\"nivel\":4}," +
