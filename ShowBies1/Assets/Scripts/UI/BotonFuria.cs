@@ -116,9 +116,12 @@ public class BotonFuria : MonoBehaviour
         if (visual != null)
         {
             // Lista, respira; activa, vibra grande. Sin escalar: la pausa de impacto
-            // del arranque no la congela.
+            // del arranque no la congela. Con el juego congelado (la pausa, el ¡HAS
+            // MUERTO!) se queda quieto: la furia no termina mientras dura la oferta, y el
+            // boton seguia vibrando encima del jugador muerto.
             float escala = 1f;
-            if (lista) escala = 1f + 0.07f * (0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 1.5f * Time.unscaledTime));
+            if (MenuPausa.JuegoCongelado) escala = 1f;
+            else if (lista) escala = 1f + 0.07f * (0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 1.5f * Time.unscaledTime));
             else if (activa) escala = 1.12f + 0.04f * Mathf.Sin(2f * Mathf.PI * 7f * Time.unscaledTime);
             visual.localScale = escalaBaseVisual * escala;
         }
