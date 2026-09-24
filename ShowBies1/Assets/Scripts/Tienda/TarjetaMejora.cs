@@ -5,10 +5,16 @@ using UnityEngine;
 // a la tienda del toque y anima lo que la tienda le pide.
 //
 // Tres estados que tienen que leerse de lejos: Comprable (verde, respira, el
-// borde late y un brillo barre el botón), SinMonedas (gris y quieto, precio en
-// rojo y "faltan N") y EnTope (dorado con "MÁX" y la estampa). Lo que se puede
-// comprar se mueve; lo que no, queda quieto. El botón queda siempre tocable: un
-// toque sin monedas también responde, con un rechazo.
+// borde late y un brillo barre el botón), SinMonedas (gris y quieto, precio
+// apagado y "faltan N") y EnTope (amarillo con "MÁX"; la de carbón neón ya no
+// lleva el sello de "¡MÁXIMO!", pero si el prefab tiene estampa, la anima). Lo que se
+// puede comprar se mueve; lo que no, queda quieto. El botón queda siempre
+// tocable: un toque sin monedas también responde, con un rechazo.
+//
+// Se viste de carbón neón (pedido de Ivan, 24/9; lo arma ConstructorTienda): la
+// tarjeta oscura con un borde celeste que brilla (haloTarjeta) y late cuando se
+// puede comprar, y el botón con su halo (haloBoton). La paleta es propia y no
+// cambia con el tema claro u oscuro: todo sale de los colores de acá.
 //
 // Anima siempre `contenido` y sus hijos, nunca la raíz: la raíz la ubica el
 // HorizontalLayoutGroup de la fila y se pelearían. Tiempo sin escalar con el
@@ -29,6 +35,15 @@ public class TarjetaMejora : MonoBehaviour
     public Color colorTope = new Color(1f, 0.84f, 0.25f);
     public Color colorPrecioFalta = new Color(1f, 0.5f, 0.45f);
     public Color colorValorSiguiente = new Color(0.5f, 1f, 0.45f);
+    [Tooltip("El precio sobre el boton de comprar.")]
+    public Color colorPrecioComprable = Color.white;
+
+    [Header("Carbon neon")]
+    [Tooltip("El borde que brilla alrededor de la tarjeta (Sprites/UI/NeonBorde).")]
+    public UnityEngine.UI.Image haloTarjeta;
+    [Tooltip("El halo detras del boton (Sprites/UI/NeonPildora), del color del boton.")]
+    public UnityEngine.UI.Image haloBoton;
+    public Color colorNeon = new Color(0f, 0.9f, 1f);
 
     private const float DuracionEntrada = 0.3f;
     private const float CaidaEntrada = 60f;
@@ -206,6 +221,7 @@ public class TarjetaMejora : MonoBehaviour
             if (fondoBoton != null) fondoBoton.color = colorTope;
             if (franja != null) franja.color = colorTope;
             PonerColorRelleno(colorTope);
+            PintarHalos(colorTope, colorTope);
             if (jugoBoton != null) jugoBoton.respirar = false;
             return;
         }
@@ -215,10 +231,8 @@ public class TarjetaMejora : MonoBehaviour
         {
             valorSiguiente.gameObject.SetActive(true);
             valorSiguiente.text = Mejora.TextoValor(n + 1);
-            // Con el tema: es el mismo verde que la flecha de al lado, que tiene el papel
-            // Acento, y en oscuro la flecha pasaba a verde claro y el numero se quedaba en
-            // el oscuro de siempre.
-            valorSiguiente.color = Tema.Elegir(colorValorSiguiente, RolDeTema.Acento);
+            // Siempre el de la tarjeta: la tienda es de carbon neon con los dos temas.
+            valorSiguiente.color = colorValorSiguiente;
         }
         ActivarSiHay(grupoPrecio, true);
         double costo = Mejora.Precio(n);
@@ -233,7 +247,8 @@ public class TarjetaMejora : MonoBehaviour
 
         bool comprable = Estado == EstadoMejora.Comprable;
         if (fondoBoton != null) fondoBoton.color = comprable ? colorComprable : colorSinMonedas;
-        colorPrecioActual = comprable ? Color.white : colorPrecioFalta;
+        PintarHalos(colorNeon, colorComprable);
+        colorPrecioActual = comprable ? colorPrecioComprable : colorPrecioFalta;
         // Durante el destello del rechazo el color lo lleva Update.
         if (precio != null && tiempoRechazo < 0f) precio.color = colorPrecioActual;
 
@@ -453,8 +468,46 @@ public class TarjetaMejora : MonoBehaviour
         estampa.rectTransform.localScale = escalaBaseEstampa * escala;
     }
 
+    // El neon: el borde de la tarjeta late si se puede comprar, queda entero en el tope y
+    // tenue si no alcanza; el halo del boton brilla solo si hay algo que tocar.
+    private void ActualizarHalos()
+    {
+        float latido = 0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 1.4f * (Time.unscaledTime + fase));
+        if (haloTarjeta != null)
+        {
+            float alfa = Estado == EstadoMejora.Comprable ? 0.7f + 0.3f * latido
+                : Estado == EstadoMejora.EnTope ? 1f
+                : 0.4f;
+            PonerAlfa(haloTarjeta, alfa);
+        }
+        if (haloBoton != null)
+        {
+            float alfa = Estado == EstadoMejora.Comprable ? 0.4f + 0.3f * latido
+                : Estado == EstadoMejora.EnTope ? 0.45f
+                : 0f;
+            PonerAlfa(haloBoton, alfa);
+        }
+    }
+
+    // El tono de los halos; el alfa lo lleva ActualizarHalos.
+    private void PintarHalos(Color tarjeta, Color boton)
+    {
+        if (haloTarjeta != null) haloTarjeta.color = new Color(tarjeta.r, tarjeta.g, tarjeta.b, haloTarjeta.color.a);
+        if (haloBoton != null) haloBoton.color = new Color(boton.r, boton.g, boton.b, haloBoton.color.a);
+    }
+
+    // Solo si cambia: tocar el color de un grafico quieto ensucia el canvas en cada cuadro.
+    private static void PonerAlfa(UnityEngine.UI.Graphic grafico, float alfa)
+    {
+        Color color = grafico.color;
+        if (Mathf.Abs(color.a - alfa) < 0.004f) return;
+        color.a = alfa;
+        grafico.color = color;
+    }
+
     private void ActualizarBorde()
     {
+        ActualizarHalos();
         if (borde == null) return;
 
         float alfa = 0f;

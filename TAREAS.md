@@ -339,8 +339,11 @@ Lo que quedó anotado, de mayor a menor:
   siempre (un gorro, una máscara, ropa nueva, zombis dorados con el oro).
 - [ ] **Gemas**: una moneda nueva que dan algunos niveles, para comprar monedas o ítems especiales.
 - [ ] **Armas que se desbloquean por nivel.**
-- [ ] **La tienda en carbón neón** (elegida por Ivan el 24/9 entre seis paletas: las maquetas están en
-  `Builds/temas_tienda`). Pidió una tienda más minimalista y negra.
+- [x] **La tienda en carbón neón** (elegida por Ivan el 24/9 entre seis paletas: las maquetas están en
+  `Builds/temas_tienda`). Pidió una tienda más minimalista y negra. **Hecha el 24/9**: fondo negro, tarjetas oscuras con
+  borde celeste que brilla, botones con halo verde neón, sin los adornos de antes; la arma `ConstructorTienda` y no
+  sigue el tema. Falta verla en el teléfono (las capturas son con el juego quieto, ver la trampa del editor en segundo
+  plano).
 - [ ] Ver en el teléfono la ventana de logros y el botón del nivel: se verificaron con capturas en 16:9 y 20:9, pero con
   el juego quieto en el primer cuadro (ver la trampa del editor en segundo plano).
 

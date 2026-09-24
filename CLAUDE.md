@@ -66,7 +66,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, y LogoShowBies.png, que lo genera Marketing/logo.py
 ```
@@ -891,9 +891,19 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   botín lo leen los dos generadores en su `Start`.
 - **La tienda es un panel del menú**, no una escena: `Prefabs/UI/Tienda.prefab` instanciado en `Menu.unity`, con
   canvas propio (1920x1080, match 0,5, `sortingOrder` 5, área segura). Las tarjetas (`Prefabs/UI/TarjetaMejora`)
-  se generan desde `enTienda`, con tres estados: comprable (verde, respira), sin monedas (gris, "faltan N", tocable
-  para que tiemble) y en tope (dorada, "MÁX" y estampa). Comprar: monedas que vuelan al botón, arpegio en la bemol
+  se generan desde `enTienda`, con tres estados: comprable (verde, respira), sin monedas (apagada, "faltan N",
+  tocable para que tiemble) y en tope (amarilla, "MÁX"). Comprar: monedas que vuelan al botón, arpegio en la bemol
   programado con `Sonidos.Programar`, estallido y temblor; compras seguidas suben el arpegio por I-IV-V-I'.
+- **La tienda es de carbón neón** (pedido de Ivan el 24/9: la quería más minimalista y negra, y eligió esta entre seis
+  paletas; las maquetas están en `Builds/temas_tienda`). Fondo casi negro y opaco, tarjetas oscuras con un borde celeste
+  que brilla (`TarjetaMejora.haloTarjeta`, el sprite `Sprites/UI/NeonBorde` en Sliced) y late cuando se puede comprar,
+  amarillo en el tope, el botón con su halo (`haloBoton`, `NeonPildora`), el título en rosa con halo magenta (el
+  material `Bangers SDF - Neon`: el underlay del shader móvil hace de brillo, que el glow es del de escritorio) y el
+  verde neón para comprar, para el número nuevo y para ¡A JUGAR!. Sin la franja ni el círculo con la letra de cada
+  mejora, sin la barra de nivel, sin el sello de "¡MÁXIMO!" y sin los rayos del fondo. **Su paleta es propia**: la
+  tienda no sigue el tema claro u oscuro y no lleva ningún `PintarConTema`. **No se edita a mano**: la arma
+  **ShowBies > Tienda > Vestir de carbón neón** (`ConstructorTienda`) sobre los dos prefabs, y se vuelve a correr para
+  cambiarla. Los colores del texto están medidos con la fórmula de la WCAG en la prueba de lógica.
 - **Navegación:** MEJORAS en el menú abre la tienda; VOLVER, Escape o el atrás de Android la cierran; ¡A JUGAR!
   carga `UltimoModo` (1 o 3; si no, 3). En la derrota, MEJORAS llama a `TiendaMejoras.AbrirEnMenu`, que carga el
   menú con la tienda abierta. Los botones MEJORAS (`BotonMejoras`) no se mueven: lo que late y se bambolea es su insignia, con
@@ -1071,8 +1081,9 @@ precio de las tarjetas, los idiomas, el video de la derrota, NO, GRACIAS) son so
 
 **La paleta es clara, "pasto de dia"** (elegida por Ivan; es el **tema claro**, ver Tema claro y oscuro): cielo celeste (0,66; 0,86; 0,96) en las camaras, la niebla del
 menu y el fondo de la derrota; pasto verde claro (`Materiales/PisoGrilla.png` con `prototype_512x512_green2`, que ya no es
-metalico: con `_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas; paneles crema (tienda y
-ventana de idioma) y tarjetas blancas con texto oscuro. **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
+metalico: con `_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas; paneles crema (las
+ventanas del menú) y tarjetas blancas con texto oscuro. La tienda no: es de carbón neón con los dos temas (ver Mejoras y
+tienda). **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
 contorno** con el material `Bangers SDF - Outline` (HUD, derrota, titulos): sin contorno, el blanco y el amarillo se pierden.
 La pausa, el revivir y los
 paneles del tutorial siguen oscuros a proposito: tapan la partida.
@@ -1141,8 +1152,8 @@ tema es de la interfaz y no del mundo.
   oscuro no se leería). **Lo que tiene color propio no lleva papel**: el verde de jugar, el dorado de la tienda, el
   rojo de GAME OVER y el color de cada mejora significan algo y valen en los dos temas.
 - **Un objeto de escena o prefab lleva `PintarConTema`** con su papel: la ventana del idioma (que copian la de
-  opciones y la de salir), el fondo y el pie de la tienda, la tarjeta de mejora, el fondo y los textos de la
-  derrota y los botones de vidrio. **Lo que se arma en código** pasa su color de siempre por `Tema.Elegir(claro,
+  opciones y la de salir), el fondo y los textos de la derrota y los botones de vidrio. La tienda y su tarjeta no llevan
+  ninguno desde el 24/9: son de carbón neón en los dos temas. **Lo que se arma en código** pasa su color de siempre por `Tema.Elegir(claro,
   rol)`; si esa ventana no se vuelve a armar, se le pone el componente con `Tema.Pintar(grafico, rol, claro)` y se
   repinta sola. `Tema.Pintar` pinta en el acto: sobre un objeto prendido, `AddComponent` ya lo había pintado en su
   `OnEnable` con el blanco de fábrica, y hasta el 24/9 quedaba blanco hasta el próximo cambio de tema (le pasó al botón
@@ -1694,8 +1705,8 @@ enterrado.
   oscuro tenga su color y que lo que se escribe encima se lea: el contraste se mide con la fórmula de la WCAG, no se
   mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, que el texto de cada
   misión diga cuánto pide, que `Economia.ZombisPorPartida` sea la suma de lo que saca el `WaveManager` de WaveMode, que
-  los avisos de la partida no se pisen, que todo botón de vidrio del menú lleve su `PintarConTema`, que la tarjeta de
-  mejora siga el tema y que el jefe no gire al terminar de invocar (por reflexión, con el prefab en una escena de vista
+  los avisos de la partida no se pisen, que todo botón de vidrio del menú lleve su `PintarConTema`, que la tienda sea
+  de carbón neón en los dos temas (sin `PintarConTema`, con sus brillos y con el contraste de cada texto medido) y que el jefe no gire al terminar de invocar (por reflexión, con el prefab en una escena de vista
   previa). Y **el nivel del jugador y los logros**: la curva y sus bordes, el ritmo contra la mezcla de zombis de
   WaveMode, el premio del nivel congelado al subir, la experiencia de una moneda congelada al ganarla, la migración a v6,
   que los puntos y las monedas copiados a mano coincidan con los assets de los zombis y los textos de cada familia. Lo que abre escenas las lee y las cierra sin guardar. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.

@@ -235,7 +235,7 @@ public static class PruebasMejoras
                         ProbarGetters(informe, catalogo);
                         ProbarCompras(informe, catalogo, temporales);
                         ProbarComprasPosibles(informe);
-                        ProbarTarjetaConTema(informe, catalogo);
+                        ProbarTarjetaNeon(informe, catalogo);
                     }
                 }
             }
@@ -1178,28 +1178,44 @@ public static class PruebasMejoras
         inf.Verdadero("tema: todos los botones de vidrio del menu cambian con el tema" + (sinPapel == 0 ? "" : " (" + cuales.Trim() + ")"), sinPapel == 0);
     }
 
-    // El valor siguiente de la tarjeta de mejora cambia con el tema, como la flecha de al
-    // lado: son el mismo verde. Hasta el 23/9 Refrescar le ponia el color claro en cada
-    // refresco, y en oscuro la flecha iba verde claro y el numero se quedaba en el oscuro.
-    // En una escena de vista previa, para no tocar la abierta.
-    static void ProbarTarjetaConTema(Informe inf, CatalogoMejoras c)
+    // La tienda es de carbon neon (pedido de Ivan, 24/9; la viste ConstructorTienda): su
+    // paleta es propia, igual en los dos temas, asi que ni la tienda ni la tarjeta llevan
+    // PintarConTema, y el valor siguiente es el verde de la tarjeta en claro y en oscuro.
+    // Lo que se lee, se lee: el contraste de cada texto contra lo que tiene detras. En una
+    // escena de vista previa, para no tocar la abierta.
+    static void ProbarTarjetaNeon(Informe inf, CatalogoMejoras c)
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/TarjetaMejora.prefab");
-        if (!inf.Verdadero("tarjeta: esta el prefab", prefab != null)) return;
+        var prefabTienda = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/Tienda.prefab");
+        if (!inf.Verdadero("tarjeta: estan los prefabs", prefab != null && prefabTienda != null)) return;
+        inf.Igual("tarjeta: sin PintarConTema, la paleta es propia", 0, prefab.GetComponentsInChildren<PintarConTema>(true).Length);
+        inf.Igual("tienda: sin PintarConTema, la paleta es propia", 0, prefabTienda.GetComponentsInChildren<PintarConTema>(true).Length);
+
         var escena = EditorSceneManager.NewPreviewScene();
         try
         {
             var tarjeta = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, escena)).GetComponent<TarjetaMejora>();
-            var flecha = tarjeta != null && tarjeta.flecha != null ? tarjeta.flecha.GetComponentInChildren<PintarConTema>(true) : null;
-            inf.Verdadero("tarjeta: el valor siguiente es el mismo verde que la flecha",
-                          flecha != null && flecha.rol == RolDeTema.Acento && flecha.colorClaro == tarjeta.colorValorSiguiente);
-
-            Tema.UsarParaPruebas(true);
+            inf.Verdadero("tarjeta: tiene el borde de neon",
+                          tarjeta.haloTarjeta != null && tarjeta.haloTarjeta.sprite != null && tarjeta.haloTarjeta.sprite.name == "NeonBorde");
+            inf.Verdadero("tarjeta: el boton tiene su halo",
+                          tarjeta.haloBoton != null && tarjeta.haloBoton.sprite != null && tarjeta.haloBoton.sprite.name == "NeonPildora");
             // El daño no tiene tope: siempre muestra el valor siguiente.
-            tarjeta.Configurar(c.danoBala, null, 0);
-            Color oscuro = Tema.Elegir(tarjeta.colorValorSiguiente, RolDeTema.Acento);
-            inf.Verdadero("tarjeta: en oscuro el valor siguiente va con el tema",
-                          tarjeta.valorSiguiente != null && tarjeta.valorSiguiente.color == oscuro && oscuro != tarjeta.colorValorSiguiente);
+            foreach (bool oscuro in new[] { false, true })
+            {
+                Tema.UsarParaPruebas(oscuro);
+                tarjeta.Configurar(c.danoBala, null, 0);
+                inf.Verdadero("tarjeta: el valor siguiente es el verde de la tarjeta " + (oscuro ? "en oscuro" : "en claro"),
+                              tarjeta.valorSiguiente != null && tarjeta.valorSiguiente.color == tarjeta.colorValorSiguiente);
+            }
+
+            var fondo = tarjeta.contenido.Find("Fondo").GetComponent<UnityEngine.UI.Image>().color;
+            Contraste(inf, "tienda: el nombre sobre la tarjeta", tarjeta.nombre.color, fondo, 4.5);
+            Contraste(inf, "tienda: el nivel sobre la tarjeta", tarjeta.nivel.color, fondo, 4.5);
+            Contraste(inf, "tienda: la unidad sobre la tarjeta", tarjeta.descripcion.color, fondo, 4.5);
+            Contraste(inf, "tienda: el valor siguiente sobre la tarjeta", tarjeta.colorValorSiguiente, fondo, 4.5);
+            Contraste(inf, "tienda: el precio sobre el boton de comprar", tarjeta.colorPrecioComprable, tarjeta.colorComprable, 4.5);
+            Contraste(inf, "tienda: el precio sobre el boton sin monedas", tarjeta.colorPrecioFalta, tarjeta.colorSinMonedas, 4.5);
+            Contraste(inf, "tienda: MAX sobre el boton del tope", tarjeta.textoTope.color, tarjeta.colorTope, 4.5);
         }
         finally
         {
