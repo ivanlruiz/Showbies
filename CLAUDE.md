@@ -948,7 +948,7 @@ Recompensa diaria). **Un solo video premiado por partida**
 | `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet, y anda igual en el teléfono. |
 | `ConfigAnuncios` | todos los números, en `Assets/Anuncios/Resources/ConfigAnuncios.asset`. Si falta, no se ofrece nada (con un LogError). |
 | `ServicioAnuncios` | la puerta: `PuedeOfrecer(lugar)` y `Mostrar(lugar, alPremiar, alNoPremiar)`. |
-| `VigiaAplicacion` | un objeto con `DontDestroyOnLoad` que se instala solo. Vacía los avisos de los videos en el hilo principal y **guarda el progreso cuando la app pierde el foco en cualquier escena** (antes eso lo hacía sólo `MenuPausa`, que no está ni en el menú ni en la derrota). |
+| `VigiaAplicacion` | un objeto con `DontDestroyOnLoad` que se instala solo. Vacía los avisos de los videos en el hilo principal y **guarda el progreso cuando la app pierde el foco en cualquier escena** (antes eso lo hacía sólo `MenuPausa`, que no está ni en el menú ni en la derrota). Al instalarse, con la app recién abierta, arranca el proveedor (`ServicioAnuncios.Arrancar`): una red de verdad tarda segundos en tener un video, y si arrancara con la primera oferta, esa oferta no lo tendría nunca. |
 | `OfertaDeDuplicar` | el botón de la derrota (objeto `OfertaVideo` en `Perdiste.unity`, componente en `Menu`). |
 | `OfertaDeRevivir` | la ventanita de "¡HAS MUERTO!" (prefab `Prefabs/UI/OfertaRevivir` en ShowBies1 y WaveMode). |
 
@@ -964,7 +964,9 @@ El día es un `aaaammdd` local guardado en el progreso, y **atrasar el reloj del
 **El aviso del SDK llega desde cualquier hilo y a veces dos veces.** Por eso `ServicioAnuncios` numera cada
 solicitud, encola el aviso con un candado y lo resuelve una sola vez en el `Update` de `VigiaAplicacion`. Antes
 de irse a pantalla completa guarda el progreso y los `PlayerPrefs`: Android puede matar la app mientras se ve
-el video. El audio del juego se pausa y se restaura como estaba.
+el video. El audio del juego se pausa y se restaura como estaba. Si el proveedor tira una excepción al pedir el
+video, la solicitud se resuelve como `NoDisponible`, sin premio y sin castigo: si no, nadie la resolvía y el juego
+quedaba mudo, con el revivir congelado o la diaria sin poder cerrarse.
 
 **Un video que se rompe al mostrarse se premia igual, pero una vez por día** (`fallasPremiadasPorDia`): no es
 culpa del jugador, pero cortar la red no puede ser la forma fácil de cobrar sin mirar nada.
@@ -1476,8 +1478,10 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
 
 - `ConfiguracionRendimiento` (`Assets/Scripts/`) corre antes de la primera escena: pone
   `Application.targetFrameRate = 60` — **Unity en Android limita a 30 FPS por defecto** si nadie lo
-  sube — y en móvil renderiza a `EscalaResolucionMovil` (0.75) de la resolución nativa. La UI no se
-  entera porque los canvas escalan con la pantalla.
+  sube — y en móvil renderiza a `EscalaResolucionMovil` (0.75) de la resolución nativa, **sin bajar de 720 de
+  alto** (`AltoMinimoMovil`): un 1080p queda en 810 y un teléfono de 720p, lo más común en la gama baja, va nativo
+  (con 0,75 fijo quedaba en 540). La UI no cambia de lugar porque los canvas escalan con la pantalla, pero se
+  dibuja a esa misma resolución: también pierde nitidez.
 - Android usa el nivel de calidad **Medium**: sombras duras, 20 m, 1 cascada, resolución baja, sin
   AA ni anisotrópico, texturas a mitad de resolución (`globalTextureMipmapLimit = 1`; las del piso
   son 4K). El editor corre en Ultra, así que **lo que ves en el editor no es lo que ve el teléfono**.

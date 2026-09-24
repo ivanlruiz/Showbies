@@ -203,6 +203,7 @@ public static class PruebasMejoras
             ProbarGrisDePocaVida(informe);
             ProbarBalasAlRevivir(informe);
             ProbarZombisPorPartida(informe);
+            ProbarCrecimientoDeMonedas(informe);
             ProbarAvisosSinPisarse(informe);
             ProbarVidriosDelMenu(informe);
             ProbarOrdenDeEscenas(informe);
@@ -1141,6 +1142,34 @@ public static class PruebasMejoras
             if (componente != null) return componente;
         }
         return null;
+    }
+
+    // El crecimiento de las monedas con que Economia y el Bestiario miden los premios, contra
+    // el del WaveManager de WaveMode, que es el que paga de verdad. Esta copiado porque los
+    // premios se calculan en el menu, sin escena: si se cambia en el inspector (TAREAS
+    // propone 1,09) y no en Economia, las misiones, el cofre, el desafio, la diaria, el nivel
+    // y las estrellas siguen midiendo con el viejo, y hasta el 24/9 ninguna prueba lo notaba.
+    // Que el Bestiario lo use lo mira ProbarPuntosYMonedasDeLosZombis.
+    static void ProbarCrecimientoDeMonedas(Informe inf)
+    {
+        float crecimiento = float.NaN;
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (oleadas != null) crecimiento = oleadas.crecimientoMonedas;
+        });
+        if (!inf.Verdadero("economia: WaveMode tiene su WaveManager, con el crecimiento de las monedas", !float.IsNaN(crecimiento))) return;
+
+        // El campo es float: 1,08f no es exactamente 1,08, de ahi la tolerancia.
+        inf.Cerca("economia: el crecimiento de las monedas es el del WaveManager de WaveMode",
+                  crecimiento, Economia.CrecimientoMonedasOleadas, 1e-6);
+
+        // Y MonedasPorPartida lo usa: de la oleada 20 a la 22, lo que deja cada zombi crece
+        // exactamente eso, porque el multiplicador se toma a mitad de camino.
+        double porZombi20 = Economia.MonedasPorPartida(20) / Economia.ZombisPorPartida(20);
+        double porZombi22 = Economia.MonedasPorPartida(22) / Economia.ZombisPorPartida(22);
+        inf.Cerca("economia: MonedasPorPartida crece con ese crecimiento",
+                  Economia.CrecimientoMonedasOleadas, porZombi22 / porZombi20, 1e-9);
     }
 
     // Economia.ZombisPorPartida contra la suma de lo que saca de verdad el WaveManager de
@@ -2737,8 +2766,12 @@ public static class PruebasMejoras
             var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>("Assets/Zombies/" + tipo + ".asset");
             if (!inf.Verdadero("zombis: esta el asset de " + tipo, enemigo != null)) continue;
             inf.Igual("zombis: los puntos de " + tipo + " en NivelJugador", enemigo.puntos, NivelJugador.PuntosPorTipo(tipo));
-            // MonedasQueDeja con la oleada 0 es el promedio del asset por 1,08^1,5 (y el jefe, por 6).
-            double esperado = (enemigo.monedasMin + enemigo.monedasMax) * 0.5 * (tipo == Bestiario.Jefe ? 6.0 : 1.0) * Math.Pow(1.08, 1.5);
+            // MonedasQueDeja con la oleada 0 es el promedio del asset por el crecimiento de las
+            // monedas a la 1,5 (y el jefe, por 6). El crecimiento es el de Economia, que
+            // ProbarCrecimientoDeMonedas compara con la escena: escrito a mano aca no notaba
+            // que el Bestiario se quedara con uno viejo.
+            double esperado = (enemigo.monedasMin + enemigo.monedasMax) * 0.5 * (tipo == Bestiario.Jefe ? 6.0 : 1.0)
+                            * Math.Pow(Economia.CrecimientoMonedasOleadas, 1.5);
             inf.Cerca("zombis: las monedas de " + tipo + " en el Bestiario", esperado, Bestiario.MonedasQueDeja(tipo, 0), 1e-9);
         }
     }

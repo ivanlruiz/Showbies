@@ -121,10 +121,39 @@ La primera versión sale **sin anuncios**, y es a propósito: el proveedor real 
 y **AdMob no sirve anuncios de verdad hasta que la app esté publicada y vinculada a su ficha**. O sea que el
 orden natural es publicar → crear la cuenta de AdMob → vincular la app → integrar el SDK → actualizar.
 
-Cuando llegue ese momento, además hay que:
-- Volver a la sección **Anuncios** de Play Console y declarar que sí tiene.
-- Rehacer **Seguridad de los datos** (AdMob recolecta identificadores y datos de uso).
-- Agregar el **consentimiento (UMP)** para usuarios del Espacio Económico Europeo y Reino Unido.
-- Publicar **app-ads.txt** si tenés dominio.
+Cuando llegue ese momento, además hay que (casi todo lo sumó la auditoría del 24/9):
+- **Declarar los anuncios antes de subir el AAB, no después.** El SDK agrega por su cuenta el permiso `AD_ID` al
+  manifiesto y, con la declaración en "no", Play bloquea la versión. El orden: la política nueva publicada, con
+  fecha → rehacer **Seguridad de los datos** (AdMob recopila y comparte identificadores del dispositivo, ubicación
+  aproximada, interacciones y diagnósticos, para publicidad, analíticas y prevención de fraude) → **Anuncios: sí**
+  e **ID de publicidad: sí** → recién ahí subir. Y sacar de la ficha (`ficha.md`) el "no recopila tus datos".
+- **Tope de clasificación**: `MaxAdContentRating` en PG (T como mucho) en la `RequestConfiguration`, antes del
+  primer pedido, y en AdMob bloquear las categorías sensibles (juegos de azar, citas, alcohol, sexualidad, dinero
+  fácil). La app es E10+ con público desde los 13, y sin tocar nada AdMob sirve hasta anuncios para adultos.
+- **Consentimiento (UMP)** para el Espacio Económico Europeo, el Reino Unido y Suiza, más el mensaje de los estados
+  de EE. UU. en AdMob. El SDK no pide anuncios hasta que UMP termina, así que `Inicializar` tiene que poder
+  esperarlo. Mostrá el formulario en el menú desde la segunda partida terminada (antes no hay videos), no al abrir
+  la app por primera vez, y sumá a OPCIONES un botón **PRIVACIDAD** que aparezca cuando UMP lo pida, para poder
+  retirarlo.
+- **Ids de bloque y de prueba en `ConfigAnuncios`**: un campo por lugar con los de la tabla de arriba, y la APK de
+  prueba (el paquete `.prueba`) siempre con el bloque de prueba de Google, `ca-app-pub-3940256099942544/5224354917`,
+  con tu teléfono registrado como dispositivo de prueba. Mirar y tocar anuncios reales propios es tráfico no
+  válido, y AdMob cierra cuentas por eso. El AAB se tiene que negar a salir con un id de prueba.
+- **app-ads.txt, sin dominio pago**: un repo público `ivanlruiz/ivanlruiz.github.io` con GitHub Pages y
+  `app-ads.txt` en la raíz, con la línea `google.com, pub-5295383586829735, DIRECT, f08c47fec0942fa0`. El sitio
+  web de la ficha tiene que caer en `ivanlruiz.github.io` (la URL de la política sirve). AdMob lo verifica recién
+  después de vincular la app a la ficha, y tarda hasta 24 h.
+- **Inicializar y precargar al arrancar**: `ServicioAnuncios.Arrancar` ya se llama al abrir la app, así que es en
+  el `Inicializar` del proveedor real donde se arranca el SDK y se piden los videos. Cada video de AdMob sirve una vez y
+  vence a la hora: hay que pedir otro después de mostrarlo y al vencer. Ni `Inicializar` ni `Listo` pueden tirar
+  excepciones: `Listo` se pregunta en el golpe que mata al jugador.
+- **Volver a preguntar `Listo` mientras las ofertas están abiertas**: hoy cada lugar pregunta una sola vez (la
+  derrota al abrirse, el revivir al morir, la diaria al cobrar), porque el proveedor falso siempre está listo. Con
+  la red real, un video que termina de cargar un segundo tarde no aparece, y el revivir, al volver de un video
+  cerrado, habilita el botón sin preguntar.
+- **Un solo resultado final por video**: el proveedor avisa una vez, al cerrarse el anuncio, con `Recompensado` si
+  el premio llegó en cualquier momento (AdMob lo manda antes del cierre, y avisar ahí reanudaría el juego detrás
+  del anuncio). Si el SDK puede no avisar nunca (volver a la app desde el ícono con el video abierto), hace falta
+  un vigía que lo resuelva como cerrado al volver.
 - **No subir Unity a 6000.3.17 o posterior**: el plugin de AdMob está roto ahí (issue #4212 del repo del
   plugin). Hoy estás en 6000.3.14, que está bien.

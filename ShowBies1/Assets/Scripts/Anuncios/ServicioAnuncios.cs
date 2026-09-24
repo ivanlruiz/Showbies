@@ -92,6 +92,17 @@ public static class ServicioAnuncios
         }
     }
 
+    // Crea e inicializa el proveedor al abrir la app: lo llama VigiaAplicacion.Asegurar. Si
+    // no, se inicializaria la primera vez que alguien pregunta si hay video, que es justo al
+    // ofrecerlo, y con una red de verdad arrancar y cargar un video tarda segundos: la
+    // primera oferta de cada sesion (casi siempre el x2 de la diaria, apenas se abre el
+    // menu) no encontraria nunca video. Con el nulo y el falso no cambia nada que se vea:
+    // su Inicializar esta vacio y el cartel falso se arma recien al mostrarse.
+    public static void Arrancar()
+    {
+        _ = Proveedor;
+    }
+
     // Solo para las pruebas del editor, como Progreso.UsarCarpetaDePruebas: cambia
     // el proveedor y la config por los de la prueba y deja el servicio como recien
     // arrancado. Con null en los dos vuelve a lo de siempre. Esto existe porque lo
@@ -179,7 +190,22 @@ public static class ServicioAnuncios
 
         int token = solicitud;
         VigiaAplicacion.Asegurar();
-        Proveedor.Mostrar(lugar, resultado => Encolar(token, resultado));
+        // Si el proveedor tira una excepcion al pedir el video, nadie va a avisar como
+        // termino y lo de arriba no se deshace nunca: el juego mudo, MostrandoAnuncio
+        // prendido el resto de la sesion (no se ofrece nada mas) y la pantalla que lo pidio
+        // esperando para siempre (el revivir, congelado y sin botones; la diaria, sin poder
+        // cerrarse). Se resuelve como si no hubiera habido video: sin premio y sin castigo,
+        // y la pantalla vuelve a como estaba. No como FallaAlMostrar, que se premia: este ni
+        // llego a empezar.
+        try
+        {
+            Proveedor.Mostrar(lugar, resultado => Encolar(token, resultado));
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("ServicioAnuncios: el proveedor fallo al pedir el video de " + lugar + "; se sigue sin video. " + e);
+            Encolar(token, ResultadoAnuncio.NoDisponible);
+        }
         return true;
     }
 

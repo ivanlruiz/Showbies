@@ -41,6 +41,11 @@ public class VigiaAplicacion : MonoBehaviour
         var objeto = new GameObject("VigiaAplicacion");
         DontDestroyOnLoad(objeto);
         instancia = objeto.AddComponent<VigiaAplicacion>();
+
+        // Esto corre al abrir la app, que es cuando tiene que arrancar el proveedor de
+        // anuncios (ver ServicioAnuncios.Arrancar). Despues de crear el vigia: si una red
+        // de verdad fallara al arrancar, guardar el progreso tiene que seguir andando.
+        ServicioAnuncios.Arrancar();
     }
 
     private void Awake()

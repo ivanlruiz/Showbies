@@ -83,13 +83,14 @@ public static class Bestiario
 
     // Lo que deja un zombi de ese tipo a esa altura del juego: lo que suelta por el
     // multiplicador de monedas de la oleada, tomado a mitad de camino, igual que en las
-    // misiones.
+    // misiones y con el mismo crecimiento (el de Economia, que la prueba compara con la
+    // escena).
     public static double MonedasQueDeja(string tipo, int mejorOleada)
     {
         int i = Array.IndexOf(Tipos, tipo);
         double monedas = i >= 0 ? MonedasPorTipo[i] : 2.0;
         if (tipo == Jefe) monedas *= EsfuerzoDelJefe;
-        return monedas * Math.Pow(1.08, Math.Max(3, mejorOleada) * 0.5);
+        return monedas * Math.Pow(Economia.CrecimientoMonedasOleadas, Math.Max(3, mejorOleada) * 0.5);
     }
 
     // La mitad de lo que dejan las muertes del escalon, en numeros redondos.

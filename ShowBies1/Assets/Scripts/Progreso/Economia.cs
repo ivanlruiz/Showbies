@@ -9,6 +9,18 @@ using System;
 // oleada ni el botin, asi un premio calculado con esto nunca se pasa de lo que da jugarlo.
 public static class Economia
 {
+    // Cuanto crece por oleada lo que vale cada moneda: el crecimientoMonedas del WaveManager
+    // de WaveMode, copiado aca porque los premios se calculan en el menu, sin escena. Lo usan
+    // MonedasPorPartida y el Bestiario, y la prueba de logica lo compara con la escena: si se
+    // cambia uno y no el otro, todos los premios pasan a medirse con otra vara sin que nada
+    // lo avise.
+    public const double CrecimientoMonedasOleadas = 1.08;
+
+    // Lo que suelta cada zombi, en promedio. De menos a proposito, como todo aca: desde que
+    // salen los tanques y los veloces la mezcla de WaveMode suelta mas (unas 2,4 desde la
+    // oleada 9), y eso sin contar al jefe.
+    private const double MonedasPorZombi = 2.0;
+
     // Los zombis que se matan en una partida que llega a la oleada m: la oleada n saca
     // 10 + 4n, y esto es la suma hasta m, 12m + 2m². Hasta el 23/9 devolvia 10m + 2m²: le
     // faltaban 2m (6 de 54 en la oleada 3). La prueba la compara con la suma hecha con los
@@ -20,10 +32,11 @@ public static class Economia
     }
 
     // Lo que deja de monedas esa partida: cada zombi suelta unas 2 y el multiplicador de
-    // la oleada (1,08 por oleada, ver WaveManager) se toma a mitad de camino.
+    // la oleada (CrecimientoMonedasOleadas por oleada) se toma a mitad de camino.
     public static double MonedasPorPartida(int mejorOleada)
     {
-        return ZombisPorPartida(mejorOleada) * 2.0 * Math.Pow(1.08, Math.Max(3, mejorOleada) * 0.5);
+        return ZombisPorPartida(mejorOleada) * MonedasPorZombi
+             * Math.Pow(CrecimientoMonedasOleadas, Math.Max(3, mejorOleada) * 0.5);
     }
 
     // Cuanto dura esa partida, en segundos. Hace falta para los objetivos que se cumplen
