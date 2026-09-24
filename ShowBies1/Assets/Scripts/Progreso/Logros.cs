@@ -173,6 +173,14 @@ public static class Logros
 
     private static readonly List<LogroGanado> nuevas = new List<LogroGanado>();
 
+    // Lo static sobrevive a entrar en play sin recargar el dominio: la lista vacia en
+    // cada partida, como el resto de lo compartido.
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        nuevas.Clear();
+    }
+
     // Anota las monedas que se ganaron desde la ultima vez, con el nivel de ahora, y las
     // devuelve (para el aviso de la partida). La lista es la misma en cada llamada: vale
     // hasta la siguiente. Se llama seguido, asi que no aloca si no hay nada nuevo.

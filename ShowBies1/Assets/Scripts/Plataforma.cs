@@ -24,6 +24,14 @@ public static class Plataforma
     {
         tecladoEnElEditor = -1;
     }
+
+    // Y si se entra en play sin recargar el dominio, la vuelve a leer este reset: si no,
+    // quedaba la preferencia de la sesion anterior aunque se cambiara el menu.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        OlvidarPreferenciaDelEditor();
+    }
 #endif
 
     public static bool EsMovil

@@ -30,7 +30,8 @@ experiencia para el **nivel del jugador**, y cada nivel da monedas (ver Nivel de
 - El proyecto **nació en Unity 2020.3.26f1** y se subió a Unity 6. Buena parte de las rarezas del repo
   son cola de esa migración; si algo parece escrito para una API vieja, probablemente lo esté.
 - Target principal: **Android** (ver Móvil). También compila para **Windows standalone**: 1920x1080, borderless
-  (`FullScreenWindow`), ventana redimensionable.
+  (`FullScreenWindow`), ventana redimensionable y una sola instancia (`forceSingleInstance`: con dos abiertas, la
+  última en cerrarse pisaba el progreso de la otra).
 - **Input Manager viejo** (`activeInputHandler: 0`): todo es `Input.GetAxis` / `Input.GetKey` /
   `Input.GetMouseButton`. No hay Input System.
 - El proyecto Unity está en la subcarpeta **`ShowBies1/`**, no en la raíz del repo.
@@ -626,10 +627,15 @@ premios de nivel, los logros y seis récords nuevos). No usa PlayerPrefs a prop�
   algún grado una de las dos se sale de la escala.
 - **Se suman en memoria al agarrarlas y se guardan en disco en puntos seguros:** al completar cada oleada (y al subir de nivel en el libre), al
   pausar (también pasa cuando la app pierde el foco, antes de que Android pueda matarla), al morir y al
-  cerrar, y **cada compra guarda en el acto**. Se escribe un `.tmp` y después se copia; al cargar, si el
-  principal falta o está roto, se prueba el `.tmp`. Un principal ilegible se copia a `progreso.json.roto`, y un
-  JSON de versión menor se respalda (el archivo que se leyó) como `progreso.json.v<N>.bak` antes de migrarlo;
-  ningún respaldo pisa uno anterior. **Un JSON de versión mayor** (de un build más nuevo: otra rama, o volver
+  cerrar, y **cada compra guarda en el acto**. Se escribe un `.tmp` bajado al disco (fsync) y después se cambian
+  los nombres: el principal pasa a `.anterior` y el `.tmp` a principal, así en disco siempre queda una copia
+  entera, aun con un corte de energía (antes se copiaba el `.tmp` encima del principal, y tras un corte podía
+  quedar vacío y sin `.tmp`); al cargar se prueba el principal, después el `.tmp` y después el `.anterior`. Un
+  principal que no es un JSON válido se copia a `progreso.json.roto`; uno que está pero no se pudo leer (un error
+  de E/S, otro proceso que lo tenía tomado) no se toma por roto: se juega en solo lectura, como con una versión
+  mayor, para no pisarlo con un progreso de cero. Un JSON de versión menor se respalda (el archivo que se leyó)
+  como `progreso.json.v<N>.bak` antes de migrarlo; ninguno de estos respaldos (el `.roto` y los `.bak`) pisa uno
+  que ya estaba. **Un JSON de versión mayor** (de un build más nuevo: otra rama, o volver
   atrás una versión) se respalda como `progreso.json.v<N>.futuro.bak` y el progreso queda en solo lectura: se
   juega con los campos que el build entiende, pero `Guardar` no escribe, así un build viejo no borra lo que
   agregó el nuevo. Lo que se gane o compre en ese estado se pierde al cerrar. Sólo `ReiniciarTodo` (las

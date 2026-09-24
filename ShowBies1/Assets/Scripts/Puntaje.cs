@@ -16,6 +16,15 @@ public class Puntaje : MonoBehaviour
    
 
 
+    // Lo static sobrevive al cambio de escena y a entrar en play sin recargar el dominio:
+    // sin esto instance quedaba apuntando al Puntaje destruido de la partida anterior, que
+    // con el == de Unity da null pero con "is null" o "?." no.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        instance = null;
+    }
+
     private void Awake()
     {
 
@@ -28,6 +37,11 @@ public class Puntaje : MonoBehaviour
             Destroy(gameObject);
         }
         UpdateKillCounterUI();
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this) instance = null;
     }
 
 

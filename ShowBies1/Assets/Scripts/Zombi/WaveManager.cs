@@ -168,7 +168,10 @@ public class WaveManager : MonoBehaviour
                 Progreso.RegistrarOleadaIntacta(OleadaActual);
             MisionesDiarias.RegistrarOleada(OleadaActual);
             DesafioSemanal.RegistrarOleada();
-            Progreso.Guardar();
+            // Sin Guardar aca: lo de esta oleada (el bono, la marca, las misiones) lo
+            // escribe el Guardar del principio de la vuelta siguiente, que corre en este
+            // mismo cuadro porque no hay ningun yield en el medio. Guardar aca tambien
+            // escribia el archivo entero dos veces seguidas, justo con el cartel.
         }
     }
 

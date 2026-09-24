@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEngine;
 
 // Lo que el jugador conserva entre partidas: las monedas, la mejor oleada
@@ -774,19 +775,41 @@ public static class Progreso
         Revision++;
     }
 
-    // Primero un .tmp y despues la copia: si la app muere a mitad de escritura,
-    // queda al menos una de las dos versiones entera.
+    // En disco queda siempre una copia entera, aunque la app muera o se corte la energia
+    // en cualquier punto del guardado:
+    //  1. El .tmp se escribe y se baja al disco (Flush(true) es el fsync).
+    //  2. El principal pasa a .anterior, y el .tmp a principal. Son cambios de nombre,
+    //     que no tocan los datos: en cada paso queda el principal, el .tmp o el
+    //     .anterior entero, y Cargar los prueba en ese orden.
+    // Antes el .tmp se copiaba encima del principal (que lo trunca y lo reescribe) y se
+    // borraba, todo sin fsync: tras un corte, el sistema de archivos podia haber
+    // asentado el truncado y el borrado antes que los datos (en f2fs, el de muchos
+    // Android, puede pasar), y quedaba un principal vacio y ningun .tmp: el jugador
+    // arrancaba de cero. File.Delete + File.Move y no File.Replace, que en IL2CPP no es
+    // seguro que ande.
     public static void Guardar()
     {
         if (datos == null || soloLectura) return;
 
         string ruta = Ruta();
         string temporal = ruta + ".tmp";
+        string anterior = ruta + ".anterior";
         try
         {
-            File.WriteAllText(temporal, JsonUtility.ToJson(datos, true));
-            File.Copy(temporal, ruta, true);
-            File.Delete(temporal);
+            byte[] json = new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(datos, true));
+            using (var archivo = new FileStream(temporal, FileMode.Create, FileAccess.Write, FileShare.Read))
+            {
+                archivo.Write(json, 0, json.Length);
+                archivo.Flush(true);
+            }
+
+            // File.Move no pisa un archivo que ya existe: primero se hace lugar.
+            if (File.Exists(ruta))
+            {
+                if (File.Exists(anterior)) File.Delete(anterior);
+                File.Move(ruta, anterior);
+            }
+            File.Move(temporal, ruta);
         }
         catch (Exception e)
         {
@@ -794,23 +817,30 @@ public static class Progreso
         }
     }
 
-    // Si el principal esta roto se aparta como .roto antes de que el primer
-    // Guardar lo pise, y se prueba el .tmp de un guardado interrumpido. Si lo
-    // que se leyo es de una version vieja, se respalda como .v<N>.bak antes de
-    // migrarlo: si la migracion tuviera un error, el original sigue en disco.
+    // Se prueba el principal; si falta o esta roto, el .tmp de un guardado
+    // interrumpido; y si tampoco, el .anterior, que es el guardado de antes (ver
+    // Guardar). Si el principal esta roto se aparta como .roto antes de que el primer
+    // Guardar lo pise. Si lo que se leyo es de una version vieja, se respalda como
+    // .v<N>.bak antes de migrarlo: si la migracion tuviera un error, el original
+    // sigue en disco.
     private static void Cargar()
     {
         if (datos != null) return;
 
         string ruta = Ruta();
-        Datos leidos = Leer(ruta);
-        string rutaLeida = leidos != null ? ruta : null;
-
-        if (leidos == null)
+        Datos leidos = null;
+        string rutaLeida = null;
+        bool quedoSinLeer = false;
+        foreach (string candidato in new[] { ruta, ruta + ".tmp", ruta + ".anterior" })
         {
-            if (File.Exists(ruta)) Respaldar(ruta, ruta + ".roto");
-            leidos = Leer(ruta + ".tmp");
-            if (leidos != null) rutaLeida = ruta + ".tmp";
+            Lectura lectura = Leer(candidato, out leidos);
+            if (lectura == Lectura.Leida)
+            {
+                rutaLeida = candidato;
+                break;
+            }
+            if (lectura == Lectura.NoSePudoLeer) quedoSinLeer = true;
+            else if (lectura == Lectura.Rota && candidato == ruta) Respaldar(ruta, ruta + ".roto");
         }
 
         soloLectura = false;
@@ -836,6 +866,17 @@ public static class Progreso
                              VersionActual + ". Se usa sin guardar cambios para no borrar lo que agrego la version nueva.");
         }
 
+        // Un archivo que esta pero no se pudo leer puede ser el bueno, o uno mas nuevo que
+        // lo que se cargo: se juega sin guardar, como con una version mas nueva, y se
+        // vuelve a leer la proxima vez que se abra el juego. Antes se tomaba por roto: se
+        // arrancaba de cero y el primer Guardar pisaba el progreso sano.
+        if (quedoSinLeer)
+        {
+            soloLectura = true;
+            Debug.LogError("Progreso: hay un archivo del progreso que no se pudo leer. Se juega " +
+                           (rutaLeida != null ? "con " + rutaLeida : "de cero") + " y sin guardar, para no pisarlo.");
+        }
+
         Normalizar(leidos);
         if (versionLeida < 6) MigrarAlNivel(leidos);
         datos = leidos;
@@ -857,16 +898,55 @@ public static class Progreso
         if (d.rachaRecompensa > d.estadisticas.mejorRacha) d.estadisticas.mejorRacha = d.rachaRecompensa;
     }
 
-    private static Datos Leer(string ruta)
+    private enum Lectura { Leida, NoExiste, Rota, NoSePudoLeer }
+
+    // Separa "no se pudieron leer los bytes" (el archivo esta, pero el sistema no lo
+    // entrego: otro proceso lo tenia tomado, un error de E/S, un permiso) de "se leyo y
+    // no es un JSON valido". Solo lo segundo es un archivo roto: con lo primero el
+    // archivo puede estar sano, y hay que no pisarlo (ver Cargar).
+    private static Lectura Leer(string ruta, out Datos leidos)
     {
+        leidos = null;
+        string texto;
+        for (int intento = 1; ; intento++)
+        {
+            try
+            {
+                if (!File.Exists(ruta)) return Lectura.NoExiste;
+                texto = File.ReadAllText(ruta);
+                break;
+            }
+            catch (FileNotFoundException) { return Lectura.NoExiste; }
+            catch (DirectoryNotFoundException) { return Lectura.NoExiste; }
+            catch (Exception e)
+            {
+                // Un bloqueo pasajero (el antivirus, otro proceso a mitad de escritura)
+                // suele soltarse enseguida: se reintenta antes de darlo por perdido.
+                if (intento < 3)
+                {
+                    System.Threading.Thread.Sleep(50);
+                    continue;
+                }
+                Debug.LogError("Progreso: no se pudo leer " + ruta + ": " + e.Message);
+                return Lectura.NoSePudoLeer;
+            }
+        }
+
         try
         {
-            return File.Exists(ruta) ? JsonUtility.FromJson<Datos>(File.ReadAllText(ruta)) : null;
+            leidos = JsonUtility.FromJson<Datos>(texto);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            return null;
+            Debug.LogWarning("Progreso: " + ruta + " no es un JSON valido: " + e.Message);
+            return Lectura.Rota;
         }
+        if (leidos == null)
+        {
+            Debug.LogWarning("Progreso: " + ruta + " no es un JSON valido.");
+            return Lectura.Rota;
+        }
+        return Lectura.Leida;
     }
 
     // No pisa un respaldo que ya exista: el primero es el que tiene el original.
