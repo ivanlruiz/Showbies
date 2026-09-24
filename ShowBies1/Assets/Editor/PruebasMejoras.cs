@@ -201,6 +201,7 @@ public static class PruebasMejoras
             ProbarCalidadDeAndroid(informe);
             ProbarPuntoDeLaGranada(informe);
             ProbarGrisDePocaVida(informe);
+            ProbarBalasAlRevivir(informe);
             ProbarZombisPorPartida(informe);
             ProbarAvisosSinPisarse(informe);
             ProbarVidriosDelMenu(informe);
@@ -1076,6 +1077,25 @@ public static class PruebasMejoras
     static bool Cerca(Vector3 a, Vector3 b)
     {
         return (a - b).sqrMagnitude < 1e-6f;
+    }
+
+    // Revivir sin balas no es volver a jugar: con cuantas vuelve (OfertaDeRevivir.BalasAlRevivir,
+    // estatica para probarla sin escena).
+    static void ProbarBalasAlRevivir(Informe inf)
+    {
+        inf.Igual("revivir: sin balas vuelve con el minimo", 500, OfertaDeRevivir.BalasAlRevivir(0, 500, 500));
+        inf.Igual("revivir: con pocas balas vuelve con el minimo", 500, OfertaDeRevivir.BalasAlRevivir(30, 500, 500));
+        inf.Igual("revivir: con mas balas que el minimo no se le quitan", 700, OfertaDeRevivir.BalasAlRevivir(700, 1000, 500));
+        inf.Igual("revivir: con el cargador mejorado vuelve con el minimo, no lo llena como una caja", 500,
+                  OfertaDeRevivir.BalasAlRevivir(0, 1000, 500));
+        inf.Igual("revivir: nunca pasa del cargador", 300, OfertaDeRevivir.BalasAlRevivir(0, 300, 500));
+        var oferta = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/OfertaRevivir.prefab");
+        var revivir = oferta != null ? oferta.GetComponent<OfertaDeRevivir>() : null;
+        var jugador = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/Jugador.prefab");
+        var control = jugador != null ? jugador.GetComponent<PlayerController>() : null;
+        inf.Verdadero("revivir: el prefab vuelve con balas, sin pasar del cargador de base",
+                      revivir != null && control != null && revivir.balasMinimasAlRevivir > 0
+                      && revivir.balasMinimasAlRevivir <= control.maxBalas);
     }
 
     static void ProbarGrisDePocaVida(Informe inf)

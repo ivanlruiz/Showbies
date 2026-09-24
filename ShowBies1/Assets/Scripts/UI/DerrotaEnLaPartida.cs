@@ -89,15 +89,23 @@ public class DerrotaEnLaPartida : MonoBehaviour
         desde = Time.unscaledTime;
         Avance = grisInicial;
 
-        EsconderElHud();
-
         // La horda festeja desde ahora (EnemyController, el festejo): de aca se cuentan
         // sus oleadas.
         EnemyController.EmpezarFestejo();
 
         // La pantalla sale enseguida: se carga ya, y MenuPerdiste lee esto en su Awake.
         MenuPerdiste.SobreLaPartida = true;
-        if (SceneManager.LoadSceneAsync(EscenaDerrota, LoadSceneMode.Additive) == null) CargarComoAntes();
+        Scene juego = SceneManager.GetActiveScene();
+        AsyncOperation carga = SceneManager.LoadSceneAsync(EscenaDerrota, LoadSceneMode.Additive);
+        if (carga == null)
+        {
+            CargarComoAntes();
+            return;
+        }
+        // El HUD se apaga cuando la derrota ya esta, no al morir: la escena aditiva tarda al
+        // menos un cuadro en aparecer (mas en un telefono cargado), y en ese hueco no habia
+        // ni HUD ni derrota, solo el mundo.
+        carga.completed += _ => EsconderElHud(juego);
     }
 
     // El gris sigue detras de la pantalla. Tiempo sin escalar, que es el de la UI.
@@ -115,9 +123,12 @@ public class DerrotaEnLaPartida : MonoBehaviour
     // HUD, los joysticks y la barra del jefe se quedarian a color encima del mundo
     // gris. Se apagan los canvas raiz de la escena del juego; los hijos se van con
     // ellos. No se vuelven a prender: de la derrota se sale siempre cambiando de escena.
-    private static void EsconderElHud()
+    private static void EsconderElHud(Scene juego)
     {
-        foreach (GameObject raiz in SceneManager.GetActiveScene().GetRootGameObjects())
+        // Por si se salio de la partida antes de que la derrota terminara de cargar (la R la
+        // recarga): esa escena ya no esta, y la nueva tiene su HUD.
+        if (!juego.IsValid() || !juego.isLoaded) return;
+        foreach (GameObject raiz in juego.GetRootGameObjects())
             foreach (Canvas canvas in raiz.GetComponentsInChildren<Canvas>(true))
                 if (canvas.isRootCanvas) canvas.enabled = false;
     }

@@ -50,6 +50,15 @@ public class OfertaDeRevivir : MonoBehaviour
     [Tooltip("Segundos finales en los que el reloj late y se pone rojo.")]
     public float segundosDeApuro = 3f;
 
+    // Volver sin balas no es volver a jugar: quedarse sin balas y rodeado es una muerte
+    // tipica, y el jugador volvia con la vida llena, 0 balas y unos segundos de gracia, a
+    // morir otra vez ya sin oferta y con el unico video de la partida gastado. Es un minimo
+    // y no una caja: no llena un cargador mejorado ni toca la cadencia.
+    [Tooltip("Las balas con las que vuelve, como mínimo, al revivir. 500 son las del arranque de la "
+        + "partida (cantBalas en las escenas) y las que da una caja de balas con el cargador de base; "
+        + "nunca pasa del cargador (maxBalas).")]
+    public int balasMinimasAlRevivir = 500;
+
     [Header("Sonido")]
     [Tooltip("Suena al aparecer la ventanita. Grave, que es una mala noticia.")]
     public AudioClip sonido;
@@ -74,6 +83,15 @@ public class OfertaDeRevivir : MonoBehaviour
     private float desde;
     private float aceptadoEn = -1f;   // cuando toco el video, para devolverle su tiempo
     private float ignorarAtrasHasta;  // el atras que cerro el video no rechaza
+
+    // La cuenta atras tambien se congela con la app sin foco (la cortina de notificaciones,
+    // una llamada encima) o en segundo plano: MenuPausa no pausa encima de la oferta, y el
+    // reloj se vencia y mandaba a la derrota a alguien que no habia decidido nada. Al irse
+    // se anota cuanto iba (-1: no esta congelada) y al volver sigue desde ahi.
+    private float pasadoAlIrse = -1f;
+    private bool sinFoco;
+    private bool enSegundoPlano;
+
     private float duracion;
     private float agrisado;
     private float radioDespeje;
@@ -181,6 +199,7 @@ public class OfertaDeRevivir : MonoBehaviour
         gracia = config.segundosDeGracia;
 
         desde = Time.unscaledTime;
+        pasadoAlIrse = -1f;
         corriendo = true;
         esperandoVideo = false;
         ultimoSegundoEscrito = -1;
@@ -218,6 +237,15 @@ public class OfertaDeRevivir : MonoBehaviour
     {
         if (!corriendo || esperandoVideo) return;
 
+        // De vuelta en la app: la cuenta sigue desde donde se congelo. Aca, con el tiempo de
+        // este cuadro, y no en el aviso de volver: asi da igual si Time.unscaledTime conto el
+        // rato de afuera y en que momento del cuadro llega el aviso.
+        if (pasadoAlIrse >= 0f && !Afuera)
+        {
+            desde = Time.unscaledTime - pasadoAlIrse;
+            pasadoAlIrse = -1f;
+        }
+
         // El atras de Android llega como Escape: aca es NO, GRACIAS, que no castiga. Era la
         // unica pantalla donde el atras no hacia nada (MenuPausa no la pausa) y se leia como
         // que el juego se habia colgado. Un rato despues de volver de un video no cuenta: el
@@ -228,7 +256,8 @@ public class OfertaDeRevivir : MonoBehaviour
             return;
         }
 
-        float pasado = Time.unscaledTime - desde;
+        // Congelada mientras la app esta afuera: sin foco, Update sigue corriendo.
+        float pasado = pasadoAlIrse >= 0f ? pasadoAlIrse : Time.unscaledTime - desde;
 
         float grisado = agrisado > 0f ? Mathf.Clamp01(pasado / agrisado) : 1f;
         if (velo != null) velo.color = ColorDelVelo(grisado);
@@ -272,6 +301,34 @@ public class OfertaDeRevivir : MonoBehaviour
 
         // Que se venza es lo mismo que decir que no: no hay castigo por dudar.
         if (restante <= 0f) Rechazar();
+    }
+
+    // Sin foco la app sigue andando; en segundo plano, no. Las dos cosas congelan la cuenta,
+    // y vuelve a correr recien con foco y en primer plano: los dos avisos no siempre llegan
+    // juntos (Android puede retomar la app detras de la pantalla de bloqueo, sin foco).
+    private void OnApplicationFocus(bool conFoco)
+    {
+        sinFoco = !conFoco;
+        CongelarSiSeFue();
+    }
+
+    private void OnApplicationPause(bool enPausa)
+    {
+        enSegundoPlano = enPausa;
+        CongelarSiSeFue();
+    }
+
+    private bool Afuera
+    {
+        get { return sinFoco || enSegundoPlano; }
+    }
+
+    // Mientras se mira el video no: el video mismo saca el foco a la app, y ese rato ya se
+    // lo devuelve SinPremio con aceptadoEn. Congelarlo aca tambien lo descontaria dos veces.
+    private void CongelarSiSeFue()
+    {
+        if (!Afuera || !corriendo || esperandoVideo || pasadoAlIrse >= 0f) return;
+        pasadoAlIrse = Mathf.Max(0f, Time.unscaledTime - desde);
     }
 
     private Color ColorDelVelo(float t)
@@ -322,6 +379,10 @@ public class OfertaDeRevivir : MonoBehaviour
 
         if (botonVideo != null) botonVideo.interactable = true;
         if (botonNo != null) botonNo.interactable = true;
+
+        // Si el aviso llego con la app todavia sin foco, la cuenta sigue congelada hasta que
+        // vuelva, desde lo que quedaba antes del video.
+        CongelarSiSeFue();
     }
 
     private void Volver()
@@ -333,8 +394,22 @@ public class OfertaDeRevivir : MonoBehaviour
 
         Esconder();
         Time.timeScale = 1f;
-        if (jugador != null) jugador.Revivir(radioDespeje, gracia);
+        if (jugador != null)
+        {
+            jugador.Revivir(radioDespeje, gracia);
+            // Con balas para seguir jugando (ver balasMinimasAlRevivir).
+            var control = jugador.GetComponent<PlayerController>();
+            if (control != null)
+                control.cantBalas = BalasAlRevivir(control.cantBalas, control.maxBalas, balasMinimasAlRevivir);
+        }
         jugador = null;
+    }
+
+    // Las que tenia, o el minimo si tenia menos, sin pasar del cargador: con mas que eso el
+    // contador mostraria "500/300". Estatico para probarlo sin escena.
+    public static int BalasAlRevivir(int balas, int maxBalas, int minimo)
+    {
+        return Mathf.Max(balas, Mathf.Min(minimo, maxBalas));
     }
 
     private void Rechazar()

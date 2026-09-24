@@ -999,7 +999,9 @@ partida y la descongela: ver La derrota encima de la partida).
   que haya (`FiltroBlancoYNegro.Tomar`): con poca vida el mundo ya venía perdiendo color.
 - **Volver no regala nada más que seguir jugando**: `EnemyController.DespejarAlrededor` saca del mapa a los
   zombis que estén a `radioDeDespeje` (7 m) **sin puntos, monedas ni mancha**, como el kill-Z, y el jugador
-  vuelve con la vida llena y `segundosDeGracia` (2,5 s) sin recibir daño. Si esos zombis dieran monedas, el
+  vuelve con la vida llena, `segundosDeGracia` (2,5 s) sin recibir daño y **al menos 500 balas**
+  (`OfertaDeRevivir.balasMinimasAlRevivir`, las del arranque, sin pasar del cargador ni tocar la cadencia: volver con
+  el cargador vacío era gastar el video para morir otra vez). Si esos zombis dieran monedas, el
   video sería la forma barata de cobrar una pantalla llena. **El jefe no se despeja** (`EnemyController.EsJefe`, que
   marcan `WaveManager` y `GeneradorZombis`): la oleada lo contaría como muerto y revivir al lado del jefe lo borraría.
 - **Caer al vacío no se revive**: el kill-Z del jugador llama directo a `Terminar`. Revivir lo dejaría 20 m bajo el piso
@@ -1015,7 +1017,10 @@ partida y la descongela: ver La derrota encima de la partida).
   la partida termina igual por otro camino. Lo mismo vale si el vídeo no se pudo mostrar. Antes los dos caminos
   llamaban a `Rechazar`, o sea que cerrar el anuncio mandaba derecho a la derrota.
 - Mientras la ventana está abierta, `OfertaDeRevivir.Activa` es cierto y **`MenuPausa` no pausa**: reanudar
-  desde el menú de pausa devolvería el `timeScale` a 1 con el jugador muerto. **`MenuPausa.JuegoCongelado`**
+  desde el menú de pausa devolvería el `timeScale` a 1 con el jugador muerto. Por eso la cuenta atrás **se congela
+  sola con la app sin foco o en segundo plano** (una llamada, la cortina de notificaciones: antes se vencía sin que el
+  jugador pudiera tocar nada) y sigue al volver con foco; con el vídeo en pantalla no, que ese rato ya lo devuelve
+  `SinPremio`. **`MenuPausa.JuegoCongelado`**
   (pausa u oferta abierta) es lo que miran el input (`PlayerController`, `PlayerJS`, la granada, la furia) y la pausa
   de impacto de `Efectos`: antes una explosión en el momento de morir devolvía el `timeScale` a 1 detrás del ¡HAS
   MUERTO!. Si la escena se descarga con la
@@ -1355,8 +1360,9 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   escena trae su Directional Light, y cargada encima era un segundo sol: el mundo quedaba casi blanco en vez de gris) y
   deja **el fondo transparente** (`PintarConTema.FijarOpacidad`, `opacidadDelFondo` en 0). Abierta sola, la escena es
   la de siempre, y es lo que se carga si no hay cámara.
-- **El HUD del juego se apaga** (todos los canvas raíz de la escena): la UI en overlay no pasa por la cámara y quedaría
-  a color encima del gris.
+- **El HUD del juego se apaga** (todos los canvas raíz de la escena) **cuando la derrota termina de cargar**: la UI en
+  overlay no pasa por la cámara y quedaría a color encima del gris. Apagarlo al morir dejaba al menos un cuadro sin HUD
+  ni derrota, lo que tarda en aparecer la escena aditiva.
 - **El gris es `FiltroBlancoYNegro`**, el mismo de la oferta de revivir, que se toma con `Tomar` (no vuelve a cero): si
   se venía de rechazar el revivir, ya estaba gris o a mitad de camino y sigue desde ahí. Por eso `OfertaDeRevivir.
   Rechazar` esconde la ventanita **sin soltar el filtro**; `DerrotaEnLaPartida` pone el `timeScale` en 1 (la oferta sí
