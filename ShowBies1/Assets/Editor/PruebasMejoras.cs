@@ -1371,6 +1371,69 @@ public static class PruebasMejoras
             Tema.UsarParaPruebas(null);
             EditorSceneManager.ClosePreviewScene(escena);
         }
+
+        // Al abrir, la fila arranca al principio (abria centrada, con el daño afuera), salvo que
+        // la primera tarjeta que se puede comprar no entre entera: entonces corre lo justo. Con
+        // las medidas de 16:9: ocho tarjetas de 360 cada 380 desde 10 (3040) en una lista de 1872.
+        inf.Cerca("tienda: al abrir con el daño comprable la fila arranca al principio", 0, TiendaMejoras.PosicionAlAbrir(3040f, 1872f, 370f), 1e-4);
+        inf.Cerca("tienda: al abrir sin nada comprable la fila arranca al principio", 0, TiendaMejoras.PosicionAlAbrir(3040f, 1872f, float.NaN), 1e-4);
+        inf.Cerca("tienda: con la granada como primera comprable corre lo justo", 28.0 / 1168.0, TiendaMejoras.PosicionAlAbrir(3040f, 1872f, 1890f), 1e-4);
+        inf.Cerca("tienda: con el iman como primera comprable lo muestra entero", 408.0 / 1168.0, TiendaMejoras.PosicionAlAbrir(3040f, 1872f, 2270f), 1e-4);
+        inf.Cerca("tienda: con la furia como primera comprable va al final", 1, TiendaMejoras.PosicionAlAbrir(3040f, 1872f, 3030f), 1e-4);
+        inf.Cerca("tienda: una fila que entra entera no se corre", 0, TiendaMejoras.PosicionAlAbrir(1500f, 1872f, 1490f), 1e-4);
+
+        // El toque que frena la fila no compra; con la fila casi quieta, o contra el borde al que
+        // iba (en Clamped la velocidad sigue bajando sola con la fila ya quieta), si.
+        float rapido = TiendaMejoras.VelocidadParaFrenar * 5f;
+        inf.Verdadero("tienda: con la fila quieta el toque compra", !TiendaMejoras.SeEstaDeslizando(0f, 0.5f));
+        inf.Verdadero("tienda: con la fila casi quieta el toque compra", !TiendaMejoras.SeEstaDeslizando(TiendaMejoras.VelocidadParaFrenar * 0.5f, 0.5f));
+        inf.Verdadero("tienda: deslizandose hacia el final el toque la frena", TiendaMejoras.SeEstaDeslizando(-rapido, 0.5f));
+        inf.Verdadero("tienda: deslizandose hacia el principio el toque la frena", TiendaMejoras.SeEstaDeslizando(rapido, 0.5f));
+        inf.Verdadero("tienda: saliendo del principio el toque la frena", TiendaMejoras.SeEstaDeslizando(-rapido, 0f));
+        inf.Verdadero("tienda: contra el principio el toque compra", !TiendaMejoras.SeEstaDeslizando(rapido, 0f));
+        inf.Verdadero("tienda: contra el final el toque compra", !TiendaMejoras.SeEstaDeslizando(-rapido, 1f));
+
+        // La flecha de la guia de la primera compra hacia A JUGAR no pisa las tarjetas. Iba
+        // encima del boton, y en 20:9 y 21:9 (el pie queda a unos 80 de las tarjetas) su base
+        // tapaba el pie de los botones de comprar; va a su izquierda, en el pie. Con las medidas
+        // del prefab, sin area segura, en los extremos del rebote y con la sombra; el canvas de
+        // la tienda es de 1920 x 1080 con match 0,5, como los de las escenas de juego. Las
+        // tarjetas van centradas en la lista (la fila en la lista, y ellas en la fila).
+        Rect EnElPadre(RectTransform rt, Rect padre)
+        {
+            Vector2 min = padre.min + Vector2.Scale(rt.anchorMin, padre.size) + rt.offsetMin;
+            Vector2 max = padre.min + Vector2.Scale(rt.anchorMax, padre.size) + rt.offsetMax;
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+        var areaSegura = prefabTienda.transform.Find("Panel/AreaSegura");
+        var lista = areaSegura != null ? areaSegura.Find("Tarjetas") as RectTransform : null;
+        var pie = areaSegura != null ? areaSegura.Find("Pie") as RectTransform : null;
+        var jugar = pie != null ? pie.Find("BotonJugar") as RectTransform : null;
+        if (!inf.Verdadero("tienda: estan la lista, el pie y el boton de jugar", lista != null && jugar != null)) return;
+        float medioAltoTarjeta = ((RectTransform)prefab.transform).sizeDelta.y * 0.5f;
+        float mitadFlecha = GuiaPrimeraCompra.LadoFlecha * 0.5f;
+        foreach (var pantalla in new[] { new Vector2(16f, 9f), new Vector2(20f, 9f), new Vector2(21f, 9f) })
+        {
+            float medioAlto = MedioAltoDelCanvas(pantalla);
+            float medioAncho = medioAlto * pantalla.x / pantalla.y;
+            var canvas = Rect.MinMaxRect(-medioAncho, -medioAlto, medioAncho, medioAlto);
+            float pisoTarjetas = EnElPadre(lista, canvas).center.y - medioAltoTarjeta;
+            Rect boton = EnElPadre(jugar, EnElPadre(pie, canvas));
+            bool pisa = false, tapa = false, afuera = false;
+            foreach (float distancia in new[] { GuiaPrimeraCompra.Separacion, GuiaPrimeraCompra.Separacion + GuiaPrimeraCompra.Rebote })
+            {
+                Vector2 centro = GuiaPrimeraCompra.CentroDeLaFlecha(boton, false, distancia);
+                var flecha = Rect.MinMaxRect(centro.x - mitadFlecha, centro.y - mitadFlecha - GuiaPrimeraCompra.CaidaSombra,
+                                             centro.x + mitadFlecha, centro.y + mitadFlecha);
+                pisa |= flecha.yMax >= pisoTarjetas;
+                tapa |= flecha.Overlaps(boton);
+                afuera |= flecha.xMin < canvas.xMin || flecha.yMin < canvas.yMin;
+            }
+            string en = " (" + pantalla.x + ":" + pantalla.y + ")";
+            inf.Verdadero("tienda: la flecha de A JUGAR no pisa las tarjetas" + en, !pisa);
+            inf.Verdadero("tienda: la flecha de A JUGAR no tapa el boton" + en, !tapa);
+            inf.Verdadero("tienda: la flecha de A JUGAR queda en la pantalla" + en, !afuera);
+        }
     }
 
     // Al terminar de invocar el jefe no gira: el rumbo que se guarda al aturdirse es el de la

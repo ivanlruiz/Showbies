@@ -133,8 +133,9 @@ retomarla es empezarla de cero), `NoTerminoPartidas` y `NuncaCompro`.
   Con el primer zombi muerto, "¡COGE LAS MONEDAS!" hasta agarrar una. No frena nada. Sigue si se sale y se retoma
   (mira `NoTerminoPartidas`, porque `WaveManager` guarda la oleada en curso apenas empieza).
 - **La primera compra está señalada** (`GuiaPrimeraCompra`, en la raíz del prefab `Tienda`): si nunca compró y le alcanza
-  para el daño, la lista se desplaza hasta esa tarjeta y una flecha dorada la señala desde abajo; al comprar, la flecha
-  pasa a ¡A JUGAR!. Es el triángulo de `TexturasUI.Play` girado.
+  para el daño, la lista se desplaza hasta esa tarjeta si no se ve y una flecha dorada la señala desde abajo; al comprar
+  (también en la demora del principio), la flecha pasa a ¡A JUGAR!, desde su izquierda: encima pisaba las tarjetas en
+  20:9. Es el triángulo de `TexturasUI.Play` girado.
 - **La recompensa diaria espera a la primera partida terminada**: si no, se cobran 150 monedas y se compra antes de jugar.
 
 ### Tutorial

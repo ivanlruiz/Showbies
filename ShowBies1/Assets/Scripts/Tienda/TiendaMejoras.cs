@@ -72,6 +72,14 @@ public class TiendaMejoras : MonoBehaviour
     private const float DuracionFlash = 0.25f;
     private const float AlfaFlash = 0.35f;
 
+    // Un toque que llega con la fila deslizándose a más de esto (unidades del canvas por
+    // segundo) es para frenarla y no compra (ver TarjetaMejora). Por debajo la fila ya se ve
+    // quieta: con la desaceleración del ScrollRect le quedan menos de 30 de recorrido.
+    public const float VelocidadParaFrenar = 60f;
+    // Lo que queda entre la tarjeta que se muestra al abrir y el borde de la lista: el mismo
+    // relleno que tiene la fila a los costados.
+    private const float MargenDeLaFila = 10f;
+
     // Todo en la bemol mayor, en semitonos desde la bemol: las tarjetas entran
     // subiendo, las monedas que vuelan bajan por la escala y el arpegio de cada
     // compra es el acorde, transpuesto por I-IV-V-I' con la racha.
@@ -97,6 +105,8 @@ public class TiendaMejoras : MonoBehaviour
     private bool sinCatalogo;
 
     private bool abierta;
+    private bool filaPorAcomodar;
+    private readonly Vector3[] esquinas = new Vector3[4];
     private float tiempoAbierta;
     private float fade;
     private int revisionVista;
@@ -126,6 +136,27 @@ public class TiendaMejoras : MonoBehaviour
     public bool Abierta
     {
         get { return abierta; }
+    }
+
+    // Si la fila se está deslizando sola. Lo pregunta cada tarjeta al apoyar el dedo (ver
+    // TarjetaMejora): en uGUI el toque que la frena también llega como click al botón de abajo.
+    public bool FilaEnMovimiento
+    {
+        get
+        {
+            if (!abierta || scroll == null || !scroll.enabled) return false;
+            return SeEstaDeslizando(scroll.velocity.x, scroll.horizontalNormalizedPosition);
+        }
+    }
+
+    // Con la velocidad del contenido (positiva lo corre a la derecha, hacia el principio) y la
+    // posición normalizada. Contra el borde al que va no cuenta: en Clamped el ScrollRect
+    // corrige la posición y no la velocidad, que sigue bajando sola un par de segundos con la
+    // fila ya quieta, y un toque ahí sería una compra que no se hace. Estática para las pruebas.
+    public static bool SeEstaDeslizando(float velocidad, float posicion)
+    {
+        if (Mathf.Abs(velocidad) <= VelocidadParaFrenar) return false;
+        return velocidad > 0f ? posicion > 0.001f : posicion < 0.999f;
     }
 
     private void Awake()
@@ -243,6 +274,8 @@ public class TiendaMejoras : MonoBehaviour
         }
 
         RefrescarTodas();
+        // Después de refrescar: dónde arranca la fila depende de qué se puede comprar.
+        filaPorAcomodar = !AcomodarFila(true);
 
         for (int i = 0; i < tarjetas.Count; i++)
         {
@@ -255,6 +288,7 @@ public class TiendaMejoras : MonoBehaviour
     public void Cerrar()
     {
         abierta = false;
+        filaPorAcomodar = false;
         if (panel != null) panel.SetActive(false);
         if (menuPrincipal != null) menuPrincipal.SetActive(true);
         if (extrasMenu != null) extrasMenu.SetActive(true);
@@ -347,6 +381,7 @@ public class TiendaMejoras : MonoBehaviour
         if (Progreso.Revision != revisionVista || Idioma.Revision != idiomaVisto || Tema.Revision != temaVisto) RefrescarTodas();
 
         ActualizarScroll();
+        if (filaPorAcomodar && AcomodarFila(false)) filaPorAcomodar = false;
         ActualizarGolpesPendientes(dt);
         ActualizarSacudida(dt);
         ActualizarFlash(dt);
@@ -363,6 +398,51 @@ public class TiendaMejoras : MonoBehaviour
         if (scroll.enabled != hayQueDesplazar) scroll.enabled = hayQueDesplazar;
         if (!hayQueDesplazar && contenedor.anchoredPosition != Vector2.zero)
             contenedor.anchoredPosition = Vector2.zero;
+    }
+
+    // La fila arranca al principio, con el daño (la primera tarjeta y la que más se compra) a
+    // la vista. Contenido está centrado en la lista y el ScrollRect, en Clamped, no corrige una
+    // fila que se pasa por los dos lados: abría centrada, con el daño afuera y la cadencia
+    // cortada, en cada visita (el menú se vuelve a cargar al volver de jugar). Devuelve falso si
+    // la fila todavía no tenía su ancho, para volver a probar en el cuadro siguiente.
+    private bool AcomodarFila(bool forzarLayout)
+    {
+        if (scroll == null || contenedor == null || viewport == null) return true;
+
+        // El panel recién se prendió: sin esto la fila todavía no tiene el ancho del layout.
+        if (forzarLayout) Canvas.ForceUpdateCanvases();
+        float anchoFila = contenedor.rect.width;
+        float anchoVista = viewport.rect.width;
+        if (anchoFila <= anchoVista + 1f) return false;
+
+        // El borde derecho de la primera tarjeta que se puede comprar, medido desde el comienzo
+        // de la fila. La raíz de la tarjeta la ubica el layout y no se anima: lo que entra
+        // animado es su contenido.
+        float derecha = float.NaN;
+        foreach (TarjetaMejora tarjeta in tarjetas)
+        {
+            if (tarjeta == null || tarjeta.Estado != EstadoMejora.Comprable) continue;
+            ((RectTransform)tarjeta.transform).GetWorldCorners(esquinas);
+            derecha = contenedor.InverseTransformPoint(esquinas[2]).x - contenedor.rect.xMin;
+            break;
+        }
+
+        scroll.StopMovement();
+        scroll.horizontalNormalizedPosition = PosicionAlAbrir(anchoFila, anchoVista, derecha);
+        return true;
+    }
+
+    // Dónde arranca la fila, como posición normalizada del ScrollRect (0 es el principio): al
+    // principio, salvo que la primera tarjeta que se puede comprar no entre entera desde ahí;
+    // entonces corre lo justo para mostrarla, con el margen de la fila. 'derecha' es el borde
+    // derecho de esa tarjeta medido desde el comienzo de la fila, y NaN si no hay ninguna: sin
+    // nada para comprar queda el principio, con el daño y lo que le falta. Estática para las
+    // pruebas.
+    public static float PosicionAlAbrir(float anchoFila, float anchoVista, float derecha)
+    {
+        float oculto = anchoFila - anchoVista;
+        if (oculto <= 0f || float.IsNaN(derecha)) return 0f;
+        return Mathf.Clamp01((derecha + MargenDeLaFila - anchoVista) / oculto);
     }
 
     private void ActualizarGolpesPendientes(float dt)

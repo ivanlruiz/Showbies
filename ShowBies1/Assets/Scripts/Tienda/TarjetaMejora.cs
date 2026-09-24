@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 // Una tarjeta de la tienda: nombre, nivel, "valor → siguiente" y el botón con el
 // precio. La genera TiendaMejoras desde el catálogo; no cobra nada, sólo le avisa
@@ -9,7 +10,8 @@ using UnityEngine;
 // apagado y "faltan N") y EnTope (amarillo con "MÁX"; la de carbón neón ya no
 // lleva el sello de "¡MÁXIMO!", pero si el prefab tiene estampa, la anima). Lo que se
 // puede comprar se mueve; lo que no, queda quieto. El botón queda siempre
-// tocable: un toque sin monedas también responde, con un rechazo.
+// tocable: un toque sin monedas también responde, con un rechazo. El que no compra
+// es el toque que frena la fila mientras se desliza (ver ToqueQueFrena).
 //
 // Se viste de carbón neón (pedido de Ivan, 24/9; lo arma ConstructorTienda): la
 // tarjeta oscura con un borde celeste que brilla (haloTarjeta) y late cuando se
@@ -105,6 +107,11 @@ public class TarjetaMejora : MonoBehaviour
     private void Awake()
     {
         Inicializar();
+
+        // Lo que hace que el toque que frena la fila no compre. En Awake, que corre solo en
+        // play: fuera de play nadie toca la tarjeta.
+        if (boton != null && boton.GetComponent<ToqueQueFrena>() == null)
+            boton.gameObject.AddComponent<ToqueQueFrena>().tarjeta = this;
     }
 
     // La tienda crea las tarjetas dentro del panel apagado y las configura antes
@@ -571,5 +578,24 @@ public class TarjetaMejora : MonoBehaviour
     private static void ActivarSiHay(GameObject objeto, bool activo)
     {
         if (objeto != null && objeto.activeSelf != activo) objeto.SetActive(activo);
+    }
+
+    // Un toque que frena la fila mientras se desliza no compra. En uGUI ese toque hace las
+    // dos cosas: el ScrollRect se frena (initializePotentialDrag le pone la velocidad en cero)
+    // y, si el dedo no se arrastra, el mismo toque llega como click al botón que quedó
+    // debajo, y la compra es en el acto y sin deshacer. Va en el objeto del botón, junto al
+    // Button: el pointerDown se reparte entre los componentes del primero de la jerarquía que
+    // lo atiende, y llega antes que initializePotentialDrag, cuando todavía se sabe si la fila
+    // se movía. Le saca el click a ese toque y nada más, sin marcas que queden colgadas: el
+    // siguiente compra.
+    private class ToqueQueFrena : MonoBehaviour, IPointerDownHandler
+    {
+        public TarjetaMejora tarjeta;
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (tarjeta != null && tarjeta.tienda != null && tarjeta.tienda.FilaEnMovimiento)
+                eventData.eligibleForClick = false;
+        }
     }
 }
