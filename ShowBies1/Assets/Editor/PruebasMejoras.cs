@@ -1798,6 +1798,7 @@ public static class PruebasMejoras
         public ResultadoAnuncio resultado = ResultadoAnuncio.Recompensado;
         public bool hayVideo = true;
         public bool avisarDosVeces;
+        public bool tirarAlMostrar;   // como un SDK que revienta al pedirle el video
         public int veces;
 
         public string Nombre { get { return "prueba"; } }
@@ -1807,6 +1808,7 @@ public static class PruebasMejoras
         public void Mostrar(string lugar, System.Action<ResultadoAnuncio> alTerminar)
         {
             veces++;
+            if (tirarAlMostrar) throw new System.InvalidOperationException("prueba: el SDK revento al mostrar");
             if (alTerminar == null) return;
             alTerminar(resultado);
             if (avisarDosVeces) alTerminar(resultado);
@@ -1895,6 +1897,26 @@ public static class PruebasMejoras
             ServicioAnuncios.AtenderAvisos();
             inf.Igual("circuito: sin video no hay premio", 0, premios);
             inf.Igual("circuito: sin video no gasta tope", 0, Progreso.UsosDeHoy(lugar));
+
+            // --- el proveedor revienta al pedirle el video ------------------------
+            // Nadie iba a avisar como termino: el juego quedaba mudo, MostrandoAnuncio
+            // prendido toda la sesion y el revivir congelado sin botones. Se resuelve como
+            // si no hubiera habido video (deja un error en la consola: es el esperado).
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(proveedor, config);
+            proveedor.resultado = ResultadoAnuncio.Recompensado;
+            proveedor.tirarAlMostrar = true;
+            premios = cierres = 0;
+            bool audioAntesDeRomperse = AudioListener.pause;
+            bool arranco = ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
+            ServicioAnuncios.AtenderAvisos();
+            proveedor.tirarAlMostrar = false;
+            inf.Verdadero("circuito: si el proveedor revienta, Mostrar no tira la excepcion para arriba", arranco);
+            inf.Igual("circuito: y no hay premio", 0, premios);
+            inf.Igual("circuito: y se avisa que no hubo premio", 1, cierres);
+            inf.Verdadero("circuito: y ya no esta mostrando", !ServicioAnuncios.MostrandoAnuncio);
+            inf.Verdadero("circuito: y el audio vuelve como estaba", AudioListener.pause == audioAntesDeRomperse);
+            inf.Igual("circuito: y no gasta el tope del dia", 0, Progreso.UsosDeHoy(lugar));
 
             // --- fallo al mostrarse ----------------------------------------------
             EmpezarConMonedas(0);
