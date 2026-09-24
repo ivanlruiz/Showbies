@@ -67,6 +67,9 @@ public class BotonModoLibre : MonoBehaviour
             return;
         }
         Time.timeScale = 1f;
-        SceneManager.LoadScene(TiendaMejoras.EscenaModoLibre);
+        // Por ModoLibre.EscenaPara, como todo lo que carga el libre (ver CLAUDE.md): si
+        // cambia la regla de adonde mandar al que lo pide, este boton, que es el camino
+        // principal, se entera. El temblor de arriba queda: es la respuesta del boton.
+        SceneManager.LoadScene(ModoLibre.EscenaPara(TiendaMejoras.EscenaModoLibre));
     }
 }

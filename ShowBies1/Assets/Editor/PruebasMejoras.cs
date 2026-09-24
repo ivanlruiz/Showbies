@@ -205,6 +205,7 @@ public static class PruebasMejoras
             ProbarZombisPorPartida(informe);
             ProbarAvisosSinPisarse(informe);
             ProbarVidriosDelMenu(informe);
+            ProbarOrdenDeEscenas(informe);
             ProbarJefeAlTerminar(informe);
             ProbarCurvaDeNivel(informe);
             ProbarRitmoDelNivel(informe);
@@ -1239,6 +1240,31 @@ public static class PruebasMejoras
         float alto = 1080f, ancho = alto * proporcion.x / proporcion.y;
         float escala = Mathf.Sqrt(ancho * alto / (1920f * 1080f));
         return alto / escala * 0.5f;
+    }
+
+    // Los indices de escena estan escritos en el codigo, en literales (MainMenu.GameModes y
+    // Tutorial, MenuPerdiste.Menu, MenuPausa, TutorialManager.IrAlMenu) y en constantes
+    // (TiendaMejoras.EscenaMenu, EscenaModoLibre y EscenaOleadas, DerrotaEnLaPartida.
+    // EscenaDerrota): reordenar Build Settings rompe la navegacion sin ningun aviso en la
+    // build, y hasta el 24/9 ninguna prueba lo miraba. El orden es la tabla del CLAUDE.md.
+    // Cuentan solo las escenas prendidas, que son las que numera SceneManager.LoadScene.
+    static void ProbarOrdenDeEscenas(Informe inf)
+    {
+        string[] esperadas = { "Menu", "ShowBies1", "Perdiste", "WaveMode", "Tutorial" };
+        var enElBuild = new List<string>();
+        foreach (var escena in EditorBuildSettings.scenes)
+        {
+            if (escena != null && escena.enabled) enElBuild.Add(Path.GetFileNameWithoutExtension(escena.path));
+        }
+        for (int i = 0; i < esperadas.Length; i++)
+        {
+            inf.Igual("escenas: la " + i + " del build es " + esperadas[i], esperadas[i],
+                      i < enElBuild.Count ? enElBuild[i] : "(no hay)");
+        }
+        inf.Igual("escenas: TiendaMejoras.EscenaMenu es el menu", 0, TiendaMejoras.EscenaMenu);
+        inf.Igual("escenas: TiendaMejoras.EscenaModoLibre es el libre", 1, TiendaMejoras.EscenaModoLibre);
+        inf.Igual("escenas: DerrotaEnLaPartida.EscenaDerrota es la derrota", 2, DerrotaEnLaPartida.EscenaDerrota);
+        inf.Igual("escenas: TiendaMejoras.EscenaOleadas son las oleadas", 3, TiendaMejoras.EscenaOleadas);
     }
 
     // Los botones de vidrio del menu cambian con el tema: todo Image del menu con el color

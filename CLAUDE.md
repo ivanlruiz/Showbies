@@ -93,7 +93,8 @@ Marketing/                  ← logo.py: el logo del juego dibujado en código, 
 `MainMenu.Tutorial` → 4, `DerrotaEnLaPartida.EscenaDerrota` → 2 (en modo aditivo, ver La derrota encima de la partida), `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1,
 `TiendaMejoras.Jugar` → 1 o 3 y `TiendaMejoras.AbrirEnMenu` → 0, estos dos con las constantes `EscenaMenu`,
 `EscenaModoLibre` y `EscenaOleadas`).
-Reordenar Build Settings rompe la navegación en silencio.
+Reordenar Build Settings rompe la navegación en silencio: solo lo avisa la prueba de lógica, que compara el orden del
+build con esta tabla.
 
 ### Menú y modos
 
@@ -104,8 +105,8 @@ con el libre y el tutorial encima y VOLVER abajo a la izquierda. El menú no mue
 libre está **bloqueado hasta llegar a la oleada 12** (`ModoLibre.OleadaParaDesbloquear`; llegar a la 12 es haber
 completado la 11, que es lo que guarda `Progreso.MejorOleada`). Bloqueado, `BotonModoLibre` lo pinta gris con
 "REACH WAVE 12" abajo y tocarlo lo hace temblar. **Todo lo que carga el libre pasa por `ModoLibre.EscenaPara`**, que
-manda a las oleadas si todavía no está: `MainMenu.PlayGame`, el final del tutorial, el ¡A JUGAR! de la tienda y el
-OTRA VEZ de la derrota. Si agregás otro camino al libre, pasalo por ahí.
+manda a las oleadas si todavía no está: el botón MODO LIBRE (`BotonModoLibre.Jugar`), `MainMenu.PlayGame`, el final
+del tutorial, el ¡A JUGAR! de la tienda y el OTRA VEZ de la derrota. Si agregás otro camino al libre, pasalo por ahí.
 
 **`MainMenu` y `GameModesMenu` están estirados al canvas** (anclas 0,0 a 1,1). Antes eran rectángulos fijos de 1920x1080
 centrados, y como el canvas escala por ancho, en un teléfono 20:9 (2400x1080, el más común) mide 864 de alto: PLAY,
@@ -122,8 +123,8 @@ pudo armar, las dos cosas cierran el juego como antes.
 
 Lo que ve alguien que recien instala (ronda de ideas del 19/9: el panel de modos, el tutorial opcional y una tienda de
 ocho tarjetas sin guía eran demasiado). Lo decide `PrimeraVez` (`Assets/Scripts/Tutorial/`) mirando el progreso, sin
-marcas aparte: `NuncaJugo` (ninguna partida terminada, ninguna oleada completada ni a medias), `NoTerminoPartidas` y
-`NuncaCompro`.
+marcas aparte: `NuncaJugo` (ninguna partida terminada, ninguna oleada completada y a lo sumo la 1 a medias, que
+retomarla es empezarla de cero), `NoTerminoPartidas` y `NuncaCompro`.
 
 - **PLAY va derecho a la oleada 1** (`MainMenu.TocarJugar`, que es el `onClick` del botón): después abre el panel de modos.
 - **La primera partida trae una guía** (`GuiaPrimeraPartida`, objeto propio en WaveMode, armada en código): en el
@@ -1047,7 +1048,8 @@ la app ya está publicada y vinculada a su ficha de Play.
 
 `PedidoDeResena` (raíz del canvas "Main Menu") pide la ventanita nativa de reseña de Play (In-App Review) **en el menú,
 con todo cerrado**, cuando la mejor oleada llegó a 10 y hay 3 partidas terminadas, y después como mucho cada 60 días
-(`"ResenaPedidaEn"`, y atrasar el reloj no la vuelve a pedir). Nunca en la partida ni en la derrota, sin preguntar antes
+(`"ResenaPedidaEn"`, que se anota recién cuando Play aceptó el pedido: si falla, se reintenta en la próxima visita al
+menú; atrasar el reloj no la vuelve a pedir). Nunca en la partida ni en la derrota, sin preguntar antes
 "¿te gusta?" y sin premio: son reglas de Play. Google decide en silencio si la muestra, y fuera de una instalación desde
 Play (una APK a mano) no muestra nada.
 

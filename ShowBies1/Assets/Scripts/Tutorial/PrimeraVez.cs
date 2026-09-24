@@ -6,10 +6,15 @@
 // Todo sale del progreso y no de una marca aparte: el que ya jugo lo tiene anotado.
 public static class PrimeraVez
 {
-    // Nunca termino una partida, no completo ninguna oleada y no dejo una a medias.
+    // Nunca termino una partida, no completo ninguna oleada y a lo sumo dejo a medias la
+    // oleada 1. Sin ninguna completada, la guardada solo puede ser la 1 (para llegar a la 2
+    // hay que completar la 1), y retomarla es empezarla de cero con 0 puntos: lo mismo que
+    // ya hace PLAY. Hasta el 24/9 pedia que no hubiera ninguna a medias, y el que abandonaba
+    // su primera oleada (MENU en la pausa, o Android matando la app) caia en el panel de
+    // modos, que es justo lo que la primera vez le quiere ahorrar.
     public static bool NuncaJugo
     {
-        get { return NoTerminoPartidas && Progreso.OleadaEnCurso == 0; }
+        get { return NoTerminoPartidas && Progreso.OleadaEnCurso <= 1; }
     }
 
     // Lo mismo sin mirar la oleada a medias: la guia de la primera partida sigue si se

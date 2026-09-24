@@ -34,6 +34,13 @@ public class PedidoDeResena : MonoBehaviour
     public TiendaMejoras tienda;
     public ConfirmarSalir confirmarSalir;
 
+    // Lo demas que se puede abrir encima del menu y no tiene estatica propia: el idioma,
+    // las opciones y el panel de modos. No estan cableados aca: los toma de BotonAtrasMenu,
+    // que esta en el mismo canvas y es el que sabe que se puede cerrar con el atras.
+    private SelectorIdioma selectorIdioma;
+    private OpcionesSonido opcionesSonido;
+    private GameObject menuModos;
+
     private float tranquiloDesde = -1f;
     private bool pedida;
 
@@ -42,11 +49,30 @@ public class PedidoDeResena : MonoBehaviour
     private static AndroidJavaObject administrador;
     private static AndroidJavaObject actividad;
 
+    // Lo prende el aviso de Android cuando Play dio la ventana y se lanzo el flujo. La fecha
+    // se anota en el Update siguiente, en el hilo de Unity (PlayerPrefs no se toca desde el
+    // de Android), y si el pedido falla no se anota nada: se vuelve a intentar en la proxima
+    // visita al menu. Hasta el 24/9 la fecha se guardaba antes de pedir, y una falla (sin
+    // conexion, una Play vieja) gastaba los 60 dias sin haber pedido nada. Es estatico para
+    // que llegue aunque el menu se haya descargado: se anota al volver.
+    private static volatile bool pedidoConfirmado;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
         administrador = null;
         actividad = null;
+        pedidoConfirmado = false;
+    }
+
+    private void Awake()
+    {
+        var atras = GetComponent<BotonAtrasMenu>();
+        if (atras == null) atras = FindAnyObjectByType<BotonAtrasMenu>();
+        if (atras == null) return;
+        selectorIdioma = atras.selectorIdioma;
+        opcionesSonido = atras.opcionesSonido;
+        menuModos = atras.menuModos;
     }
 
     // Separada para las pruebas: si tocaria pedirla con este progreso y esta fecha.
@@ -64,11 +90,21 @@ public class PedidoDeResena : MonoBehaviour
 
     private void Update()
     {
+        if (pedidoConfirmado)
+        {
+            pedidoConfirmado = false;
+            AnotarPedido();
+        }
         if (pedida) return;
 
+        // Con todo cerrado de verdad: hasta el 24/9 no miraba el idioma, las opciones ni el
+        // panel de modos, y la hoja de Play podia salir mientras se arrastraba el volumen.
         bool tranquilo = !VentanaRecompensaDiaria.Abierta && !VentanaMisiones.Abierta && !VentanaBestiario.Abierta
                          && !VentanaLogros.Abierta && (tienda == null || !tienda.Abierta)
-                         && (confirmarSalir == null || !confirmarSalir.Abierta);
+                         && (confirmarSalir == null || !confirmarSalir.Abierta)
+                         && (selectorIdioma == null || !selectorIdioma.Abierto)
+                         && (opcionesSonido == null || !opcionesSonido.Abierto)
+                         && (menuModos == null || !menuModos.activeSelf);
         if (!tranquilo)
         {
             tranquiloDesde = -1f;
@@ -82,19 +118,26 @@ public class PedidoDeResena : MonoBehaviour
         if (!Corresponde(Progreso.MejorOleada, Progreso.PartidasTerminadas, PlayerPrefs.GetString(ClaveUltimoPedido, ""),
                          DateTime.Now, oleadaMinima, partidasMinimas, diasEntrePedidos)) return;
 
-        PlayerPrefs.SetString(ClaveUltimoPedido, DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-        PlayerPrefs.Save();
+        if (Application.platform != RuntimePlatform.Android)
+        {
+            // Fuera de Android no hay nada que pueda fallar: se anota en el acto, asi el
+            // aviso sale una vez cada diasEntrePedidos, como en el telefono.
+            Debug.Log("PedidoDeResena: en Android se pediria la reseña ahora.");
+            AnotarPedido();
+            return;
+        }
         Pedir();
     }
 
+    private static void AnotarPedido()
+    {
+        PlayerPrefs.SetString(ClaveUltimoPedido, DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        PlayerPrefs.Save();
+    }
+
+    // Solo en Android. La fecha la anota el Update cuando Play confirma (pedidoConfirmado).
     private static void Pedir()
     {
-        if (Application.platform != RuntimePlatform.Android)
-        {
-            Debug.Log("PedidoDeResena: en Android se pediria la reseña ahora.");
-            return;
-        }
-
         try
         {
             using (var jugador = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
@@ -113,7 +156,8 @@ public class PedidoDeResena : MonoBehaviour
         }
     }
 
-    // Llega desde el hilo de Android, no desde el de Unity: no se toca nada del juego.
+    // Llega desde el hilo de Android, no desde el de Unity: no se toca nada del juego, solo
+    // se prende la marca para que el Update anote la fecha.
     private static void LanzarFlujo(AndroidJavaObject tarea)
     {
         try
@@ -121,6 +165,7 @@ public class PedidoDeResena : MonoBehaviour
             if (tarea == null || !tarea.Call<bool>("isSuccessful") || administrador == null) return;
             var informacion = tarea.Call<AndroidJavaObject>("getResult");
             administrador.Call<AndroidJavaObject>("launchReviewFlow", actividad, informacion);
+            pedidoConfirmado = true;
         }
         catch (Exception e)
         {
@@ -138,7 +183,10 @@ public class PedidoDeResena : MonoBehaviour
             this.alCompletar = alCompletar;
         }
 
-        // El nombre y la firma son los de la interfaz de Java.
+        // El nombre y la firma son los de la interfaz de Java. Nadie lo llama desde C#: Unity
+        // lo busca por nombre cuando Java llama al proxy, y con la limpieza de codigo mas
+        // alta (hoy esta en Low) el linker lo sacaria sin ningun error. Preserve lo impide.
+        [UnityEngine.Scripting.Preserve]
         public void onComplete(AndroidJavaObject tarea)
         {
             alCompletar(tarea);

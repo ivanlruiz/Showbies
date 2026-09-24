@@ -9,7 +9,8 @@ using UnityEngine;
 // Los zombis son los prefabs de verdad sin nada de su logica: se instancian dentro
 // de un objeto apagado y se les borran scripts, fisica y colliders antes de
 // prenderlos, asi no cuentan en ZombisVivos ni buscan al jugador. Caminan con su
-// Animator al mismo ritmo relativo que en la partida (EnemyController.velocidadDeAnimacion).
+// Animator como en la partida: el paso (EnemyController.velocidadDeAnimacion) y si
+// caminan o corren (ritmoDeAndar), por los parametros Paso y Ritmo del controller.
 //
 // La camara del menu se acomoda aca (mirando un poco desde arriba, fondo del color
 // del piso): la imagen BG del canvas quedo transparente para que esto se vea.
@@ -89,6 +90,13 @@ public class FondoMenu : MonoBehaviour
     }
     private static readonly FieldInfo campoAnimacion =
         typeof(EnemyController).GetField("velocidadDeAnimacion", BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly FieldInfo campoRitmo =
+        typeof(EnemyController).GetField("ritmoDeAndar", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    // Los del controller de los zombis (ConstructorAnimaciones), como hash, igual que en
+    // EnemyController.
+    private static readonly int idPaso = Animator.StringToHash("Paso");
+    private static readonly int idRitmo = Animator.StringToHash("Ritmo");
 
     private void Start()
     {
@@ -226,6 +234,7 @@ public class FondoMenu : MonoBehaviour
         var enemigo = prefab.GetComponent<EnemyController>();
         float velocidadJuego = enemigo != null && enemigo.enemyType != null ? enemigo.enemyType.velocidad : 5f;
         float animacion = enemigo != null && campoAnimacion != null ? (float)campoAnimacion.GetValue(enemigo) : 1f;
+        float ritmo = enemigo != null && campoRitmo != null ? (float)campoRitmo.GetValue(enemigo) : 1f;
 
         // Dentro de un padre apagado: nada de Awake ni OnEnable hasta borrarle la logica.
         var caja = new GameObject("ZombiDelFondo");
@@ -259,8 +268,22 @@ public class FondoMenu : MonoBehaviour
 
         zombi.transform.SetParent(transform, true);
         Destroy(caja);
-        foreach (var a in zombi.GetComponentsInChildren<Animator>(true)) a.speed = animacion * factorVelocidad;
         zombi.SetActive(true);
+
+        // El paso va por los parametros del controller, como en la partida
+        // (EnemyController.OnEnable), con el Animator entero a 1: Paso es el ritmo del
+        // estado de andar y Ritmo elige entre caminar y correr. Con animator.speed y sin
+        // Ritmo (que en el controller vale 1) todos corrian, y el tanque y el jefe, que
+        // caminan, corrian en camara lenta. Despues de prenderlo (a un Animator apagado no
+        // se le fijan parametros), y solo los que tienen controller: el rapido trae un
+        // segundo Animator vacio, y pedirle un parametro avisa en la consola.
+        foreach (var a in zombi.GetComponentsInChildren<Animator>(true))
+        {
+            if (a.runtimeAnimatorController == null) continue;
+            a.speed = 1f;
+            a.SetFloat(idPaso, animacion * factorVelocidad);
+            a.SetFloat(idRitmo, ritmo);
+        }
 
         caminantes.Add(new Caminante
         {

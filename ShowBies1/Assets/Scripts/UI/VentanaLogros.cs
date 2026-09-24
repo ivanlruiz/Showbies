@@ -123,6 +123,7 @@ public class VentanaLogros : MonoBehaviour
     private int idiomaArmado = -1;
     private int temaArmado = -1;
     private float relojInsignia, proximaRevision;
+    private int cuentaEscrita = -1;
     private int nivelMostrado;
 
     private void Start()
@@ -292,14 +293,18 @@ public class VentanaLogros : MonoBehaviour
             proximaRevision = relojInsignia + 0.5f;
             Logros.Revisar();
         }
-        ConstructorUI.Latir(insignia, numeroInsignia, Logros.PorCobrar + NivelJugador.PorCobrar, relojInsignia);
+        // El numero se escribe solo cuando cambia: escribirlo en cada cuadro armaba una
+        // cadena por cuadro. Latir sin texto sigue prendiendo, apagando y latiendo.
+        int cuenta = Logros.PorCobrar + NivelJugador.PorCobrar;
+        ConstructorUI.Latir(insignia, cuenta != cuentaEscrita ? numeroInsignia : null, cuenta, relojInsignia);
+        cuentaEscrita = cuenta;
 
         AvanzarExperiencia(dt);
         Saltar(enElBoton, dt);
         if (!Abierta) return;
 
         reloj += dt;
-        ventana.localScale = Vector3.one * CurvasUI.SalidaAtras(Mathf.Clamp01(reloj / 0.45f));
+        ventana.localScale = Vector3.one * (EscalaQueEntra() * CurvasUI.SalidaAtras(Mathf.Clamp01(reloj / 0.45f)));
         if (Progreso.Revision != revisionVista) Refrescar();
         Saltar(enLaVentana, dt);
 
@@ -323,6 +328,23 @@ public class VentanaLogros : MonoBehaviour
                 fila.bordes[e].rectTransform.localScale = Vector3.one * escala;
             }
         }
+    }
+
+    // La ventana, con el halo de neon que sobresale 40 de cada lado, tiene que entrar en el
+    // alto del canvas "Main Menu", que escala por el ancho (match 0): mide 1080 en 16:9, 864
+    // en 20:9 y 823 en 21:9. Con sus 820 de alto, en 20:9 se cortaba el halo de arriba y en
+    // 21:9 hasta la linea y las puntas. En las pantallas mas largas se achica lo justo, y
+    // nunca se agranda. Se mide en cada cuadro: en PC la ventana del juego cambia de tamanio.
+    private const float HaloDeLaVentana = 40f;
+    private const float MargenAlBorde = 10f;
+
+    private float EscalaQueEntra()
+    {
+        float alto = ((RectTransform)panel.transform).rect.height;
+        if (alto <= 0f) return 1f;
+        float lugar = alto * 0.5f - Mathf.Abs(ventana.anchoredPosition.y) - MargenAlBorde;
+        float mitad = ventana.rect.height * 0.5f + HaloDeLaVentana;
+        return Mathf.Clamp(lugar / mitad, 0.5f, 1f);
     }
 
     // La barra va hacia la experiencia de verdad de a poco; cada nivel que cruza hace

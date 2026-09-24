@@ -114,6 +114,10 @@ public class VentanaMisiones : MonoBehaviour
     private float relojCuenta;
     private int temaArmado = -1;
     private float relojInsignia;
+    private float proximaCuenta;
+    private int revisionContada = -1;
+    private int cuentaInsignia;
+    private int cuentaEscrita = -1;
     private Button cofre;
     private Image fondoCofre;
     private Image iconoDelCofre;
@@ -157,8 +161,25 @@ public class VentanaMisiones : MonoBehaviour
     private void RefrescarInsignia(float dt)
     {
         relojInsignia += dt;
-        ConstructorUI.Latir(insignia, numeroInsignia,
-                            MisionesDiarias.PorCobrar + (DesafioSemanal.PorCobrar ? 1 : 0), relojInsignia);
+
+        // Contar lo que hay para cobrar pregunta el dia (Asegurar): con la hora confiable,
+        // en Android es una llamada por JNI (RelojConfiable), mas fechas armadas y parseadas,
+        // y corria en cada cuadro con el menu abierto para mostrar casi siempre el mismo
+        // numero. Se cuenta dos veces por segundo, y en el acto cuando cambia el progreso
+        // (cobrar, las misiones nuevas del dia): se ve igual que antes.
+        if (relojInsignia >= proximaCuenta || Progreso.Revision != revisionContada)
+        {
+            proximaCuenta = relojInsignia + 0.5f;
+            cuentaInsignia = MisionesDiarias.PorCobrar + (DesafioSemanal.PorCobrar ? 1 : 0);
+            // Despues de contar: armar las misiones del dia nuevo tambien sube la revision.
+            revisionContada = Progreso.Revision;
+        }
+
+        // El numero se escribe solo cuando cambia: escribirlo en cada cuadro armaba una
+        // cadena por cuadro. Latir sin texto sigue prendiendo, apagando y latiendo.
+        bool otroNumero = cuentaInsignia != cuentaEscrita;
+        ConstructorUI.Latir(insignia, otroNumero ? numeroInsignia : null, cuentaInsignia, relojInsignia);
+        cuentaEscrita = cuentaInsignia;
     }
 
     // --- La ventana ----------------------------------------------------------------
@@ -226,7 +247,7 @@ public class VentanaMisiones : MonoBehaviour
         if (!Abierta) return;
 
         reloj += dt;
-        ventana.localScale = Vector3.one * CurvasUI.SalidaAtras(Mathf.Clamp01(reloj / 0.45f));
+        ventana.localScale = Vector3.one * (EscalaQueEntra() * CurvasUI.SalidaAtras(Mathf.Clamp01(reloj / 0.45f)));
 
         // El cofre tiembla un rato antes de abrirse.
         if (abriendo >= 0f)
@@ -372,6 +393,23 @@ public class VentanaMisiones : MonoBehaviour
         if (jugoCofre != null) jugoCofre.respirar = MisionesDiarias.CofreDisponible;
     }
 
+    // La ventana, con el halo de neon que sobresale 40 de cada lado, tiene que entrar en el
+    // alto del canvas "Main Menu", que escala por el ancho (match 0): mide 1080 en 16:9, 864
+    // en 20:9 y 823 en 21:9. Con sus 820 de alto, en 20:9 se cortaba el halo de arriba y en
+    // 21:9 hasta la linea y las puntas. En las pantallas mas largas se achica lo justo, y
+    // nunca se agranda. Se mide en cada cuadro: en PC la ventana del juego cambia de tamanio.
+    private const float HaloDeLaVentana = 40f;
+    private const float MargenAlBorde = 10f;
+
+    private float EscalaQueEntra()
+    {
+        float alto = ((RectTransform)panel.transform).rect.height;
+        if (alto <= 0f) return 1f;
+        float lugar = alto * 0.5f - Mathf.Abs(ventana.anchoredPosition.y) - MargenAlBorde;
+        float mitad = ventana.rect.height * 0.5f + HaloDeLaVentana;
+        return Mathf.Clamp(lugar / mitad, 0.5f, 1f);
+    }
+
     // Con la hora confiable, la misma con que cambian las misiones: con DateTime.Now, un
     // reloj movido mostraba una cuenta que no se correspondia con nada.
     private static int MinutosParaLasNuevas()
@@ -465,9 +503,12 @@ public class VentanaMisiones : MonoBehaviour
         var imgMoneda = moneda.gameObject.AddComponent<Image>();
         imgMoneda.sprite = circulo;
         imgMoneda.color = colorMoneda;
-        // El premio de la semana es un numero grande: mas lugar y separado de la moneda.
-        s.premio = Texto(s.raiz, "Premio", "", 44f, ColorDeTexto, new Vector2(335f, 4f), new Vector2(200f, 56f));
+        // El premio de la semana es un numero grande: mas lugar y separado de la moneda. La
+        // caja termina donde empieza COBRAR (x = 340), que se dibuja encima: desde la oleada
+        // 12 paga cinco cifras y el boton tapaba parte del ultimo digito. Se achica.
+        s.premio = Texto(s.raiz, "Premio", "", 44f, ColorDeTexto, new Vector2(287.5f, 4f), new Vector2(105f, 56f));
         s.premio.alignment = TextAlignmentOptions.Left;
+        Achicar(s.premio, 30f);
 
         var cobrar = ArmarBoton(s.raiz, "Cobrar", new Vector2(440f, 0f), new Vector2(200f, 84f),
                                 ConstructorUI.Verde, ConstructorUI.VerdeTexto, null,
@@ -528,15 +569,22 @@ public class VentanaMisiones : MonoBehaviour
         Redondear(imgRelleno, 6f);
         imgRelleno.color = colorBarra;
 
+        // Con cinco cifras de cada lado ("12.180 / 20.300") se metia debajo de la moneda: se
+        // achica para no salirse de su caja, que termina antes.
         fila.cuenta = Texto(fila.raiz, "Cuenta", "", 32f, ColorDeTexto, new Vector2(100f, -24f), new Vector2(160f, 40f));
         fila.cuenta.alignment = TextAlignmentOptions.Left;
+        Achicar(fila.cuenta, 22f);
 
         var moneda = Rect(fila.raiz, "Moneda", new Vector2(215f, 0f), new Vector2(44f, 44f));
         var imgMoneda = moneda.gameObject.AddComponent<Image>();
         imgMoneda.sprite = circulo;
         imgMoneda.color = colorMoneda;
-        fila.premio = Texto(fila.raiz, "Premio", "", 42f, ColorDeTexto, new Vector2(305f, 0f), new Vector2(110f, 56f));
+        // La caja del premio termina donde empieza COBRAR (x = 340), que se crea despues y se
+        // dibuja encima: desde la oleada ~25 la dificil paga cinco cifras ("20.550") y el
+        // boton tapaba el ultimo digito. Se achica en vez de salirse.
+        fila.premio = Texto(fila.raiz, "Premio", "", 42f, ColorDeTexto, new Vector2(295f, 0f), new Vector2(90f, 56f));
         fila.premio.alignment = TextAlignmentOptions.Left;
+        Achicar(fila.premio, 28f);
 
         var cobrar = ArmarBoton(fila.raiz, "Cobrar", new Vector2(440f, 0f), new Vector2(200f, 84f),
                                 ConstructorUI.Verde, ConstructorUI.VerdeTexto, null,
@@ -564,6 +612,15 @@ public class VentanaMisiones : MonoBehaviour
     private void Redondear(Image img, float multiplicador)
     {
         ConstructorUI.Redondear(img, pildora, multiplicador);
+    }
+
+    // Un numero que se achica hasta 'minimo' para no salirse de su caja (en una sola linea):
+    // el que entra queda del tamanio de siempre.
+    private static void Achicar(TMP_Text texto, float minimo)
+    {
+        texto.fontSizeMax = texto.fontSize;
+        texto.fontSizeMin = minimo;
+        texto.enableAutoSizing = true;
     }
 
     private TMP_Text Texto(RectTransform padre, string nombre, string texto, float tamanio, Color color, Vector2 posicion, Vector2 caja)
