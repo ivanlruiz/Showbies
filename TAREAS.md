@@ -36,8 +36,8 @@ Lista de Ivan del 16/9/2026, para después de subir la prueba cerrada. Todavía 
 - [x] **Recompensa diaria:** monedas por entrar, que crecen si entrás varios días seguidos.
 - [x] **Misiones:** 3 por día del tipo "matá 200 zombis", "llegá a la oleada 10" o "usá la furia 3 veces". Dan monedas y
       le ponen un objetivo a cada partida.
-- [ ] **Logros:** hitos permanentes (primer jefe, 10.000 zombis, crítico al 100 %). Se pueden conectar con Google Play
-      Games.
+- [x] **Logros:** hitos permanentes (primer jefe, 10.000 zombis, crítico al 100 %). **Hechos el 24/9**, con el nivel del
+      jugador (ver abajo). Falta conectarlos con Google Play Games.
 
 ## Pendientes de la auditoría (18/9/2026)
 
@@ -303,8 +303,10 @@ Lo que quedó anotado, de mayor a menor:
 - [ ] **Las estrellas del bestiario conviene no cobrarlas nunca**: el premio se resuelve al cobrar y crece con la mejor
   oleada, mientras los escalones son muertes absolutas. Arreglo: anotar la marca al ganar la estrella y pagar con esa,
   como ahora hacen las misiones.
-- [ ] `Bestiario.MonedasPorTipo` copia a mano el promedio de `monedasMin/monedasMax` de los `.asset`. Si se toca el
+- [x] `Bestiario.MonedasPorTipo` copia a mano el promedio de `monedasMin/monedasMax` de los `.asset`. Si se toca el
   balance de un zombi, el premio miente en silencio: una prueba que cargue los `Enemy` con `AssetDatabase` y compare.
+  **Hecho el 24/9**: la prueba carga los cinco `Enemy` y compara sus monedas y sus puntos (que ahora también copia
+  `NivelJugador`).
 - [x] Quedaban `Sprite.Create` sin `Destroy` en seis pantallas: ~8 objetos por vuelta al menú. **Arreglado el 20/9**:
   cada una guarda sus sprites y los destruye con las texturas. El globo del idioma usa uno solo para el fondo y la
   sombra, que son el mismo dibujo.
@@ -323,6 +325,24 @@ Lo que quedó anotado, de mayor a menor:
 - [x] **El desafío semanal.** **Hecho el 20/9**: `DesafioSemanal`, uno por semana de lunes a domingo, que cuesta
   quince partidas y paga la mitad de lo que dan esas quince (la vara de `Economia`, como todo lo demás). Se ve en una
   fila dorada arriba de las tres diarias, con los días que faltan; el progreso pasó a versión 5.
+
+## Nivel del jugador y logros (24/9)
+
+- [x] **Logros, experiencia y nivel del jugador** (elegido por Ivan). Doce familias con tres monedas (bronce, plata y
+  oro) que dan experiencia; la experiencia son los puntos de cada zombi, y cada nivel da monedas (el triple cada cinco).
+  Ventana en el menú con la píldora del nivel arriba a la izquierda y una medalla arriba a la derecha, avisos en la
+  partida y el nivel siguiente en la derrota. Progreso v6. Detalle en CLAUDE.md, Nivel del jugador y logros; 85 pruebas
+  nuevas, y las del premio congelado, la experiencia congelada y la migración verificadas volviendo a poner el bug (11
+  fallas).
+- [x] `Tema.Pintar` no repintaba un objeto prendido: el botón del nivel salía blanco. Arreglado de paso.
+- [ ] **Skins de los zombis por moneda de logro** (elegido por Ivan): cada moneda le cambia la pinta a la horda para
+  siempre (un gorro, una máscara, ropa nueva, zombis dorados con el oro).
+- [ ] **Gemas**: una moneda nueva que dan algunos niveles, para comprar monedas o ítems especiales.
+- [ ] **Armas que se desbloquean por nivel.**
+- [ ] **La tienda en carbón neón** (elegida por Ivan el 24/9 entre seis paletas: las maquetas están en
+  `Builds/temas_tienda`). Pidió una tienda más minimalista y negra.
+- [ ] Ver en el teléfono la ventana de logros y el botón del nivel: se verificaron con capturas en 16:9 y 20:9, pero con
+  el juego quieto en el primer cuadro (ver la trampa del editor en segundo plano).
 
 - [ ] **Co-op online.** Investigado el 21/9, está en `COOP.md`: se puede, el hosting es barato
   (~3.800 partidas de 4 jugadores gratis por mes en Relay), pero son 2-3 meses y hay que reescribir el 19 % del

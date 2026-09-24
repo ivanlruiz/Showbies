@@ -21,7 +21,8 @@ Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
 
 Es un **incremental**: las monedas que se juntan en las partidas se gastan en la **tienda de mejoras** del menú
 (daño de bala, cadencia, críticos, vida máxima, granada, imán, botín y la furia), y las mejoras se aplican al empezar cada partida. Del otro lado,
-los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos.
+los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos. Además, jugar y ganar logros da
+experiencia para el **nivel del jugador**, y cada nivel da monedas (ver Nivel del jugador y logros).
 
 ## Entorno
 
@@ -46,9 +47,9 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
@@ -585,9 +586,10 @@ porque el menú la tiene guardada en su escena (ver El fondo del menú vivo).
 
 Lo que el jugador conserva entre partidas vive en `Progreso` (`Assets/Scripts/Progreso/`): un JSON en
 `Application.persistentDataPath/progreso.json` con las monedas, la mejor oleada completada, el nivel de cada
-mejora y lo que necesitan los anuncios (versión 5: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
+mejora y lo que necesitan los anuncios (versión 6: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
 guarda diccionarios, desde la 3 se suman `partidasTerminadas`, `segundosJugados`, `ofrecerVideos` y los topes
-del día, desde la 4 los contadores de por vida y desde la 5 el desafío de la semana). No usa PlayerPrefs a propósito: es estado estructurado.
+del día, desde la 4 los contadores de por vida, desde la 5 el desafío de la semana y desde la 6 la experiencia, los
+premios de nivel, los logros y seis récords nuevos). No usa PlayerPrefs a propósito: es estado estructurado.
 
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
@@ -803,6 +805,52 @@ TANQUE, JEFE) salen de la tabla.
 **Las ventanas del menú que se arman en código usan `ConstructorUI`** (rectángulos, textos, pildoras con el molde de
 siempre, barras sin sprite, los botones redondos de las esquinas copiados del globo y la insignia copiada de MEJORAS).
 Como escriben sus textos al armarse, **se vuelven a armar al abrirlas si cambió el idioma** (`Idioma.Revision`).
+
+## Nivel del jugador y logros
+
+Pedido de Ivan (24/9): logros que dan **experiencia**, y la experiencia sube el **nivel del jugador**, que en cada nivel
+da un premio. Hoy el premio son monedas; de acá van a colgar las skins de los zombis (cada moneda de logro le cambia la
+pinta a la horda, elegido por Ivan), las gemas y las armas (ver TAREAS).
+
+- **La experiencia son los puntos**: `DanoZombi` llama a `NivelJugador.Sumar(enemyType.puntos)` en el mismo bloque que
+  suma el puntaje. Los logros dan más, de a golpes.
+- **La curva** (`NivelJugador`): pasar del nivel L al siguiente cuesta `100L − 75` (25, 125, 225… 925 el décimo). Una
+  partida da más experiencia cuanto más lejos se llega, así que con esta curva se sube más o menos **un nivel por
+  partida** en todo el juego: con el modelo de `Economia`, el 10 cae cerca de la partida 10 y el 50 cerca de la 55. La
+  prueba lo mide con la mezcla de zombis, los pesos y los puntos del `WaveManager` de WaveMode.
+- **El premio de cada nivel**: el 15 % de lo que deja una partida (`Economia.MonedasPorPartida`), y el triple cada 5
+  niveles, **con la mejor oleada del momento en que se sube** (`PremioDeNivel.oleada`), no la de cuando se cobra: si no,
+  convendría no cobrarlo nunca. Queda pendiente y se cobra en el menú, por `CobrarPremio`.
+- **Doce familias de logros con tres monedas** (bronce, plata y oro) en `Logros`: completa la oleada 10/25/50 (la 10 es
+  el primer jefe), mata 1.000/10.000/100.000 zombis, combo x25/x50/x100, crítico al 30/50/100 %, gana
+  10.000/100.000/1.000.000 monedas jugando, mata 5/10/15 con una granada, usa la furia 1/25/100 veces, termina la
+  oleada 5/10/20 sin que te toquen, racha diaria de 3/7/30 días, cobra 10/50/200 misiones, 5/10/15 estrellas del
+  bestiario y llega al nivel 5/10/20 del modo libre. **Los ids de las familias se guardan en el JSON: no se renombran.**
+- **Seis récords nuevos en los contadores de por vida** (v6), que solo suben: el mejor combo (`ContadorCombo`), la mejor
+  granada (`Granade`: los que dejan de estar `Vivo` en la explosión), la oleada más alta sin un golpe (`WaveManager`
+  compara `PlayerHealth.GolpesRecibidos` al empezar y al terminar la oleada), el nivel más alto del libre
+  (`GeneradorZombis`), la racha más larga (`Progreso.RegistrarRecompensaDiaria`) y las misiones cobradas (también las
+  del cierre de medianoche).
+- **Una moneda se anota al verla** (`Logros.Revisar`: en la partida cada tres décimas, desde `AvisoDeMisiones`, y en el
+  menú al abrir la ventana y cada medio segundo) **con el nivel de ese momento**, y queda ganada para siempre aunque la
+  marca baje: el renacer va a devolver las mejoras a cero, y el crítico al 100 % con ellas. **Da los niveles de su
+  escalón a lo que costaba el nivel en que se ganó**: bronce uno, plata dos y oro cuatro (`Logros.Experiencia`).
+  Guardarla para cobrarla más arriba no rinde.
+- **La migración a v6** (`Progreso.MigrarAlNivel`): un progreso viejo arranca con la experiencia de los zombis que ya
+  había matado (los puntos de cada tipo, copiados en `NivelJugador.PuntosPorTipo`; la prueba los compara con los
+  assets) y sin premio por esos niveles: dar de golpe los de meses de partidas eran cientos de miles de monedas.
+- **En el menú** (`VentanaLogros`, raíz del canvas "Main Menu", armada con `ConstructorUI`): una píldora de vidrio arriba
+  a la izquierda, después del engranaje, con la moneda del nivel y su barra, y una medalla redonda arriba a la derecha,
+  al lado del bestiario, con la insignia de lo que hay para cobrar (`Sprites/UI/IconoMedalla`, dibujada con PIL como los
+  otros íconos). Las dos abren la ventana: arriba la tarjeta del nivel (la barra, cuánto falta y COBRAR el premio
+  pendiente, o lo que va a dar el siguiente) y abajo una lista que se desplaza con las doce familias y arranca en la
+  primera con algo para cobrar. **La barra se llena de a poco** (`experienciaMostrada`, estática: al volver de jugar se
+  llena con lo jugado) y cada nivel que cruza hace saltar la moneda con una nota.
+- **En la partida**, `AvisoDeMisiones` avisa "¡LOGRO DE PLATA!" (del color de la moneda) y "¡NIVEL 13!" con el premio
+  que espera en el menú. **En la derrota**, `ProximoObjetivo` también mira el nivel siguiente ("TE FALTAN 300 XP PARA
+  EL NIVEL 13").
+- Los textos son `logro_<id>_nombre`, `logro_<id>` (con `{0}`) y `logro_<id>_uno` para una meta de 1 ("Usa la furia por
+  primera vez", no "1 veces"). Los revisa su prueba: la de idiomas no ve los ids que se arman en código.
 
 ## Mejoras y tienda
 
@@ -1096,7 +1144,9 @@ tema es de la interfaz y no del mundo.
   opciones y la de salir), el fondo y el pie de la tienda, la tarjeta de mejora, el fondo y los textos de la
   derrota y los botones de vidrio. **Lo que se arma en código** pasa su color de siempre por `Tema.Elegir(claro,
   rol)`; si esa ventana no se vuelve a armar, se le pone el componente con `Tema.Pintar(grafico, rol, claro)` y se
-  repinta sola. Las ventanas de misiones y bestiario se rearman al abrirlas si cambió `Tema.Revision`, igual que
+  repinta sola. `Tema.Pintar` pinta en el acto: sobre un objeto prendido, `AddComponent` ya lo había pintado en su
+  `OnEnable` con el blanco de fábrica, y hasta el 24/9 quedaba blanco hasta el próximo cambio de tema (le pasó al botón
+  del nivel). Las ventanas de misiones y bestiario se rearman al abrirlas si cambió `Tema.Revision`, igual que
   con `Idioma.Revision`.
 - **Nadie se suscribe a nada**: `Tema.Revision` sube con cada cambio y quien pinta lo mira en su `Update`, como con
   `Progreso.Revision`. La preferencia va en `PlayerPrefs["TemaOscuro"]`, como el idioma y los volúmenes, porque es
@@ -1609,6 +1659,21 @@ enterrado.
   `ScreenCapture.CaptureScreenshot` no escribe nada, pero el editor sí sigue vivo: una prueba manejada desde
   `EditorApplication.update` parece avanzar y todo lo del juego parece roto. Si hay que medir o fotografiar
   algo en play sin mirar la pantalla, prendé `PlayerSettings.runInBackground` y volvelo a apagar al terminar.
+  **Y aun así puede quedarse en el primer cuadro** (pasó el 24/9, con dos editores abiertos y ninguno delante: ni
+  `QueuePlayerLoopUpdate` ni apagar la sincronización lo movieron, y `EditorApplication.Step` avanza un cuadro cada
+  varias llamadas). Para fotografiar la UI sin depender de eso: las cámaras a una `RenderTexture`, los canvas overlay
+  pasados un instante a `ScreenSpaceCamera` con una cámara lejos del mundo, `Canvas.ForceUpdateCanvases`, y lo que
+  haría `Update` (la escala de entrada de una ventana, una barra que se llena), a mano.
+
+- **Con dos editores de Unity abiertos, el servidor unity-mcp se conecta a uno solo**, que puede no ser el de ShowBies:
+  todo comando empieza mirando `Application.dataPath`. El relay (`~/.unity/relay/relay_win.exe`) acepta
+  `--mcp --project-path <ruta>` para hablar con uno en particular. Un comando que recompila pierde su respuesta en la
+  recarga del dominio: se da por enviado y se pregunta después si terminó.
+
+- **Una prueba con un bug puesto a propósito en la carga del progreso puede romper el progreso real del editor.**
+  `Progreso.UsarCarpetaDePruebas` guarda primero lo que haya cargado, y si el editor tenía cargado el real con la carga
+  rota, lo escribe así. Pasó el 24/9 con la migración a v6 sacada a propósito: quedó en v6 con 0 de experiencia y se
+  rehízo la cuenta a mano.
 
 - **Un `Image` sin sprite ignora `Image.Type.Filled`.** La barra del anuncio de prueba se veía llena desde el
   primer frame por eso; ahora mueve el ancho del `RectTransform`. Lo mismo vale para cualquier medidor que se
@@ -1631,7 +1696,9 @@ enterrado.
   misión diga cuánto pide, que `Economia.ZombisPorPartida` sea la suma de lo que saca el `WaveManager` de WaveMode, que
   los avisos de la partida no se pisen, que todo botón de vidrio del menú lleve su `PintarConTema`, que la tarjeta de
   mejora siga el tema y que el jefe no gire al terminar de invocar (por reflexión, con el prefab en una escena de vista
-  previa). Lo que abre escenas las lee y las cierra sin guardar. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
+  previa). Y **el nivel del jugador y los logros**: la curva y sus bordes, el ritmo contra la mezcla de zombis de
+  WaveMode, el premio del nivel congelado al subir, la experiencia de una moneda congelada al ganarla, la migración a v6,
+  que los puntos y las monedas copiados a mano coincidan con los assets de los zombis y los textos de cada familia. Lo que abre escenas las lee y las cierra sin guardar. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
 - **ShowBies > Pruebas > Disparo con el joystick (play)** (`PruebaDisparo`): el camino del teléfono, con los joysticks
   de verdad (los eventos de un dedo sobre el `FixedJoystick`): que apuntar dispare y prenda la animación, que soltar la
   apague, que sin balas no la haga y que con una caja dispare sin soltar; y la pistola: que esté en la mano sin el bate,

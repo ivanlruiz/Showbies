@@ -129,12 +129,14 @@ public class Granade : MonoBehaviour
         // HashSet porque entonces los tres colliders del mismo zombi resuelven
         // al mismo componente: sin dedup la explosion lo dañaria tres veces.
         var yaDanados = new HashSet<EnemyController>();
+        int muertos = 0;   // para el logro GRANADERO
         foreach (Collider nearbyObject in colliders)
         {
             EnemyController enemyController = nearbyObject.GetComponentInParent<EnemyController>();
 
             if (enemyController != null && yaDanados.Add(enemyController))
             {
+                bool vivo = enemyController.Vivo;
                 // Aplicar daño al zombi. Escala con la vida del zombi y no con la
                 // mejora de daño de bala: la granada es un recurso con cooldown que
                 // tiene que seguir matando lo mismo en la oleada 20 que en la 1, y
@@ -143,8 +145,11 @@ public class Granade : MonoBehaviour
                 // en abanico en vez de caer todos para el mismo lado.
                 enemyController.DanoZombi(damage * enemyController.multiplicadorVida, false,
                                           enemyController.transform.position - transform.position);
+                // Uno que muere deja de estar Vivo en el acto (el cadaver ya no cuenta).
+                if (vivo && !enemyController.Vivo) muertos++;
             }
         }
+        if (muertos > 0) Progreso.RegistrarGranada(muertos);
 
         if (explosion != null)
         {

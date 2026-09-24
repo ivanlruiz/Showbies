@@ -9,7 +9,9 @@ using UnityEngine;
 // Mira las misiones del dia cada tanto (no hace falta en cada frame) y avisa las que se
 // cumplen durante esta partida; las que ya estaban cumplidas al empezar no se repiten.
 // Tambien avisa las estrellas del bestiario que se ganan jugando ("¡ESTRELLA!", en
-// dorado, con el tipo y el escalon). Si llegan dos a la vez, salen una despues de otra.
+// dorado, con el tipo y el escalon), los logros ("¡LOGRO DE PLATA!", del color de su
+// moneda) y cada nivel del jugador que se sube ("¡NIVEL 13!", con el premio que espera
+// en el menu). Si llegan dos a la vez, salen una despues de otra.
 // Va en ShowBies1 y WaveMode (objeto AvisoDeMisiones), con el texto armado en codigo
 // sobre el canvas del HUD.
 public class AvisoDeMisiones : MonoBehaviour
@@ -23,6 +25,7 @@ public class AvisoDeMisiones : MonoBehaviour
 
     public Color colorMision = new Color(0.72f, 0.56f, 1f);
     public Color colorEstrella = new Color(1f, 0.8f, 0.2f);
+    public Color colorNivel = new Color(0.4f, 0.85f, 1f);
 
     // Donde sale, desde el centro de la pantalla, y su letra. Debajo del jugador: arriba
     // estan el cartel de la oleada (170), la barra del jefe (arriba de 320) y el cartel del
@@ -49,11 +52,52 @@ public class AvisoDeMisiones : MonoBehaviour
     private float mostrandoDesde = -1f;
     private int diaVisto;
 
+    private int nivelVisto;
+
     private void Start()
     {
         MisionesDiarias.Asegurar();
         Anotar(true);
         for (int i = 0; i < estrellasVistas.Length; i++) estrellasVistas[i] = Bestiario.Alcanzadas(Bestiario.Tipos[i]);
+        // Los logros que se ganaron fuera de una partida (en el menu, comprando el
+        // critico) se anotan sin aviso: no se ganaron aca.
+        Logros.Revisar();
+        nivelVisto = NivelJugador.Nivel;
+    }
+
+    // Los logros nuevos, uno por moneda, del color de su escalon.
+    private void AnotarLogros()
+    {
+        foreach (var logro in Logros.Revisar())
+        {
+            var familia = Logros.Buscar(logro.familia);
+            if (familia == null) continue;
+            pendientes.Enqueue(new Aviso
+            {
+                titulo = Textos.De(TitulosDeLogro[Mathf.Clamp(logro.escalon, 0, TitulosDeLogro.Length - 1)]),
+                detalle = Logros.Nombre(logro.familia) + ": " + Logros.Descripcion(logro.familia, familia.metas[logro.escalon]),
+                color = ColoresDeLogro.De(logro.escalon),
+            });
+        }
+    }
+
+    private static readonly string[] TitulosDeLogro = { "aviso_logro_bronce", "aviso_logro_plata", "aviso_logro_oro" };
+
+    // Cada nivel que se subio, con el premio que quedo esperando en el menu.
+    private void AnotarNivel()
+    {
+        int nivel = NivelJugador.Nivel;
+        while (nivelVisto < nivel)
+        {
+            nivelVisto++;
+            var premio = NivelJugador.PendienteDe(nivelVisto);
+            pendientes.Enqueue(new Aviso
+            {
+                titulo = Textos.Formato("aviso_nivel", nivelVisto),
+                detalle = premio != null ? Textos.Formato("aviso_nivel_premio", FormatoNumeros.Compacto(NivelJugador.Monto(premio))) : "",
+                color = colorNivel,
+            });
+        }
     }
 
     // Las estrellas nuevas desde la ultima mirada, una por escalon cruzado.
@@ -112,6 +156,8 @@ public class AvisoDeMisiones : MonoBehaviour
             proximaRevision = t + cadaCuanto;
             Anotar(false);
             AnotarEstrellas();
+            AnotarLogros();
+            AnotarNivel();
         }
 
         if (cartel == null && pendientes.Count > 0 && canvas != null) Mostrar(pendientes.Dequeue(), t);

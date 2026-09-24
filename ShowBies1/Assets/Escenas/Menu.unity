@@ -5136,6 +5136,7 @@ GameObject:
   - component: {fileID: 1452757540}
   - component: {fileID: 1452757541}
   - component: {fileID: 1452757542}
+  - component: {fileID: 1452757543}
   m_Layer: 5
   m_Name: Main Menu
   m_TagString: Untagged
@@ -5348,6 +5349,7 @@ MonoBehaviour:
   confirmarSalir: {fileID: 1452757539}
   misiones: {fileID: 1452757541}
   bestiario: {fileID: 1452757542}
+  logros: {fileID: 1452757543}
 --- !u!114 &1452757534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5573,6 +5575,39 @@ MonoBehaviour:
   - {r: 0.4, g: 0.8, b: 1, a: 1}
   - {r: 0.95, g: 0.35, b: 0.3, a: 1}
   - {r: 0.65, g: 0.4, b: 0.95, a: 1}
+--- !u!114 &1452757543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1452757527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ed2a81bb9c4c3340baab4cb175041d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VentanaLogros
+  selectorIdioma: {fileID: 1452757534}
+  botonMejoras: {fileID: 111075799}
+  separacion: 24
+  iconoBoton: {fileID: 21300000, guid: 7e80e6e3a8e94ff39771d4a2828081e6, type: 3}
+  fuente: {fileID: 11400000, guid: 125cb55b44b24c4393181402bc6200e6, type: 2}
+  materialContorno: {fileID: 2100000, guid: f629c6e43dba4bf38cb74d8860150664, type: 2}
+  pildora: {fileID: 21300000, guid: 0f913b6593a72244dac6d78bf50adbd0, type: 3}
+  iconoAtras: {fileID: 21300000, guid: 30f2fae9ad3f1074fa9c532668918252, type: 3}
+  tilde: {fileID: 21300000, guid: 75c5d96349c394243835311bea8abc03, type: 3}
+  nota: {fileID: 8300000, guid: 7b67e640e9f07a845ae7a048cf7600c4, type: 3}
+  sonidoFestejo: {fileID: 8300000, guid: 2dfb80e7e6c2f19489beb252efd030af, type: 3}
+  sonidoClick: {fileID: 0}
+  colorVentana: {r: 1, g: 0.96, b: 0.86, a: 1}
+  colorTextoOscuro: {r: 0.16, g: 0.14, b: 0.2, a: 1}
+  colorTitulo: {r: 0.97, g: 0.79, b: 0.28, a: 1}
+  colorFila: {r: 0, g: 0, b: 0, a: 0.06}
+  colorApagado: {r: 0, g: 0, b: 0, a: 0.15}
+  colorBarra: {r: 0.3, g: 0.75, b: 0.2, a: 1}
+  colorExperiencia: {r: 0.25, g: 0.6, b: 1, a: 1}
+  colorVidrio: {r: 0.06, g: 0.12, b: 0.05, a: 0.45}
+  llenado: 3.5
 --- !u!1 &1509229833
 GameObject:
   m_ObjectHideFlags: 0

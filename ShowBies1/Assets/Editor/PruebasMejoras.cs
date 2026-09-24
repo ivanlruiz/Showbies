@@ -203,6 +203,10 @@ public static class PruebasMejoras
             ProbarAvisosSinPisarse(informe);
             ProbarVidriosDelMenu(informe);
             ProbarJefeAlTerminar(informe);
+            ProbarCurvaDeNivel(informe);
+            ProbarRitmoDelNivel(informe);
+            ProbarFamiliasDeLogros(informe);
+            ProbarPuntosYMonedasDeLosZombis(informe);
 
             // Todo lo que toca Progreso va contra una carpeta temporal, y el
             // finally devuelve el progreso a persistentDataPath pase lo que pase.
@@ -223,8 +227,11 @@ public static class PruebasMejoras
                     ProbarDesafioSemanal(informe);
                     ProbarProximoObjetivo(informe);
                     ProbarBestiario(informe);
+                    ProbarNivelDelJugador(informe);
+                    ProbarLogros(informe);
                     if (completo)
                     {
+                        ProbarLogroDelCritico(informe);
                         ProbarGetters(informe, catalogo);
                         ProbarCompras(informe, catalogo, temporales);
                         ProbarComprasPosibles(informe);
@@ -2421,6 +2428,307 @@ public static class PruebasMejoras
         inf.Verdadero("bestiario: el zombi mas duro paga mas por el mismo escalon", elMasDuroPagaMas);
         inf.Verdadero("bestiario: el premio no pasa lo que dejan esas muertes", proporcion);
         inf.Verdadero("bestiario: el premio crece con la mejor oleada", creceConLaOleada);
+    }
+
+    // ------------------------------------------------------------------------
+    // El nivel del jugador y los logros (NivelJugador, Logros)
+    // ------------------------------------------------------------------------
+
+    // La curva: lo que cuesta cada nivel, la experiencia con que se llega a cada uno y la
+    // vuelta (NivelCon) justo en los bordes, que es donde una raiz en double se equivoca.
+    static void ProbarCurvaDeNivel(Informe inf)
+    {
+        inf.Igual("nivel: el primero cuesta 25", 25, NivelJugador.CostoDelNivel(1));
+        inf.Igual("nivel: el segundo, 125", 125, NivelJugador.CostoDelNivel(2));
+        inf.Igual("nivel: el decimo, 925", 925, NivelJugador.CostoDelNivel(10));
+        inf.Cerca("nivel: al 1 se llega con 0", 0, NivelJugador.ExperienciaDelNivel(1), 1e-9);
+        inf.Cerca("nivel: al 2, con 25", 25, NivelJugador.ExperienciaDelNivel(2), 1e-9);
+        inf.Cerca("nivel: al 10, con 3.825", 3825, NivelJugador.ExperienciaDelNivel(10), 1e-9);
+        inf.Igual("nivel: sin experiencia, el 1", 1, NivelJugador.NivelCon(0));
+        inf.Igual("nivel: con experiencia negativa, el 1", 1, NivelJugador.NivelCon(-5));
+        inf.Igual("nivel: con NaN, el 1", 1, NivelJugador.NivelCon(double.NaN));
+
+        bool bordes = true, sumaDeCostos = true;
+        string cual = "";
+        double acumulada = 0;
+        for (int nivel = 1; nivel <= 3000; nivel++)
+        {
+            double experiencia = NivelJugador.ExperienciaDelNivel(nivel);
+            if (Math.Abs(experiencia - acumulada) > 1e-6) sumaDeCostos = false;
+            acumulada += NivelJugador.CostoDelNivel(nivel);
+            bool justo = NivelJugador.NivelCon(experiencia) == nivel;
+            bool antes = nivel == 1 || NivelJugador.NivelCon(experiencia - 0.001) == nivel - 1;
+            if (justo && antes) continue;
+            if (bordes) cual = " (falla el " + nivel + ")";
+            bordes = false;
+        }
+        inf.Verdadero("nivel: la experiencia de cada nivel es la suma de los costos de antes", sumaDeCostos);
+        inf.Verdadero("nivel: NivelCon acierta justo en el borde de los 3.000 primeros" + cual, bordes);
+
+        // El premio: un 15 % de una partida con la mejor oleada, y el triple cada cinco.
+        inf.Cerca("nivel: premio del 2 sin oleadas", 20, NivelJugador.Premio(2, 0), 1e-9);
+        inf.Cerca("nivel: premio del 6 con la oleada 10", 140, NivelJugador.Premio(6, 10), 1e-9);
+        inf.Cerca("nivel: el 5 es grande, el triple", 420, NivelJugador.Premio(5, 10), 1e-9);
+        inf.Verdadero("nivel: el premio crece con la mejor oleada", NivelJugador.Premio(7, 40) > NivelJugador.Premio(7, 20));
+    }
+
+    // El ritmo: con la experiencia de jugar (los puntos) y una mejor oleada que crece como la
+    // raiz de las partidas jugadas (3,3 por la raiz de k: la 10 en la partida 9, la 33 en la
+    // 100), el nivel 10 cae cerca de la partida 10 y el 50 cerca de la 55, que es lo que dice
+    // NivelJugador. Los puntos de cada oleada salen del WaveManager de WaveMode: su mezcla de
+    // tipos, sus pesos, el jefe y los puntos del asset de cada uno.
+    static void ProbarRitmoDelNivel(Informe inf)
+    {
+        var tipos = new List<float[]>();   // desde que oleada, peso, puntos
+        int zombisBase = -1, zombisPorOleada = 0, cadaJefe = 0, puntosJefe = 0;
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (oleadas == null) return;
+            zombisBase = oleadas.zombisBase;
+            zombisPorOleada = oleadas.zombisPorOleada;
+            cadaJefe = oleadas.jefeCadaOleadas;
+            foreach (var tipo in oleadas.tipos)
+            {
+                var zombi = tipo.prefab != null ? tipo.prefab.GetComponent<EnemyController>() : null;
+                if (zombi != null && zombi.enemyType != null) tipos.Add(new float[] { tipo.desdeOleada, tipo.peso, zombi.enemyType.puntos });
+            }
+            var jefe = oleadas.jefe != null ? oleadas.jefe.GetComponent<EnemyController>() : null;
+            if (jefe != null && jefe.enemyType != null) puntosJefe = jefe.enemyType.puntos;
+        });
+        if (!inf.Verdadero("nivel: WaveMode tiene su WaveManager con tipos", zombisBase >= 0 && tipos.Count > 0)) return;
+
+        Func<int, double> puntosDeOleada = n =>
+        {
+            double suma = 0, pesos = 0;
+            foreach (var t in tipos)
+            {
+                if (n < t[0]) continue;
+                suma += t[1] * t[2];
+                pesos += t[1];
+            }
+            double medio = pesos > 0 ? suma / pesos : 1;
+            return (zombisBase + zombisPorOleada * n) * medio + (cadaJefe > 0 && n % cadaJefe == 0 ? puntosJefe : 0);
+        };
+
+        double experiencia = 0;
+        int del10 = -1, del50 = -1;
+        for (int k = 1; k <= 400 && del50 < 0; k++)
+        {
+            int llega = (int)Math.Floor(3.3 * Math.Sqrt(k));
+            for (int n = 1; n <= llega; n++) experiencia += puntosDeOleada(n);
+            experiencia += 0.4 * puntosDeOleada(llega + 1);   // y muere a mitad de la siguiente
+            int nivel = NivelJugador.NivelCon(experiencia);
+            if (del10 < 0 && nivel >= 10) del10 = k;
+            if (del50 < 0 && nivel >= 50) del50 = k;
+        }
+        inf.Verdadero("nivel: el 10 cae cerca de la partida 10 (en la " + del10 + ")", del10 >= 7 && del10 <= 14);
+        inf.Verdadero("nivel: el 50 cae cerca de la partida 55 (en la " + del50 + ")", del50 >= 40 && del50 <= 75);
+    }
+
+    // Las familias de logros: doce, con ids distintos y tres metas que crecen, y los textos
+    // de cada una en los dos idiomas: el nombre, la descripcion con su {0} y, si una meta es
+    // 1, su texto propio. Los ids de esos textos se arman en codigo y la prueba de idiomas no
+    // los ve: por eso van aca.
+    static void ProbarFamiliasDeLogros(Informe inf)
+    {
+        inf.Igual("logros: doce familias", 12, Logros.Familias.Length);
+        var ids = new HashSet<string>();
+        var lenguas = new[] { Lengua.Ingles, Lengua.Espanol };
+        bool unicos = true, metas = true, textos = true;
+        string falta = "";
+        foreach (var familia in Logros.Familias)
+        {
+            if (!ids.Add(familia.id)) unicos = false;
+            if (familia.metas == null || familia.metas.Length != Logros.Escalones || !(familia.metas[0] > 0))
+            {
+                metas = false;
+                continue;
+            }
+            for (int e = 1; e < Logros.Escalones; e++) if (!(familia.metas[e] > familia.metas[e - 1])) metas = false;
+
+            var necesarios = new List<string> { "logro_" + familia.id + "_nombre", "logro_" + familia.id };
+            foreach (double meta in familia.metas) if (meta == 1) necesarios.Add("logro_" + familia.id + "_uno");
+            foreach (string id in necesarios)
+            {
+                foreach (var lengua in lenguas)
+                {
+                    if (!string.IsNullOrEmpty(Textos.Crudo(id, lengua))) continue;
+                    textos = false;
+                    falta += id + " ";
+                }
+            }
+            foreach (var lengua in lenguas)
+            {
+                string plantilla = Textos.Crudo("logro_" + familia.id, lengua);
+                if (plantilla == null || plantilla.Contains("{0}")) continue;
+                textos = false;
+                falta += "logro_" + familia.id + "(sin {0}) ";
+            }
+        }
+        foreach (string id in new[] { "aviso_logro_bronce", "aviso_logro_plata", "aviso_logro_oro" })
+        {
+            foreach (var lengua in lenguas)
+            {
+                if (!string.IsNullOrEmpty(Textos.Crudo(id, lengua))) continue;
+                textos = false;
+                falta += id + " ";
+            }
+        }
+        inf.Verdadero("logros: ids distintos", unicos);
+        inf.Verdadero("logros: tres metas por familia, que crecen", metas);
+        inf.Verdadero("logros: los textos de cada familia en los dos idiomas" + (textos ? "" : " (faltan " + falta.Trim() + ")"), textos);
+        inf.Igual("logros: la descripcion lleva la meta", "Llega a un combo x50", Logros.Descripcion(Logros.Imparable, 50));
+        inf.Igual("logros: una meta de 1 no dice \"1 veces\"", "Usa la furia por primera vez", Logros.Descripcion(Logros.Furioso, 1));
+        inf.Cerca("logros: el bronce vale un nivel del que se gano", NivelJugador.CostoDelNivel(7),
+                  Logros.Experiencia(new LogroGanado { escalon = 0, nivelAlGanar = 7 }), 1e-9);
+        inf.Cerca("logros: el oro, cuatro", 4.0 * NivelJugador.CostoDelNivel(7),
+                  Logros.Experiencia(new LogroGanado { escalon = 2, nivelAlGanar = 7 }), 1e-9);
+    }
+
+    // Los puntos y las monedas de cada zombi estan copiados a mano en NivelJugador (la
+    // experiencia de un progreso viejo) y en el Bestiario (su premio), porque hacen falta sin
+    // escena. Si se toca el balance de un zombi y no esas copias, esto falla.
+    static void ProbarPuntosYMonedasDeLosZombis(Informe inf)
+    {
+        foreach (string tipo in Bestiario.Tipos)
+        {
+            var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>("Assets/Zombies/" + tipo + ".asset");
+            if (!inf.Verdadero("zombis: esta el asset de " + tipo, enemigo != null)) continue;
+            inf.Igual("zombis: los puntos de " + tipo + " en NivelJugador", enemigo.puntos, NivelJugador.PuntosPorTipo(tipo));
+            // MonedasQueDeja con la oleada 0 es el promedio del asset por 1,08^1,5 (y el jefe, por 6).
+            double esperado = (enemigo.monedasMin + enemigo.monedasMax) * 0.5 * (tipo == Bestiario.Jefe ? 6.0 : 1.0) * Math.Pow(1.08, 1.5);
+            inf.Cerca("zombis: las monedas de " + tipo + " en el Bestiario", esperado, Bestiario.MonedasQueDeja(tipo, 0), 1e-9);
+        }
+    }
+
+    // La experiencia en el progreso: sube niveles, cada nivel deja un premio con la mejor
+    // oleada de ese momento, se cobran de a uno y se guardan. Y la migracion de la v5.
+    static void ProbarNivelDelJugador(Informe inf)
+    {
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":0,\"mejorOleada\":10}", null);
+        inf.Igual("nivel: arranca en el 1", 1, NivelJugador.Nivel);
+        inf.Igual("nivel: 24 de experiencia no alcanzan", 0, NivelJugador.Sumar(24));
+        inf.Igual("nivel: con 25 sube al 2", 1, NivelJugador.Sumar(1));
+        inf.Igual("nivel: un premio esperando", 1, NivelJugador.PorCobrar);
+        inf.Igual("nivel: 350 mas, dos niveles de una", 2, NivelJugador.Sumar(350));
+        inf.Igual("nivel: ya en el 4", 4, NivelJugador.Nivel);
+        inf.Igual("nivel: tres premios esperando", 3, NivelJugador.PorCobrar);
+
+        // El premio queda con la oleada del momento de subir: mejorarla despues no lo sube.
+        // Si no, la jugada optima seria no cobrarlo nunca.
+        Progreso.RegistrarOleadaCompletada(40);
+        double esperado = NivelJugador.Premio(2, 10);
+        inf.Cerca("nivel: cobra primero el del 2, con la oleada de cuando subio", esperado, NivelJugador.Cobrar(), 1e-9);
+        inf.Cerca("nivel: las monedas llegaron", esperado, Progreso.Monedas, 1e-9);
+        inf.Cerca("nivel: no cuentan como jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
+        inf.Igual("nivel: quedan dos", 2, NivelJugador.PorCobrar);
+        var pendiente = NivelJugador.Pendiente;
+        inf.Igual("nivel: el que sigue es el del 3", 3, pendiente != null ? pendiente.nivel : -1);
+
+        // Un nivel que se sube despues de mejorar la marca paga con la nueva.
+        NivelJugador.Sumar(NivelJugador.ExperienciaDelNivel(5) - NivelJugador.Experiencia);
+        var delCinco = NivelJugador.PendienteDe(5);
+        inf.Igual("nivel: el del 5 quedo con la oleada 40", 40, delCinco != null ? delCinco.oleada : -1);
+
+        // Se guarda: al releer, la experiencia y los premios siguen ahi.
+        double experiencia = NivelJugador.Experiencia;
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Cerca("nivel: se relee la experiencia", experiencia, NivelJugador.Experiencia, 1e-9);
+        inf.Igual("nivel: se releen los premios", 3, NivelJugador.PorCobrar);
+        while (NivelJugador.Cobrar() > 0) { }
+        inf.Igual("nivel: cobrados todos, no queda ninguno", 0, NivelJugador.PorCobrar);
+
+        // La migracion: un progreso de antes (v5) arranca con la experiencia de sus muertes,
+        // sin premio por los niveles de antes, y con la racha de ahora como la mejor.
+        string ruta = EmpezarCaso("{\"version\":5,\"monedas\":0,\"rachaRecompensa\":4,\"estadisticas\":{\"matados\":[" +
+                                  "{\"id\":\"ZombiNormal\",\"cantidad\":1500},{\"id\":\"ZombiTanque\",\"cantidad\":10}," +
+                                  "{\"id\":\"ZombiBOSS\",\"cantidad\":2}]}}", null);
+        inf.Cerca("nivel: la migracion suma los puntos de las muertes", 1500 + 200 + 200, NivelJugador.Experiencia, 1e-9);
+        inf.Igual("nivel: con 1.900 es el 7", 7, NivelJugador.Nivel);
+        inf.Igual("nivel: los niveles de antes no dejan premio", 0, NivelJugador.PorCobrar);
+        inf.Igual("nivel: la mejor racha arranca con la de ahora", 4, Progreso.MejorRacha);
+        Progreso.Guardar();
+        var guardado = LeerGuardado(ruta);
+        inf.Igual("nivel: se guarda como v" + Progreso.VersionActual, Progreso.VersionActual, guardado != null ? guardado.version : -1);
+        NivelJugador.Sumar(NivelJugador.ExperienciaDelNivel(8) - NivelJugador.Experiencia);
+        inf.Igual("nivel: el primero que se sube despues si deja premio", 1, NivelJugador.PorCobrar);
+    }
+
+    // Los logros en el progreso: se anotan al verlos con el nivel de ese momento, se cobran
+    // de a uno y en orden, y lo que dan no cambia por cobrarlos mas tarde.
+    static void ProbarLogros(Informe inf)
+    {
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":0,\"mejorOleada\":25," +
+                    "\"estadisticas\":{\"matados\":[{\"id\":\"ZombiNormal\",\"cantidad\":1500}]}}", null);
+        int nivel = NivelJugador.Nivel;   // es v6: no migra, arranca sin experiencia
+        var nuevas = Logros.Revisar();
+        inf.Igual("logros: oleada 25 y 1.500 zombis, tres monedas nuevas", 3, nuevas.Count);
+        inf.Igual("logros: superviviente con bronce y plata", 2, Logros.Ganadas(Logros.Superviviente));
+        inf.Igual("logros: exterminador con bronce", 1, Logros.Ganadas(Logros.Exterminador));
+        inf.Igual("logros: la segunda mirada no encuentra nada", 0, Logros.Revisar().Count);
+        inf.Igual("logros: tres para cobrar", 3, Logros.PorCobrar);
+        var plata = Logros.Ganado(Logros.Superviviente, 1);
+        inf.Igual("logros: se anotan con el nivel de ahora", nivel, plata != null ? plata.nivelAlGanar : -1);
+
+        // Subir de nivel antes de cobrar no cambia lo que dan: es la regla de todos los premios.
+        NivelJugador.Sumar(NivelJugador.ExperienciaDelNivel(nivel + 10) - NivelJugador.Experiencia);
+        double antes = NivelJugador.Experiencia;
+        double costo = NivelJugador.CostoDelNivel(nivel);
+        inf.Cerca("logros: cobra el bronce, lo que valia un nivel al ganarlo", costo, Logros.Cobrar(Logros.Superviviente), 1e-9);
+        inf.Cerca("logros: despues la plata, dos", 2.0 * costo, Logros.Cobrar(Logros.Superviviente), 1e-9);
+        inf.Cerca("logros: el oro no esta ganado", 0, Logros.Cobrar(Logros.Superviviente), 1e-9);
+        inf.Cerca("logros: la experiencia llego al nivel", antes + 3.0 * costo, NivelJugador.Experiencia, 1e-9);
+        inf.Igual("logros: queda el de exterminador", 1, Logros.PorCobrar);
+
+        // Se guardan al cobrar: al releer siguen ganadas y cobradas.
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("logros: se releen las ganadas", 2, Logros.Ganadas(Logros.Superviviente));
+        inf.Igual("logros: y las cobradas", 2, Logros.Cobradas(Logros.Superviviente));
+
+        // Los records solo suben.
+        Progreso.RegistrarCombo(30);
+        Progreso.RegistrarCombo(12);
+        inf.Igual("logros: el mejor combo no baja", 30, Progreso.MejorCombo);
+        Progreso.RegistrarGranada(6);
+        Progreso.RegistrarGranada(2);
+        inf.Igual("logros: la mejor granada no baja", 6, Progreso.MejorGranada);
+        inf.Igual("logros: combo x30 y una granada de 6, dos bronces", 2, Logros.Revisar().Count);
+
+        // Un archivo con repetidos o escalones que no existen se limpia al cargar.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"jugador\":{\"experiencia\":50,\"logros\":[" +
+                    "{\"familia\":\"imparable\",\"escalon\":0,\"nivelAlGanar\":3}," +
+                    "{\"familia\":\"imparable\",\"escalon\":0,\"nivelAlGanar\":9}," +
+                    "{\"familia\":\"imparable\",\"escalon\":7,\"nivelAlGanar\":3}," +
+                    "{\"familia\":\"\",\"escalon\":1,\"nivelAlGanar\":3}]}}", null);
+        var logros = Progreso.Jugador.logros;
+        inf.Igual("logros: al cargar quedan los validos, sin repetidos", 1, logros.Count);
+        inf.Igual("logros: de los repetidos gana el primero", 3, logros.Count > 0 ? logros[0].nivelAlGanar : -1);
+
+        // La derrota muestra el nivel siguiente cuando es lo que esta mas cerca.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"jugador\":{\"experiencia\":145}}", null);
+        MisionesDiarias.Asegurar();
+        Progreso.Misiones.lista.Clear();
+        string texto;
+        float fraccion;
+        ProximoObjetivo.Elegir(out texto, out fraccion);
+        inf.Igual("logros: la derrota dice lo que falta para el nivel 3", "TE FALTAN 5 XP PARA EL NIVEL 3", texto);
+    }
+
+    // Una moneda ganada queda aunque la marca baje: la del critico se gana comprando, y el
+    // renacer va a devolver las mejoras a cero.
+    static void ProbarLogroDelCritico(Informe inf)
+    {
+        EmpezarConMonedas(0);
+        Progreso.DepurarFijarNivel("criticos", 4);
+        Logros.Revisar();
+        inf.Igual("logros: critico al 30 %, el bronce", 1, Logros.Ganadas(Logros.Critico));
+        Progreso.DepurarFijarNivel("criticos", 8);
+        Logros.Revisar();
+        inf.Igual("logros: critico al 100 %, las tres", 3, Logros.Ganadas(Logros.Critico));
+        Progreso.DepurarFijarNivel("criticos", 0);
+        Logros.Revisar();
+        inf.Igual("logros: con el critico en cero siguen ganadas", 3, Logros.Ganadas(Logros.Critico));
     }
 
     static void ProbarRecompensaDiaria(Informe inf)

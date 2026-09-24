@@ -122,6 +122,7 @@ public class WaveManager : MonoBehaviour
             OleadaActual++;
             Progreso.GuardarOleadaEnCurso(OleadaActual, Puntaje.instance != null ? Puntaje.instance.contadorKill : 0);
             Progreso.Guardar();
+            int golpesAlEmpezar = PlayerHealth.instance != null ? PlayerHealth.instance.GolpesRecibidos : -1;
             int cantidad = zombisBase + zombisPorOleada * OleadaActual;
             bool conJefe = jefe != null && jefeCadaOleadas > 0 && OleadaActual % jefeCadaOleadas == 0;
             zombisEnLaOleada = cantidad + (conJefe ? 1 : 0);
@@ -162,6 +163,9 @@ public class WaveManager : MonoBehaviour
             bonoDeLaOleadaAnterior = bonoPorOleada * OleadaActual;
             Progreso.Sumar(bonoDeLaOleadaAnterior);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
+            // Sin un solo golpe en toda la oleada: el logro INTOCABLE.
+            if (PlayerHealth.instance != null && PlayerHealth.instance.GolpesRecibidos == golpesAlEmpezar)
+                Progreso.RegistrarOleadaIntacta(OleadaActual);
             MisionesDiarias.RegistrarOleada(OleadaActual);
             DesafioSemanal.RegistrarOleada();
             Progreso.Guardar();

@@ -115,6 +115,7 @@ public static class MisionesDiarias
             if (!Cumplida(mision)) continue;
             mision.cobrada = true;
             cobradas++;
+            Progreso.ContarMisionCobrada();
             Progreso.CobrarPremio("mision_" + mision.tipo, Monto(mision.dificultad, marca), false);
         }
         if (cobradas >= Cantidad && !estado.cofreCobrado && estado.lista.Count == Cantidad)
@@ -242,6 +243,7 @@ public static class MisionesDiarias
 
         mision.cobrada = true;
         double monto = Monto(mision.dificultad, OleadaDeHoy);
+        Progreso.ContarMisionCobrada();
         Progreso.CobrarPremio("mision_" + mision.tipo, monto, false);
         return monto;
     }

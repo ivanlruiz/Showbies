@@ -4,8 +4,9 @@ using UnityEngine.UI;
 
 // En la derrota, entre la oferta de video y los botones: lo que esta mas cerca de
 // completarse, con una barra que se llena al entrar. Una mision del dia a medias
-// ("PROXIMO: Mata 300 zombis 120/300") o la mejora mas barata que todavia no alcanza
-// ("TE FALTAN 40 PARA CADENCIA NIVEL 9"), la que tenga mas avance. La derrota es cuando
+// ("PROXIMO: Mata 300 zombis 120/300"), la mejora mas barata que todavia no alcanza
+// ("TE FALTAN 40 PARA CADENCIA NIVEL 9") o el nivel siguiente del jugador ("TE FALTAN
+// 300 XP PARA EL NIVEL 13"), la que tenga mas avance. La derrota es cuando
 // se cierra la app, y un objetivo casi lleno es el mejor "una mas". Las mejoras que ya
 // alcanzan no van aca: las dice el aviso de compras.
 //
@@ -53,6 +54,19 @@ public class ProximoObjetivo : MonoBehaviour
             fraccion = f;
             texto = Textos.Formato("objetivo_mision", MisionesDiarias.Descripcion(mision),
                                    FormatoNumeros.Compacto(avance), FormatoNumeros.Compacto(mision.objetivo));
+        }
+
+        // El nivel siguiente del jugador: la experiencia son los puntos, asi que cada
+        // partida lo acerca, y casi lleno es un "una mas" como cualquier otro.
+        {
+            int costo = NivelJugador.CostoActual;
+            double dentro = NivelJugador.EnElNivel;
+            float f = costo > 0 ? (float)(dentro / costo) : 0f;
+            if (f > fraccion)
+            {
+                fraccion = f;
+                texto = Textos.Formato("objetivo_nivel", FormatoNumeros.Compacto(System.Math.Ceiling(costo - dentro)), NivelJugador.Nivel + 1);
+            }
         }
 
         var catalogo = CatalogoMejoras.Instancia;

@@ -83,6 +83,7 @@ public class ContadorCombo : MonoBehaviour
             combo += muertesSinProcesar;
             muertesSinProcesar = 0;
             ultimaMuerte = Time.time;
+            Progreso.RegistrarCombo(combo);   // el logro IMPARABLE
 
             if (combo >= minimoParaMostrar)
             {

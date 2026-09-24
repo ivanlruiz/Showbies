@@ -117,6 +117,8 @@ public class GeneradorZombis : MonoBehaviour
         // el, el modo libre se pondria mas dificil sin ningun aviso.
         if (nivel > 1)
         {
+            Progreso.RegistrarNivelLibre(nivel);   // el logro SIN FIN
+
             // Un punto seguro para guardar, como el fin de oleada en WaveMode: antes el
             // modo libre solo guardaba al pausar y al morir, y si Android mataba la app
             // se perdian las monedas de toda la partida.

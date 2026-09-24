@@ -145,6 +145,10 @@ public class PlayerHealth : MonoBehaviour
     public bool YaRevivio { get { return yaRevivio; } }
     public float SegundosDePartida { get { return Time.time - empezoEn; } }
 
+    // Los golpes que le sacaron vida en la partida. WaveManager lo mira al empezar y al
+    // terminar cada oleada: si no cambio, la oleada salio sin un rasguño (logro INTOCABLE).
+    public int GolpesRecibidos { get; private set; }
+
     public void TakeDamage(float amount)
     {
         // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
@@ -158,6 +162,7 @@ public class PlayerHealth : MonoBehaviour
         // carga del jefe pega x2,5), y con la oferta de revivir la partida no termina:
         // el HUD mostraba "-17" en rojo durante los diez segundos del ¡HAS MUERTO!.
         health = Mathf.Max(0, health - dano);
+        GolpesRecibidos++;
         if (health > 0) Efectos.DanioJugador();
         if (health > 0) return;
 

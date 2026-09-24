@@ -59,6 +59,14 @@ public static class Progreso
         // Solo lo que entra por Sumar: los premios (videos, la diaria) no cuentan,
         // asi el renacer no se puede comprar mirando videos.
         public double monedasGanadasJugando;
+
+        // v6, para los logros (Logros): lo mejor que se hizo alguna vez, no una suma.
+        public int mejorCombo;
+        public int mejorGranada;          // zombis muertos con una sola granada
+        public int mejorOleadaIntacta;    // la oleada mas alta terminada sin recibir un golpe
+        public int mejorNivelLibre;       // el nivel mas alto al que se llego en el modo libre
+        public int mejorRacha;            // la racha mas larga de la recompensa diaria
+        public int misionesCobradas;      // las del dia, tambien las que cobra el cierre de medianoche
     }
 
     [Serializable]
@@ -120,13 +128,18 @@ public static class Progreso
 
         // Las estrellas del bestiario ya cobradas, por tipo de zombi (Bestiario).
         public List<Conteo> estrellasCobradas = new List<Conteo>();
+
+        // v6: la experiencia, los premios de nivel y los logros (NivelJugador, Logros).
+        public EstadoJugador jugador = new EstadoJugador();
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
     // necesitan los anuncios (partidas, tiempo jugado, interruptor y topes del dia).
     // 4: suma los contadores de por vida. Sube aunque migrar no pida nada, para que
     // un build viejo abra el archivo en solo lectura y no borre los contadores.
-    public const int VersionActual = 5;
+    // 5: el desafio semanal. 6: el nivel del jugador y los logros; al migrar, la
+    // experiencia sale de los zombis ya matados (ver MigrarAlNivel).
+    public const int VersionActual = 6;
 
     private const string NombreArchivo = "progreso.json";
 
@@ -271,6 +284,12 @@ public static class Progreso
         get { Cargar(); return datos.misiones; }
     }
 
+    // La experiencia, los premios de nivel y los logros: los manejan NivelJugador y Logros.
+    public static EstadoJugador Jugador
+    {
+        get { Cargar(); return datos.jugador; }
+    }
+
     public static int EstrellasCobradas(string tipo)
     {
         Cargar();
@@ -324,6 +343,7 @@ public static class Progreso
         Cargar();
         datos.diaRecompensa = Math.Max(0, dia);
         datos.rachaRecompensa = Math.Max(0, racha);
+        if (datos.rachaRecompensa > datos.estadisticas.mejorRacha) datos.estadisticas.mejorRacha = datos.rachaRecompensa;
 
         // La marca con que despues se nota si el reloj se adelanto a mano. La hora es la
         // confiable, no la del reloj: si ya estaba adelantado, la marca no lo hereda.
@@ -405,6 +425,70 @@ public static class Progreso
     {
         Cargar();
         datos.estadisticas.criticos++;
+    }
+
+    // Los records de los logros: cada uno guarda lo mejor que se hizo, asi que solo suben.
+    // El combo, desde ContadorCombo; la granada, desde Granade al explotar; la oleada
+    // sin golpes, desde WaveManager; el nivel del libre, desde GeneradorZombis.
+    public static void RegistrarCombo(int combo)
+    {
+        Cargar();
+        if (combo > datos.estadisticas.mejorCombo) datos.estadisticas.mejorCombo = combo;
+    }
+
+    public static void RegistrarGranada(int muertos)
+    {
+        Cargar();
+        if (muertos > datos.estadisticas.mejorGranada) datos.estadisticas.mejorGranada = muertos;
+    }
+
+    public static void RegistrarOleadaIntacta(int oleada)
+    {
+        Cargar();
+        if (oleada > datos.estadisticas.mejorOleadaIntacta) datos.estadisticas.mejorOleadaIntacta = oleada;
+    }
+
+    public static void RegistrarNivelLibre(int nivel)
+    {
+        Cargar();
+        if (nivel > datos.estadisticas.mejorNivelLibre) datos.estadisticas.mejorNivelLibre = nivel;
+    }
+
+    // Desde MisionesDiarias, al cobrar una mision del dia (a mano o en el cierre de medianoche).
+    public static void ContarMisionCobrada()
+    {
+        Cargar();
+        if (datos.estadisticas.misionesCobradas < int.MaxValue) datos.estadisticas.misionesCobradas++;
+    }
+
+    public static int MejorCombo
+    {
+        get { Cargar(); return datos.estadisticas.mejorCombo; }
+    }
+
+    public static int MejorGranada
+    {
+        get { Cargar(); return datos.estadisticas.mejorGranada; }
+    }
+
+    public static int MejorOleadaIntacta
+    {
+        get { Cargar(); return datos.estadisticas.mejorOleadaIntacta; }
+    }
+
+    public static int MejorNivelLibre
+    {
+        get { Cargar(); return datos.estadisticas.mejorNivelLibre; }
+    }
+
+    public static int MejorRacha
+    {
+        get { Cargar(); return datos.estadisticas.mejorRacha; }
+    }
+
+    public static int MisionesCobradas
+    {
+        get { Cargar(); return datos.estadisticas.misionesCobradas; }
     }
 
     public static int Matados(string tipo)
@@ -730,12 +814,14 @@ public static class Progreso
         }
 
         soloLectura = false;
+        int versionLeida = VersionActual;
         if (leidos == null)
         {
             leidos = new Datos { version = VersionActual };
         }
         else if (leidos.version < VersionActual)
         {
+            versionLeida = leidos.version;
             Respaldar(rutaLeida, ruta + ".v" + Math.Max(0, leidos.version) + ".bak");
         }
         else if (leidos.version > VersionActual)
@@ -751,9 +837,24 @@ public static class Progreso
         }
 
         Normalizar(leidos);
+        if (versionLeida < 6) MigrarAlNivel(leidos);
         datos = leidos;
         Application.quitting -= Guardar;
         Application.quitting += Guardar;
+    }
+
+    // Un progreso de antes del nivel del jugador (v6) arranca con la experiencia que le
+    // habria dado jugar: los puntos de los zombis que ya habia matado, que son los mismos
+    // que suma cada muerte (NivelJugador). Los niveles que salen de ahi quedan sin premio:
+    // el premio es de subir, y dar de golpe los de meses de partidas eran cientos de miles
+    // de monedas. La racha mas larga arranca con la de ahora, que es lo unico que se sabe.
+    private static void MigrarAlNivel(Datos d)
+    {
+        double experiencia = 0;
+        foreach (Conteo c in d.estadisticas.matados) experiencia += c.cantidad * (double)NivelJugador.PuntosPorTipo(c.id);
+        d.jugador.experiencia = Math.Max(d.jugador.experiencia, experiencia);
+        d.jugador.nivelPremiado = Math.Max(d.jugador.nivelPremiado, NivelJugador.NivelCon(d.jugador.experiencia));
+        if (d.rachaRecompensa > d.estadisticas.mejorRacha) d.estadisticas.mejorRacha = d.rachaRecompensa;
     }
 
     private static Datos Leer(string ruta)
@@ -822,6 +923,29 @@ public static class Progreso
         if (e.criticos < 0) e.criticos = 0;
         if (double.IsNaN(e.monedasGanadasJugando) || double.IsInfinity(e.monedasGanadasJugando) || e.monedasGanadasJugando < 0)
             e.monedasGanadasJugando = 0;
+        if (e.mejorCombo < 0) e.mejorCombo = 0;
+        if (e.mejorGranada < 0) e.mejorGranada = 0;
+        if (e.mejorOleadaIntacta < 0) e.mejorOleadaIntacta = 0;
+        if (e.mejorNivelLibre < 0) e.mejorNivelLibre = 0;
+        if (e.mejorRacha < 0) e.mejorRacha = 0;
+        if (e.misionesCobradas < 0) e.misionesCobradas = 0;
+
+        if (d.jugador == null) d.jugador = new EstadoJugador();
+        EstadoJugador j = d.jugador;
+        if (double.IsNaN(j.experiencia) || double.IsInfinity(j.experiencia) || j.experiencia < 0) j.experiencia = 0;
+        if (j.nivelPremiado < 1) j.nivelPremiado = 1;
+        // Un premio por nivel y una moneda por familia y escalon: si el archivo trae
+        // repetidos, gana el primero. Las familias que este build no conoce se conservan,
+        // como los ids de mejoras: pueden ser de una version mas nueva.
+        if (j.premios == null) j.premios = new List<PremioDeNivel>();
+        var nivelesVistos = new HashSet<int>();
+        j.premios.RemoveAll(p => p == null || p.nivel < 2 || !nivelesVistos.Add(p.nivel));
+        foreach (PremioDeNivel p in j.premios) if (p.oleada < 0) p.oleada = 0;
+        if (j.logros == null) j.logros = new List<LogroGanado>();
+        var logrosVistos = new HashSet<string>();
+        j.logros.RemoveAll(l => l == null || string.IsNullOrEmpty(l.familia) || l.escalon < 0 || l.escalon >= Logros.Escalones ||
+                                !logrosVistos.Add(l.familia + "#" + l.escalon));
+        foreach (LogroGanado l in j.logros) if (l.nivelAlGanar < 1) l.nivelAlGanar = 1;
         var conteos = new List<Conteo>(e.matados.Count);
         foreach (Conteo c in e.matados)
         {

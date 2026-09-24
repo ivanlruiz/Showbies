@@ -63,6 +63,12 @@ public class PintarConTema : MonoBehaviour
         if (revisionVista != Tema.Revision) Aplicar();
     }
 
+    // Para quien le cambia el papel o el color claro por codigo (Tema.Pintar).
+    public void Repintar()
+    {
+        Aplicar();
+    }
+
     private void Aplicar()
     {
         revisionVista = Tema.Revision;

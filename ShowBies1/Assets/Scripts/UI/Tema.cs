@@ -131,6 +131,10 @@ public static class Tema
         if (pintor == null) pintor = grafico.gameObject.AddComponent<PintarConTema>();
         pintor.rol = rol;
         pintor.colorClaro = claro;
+        // En el acto: sobre un objeto prendido, AddComponent ya lo pinto en su OnEnable con
+        // el blanco de fabrica, y sin esto quedaba blanco hasta el proximo cambio de tema
+        // (le paso al boton del nivel, VentanaLogros).
+        pintor.Repintar();
     }
 
     // Solo para las pruebas del editor: fija el tema sin escribir PlayerPrefs.

@@ -774,6 +774,8 @@ public class EnemyController : MonoBehaviour
             // 1 punto y matar a tiros valia cien veces mas.
             Puntaje.instance.contadorKill += enemyType.puntos;
             Puntaje.instance.UpdateKillCounterUI();
+            // La experiencia del nivel del jugador son los mismos puntos.
+            NivelJugador.Sumar(enemyType.puntos);
 
             SoltarMonedas();
             Progreso.ContarMuerte(nombreTipo, EsJefe);

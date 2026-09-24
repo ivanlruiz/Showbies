@@ -67,7 +67,7 @@ public class PedidoDeResena : MonoBehaviour
         if (pedida) return;
 
         bool tranquilo = !VentanaRecompensaDiaria.Abierta && !VentanaMisiones.Abierta && !VentanaBestiario.Abierta
-                         && (tienda == null || !tienda.Abierta)
+                         && !VentanaLogros.Abierta && (tienda == null || !tienda.Abierta)
                          && (confirmarSalir == null || !confirmarSalir.Abierta);
         if (!tranquilo)
         {

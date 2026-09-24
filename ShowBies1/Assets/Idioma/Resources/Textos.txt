@@ -77,6 +77,46 @@ zombi_faster	SPRINTER	VELOZ
 zombi_tanque	TANK	TANQUE
 zombi_jefe	BOSS	JEFE
 
+# --- Nivel del jugador y logros (NivelJugador, Logros, VentanaLogros, AvisoDeMisiones, ProximoObjetivo)
+logros_titulo	ACHIEVEMENTS	LOGROS
+logros_total	{0} / {1}	{0} / {1}
+nivel_titulo	LEVEL {0}	NIVEL {0}
+nivel_experiencia	{0} / {1} XP	{0} / {1} XP
+nivel_cobrar	LEVEL {0}: +{1}	NIVEL {0}: +{1}
+nivel_proximo	NEXT LEVEL\n+{0} COINS	PRÓXIMO NIVEL\n+{0} MONEDAS
+logro_cobrar	+{0} XP	+{0} XP
+aviso_nivel	LEVEL {0}!	¡NIVEL {0}!
+aviso_nivel_premio	+{0} coins waiting in the menu	+{0} monedas te esperan en el menú
+aviso_logro_bronce	BRONZE ACHIEVEMENT!	¡LOGRO DE BRONCE!
+aviso_logro_plata	SILVER ACHIEVEMENT!	¡LOGRO DE PLATA!
+aviso_logro_oro	GOLD ACHIEVEMENT!	¡LOGRO DE ORO!
+objetivo_nivel	{0} XP TO LEVEL {1}	TE FALTAN {0} XP PARA EL NIVEL {1}
+logro_superviviente_nombre	SURVIVOR	SUPERVIVIENTE
+logro_superviviente	Complete wave {0}	Completa la oleada {0}
+logro_exterminador_nombre	EXTERMINATOR	EXTERMINADOR
+logro_exterminador	Kill {0} zombies	Mata {0} zombis
+logro_imparable_nombre	UNSTOPPABLE	IMPARABLE
+logro_imparable	Reach a x{0} combo	Llega a un combo x{0}
+logro_critico_nombre	CRITICAL	CRÍTICO
+logro_critico	Get {0}% critical chance	Consigue un {0} % de críticos
+logro_millonario_nombre	MILLIONAIRE	MILLONARIO
+logro_millonario	Earn {0} coins playing	Gana {0} monedas jugando
+logro_granadero_nombre	GRENADIER	GRANADERO
+logro_granadero	Kill {0} zombies with one grenade	Mata {0} zombis con una granada
+logro_furioso_nombre	ENRAGED	FURIOSO
+logro_furioso	Unleash your rage {0} times	Usa la furia {0} veces
+logro_furioso_uno	Unleash your rage for the first time	Usa la furia por primera vez
+logro_intocable_nombre	UNTOUCHABLE	INTOCABLE
+logro_intocable	Clear wave {0} without getting hit	Termina la oleada {0} sin que te toquen
+logro_constante_nombre	DEVOTED	CONSTANTE
+logro_constante	Reach a {0}-day daily streak	Consigue una racha diaria de {0} días
+logro_misionero_nombre	ON A MISSION	MISIONERO
+logro_misionero	Claim {0} daily missions	Cobra {0} misiones del día
+logro_coleccionista_nombre	COLLECTOR	COLECCIONISTA
+logro_coleccionista	Earn {0} bestiary stars	Gana {0} estrellas del bestiario
+logro_sin_fin_nombre	ENDLESS	SIN FIN
+logro_sin_fin	Reach level {0} in endless mode	Llega al nivel {0} del modo libre
+
 # --- Capitulos de las oleadas (CapitulosDeEscenario)
 capitulo_titulo	CHAPTER {0}	CAPÍTULO {0}
 escenario_pradera	THE MEADOW	LA PRADERA
