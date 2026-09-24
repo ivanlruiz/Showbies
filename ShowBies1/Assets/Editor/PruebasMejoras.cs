@@ -2033,6 +2033,11 @@ public static class PruebasMejoras
         inf.Verdadero("primera vez: con una oleada a medias ya jugo", !PrimeraVez.NuncaJugo);
         inf.Verdadero("primera vez: pero la guia sigue (no termino partidas)", PrimeraVez.NoTerminoPartidas);
 
+        // La 1 a medias es la unica que puede quedar sin ninguna completada, y retomarla es lo
+        // mismo que empezarla: el que abandono su primera oleada sigue yendo derecho a jugar.
+        EmpezarCaso("{\"version\":4,\"oleadaEnCurso\":1}", null);
+        inf.Verdadero("primera vez: con la oleada 1 a medias sigue siendo la primera vez", PrimeraVez.NuncaJugo);
+
         EmpezarCaso("{\"version\":4,\"partidasTerminadas\":1}", null);
         inf.Verdadero("primera vez: con una partida terminada ya jugo", !PrimeraVez.NuncaJugo && !PrimeraVez.NoTerminoPartidas);
 
