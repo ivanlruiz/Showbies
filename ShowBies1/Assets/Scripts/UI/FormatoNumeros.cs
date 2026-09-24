@@ -10,8 +10,13 @@ using System.Globalization;
 // idioma actual:
 //
 //                 miles    decimal   compactos
-//   ingles        1,234    5.8       123K   4.5M   2.3B
-//   espaniol      1.234    5,8       123 K  4,5 M  2,3 MM
+//   ingles        1,234    5.8       123K   4.5M   2.3B    1.2T
+//   espaniol      1.234    5,8       123 K  4,5 M  2,3 MM  1,2 B
+//
+// El B del espaniol es el billon, un millon de millones: el trillion del ingles, no su
+// billion (que en espaniol son los mil millones, MM). Es el ultimo escalon: de ahi para
+// arriba la parte entera sigue creciendo con su separador de miles (1,234.5T), porque
+// sin separador "1234.5B" se leia como un numero roto.
 //
 // Arma los separadores a mano en vez de pedirle la cultura al sistema, que no esta
 // garantizada en todas las builds (y la de un telefono en otro idioma daria otra
@@ -28,7 +33,9 @@ public static class FormatoNumeros
 
         double millones = entero / 1000000.0;
         if (millones < 1000) return UnDecimal(millones) + (ingles ? "M" : " M");
-        return UnDecimal(millones / 1000.0) + (ingles ? "B" : " MM");
+        double milesDeMillones = millones / 1000.0;
+        if (milesDeMillones < 1000) return UnDecimal(milesDeMillones) + (ingles ? "B" : " MM");
+        return UnDecimal(milesDeMillones / 1000.0) + (ingles ? "T" : " B");
     }
 
     // Valores con decimales, como los de las mejoras (5,8 de dano, 21,6 tiros por
@@ -86,8 +93,14 @@ public static class FormatoNumeros
         return armado.ToString();
     }
 
+    // Un decimal, truncado y sin ",0" de mas. La parte entera va agrupada: en los
+    // escalones de abajo nunca pasa de 999, pero el ultimo no tiene techo.
     private static string UnDecimal(double valor)
     {
-        return (Math.Floor(valor * 10) / 10).ToString("0.#", CultureInfo.InvariantCulture).Replace('.', SeparadorDecimal);
+        long decimas = (long)Math.Floor(valor * 10);
+        string entera = Agrupado(decimas / 10);
+        long decimo = decimas % 10;
+        if (decimo == 0) return entera;
+        return entera + SeparadorDecimal + decimo.ToString(CultureInfo.InvariantCulture);
     }
 }

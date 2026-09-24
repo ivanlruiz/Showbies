@@ -5,8 +5,9 @@ using UnityEngine.UI;
 // En la derrota, entre la oferta de video y los botones: lo que esta mas cerca de
 // completarse, con una barra que se llena al entrar. Una mision del dia a medias
 // ("PROXIMO: Mata 300 zombis 120/300"), la mejora mas barata que todavia no alcanza
-// ("TE FALTAN 40 PARA CADENCIA NIVEL 9") o el nivel siguiente del jugador ("TE FALTAN
-// 300 XP PARA EL NIVEL 13"), la que tenga mas avance. La derrota es cuando
+// ("TE FALTAN 40 MONEDAS PARA CADENCIA NIVEL 9", o "PARA DESBLOQUEAR FURIA" si se compra
+// una sola vez) o el nivel siguiente del jugador ("TE FALTAN 300 XP PARA EL NIVEL 13"),
+// la que tenga mas avance. La derrota es cuando
 // se cierra la app, y un objetivo casi lleno es el mejor "una mas". Las mejoras que ya
 // alcanzan no van aca: las dice el aviso de compras.
 //
@@ -83,8 +84,13 @@ public class ProximoObjetivo : MonoBehaviour
                 float f = (float)(monedas / precio);
                 if (f <= fraccion) continue;
                 fraccion = f;
-                texto = Textos.Formato("objetivo_mejora", FormatoNumeros.Compacto(precio - monedas),
-                                       Textos.De("mejora_" + mejora.id + "_nombre"), nivel + 1);
+                string faltan = FormatoNumeros.Compacto(precio - monedas);
+                string nombre = Textos.De("mejora_" + mejora.id + "_nombre");
+                // La granada y la furia se compran una sola vez: se desbloquean, y "FURIA
+                // NIVEL 1" hablaba de un nivel que no existe.
+                texto = mejora.nivelMaximo == 1
+                    ? Textos.Formato("objetivo_desbloqueo", faltan, nombre)
+                    : Textos.Formato("objetivo_mejora", faltan, nombre, nivel + 1);
             }
         }
         return texto != null;

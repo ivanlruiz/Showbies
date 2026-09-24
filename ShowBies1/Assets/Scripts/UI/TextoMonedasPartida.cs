@@ -142,6 +142,13 @@ public class TextoMonedasPartida : MonoBehaviour
     {
         if (valor == mostradas) return;
         mostradas = valor;
-        texto.text = Textos.Formato("derrota_monedas", FormatoNumeros.Compacto(valor), FormatoNumeros.Compacto(total));
+        // Una sola moneda va en singular ("+1 COIN", no "+1 COINS"): es el texto final de
+        // una partida que dio una sola, y el conteo, que arranca en 0, pasa por el 1
+        // cuando son pocas.
+        string monedas = FormatoNumeros.Compacto(valor);
+        string enTotal = FormatoNumeros.Compacto(total);
+        texto.text = valor == 1
+            ? Textos.Formato("derrota_monedas_una", monedas, enTotal)
+            : Textos.Formato("derrota_monedas", monedas, enTotal);
     }
 }

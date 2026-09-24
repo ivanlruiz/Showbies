@@ -1222,8 +1222,9 @@ ni en el código.
   MEJORAS y los contadores de monedas. El idioma se cambia desde el menú, así que lo que se escribe una vez en
   partida (HUD, derrota) no necesita refrescarse. Si agregás algo al menú que arme texto por código, compará
   `Idioma.Revision` como hacen ellos.
-- **Los números también dependen del idioma** (`FormatoNumeros`): `1,234` / `4.5M` / `2.3B` en inglés y
-  `1.234` / `4,5 M` / `2,3 MM` en español. Los separadores se arman a mano: la cultura del sistema no está en
+- **Los números también dependen del idioma** (`FormatoNumeros`): `1,234` / `4.5M` / `2.3B` / `1.2T` en inglés y
+  `1.234` / `4,5 M` / `2,3 MM` / `1,2 B` (el billón) en español; del último escalón para arriba la parte entera va
+  agrupada (`1,234.5T`). Los separadores se arman a mano: la cultura del sistema no está en
   todas las builds y la de un teléfono en otro idioma daría otra cosa.
 - **El español es de España**: tuteo, "ratón", "coger", "vídeo" con tilde. Nada de voseo.
 - **Un id que falta no rompe nada pero se ve**: sale `[id]` en pantalla y un aviso en la consola. Un texto vacío

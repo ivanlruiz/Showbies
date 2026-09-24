@@ -491,6 +491,12 @@ public static class PruebasMejoras
         inf.Igual("Compacto(123456) en espaniol", "123 K", FormatoNumeros.Compacto(123456));
         inf.Igual("Compacto(4,5 M) en espaniol", "4,5 M", FormatoNumeros.Compacto(4500000));
         inf.Igual("Compacto(2,3 MM) en espaniol", "2,3 MM", FormatoNumeros.Compacto(2300000000));
+        // Desde el billon (un millon de millones) va el B, y el ultimo escalon agrupa la
+        // parte entera: antes 1,2345e15 salia "1234500 MM".
+        inf.Igual("Compacto(999.999.999.999) en espaniol sigue en MM", "999,9 MM", FormatoNumeros.Compacto(999999999999));
+        inf.Igual("Compacto(1 billon) en espaniol", "1 B", FormatoNumeros.Compacto(1e12));
+        inf.Igual("Compacto(1,2 billones) en espaniol", "1,2 B", FormatoNumeros.Compacto(1.2345e12));
+        inf.Igual("Compacto(1.234,5 billones) en espaniol, agrupado", "1.234,5 B", FormatoNumeros.Compacto(1.2345e15));
 
         // En ingles cambian los dos separadores y los sufijos: "1.234" en ingles se
         // lee "uno coma dos".
@@ -504,6 +510,10 @@ public static class PruebasMejoras
             inf.Igual("Compacto(123456) en ingles", "123K", FormatoNumeros.Compacto(123456));
             inf.Igual("Compacto(4,5 M) en ingles", "4.5M", FormatoNumeros.Compacto(4500000));
             inf.Igual("Compacto(2,3 B) en ingles", "2.3B", FormatoNumeros.Compacto(2300000000));
+            inf.Igual("Compacto(999.999.999.999) en ingles sigue en B", "999.9B", FormatoNumeros.Compacto(999999999999));
+            inf.Igual("Compacto(1 T) en ingles", "1T", FormatoNumeros.Compacto(1e12));
+            inf.Igual("Compacto(1,2 T) en ingles", "1.2T", FormatoNumeros.Compacto(1.2345e12));
+            inf.Igual("Compacto(1234,5 T) en ingles, agrupado", "1,234.5T", FormatoNumeros.Compacto(1.2345e15));
         }
         finally
         {

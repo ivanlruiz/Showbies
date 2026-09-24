@@ -13,7 +13,6 @@ id	en	es
 # --- Menu y modos
 menu_jugar	PLAY	JUGAR
 menu_mejoras	UPGRADES	MEJORAS
-menu_modos	GAME MODES	MODOS DE JUEGO
 menu_tutorial	TUTORIAL	TUTORIAL
 menu_salir	QUIT	SALIR
 salir_titulo	QUIT GAME?	¿SALIR DEL JUEGO?
@@ -38,13 +37,12 @@ guia_compra	UPGRADE YOUR DAMAGE!	¡MEJORA TU DAÑO!
 guia_a_jugar	NOW TRY IT OUT!	¡AHORA PRUÉBALO!
 
 # --- Misiones del dia (MisionesDiarias, VentanaMisiones, AvisoDeMisiones)
-menu_misiones	MISSIONS	MISIONES
 misiones_titulo	DAILY MISSIONS	MISIONES DEL DÍA
 misiones_nuevas	New missions in {0}h {1}m	Misiones nuevas en {0} h {1} min
 mision_matar	Kill {0} zombies	Mata {0} zombis
 mision_oleada	Complete {0} waves	Completa {0} oleadas
 mision_monedas	Earn {0} coins	Gana {0} monedas
-mision_furia	Use the fury {0} times	Usa la furia {0} veces
+mision_furia	Unleash your rage {0} times	Usa la furia {0} veces
 mision_granadas	Throw {0} grenades	Lanza {0} granadas
 mision_criticos	Land {0} critical hits	Haz {0} golpes críticos
 mision_jefe	Defeat a boss	Derrota a un jefe
@@ -62,7 +60,8 @@ semanal_termina	ENDS IN {0} DAYS	TERMINA EN {0} DÍAS
 semanal_termina_hoy	LAST DAY!	¡ÚLTIMO DÍA!
 misiones_cofre_abierto	OPENED! +{0}	¡ABIERTO! +{0}
 objetivo_mision	NEXT: {0}  {1}/{2}	PRÓXIMO: {0}  {1}/{2}
-objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} PARA {1} NIVEL {2}
+objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} MONEDAS PARA {1} NIVEL {2}
+objetivo_desbloqueo	{0} MORE COINS TO UNLOCK {1}	TE FALTAN {0} MONEDAS PARA DESBLOQUEAR {1}
 
 # --- Bestiario (Bestiario, VentanaBestiario)
 bestiario_titulo	BESTIARY	BESTIARIO
@@ -182,6 +181,7 @@ derrota_puntos	<size=55%>SCORE</size>  {0}	<size=55%>PUNTOS</size>  {0}
 derrota_record	<size=55%>BEST</size>  {0}	<size=55%>RÉCORD</size>  {0}
 derrota_record_nuevo	<size=55%>NEW BEST!</size>  {0}	<size=55%>¡NUEVO RÉCORD!</size>  {0}
 derrota_monedas	+{0} COINS   <size=70%>TOTAL {1}</size>	+{0} MONEDAS   <size=70%>TOTAL {1}</size>
+derrota_monedas_una	+{0} COIN   <size=70%>TOTAL {1}</size>	+{0} MONEDA   <size=70%>TOTAL {1}</size>
 derrota_otra_vez	PLAY AGAIN	OTRA VEZ
 derrota_menu	MENU	MENÚ
 aviso_compras_una	You can afford an upgrade!	¡Te llega para una mejora!
@@ -216,5 +216,3 @@ diaria_dia	DAY {0}	DÍA {0}
 diaria_cobrar	CLAIM +{0}	COBRAR +{0}
 diaria_cobrado	+{0} COINS!	¡+{0} MONEDAS!
 diaria_video	VIDEO: +{0} MORE	VÍDEO: +{0} MÁS
-
-# La letra grande de cada tarjeta de la tienda (TarjetaMejora), la inicial del nombre en cada idioma
