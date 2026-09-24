@@ -221,6 +221,9 @@ public class PlayerController : MonoBehaviour
         moveVelocity = Vector3.zero;
         FijarDisparo(false);
         if (trans != null && trans.anim != null) trans.anim.SetBool("run", false);
+        // Si murio apuntando la granada con Espacio, el anillo quedaba en el piso detras
+        // de la derrota: Update ya no corre para esconderlo.
+        OcultarPunteroGranada();
     }
 
     // Se desploma con la animacion de morir del pack (pedido de Ivan: quedaba parado detras

@@ -68,8 +68,9 @@ public class PlayerJS : MonoBehaviour
         // Move ya puso el rumbo de la caminata en este cuadro; esto lo pisa.
         player.transform.rotation = Quaternion.LookRotation(UltimaDireccionApuntada);
 
-        Vector3 lookAtPosition = transform.position + new Vector3(hoz, 0, ver);
-        thegun.transform.LookAt(lookAtPosition);
+        // La direccion pura, y no un LookAt a un punto a un metro del centro: con el arma a
+        // otra altura que el jugador, el LookAt la inclinaba y las balas pasaban por arriba.
+        thegun.transform.rotation = Quaternion.LookRotation(UltimaDireccionApuntada);
 
         // Por el mismo camino que el clic de PC, que ademas prende la animacion de
         // disparo: aca solo se prendia el arma y el muñeco no disparaba nunca.

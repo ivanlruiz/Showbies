@@ -943,7 +943,7 @@ Recompensa diaria). **Un solo video premiado por partida**
 |---|---|
 | `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir`, `duplicar_derrota` y `regalo_x2` (la recompensa diaria). |
 | `IProveedorAnuncios` | quién muestra el video: `Listo(lugar)` y `Mostrar(lugar, aviso)`. Cambiar de red es escribir otra clase. |
-| `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows y el de "todavía no hay red". |
+| `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows (fuera del editor, en PC se fuerza aunque el asset diga otra cosa) y el de "todavía no hay red". |
 | `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet, y anda igual en el teléfono. |
 | `ConfigAnuncios` | todos los números, en `Assets/Anuncios/Resources/ConfigAnuncios.asset`. Si falta, no se ofrece nada (con un LogError). |
 | `ServicioAnuncios` | la puerta: `PuedeOfrecer(lugar)` y `Mostrar(lugar, alPremiar, alNoPremiar)`. |
@@ -973,7 +973,11 @@ vuelve cuando se resuelve, con más monedas si el jugador cobró (`OfertaDeDupli
 `BotonMejoras`).
 
 **A partir de una hora de sesión la derrota sugiere descansar** (`AvisoDescanso`, `minutosParaAvisoDeDescanso`).
-No bloquea nada.
+No bloquea nada. La sesión es `VigiaAplicacion.SegundosDeSesion`: solo cuenta con la app delante y vuelve a cero
+tras 20 minutos en segundo plano (antes era `Time.realtimeSinceStartup`, que en Android sigue corriendo en recientes).
+
+**Cerrar el video del x2 de la derrota antes de tiempo no esconde la oferta**: `OfertaDeDuplicar.NoSeCobro` la vuelve a
+mostrar si todavía se puede ofrecer (hasta la auditoría del 24/9 desaparecía para esa partida).
 
 ### Revivir
 
@@ -1332,7 +1336,8 @@ como el récord, va en `GuardarRecord`, que corre al morir, antes de la oferta.
 incluidos el menú y la derrota, donde no hay menú de pausa que lo haga.
 
 `"UltimoModo"` es lo que hace que "Retry" vuelva al modo que estabas jugando y no siempre al primero.
-La tecla R hace lo mismo por otro camino: recarga la escena activa.
+La tecla R hace lo mismo por otro camino: recarga la escena activa (no con un video en pantalla ni con el ¡HAS
+MUERTO! abierto: ahí se perdía el premio o la partida terminaba sin pasar por `Terminar`).
 
 ## La derrota encima de la partida
 
@@ -1415,7 +1420,8 @@ click en otra ventana.
   (`androidPredictiveBackSupport: 1`, targetSdk 36): el player de Unity registra su propio
   `OnBackInvokedCallback` y reinyecta `KEYCODE_BACK` a la actividad. Deja de llegar si alguien pone
   `Input.backButtonLeavesApp = true`.
-- Cada pantalla decide qué hace Escape: en juego pausa y reanuda (`MenuPausa`), en la derrota vuelve al
+- Cada pantalla decide qué hace Escape: en juego pausa y reanuda (`MenuPausa`), en ¡HAS MUERTO! es NO, GRACIAS
+  (`OfertaDeRevivir`, salvo en el instante de volver de un video), en la derrota vuelve al
   menú (`MenuPerdiste`; como va encima de la partida, `MenuPausa` la deja pasar), y en el menú principal cierra primero la ventana de idioma, después la tienda, después el panel de modos o,
   en el principal, pregunta si salir del juego sólo en móvil (`ConfirmarSalir`, la misma ventana del botón SALIR; lo
   maneja `BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del menú). `RestartScene` ya no cierra el

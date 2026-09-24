@@ -16,6 +16,10 @@ public class RestartScene : MonoBehaviour
         // asi que apretar R en WaveMode te sacaba al otro modo.
         // GetKeyDown y no GetKey: con GetKey, mantener la R apretada recargaba
         // la escena en loop, una vez por frame hasta soltarla.
+        // Ni con un video en pantalla ni con el ¡HAS MUERTO! abierto: recargar ahi perdia
+        // el premio del video, o terminaba la partida sin pasar por PlayerHealth.Terminar
+        // (sin contarla como terminada ni olvidar la oleada en curso).
+        if (ServicioAnuncios.MostrandoAnuncio || OfertaDeRevivir.Activa) return;
         if (Input.GetKeyDown(KeyCode.R))
         {
             WaveManager.OlvidarPartidaSiEsOleadas();

@@ -73,6 +73,7 @@ public class OfertaDeRevivir : MonoBehaviour
     private bool esperandoVideo;
     private float desde;
     private float aceptadoEn = -1f;   // cuando toco el video, para devolverle su tiempo
+    private float ignorarAtrasHasta;  // el atras que cerro el video no rechaza
     private float duracion;
     private float agrisado;
     private float radioDespeje;
@@ -217,6 +218,16 @@ public class OfertaDeRevivir : MonoBehaviour
     {
         if (!corriendo || esperandoVideo) return;
 
+        // El atras de Android llega como Escape: aca es NO, GRACIAS, que no castiga. Era la
+        // unica pantalla donde el atras no hacia nada (MenuPausa no la pausa) y se leia como
+        // que el juego se habia colgado. Un rato despues de volver de un video no cuenta: el
+        // atras que cerro el anuncio podria llegar tambien a la actividad de Unity.
+        if (Input.GetKeyDown(KeyCode.Escape) && Time.unscaledTime >= ignorarAtrasHasta)
+        {
+            Rechazar();
+            return;
+        }
+
         float pasado = Time.unscaledTime - desde;
 
         float grisado = agrisado > 0f ? Mathf.Clamp01(pasado / agrisado) : 1f;
@@ -307,6 +318,7 @@ public class OfertaDeRevivir : MonoBehaviour
         // la partida igual, por otro camino.
         if (aceptadoEn >= 0f) desde += Time.unscaledTime - aceptadoEn;
         aceptadoEn = -1f;
+        ignorarAtrasHasta = Time.unscaledTime + 0.4f;
 
         if (botonVideo != null) botonVideo.interactable = true;
         if (botonNo != null) botonNo.interactable = true;

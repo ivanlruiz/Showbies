@@ -81,7 +81,7 @@ public class OfertaDeDuplicar : MonoBehaviour
         ConfigAnuncios config = ConfigAnuncios.Instancia;
         if (config == null || config.minutosParaAvisoDeDescanso <= 0f) return false;
 
-        return Time.realtimeSinceStartup >= config.minutosParaAvisoDeDescanso * 60f;
+        return VigiaAplicacion.SegundosDeSesion >= config.minutosParaAvisoDeDescanso * 60f;
     }
 
     private void Apretar()
@@ -108,9 +108,19 @@ public class OfertaDeDuplicar : MonoBehaviour
         if (contador != null) contador.Duplicar();
     }
 
+    // Cerrar el video antes no castiga (CLAUDE.md, Anuncios): si la oferta sigue en pie,
+    // vuelve. Si ya no se puede (no arranco, no hay video o el cobro fallo despues de
+    // gastar el uso), se va sin ruido, como antes.
     private void NoSeCobro()
     {
-        Esconder();
+        if (!SePuedeOfrecer())
+        {
+            Esconder();
+            return;
+        }
+        if (boton != null) boton.interactable = true;
+        if (raiz != null) raiz.SetActive(true);
+        TapaElAviso = true;
     }
 
     private void Esconder()

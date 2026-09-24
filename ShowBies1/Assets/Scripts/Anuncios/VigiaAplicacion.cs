@@ -15,10 +15,20 @@ public class VigiaAplicacion : MonoBehaviour
 {
     private static VigiaAplicacion instancia;
 
+    // La sesion de juego, para el aviso de descanso de la derrota: solo cuenta con la app
+    // delante, y vuelve a cero si estuvo en segundo plano un rato largo. Antes se usaba
+    // Time.realtimeSinceStartup, que en Android sigue corriendo con la app en recientes:
+    // diez minutos de juego repartidos en una tarde daban "llevas mas de una hora".
+    public static float SegundosDeSesion { get; private set; }
+    private const float AusenciaQueCortaLaSesion = 20f * 60f;
+    private static float fueraDesde = -1f;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
         instancia = null;
+        SegundosDeSesion = 0f;
+        fueraDesde = -1f;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -51,11 +61,30 @@ public class VigiaAplicacion : MonoBehaviour
     private void Update()
     {
         ServicioAnuncios.AtenderAvisos();
+        // Con tope: el primer cuadro despues de volver no se come la ausencia.
+        SegundosDeSesion += Mathf.Min(Time.unscaledDeltaTime, 0.1f);
     }
 
     private void OnApplicationPause(bool pausada)
     {
         if (pausada) Progreso.Guardar();
+        Ausencia(pausada);
+    }
+
+    private void OnApplicationFocus(bool conFoco)
+    {
+        Ausencia(!conFoco);
+    }
+
+    private static void Ausencia(bool empieza)
+    {
+        if (empieza)
+        {
+            if (fueraDesde < 0f) fueraDesde = Time.realtimeSinceStartup;
+            return;
+        }
+        if (fueraDesde >= 0f && Time.realtimeSinceStartup - fueraDesde >= AusenciaQueCortaLaSesion) SegundosDeSesion = 0f;
+        fueraDesde = -1f;
     }
 
     private void OnApplicationQuit()

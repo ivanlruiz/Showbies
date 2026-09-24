@@ -72,6 +72,11 @@ public static class ServicioAnuncios
 
             ConfigAnuncios config = ConfigAnuncios.Instancia;
             var cual = config != null ? config.proveedor : ConfigAnuncios.Proveedor.Nulo;
+            // Fuera del editor, en PC no hay anuncios (Nulo es el de Windows): asi el cartel
+            // de prueba no llega a una build de Windows si el asset quedo en Falso.
+            if (!Application.isEditor && !Plataforma.EsMovil) cual = ConfigAnuncios.Proveedor.Nulo;
+            if (cual == ConfigAnuncios.Proveedor.Real)
+                Debug.LogError("ServicioAnuncios: el proveedor Real todavia no existe; no se ofrecen videos.");
             switch (cual)
             {
                 case ConfigAnuncios.Proveedor.Falso:

@@ -73,6 +73,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private int temaArmado = -1;
 
     private int racha;
+    private int diaDeLaVentana;       // el dia con el que se armo: se cobra ese, aunque pase la medianoche
     private bool pendiente;                 // armada, esperando a que se cierre la tienda
     private TiendaMejoras tienda;
     private float reloj = -1f;              // tiempo desde que se abrio
@@ -88,6 +89,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private void Start()
     {
         racha = RecompensaDiaria.RachaDeHoy;
+        diaDeLaVentana = Progreso.DiaDeHoy();
         if (racha <= 0) return;
         // Espera a la primera partida terminada: si no, alguien que recien instala
         // cobra 150 monedas y compra antes de haber jugado, y la guia de la primera
@@ -151,9 +153,13 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private void Cobrar()
     {
         if (esperaParaIrse >= 0f || relojSalida >= 0f || cobrado) return;
-        double monto = RecompensaDiaria.Cobrar();
+        // El dia de la ventana y no el de ahora: abierta a las 23:59 y cobrada a las 00:00,
+        // cobraba con el dia nuevo, la racha volvia a 1 y el boton del video seguia
+        // prometiendo el monto de la racha vieja. Lo del dia nuevo se cobra igual manana.
+        double monto = RecompensaDiaria.CobrarEl(diaDeLaVentana);
         if (monto <= 0) { Cerrar(); return; }
         cobrado = true;
+        montoHoy = monto;
 
         Festejar();
         if (fondoHoy != null) fondoHoy.color = colorCobrado;

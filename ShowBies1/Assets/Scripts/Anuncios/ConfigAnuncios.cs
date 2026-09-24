@@ -20,7 +20,7 @@ public class ConfigAnuncios : ScriptableObject
 
     [Tooltip("Cual se usa. Se elige acá y no con un #if: así el proveedor falso también "
         + "llega al teléfono en la APK de prueba. ConstructorAndroid lo fuerza a Falso al buildear la APK.")]
-    public Proveedor proveedor = Proveedor.Falso;
+    public Proveedor proveedor = Proveedor.Nulo;
 
     [Header("Revivir")]
     [Tooltip("Segundos que da la ventanita para decidir.")]

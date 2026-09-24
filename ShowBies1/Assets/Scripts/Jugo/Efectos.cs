@@ -238,7 +238,8 @@ public class Efectos : MonoBehaviour
             ApagarFuria();
             return;
         }
-        if (!MenuPausa.Pausado && Time.unscaledTime >= proximoPulsoFuria)
+        // JuegoCongelado y no Pausado: detras del ¡HAS MUERTO! el borde seguia latiendo.
+        if (!MenuPausa.JuegoCongelado && Time.unscaledTime >= proximoPulsoFuria)
         {
             proximoPulsoFuria = Time.unscaledTime + intervaloPulsoFuria;
             VinetaDanio.Pulso(pulsoVinetaFuria);

@@ -86,6 +86,9 @@ public class MenuPerdiste : MonoBehaviour
     // El boton atras de Android llega como Escape.
     private void Update()
     {
+        // Con el video del x2 en pantalla el atras es del anuncio: si no, se cargaba el
+        // menu por debajo del cartel y el premio se cobraba a ciegas o se perdia.
+        if (ServicioAnuncios.MostrandoAnuncio) return;
         if (Input.GetKeyDown(KeyCode.Escape)) Menu();
     }
 }
