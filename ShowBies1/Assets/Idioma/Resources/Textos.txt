@@ -218,11 +218,3 @@ diaria_cobrado	+{0} COINS!	¡+{0} MONEDAS!
 diaria_video	VIDEO: +{0} MORE	VÍDEO: +{0} MÁS
 
 # La letra grande de cada tarjeta de la tienda (TarjetaMejora), la inicial del nombre en cada idioma
-mejora_dano_bala_simbolo	D	D
-mejora_cadencia_simbolo	F	C
-mejora_criticos_simbolo	!	!
-mejora_vida_maxima_simbolo	H	V
-mejora_granada_simbolo	G	G
-mejora_iman_simbolo	M	I
-mejora_botin_simbolo	$	$
-mejora_furia_simbolo	R	F

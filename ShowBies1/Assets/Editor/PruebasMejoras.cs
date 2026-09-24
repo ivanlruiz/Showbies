@@ -198,6 +198,8 @@ public static class PruebasMejoras
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
             ProbarFaroles(informe);
+            ProbarCalidadDeAndroid(informe);
+            ProbarPuntoDeLaGranada(informe);
             ProbarGrisDePocaVida(informe);
             ProbarZombisPorPartida(informe);
             ProbarAvisosSinPisarse(informe);
@@ -578,15 +580,18 @@ public static class PruebasMejoras
 
         // Los ids que pide el codigo: Textos.De("..."), Textos.Formato("...", ...), los que
         // le pone a un TextoTraducido copiado (t.id = "...";, como OpcionesSonido y
-        // ConfirmarSalir) y los que se arman con el id de una mejora.
+        // ConfirmarSalir), los que se pasan a un control armado en codigo
+        // (SliderVolumen.Crear(padre, "...", ...), Interruptor.Crear) y los que se arman con
+        // el id de una mejora.
         // Solo los ids escritos enteros: "mejora_" + id se prueba aparte, con el catalogo.
-        var pedido = new System.Text.RegularExpressions.Regex(@"Textos\.(?:De|Formato)\(\s*""([a-z0-9_]+)""\s*[,)]|\.id\s*=\s*""([a-z0-9_]+)""\s*;");
+        var pedido = new System.Text.RegularExpressions.Regex(@"Textos\.(?:De|Formato)\(\s*""([a-z0-9_]+)""\s*[,)]|\.id\s*=\s*""([a-z0-9_]+)""\s*;|\.Crear\(\s*\w+\s*,\s*""([a-z0-9_]+)""");
         int enCodigo = 0, faltanEnCodigo = 0;
         foreach (string archivo in Directory.GetFiles(Path.Combine(Application.dataPath, "Scripts"), "*.cs", SearchOption.AllDirectories))
         {
             foreach (System.Text.RegularExpressions.Match m in pedido.Matches(File.ReadAllText(archivo)))
             {
-                string id = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
+                string id = m.Groups[1].Success ? m.Groups[1].Value
+                          : m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Value;
                 enCodigo++;
                 if (existentes.Contains(id)) continue;
                 inf.Falla("textos: " + Path.GetFileName(archivo) + " pide \"" + id + "\", que no esta en la tabla");
@@ -603,7 +608,7 @@ public static class PruebasMejoras
             foreach (var mejora in catalogo.enTienda)
             {
                 if (mejora == null) continue;
-                foreach (string parte in new[] { "_nombre", "_unidad", "_simbolo" })
+                foreach (string parte in new[] { "_nombre", "_unidad" })
                 {
                     string id = "mejora_" + mejora.id + parte;
                     if (existentes.Contains(id)) continue;
@@ -661,6 +666,35 @@ public static class PruebasMejoras
             }
         }
         inf.Igual("textos: todo lo que piden las escenas existe (" + enEscenas + ")", 0, faltanEnEscenas);
+
+        // Los ids guardados en otros campos idTexto de escenas y prefabs: el nombre de cada
+        // capitulo (CapitulosDeEscenario.escenarios[].idTexto) y la plantilla de un contador
+        // de monedas (ContadorMonedas.idTexto, que vacio quiere decir "sin plantilla"). El
+        // codigo los pasa como variable a Textos.De, asi que la busqueda de arriba no los ve.
+        var conIdTexto = new List<string>();
+        foreach (var escena in EditorBuildSettings.scenes) conIdTexto.Add(escena.path);
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Prefabs" }))
+            conIdTexto.Add(AssetDatabase.GUIDToAssetPath(guid));
+        int enCampos = 0, faltanEnCampos = 0;
+        foreach (string relativa in conIdTexto)
+        {
+            string ruta = Path.Combine(Path.GetDirectoryName(Application.dataPath), relativa);
+            if (!File.Exists(ruta)) continue;
+            foreach (string cruda in File.ReadAllLines(ruta))
+            {
+                string linea = cruda.Trim();
+                if (linea.StartsWith("- ")) linea = linea.Substring(2).TrimStart();
+                if (!linea.StartsWith("idTexto:")) continue;
+                string id = linea.Substring("idTexto:".Length).Trim();
+                if (id.Length == 0) continue;
+                enCampos++;
+                if (existentes.Contains(id)) continue;
+                inf.Falla("textos: " + Path.GetFileName(relativa) + " guarda idTexto \"" + id + "\", que no esta en la tabla");
+                faltanEnCampos++;
+            }
+        }
+        inf.Verdadero("textos: hay campos idTexto en las escenas (" + enCampos + ")", enCampos > 0);
+        inf.Igual("textos: todo idTexto guardado existe", 0, faltanEnCampos);
     }
 
     // 4. Escalado por oleada: la cuenta de Escalado.PorOleada, con los crecimientos que
@@ -998,6 +1032,42 @@ public static class PruebasMejoras
 
     // El gris de poca vida (pedido de Ivan): nada hasta un cuarto de la vida y de ahi, en
     // linea recta, hasta medio gris con la vida en cero. Al gris total llega recien al morir.
+    // Android sale en Medium (ver Rendimiento en movil). Entrar y salir de play le borra el
+    // bloque a QualitySettings.asset sin avisar; la build tambien lo controla
+    // (ConstructorAndroid), pero esto lo avisa antes, justo despues de un banco en play.
+    static void ProbarCalidadDeAndroid(Informe inf)
+    {
+        inf.Verdadero("calidad: hay un nivel Medium", CalidadDeAndroid.Medium >= 0);
+        inf.Igual("calidad: Android sale en Medium (si falla, revertir ProjectSettings/QualitySettings.asset)",
+                  CalidadDeAndroid.Medium, CalidadDeAndroid.Guardada());
+    }
+
+    // Donde cae la granada: PlayerController.PuntoEnElPiso, estatica para probarla sin input.
+    static void ProbarPuntoDeLaGranada(Informe inf)
+    {
+        var origen = new Vector3(2f, 1f, 3f);
+        var adelante = new Vector3(0f, 0.5f, 1f);
+        Vector3 p;
+
+        p = PlayerController.PuntoEnElPiso(origen, origen + new Vector3(1f, 0f, 0f), adelante, 3f, 12f);
+        inf.Verdadero("granada: apuntada a 1 m cae a la minima, 3 m en la misma direccion", Cerca(p, new Vector3(5f, 0f, 3f)));
+        p = PlayerController.PuntoEnElPiso(origen, origen + new Vector3(0f, 0f, -20f), adelante, 3f, 12f);
+        inf.Verdadero("granada: apuntada a 20 m cae a la maxima, 12 m", Cerca(p, new Vector3(2f, 0f, -9f)));
+        p = PlayerController.PuntoEnElPiso(origen, origen + new Vector3(3.6f, 0f, 4.8f), adelante, 3f, 12f);
+        inf.Verdadero("granada: apuntada a 6 m cae ahi", Cerca(p, new Vector3(5.6f, 0f, 7.8f)));
+        p = PlayerController.PuntoEnElPiso(origen, origen + new Vector3(0f, 5f, 0f), adelante, 3f, 12f);
+        inf.Verdadero("granada: apuntada encima del jugador usa adelante, aplanado, a la minima", Cerca(p, new Vector3(2f, 0f, 6f)));
+        p = PlayerController.PuntoEnElPiso(origen, new Vector3(9f, 4f, 3f), adelante, 3f, 12f);
+        inf.Cerca("granada: cae en el piso aunque el origen y lo apuntado esten en otra altura", 0, p.y, 1e-5);
+        p = PlayerController.PuntoEnElPiso(origen, origen + new Vector3(0.5f, 0f, 0f), adelante, 8f, 8f);
+        inf.Verdadero("granada: con minima = maxima, como el toque rapido del telefono, siempre a esa distancia", Cerca(p, new Vector3(10f, 0f, 3f)));
+    }
+
+    static bool Cerca(Vector3 a, Vector3 b)
+    {
+        return (a - b).sqrMagnitude < 1e-6f;
+    }
+
     static void ProbarGrisDePocaVida(Informe inf)
     {
         inf.Cerca("gris: con la vida llena, nada", 0, GrisDePocaVida.CantidadDeGris(1f, 0.25f, 0.5f), 1e-6);

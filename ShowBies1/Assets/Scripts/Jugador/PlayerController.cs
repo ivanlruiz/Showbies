@@ -30,8 +30,8 @@ public class PlayerController : MonoBehaviour
     public int cargadorMejorado = 1000;   // a lo que sube maxBalas al agarrar un PUArma
 
     [Header("Cajas de cadencia")]
-    public float multiplicadorCadenciaPUBalas = 1.5f;   // 20 tiros/s de base pasan a 30
-    public float multiplicadorCadenciaPUArma = 3f;      // 20 pasan a 60; con la cadencia al tope, 108
+    public float multiplicadorCadenciaPUBalas = 1.5f;   // x1,5 sobre la cadencia mejorada (de 4 a 20 tiros/s)
+    public float multiplicadorCadenciaPUArma = 3f;      // x3: con la cadencia al tope, 60 tiros/s
 
     [Header("Granade Settings")]
     public float granadaCooldown = 5f;

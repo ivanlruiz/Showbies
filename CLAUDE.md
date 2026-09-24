@@ -43,7 +43,7 @@ experiencia para el **nivel del jugador**, y cada nivel da monedas (ver Nivel de
 ## Layout del código
 
 ```
-Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), AudioArma, ArmaEnLaMano (la pistola del muñeco)
+Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
@@ -58,7 +58,7 @@ Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las olea
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
-Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial (+ Scenes/SampleScene, sin usar)
+Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial
 Assets/Prefabs/             ← Bullet, Gun, Pistola (la de la mano), Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
 Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMejoras
@@ -66,7 +66,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón
 ```
@@ -146,8 +146,6 @@ terminar guarda `PlayerPrefs["TutorialCompletado"] = 1` por si algún día se qu
 primera partida. Para agregar un paso: un valor en el enum `Paso`, su texto en `Entrar` y su
 condición de salida en `Update`.
 
-`SampleScene.unity` no está en el build y no se usa. Es el único lugar donde queda `AudioArma`.
-
 ## Arquitectura: singletons y referencias de inspector
 
 No hay sistema de eventos. Los managers son `public static X instance` asignados en `Awake()`:
@@ -158,7 +156,8 @@ Lo que se comunica sin inspector usa búsquedas cacheadas:
 
 - `EnemyController.jugadorCache` — el jugador se busca **una vez** y se comparte. Antes había un
   `FindObjectOfType` por zombi spawneado, que con zombis en escena era costo cuadrático.
-- `EnemyController.ZombisVivos` — contador `static`, `OnEnable`/`OnDisable` (los zombis prendidos). Lo miran los dos
+- `EnemyController.ZombisVivos` — contador `static` de los zombis vivos: sube en `OnEnable` y baja al morir
+  (`DejarDeContar`, con el cadáver todavía prendido) o en `OnDisable` si no había muerto. Lo miran los dos
   generadores y el tutorial.
 - `BulletController.pool` — la pila de balas dormidas.
 - `EnemyController.pool` — los zombis muertos, apagados, en una pila por prefab (ver Generación de enemigos).
@@ -911,9 +910,9 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   (con 50 monedas hay cuatro tarjetas verdes pero alcanza para una sola), y en la derrota "¡Te alcanza para N
   mejoras!".
 - **Para agregar una mejora:** un asset `Mejora` con id nuevo → su campo y getter en `CatalogoMejoras` → aplicarla
-  en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → `mejora_<id>_nombre`, `mejora_<id>_unidad` y
-  `mejora_<id>_simbolo` (la letra grande de la tarjeta, la inicial en cada idioma) en la tabla de textos → casos en
-  `PruebasMejoras`. El campo `simbolo` del asset quedó sólo para el inspector.
+  en `AplicarMejoras` o en quien la consume → sumarla a `enTienda` → `mejora_<id>_nombre` y `mejora_<id>_unidad`
+  en la tabla de textos → casos en `PruebasMejoras`. El campo `simbolo` del asset quedó sólo para el inspector: la
+  tarjeta de carbón neón no muestra letra.
 
 ## Anuncios
 
@@ -1189,7 +1188,7 @@ neón y el interruptor se sacó (`PlayerPrefs["TemaOscuro"]` ya no se lee). Falt
   casillero de hoy de la diaria (amarillo) y la inicial del bestiario (el círculo del color del zombi) no cambian con el
   tema, así que su texto va oscuro siempre.
 - **Lo que se arma en código sobre un panel recibe su color de quien lo crea** (`SliderVolumen.Crear` toma el color del
-  texto y el del surco). El interruptor (`Interruptor`) quedó sin uso al irse el modo oscuro.
+  texto y el del surco). El interruptor (`Interruptor`) quedó sin uso al irse el modo oscuro; se deja para cuando haga falta otro (la vibración, el contador de FPS).
 - **Si agregás una pantalla**: negra, con los papeles puestos a lo que sea panel, fila o texto; los botones del molde de
   siempre, y se corre el constructor (o `ConstructorUI` si se arma en código).
 
@@ -1230,7 +1229,7 @@ ni en el código.
 - **ShowBies > Idioma** cambia el idioma desde el editor; "Olvidar" deja el editor como alguien que abre el
   juego por primera vez.
 - Se eligió este sistema y no el paquete Localization de Unity porque ese depende de Addressables: demasiado para
-  dos idiomas y ~75 textos. Si algún día hacen falta muchos, los textos ya están separados en una tabla.
+  dos idiomas y unos 200 textos. Si algún día hacen falta muchos, los textos ya están separados en una tabla.
 
 ## Jugo
 
@@ -1323,8 +1322,11 @@ progreso):
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
 
-`PlayerHealth.TakeDamage` llama a `PlayerPrefs.Save()` explícitamente. Si agregás una clave, escribila
-en ese mismo bloque o se pierde cuando el juego no cierra bien.
+`PlayerHealth.Terminar` escribe `"Score"` y `"UltimoModo"` y llama a `PlayerPrefs.Save()` explícitamente: es el
+único lugar por el que pasan todas las muertes de verdad (el golpe que mata sin oferta, rechazar el revivir o que se
+venza su reloj, y el kill-Z). Si agregás una clave de fin de partida, escribila ahí, antes del `Save`, o se pierde
+cuando el juego no cierra bien. Lo que tenga que sobrevivir a que Android mate la app durante el video de revivir,
+como el récord, va en `GuardarRecord`, que corre al morir, antes de la oferta.
 
 `VigiaAplicacion` (ver Anuncios) guarda el progreso cuando la app pierde el foco **en cualquier escena**,
 incluidos el menú y la derrota, donde no hay menú de pausa que lo haga.
@@ -1479,7 +1481,7 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   `ZombiFasterPiel` celeste y `ZombiJefePiel` violeta. **La cápsula y los dos cubos de cada prefab son sólo
   colliders**, con los renderers apagados: los cubos son las hitboxes y no se borran (con la cabeza grande y los
   brazos de la animación, el modelo cubre casi toda la cápsula). `EnemyController.velocidadDeAnimacion` ajusta el paso del modelo a lo que camina
-  cada uno (1 el normal y el rápido, 0,45 el tanque, 2,5 el FASTER, 0,3 el jefe), por el parámetro `Paso` del
+  cada uno (1 el normal y el rápido, 0,8 el tanque y 0,55 el jefe, que caminan con `Ritmo` 0, y 2,5 el FASTER), por el parámetro `Paso` del
   controller y no por `animador.speed` (ver Las animaciones de los zombis). Antes el tanque, el jefe y el
   FASTER eran la cápsula y los cubos a la vista.
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
@@ -1636,7 +1638,7 @@ enterrado.
   `PlayerHealth`. (`pop.mp3`, que antes tampoco usaba nadie, ahora suena al agarrar cajas.)
 
 - **La pausa de impacto toca `Time.timeScale`, igual que el menú de pausa.** `Efectos` lo baja un instante y
-  lo devuelve a 1 sólo si `MenuPausa.Pausado` es falso, y lo restaura si la escena se descarga en el medio. Lo que
+  lo devuelve a 1 sólo si `MenuPausa.JuegoCongelado` es falso (pausa, oferta de revivir o derrota), y lo restaura si la escena se descarga en el medio. Lo que
   agregues que cambie `timeScale` tiene que respetar lo mismo, y lo que deba seguir andando durante la pausa de
   impacto (UI, temblor, sonidos) tiene que usar tiempo sin escalar. Para animaciones que arrancan al cargar una
   escena, topeá el delta: el primer frame dura mucho y se come la animación.
@@ -1754,7 +1756,7 @@ enterrado.
 4. ¿Suma puntos o monedas? Que salga de `DanoZombi` (`enemyType.puntos`, y las monedas que suelta), no de
    donde se produce el daño.
 5. ¿Guarda algo entre partidas? Si es progreso (monedas, mejoras), va en `Progreso` y su JSON. Los
-   `PlayerPrefs` quedan para el récord y el último modo, en el bloque de `PlayerHealth.TakeDamage`.
+   `PlayerPrefs` quedan para el récord y el último modo, en `PlayerHealth.Terminar` (el récord, en `GuardarRecord`).
 6. ¿Tiene UI? Lo que sea crema, blanco o texto oscuro lleva `PintarConTema` con su papel, o pasa por
    `Tema.Elegir` si se arma en código, y los botones van de neón (ver Tema: carbón neón). Los cuatro canvas usan `ScaleWithScreenSize`. Las escenas de juego tienen la referencia
    en 1080x1920 (vertical, herencia de móvil): parece un error pero con `match = 0.5` la escala sale de

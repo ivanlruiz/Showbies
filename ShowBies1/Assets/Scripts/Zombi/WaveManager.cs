@@ -40,25 +40,25 @@ public class WaveManager : MonoBehaviour
     public float distanciaMinimaAlJugador = 8f; // ninguno nace mas cerca que esto, si se puede
 
     [Header("Ritmo")]
-    public int zombisBase = 6;               // zombis por oleada = zombisBase + zombisPorOleada * oleada
-    public int zombisPorOleada = 2;
-    public float intervaloEntreApariciones = 0.8f;
+    public int zombisBase = 10;              // zombis por oleada = zombisBase + zombisPorOleada * oleada
+    public int zombisPorOleada = 4;
+    public float intervaloEntreApariciones = 0.35f;
     public float descansoEntreOleadas = 3f;
     public int maxZombisVivos = 60;          // techo de poblacion: si esta lleno, la oleada espera
     public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
 
     // Con las mejoras compradas el jugador pega mas y aguanta mas: sin esto, a las
-    // pocas compras las oleadas dejaban de ser un desafio. La vida crece 15 % por
+    // pocas compras las oleadas dejaban de ser un desafio. La vida crece 11 % por
     // oleada, compuesto, y el daño de bala suma 1 por nivel: las primeras compras le
     // ganan al escalado, y mas adelante hace falta sumarles la cadencia.
     [Header("Dificultad")]
-    public float crecimientoVida = 1.15f;    // la vida de cada zombi es hp * crecimientoVida^(oleada - 1)
+    public float crecimientoVida = 1.11f;    // la vida de cada zombi es hp * crecimientoVida^(oleada - 1)
     public float crecimientoDano = 1.07f;    // su golpe es daño * crecimientoDano^(oleada - 1)
 
     [Header("Monedas")]
     public Moneda monedaPrefab;              // la que sueltan los zombis al morir
-    public float crecimientoMonedas = 1.05f; // cada moneda vale crecimientoMonedas^(oleada - 1)
-    public int bonoPorOleada = 2;            // al completar la oleada N se cobran bonoPorOleada * N
+    public float crecimientoMonedas = 1.08f; // cada moneda vale crecimientoMonedas^(oleada - 1)
+    public int bonoPorOleada = 4;            // al completar la oleada N se cobran bonoPorOleada * N
 
     [Header("HUD")]
     public TMP_Text textoOleada;             // "Oleada N" y "Zombis muertos/total" en el HUD

@@ -121,9 +121,10 @@ public class EnemyController : MonoBehaviour
     private Collider[] colliders;
 
     // El festejo, pedido de Ivan: con el jugador muerto la partida sigue andando detras
-    // de la derrota (DerrotaEnLaPartida), y la horda festeja. Cada zombi se abre al
-    // costado de la pantalla que le queda mas cerca (el centro lo tapa la derrota), se
-    // da vuelta a mirar el cuerpo y, en oleadas cada PeriodoDelFestejo, salta tres veces
+    // de la derrota (DerrotaEnLaPartida), y la horda festeja. Cada zombi va a un lugar
+    // alrededor del cuerpo, en la franja de la pantalla que la derrota deja libre (la
+    // camara corre el cuerpo a un costado, CamaraJugador.MostrarElCuerpo), se da vuelta
+    // a mirarlo y, en oleadas cada PeriodoDelFestejo, salta tres veces
     // con el puño en alto y el cuerpo arqueado hacia atras. Los primeros rugidos los
     // tira el primero que entra en cada oleada.
     const float PeriodoDelFestejo = 2.4f;

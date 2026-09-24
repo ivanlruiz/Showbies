@@ -131,7 +131,6 @@ public static class ConstructorTienda
             Apagar(contenido, "Icono");
             tarjeta.icono = null;
             tarjeta.imagenIcono = null;
-            tarjeta.simbolo = null;
             Apagar(contenido, "BarraNivel");
             tarjeta.barraNivel = null;
             tarjeta.rellenoNivel = null;

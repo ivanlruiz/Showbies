@@ -181,6 +181,16 @@ public static class ConstructorAndroid
         Directory.CreateDirectory(CarpetaSalida);
         if (File.Exists(RutaResultado)) File.Delete(RutaResultado);
 
+        // Entrar y salir de play le borra a QualitySettings.asset el bloque que pone Android
+        // en Medium, sin avisar: la build saldria en el nivel por defecto y el telefono iria
+        // mucho mas lento (ver la trampa en CLAUDE.md). Se corta antes de compilar.
+        if (!CalidadDeAndroid.EstaEnMedium())
+        {
+            Fallar("Android no esta en calidad Medium en ProjectSettings/QualitySettings.asset "
+                + "(falta o cambio m_PerPlatformDefaultQuality): revertirlo con git, ver la trampa en CLAUDE.md");
+            return;
+        }
+
         var habilitadas = new List<string>();
         foreach (var e in EditorBuildSettings.scenes)
             if (e.enabled) habilitadas.Add(e.path);

@@ -264,31 +264,11 @@ public static class FotosDeLosFaroles
         return suma / n;
     }
 
-    // El nivel de calidad con el que sale la build de Android, del bloque
-    // m_PerPlatformDefaultQuality de QualitySettings.asset. Si falta (entrar y salir de play
-    // lo borra, ver la trampa en CLAUDE.md), el que se llama Medium.
+    // El nivel de calidad con el que sale la build de Android (CalidadDeAndroid). Si falta
+    // (entrar y salir de play lo borra, ver la trampa en CLAUDE.md), el que se llama Medium.
     static int CalidadDeAndroid()
     {
-        try
-        {
-            bool enElBloque = false;
-            foreach (string linea in File.ReadAllLines("ProjectSettings/QualitySettings.asset"))
-            {
-                if (linea.Contains("m_PerPlatformDefaultQuality")) { enElBloque = true; continue; }
-                if (!enElBloque) continue;
-                string limpia = linea.Trim();
-                if (limpia.StartsWith("Android:"))
-                {
-                    int nivel;
-                    if (int.TryParse(limpia.Substring("Android:".Length).Trim(), out nivel) && nivel >= 0 && nivel < QualitySettings.names.Length)
-                        return nivel;
-                }
-                if (!linea.StartsWith("    ")) break;
-            }
-        }
-        catch (IOException)
-        {
-        }
-        return System.Array.IndexOf(QualitySettings.names, "Medium");
+        int guardada = global::CalidadDeAndroid.Guardada();
+        return guardada >= 0 ? guardada : global::CalidadDeAndroid.Medium;
     }
 }

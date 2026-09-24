@@ -25,7 +25,7 @@ public class TarjetaMejora : MonoBehaviour
     public CanvasGroup grupo;
     public UnityEngine.UI.Image borde, franja, icono, imagenIcono, fondoBoton, destello, brillo;
     public RectTransform barraNivel, rellenoNivel, raizBoton;
-    public TMPro.TMP_Text simbolo, nombre, nivel, valorActual, valorSiguiente, descripcion, faltan, precio, textoTope, estampa;
+    public TMPro.TMP_Text nombre, nivel, valorActual, valorSiguiente, descripcion, faltan, precio, textoTope, estampa;
     public GameObject flecha, grupoPrecio;
     public UnityEngine.UI.Button boton;
     public BotonJugoso jugoBoton;
@@ -158,8 +158,6 @@ public class TarjetaMejora : MonoBehaviour
             imagenIcono.sprite = mejora.icono;
             imagenIcono.gameObject.SetActive(mejora.icono != null);
         }
-        // Con un ícono de verdad la letra de respaldo quedaría encima.
-        if (simbolo != null) simbolo.gameObject.SetActive(mejora.icono == null);
 
         if (boton != null)
         {
@@ -191,8 +189,6 @@ public class TarjetaMejora : MonoBehaviour
         // mejora, que ya es fijo para siempre.
         if (nombre != null) nombre.text = Textos.De("mejora_" + Mejora.id + "_nombre");
         if (descripcion != null) descripcion.text = Textos.De("mejora_" + Mejora.id + "_unidad");
-        // La letra grande tambien depende del idioma: la V de VIDA no dice nada en MAX HEALTH.
-        if (simbolo != null) simbolo.text = Textos.De("mejora_" + Mejora.id + "_simbolo");
 
         if (nivel != null)
             nivel.text = Mejora.TieneTope

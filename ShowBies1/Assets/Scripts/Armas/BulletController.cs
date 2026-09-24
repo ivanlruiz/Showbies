@@ -16,8 +16,8 @@ public class BulletController : MonoBehaviour
 
     // Pool de balas.
     //
-    // Son 20 tiros por segundo de base, hasta 108 con la cadencia al tope y la
-    // caja de arma, con un techo de 120. Cada una era un Instantiate y un
+    // Son de 4 a 20 tiros por segundo con la mejora, hasta 60 con la caja de arma
+    // y mas con la furia, con un techo de 120. Cada una era un Instantiate y un
     // Destroy: de lejos la mayor fuente de basura del juego.
     private static readonly Stack<BulletController> pool = new Stack<BulletController>();
 
