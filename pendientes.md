@@ -68,19 +68,6 @@ diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verific�
 - **Cada bala empuja al zombi que toca** (hipótesis). La bala no es trigger y aparece de golpe adentro: PhysX lo
   separa empujándolo, más a menos FPS. Con el barrido se va solo; si no, `IsTrigger` en `Bullet.prefab`.
 
-### Tutorial
-
-- **Los zombis del paso de la granada desaparecen al tirarla y la granada explota sobre nada** (media). El paso
-  termina en el cuadro en que existe un `Granade` (`TutorialManager.cs:67`) y el siguiente destruye a los zombis con un
-  `Destroy` seco, 0,8 s antes de que la granada caiga. **Arreglo**: pasar de paso cuando la granada ya explotó, con
-  ~1 s para ver los cadáveres, y sacar a los que sobrevivan con partículas.
-- **Agarrar la caja de balas saltea la de arma** (media). El paso Arma se da por cumplido con `theGun.MejoraActiva`
-  (`TutorialManager.cs:79`), que prende cualquier caja: con la de balas del paso anterior, el texto salta al del reloj
-  ("el cargador más grande se queda para siempre", falso para esa caja) y la de arma se destruye sin tocarla.
-  **Arreglo**: que el paso espere a que desaparezca su caja, como el de las cajas.
-- **Cajas y zombis del tutorial nacen a distancias fijas del jugador sin mirar las paredes** (baja): pegado a la pared
-  norte, la caja de arma nace del otro lado y el tutorial se traba. **Arreglo**: acotar el punto a ±44 en `Spawnear`.
-
 ### Sonido
 
 - **Una granada que mata satura la salida** (media): la explosión suena casi a 0 dBFS y en el mismo cuadro se le suman
@@ -95,20 +82,6 @@ diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verific�
   en el teléfono quedan a más de 30 ms, un eco. Además anuncia 14 cosas distintas, el ¡HAS MUERTO! incluido.
 - **La barra del nivel toca siempre la misma nota** al cruzar cada nivel (baja; `VentanaLogros.cs:345`): cuenta los
   niveles cruzados en ese cuadro, no desde que empezó a llenarse.
-
-### Zombis
-
-- **Festejo: los lugares detrás de las paredes no se alcanzan** (baja) y esos zombis corren en el lugar para siempre,
-  de espaldas al cuerpo. **Arreglo**: si en ~0,5 s no se acercó, festejar donde está.
-- **En la ciudad las manchas de sangre quedan tapadas por las veredas** (baja): van a 0,1 m y la vereda mide 0,14.
-- **El cadáver del tanque sale despedido igual que el de un normal** (baja): `empujeAlMorir / Max(1, escala)` solo
-  frena al jefe; el CLAUDE.md dice que el tanque casi no se mueve. **Arreglo**: dividir por la escala relativa al
-  normal (0,5).
-- **Un zombi que muere en el aire queda flotando** (baja): el cadáver pasa a kinematic donde está.
-- **Barras de vida superpuestas** (baja): todos los fondos se dibujan antes que todos los rellenos. **Arreglo**: un
-  `SortingGroup` por barra.
-- **Oleada del jefe: el jefe y el primer zombi salen en el mismo cuadro** (baja; confianza baja), a veces en el mismo
-  punto. **Arreglo**: esperar 1-2 s después del jefe.
 
 ### Rendimiento
 
@@ -144,6 +117,34 @@ diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verific�
   aprieta (`BotonJugoso`).
 - **Ciudad**: las cajas (hasta 30 s) y monedas (hasta 20 s) que ya estaban en el piso cuando sale la ciudad quedan
   tapadas por los edificios, y los autos no cuentan como tapadores (1,8 % del área).
+- **En PC la granada comprada no tiene botón ni aviso**: nada dice que se tira con ESPACIO, y en la recarga no hay
+  respuesta. **Arreglo**: `showOnPC: 1` en el `ConditionalShow` de `BotonGranada` de las tres escenas (en Unity, junto
+  con la fase 2 del HUD) y, en `JoystickGranada`, en PC la etiqueta "GRANADA (ESPACIO)" y el botón sin raycasts (el clic
+  ya dispara el arma).
+- **La diaria del día 1 con OTRA VEZ**: ahora la tienda que se abre desde la derrota espera a la diaria, pero OTRA VEZ
+  no pasa por el menú, así que quien solo juega así no la ve. Opcional: una insignia en MENÚ de la derrota con lo que
+  espera en el menú (después de la fase 2, que rehace la derrota).
+
+### Rendimiento: hacerlo en Unity y medirlo en el teléfono
+
+Aprobado por el revisor, pero son materiales, prefabs o ajustes del proyecto, y conviene ver el antes y el después con
+el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
+
+- **El contacto de los zombis** (lo aprobaron dos revisores): cada zombi recibe un `OnCollisionStay` por paso de física
+  por el piso y por cada vecino, solo para encontrar al jugador. **Arreglo**: que lo avise el jugador
+  (`PlayerController.OnCollisionEnter/Stay` → `zombi.TocarAlJugador()`) y sacar los de `EnemyController`. Toca el
+  camino del golpe: correr **Golpe animado**, **Derrota encima de la partida** y **Grabar al jefe** antes y después.
+- **Las balas**: sin sombra (`Bullet.prefab`) y con GPU Instancing (`Bullet.mat`): hoy cada bala son dos draw calls, y
+  con la caja de arma y la furia hay cien en pantalla.
+- **Los zombis**: GPU Instancing en `TT_demo.mat` y las cuatro `Zombi*Piel.mat` (la cabeza es un draw call aparte),
+  mipmaps en las manchas de sangre, y probar el Dynamic Batching en Android (quedárselo solo si baja el tiempo de
+  cuadro).
+- **El piso**: sin Specular Highlights ni Reflections en los tres materiales (por el inspector: tocar el float del
+  YAML no prende la keyword) y sin proyectar sombra. Mostrarle a Ivan el antes y el después.
+- **Android**: Blit Type en Auto y la pre-rotación de Vulkan prendida; probar en dos o tres teléfonos, girándolos en
+  plena partida.
+- **Los Animators de los zombis** (Humanoid, ~27 huesos como GameObjects): si pesan más de ~2 ms por cuadro, Optimize
+  Game Objects exponiendo `HEAD_CONTAINER`.
 
 ## 3. Para decidir
 
@@ -233,6 +234,19 @@ Todo lo de la auditoría se aplicó sin Unity: compila (con el chequeo de refere
 - **El menú en 20:9**: las ventanas de misiones y logros se ven un 8 % más chicas, para que entre el halo.
 - **720p nativo en el teléfono** (antes quedaba en 540): medir los FPS en la oleada 10+ con 35 zombis; si no llega a
   60, bajar `AltoMinimoMovil`.
+- **El tutorial**: tirar la granada al grupo y afuera (el paso cambia después de la explosión, los muertos se caen y
+  los que quedan se van con partículas); en el paso 4 agarrar la caja de balas (sigue "Cógela" hasta agarrar la de
+  arma); y correr contra una pared antes de los pasos 3, 4 y 5 (todo tiene que nacer del lado de adentro).
+- **La diaria antes que la tienda**: derrota → MEJORAS con la diaria disponible, cobrando, con vídeo y cerrándola con
+  el atrás. La tienda (y la flecha de la primera compra) tienen que llegar después; sin diaria, abre como siempre.
+- **El desbloqueo del libre**: completar la oleada 11 (con **ShowBies > Progreso**) y ver el aviso en la partida y el
+  "¡NUEVO!" en el panel de modos, también cambiando de idioma.
+- **La horda**: el festejo con una muerte contra la pared oeste (**Derrota encima de la partida**), las barras de vida
+  cruzadas en una horda apretada, y las manchas de sangre, que ahora van a 0,2 m (para no quedar debajo de las
+  veredas de la ciudad) y tapan unos 20 cm de lo que las pisa durante sus 2 s.
+- **Las medallas de logros**: cada familia con su símbolo de una o dos letras, que entre en el círculo.
+- **La build**: ahora se niega con un paquete, un nombre o un orden de escenas que no son los de Play, y por
+  línea de comandos sale con código 1 si falla. Hacer una APK y un AAB para ver que sigan saliendo.
 
 ## 5. Antes de integrar la red de anuncios
 
