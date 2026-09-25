@@ -200,6 +200,7 @@ public static class PruebasMejoras
             ProbarDanoAlJugador(informe);
             ProbarCajasYMonedas(informe);
             ProbarFaroles(informe);
+            ProbarLaHorda(informe);
             ProbarCalidadDeAndroid(informe);
             ProbarPuntoDeLaGranada(informe);
             ProbarGrisDePocaVida(informe);
@@ -1216,6 +1217,121 @@ public static class PruebasMejoras
             if (m != null && m.id == id) return m.nivel;
         }
         return -1;
+    }
+
+    // La horda, de la auditoria del 24/9:
+    // - No aparece a la vista (EnemyController.SeVeriaAlAparecer): a los 8 m de distancia
+    //   minima al jugador todavia se esta en cuadro. Con la camara de WaveMode, en 16:9 y 20:9.
+    // - En el festejo, el que no se acerca a su lugar (detras de una pared invisible, adentro
+    //   de un tanque) deja de ir: caminando hacia el no se traba, parado contra algo si.
+    // - El cadaver sale despedido segun cuanto mas grande que el normal es, con la escala de
+    //   cada prefab: el tanque salia igual que un normal.
+    // - La mancha de sangre queda por encima de la vereda y el cordon de la ciudad, que la
+    //   tapaban.
+    static void ProbarLaHorda(Informe inf)
+    {
+        inf.Verdadero("horda: sin camara no se descarta ningun punto", !EnemyController.SeVeriaAlAparecer(null, Vector3.zero));
+
+        Vector3 posicionCamara = Vector3.zero, jugador = Vector3.zero;
+        Quaternion rotacionCamara = Quaternion.identity;
+        float campoVisual = 0f, cerca = 0.3f, lejos = 1000f;
+        LeerEscena("Assets/Escenas/WaveMode.unity", e =>
+        {
+            var seguidor = Buscar<CamaraJugador>(e);
+            var control = Buscar<PlayerController>(e);
+            var lente = seguidor != null ? seguidor.GetComponent<Camera>() : null;
+            if (lente == null || control == null) return;
+            posicionCamara = lente.transform.position;
+            rotacionCamara = lente.transform.rotation;
+            campoVisual = lente.fieldOfView;
+            cerca = lente.nearClipPlane;
+            lejos = lente.farClipPlane;
+            jugador = control.transform.position;
+        });
+        if (inf.Verdadero("horda: esta la camara del juego en WaveMode", campoVisual > 0f))
+        {
+            var objeto = EditorUtility.CreateGameObjectWithHideFlags("prueba_camara_horda", HideFlags.HideAndDontSave, typeof(Camera));
+            try
+            {
+                var camara = objeto.GetComponent<Camera>();
+                camara.enabled = false;
+                camara.transform.SetPositionAndRotation(posicionCamara, rotacionCamara);
+                camara.fieldOfView = campoVisual;
+                camara.nearClipPlane = cerca;
+                camara.farClipPlane = lejos;
+                foreach (var pantalla in new[] { new Vector2(16f, 9f), new Vector2(20f, 9f) })
+                {
+                    camara.aspect = pantalla.x / pantalla.y;
+                    string en = " (" + pantalla.x + ":" + pantalla.y + ")";
+                    Func<float, float, bool> seVe = (x, z) =>
+                        EnemyController.SeVeriaAlAparecer(camara, new Vector3(jugador.x + x, 0f, jugador.z + z));
+                    inf.Verdadero("horda: a 8 m por delante, la distancia minima, todavia se ve y no aparece ahi" + en, seVe(0f, 8f));
+                    inf.Verdadero("horda: a 9 m al costado se ve y no aparece ahi" + en, seVe(9f, 0f));
+                    inf.Verdadero("horda: a 20 m al costado no se ve" + en, !seVe(20f, 0f));
+                    inf.Verdadero("horda: a 12 m por detras no se ve" + en, !seVe(0f, -12f));
+                    inf.Verdadero("horda: a 16 m por delante no se ve" + en, !seVe(0f, 16f));
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(objeto);
+            }
+        }
+
+        // El festejo, a paso de fisica: caminando a 2 m/s (el jefe, el mas lento) no se traba;
+        // parado a 3 m de su lugar, deja de ir a los EsperaSinAcercarse.
+        float masCerca = float.PositiveInfinity, desde = 0f;
+        bool trabado = false;
+        for (int paso = 0; paso <= 100 && !trabado; paso++)
+            trabado = EnemyController.SinAcercarse(10f - 2f * 0.02f * paso, 0.02f * paso, ref masCerca, ref desde);
+        inf.Verdadero("horda: festejo, caminando hacia su lugar no se traba", !trabado);
+        masCerca = float.PositiveInfinity;
+        desde = 0f;
+        float trabadoEn = -1f;
+        for (int paso = 0; paso <= 100 && trabadoEn < 0f; paso++)
+            if (EnemyController.SinAcercarse(3f, 0.02f * paso, ref masCerca, ref desde)) trabadoEn = 0.02f * paso;
+        inf.Cerca("horda: festejo, parado contra una pared deja de ir a su lugar al rato",
+                  EnemyController.EsperaSinAcercarse, trabadoEn, 0.021);
+
+        // El empujon del cadaver, con la escala de la raiz de cada prefab.
+        var escalas = new Dictionary<string, float>();
+        foreach (string nombre in new[] { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/" + nombre + ".prefab");
+            if (prefab != null) escalas[nombre] = prefab.transform.localScale.y;
+        }
+        if (inf.Igual("horda: estan los cinco prefabs de zombi", 5, escalas.Count))
+        {
+            inf.Cerca("horda: la vara del empujon es la escala del zombi normal", escalas["Zombi"], EnemyController.EscalaDelNormal, 1e-6);
+            inf.Cerca("horda: el cadaver del normal sale con todo el empujon", 1, EnemyController.VelocidadDelEmpuje(1f, escalas["Zombi"]), 1e-6);
+            inf.Cerca("horda: el del rapido, mas chico, como el normal", 1, EnemyController.VelocidadDelEmpuje(1f, escalas["ZombiRapido"]), 1e-6);
+            inf.Cerca("horda: el del FASTER, mas chico, como el normal", 1, EnemyController.VelocidadDelEmpuje(1f, escalas["ZombiFASTER"]), 1e-6);
+            inf.Verdadero("horda: el del tanque sale a la mitad o menos (salia como el normal)",
+                          EnemyController.VelocidadDelEmpuje(1f, escalas["ZombiTanque"]) <= 0.5f + 1e-6f);
+            inf.Verdadero("horda: el del jefe sale a un cuarto o menos",
+                          EnemyController.VelocidadDelEmpuje(1f, escalas["ZombiBOSS"]) <= 0.25f + 1e-6f);
+        }
+
+        // La mancha, por encima de lo mas alto que se pisa en la ciudad: la vereda de cada
+        // manzana y su cordon (cubos derechos, asi que el techo es el centro mas medio alto).
+        var ciudad = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Escenarios/Ciudad.prefab");
+        if (inf.Verdadero("horda: esta el prefab de la ciudad", ciudad != null))
+        {
+            float techo = float.NegativeInfinity;
+            int piezas = 0;
+            foreach (Transform manzana in ciudad.GetComponentsInChildren<Transform>(true))
+            {
+                if (manzana.name != "Manzana") continue;
+                foreach (Transform pieza in manzana)
+                {
+                    piezas++;
+                    techo = Mathf.Max(techo, pieza.position.y + Mathf.Abs(pieza.lossyScale.y) * 0.5f);
+                }
+            }
+            inf.Verdadero("horda: la ciudad tiene manzanas con vereda", piezas > 0);
+            inf.Verdadero("horda: la mancha de sangre queda por encima de la vereda y el cordon de la ciudad (" + Numero(techo, "0.00") + " m)",
+                          piezas > 0 && ManchaDeSangre.AlturaSobreElPiso > techo);
+        }
     }
 
     // 7. Migracion desde v1, archivos rotos y normalizacion.

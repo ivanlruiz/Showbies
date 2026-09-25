@@ -132,20 +132,24 @@ public class GeneradorZombis : MonoBehaviour
         }
     }
 
-    // Un punto al azar del mapa, lejos del jugador: hasta unos intentos, y si no sale
-    // ninguno, el ultimo (en un mapa de casi 100 m no deberia pasar).
+    // Un punto al azar del mapa, lejos del jugador y fuera de la vista: hasta unos intentos,
+    // y si no sale ninguno, el ultimo (en un mapa de casi 100 m no deberia pasar). A los 8 m
+    // todavia se esta en pantalla (ver EnemyController.SeVeriaAlAparecer), y hasta el 25/9
+    // uno de cada 30 a 45 zombis se materializaba a la vista, a veces un FASTER que pegaba
+    // antes de que se lo viera venir.
     private Vector3 PosicionLejosDelJugador()
     {
         Transform jugador = PlayerHealth.instance != null ? PlayerHealth.instance.transform : null;
+        Camera camara = Camera.main;
         float minimo = distanciaMinimaAlJugador * distanciaMinimaAlJugador;
         Vector3 posicion = Vector3.zero;
-        for (int intento = 0; intento < 6; intento++)
+        for (int intento = 0; intento < 10; intento++)
         {
             posicion = new Vector3(Random.Range(-48f, 48f), 0.5f, Random.Range(-45f, 45f));
             if (jugador == null) break;
             Vector3 d = posicion - jugador.position;
             d.y = 0f;
-            if (d.sqrMagnitude >= minimo) break;
+            if (d.sqrMagnitude >= minimo && !EnemyController.SeVeriaAlAparecer(camara, posicion)) break;
         }
         return posicion;
     }

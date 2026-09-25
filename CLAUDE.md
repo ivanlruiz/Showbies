@@ -373,7 +373,9 @@ Los dos generadores respetan el mismo techo, `maxZombisVivos` (60 por defecto, e
 consultando `EnemyController.ZombisVivos`:
 
 - **`GeneradorZombis`** (free mode) — cinco corrutinas paralelas, una por tipo, cada una con un `while`
-  infinito y su `WaitForSeconds`, en un punto al azar a más de `distanciaMinimaAlJugador` (8 m) del jugador. Si se
+  infinito y su `WaitForSeconds`, en un punto al azar a más de `distanciaMinimaAlJugador` (8 m) del jugador **y
+  fuera de la vista** (`EnemyController.SeVeriaAlAparecer`: a 8 m todavía se está en pantalla, y hasta el 25/9 uno de
+  cada 30 a 45 zombis se materializaba a la vista). Si se
   llegó al techo, saltea el spawn y sigue esperando. Al subir de nivel guarda el progreso. **Escala con el
   tiempo:** `NivelActual` sube uno cada `segundosPorNivel` (45 s de tiempo escalado, así la pausa lo congela) y
   cada zombi aparece con vida × `crecimientoVida`^(nivel−1), daño × `crecimientoDano`^(nivel−1) y monedas ×
@@ -384,10 +386,12 @@ consultando `EnemyController.ZombisVivos`:
      (`textoOleada`) muestra "Oleada N" y abajo "Zombis muertos/total" de esa oleada, jefe incluido; se
      actualiza en `Update` sólo cuando cambia, y los caídos por el kill-Z cuentan como muertos para que
      llegue al total justo cuando la oleada termina.
-  2. Si la oleada es múltiplo de `jefeCadaOleadas` (10), saca un `jefe`.
+  2. Si la oleada es múltiplo de `jefeCadaOleadas` (10), saca un `jefe`, y el primero de los demás sale
+     `esperaTrasElJefe` (1,5 s) después y en otro punto: salían en el mismo cuadro, a veces en el mismo punto, con el
+     chico adentro del jefe.
   3. Saca `zombisBase + zombisPorOleada × oleada` zombis (10 + 4n: 14 en la 1, 50 en la 10; pedido de Ivan antes de
-     la prueba cerrada, antes eran 6 + 2n), de a uno cada `intervaloEntreApariciones` (0,35 s, antes 0,8 s), en un punto al azar de `spawnPoints` a más de `distanciaMinimaAlJugador` (8 m) del jugador (si todos
-     están cerca, el más lejano: antes nacían encima y pegaban en el acto). El tipo sale por sorteo
+     la prueba cerrada, antes eran 6 + 2n), de a uno cada `intervaloEntreApariciones` (0,35 s, antes 0,8 s), en un punto al azar de `spawnPoints` a más de `distanciaMinimaAlJugador` (8 m) del jugador y fuera de la vista (si todos
+     están cerca, el más lejano: antes nacían encima y pegaban en el acto; si los lejanos se ven, uno de esos). El tipo sale por sorteo
      entre los `tipos` ya habilitados (`desdeOleada`), con `peso` relativo: normal desde la 1, rápido desde
      la 3, tanque desde la 6 y FASTER desde la 9. Si se llegó al techo, espera.
   4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos. Si el
@@ -517,15 +521,18 @@ conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m
   zarpazo de justo antes dejaba el intervalo corriendo y el primer choque no contaba, o pegaba en plena carga y la cortaba.
 - **Morir dejó de ser "apagar el objeto".** `EnemyController.Morir` saca al zombi de la cuenta en el acto
   (`DejarDeContar`: `ZombisVivos--`, deja de ser jefe, se esconde la barra) y **deja el GameObject prendido
-  `duracionDeLaMuerte` (1,4 s)** mientras se desploma, con los colliders apagados y el Rigidbody kinematic; recién
+  `duracionDeLaMuerte` (1,4 s)** mientras se desploma, con los colliders apagados y el Rigidbody kinematic (si murió
+  en el aire, `Update` lo baja hasta el piso con la gravedad: hasta el 25/9 se desplomaba flotando); recién
   entonces llama a `Devolver`. El estado Morir va a velocidad 1,35 para que los 1,83 s del clip entren en esa ventana.
   **Para todo el resto del juego el cadáver ya no existe**: `Vivo` (que es `enUso`) da falso, la oleada lo cuenta
   muerto, las balas lo atraviesan y su lugar en el techo de población queda libre.
 - **El cadáver sale despedido hacia donde iba el golpe.** `DanoZombi` recibe un `empuje` opcional —la bala pasa su
   `transform.forward` y la granada, del centro de la explosión hacia afuera— y el cadáver se desliza en esa dirección
   frenando solo (`empujeAlMorir` 5 m/s, `frenadoDelEmpuje` 14 m/s²: unos 90 cm en un tercio de segundo), inclinándose de
-  espaldas y enderezándose a medida que frena. **Se divide por la escala del zombi**, así el tanque y el jefe casi no se
-  mueven. Quien no pasa dirección —el kill-Z, el despeje del revivir, el medidor— lo deja caer donde está. Sin esto
+  espaldas y enderezándose a medida que frena. **Se divide por cuántas veces más grande que el normal es el zombi**
+  (`VelocidadDelEmpuje`, con la escala del normal, 0,5, en `EscalaDelNormal`), así el tanque sale a la mitad (22 cm) y
+  el jefe a un cuarto (6 cm); los más chicos, como el normal. Hasta el 25/9 se dividía por la escala a secas y el
+  tanque volaba como un normal. Quien no pasa dirección —el kill-Z, el despeje del revivir, el medidor— lo deja caer donde está. Sin esto
   todos caían igual, en la dirección que trae el clip, y un tiro por la espalda se veía como uno de frente. Se mueve la
   **raíz** y no el modelo: durante el desplome `FixedUpdate` no corre, así que nadie más la está tocando.
 - **Hay techo de cadáveres** (`MaxCadaveres` 12, `MaxCadaveresMovil` 5): un cadáver es una malla con huesos
@@ -550,7 +557,9 @@ conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m
 zombis que mueren de un tiro nunca la muestran. Es un objeto aparte que sigue al zombi y mira a la cámara, no
 un hijo: los zombis rotan hacia el jugador y tienen escalas distintas, y una barra hija heredaría las dos
 cosas. Son dos `SpriteRenderer` sobre un sprite blanco hecho en código (estático, con su reset), no un Canvas
-por zombi. La fracción sale de la vida con la que apareció el zombi (`vidaMaxima`), así que un escalado de vida
+por zombi, **en un `SortingGroup`**: sin él el orden de los sprites mandaba sobre la distancia, todos los fondos se
+dibujaban antes que todos los rellenos, y con dos barras pisándose el relleno de la de atrás se veía a través de la
+parte vacía de la de adelante. La fracción sale de la vida con la que apareció el zombi (`vidaMaxima`), así que un escalado de vida
 por oleada no la rompe mientras se aplique antes del primer golpe. Cuando el zombi muere la barra se apaga y queda
 guardada con él: la aparición siguiente la prende con su primer golpe que no mata, sin crear otra (el pool es por
 prefab, así que la altura sirve). Se destruye con el zombi.
@@ -1444,7 +1453,10 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   (también la del jefe, antes que sus patrones): cada zombi va a un lugar en esa franja libre, alrededor del cuerpo
   (de 5 m a su izquierda a 1,8 m a su derecha, donde empiezan los textos, y 4,5 m hacia arriba y hacia abajo, nunca a
   menos de 1,6 m de él), se da vuelta a mirarlo y festeja. Antes, con el cuerpo tapado en el centro, se abrían a los
-  costados de la pantalla, a 9-12,5 m, lejos de él. El festejo va **en oleadas cada 2,4 s**: tres saltos con el puño en alto (el estado `Festejar`,
+  costados de la pantalla, a 9-12,5 m, lejos de él. **El que no se acerca a su lugar en medio segundo prueba otro, y
+  si tampoco, festeja donde está** (`EnemyController.SinAcercarse`): el lugar se sortea sin mirar si se puede pisar, y
+  hasta el 25/9 los que caían detrás de una pared invisible, o adentro de un tanque o del jefe, quedaban corriendo
+  contra eso, de espaldas al cuerpo. El festejo va **en oleadas cada 2,4 s**: tres saltos con el puño en alto (el estado `Festejar`,
   que es el zarpazo con el Motion Time entre la mano al hombro, 0,15 s, y sobre la cabeza, 0,29 s), el cuerpo
   arqueado hacia atrás como el jefe al invocar, y un desfase de hasta 0,45 s por zombi para que no sea un baile
   sincronizado. **Lo que se lee desde la cámara es el salto** (medio alto del zombi, con estirón): a esa distancia un
@@ -1787,7 +1799,10 @@ enterrado.
   (que cada texto tenga los dos idiomas y los mismos `{n}`, y que existan todos los ids que piden el código, las
   mejoras, los prefabs y las escenas) y **el tema** (que el de siempre sea el neón, que el claro de prueba devuelva el color de la escena, que cada papel del
   oscuro tenga su color y que lo que se escribe encima se lea: el contraste se mide con la fórmula de la WCAG, no se
-  mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, que el texto de cada
+  mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, la horda (que no aparezca
+  a la vista con la cámara de WaveMode, que en el festejo deje de ir a un lugar al que no llega, que el cadáver del
+  tanque y del jefe casi no salga despedido y que la mancha de sangre quede por encima de la vereda y el cordón de la
+  ciudad), que el texto de cada
   misión diga cuánto pide, que `Economia.ZombisPorPartida` sea la suma de lo que saca el `WaveManager` de WaveMode, que
   los avisos de la partida no se pisen, que todo botón de vidrio del menú lleve su `PintarConTema`, que la tienda sea
   de carbón neón en los dos temas (sin `PintarConTema`, con sus brillos y con el contraste de cada texto medido) y los

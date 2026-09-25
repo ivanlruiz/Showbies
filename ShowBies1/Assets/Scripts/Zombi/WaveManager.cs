@@ -43,6 +43,7 @@ public class WaveManager : MonoBehaviour
     public int zombisBase = 10;              // zombis por oleada = zombisBase + zombisPorOleada * oleada
     public int zombisPorOleada = 4;
     public float intervaloEntreApariciones = 0.35f;
+    public float esperaTrasElJefe = 1.5f;    // entre el jefe y el primer zombi de su oleada
     public float descansoEntreOleadas = 3f;
     public int maxZombisVivos = 60;          // techo de poblacion: si esta lleno, la oleada espera
     public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
@@ -130,9 +131,16 @@ public class WaveManager : MonoBehaviour
             ActualizarHud();
             yield return Descanso();
 
+            // El jefe sale solo y el primero de los demas, un rato despues y en otro punto:
+            // salian en el mismo cuadro, y una de cada tres o cuatro veces en el mismo punto,
+            // con el chico entero adentro de la capsula del jefe (1,44 m de radio y masa 1e9),
+            // de donde la fisica lo sacaba empujandolo sobre todo hacia abajo, contra el piso.
+            // En esperaTrasElJefe el jefe camina 3 m y deja el punto libre.
+            Transform puntoDelJefe = null;
             if (conJefe)
             {
-                Aparecer(jefe);
+                puntoDelJefe = Aparecer(jefe);
+                if (puntoDelJefe != null) yield return new WaitForSeconds(esperaTrasElJefe);
             }
 
             for (int i = 0; i < cantidad; i++)
@@ -142,7 +150,7 @@ public class WaveManager : MonoBehaviour
                     yield return null;
                 }
 
-                Aparecer(ElegirTipo());
+                Aparecer(ElegirTipo(), i == 0 ? puntoDelJefe : null);
                 yield return new WaitForSeconds(intervaloEntreApariciones);
             }
 
@@ -239,40 +247,50 @@ public class WaveManager : MonoBehaviour
         return null;
     }
 
-    // Un punto de aparicion al azar lejos del jugador: si el jugador esta parado al
-    // lado de uno, el zombi nacia encima y pegaba en el acto. Si todos estan cerca,
-    // el mas lejano.
-    private Transform ElegirPunto()
+    // Un punto de aparicion al azar lejos del jugador y fuera de la vista: si el jugador
+    // esta parado al lado de uno, el zombi nacia encima y pegaba en el acto, y a los 8 m
+    // todavia se esta en pantalla (ver EnemyController.SeVeriaAlAparecer), donde se
+    // materializaba de la nada: kiteando cerca del punto este u oeste, uno de cada cuatro.
+    // Si todos los lejanos se ven, el primero de esos; si todos estan cerca, el mas lejano.
+    // "evitar" es donde acaba de salir el jefe: solo si no queda otro.
+    private Transform ElegirPunto(Transform evitar)
     {
         Transform jugador = PlayerHealth.instance != null ? PlayerHealth.instance.transform : null;
-        if (jugador == null) return spawnPoints[Random.Range(0, spawnPoints.Length)];
-
+        Camera camara = Camera.main;
         float minimo = distanciaMinimaAlJugador * distanciaMinimaAlJugador;
         int inicio = Random.Range(0, spawnPoints.Length);
-        Transform masLejano = null;
+        Transform lejosPeroALaVista = null, masLejano = null;
         float mayor = -1f;
         for (int i = 0; i < spawnPoints.Length; i++)
         {
             Transform punto = spawnPoints[(inicio + i) % spawnPoints.Length];
-            if (punto == null) continue;
+            if (punto == null || punto == evitar) continue;
+            if (jugador == null) return punto;
             Vector3 d = punto.position - jugador.position;
             d.y = 0f;
             float distancia = d.sqrMagnitude;
-            if (distancia >= minimo) return punto;
+            if (distancia >= minimo)
+            {
+                if (!EnemyController.SeVeriaAlAparecer(camara, punto.position)) return punto;
+                if (lejosPeroALaVista == null) lejosPeroALaVista = punto;
+            }
             if (distancia > mayor) { mayor = distancia; masLejano = punto; }
         }
-        return masLejano;
+        if (lejosPeroALaVista != null) return lejosPeroALaVista;
+        if (masLejano != null) return masLejano;
+        return evitar;
     }
 
-    private void Aparecer(GameObject prefab)
+    // Devuelve el punto donde salio, o null si no salio.
+    private Transform Aparecer(GameObject prefab, Transform evitar = null)
     {
-        if (prefab == null || spawnPoints.Length == 0) return;
+        if (prefab == null || spawnPoints.Length == 0) return null;
 
-        Transform punto = ElegirPunto();
-        if (punto == null) return;
+        Transform punto = ElegirPunto(evitar);
+        if (punto == null) return null;
 
         var enemigo = EnemyController.Aparecer(prefab, punto.position);
-        if (enemigo == null) return;
+        if (enemigo == null) return null;
 
         // Antes de su primer golpe, que es cuando calcula la vida. Los .asset no se
         // tocan: son los stats de la oleada 1.
@@ -282,6 +300,7 @@ public class WaveManager : MonoBehaviour
         enemigo.monedaPrefab = monedaPrefab;
         enemigo.EsJefe = prefab == jefe;
         zombisDeLaOleada.Add(new ZombiAnotado { zombi = enemigo, aparicion = enemigo.NumeroDeAparicion });
+        return punto;
     }
 
     // Los zombis muertos, o caidos por el kill-Z, ya no siguen vivos en la aparicion

@@ -5,8 +5,8 @@ using UnityEngine;
 //
 // Es un objeto aparte que sigue al zombi, no un hijo: los zombis rotan hacia el
 // jugador y tienen escalas distintas (el jefe x2, el FASTER x0.3), y una barra
-// hija heredaria las dos cosas. Son dos SpriteRenderer y no un Canvas: con
-// decenas de zombis, un canvas por barra cuesta mucho mas en el telefono.
+// hija heredaria las dos cosas. Son dos SpriteRenderer en un SortingGroup y no un
+// Canvas: con decenas de zombis, un canvas por barra cuesta mucho mas en el telefono.
 public class BarraDeVida : MonoBehaviour
 {
     public float ancho = 1.2f;
@@ -39,6 +39,13 @@ public class BarraDeVida : MonoBehaviour
         var barra = new GameObject("BarraDeVida").AddComponent<BarraDeVida>();
         barra.zombi = zombi;
         barra.altura = AlturaDeLaCabeza(zombi) + barra.margenSobreLaCabeza;
+
+        // Cada barra se ordena entera contra las otras, por distancia a la camara, y adentro
+        // el fondo antes que el relleno. Sin el grupo, el orden de los sprites manda sobre la
+        // distancia: todos los fondos se dibujaban antes que todos los rellenos, y con dos
+        // barras pisandose (zombis de costado en la horda) el relleno de la de atras se veia a
+        // traves de la parte vacia de la de adelante, justo al elegir a cual rematar.
+        barra.gameObject.AddComponent<UnityEngine.Rendering.SortingGroup>();
 
         var fondo = barra.Capa("Fondo", new Color(0f, 0f, 0f, 0.6f), 0);
         fondo.transform.localPosition = new Vector3(-barra.ancho / 2f, 0f, 0f);

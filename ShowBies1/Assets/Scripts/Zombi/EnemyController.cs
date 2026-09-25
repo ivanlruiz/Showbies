@@ -99,12 +99,17 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float saltoDelFestejo = 0.5f;
 
     [Header("Empujon al morir")]
-    [Tooltip("A que velocidad sale despedido el cadaver en la direccion del tiro, en m/s. Se divide por la escala del zombi: el tanque y el jefe casi no se mueven.")]
+    [Tooltip("A que velocidad sale despedido el cadaver del zombi normal en la direccion del tiro, en m/s. Los mas grandes, dividido por cuantas veces mas grandes que el normal son (ver VelocidadDelEmpuje): el tanque sale a la mitad y el jefe a un cuarto. Los mas chicos, como el normal.")]
     [SerializeField] private float empujeAlMorir = 5f;
     [Tooltip("Cuanto frena ese empujon, en m/s2. Con 5 y 14 el cadaver recorre unos 90 cm en un tercio de segundo.")]
     [SerializeField] private float frenadoDelEmpuje = 14f;
     [Tooltip("Cuanto se va de espaldas el cadaver al salir despedido, en grados. Se endereza con el empujon.")]
     [SerializeField] private float inclinacionDelEmpuje = 12f;
+
+    // La escala de la raiz del zombi normal (Zombi.prefab), que es la vara del empujon: los
+    // demas salen despedidos segun cuanto mas grandes que el son. Si cambia la del prefab,
+    // la prueba de logica lo avisa.
+    public const float EscalaDelNormal = 0.5f;
 
     // Un cadaver es una malla con huesos animandose: cuesta lo mismo que un zombi
     // vivo. Sin techo, una granada que mata a diez deja diez animandose encima de
@@ -119,6 +124,14 @@ public class EnemyController : MonoBehaviour
     private bool desplomandose;
     private float sacarloEn;
     private Collider[] colliders;
+    private CapsuleCollider capsula;
+
+    // Lo que le falta bajar al cadaver hasta el piso, y a que velocidad baja. El cadaver
+    // queda kinematic donde muere, y uno que muere en el aire (subido encima de la horda,
+    // despedido por la embestida del jefe, recien aparecido) se desplomaba flotando hasta
+    // irse, a la altura en que lo mataron.
+    private float caidaDelCadaver;
+    private float velocidadDeCaida;
 
     // El festejo, pedido de Ivan: con el jugador muerto la partida sigue andando detras
     // de la derrota (DerrotaEnLaPartida), y la horda festeja. Cada zombi va a un lugar
@@ -148,6 +161,19 @@ public class EnemyController : MonoBehaviour
     private bool tieneLugarDelFestejo;
     private Vector3 lugarDelFestejo;
     private float desfaseDelFestejo;
+
+    // El lugar del festejo se sortea sin mirar si se puede pisar: cae detras de una pared
+    // invisible del borde si el jugador murio cerca de ella, o adentro de un tanque o del
+    // jefe, que un zombi chico no corre. Hasta el 25/9 esos quedaban corriendo contra eso
+    // mientras durara la derrota, de espaldas al cuerpo y en la franja de la pantalla que la
+    // camara deja para el festejo. Ahora, si en EsperaSinAcercarse no se acerca
+    // AcercamientoMinimo a su lugar, prueba otro, y si tampoco llega, festeja donde esta.
+    public const float EsperaSinAcercarse = 0.5f;
+    public const float AcercamientoMinimo = 0.1f;
+    private float masCercaDelLugar;       // lo mas cerca que estuvo del lugar al que va
+    private float seAcercoEn;             // cuando se acerco por ultima vez
+    private bool cambioDeLugar;           // si ya probo otro lugar
+
     private Transform modelo;
     private Vector3 posicionBaseDelModelo;
     private Quaternion rotacionBaseDelModelo;
@@ -379,6 +405,24 @@ public class EnemyController : MonoBehaviour
         return zombi;
     }
 
+    // Si un zombi que aparece en ese punto del piso se veria en pantalla. Los generadores
+    // no los sacan ahi: a los 8 m de distancia minima al jugador todavia se esta en cuadro
+    // (la camara ve unos 12 m a los costados en 16:9 y 15 en 20:9), y el zombi se
+    // materializaba de la nada, a veces un FASTER que pegaba antes de que se lo viera venir.
+    // Se mira el punto a AlturaAlAparecer con MargenAlAparecer por fuera del cuadro, que con
+    // la camara del juego alcanza para la cabeza del jefe (4 m) en el borde de abajo y para
+    // los pies en el de arriba. Sin camara no se descarta nada. Estatica para probarla con
+    // la camara de WaveMode.
+    public const float AlturaAlAparecer = 1f;
+    public const float MargenAlAparecer = 0.1f;   // en fracciones de la pantalla
+
+    public static bool SeVeriaAlAparecer(Camera camara, Vector3 punto)
+    {
+        if (camara == null) return false;
+        Vector3 enPantalla = camara.WorldToViewportPoint(new Vector3(punto.x, AlturaAlAparecer, punto.z));
+        return JefePatrones.DentroDelCuadro(enPantalla, new Vector2(-MargenAlAparecer, -MargenAlAparecer));
+    }
+
     // Vivo y en la misma aparicion que se anoto: un zombi que murio y volvio a
     // salir del pool es otro zombi, aunque sea el mismo objeto.
     public static bool SigueVivo(EnemyController zombi, int numeroDeAparicion)
@@ -397,6 +441,7 @@ public class EnemyController : MonoBehaviour
         escalaBase = transform.localScale;
         animadores = ConControlador(GetComponentsInChildren<Animator>(true));
         colliders = GetComponentsInChildren<Collider>(true);
+        capsula = GetComponent<CapsuleCollider>();
         BuscarElModelo();
         movimientoPropio = GetComponent<IMovimientoPropio>();
         PrepararDestello();
@@ -421,6 +466,7 @@ public class EnemyController : MonoBehaviour
         GolpesDados = 0;
         festejando = false;
         tieneLugarDelFestejo = false;
+        cambioDeLugar = false;
         desfaseDelFestejo = Random.Range(0f, DesfaseMaximo);
         if (modelo != null)
         {
@@ -444,6 +490,8 @@ public class EnemyController : MonoBehaviour
         rb.isKinematic = false;
         velocidadDelEmpuje = 0f;
         direccionDelEmpuje = Vector3.zero;
+        caidaDelCadaver = 0f;
+        velocidadDeCaida = 0f;
         // Uno que se desplomo inclinado vuelve derecho: la rotacion la pisa
         // FixedUpdate con el LookAt, pero recien en el primer paso de fisica, y
         // hasta ahi se veria torcido.
@@ -515,13 +563,23 @@ public class EnemyController : MonoBehaviour
     private void Update()
     {
         if (!desplomandose) return;
+        float dt = Time.deltaTime;
+
+        // Si murio en el aire, baja hasta el piso con la gravedad de la fisica, que es como
+        // venia cayendo: kinematic, nadie mas lo baja.
+        if (caidaDelCadaver > 0f)
+        {
+            velocidadDeCaida += Mathf.Abs(Physics.gravity.y) * dt;
+            float baja = Mathf.Min(caidaDelCadaver, velocidadDeCaida * dt);
+            transform.position += Vector3.down * baja;
+            caidaDelCadaver -= baja;
+        }
 
         // El cadaver sale despedido hacia donde apuntaba el tiro y frena solo. Sin
         // esto todos caian igual, en la direccion que tiene el clip, y un tiro por
         // la espalda se veia como uno de frente.
         if (velocidadDelEmpuje > 0f)
         {
-            float dt = Time.deltaTime;
             transform.position += direccionDelEmpuje * (velocidadDelEmpuje * dt);
             velocidadDelEmpuje = Mathf.Max(0f, velocidadDelEmpuje - frenadoDelEmpuje * dt);
 
@@ -557,19 +615,24 @@ public class EnemyController : MonoBehaviour
         sacarloEn = Time.time + duracionDeLaMuerte;
 
         // Sin colliders no frena balas ni empuja al jugador, y kinematic para que no
-        // resbale por el empujon del ultimo tiro mientras se cae.
+        // resbale por el empujon del ultimo tiro mientras se cae. Si estaba en el aire,
+        // lo baja Update, con la velocidad a la que ya venia cayendo.
+        float fondo;
+        caidaDelCadaver = FondoDeLaCapsula(out fondo) ? Mathf.Max(0f, fondo - AlturaDelPiso) : 0f;
+        velocidadDeCaida = Mathf.Max(0f, -rb.linearVelocity.y);
         foreach (var c in colliders) c.enabled = false;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
 
-        // Los grandes casi no se mueven: el mismo empujon dividido por su escala.
+        // Los grandes casi no se mueven: el empujon del normal, dividido por cuanto mas
+        // grandes son.
         rotacionAlMorir = transform.rotation;
         empuje.y = 0f;
         if (empuje.sqrMagnitude > 0.0001f)
         {
             direccionDelEmpuje = empuje.normalized;
-            velocidadDelEmpuje = empujeAlMorir / Mathf.Max(1f, escalaBase.y);
+            velocidadDelEmpuje = VelocidadDelEmpuje(empujeAlMorir, escalaBase.y);
         }
         else
         {
@@ -578,6 +641,17 @@ public class EnemyController : MonoBehaviour
         }
 
         foreach (var animador in animadores) animador.SetTrigger(idMorir);
+    }
+
+    // A que velocidad sale despedido el cadaver de un zombi de esa escala: el empujon del
+    // normal, dividido por cuantas veces mas grande que el normal es. El tanque (1) sale a
+    // la mitad y recorre unos 22 cm, el jefe (2) a un cuarto y unos 6 cm; el rapido y el
+    // FASTER, mas chicos, como el normal (90 cm). Hasta el 25/9 se dividia por la escala a
+    // secas, con el normal ya en 0,5: el tanque salia despedido igual que un normal y solo
+    // frenaba el jefe. Estatica para probarla con los prefabs.
+    public static float VelocidadDelEmpuje(float empuje, float escala)
+    {
+        return empuje / Mathf.Max(1f, Mathf.Abs(escala) / EscalaDelNormal);
     }
 
     // La barra es un objeto aparte y, apagada, no se entera de que el zombi ya no
@@ -645,15 +719,23 @@ public class EnemyController : MonoBehaviour
     // haga aparecer.
     private void SubirSobreElPiso()
     {
-        var capsula = GetComponent<CapsuleCollider>();
-        if (capsula == null) return;
-
-        float alto = capsula.direction == 1 ? Mathf.Max(capsula.height * 0.5f, capsula.radius) : capsula.radius;
-        float fondo = transform.TransformPoint(capsula.center).y - alto * Mathf.Abs(transform.lossyScale.y);
-        if (fondo < AlturaDelPiso)
+        float fondo;
+        if (FondoDeLaCapsula(out fondo) && fondo < AlturaDelPiso)
         {
             transform.position += Vector3.up * (AlturaDelPiso - fondo + MargenSobreElPiso);
         }
+    }
+
+    // A que altura queda el fondo de la capsula, con la escala de siempre: la del
+    // aplastado de un golpe es de un momento, y con ella el cadaver bajaria de mas. Los
+    // zombis no tienen padre, asi que la escala local es la del mundo. Sin capsula, falso.
+    private bool FondoDeLaCapsula(out float fondo)
+    {
+        fondo = 0f;
+        if (capsula == null) return false;
+        float alto = capsula.direction == 1 ? Mathf.Max(capsula.height * 0.5f, capsula.radius) : capsula.radius;
+        fondo = transform.TransformPoint(capsula.center).y - alto * Mathf.Abs(escalaBase.y);
+        return true;
     }
 
     // Perezosa y una sola vez por aparicion: quien hace aparecer al zombi le pone
@@ -1016,7 +1098,8 @@ public class EnemyController : MonoBehaviour
         return d.magnitude;
     }
 
-    // Camina hasta su lugar al costado y ahi se da vuelta a mirar el cuerpo y festeja.
+    // Camina hasta su lugar al costado y ahi se da vuelta a mirar el cuerpo y festeja. Si
+    // no llega (ver EsperaSinAcercarse), prueba otro lugar y despues festeja donde este.
     private void MoverseAlFestejo()
     {
         Vector3 cuerpo = thePlayer.transform.position;
@@ -1024,8 +1107,23 @@ public class EnemyController : MonoBehaviour
 
         Vector3 falta = lugarDelFestejo - transform.position;
         falta.y = 0f;
+        bool yendo = !festejando && falta.sqrMagnitude > 0.6f * 0.6f;
+        if (yendo && SinAcercarse(falta.magnitude, Time.time, ref masCercaDelLugar, ref seAcercoEn))
+        {
+            if (cambioDeLugar)
+            {
+                yendo = false;
+            }
+            else
+            {
+                // El nuevo cuenta desde el paso siguiente: en este sigue hacia el de antes.
+                cambioDeLugar = true;
+                ElegirLugarDelFestejo(cuerpo);
+            }
+        }
+
         Vector3 velocidad = Vector3.zero;
-        if (!festejando && falta.sqrMagnitude > 0.6f * 0.6f)
+        if (yendo)
         {
             transform.rotation = Quaternion.LookRotation(falta);
             velocidad = transform.forward * enemyType.velocidad;
@@ -1050,6 +1148,8 @@ public class EnemyController : MonoBehaviour
     private void ElegirLugarDelFestejo(Vector3 cuerpo)
     {
         tieneLugarDelFestejo = true;
+        masCercaDelLugar = float.PositiveInfinity;
+        seAcercoEn = Time.time;
         Transform camara = Camera.main != null ? Camera.main.transform : null;
         Vector3 derecha = camara != null ? camara.right : Vector3.right;
         derecha.y = 0f;
@@ -1067,6 +1167,21 @@ public class EnemyController : MonoBehaviour
         if (lugar.sqrMagnitude < cercaDelCuerpo * cercaDelCuerpo)
             lugar = (lugar.sqrMagnitude > 0.0001f ? lugar.normalized : Vector2.left) * cercaDelCuerpo;
         lugarDelFestejo = cuerpo + derecha * lugar.x + adelante * lugar.y;
+    }
+
+    // Si hace EsperaSinAcercarse que no se acerca AcercamientoMinimo al lugar al que va, a
+    // "distancia" de el: trabado contra una pared, un tanque o el jefe. Caminando, el mas
+    // lento (el jefe) se acerca un metro en ese rato, y abrirse paso entre la horda lo
+    // frena pero no tanto. Estatica para probarla sin escena.
+    public static bool SinAcercarse(float distancia, float ahora, ref float masCerca, ref float seAcerco)
+    {
+        if (distancia <= masCerca - AcercamientoMinimo)
+        {
+            masCerca = distancia;
+            seAcerco = ahora;
+            return false;
+        }
+        return ahora - seAcerco >= EsperaSinAcercarse;
     }
 
     private void EmpezarAFestejar()

@@ -9,8 +9,14 @@ using UnityEngine;
 // solo a la copia la primera vez, asi el prefab de la mancha no cambia.
 public class ManchaDeSangre : MonoBehaviour
 {
-    // Apenas sobre el piso (que esta en Y = 0), para que no parpadee contra el.
-    private const float AlturaSobreElPiso = 0.1f;
+    // Sobre el piso (que esta en Y = 0), para que no parpadee contra el, y por encima de
+    // lo mas alto que se pisa en los capitulos: el cordon de la ciudad (0,18 m; la vereda,
+    // 0,14). El decorado no tiene colliders y los zombis cruzan las manzanas a y = 0, asi
+    // que hasta el 25/9, a 0,1, la mancha de uno que moria sobre la vereda quedaba adentro
+    // del cubo, tapada: alrededor del cruce del centro, donde se pelea, las manzanas cubren
+    // un tercio del piso o mas. Va a la altura del charco de los faroles de la ciudad, por
+    // lo mismo.
+    public const float AlturaSobreElPiso = 0.2f;
 
     // Por prefab, como el pool de zombis: hoy todos los zombis usan la misma mancha,
     // pero cada uno tiene su campo en el inspector.
