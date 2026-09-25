@@ -166,7 +166,9 @@ teléfono.
   solo sprite para los dos pulgares.
 
 **Mejoras que propuso:**
-- Invocación segura del jefe (lo de arriba, más validar que cada punto del anillo esté dentro del mapa).
+- [x] Invocación segura del jefe (lo de arriba, más validar que cada punto del anillo esté dentro del mapa). **Hecha el
+  25/9** (auditoría del 24/9): los invocados nacen en el piso del anillo y a 1 m de las paredes, y el que no entra de
+  su lado sale del lado de enfrente.
 - Carga que castiga y premia: un golpe propio de la carga (×2 o ×3, una vez), frenar en seco al chocar y dejar al jefe
   aturdido un instante (la ventana para pegarle).
 - [x] Barra de vida del jefe grande arriba al centro, con su nombre y la muesca de la mitad. **Hecha el 20/9**
@@ -336,7 +338,11 @@ Lo que quedó anotado, de mayor a menor:
   fallas).
 - [x] `Tema.Pintar` no repintaba un objeto prendido: el botón del nivel salía blanco. Arreglado de paso.
 - [ ] **Skins de los zombis por moneda de logro** (elegido por Ivan): cada moneda le cambia la pinta a la horda para
-  siempre (un gorro, una máscara, ropa nueva, zombis dorados con el oro).
+  siempre (un gorro, una máscara, ropa nueva, zombis dorados con el oro). **Ojo** (auditoría del 24/9): el destello del
+  golpe guarda los materiales y los renderers prendidos en el `Awake` del zombi (`PrepararDestello`), y como los zombis
+  salen de un pool, una skin puesta después se deshace con el primer golpe y un gorro prendido por código no destella.
+  Quien ponga la skin tiene que volver a correr `PrepararDestello` (y vaciar `materialesDestello`), o ponerla en el
+  prefab antes de instanciar.
 - [ ] **Gemas**: una moneda nueva que dan algunos niveles, para comprar monedas o ítems especiales.
 - [ ] **Armas que se desbloquean por nivel.**
 - [x] **La tienda en carbón neón** (elegida por Ivan el 24/9 entre seis paletas: las maquetas están en
