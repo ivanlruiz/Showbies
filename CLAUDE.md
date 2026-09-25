@@ -106,7 +106,11 @@ La excepción es la primera vez (ver Primera vez): `MainMenu.TocarJugar` manda d
 con el libre y el tutorial encima y VOLVER abajo a la izquierda. El menú no muestra monedas: solo la tienda. El modo
 libre está **bloqueado hasta llegar a la oleada 12** (`ModoLibre.OleadaParaDesbloquear`; llegar a la 12 es haber
 completado la 11, que es lo que guarda `Progreso.MejorOleada`). Bloqueado, `BotonModoLibre` lo pinta gris con
-"REACH WAVE 12" abajo y tocarlo lo hace temblar. **Todo lo que carga el libre pasa por `ModoLibre.EscenaPara`**, que
+"REACH WAVE 12" abajo y tocarlo lo hace temblar. **El desbloqueo se anuncia**: en la partida en que se gana,
+`AvisoDeMisiones` saca "¡MODO LIBRE DESBLOQUEADO!" (una sola vez), y el botón dice "¡NUEVO!" abajo mientras no haya
+récord del libre (`HighScore_1`, que escribe la primera partida ahí que suma algún punto). Hasta el 25/9 el único
+cambio era el color del botón, que OTRA VEZ y ¡A JUGAR! no muestran.
+**Todo lo que carga el libre pasa por `ModoLibre.EscenaPara`**, que
 manda a las oleadas si todavía no está: el botón MODO LIBRE (`BotonModoLibre.Jugar`), `MainMenu.PlayGame`, el final
 del tutorial, el ¡A JUGAR! de la tienda y el OTRA VEZ de la derrota. Si agregás otro camino al libre, pasalo por ahí.
 
@@ -138,6 +142,8 @@ retomarla es empezarla de cero), `NoTerminoPartidas` y `NuncaCompro`.
   (también en la demora del principio), la flecha pasa a ¡A JUGAR!, desde su izquierda: encima pisaba las tarjetas en
   20:9. Es el triángulo de `TexturasUI.Play` girado.
 - **La recompensa diaria espera a la primera partida terminada**: si no, se cobran 150 monedas y se compra antes de jugar.
+  Y sale antes que la tienda que abre MEJORAS de la derrota (ver Recompensa diaria): el circuito que enseña la guía
+  (MEJORAS, comprar, ¡A JUGAR!) no pasa nunca por el menú con la tienda cerrada.
 
 ### Tutorial
 
@@ -149,6 +155,12 @@ se completa haciendo la acción**, no apretando "siguiente". Los textos salen de
 terminar guarda `PlayerPrefs["TutorialCompletado"] = 1` por si algún día se quiere sugerir en la
 primera partida. Para agregar un paso: un valor en el enum `Paso`, su texto en `Entrar` y su
 condición de salida en `Update`.
+
+El de la granada termina cuando **explota** la que se tiró en ese paso, no al tirarla: los zombis que mató terminan de
+caerse solos y los que quedan se van con sus partículas de muerte, sin puntos (`TutorialManager.Sacar`). El de la caja
+de arma, cuando se agarra esa caja: `MejoraActiva` la prende también la de balas. Todo nace adentro del área jugable
+(`TutorialManager.PuntoDelMapa`, ±44 m; las paredes invisibles están en ±49): del otro lado de una pared, una caja
+—que acá no caduca— trababa el paso.
 
 ## Arquitectura: singletons y referencias de inspector
 
@@ -171,7 +183,8 @@ Lo que se comunica sin inspector usa búsquedas cacheadas:
   quedan neutras con un LogError.
 - `Progreso.Revision` — un contador que sube con cada cambio del progreso. La tienda y los botones MEJORAS lo
   consultan en `Update` y se refrescan cuando cambia, en vez de suscribirse a un evento.
-- `TiendaMejoras.AbrirAlCargarMenu` — la derrota lo prende para que el menú cargue con la tienda abierta.
+- `TiendaMejoras.AbrirAlCargarMenu` — la derrota lo prende para que la tienda se abra sola al cargar el menú (después
+  de la recompensa diaria, si hay: `VentanaRecompensaDiaria.Ocupada`).
 
 **Todo lo `static` se resetea en un `[RuntimeInitializeOnLoadMethod(SubsystemRegistration)]`**, porque
 sobrevive al cambio de escena y al "enter play mode" sin domain reload. Si agregás estado `static`,
@@ -711,8 +724,10 @@ terminada: ver Primera vez).
   paga lo mismo otra vez (`RecompensaDiaria.CobrarDuplicado`, una sola vez por cobro y en memoria). Sin video, la ventana
   se va sola. Cerrar el video antes no castiga: vuelve la oferta si todavía se puede ofrecer.
 - El atrás de Android la cierra sin cobrar (`BotonAtrasMenu`); vuelve a salir la próxima vez que se abre el menú ese día.
-- **No se abre con la tienda abierta** (MEJORAS de la derrota carga el menú con la tienda encima, en otro canvas): se
-  arma en `Start` y se abre en el primer `Update` con `TiendaMejoras.Abierta` en falso.
+- **Va antes que la tienda** (MEJORAS de la derrota carga el menú con la tienda abierta, en otro canvas por encima): se
+  arma en `Start` y prende `VentanaRecompensaDiaria.Ocupada` hasta que termina de irse, y la tienda que se abre sola
+  la espera (`TiendaMejoras.Update`). Hasta el 25/9 era al revés: la diaria esperaba a que se cerrara la tienda, y el
+  circuito de la primera vez (MEJORAS, comprar, ¡A JUGAR!) carga la partida sin cerrarla, así que el día 1 no salía.
 - Cada casillero se etiqueta con el mismo día de racha que usa su monto: desde el día 8 el casillero de hoy dice DÍA 8.
 - Las pruebas cubren racha, corte, reloj atrasado, fin de mes y de año, bisiesto, montos y el cobro guardado.
 
@@ -1356,7 +1371,7 @@ progreso):
 | clave | quién escribe | quién lee |
 |---|---|---|
 | `"Score"` | `PlayerHealth` al morir | `Score` (pantalla de derrota) |
-| `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"` |
+| `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"`; `BotonModoLibre`, si hay del libre (el ¡NUEVO!) |
 | `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext`, `TiendaMejoras.Jugar` |
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
 | `"VolumenEfectos"`, `"VolumenMusica"` | `SliderVolumen` (menú y pausa) | `Volumen`; sin nada guardado, 1 |

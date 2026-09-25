@@ -105,6 +105,9 @@ public class TiendaMejoras : MonoBehaviour
     private bool sinCatalogo;
 
     private bool abierta;
+    // Lo que pidió AbrirAlCargarMenu: se abre en el primer Update en que la recompensa
+    // diaria no está ocupada.
+    private bool abrirAlLlegar;
     private bool filaPorAcomodar;
     private readonly Vector3[] esquinas = new Vector3[4];
     private float tiempoAbierta;
@@ -188,7 +191,12 @@ public class TiendaMejoras : MonoBehaviour
         if (!AbrirAlCargarMenu) return;
 
         AbrirAlCargarMenu = false;
-        Abrir();
+        // No en el acto: si hoy hay recompensa diaria, primero ella (VentanaRecompensaDiaria.
+        // Ocupada). Con la tienda encima la diaria esperaba a que se cerrara, y el circuito de
+        // la derrota que enseña la primera vez (MEJORAS, comprar, ¡A JUGAR!) carga la partida
+        // sin cerrarla: el día 1 no salía nunca. Todos los Start corren antes del primer
+        // Update, así que sin diaria se abre antes del primer cuadro, como antes.
+        abrirAlLlegar = true;
     }
 
     private void OnDestroy()
@@ -357,6 +365,11 @@ public class TiendaMejoras : MonoBehaviour
 
     private void Update()
     {
+        if (abrirAlLlegar && !VentanaRecompensaDiaria.Ocupada)
+        {
+            abrirAlLlegar = false;
+            Abrir();
+        }
         if (!abierta) return;
 
         float dt = Mathf.Min(Time.unscaledDeltaTime, 1f / 30f);

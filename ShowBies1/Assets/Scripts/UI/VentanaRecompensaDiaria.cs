@@ -50,6 +50,13 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
     public static bool Abierta { get; private set; }
 
+    // Armada para abrirse o abierta, hasta que termina de irse. La mira la tienda que se abre
+    // sola al llegar (MEJORAS de la derrota), que espera a que la diaria termine: antes la
+    // diaria esperaba a la tienda, y el circuito que ensenia la primera vez (MEJORAS, comprar,
+    // A JUGAR) carga la partida con la tienda abierta, asi que el dia 1 no salia nunca y se
+    // perdian esas monedas y un dia de racha.
+    public static bool Ocupada { get; private set; }
+
     private GameObject panel;
     private RectTransform ventana;
     private RectTransform casilleroHoy;
@@ -84,6 +91,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private static void Reiniciar()
     {
         Abierta = false;
+        Ocupada = false;
     }
 
     private void Start()
@@ -106,16 +114,20 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         spriteClaqueta = Sprite.Create(texturaClaqueta, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
         Armar();
         panel.SetActive(false);
-        // No se abre en el acto: si el menu cargo con la tienda abierta (MEJORAS de la
-        // derrota), la tienda tiene su propio canvas por encima y la diaria quedaria
-        // escondida debajo. Se abre en el primer Update con la tienda cerrada.
+        // Se abre en el primer Update, con la tienda cerrada: la tienda tiene su propio canvas
+        // por encima y la diaria quedaria escondida debajo. La que se abre sola al llegar
+        // (MEJORAS de la derrota) espera a que la diaria termine (Ocupada), asi que hoy la
+        // diaria no espera nunca; la condicion queda por si la tienda llega a abrirse antes.
         tienda = FindAnyObjectByType<TiendaMejoras>(FindObjectsInactive.Include);
         pendiente = true;
+        Ocupada = true;
     }
 
     private void OnDestroy()
     {
         if (panel != null) Abierta = false;
+        // Sin condicion: si quedara prendida, la tienda del menu siguiente no se abriria nunca.
+        Ocupada = false;
         if (spriteMoneda != null) Destroy(spriteMoneda);
         if (spriteClaqueta != null) Destroy(spriteClaqueta);
         if (bordeMoneda != null) Destroy(bordeMoneda);
@@ -246,6 +258,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
             {
                 panel.SetActive(false);
                 Abierta = false;
+                Ocupada = false;
                 relojSalida = -1f;
             }
             return;

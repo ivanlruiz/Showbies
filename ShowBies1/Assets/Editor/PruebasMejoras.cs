@@ -195,6 +195,7 @@ public static class PruebasMejoras
             ProbarIdiomas(informe);
             ProbarTema(informe);
             ProbarEscalado(informe);
+            ProbarLugaresDelTutorial(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
             ProbarCajasYMonedas(informe);
@@ -783,6 +784,65 @@ public static class PruebasMejoras
     static double Canal(double v)
     {
         return v <= 0.03928 ? v / 12.92 : Math.Pow((v + 0.055) / 1.055, 2.4);
+    }
+
+    // Donde nacen las cajas y los zombis del tutorial (TutorialManager.PuntoDelMapa, estatica
+    // para probarla sin escena). Hasta el 25/9 se sumaba el desplazamiento al jugador sin mirar
+    // las paredes invisibles, que dejan adentro unos 49 m desde el centro: una caja del otro
+    // lado, que en el tutorial no caduca, trababa el paso, y un zombi caia al vacio y el paso
+    // de disparar se daba por hecho.
+    static void ProbarLugaresDelTutorial(Informe inf)
+    {
+        float limite = TutorialManager.LimiteDelMapa;
+        // Mas el grupo de la granada (1,5 m) y la mitad de una caja, antes de las paredes.
+        inf.Verdadero("tutorial: el area deja margen antes de las paredes", limite > 20f && limite + 2f < 49f);
+
+        var j = new Vector3(3f, 0.5f, -2f);
+        inf.Verdadero("tutorial: con lugar, donde se pidio y en el piso",
+                      Cerca(TutorialManager.PuntoDelMapa(j, new Vector3(4f, 0f, 2f), limite), new Vector3(7f, 0f, 0f)));
+        j = new Vector3(0f, 0.5f, 47f);
+        inf.Verdadero("tutorial: pegado a la pared norte, la caja de arma va al sur a la misma distancia",
+                      Cerca(TutorialManager.PuntoDelMapa(j, new Vector3(0f, 0f, 4f), limite), new Vector3(0f, 0f, 43f)));
+        j = new Vector3(48f, 0.5f, -47f);
+        inf.Verdadero("tutorial: en un rincon, el zombi viene de adentro a la misma distancia",
+                      Cerca(TutorialManager.PuntoDelMapa(j, new Vector3(9f, 0f, -9f), limite), new Vector3(39f, 0f, -38f)));
+        j = new Vector3(49f, 0.5f, 0f);
+        inf.Verdadero("tutorial: con el jugador afuera del area, recortado al borde y mas lejos",
+                      Cerca(TutorialManager.PuntoDelMapa(j, new Vector3(2f, 0f, 0f), limite), new Vector3(limite, 0f, 0f)));
+
+        // Las dos cajas del paso 4, a 4 m a los costados de un punto 2 m adelante que se acota
+        // dejandoles lugar: contra la pared de un costado, acotada cada una por su lado, las
+        // dos caian en el mismo lugar.
+        j = new Vector3(47f, 0.5f, 10f);
+        Vector3 medio = TutorialManager.PuntoDelMapa(j, new Vector3(0f, 0f, 2f), limite - 4f);
+        Vector3 derecha = medio + new Vector3(4f, 0f, 0f), izquierda = medio - new Vector3(4f, 0f, 0f);
+        inf.Verdadero("tutorial: contra la pared este, las dos cajas adentro y separadas",
+                      Mathf.Abs(derecha.x) <= limite && Mathf.Abs(izquierda.x) <= limite && (derecha - izquierda).magnitude > 7.9f);
+
+        // Con el jugador en cualquier lugar entre las paredes y lo que pide cada paso (las
+        // cajas a 2 y 4 m, el zombi a 14 m en cualquier direccion): siempre adentro y nunca
+        // mas cerca del jugador de lo pedido, en ninguno de los dos ejes.
+        var pedidos = new List<Vector3> { new Vector3(0f, 0f, 2f), new Vector3(0f, 0f, 4f),
+                                          new Vector3(4f, 0f, 2f), new Vector3(-4f, 0f, 2f) };
+        for (int grados = 0; grados < 360; grados += 15)
+            pedidos.Add(Quaternion.Euler(0f, grados, 0f) * Vector3.forward * 14f);
+        int casos = 0, afuera = 0, masCerca = 0;
+        for (float x = -49f; x <= 49f; x += 1f)
+        {
+            for (float z = -49f; z <= 49f; z += 1f)
+            {
+                j = new Vector3(x, 0.5f, z);
+                foreach (Vector3 d in pedidos)
+                {
+                    Vector3 p = TutorialManager.PuntoDelMapa(j, d, limite);
+                    casos++;
+                    if (Mathf.Abs(p.x) > limite + 1e-4f || Mathf.Abs(p.z) > limite + 1e-4f || p.y != 0f) afuera++;
+                    if (Mathf.Abs(p.x - j.x) < Mathf.Abs(d.x) - 1e-3f || Mathf.Abs(p.z - j.z) < Mathf.Abs(d.z) - 1e-3f) masCerca++;
+                }
+            }
+        }
+        inf.Igual("tutorial: nada nace fuera del area (" + casos + " casos)", 0, afuera);
+        inf.Igual("tutorial: nada nace mas cerca del jugador de lo pedido", 0, masCerca);
     }
 
     static void ProbarEscalado(Informe inf)

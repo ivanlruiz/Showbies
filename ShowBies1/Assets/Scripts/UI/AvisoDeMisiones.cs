@@ -10,8 +10,9 @@ using UnityEngine;
 // cumplen durante esta partida; las que ya estaban cumplidas al empezar no se repiten.
 // Tambien avisa las estrellas del bestiario que se ganan jugando ("¡ESTRELLA!", en
 // dorado, con el tipo y el escalon), los logros ("¡LOGRO DE PLATA!", del color de su
-// moneda) y cada nivel del jugador que se sube ("¡NIVEL 13!", con el premio que espera
-// en el menu). Si llegan dos a la vez, salen una despues de otra.
+// moneda), cada nivel del jugador que se sube ("¡NIVEL 13!", con el premio que espera
+// en el menu) y el desbloqueo del modo libre. Si llegan dos a la vez, salen una despues
+// de otra.
 // Va en ShowBies1 y WaveMode (objeto AvisoDeMisiones), con el texto armado en codigo
 // sobre el canvas del HUD.
 public class AvisoDeMisiones : MonoBehaviour
@@ -53,6 +54,7 @@ public class AvisoDeMisiones : MonoBehaviour
     private int diaVisto;
 
     private int nivelVisto;
+    private bool libreVisto;
 
     private void Start()
     {
@@ -63,6 +65,23 @@ public class AvisoDeMisiones : MonoBehaviour
         // critico) se anotan sin aviso: no se ganaron aca.
         Logros.Revisar();
         nivelVisto = NivelJugador.Nivel;
+        libreVisto = ModoLibre.Desbloqueado;
+    }
+
+    // El modo libre se gana llegando a la oleada 12 (ModoLibre), y hasta el 25/9 llegaba en
+    // silencio: el unico cambio era el color de su boton en el panel de modos, que OTRA VEZ
+    // y ¡A JUGAR! no muestran. Sale una sola vez, en la partida en que se gana: en la
+    // siguiente ya arranca desbloqueado.
+    private void AnotarModoLibre()
+    {
+        if (libreVisto || !ModoLibre.Desbloqueado) return;
+        libreVisto = true;
+        pendientes.Enqueue(new Aviso
+        {
+            titulo = Textos.De("aviso_libre"),
+            detalle = Textos.De("aviso_libre_detalle"),
+            color = colorEstrella,
+        });
     }
 
     // Los logros nuevos, uno por moneda, del color de su escalon.
@@ -154,6 +173,7 @@ public class AvisoDeMisiones : MonoBehaviour
         if (t >= proximaRevision && !MenuPausa.JuegoCongelado)
         {
             proximaRevision = t + cadaCuanto;
+            AnotarModoLibre();
             Anotar(false);
             AnotarEstrellas();
             AnotarLogros();

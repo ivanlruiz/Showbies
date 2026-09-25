@@ -21,6 +21,9 @@ salir_seguir	KEEP PLAYING	SEGUIR JUGANDO
 modo_libre	ENDLESS	MODO LIBRE
 modo_oleadas	WAVES	OLEADAS
 modo_libre_bloqueado	REACH WAVE {0}	LLEGA A LA OLEADA {0}
+modo_libre_nuevo	NEW!	¡NUEVO!
+aviso_libre	ENDLESS MODE UNLOCKED!	¡MODO LIBRE DESBLOQUEADO!
+aviso_libre_detalle	Find it under PLAY	Lo encontrarás en JUGAR
 modo_oleadas_continuar	CONTINUE WAVE {0}	SIGUE EN LA OLEADA {0}
 comun_volver	BACK	VOLVER
 opciones_titulo	OPTIONS	OPCIONES
