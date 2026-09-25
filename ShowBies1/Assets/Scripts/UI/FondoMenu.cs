@@ -107,6 +107,12 @@ public class FondoMenu : MonoBehaviour
             camara.transform.rotation = Quaternion.Euler(rotacionCamara);
             camara.clearFlags = CameraClearFlags.SolidColor;
             camara.backgroundColor = colorCielo;
+            // Como las camaras de las escenas de juego: sin post-proceso, HDR y MSAA no aportan
+            // nada, y el HDR (donde el tier del telefono lo deja) es dibujar en un buffer de 16
+            // bits por canal y copiarlo a la pantalla en cada cuadro, en la pantalla donde mas
+            // rato se pasa entre partidas. En la escena siguen prendidos: se apagan aca.
+            camara.allowHDR = false;
+            camara.allowMSAA = false;
         }
 
         // Niebla del color del cielo: el piso se funde con el fondo y no se ve donde termina.

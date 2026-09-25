@@ -209,6 +209,7 @@ public static class PruebasMejoras
             ProbarZombisPorPartida(informe);
             ProbarCrecimientoDeMonedas(informe);
             ProbarAvisosSinPisarse(informe);
+            ProbarTiendaTapaLaEscena(informe);
             ProbarVidriosDelMenu(informe);
             ProbarOrdenDeEscenas(informe);
             ProbarJefeAlTerminar(informe);
@@ -1665,6 +1666,50 @@ public static class PruebasMejoras
             cual += m + ": " + Economia.ZombisPorPartida(m) + " en vez de " + suma + "; ";
         }
         inf.Verdadero("economia: ZombisPorPartida es la suma de lo que saca cada oleada" + (iguales ? "" : " (" + cual.Trim() + ")"), iguales);
+    }
+
+    // Con la tienda entera a la vista la camara del menu no dibuja nada (TiendaMejoras, con
+    // su cullingMask en 0 desde que termina el fundido de entrada hasta que se cierra): eso
+    // solo vale si la tienda tapa la pantalla entera por su cuenta. Sobre la tienda de
+    // Menu.unity, con lo que la escena le pise: el fondo del panel prendido, liso, opaco y
+    // estirado a todo el canvas, y el canvas overlay, que no pasa por la camara. Con un fondo
+    // translucido detras se veria el color liso de la camara, y con un canvas de camara no se
+    // veria la tienda.
+    static void ProbarTiendaTapaLaEscena(Informe inf)
+    {
+        bool Estirado(RectTransform rt)
+        {
+            return rt.anchorMin == Vector2.zero && rt.anchorMax == Vector2.one &&
+                   rt.offsetMin == Vector2.zero && rt.offsetMax == Vector2.zero &&
+                   rt.localScale == Vector3.one && rt.localRotation == Quaternion.identity;
+        }
+
+        bool hay = false, overlay = false, panelEntero = false, fondoEntero = false, liso = false;
+        float alfa = float.NaN;
+        LeerEscena("Assets/Escenas/Menu.unity", escena =>
+        {
+            var tienda = Buscar<TiendaMejoras>(escena);
+            var panel = tienda != null && tienda.panel != null ? tienda.panel.transform as RectTransform : null;
+            var fondo = panel != null ? panel.Find("Fondo") as RectTransform : null;
+            var imagen = fondo != null ? fondo.GetComponent<UnityEngine.UI.Image>() : null;
+            if (imagen == null) return;
+            hay = true;
+
+            // El de mas arriba: los canvas anidados dibujan como el suyo.
+            var canvases = panel.GetComponentsInParent<Canvas>(true);
+            var raiz = canvases.Length > 0 ? canvases[canvases.Length - 1] : null;
+            overlay = raiz != null && raiz.renderMode == RenderMode.ScreenSpaceOverlay;
+            panelEntero = raiz != null && panel.parent == raiz.transform && Estirado(panel);
+            fondoEntero = Estirado(fondo);
+            liso = fondo.gameObject.activeSelf && imagen.enabled && imagen.sprite == null;
+            alfa = imagen.color.a;
+        });
+        if (!inf.Verdadero("tienda: el menu tiene la tienda, con su panel y el fondo del panel", hay)) return;
+        inf.Verdadero("tienda: su canvas es overlay (no pasa por la camara del menu)", overlay);
+        inf.Verdadero("tienda: el panel cuelga del canvas y lo ocupa entero", panelEntero);
+        inf.Verdadero("tienda: el fondo del panel ocupa el panel entero", fondoEntero);
+        inf.Verdadero("tienda: el fondo del panel esta prendido y es un color liso", liso);
+        inf.Cerca("tienda: el fondo del panel es opaco", 1, alfa, 1e-3);
     }
 
     // Los avisos que pueden salir a la vez no se pisan: el de mision cumplida con el cartel

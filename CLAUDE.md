@@ -1563,8 +1563,12 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
 - Android usa el nivel de calidad **Medium**: sombras duras, 20 m, 1 cascada, resolución baja, sin
   AA ni anisotrópico, texturas a mitad de resolución (`globalTextureMipmapLimit = 1`; las del piso
   son 4K). El editor corre en Ultra, así que **lo que ves en el editor no es lo que ve el teléfono**.
-- Las cámaras de las escenas de juego tienen HDR y MSAA apagados (sin post-proceso no aportan nada),
-  y todo lo estático está marcado `BatchingStatic`.
+- Las cámaras de las escenas de juego tienen HDR y MSAA apagados (sin post-proceso no aportan nada), y la del
+  menú también: se los apaga `FondoMenu` al acomodarla (en `Menu.unity` siguen prendidos). **Con la tienda entera a
+  la vista, la cámara del menú no dibuja nada** (`TiendaMejoras`: `cullingMask` en 0 al terminar el fundido de
+  entrada, y de vuelta al cerrarla o si la tienda se apaga): el fondo de la tienda es opaco y tapa la pantalla, y
+  detrás se seguían pintando el piso con niebla y los zombis del fondo con su sombra. Depende de que ese fondo tape
+  todo, y lo mira la prueba de lógica. Todo lo estático está marcado `BatchingStatic`.
 - Los generadores usan `maxZombisVivosMovil` (35) en vez de 60 cuando `Plataforma.EsMovil`.
 - Los Animators de los zombis están en **Cull Update Transforms**: fuera de pantalla no
   mueven huesos. El rápido tiene **dos** Animators: el que tiene el esqueleto usa el controller y el avatar del

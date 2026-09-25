@@ -119,6 +119,11 @@ public class TiendaMejoras : MonoBehaviour
     private bool musicaBajada;
     private float volumenMusicaOriginal;
 
+    // La cámara del menú mientras la tienda la tapa entera, y lo que dibujaba antes (ver
+    // DejarDeDibujarLaEscena). Null con la escena a la vista.
+    private Camera camaraTapada;
+    private int mascaraDeLaCamara;
+
     private int racha;
     private float ultimaCompra = float.NegativeInfinity;
 
@@ -166,9 +171,18 @@ public class TiendaMejoras : MonoBehaviour
     {
         // Las texturas se hacen en código para no sumar assets; son de esta
         // tienda y se destruyen con ella.
-        texturaRayos = TexturasUI.Rayos(512, 16);
+        // Los rayos los apagó el carbón neón (ConstructorTienda): con el objeto apagado no se
+        // dibuja su textura (512 x 512 con Atan2, Cos y Pow por píxel, y 1 MB en la GPU), que
+        // se hacía en cada carga del menú, al abrir el juego y al volver de cada partida, para
+        // algo que no se ve; y tampoco se lo gira en cada cuadro. activeSelf y no
+        // activeInHierarchy: Panel arranca apagado, y con la jerarquía daría apagado siempre.
+        if (rayos != null && !rayos.gameObject.activeSelf) rayos = null;
+        if (rayos != null)
+        {
+            texturaRayos = TexturasUI.Rayos(512, 16);
+            rayos.texture = texturaRayos;
+        }
         texturaResplandor = TexturasUI.Resplandor(128);
-        if (rayos != null) rayos.texture = texturaRayos;
         if (resplandor != null)
         {
             resplandor.texture = texturaResplandor;
@@ -197,6 +211,13 @@ public class TiendaMejoras : MonoBehaviour
         // sin cerrarla: el día 1 no salía nunca. Todos los Start corren antes del primer
         // Update, así que sin diaria se abre antes del primer cuadro, como antes.
         abrirAlLlegar = true;
+    }
+
+    // También al destruirse (OnDisable corre antes que OnDestroy) o apagarse abierta: con ella
+    // se va su panel, y la escena no puede quedar sin dibujarse.
+    private void OnDisable()
+    {
+        VolverADibujarLaEscena();
     }
 
     private void OnDestroy()
@@ -295,6 +316,9 @@ public class TiendaMejoras : MonoBehaviour
 
     public void Cerrar()
     {
+        // Lo primero, antes de que vuelva a verse algo de la escena (si la salida tuviera un
+        // fundido, esto iría al empezarlo, no al terminarlo).
+        VolverADibujarLaEscena();
         abierta = false;
         filaPorAcomodar = false;
         if (panel != null) panel.SetActive(false);
@@ -326,6 +350,31 @@ public class TiendaMejoras : MonoBehaviour
         Time.timeScale = 1f;
         AudioListener.pause = false;
         SceneManager.LoadScene(EscenaMenu);
+    }
+
+    // Con la tienda entera a la vista (el fundido de entrada terminado: su fondo es opaco y
+    // ocupa toda la pantalla) la cámara del menú no dibuja nada: seguía pintando el piso con
+    // niebla y los zombis del fondo, con su sombra, detrás de un panel que no deja ver nada,
+    // en la pantalla donde más rato se pasa entre partidas. Igual limpia con su color, y los
+    // canvas del menú y de la tienda son overlay, que no pasan por ella. No en Abrir: el panel
+    // entra con un fundido, y se vería el color liso de golpe. Que el fondo tape todo lo mira
+    // la prueba de lógica.
+    private void DejarDeDibujarLaEscena()
+    {
+        if (camaraTapada != null || panel == null) return;
+        Camera camara = Camera.main;
+        if (camara == null) return;
+        camaraTapada = camara;
+        mascaraDeLaCamara = camara.cullingMask;
+        camara.cullingMask = 0;
+    }
+
+    // Se puede llamar de más. Si la cámara ya no está (se está descargando el menú), no hay
+    // nada que devolver.
+    private void VolverADibujarLaEscena()
+    {
+        if (camaraTapada != null) camaraTapada.cullingMask = mascaraDeLaCamara;
+        camaraTapada = null;
     }
 
     private void RestaurarMusica()
@@ -379,6 +428,8 @@ public class TiendaMejoras : MonoBehaviour
         {
             fade = Mathf.Min(1f, fade + dt / DuracionFade);
             if (grupoPanel != null) grupoPanel.alpha = fade;
+            // En el mismo cuadro en que el panel queda opaco: la escena ya no se ve.
+            if (fade >= 1f) DejarDeDibujarLaEscena();
         }
 
         if (rayos != null)

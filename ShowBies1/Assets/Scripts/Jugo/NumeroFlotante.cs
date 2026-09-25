@@ -26,6 +26,8 @@ public class NumeroFlotante : MonoBehaviour
     private Vector3 velocidad;
     private float escala;
     private Color color;
+    // El alfa que tienen hoy los vertices de la malla (ver PonerAlfa).
+    private byte alfaDeLosVertices = 255;
 
     private void Awake()
     {
@@ -45,6 +47,12 @@ public class NumeroFlotante : MonoBehaviour
         velocidad = new Vector3(Random.Range(-1.2f, 1.2f), velocidadInicial, 0f);
         nacio = Time.time;
 
+        // Opaco: con el SetText la malla se rehace igual, con este color en los vertices. El
+        // fundido del final va por el alfa de los vertices (ver Animar).
+        Color opaco = color;
+        opaco.a = 1f;
+        texto.color = opaco;
+        alfaDeLosVertices = 255;
         if (critico) texto.SetText("{0}!", valor);
         else texto.SetText("{0}", valor);
         gameObject.SetActive(true);
@@ -73,11 +81,33 @@ public class NumeroFlotante : MonoBehaviour
         float final = t > 0.65f ? 1f - (t - 0.65f) / 0.35f : 1f;
         transform.localScale = Vector3.one * (escala * golpe * Mathf.Lerp(0.5f, 1f, final));
 
-        Color c = color;
-        c.a = final;
-        texto.color = c;
+        // El fundido va por los vertices y no por texto.color: en TextMeshPro cambiar el color
+        // marca el texto como cambiado y rehace la malla entera (leer el texto, acomodar las
+        // letras y subir todo) en cada cuadro del ultimo tercio, y con la cadencia alta hay
+        // decenas de numeros a la vez. Asi solo se suben los colores, y solo si cambio el alfa.
+        byte alfa = (byte)Mathf.RoundToInt(Mathf.Clamp01(final) * 255f);
+        if (alfa != alfaDeLosVertices) PonerAlfa(alfa);
 
         Camera camara = Camera.main;
         if (camara != null) transform.rotation = camara.transform.rotation;
+    }
+
+    // El mismo alfa que dejaba texto.color: TextMeshPro lo lleva a los vertices y el shader
+    // lo toma de ahi. Recorre todas las mallas del texto, por si una letra sale de otra fuente.
+    private void PonerAlfa(byte alfa)
+    {
+        alfaDeLosVertices = alfa;
+        TMP_TextInfo info = texto.textInfo;
+        if (info == null || info.meshInfo == null) return;
+
+        int mallas = Mathf.Min(info.materialCount, info.meshInfo.Length);
+        for (int m = 0; m < mallas; m++)
+        {
+            Color32[] colores = info.meshInfo[m].colors32;
+            if (colores == null) continue;
+            int vertices = Mathf.Min(info.meshInfo[m].vertexCount, colores.Length);
+            for (int i = 0; i < vertices; i++) colores[i].a = alfa;
+        }
+        texto.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
     }
 }
