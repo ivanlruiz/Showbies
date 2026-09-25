@@ -14,6 +14,9 @@ using UnityEngine.UI;
 //
 // Con tiempo sin escalar: la tienda y la derrota no tienen timeScale propio, pero
 // la pausa de impacto de Efectos no tiene que congelar un boton.
+//
+// El clic sale por Sonidos.TocarUI, que la pausa no calla: con AudioListener.pause el
+// de CONTINUAR sonaba recien al reanudar, y el de MENU y REINICIAR nunca.
 public class BotonJugoso : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
     public RectTransform visual;
@@ -21,11 +24,31 @@ public class BotonJugoso : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public bool respirar;
     public float amplitudRespiracion = 0.04f;
     public float frecuenciaRespiracion = 1.4f;
-    public AudioClip sonidoClick;
+    public AudioClip sonidoClick;           // vacio: el clic de siempre (ClicPorDefecto)
     public float volumenClick = 0.4f;
     public float semitonosClick = 7f;
 
     private const float VelocidadApretado = 18f;
+
+    // El clic de los que no traen uno. Casi ningun boton de las escenas lo tenia puesto:
+    // en el menu solo sonaba MEJORAS, y PLAY, los modos, SALIR, la pausa y todo lo que
+    // arman en codigo las ventanas del menu (que pasan su sonidoClick, tambien vacio)
+    // eran mudos. Todos los que lo tienen usan golpe.wav, asi que el primero que aparece
+    // con uno se lo presta a los demas: el menu es la primera escena y MEJORAS esta
+    // prendido desde que carga. En una partida abierta directo desde el editor, el golpe
+    // de Efectos, que es el mismo sonido.
+    private static AudioClip clicPrestado;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        clicPrestado = null;
+    }
+
+    public static AudioClip ClicPorDefecto
+    {
+        get { return clicPrestado != null ? clicPrestado : Efectos.ClipGolpe; }
+    }
 
     private Selectable selectable;
     private Vector3 escalaBase = Vector3.one;
@@ -68,6 +91,8 @@ public class BotonJugoso : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         // Fase al azar: varios botones respirando juntos se ven como uno solo.
         fase = Random.value;
         selectable = GetComponent<Selectable>();
+
+        if (sonidoClick != null && clicPrestado == null) clicPrestado = sonidoClick;
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -77,7 +102,8 @@ public class BotonJugoso : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         if (selectable != null && !selectable.IsInteractable()) return;
 
         apretado = true;
-        Sonidos.Tocar(sonidoClick, volumenClick, Sonidos.PitchDe(semitonosClick), 0.05f, 0.03f);
+        AudioClip clic = sonidoClick != null ? sonidoClick : ClicPorDefecto;
+        Sonidos.TocarUI(clic, volumenClick, Sonidos.PitchDe(semitonosClick), 0.05f, 0.03f);
     }
 
     public void OnPointerUp(PointerEventData eventData)

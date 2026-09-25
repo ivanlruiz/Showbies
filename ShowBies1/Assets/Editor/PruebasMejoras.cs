@@ -204,6 +204,7 @@ public static class PruebasMejoras
             ProbarCalidadDeAndroid(informe);
             ProbarPuntoDeLaGranada(informe);
             ProbarGrisDePocaVida(informe);
+            ProbarSonidoDelJugo(informe);
             ProbarBalasAlRevivir(informe);
             ProbarZombisPorPartida(informe);
             ProbarCrecimientoDeMonedas(informe);
@@ -1499,6 +1500,71 @@ public static class PruebasMejoras
         inf.Verdadero("revivir: el prefab vuelve con balas, sin pasar del cargador de base",
                       revivir != null && control != null && revivir.balasMinimasAlRevivir > 0
                       && revivir.balasMinimasAlRevivir <= control.maxBalas);
+    }
+
+    // El sonido del jugo: el limitador de Sonidos (lo de siempre no cambia y una granada que
+    // mata baja parejo), el daño al jugador segun cuanto entro, la escalera de la barra del
+    // nivel, que haya un clic para los botones que no traen uno, la nota de los avisos de la
+    // furia y como se importan el disparo y la musica del menu.
+    static void ProbarSonidoDelJugo(Informe inf)
+    {
+        inf.Cerca("limitador: un tiro que mata (golpe y muerte) suena igual", 1, Sonidos.GananciaDelLimitador(0.35f + 0.55f, 0f), 1e-6);
+        inf.Cerca("limitador: la muerte del jefe (golpe y muerte grande) suena igual", 1, Sonidos.GananciaDelLimitador(0.35f + 1f, 0f), 1e-6);
+        inf.Cerca("limitador: una granada que mata baja parejo golpe, muerte y explosion", 1.4 / 1.9,
+                  Sonidos.GananciaDelLimitador(0.35f + 0.55f + 1f, 0f), 1e-5);
+        float conTodo = Sonidos.GananciaDelLimitador(1f, 20f);
+        inf.Verdadero("limitador: con todo sonando baja mucho, pero nunca calla", conTodo > 0f && conTodo < 0.1f);
+        inf.Cerca("limitador: lo que recien arranca pesa entero", 0.8, Sonidos.CargaQueQueda(0.8f, 0f, 0.1f), 1e-6);
+        inf.Verdadero("limitador: el golpe deja de pesar enseguida", Sonidos.CargaQueQueda(1f, 0.1f, Sonidos.AtaqueDe(0.07f)) < 0.01f);
+        inf.Verdadero("limitador: la explosion pesa mas tiempo que el golpe", Sonidos.AtaqueDe(1.3f) > 5f * Sonidos.AtaqueDe(0.07f));
+
+        inf.Cerca("daño al jugador: sin saber cuanto, como un zarpazo comun", 0, Efectos.IntensidadDelDanio(0f), 1e-6);
+        inf.Cerca("daño al jugador: un rasguño tampoco cambia", 0, Efectos.IntensidadDelDanio(0.03f), 1e-6);
+        inf.Cerca("daño al jugador: un tercio de la vida es lo mas fuerte", 1, Efectos.IntensidadDelDanio(0.3f), 1e-6);
+        inf.Cerca("daño al jugador: media vida no pasa de lo mas fuerte", 1, Efectos.IntensidadDelDanio(0.5f), 1e-6);
+
+        inf.Igual("nivel: el primer nivel que cruza la barra suena una octava arriba", 12, VentanaLogros.SemitonosDelNivelCruzado(0));
+        inf.Igual("nivel: el segundo, un grado mas", 14, VentanaLogros.SemitonosDelNivelCruzado(1));
+        inf.Igual("nivel: el tercero sigue por la escala de la bemol", 16, VentanaLogros.SemitonosDelNivelCruzado(2));
+        inf.Igual("nivel: el octavo llega a la octava de arriba", 24, VentanaLogros.SemitonosDelNivelCruzado(7));
+        inf.Igual("nivel: pasada la octava vuelve a empezar", 12, VentanaLogros.SemitonosDelNivelCruzado(8));
+
+        // Los botones sin sonidoClick usan el del primero que aparece con uno (MEJORAS, en el
+        // menu) y, en una partida abierta directo, el golpe de Efectos.
+        int conClic = 0;
+        LeerEscena("Assets/Escenas/Menu.unity", escena =>
+        {
+            foreach (var raiz in escena.GetRootGameObjects())
+            {
+                foreach (var boton in raiz.GetComponentsInChildren<BotonJugoso>(true))
+                {
+                    if (boton.sonidoClick != null && boton.gameObject.activeInHierarchy) conClic++;
+                }
+            }
+        });
+        inf.Verdadero("clic: el menu tiene un boton prendido con clic, que se lo presta a los demas", conClic > 0);
+        var prefabEfectos = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Jugo/Efectos.prefab");
+        var efectos = prefabEfectos != null ? prefabEfectos.GetComponent<Efectos>() : null;
+        inf.Verdadero("clic: en la partida queda el golpe de Efectos", efectos != null && efectos.golpe != null);
+
+        // Los avisos de la furia son la nota del combo del HUD, en las escenas con furia.
+        foreach (var ruta in new[] { "Assets/Escenas/WaveMode.unity", "Assets/Escenas/ShowBies1.unity" })
+        {
+            ContadorCombo combo = null;
+            LeerEscena(ruta, escena => combo = Buscar<ContadorCombo>(escena));
+            inf.Verdadero("furia: los avisos tienen la nota del combo en " + Path.GetFileNameWithoutExtension(ruta),
+                          combo != null && combo.nota != null);
+        }
+
+        // El disparo viene a -27 dBFS, y el Normalize del importador solo actua al pasarlo
+        // a mono: en mono sube ~27 dB. La musica del menu, comprimida y en segundo plano,
+        // y en estereo (en mono, el Normalize le subiria el volumen).
+        var disparo = AssetImporter.GetAtPath("Assets/otros/shot.mp3") as AudioImporter;
+        inf.Verdadero("importacion: el disparo va en mono, que es lo que hace actuar su Normalize", disparo != null && disparo.forceToMono);
+        var musica = AssetImporter.GetAtPath("Assets/otros/MainMenu.mp3") as AudioImporter;
+        inf.Verdadero("importacion: la musica del menu no se descomprime entera al cargar el menu",
+                      musica != null && musica.defaultSampleSettings.loadType != AudioClipLoadType.DecompressOnLoad && musica.loadInBackground);
+        inf.Verdadero("importacion: la musica del menu sigue en estereo, con su volumen", musica != null && !musica.forceToMono);
     }
 
     static void ProbarGrisDePocaVida(Informe inf)

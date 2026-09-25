@@ -135,8 +135,9 @@ public class OpcionesSonido : MonoBehaviour
         // ventana, que es copia de la del idioma.
         Color colorDelTexto = Tema.Elegir(colorTexto, RolDeTema.Texto);
         Color colorDelSurco = Tema.Elegir(SliderVolumen.ColorBarra, RolDeTema.Surco);
+        // El de efectos suena al moverlo (FijarEfectosConMuestra).
         SeguirElTema(SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 85f), AnchoControl, fuente,
-                                         Volumen.Efectos, Volumen.FijarEfectos, spritePerilla, colorDelTexto, colorDelSurco));
+                                         Volumen.Efectos, SliderVolumen.FijarEfectosConMuestra, spritePerilla, colorDelTexto, colorDelSurco));
         SeguirElTema(SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, -35f), AnchoControl, fuente,
                                          Volumen.Musica, Volumen.FijarMusica, spritePerilla, colorDelTexto, colorDelSurco));
     }

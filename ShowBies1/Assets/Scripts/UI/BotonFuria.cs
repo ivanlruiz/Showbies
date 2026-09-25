@@ -4,8 +4,8 @@ using UnityEngine.UI;
 // El boton de la furia en el HUD: aparece solo si se compro y se toca para
 // activarla. La sombra radial muestra lo que falta: mientras dura la furia crece
 // hasta cubrirlo, y en el enfriamiento se va retirando mientras el numero cuenta
-// los segundos. Listo, late. Cada vez que la furia arranca (con el boton o con la
-// tecla) prende el cartel "¡FURIA!" del centro.
+// los segundos. Listo, late; al volver a estarlo, suena y salta. Cada vez que la
+// furia arranca (con el boton o con la tecla) prende el cartel "¡FURIA!" del centro.
 //
 // Es el prefab Prefabs/UI/BotonFuria, estirado sobre el area segura del HUD: el
 // boton en la esquina, arriba del de granada, y el cartel en el centro. Anima el
@@ -30,6 +30,13 @@ public class BotonFuria : MonoBehaviour
     private float cartelHasta = -1f;     // en tiempo sin escalar; negativo sin cartel
     private int segundosMostrados = -1;
     private Vector3 escalaBaseVisual = Vector3.one;
+
+    // Volver a estar lista suena y hace saltar el boton (ver Update). Arranca en verdadero
+    // para que no avise al empezar la partida, cuando ya lo esta.
+    private bool estabaLista = true;
+    private float saltoDesde = -1f;      // en tiempo sin escalar; negativo sin salto
+    private const float DuracionSalto = 0.45f;
+    private const float AlturaSalto = 0.35f;
 
     // Start y no Awake: Furia se registra en el Awake del jugador.
     private void Start()
@@ -79,6 +86,16 @@ public class BotonFuria : MonoBehaviour
         float enfriando = furia.RestanteEnfriamiento;
         bool lista = !activa && enfriando <= 0f;
 
+        // Volvio a estar lista: dos notas y un salto, para quien esta en plena horda y no
+        // mira la esquina (antes solo cambiaba de color). Con el juego congelado no: detras
+        // de la derrota la partida sigue y el enfriamiento vence igual.
+        if (lista && !estabaLista && !MenuPausa.JuegoCongelado)
+        {
+            Efectos.FuriaLista();
+            saltoDesde = Time.unscaledTime;
+        }
+        estabaLista = lista;
+
         float cubierto;
         Color color;
         int cuenta = 0;
@@ -123,6 +140,12 @@ public class BotonFuria : MonoBehaviour
             if (MenuPausa.JuegoCongelado) escala = 1f;
             else if (lista) escala = 1f + 0.07f * (0.5f + 0.5f * Mathf.Sin(2f * Mathf.PI * 1.5f * Time.unscaledTime));
             else if (activa) escala = 1.12f + 0.04f * Mathf.Sin(2f * Mathf.PI * 7f * Time.unscaledTime);
+            if (saltoDesde >= 0f)
+            {
+                float t = (Time.unscaledTime - saltoDesde) / DuracionSalto;
+                if (t >= 1f || MenuPausa.JuegoCongelado) saltoDesde = -1f;
+                else escala *= 1f + AlturaSalto * CurvasUI.Campana(t);
+            }
             visual.localScale = escalaBaseVisual * escala;
         }
     }

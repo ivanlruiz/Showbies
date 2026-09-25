@@ -27,9 +27,10 @@ public class VolumenEnPausa : MonoBehaviour
         float x = (ancho + separacion) * 0.5f;
 
         // El panel de la pausa es negro con cualquier tema: texto blanco y el surco
-        // claro, que el negro sobre negro no se ve.
-        SliderVolumen.Crear(padre, "sonido_efectos", new Vector2(-x, alturaFila), ancho, fuente, Volumen.Efectos, Volumen.FijarEfectos,
-                            spritePerilla, Color.white, SliderVolumen.ColorBarraClara);
+        // claro, que el negro sobre negro no se ve. El de efectos suena al moverlo, por la
+        // fuente de la interfaz, que la pausa no calla (FijarEfectosConMuestra).
+        SliderVolumen.Crear(padre, "sonido_efectos", new Vector2(-x, alturaFila), ancho, fuente, Volumen.Efectos,
+                            SliderVolumen.FijarEfectosConMuestra, spritePerilla, Color.white, SliderVolumen.ColorBarraClara);
         SliderVolumen.Crear(padre, "sonido_musica", new Vector2(x, alturaFila), ancho, fuente, Volumen.Musica, Volumen.FijarMusica,
                             spritePerilla, Color.white, SliderVolumen.ColorBarraClara);
     }

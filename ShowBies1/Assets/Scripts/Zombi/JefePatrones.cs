@@ -563,8 +563,9 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
             nuevo.monedaPrefab = zombi.monedaPrefab;
             if (oleadas != null) oleadas.SumarALaOleada(nuevo);
             // Del cuerpo del que sale, ya parado en el piso: en el punto del anillo (y = 0)
-            // la mitad de las chispas quedaria bajo el piso.
-            Efectos.Caja(nuevo.transform.position);
+            // la mitad de las chispas quedaria bajo el piso. Las chispas de una caja, sin
+            // su pop: el sonido de agarrar algo bueno anunciaba enemigos.
+            Efectos.Invocado(nuevo.transform.position);
         }
         CamaraJugador.Temblar(0.35f);
     }

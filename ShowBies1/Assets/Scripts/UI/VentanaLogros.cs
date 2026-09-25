@@ -347,6 +347,20 @@ public class VentanaLogros : MonoBehaviour
         return Mathf.Clamp(lugar / mitad, 0.5f, 1f);
     }
 
+    // La nota del nivel numero 'cruzados' (desde 0) de un llenado: por la escala de la bemol
+    // como las monedas, desde la octava de arriba, y pasada la octava vuelve a empezar.
+    // Contaba los niveles cruzados en el cuadro, que casi siempre es uno, asi que sonaba
+    // siempre la misma nota; y los pasos de a 2 semitonos se salian de la escala. Estatica
+    // para probarla sin escena.
+    public static int SemitonosDelNivelCruzado(int cruzados)
+    {
+        return 12 + Moneda.SemitonosDelGrado(Mathf.Max(0, cruzados) % 8);
+    }
+
+    // Los niveles que la barra cruzo en este llenado, para la escalera de las notas. Vuelve
+    // a 0 cuando la barra alcanza la experiencia.
+    private int nivelesCruzados;
+
     // La barra va hacia la experiencia de verdad de a poco; cada nivel que cruza hace
     // saltar las monedas con una nota, un grado mas arriba cada vez.
     private void AvanzarExperiencia(float dt)
@@ -364,12 +378,13 @@ public class VentanaLogros : MonoBehaviour
             int nivel = NivelJugador.NivelCon(experienciaMostrada);
             if (nivel > nivelMostrado)
             {
-                Sonidos.Tocar(nota, 0.8f, Sonidos.PitchDe(Mathf.Min(24, 12 + (nivel - nivelMostrado) * 2)));
+                if (Sonidos.Tocar(nota, 0.8f, Sonidos.PitchDe(SemitonosDelNivelCruzado(nivelesCruzados)))) nivelesCruzados++;
                 nivelMostrado = nivel;
                 if (enElBoton != null) enElBoton.golpe = 0f;
                 if (enLaVentana != null) enLaVentana.golpe = 0f;
             }
         }
+        if (experienciaMostrada >= real) nivelesCruzados = 0;
         PintarMedidor(enElBoton, false);
         if (Abierta) PintarMedidor(enLaVentana, true);
     }

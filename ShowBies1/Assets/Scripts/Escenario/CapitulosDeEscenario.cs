@@ -481,7 +481,10 @@ public class CapitulosDeEscenario : MonoBehaviour
         cartel.textWrappingMode = TextWrappingModes.NoWrap;
         cartel.raycastTarget = false;
         cartelDesde = Time.unscaledTime;
-        Efectos.CartelOleada();
+        // Sin jingle propio: el capitulo cambia siempre con una oleada nueva, y el de su
+        // cartel ya sono. Este salia un cuadro despues (la oleada cambia en la corrutina
+        // del WaveManager, despues de este Update), y en el telefono, con ese cuadro
+        // guardando el progreso, pasaba la separacion de 30 ms y se oia como un eco.
     }
 
     private void AnimarCartel()

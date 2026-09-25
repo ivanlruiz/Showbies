@@ -275,7 +275,9 @@ furia multiplica aparte (`FijarFuria`), así una caja que llega durante la furia
 
 **El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
 `intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,
-con la cadencia mejorada, no llegaba a oírse.
+con la cadencia mejorada, no llegaba a oírse. **`shot.mp3` se importa en mono** (Force To Mono), que es lo que hace
+actuar su Normalize: el archivo viene a −27 dBFS y, con la fuente de las escenas a 0,26, el disparo quedaba 29 dB por
+debajo del golpe; normalizado sube ~27 dB y queda ~4 dB por debajo (ponderado A).
 
 La bala **no tiene Rigidbody**, sólo un `BoxCollider`: los eventos de colisión llegan porque el zombi
 sí tiene Rigidbody. Por eso el pool no necesita resetear velocidades.
@@ -362,7 +364,9 @@ en la partida. `Furia` (`Assets/Scripts/Jugador/`, en la raíz de `Jugador.prefa
   (`PlayerController.multiplicadorVelocidad`). Esos números están en el componente del prefab.
 - **Jugo** (`Efectos.EmpezarFuria`): cartel "¡FURIA!" con rebote, chispas, temblor, una pausa de impacto corta y el
   borde rojo latiendo mientras dura. El botón respira cuando está lista, vibra mientras dura y
-  cuenta los segundos del enfriamiento.
+  cuenta los segundos del enfriamiento. **Al volver a estar lista suena y salta** (`Efectos.FuriaLista`, dos notas del
+  combo hacia arriba, desde `BotonFuria`) y **al terminar suenan las mismas hacia abajo** (`Efectos.TerminarFuria`):
+  en plena horda nadie mira la esquina. Las notas son el `combo.wav` del `ContadorCombo` de la escena.
 - `GunController.DanoPorBala` sigue siendo el de la mejora (lo miran el medidor y las pruebas); lo que lleva cada bala
   es `DanoPorTiro`.
 - **Es un desbloqueo permanente:** cuando entre el renacer de la fase 5, no tiene que reiniciarla.
@@ -576,7 +580,8 @@ piso se leen en el `Start` en vez de cargarse a mano, así el capítulo 1 se ve 
 nuevo alcanza con un elemento más en el array, su prefab y su fila en la tabla de textos.
 
 Al pasar de capítulo, en el descanso de la oleada: el cartel "CAPÍTULO 3 / LA CIUDAD" arriba de todo (al medio está el de
-la oleada) con el jingle; el cielo, la luz, la luz ambiente y la niebla se funden de un escenario al otro en 2,5 s; a
+la oleada) con el jingle de la oleada, sin uno propio (sonaba un cuadro después y en el teléfono se oía como un eco); el
+cielo, la luz, la luz ambiente y la niebla se funden de un escenario al otro en 2,5 s; a
 mitad del fundido —que es lo más oscuro— cambia el piso, se va el decorado viejo y sale el nuevo. El que no tiene niebla
 la manda lejísimos, así entrar o salir de la noche se ve como que se cierra o se abre, y no como un corte. Una partida
 retomada en la 25 arranca directamente en la ciudad, sin fundido. Al descargarse la escena la niebla se apaga.
@@ -1320,18 +1325,32 @@ que sin `Efectos` instancia las partículas del zombi como antes.
   palabra (¡ARRASANDO!, ¡MASACRE!, ¡IMPARABLE!, ¡LEGENDARIO!) un rato, con un arpegio, un temblor y un salto más
   grande. Solo efecto: no da monedas.
 - **Granada**: temblor, estruendo, chispas y una pausa corta. **Daño al jugador**: temblor, borde rojo
-  (`VinetaDanio`) y sonido, con 0,4 s mínimos entre dos, para que rodeado no quede prendido. **Cajas**: `pop.mp3`
-  y chispas. **Disparo**: chispas en la boca del arma. **Cartel de oleada**: jingle en la bemol mayor y un rebote
-  de escala (`AparecerConRebote`).
+  (`VinetaDanio`) y sonido, con 0,4 s mínimos entre dos, para que rodeado no quede prendido. `DanioJugador(fraccion)`
+  (el daño sobre la vida máxima) suena más fuerte y grave y sacude más cuanto más entró, y desde el 15 % no espera los
+  0,4 s; sin fracción es lo de siempre (`PlayerHealth` todavía no la pasa). **El golpe que mata** tiene lo suyo
+  (`Efectos.MuerteJugador`, desde `PlayerController.Caer`): el daño más grave con un golpe encima, temblor y el borde
+  entero; antes caía en silencio. **Cajas**: `pop.mp3` y chispas (los invocados del jefe, las chispas sin el pop:
+  `Efectos.Invocado`). **Disparo**: chispas en la boca del arma. **Cartel de oleada**: jingle en la bemol mayor y un
+  rebote de escala (`AparecerConRebote`).
 - **Temblor de cámara**: `CamaraJugador.Temblar(trauma)`. El trauma (0 a 1) se descarga solo y la sacudida crece
   con su cuadrado, así los golpes chicos casi no se notan. Usa tiempo sin escalar y se frena en la pausa del menú.
 - **Sonidos**: `Sonidos.Tocar(clip, volumen, pitch, variación, separación mínima)`, un solo objeto con fuentes 2D
   que también usan las monedas y la tienda. Los de pitch 1 van a una fuente que nunca cambia de tono; los demás
   eligen una fuente libre según cuándo termina lo último que puso cada una (guardado con `dspTime`, porque
   `isPlaying` no sirve con `PlayOneShot`): reusar una que suena le cambia el tono a esa nota. `Sonidos.Programar`
-  hace lo mismo con `PlayScheduled`, para los arpegios de la tienda.
+  hace lo mismo con `PlayScheduled`, para los arpegios de la tienda. La separación mínima es por clip, salvo la
+  variante `Sonidos.Aparte`, que lleva su propia cuenta: la muerte del tanque o del jefe, el crítico y la explosión
+  se perdían si el mismo clip había sonado 30-40 ms antes (una muerte chica, un tiro, el rugido del jefe).
+  **Hay un limitador** (no hay mezclador, y una granada que mata sumaba golpe, muerte y una explosión casi a 0 dBFS:
+  +4 a +6 dBFS, recortados por el teléfono): se lleva la carga de lo que arrancó hace poco (los volúmenes, cayendo
+  según lo que dura cada clip) y lo nuevo que la pasa de `TechoDeCarga` (1,4) suena más bajo, en proporción; lo del
+  mismo frame baja parejo. Con poco a la vez (un tiro que mata, la muerte del jefe, la escalera de monedas) no
+  cambia nada. `Sonidos.TocarUI` es lo mismo por fuentes con `ignoreListenerPause`, que la pausa no calla.
 - **UI**: `BotonJugoso` anima un hijo `Visual` del botón (apretar, rebotar, respirar, temblar), nunca la raíz, así
-  el layout no se entera. `EfectosUI` (monedas que vuelan, estallidos, textos flotantes) va en un sub-Canvas con
+  el layout no se entera. **Hace clic al apoyar el dedo**, por `TocarUI`: el que no trae `sonidoClick` (casi todos
+  los de las escenas y los que se arman en código: en el menú solo sonaba MEJORAS) usa el del primero que apareció
+  con uno (MEJORAS, en el menú) o, en una partida abierta directo desde el editor, el golpe de `Efectos`.
+  `EfectosUI` (monedas que vuelan, estallidos, textos flotantes) va en un sub-Canvas con
   pools propios. Todo con tiempo sin escalar y delta topeado.
 - **Chispas**: un solo `ParticleSystem` por escena (`Particulas/Chispas.prefab`) usado con `Emit`, como el brillo
   de las monedas.
@@ -1358,7 +1377,8 @@ que sin `Efectos` instancia las partículas del zombi como antes.
 
 El jugador elige **dos volúmenes**, efectos y música (`Volumen`, en `PlayerPrefs` "VolumenEfectos" y "VolumenMusica", de 0
 a 1). Se cambian desde el **engranaje del menú** (a la derecha del globo) y desde el **menú de pausa**, con el mismo control
-(`SliderVolumen`, armado en código).
+(`SliderVolumen`, armado en código). **Mover EFECTOS toca un clic con el volumen nuevo** (`SliderVolumen.FijarEfectosConMuestra`,
+uno cada 0,2 s como mucho, por `Sonidos.TocarUI`: en la pausa también suena), así no se elige a ciegas.
 
 - **Toda fuente de escena o prefab lleva `FuenteConVolumen`**: su volumen queda en el del inspector por el del jugador. Las que
   hacen loop son música (la del menú y la de `Efectos`), el resto efectos (el disparo). Si agregás un `AudioSource`, sumale el

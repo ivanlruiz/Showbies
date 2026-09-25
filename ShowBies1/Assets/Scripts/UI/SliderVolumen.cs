@@ -85,6 +85,16 @@ public class SliderVolumen : MonoBehaviour
         cambioSinGuardar = Time.unscaledTime;
     }
 
+    // El alCambiar del control de EFECTOS: fija el volumen y toca un clic con el nuevo,
+    // asi no se elige a ciegas (en el menu casi no suena nada, y en la pausa no sonaba
+    // nada: sale por la fuente de la interfaz, que la pausa no calla). Mientras se
+    // arrastra, uno cada 0,2 s como mucho: la separacion minima del clic.
+    public static void FijarEfectosConMuestra(float valor)
+    {
+        Volumen.FijarEfectos(valor);
+        Sonidos.TocarUI(BotonJugoso.ClicPorDefecto, 0.4f, Sonidos.PitchDe(7f), 0f, 0.2f);
+    }
+
     // Mientras se arrastra solo cambia en memoria; se escribe a disco medio segundo
     // despues del ultimo movimiento, o al cerrarse la ventana. El Slider se queda con
     // el evento de soltar, por eso no se usa OnPointerUp.

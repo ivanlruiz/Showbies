@@ -236,6 +236,9 @@ public class PlayerController : MonoBehaviour
     public void Caer()
     {
         Soltar();
+        // El golpe que mata suena, sacude y pone el borde rojo: PlayerHealth no toca el
+        // daño en ese golpe, y el jugador caia en silencio.
+        if (!caido) Efectos.MuerteJugador();
         if (caido || trans == null || trans.anim == null) return;
         caido = true;
         modoAntesDeCaer = trans.anim.updateMode;
