@@ -553,7 +553,10 @@ public class VentanaLogros : MonoBehaviour
         string nombre = Logros.Nombre(fila.familia.id);
         fila.borde = ConstructorUI.Imagen(fila.raiz, "Borde", new Vector2(-478f, 0f), new Vector2(86f, 86f), circulo, ColorApagado);
         fila.cara = ConstructorUI.Imagen(fila.raiz, "Cara", new Vector2(-478f, 0f), new Vector2(72f, 72f), circulo, ColorApagado);
-        fila.inicial = ConstructorUI.Texto(fila.raiz, "Inicial", nombre.Substring(0, 1), 44f, ColorDeTexto,
+        // El simbolo de la tabla (una o dos letras) y no la inicial del nombre: con la inicial
+        // salian tres C en espaniol (CRITICO, CONSTANTE, COLECCIONISTA) y tres E en ingles,
+        // todas del mismo gris hasta ganarse. Con Bangers a 44, dos letras entran en la cara.
+        fila.inicial = ConstructorUI.Texto(fila.raiz, "Inicial", Textos.De("logro_" + fila.familia.id + "_simbolo"), 44f, ColorDeTexto,
                                            new Vector2(-478f, 0f), new Vector2(86f, 86f), fuente);
 
         var rotulo = ConstructorUI.Texto(fila.raiz, "Nombre", nombre, 40f, ColorDeTexto, new Vector2(-150f, 30f), new Vector2(560f, 48f), fuente);

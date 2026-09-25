@@ -86,6 +86,7 @@ public class VentanaBestiario : MonoBehaviour
     private int idiomaArmado = -1;
     private int temaArmado = -1;
     private float relojInsignia;
+    private int cuentaEscrita = -1;
 
     private void Start()
     {
@@ -154,7 +155,12 @@ public class VentanaBestiario : MonoBehaviour
     {
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
         relojInsignia += dt;
-        ConstructorUI.Latir(insignia, numeroInsignia, Bestiario.PorCobrar, relojInsignia);
+        // El numero se escribe solo cuando cambia, como en las misiones y los logros:
+        // escribirlo en cada cuadro armaba una cadena por cuadro. Latir sin texto sigue
+        // prendiendo, apagando y latiendo.
+        int cuenta = Bestiario.PorCobrar;
+        ConstructorUI.Latir(insignia, cuenta != cuentaEscrita ? numeroInsignia : null, cuenta, relojInsignia);
+        cuentaEscrita = cuenta;
         if (!Abierta) return;
 
         reloj += dt;

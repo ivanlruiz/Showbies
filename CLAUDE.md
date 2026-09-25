@@ -94,8 +94,9 @@ Marketing/                  ← logo.py: el logo del juego dibujado en código, 
 `MainMenu.Tutorial` → 4, `DerrotaEnLaPartida.EscenaDerrota` → 2 (en modo aditivo, ver La derrota encima de la partida), `MenuPerdiste.Menu` → 0, `TutorialManager.IrAJugar` → 1,
 `TiendaMejoras.Jugar` → 1 o 3 y `TiendaMejoras.AbrirEnMenu` → 0, estos dos con las constantes `EscenaMenu`,
 `EscenaModoLibre` y `EscenaOleadas`).
-Reordenar Build Settings rompe la navegación en silencio: solo lo avisa la prueba de lógica, que compara el orden del
-build con esta tabla.
+Reordenar Build Settings rompe la navegación en silencio: lo avisan la prueba de lógica, que compara el orden del
+build con esta tabla, y las builds de Android, que se niegan a construirse si las escenas prendidas no son estas cinco
+en este orden (`ConstructorAndroid.EscenasEnOrden`).
 
 ### Menú y modos
 
@@ -876,8 +877,10 @@ pinta a la horda, elegido por Ivan), las gemas y las armas (ver TAREAS).
 - **En la partida**, `AvisoDeMisiones` avisa "¡LOGRO DE PLATA!" (del color de la moneda) y "¡NIVEL 13!" con el premio
   que espera en el menú. **En la derrota**, `ProximoObjetivo` también mira el nivel siguiente ("TE FALTAN 300 XP PARA
   EL NIVEL 13").
-- Los textos son `logro_<id>_nombre`, `logro_<id>` (con `{0}`) y `logro_<id>_uno` para una meta de 1 ("Usa la furia por
-  primera vez", no "1 veces"). Los revisa su prueba: la de idiomas no ve los ids que se arman en código.
+- Los textos son `logro_<id>_nombre`, `logro_<id>_simbolo` (lo que dice la medalla de la fila: una o dos letras,
+  distintas dentro de cada idioma, porque con la inicial del nombre salían tres C en español y tres E en inglés),
+  `logro_<id>` (con `{0}`) y `logro_<id>_uno` para una meta de 1 ("Usa la furia por primera vez", no "1 veces"). Los
+  revisa su prueba: la de idiomas no ve los ids que se arman en código.
 
 ## Mejoras y tienda
 
@@ -1536,13 +1539,15 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
 
 ### Build de Android
 
-Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben el veredicto en
-`Builds/build_result.txt` (raíz del repo, gitignoreada) y sirven por CLI con `-executeMethod`:
+Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben el veredicto (con la versión y el
+versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirven por CLI con `-executeMethod`; en
+`-batchmode`, una build que falla o que no llega a arrancar sale con código 1:
 
 - **Build > Android APK** (`ConstructorAndroid.BuildApk`): `Builds/ShowBies.apk` firmado con el
   debug keystore, para probar en el teléfono. No pide nada. Sale con el paquete `com.ivanruiz.showbies.prueba` y el
   nombre "ShowBies (prueba)" (los restaura al terminar): la de Play está firmada con otra clave y Android no deja
-  instalar una encima de la otra, así que conviven, cada una con su progreso.
+  instalar una encima de la otra, así que conviven, cada una con su progreso. Si el editor se cae en el medio quedan
+  así en disco: la APK se niega a armar un `.prueba.prueba` y el AAB, a salir con otro paquete o con el nombre de prueba.
 - **Build > Android AAB (release)** (`ConstructorAndroid.BuildAab`): `Builds/ShowBies.aab` firmado
   con el keystore de release, que es lo que se sube a la Play Store. Lee ruta, alias y passwords
   de `ShowBies1/keystore.local` (gitignoreado; plantilla en `keystore.local.example`) y los limpia
@@ -1560,8 +1565,9 @@ Dos entradas de menú en `Assets/Editor/ConstructorAndroid.cs`, ambas escriben e
 - **Keystores: `*.keystore`, `*.jks` y `keystore.local` están gitignoreados.** Había un
   `ShowBies1/user.keystore` de 2023 versionado, con password desconocida; se sacó del repo (queda
   en disco por si aparece la password). El de release se genera con `keytool` y se guarda con
-  backup fuera del repo: si se pierde, no se puede actualizar la app publicada (salvo con Play App
-  Signing, que conviene activar al subirla por primera vez).
+  backup fuera del repo. Es la clave de subida: con AAB, Play App Signing es obligatorio para las apps
+  nuevas desde agosto de 2021 y la clave que firma lo que se instala la guarda Google, así que si se
+  pierde se pide en Play Console un reseteo de la clave de subida (y hasta que lo aprueban no se sube nada).
 - **El AAB lleva los símbolos nativos** (`UserBuildSettings.DebugSymbols`: `SymbolTable` dentro del bundle, y se
   restauran al terminar), así los crashes de Android vitals llegan con nombres de funciones.
 - **No hay paquete Sentis** (`com.unity.ai.inference`): no lo usaba nadie y, por la carpeta Resources que trae, metía

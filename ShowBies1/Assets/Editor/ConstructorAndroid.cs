@@ -16,7 +16,13 @@ using System.Collections.Generic;
 //
 // Escribe el resultado en Builds/build_result.txt (en la raiz del repo, que
 // esta gitignoreada) ademas de loguearlo, para poder saber como termino una
-// build lanzada sin supervision.
+// build lanzada sin supervision. Por linea de comandos (-batchmode), una build
+// que falla o que no llega a arrancar sale con codigo 1.
+//
+// Antes de compilar revisa lo que el repo sabe que se rompe sin avisar: la
+// calidad de Android (CalidadDeAndroid), el orden de las escenas, y el paquete y
+// el nombre que la APK cambia y devuelve (si el editor se cae en el medio, quedan
+// cambiados en disco).
 public static class ConstructorAndroid
 {
     // El directorio de trabajo del editor es la carpeta del proyecto
@@ -27,10 +33,43 @@ public static class ConstructorAndroid
     const string RutaResultado = CarpetaSalida + "/build_result.txt";
     const string RutaKeystoreLocal = "keystore.local";
     const string SufijoPaquetePrueba = ".prueba";
+    const string SufijoNombrePrueba = " (prueba)";
+
+    // El paquete con que la app esta registrada en Play Console: una app publicada no lo
+    // cambia nunca, y con otro Play no acepta el AAB.
+    public const string PaqueteDePlay = "com.ivanruiz.showbies";
+
+    // Las escenas del build, en el orden de la tabla del CLAUDE.md. Los indices estan
+    // escritos en el codigo: con otro orden la build sale igual y la navegacion se rompe
+    // en el telefono sin ningun aviso (lo mismo mira ProbarOrdenDeEscenas).
+    public static readonly string[] EscenasEnOrden = { "Menu", "ShowBies1", "Perdiste", "WaveMode", "Tutorial" };
+
+    // Si algo fallo en esta build: lo anota Fallar, o un reporte que no es Succeeded. Es
+    // del editor y no del juego: vuelve a falso al empezar cada build.
+    static bool fallo;
 
     [MenuItem("Build/Android APK")]
     public static void BuildApk()
     {
+        fallo = false;
+        ArmarApk();
+        SalirSiFallo();
+    }
+
+    static void ArmarApk()
+    {
+        // El paquete y el nombre de prueba se ponen y se devuelven en el finally de abajo:
+        // si el editor se cae en el medio quedan asi en disco, y la APK siguiente saldria
+        // como ".prueba.prueba". Se corta antes de tocar nada.
+        string paquete = PaqueteAndroid;
+        string nombre = PlayerSettings.productName;
+        string problema = ProblemaDeLaApk(paquete, nombre);
+        if (problema != null)
+        {
+            Fallar(problema);
+            return;
+        }
+
         EditorUserBuildSettings.buildAppBundle = false;
         PlayerSettings.Android.useCustomKeystore = false;
 
@@ -41,21 +80,84 @@ public static class ConstructorAndroid
         // Otro paquete y otro nombre: la de Play esta firmada con otra clave y Android no
         // deja instalar una encima de la otra (habia que desinstalar y se perdia el
         // progreso). Asi las dos conviven en el telefono, cada una con su progreso.
-        string paquete = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
-        string nombre = PlayerSettings.productName;
-        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, paquete + SufijoPaquetePrueba);
-        PlayerSettings.productName = nombre + " (prueba)";
+        PaqueteAndroid = paquete + SufijoPaquetePrueba;
+        PlayerSettings.productName = nombre + SufijoNombrePrueba;
         try
         {
             Construir(RutaApk);
         }
         finally
         {
-            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, paquete);
+            PaqueteAndroid = paquete;
             PlayerSettings.productName = nombre;
             RestaurarProveedorDeAnuncios(proveedorAnterior);
             AssetDatabase.SaveAssets();
         }
+    }
+
+    // El paquete de Android (applicationIdentifier), con el que Play reconoce la app.
+    public static string PaqueteAndroid
+    {
+        get { return PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android); }
+        private set { PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, value); }
+    }
+
+    // Por que el AAB no puede salir con ese paquete y ese nombre, o null si puede. Va a
+    // Play: con otro paquete Play no lo acepta, y con el nombre de la APK de prueba si,
+    // y en los telefonos se veria "ShowBies (prueba)".
+    public static string ProblemaDelAab(string paquete, string nombre)
+    {
+        if (paquete != PaqueteDePlay)
+            return "el paquete de Android es '" + paquete + "' y el AAB tiene que salir con '" + PaqueteDePlay
+                + "', el registrado en Play Console" + ComoDevolverlos;
+        if (EsNombreDePrueba(nombre))
+            return "el nombre del producto es '" + nombre + "', el de la APK de prueba" + ComoDevolverlos;
+        return null;
+    }
+
+    // Por que la APK de prueba no puede salir, o null si puede: le suma el sufijo al
+    // paquete y al nombre, y si ya lo tienen saldria un ".prueba.prueba", otra app mas en
+    // el telefono.
+    public static string ProblemaDeLaApk(string paquete, string nombre)
+    {
+        if (paquete != null && paquete.EndsWith(SufijoPaquetePrueba))
+            return "el paquete de Android ya es el de prueba ('" + paquete + "')" + ComoDevolverlos;
+        if (EsNombreDePrueba(nombre))
+            return "el nombre del producto ya es el de prueba ('" + nombre + "')" + ComoDevolverlos;
+        return null;
+    }
+
+    static bool EsNombreDePrueba(string nombre)
+    {
+        return nombre != null && nombre.TrimEnd().EndsWith(SufijoNombrePrueba.Trim());
+    }
+
+    const string ComoDevolverlos = ". Si lo dejo asi una APK que no termino (el editor se cerro en el medio), "
+        + "revertir ProjectSettings/ProjectSettings.asset con git o corregirlo en Player Settings.";
+
+    // Las rutas de las escenas prendidas del build: las que entran y las que numera
+    // SceneManager.LoadScene.
+    public static List<string> EscenasHabilitadas()
+    {
+        var habilitadas = new List<string>();
+        foreach (var e in EditorBuildSettings.scenes)
+            if (e != null && e.enabled) habilitadas.Add(e.path);
+        return habilitadas;
+    }
+
+    // Por que esas escenas no sirven para la build, o null si son las del juego y en su
+    // orden, sin ninguna de mas.
+    public static string ProblemaDeEscenas(IList<string> rutas)
+    {
+        var nombres = new List<string>();
+        if (rutas != null)
+            foreach (string ruta in rutas) nombres.Add(Path.GetFileNameWithoutExtension(ruta));
+        bool iguales = nombres.Count == EscenasEnOrden.Length;
+        for (int i = 0; iguales && i < nombres.Count; i++) iguales = nombres[i] == EscenasEnOrden[i];
+        if (iguales) return null;
+        return "las escenas prendidas del build son " + (nombres.Count > 0 ? string.Join(", ", nombres) : "ninguna")
+            + " y tienen que ser, en este orden, " + string.Join(", ", EscenasEnOrden)
+            + ": los indices estan escritos en el codigo (ver la tabla de escenas en CLAUDE.md)";
     }
 
     // Cambia el proveedor del asset para esta build y devuelve el que habia, o null
@@ -90,6 +192,13 @@ public static class ConstructorAndroid
     [MenuItem("Build/Android AAB (release)")]
     public static void BuildAab()
     {
+        fallo = false;
+        ArmarAab();
+        SalirSiFallo();
+    }
+
+    static void ArmarAab()
+    {
         var datos = LeerKeystoreLocal();
         if (datos == null) return;
 
@@ -100,6 +209,15 @@ public static class ConstructorAndroid
         {
             Fallar("el proveedor de anuncios esta en Falso: no se sube a Play con el anuncio de prueba. "
                 + "Cambialo en Assets/Anuncios/Resources/ConfigAnuncios.");
+            return;
+        }
+
+        // El paquete y el nombre de Play: la APK los cambia y los devuelve en un finally,
+        // pero si el editor se cae en el medio quedan cambiados en disco.
+        string problema = ProblemaDelAab(PaqueteAndroid, PlayerSettings.productName);
+        if (problema != null)
+        {
+            Fallar(problema);
             return;
         }
 
@@ -191,9 +309,13 @@ public static class ConstructorAndroid
             return;
         }
 
-        var habilitadas = new List<string>();
-        foreach (var e in EditorBuildSettings.scenes)
-            if (e.enabled) habilitadas.Add(e.path);
+        var habilitadas = EscenasHabilitadas();
+        string problemaDeEscenas = ProblemaDeEscenas(habilitadas);
+        if (problemaDeEscenas != null)
+        {
+            Fallar(problemaDeEscenas);
+            return;
+        }
 
         try
         {
@@ -201,8 +323,13 @@ public static class ConstructorAndroid
                 habilitadas.ToArray(), rutaSalida, BuildTarget.Android, BuildOptions.None);
 
             var s = reporte.summary;
+            if (s.result != BuildResult.Succeeded) fallo = true;
+            // La version y el versionCode, para saber que se armo sin abrir el editor: el
+            // versionCode tiene que subir en cada subida a Play.
             string resumen =
                 "resultado: " + s.result + "\n" +
+                "version: " + PlayerSettings.bundleVersion + "\n" +
+                "versionCode: " + PlayerSettings.Android.bundleVersionCode + "\n" +
                 "errores: " + s.totalErrors + "\n" +
                 "warnings: " + s.totalWarnings + "\n" +
                 "duracion: " + s.totalTime + "\n" +
@@ -220,7 +347,20 @@ public static class ConstructorAndroid
 
     static void Fallar(string motivo)
     {
+        fallo = true;
+        // Puede fallar antes de Construir, que es la que crea la carpeta.
+        Directory.CreateDirectory(CarpetaSalida);
         File.WriteAllText(RutaResultado, "resultado: Failed\n" + motivo + "\n");
         Debug.LogError("ConstructorAndroid: " + motivo);
+    }
+
+    // Por linea de comandos (-batchmode -executeMethod) Unity sale con 0 si el metodo no
+    // tiro una excepcion, aunque la build haya fallado o no haya arrancado, y un script la
+    // daba por buena. Se sale al final de BuildApk y BuildAab, despues de los finally que
+    // devuelven el paquete, el nombre, el keystore y el proveedor de anuncios: salir en el
+    // medio los dejaria cambiados en disco. Con el editor abierto no hace nada.
+    static void SalirSiFallo()
+    {
+        if (fallo && Application.isBatchMode) EditorApplication.Exit(1);
     }
 }

@@ -66,7 +66,11 @@ public class ProximoObjetivo : MonoBehaviour
             if (f > fraccion)
             {
                 fraccion = f;
-                texto = Textos.Formato("objetivo_nivel", FormatoNumeros.Compacto(System.Math.Ceiling(costo - dentro)), NivelJugador.Nivel + 1);
+                double faltan = System.Math.Ceiling(costo - dentro);
+                // Con uno solo, el verbo va en singular: "TE FALTAN 1 XP" no.
+                texto = faltan == 1
+                    ? Textos.Formato("objetivo_nivel_uno", FormatoNumeros.Compacto(faltan), NivelJugador.Nivel + 1)
+                    : Textos.Formato("objetivo_nivel", FormatoNumeros.Compacto(faltan), NivelJugador.Nivel + 1);
             }
         }
 
@@ -86,11 +90,18 @@ public class ProximoObjetivo : MonoBehaviour
                 fraccion = f;
                 string faltan = FormatoNumeros.Compacto(precio - monedas);
                 string nombre = Textos.De("mejora_" + mejora.id + "_nombre");
+                // Con una sola moneda de falta va en singular ("TE FALTAN 1 MONEDAS" no). El
+                // precio es entero y las monedas tambien (MonedasEnteras), asi que la resta es
+                // exacta.
+                bool una = precio - monedas == 1;
                 // La granada y la furia se compran una sola vez: se desbloquean, y "FURIA
                 // NIVEL 1" hablaba de un nivel que no existe.
-                texto = mejora.nivelMaximo == 1
-                    ? Textos.Formato("objetivo_desbloqueo", faltan, nombre)
-                    : Textos.Formato("objetivo_mejora", faltan, nombre, nivel + 1);
+                if (mejora.nivelMaximo == 1)
+                    texto = una ? Textos.Formato("objetivo_desbloqueo_una", faltan, nombre)
+                                : Textos.Formato("objetivo_desbloqueo", faltan, nombre);
+                else
+                    texto = una ? Textos.Formato("objetivo_mejora_una", faltan, nombre, nivel + 1)
+                                : Textos.Formato("objetivo_mejora", faltan, nombre, nivel + 1);
             }
         }
         return texto != null;

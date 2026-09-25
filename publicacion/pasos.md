@@ -45,9 +45,10 @@ en el menú ⋮ de abajo a la derecha.
 ## Lo que ya está resuelto en el proyecto
 
 - [x] **Keystore de release**: `showbies-release.keystore`, con ruta, alias y passwords en `ShowBies1/keystore.local`
-      (gitignoreado). **Hacé una copia fuera de la computadora hoy mismo.** Si se pierde, no se puede volver a
-      actualizar la app publicada nunca más; sólo se salva si activás Play App Signing al subir la primera vez,
-      que es lo que conviene hacer.
+      (gitignoreado). **Hacé una copia fuera de la computadora hoy mismo.** Es la **clave de subida**: con AAB, Play
+      App Signing es obligatorio para las apps nuevas desde agosto de 2021, así que la clave que firma lo que se
+      instala la guarda Google. Si perdés la tuya, la app no se pierde: generás otra con `keytool` y pedís en Play
+      Console que te reseteen la clave de subida, pero hasta que Google lo aprueba no podés subir versiones.
 - [x] **Target API 36**, obligatorio para apps nuevas desde el 31/8/2026. Estaba en "automático", que depende de
       qué SDK tenga instalado la máquina.
 - [x] **64 bits** (ARM64 + IL2CPP), que Play exige.
@@ -99,8 +100,10 @@ paralelo a todo lo demás. Juntá 12 personas (amigos, familia, foros de gamedev
 dejen la app instalada**; se hace con una lista de mails de Google o un grupo de Google.
 
 ### 4. Subir el AAB
-`Build > Android AAB (release)` en Unity genera `Builds/ShowBies.aab` firmado con tu keystore. Al subirlo por
-primera vez, **activá Play App Signing** (es el seguro contra perder el keystero).
+`Build > Android AAB (release)` en Unity genera `Builds/ShowBies.aab` firmado con tu keystore, que es la clave de
+subida. Play App Signing no hace falta activarlo: con AAB es obligatorio para las apps nuevas desde agosto de 2021, y
+Google firma con su clave lo que se instala. Si perdés el keystore, pedís en Play Console que te reseteen la clave de
+subida (por eso la copia: te ahorra ese trámite).
 
 ## Anuncios
 

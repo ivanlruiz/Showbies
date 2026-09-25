@@ -1212,6 +1212,43 @@ public static class PruebasMejoras
         inf.Verdadero("calidad: hay un nivel Medium", CalidadDeAndroid.Medium >= 0);
         inf.Igual("calidad: Android sale en Medium (si falla, revertir ProjectSettings/QualitySettings.asset)",
                   CalidadDeAndroid.Medium, CalidadDeAndroid.Guardada());
+
+        // Lo demas que la build revisa antes de compilar (ConstructorAndroid): el paquete y el
+        // nombre, que la APK cambia y devuelve en un finally (si el editor se cae en el medio
+        // quedan cambiados en disco), y las escenas, cuyos indices estan escritos en el codigo.
+        string play = ConstructorAndroid.PaqueteDePlay;
+        inf.Verdadero("build: el AAB sale con el paquete de Play y el nombre de siempre",
+                      ConstructorAndroid.ProblemaDelAab(play, "ShowBies") == null);
+        inf.Verdadero("build: el AAB no sale con el paquete que deja una APK a medias",
+                      ConstructorAndroid.ProblemaDelAab(play + ".prueba", "ShowBies") != null);
+        inf.Verdadero("build: el AAB no sale con otro paquete", ConstructorAndroid.ProblemaDelAab("com.ivanruiz.showbie", "ShowBies") != null);
+        inf.Verdadero("build: el AAB no sale con el nombre de la APK de prueba",
+                      ConstructorAndroid.ProblemaDelAab(play, "ShowBies (prueba)") != null);
+        inf.Verdadero("build: la APK sale del paquete de Play", ConstructorAndroid.ProblemaDeLaApk(play, "ShowBies") == null);
+        inf.Verdadero("build: la APK no arma un .prueba.prueba", ConstructorAndroid.ProblemaDeLaApk(play + ".prueba", "ShowBies") != null);
+        inf.Verdadero("build: la APK no arma un nombre (prueba) (prueba)",
+                      ConstructorAndroid.ProblemaDeLaApk(play, "ShowBies (prueba)") != null);
+
+        var enOrden = new List<string>();
+        foreach (string nombre in ConstructorAndroid.EscenasEnOrden) enOrden.Add("Assets/Escenas/" + nombre + ".unity");
+        inf.Verdadero("build: las escenas del juego en su orden pasan", ConstructorAndroid.ProblemaDeEscenas(enOrden) == null);
+        var cambiadas = new List<string>(enOrden);
+        cambiadas[1] = enOrden[3];
+        cambiadas[3] = enOrden[1];
+        inf.Verdadero("build: con el libre y las oleadas cambiados de lugar no sale", ConstructorAndroid.ProblemaDeEscenas(cambiadas) != null);
+        var sinUna = new List<string>(enOrden);
+        sinUna.RemoveAt(sinUna.Count - 1);
+        inf.Verdadero("build: sin el tutorial no sale", ConstructorAndroid.ProblemaDeEscenas(sinUna) != null);
+        var conOtra = new List<string>(enOrden);
+        conOtra.Insert(2, "Assets/Escenas/Prueba.unity");
+        inf.Verdadero("build: con otra escena en el medio no sale", ConstructorAndroid.ProblemaDeEscenas(conOtra) != null);
+        inf.Verdadero("build: sin escenas no sale", ConstructorAndroid.ProblemaDeEscenas(new List<string>()) != null);
+
+        // Y lo que tiene hoy el proyecto pasa: si no, la build se va a negar.
+        inf.Verdadero("build: el proyecto tiene el paquete y el nombre de Play (si falla, revertir ProjectSettings/ProjectSettings.asset)",
+                      ConstructorAndroid.ProblemaDelAab(ConstructorAndroid.PaqueteAndroid, PlayerSettings.productName) == null);
+        inf.Verdadero("build: las escenas prendidas del proyecto son las del juego, en su orden",
+                      ConstructorAndroid.ProblemaDeEscenas(ConstructorAndroid.EscenasHabilitadas()) == null);
     }
 
     // Donde cae la granada: PlayerController.PuntoEnElPiso, estatica para probarla sin input.
@@ -1233,6 +1270,35 @@ public static class PruebasMejoras
         inf.Cerca("granada: cae en el piso aunque el origen y lo apuntado esten en otra altura", 0, p.y, 1e-5);
         p = PlayerController.PuntoEnElPiso(origen, origen + new Vector3(0.5f, 0f, 0f), adelante, 8f, 8f);
         inf.Verdadero("granada: con minima = maxima, como el toque rapido del telefono, siempre a esa distancia", Cerca(p, new Vector3(10f, 0f, 3f)));
+
+        // La tarjeta de la granada dice cada cuanto se tira ("granada cada 5 s") con el numero
+        // escrito a mano en la tabla, y el de verdad es PlayerController.granadaCooldown, del
+        // prefab del jugador: si se rebalancea ahi (o una escena se lo pisa) y no en el texto,
+        // la tienda miente. Las escenas son las dos donde se usa la granada comprada.
+        var prefabJugador = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/Jugador.prefab");
+        var control = prefabJugador != null ? prefabJugador.GetComponent<PlayerController>() : null;
+        if (!inf.Verdadero("granada: el prefab del jugador tiene su PlayerController", control != null)) return;
+        float recarga = control.granadaCooldown;
+        var numero = new System.Text.RegularExpressions.Regex(@"\d+(?:[.,]\d+)?");
+        foreach (var lengua in new[] { Lengua.Ingles, Lengua.Espanol })
+        {
+            string texto = Textos.Crudo("mejora_granada_unidad", lengua) ?? "";
+            var m = numero.Match(texto);
+            double dice = m.Success ? double.Parse(m.Value.Replace(',', '.'), Invariante) : double.NaN;
+            inf.Cerca("granada: \"" + texto + "\" (" + Idioma.Codigo(lengua) + ") dice el granadaCooldown del prefab del jugador",
+                      recarga, dice, 1e-3);
+        }
+        foreach (string escena in new[] { "Assets/Escenas/ShowBies1.unity", "Assets/Escenas/WaveMode.unity" })
+        {
+            float enLaEscena = float.NaN;
+            LeerEscena(escena, abierta =>
+            {
+                var jugador = Buscar<PlayerController>(abierta);
+                if (jugador != null) enLaEscena = jugador.granadaCooldown;
+            });
+            inf.Cerca("granada: " + Path.GetFileNameWithoutExtension(escena) + " no le cambia el granadaCooldown al jugador",
+                      recarga, enLaEscena, 1e-4);
+        }
     }
 
     static bool Cerca(Vector3 a, Vector3 b)
@@ -2954,6 +3020,40 @@ public static class PruebasMejoras
         Progreso.Misiones.lista.Clear();
         ProximoObjetivo.Elegir(out texto, out fraccion);
         inf.Verdadero("objetivo: con todo al alcance no elige una mejora que ya alcanza", fraccion < 1f);
+
+        // Con una sola moneda de falta va en singular: "TE FALTAN 1 MONEDAS" no. Con las
+        // monedas una por debajo del precio de una mejora, gana la mas cerca de las que no
+        // alcanzan y le falta justo una: se prueba con cada una de la tienda, asi pasan las
+        // que suben de nivel y las que se desbloquean (la granada y la furia).
+        var catalogo = CatalogoMejoras.Instancia;
+        if (catalogo != null && catalogo.enTienda != null)
+        {
+            string enPlural = "";
+            double masBarata = double.MaxValue;
+            foreach (var mejora in catalogo.enTienda)
+            {
+                if (mejora == null) continue;
+                masBarata = Math.Min(masBarata, mejora.Precio(0));
+                EmpezarConMonedas(mejora.Precio(0) - 1);
+                ProximoObjetivo.Elegir(out texto, out fraccion);
+                if (texto == null || !texto.StartsWith("TE FALTA 1 MONEDA PARA ")) enPlural += mejora.id + " ";
+            }
+            inf.Verdadero("objetivo: con una moneda de falta, en singular" + (enPlural.Length == 0 ? "" : " (" + enPlural.Trim() + ")"),
+                          enPlural.Length == 0);
+            EmpezarConMonedas(masBarata - 2);
+            ProximoObjetivo.Elegir(out texto, out fraccion);
+            inf.Verdadero("objetivo: con dos de falta, en plural", texto != null && texto.StartsWith("TE FALTAN 2 MONEDAS PARA "));
+        }
+
+        // Lo mismo con la experiencia, sin monedas para que gane el nivel.
+        EmpezarConMonedas(0);
+        NivelJugador.Sumar(NivelJugador.CostoDelNivel(1) - 1);
+        ProximoObjetivo.Elegir(out texto, out fraccion);
+        inf.Igual("objetivo: con un punto de experiencia de falta, en singular", "TE FALTA 1 XP PARA EL NIVEL 2", texto);
+        EmpezarConMonedas(0);
+        NivelJugador.Sumar(NivelJugador.CostoDelNivel(1) - 2);
+        ProximoObjetivo.Elegir(out texto, out fraccion);
+        inf.Igual("objetivo: con dos puntos de falta, en plural", "TE FALTAN 2 XP PARA EL NIVEL 2", texto);
     }
 
     // El bestiario: las estrellas por muertes de cada tipo, que se cobran una vez cada una.
@@ -3120,9 +3220,9 @@ public static class PruebasMejoras
     }
 
     // Las familias de logros: doce, con ids distintos y tres metas que crecen, y los textos
-    // de cada una en los dos idiomas: el nombre, la descripcion con su {0} y, si una meta es
-    // 1, su texto propio. Los ids de esos textos se arman en codigo y la prueba de idiomas no
-    // los ve: por eso van aca.
+    // de cada una en los dos idiomas: el nombre, el simbolo de la medalla, la descripcion con
+    // su {0} y, si una meta es 1, su texto propio. Los ids de esos textos se arman en codigo y
+    // la prueba de idiomas no los ve: por eso van aca.
     static void ProbarFamiliasDeLogros(Informe inf)
     {
         inf.Igual("logros: doce familias", 12, Logros.Familias.Length);
@@ -3140,7 +3240,7 @@ public static class PruebasMejoras
             }
             for (int e = 1; e < Logros.Escalones; e++) if (!(familia.metas[e] > familia.metas[e - 1])) metas = false;
 
-            var necesarios = new List<string> { "logro_" + familia.id + "_nombre", "logro_" + familia.id };
+            var necesarios = new List<string> { "logro_" + familia.id + "_nombre", "logro_" + familia.id, "logro_" + familia.id + "_simbolo" };
             foreach (double meta in familia.metas) if (meta == 1) necesarios.Add("logro_" + familia.id + "_uno");
             foreach (string id in necesarios)
             {
@@ -3171,6 +3271,29 @@ public static class PruebasMejoras
         inf.Verdadero("logros: ids distintos", unicos);
         inf.Verdadero("logros: tres metas por familia, que crecen", metas);
         inf.Verdadero("logros: los textos de cada familia en los dos idiomas" + (textos ? "" : " (faltan " + falta.Trim() + ")"), textos);
+
+        // El simbolo de la medalla (VentanaLogros): una o dos letras, que con tres no entran en
+        // el circulo, y distinto dentro de cada idioma. Con la inicial del nombre salian tres C
+        // en espaniol y tres E en ingles. Que la fila este lo mira el caso de arriba.
+        foreach (var lengua in lenguas)
+        {
+            var simbolos = new HashSet<string>();
+            string repetidos = "", malos = "";
+            foreach (var familia in Logros.Familias)
+            {
+                string simbolo = Textos.Crudo("logro_" + familia.id + "_simbolo", lengua);
+                if (string.IsNullOrEmpty(simbolo)) continue;
+                if (!simbolos.Add(simbolo)) repetidos += simbolo + " ";
+                bool letras = simbolo.Length <= 2;
+                foreach (char c in simbolo) if (!char.IsLetter(c)) letras = false;
+                if (!letras) malos += simbolo + " ";
+            }
+            string codigo = Idioma.Codigo(lengua);
+            inf.Verdadero("logros: los simbolos de las medallas son distintos en " + codigo
+                          + (repetidos.Length == 0 ? "" : " (se repite " + repetidos.Trim() + ")"), repetidos.Length == 0);
+            inf.Verdadero("logros: cada simbolo es una o dos letras en " + codigo
+                          + (malos.Length == 0 ? "" : " (" + malos.Trim() + ")"), malos.Length == 0);
+        }
         inf.Igual("logros: la descripcion lleva la meta", "Llega a un combo x50", Logros.Descripcion(Logros.Imparable, 50));
         inf.Igual("logros: una meta de 1 no dice \"1 veces\"", "Usa la furia por primera vez", Logros.Descripcion(Logros.Furioso, 1));
         inf.Cerca("logros: el bronce vale un nivel del que se gano", NivelJugador.CostoDelNivel(7),

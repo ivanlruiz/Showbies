@@ -61,7 +61,9 @@ semanal_termina_hoy	LAST DAY!	¡ÚLTIMO DÍA!
 misiones_cofre_abierto	OPENED! +{0}	¡ABIERTO! +{0}
 objetivo_mision	NEXT: {0}  {1}/{2}	PRÓXIMO: {0}  {1}/{2}
 objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} MONEDAS PARA {1} NIVEL {2}
+objetivo_mejora_una	{0} MORE COIN FOR {1} LV {2}	TE FALTA {0} MONEDA PARA {1} NIVEL {2}
 objetivo_desbloqueo	{0} MORE COINS TO UNLOCK {1}	TE FALTAN {0} MONEDAS PARA DESBLOQUEAR {1}
+objetivo_desbloqueo_una	{0} MORE COIN TO UNLOCK {1}	TE FALTA {0} MONEDA PARA DESBLOQUEAR {1}
 
 # --- Bestiario (Bestiario, VentanaBestiario)
 bestiario_titulo	BESTIARY	BESTIARIO
@@ -89,6 +91,7 @@ aviso_logro_bronce	BRONZE ACHIEVEMENT!	¡LOGRO DE BRONCE!
 aviso_logro_plata	SILVER ACHIEVEMENT!	¡LOGRO DE PLATA!
 aviso_logro_oro	GOLD ACHIEVEMENT!	¡LOGRO DE ORO!
 objetivo_nivel	{0} XP TO LEVEL {1}	TE FALTAN {0} XP PARA EL NIVEL {1}
+objetivo_nivel_uno	{0} XP TO LEVEL {1}	TE FALTA {0} XP PARA EL NIVEL {1}
 logro_superviviente_nombre	SURVIVOR	SUPERVIVIENTE
 logro_superviviente	Complete wave {0}	Completa la oleada {0}
 logro_exterminador_nombre	EXTERMINATOR	EXTERMINADOR
@@ -114,6 +117,20 @@ logro_coleccionista_nombre	COLLECTOR	COLECCIONISTA
 logro_coleccionista	Earn {0} bestiary stars	Gana {0} estrellas del bestiario
 logro_sin_fin_nombre	ENDLESS	SIN FIN
 logro_sin_fin	Reach level {0} in endless mode	Llega al nivel {0} del modo libre
+# El simbolo de la medalla de cada familia (VentanaLogros): una o dos letras, que con tres no entran
+# en el circulo, y distintas dentro de cada idioma (con la inicial del nombre habia tres C y tres E)
+logro_superviviente_simbolo	S	SU
+logro_exterminador_simbolo	EX	E
+logro_imparable_simbolo	US	IM
+logro_critico_simbolo	CR	CR
+logro_millonario_simbolo	M	ML
+logro_granadero_simbolo	G	G
+logro_furioso_simbolo	ER	F
+logro_intocable_simbolo	UT	IN
+logro_constante_simbolo	D	CT
+logro_misionero_simbolo	O	MI
+logro_coleccionista_simbolo	CO	CO
+logro_sin_fin_simbolo	EN	SF
 
 # --- Capitulos de las oleadas (CapitulosDeEscenario)
 capitulo_titulo	CHAPTER {0}	CAPÍTULO {0}
