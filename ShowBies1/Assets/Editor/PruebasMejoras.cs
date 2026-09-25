@@ -1548,12 +1548,16 @@ public static class PruebasMejoras
         inf.Verdadero("clic: en la partida queda el golpe de Efectos", efectos != null && efectos.golpe != null);
 
         // Los avisos de la furia son la nota del combo del HUD, en las escenas con furia.
+        // Se mira adentro de LeerEscena: al volver, la escena ya se cerro y el componente no existe.
         foreach (var ruta in new[] { "Assets/Escenas/WaveMode.unity", "Assets/Escenas/ShowBies1.unity" })
         {
-            ContadorCombo combo = null;
-            LeerEscena(ruta, escena => combo = Buscar<ContadorCombo>(escena));
-            inf.Verdadero("furia: los avisos tienen la nota del combo en " + Path.GetFileNameWithoutExtension(ruta),
-                          combo != null && combo.nota != null);
+            bool conNota = false;
+            LeerEscena(ruta, escena =>
+            {
+                var combo = Buscar<ContadorCombo>(escena);
+                conNota = combo != null && combo.nota != null;
+            });
+            inf.Verdadero("furia: los avisos tienen la nota del combo en " + Path.GetFileNameWithoutExtension(ruta), conNota);
         }
 
         // El disparo viene a -27 dBFS, y el Normalize del importador solo actua al pasarlo
