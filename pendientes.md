@@ -68,21 +68,6 @@ diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verific�
 - **Cada bala empuja al zombi que toca** (hipótesis). La bala no es trigger y aparece de golpe adentro: PhysX lo
   separa empujándolo, más a menos FPS. Con el barrido se va solo; si no, `IsTrigger` en `Bullet.prefab`.
 
-### Sonido
-
-- **Una granada que mata satura la salida** (media): la explosión suena casi a 0 dBFS y en el mismo cuadro se le suman
-  el golpe y la muerte de cada zombi (+4 a +6,5 dBFS, medido mezclando los clips reales). **Arreglo**: un limitador
-  simple en `Sonidos` (una carga que decae y escala lo nuevo) o bajar los eventos fuertes.
-- **En el menú solo MEJORAS hace clic** (media): PLAY, los modos, SALIR y los botones de las ventanas armadas en código
-  tienen `sonidoClick` vacío. La pausa tampoco suena (y con `AudioListener.pause` haría falta una fuente que lo
-  ignore).
-- **La muerte del tanque o del jefe puede quedarse sin sonido** (media): comparte con las muertes chicas la separación
-  de 40 ms por clip. Lo mismo el crítico. **Arreglo**: que la muerte grande no pase por la separación.
-- **`cartel.wav` suena dos veces al cambiar de capítulo** (baja): lo toca la oleada y un cuadro después el capítulo;
-  en el teléfono quedan a más de 30 ms, un eco. Además anuncia 14 cosas distintas, el ¡HAS MUERTO! incluido.
-- **La barra del nivel toca siempre la misma nota** al cruzar cada nivel (baja; `VentanaLogros.cs:345`): cuenta los
-  niveles cruzados en ese cuadro, no desde que empezó a llenarse.
-
 ### Rendimiento
 
 - **La cámara repite posición 1 de cada 6 cuadros** (media): física a 50 Hz, juego a 60 FPS y nada interpolado; se ve
@@ -124,6 +109,17 @@ diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verific�
 - **La diaria del día 1 con OTRA VEZ**: ahora la tienda que se abre desde la derrota espera a la diaria, pero OTRA VEZ
   no pasa por el menú, así que quien solo juega así no la ve. Opcional: una insignia en MENÚ de la derrota con lo que
   espera en el menú (después de la fase 2, que rehace la derrota).
+- **El daño al jugador según cuánto entró** (fase 2): `Efectos.DanioJugador(fraccion)` ya está (un golpe grande suena
+  más fuerte y grave, sacude más y no espera la ventana de 0,4 s), pero `PlayerHealth` todavía llama a la versión sin
+  fracción. Falta una línea en `PlayerHealth.TakeDamage`:
+  `if (health > 0) Efectos.DanioJugador((float)dano / maxHealth);`.
+- **El limitador de sonido no llega a todo**: una granada que no mata queda en +2 dBFS durante 1,3 ms (golpe más
+  explosión suman lo mismo que la muerte del jefe, que no satura) y con un golpe al jugador en el cuadro siguiente,
+  en +3,2. Si en el teléfono sigue crujiendo, el paso siguiente es un limitador de verdad sobre la salida
+  (`OnAudioFilterRead` en el `AudioListener`) o bajar la explosión.
+- **Sonido, lo que quedó afuera**: `AvisoDeMisiones` toca su copia del jingle encima del cartel de la oleada (hay que
+  esperar ~1 s después del último cartel); un tono distinto por caja (hoy las tres tocan `pop.mp3`); un clic al
+  intentar la granada en recarga; y un disparo sintetizado propio si el de ahora cansa.
 
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
@@ -247,6 +243,14 @@ Todo lo de la auditoría se aplicó sin Unity: compila (con el chequeo de refere
 - **Las medallas de logros**: cada familia con su símbolo de una o dos letras, que entre en el círculo.
 - **La build**: ahora se niega con un paquete, un nombre o un orden de escenas que no son los de Play, y por
   línea de comandos sale con código 1 si falla. Hacer una APK y un AAB para ver que sigan saliendo.
+- **El sonido, en el teléfono**:
+  - que las granadas no crujan sobre un grupo ni sobre un tanque (la que mata suena ~2,6 dB más baja: ver si se
+    siente débil), y que la horda densa y los arpegios de la tienda no se sientan apagados (bajan ~1 y ~3 dB);
+  - los clics de todo el menú y de la pausa, y el control de EFECTOS, que ahora suena al arrastrarlo;
+  - el disparo, que subió ~27 dB (estaba casi mudo): que no canse a 20 tiros por segundo;
+  - la muerte del jugador (golpe grave, temblor y borde rojo), las notas de furia lista y de fin de la furia, la
+    muerte del jefe (que ya no se pierde), un solo jingle al pasar a la oleada 11 y la escalera de la barra del nivel;
+  - la música del menú, que ahora arranca unos cuadros tarde: medir cuánto tarda `LoadScene(0)` antes y después.
 
 ## 5. Antes de integrar la red de anuncios
 
