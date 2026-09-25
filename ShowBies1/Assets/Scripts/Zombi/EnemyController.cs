@@ -292,6 +292,13 @@ public class EnemyController : MonoBehaviour
     // JefePatrones junto con multiplicadorGolpe; vuelve a falso en cada aparicion.
     [System.NonSerialized] public bool golpeaAlChocar;
 
+    // Si puede arrancar zarpazos. El jefe los corta desde que avisa un ataque hasta que
+    // vuelve a perseguir (JefePatrones): aturdido tiene que quedar "sin atacar", que es la
+    // ventana para castigarlo, y hasta el 24/9 el que quedaba pegado a el se comia
+    // zarpazos igual. No corta la embestida (golpeaAlChocar). Vuelve a verdadero en cada
+    // aparicion.
+    [System.NonSerialized] public bool puedeZarpar = true;
+
     // Para las pruebas: donde cae el impacto dentro del clip de atacar.
     public float MomentoDelImpacto => momentoDelImpacto;
 
@@ -409,6 +416,7 @@ public class EnemyController : MonoBehaviour
         proximoGolpe = 0f;
         multiplicadorGolpe = 1f;
         golpeaAlChocar = false;
+        puedeZarpar = true;
         golpeEnCurso = false;
         GolpesDados = 0;
         festejando = false;
@@ -941,6 +949,9 @@ public class EnemyController : MonoBehaviour
         if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
         if (Time.time < proximoGolpe || !collision.gameObject.CompareTag("Player")) return;
         if (PlayerHealth.instance == null) return;
+        // El jefe avisando, invocando o aturdido no tira zarpazos. Sin tocar el intervalo:
+        // al volver a perseguir, si sigue pegado, pega en el acto.
+        if (!golpeaAlChocar && !puedeZarpar) return;
 
         proximoGolpe = Time.time + intervaloDeGolpe;
 
@@ -963,6 +974,17 @@ public class EnemyController : MonoBehaviour
         ZarpazosEmpezados++;
         foreach (var animador in animadores)
             animador.CrossFadeInFixedTime(idAtacar, 0.05f, 0, momentoDelImpacto - anticipacion);
+    }
+
+    // Lo llama el jefe al empezar a embestir (JefePatrones): el unico golpe que cuenta
+    // embistiendo es el del cuerpo. Un zarpazo de justo antes dejaba el intervalo
+    // corriendo, y el primer choque no contaba: el jefe arrastraba al jugador a 16 m/s
+    // hasta que vencia. O el zarpazo pegaba en plena carga y JefePatrones lo tomaba por
+    // el choque, y la carga se cortaba a los 0,2 s.
+    public void EmpezarEmbestida()
+    {
+        proximoGolpe = 0f;
+        golpeEnCurso = false;
     }
 
     // El momento del impacto: pega si el jugador sigue al alcance del brazo. Si se fue

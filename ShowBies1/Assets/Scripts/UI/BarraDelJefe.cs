@@ -4,8 +4,8 @@ using UnityEngine.UI;
 
 // La barra de vida del jefe, grande y arriba de todo (pedido de Ivan, como la de los
 // jefes de Minecraft): mientras hay un jefe vivo se ve su nombre, cuanta vida le queda y
-// la muesca de la mitad, que es donde entra en furia. Pegarle 500 veces a un zombi grande
-// sin saber cuanto falta no se siente un evento.
+// la muesca donde entra en furia (la mitad). Pegarle 500 veces a un zombi grande sin
+// saber cuanto falta no se siente un evento.
 //
 // Detras del relleno va una barra blanca que baja despacio: es el golpe que acaba de
 // entrar, y hace que cada bala se vea.
@@ -58,11 +58,14 @@ public class BarraDelJefe : MonoBehaviour
     private RectTransform raiz;
     private RectTransform relleno;
     private RectTransform golpe;
+    private RectTransform muesca;
     private TMP_Text nombre;
     private Image imagenRelleno;
     private CanvasGroup grupo;
 
     private EnemyController jefe;
+    // Sus patrones: donde entra en furia y si ya entro. Null en un jefe sin patrones.
+    private JefePatrones patrones;
     private int numeroDelJefe;
     private float desdeQueAparecio;
     private float visible;              // 0 escondida, 1 puesta
@@ -103,8 +106,8 @@ public class BarraDelJefe : MonoBehaviour
         imagenRelleno = relleno.GetComponent<Image>();
         grupo = raiz.gameObject.AddComponent<CanvasGroup>();
 
-        // La mitad, que es donde entra en furia.
-        var muesca = ConstructorUI.Rect(marco, "Muesca", Vector2.zero, new Vector2(4f, alto));
+        // Donde entra en furia: la ubica UbicarMuesca con cada jefe nuevo.
+        muesca = ConstructorUI.Rect(marco, "Muesca", Vector2.zero, new Vector2(4f, alto));
         var imgMuesca = muesca.gameObject.AddComponent<Image>();
         imgMuesca.color = colorMuesca;
         imgMuesca.raycastTarget = false;
@@ -174,8 +177,10 @@ public class BarraDelJefe : MonoBehaviour
         raiz.anchoredPosition = new Vector2(0f, YEnReposo + (1f - suave) * 90f);
         grupo.alpha = visible;
 
-        // Con la mitad de la vida el jefe entra en furia: la barra lo dice latiendo.
-        if (fraccion <= 0.5f)
+        // Con la furia del jefe la barra late. Con la suya (JefePatrones.EnFuria) y no con
+        // la mitad fija: si se balanceaba fraccionFuria en el prefab, la barra latia donde
+        // el jefe todavia no habia cambiado de patron.
+        if (patrones != null && patrones.EnFuria)
         {
             float latido = 0.5f + 0.5f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 5f));
             imagenRelleno.color = Color.Lerp(colorVida, colorFuria, latido);
@@ -208,9 +213,35 @@ public class BarraDelJefe : MonoBehaviour
             jefe = mejor;
             numeroDelJefe = mejor != null ? mejor.NumeroDeAparicion : 0;
             desdeQueAparecio = Time.time;
-            fraccionGolpe = fraccion = 1f;
+            if (mejor != null)
+            {
+                fraccionGolpe = fraccion = 1f;
+                patrones = mejor.GetComponent<JefePatrones>();
+                UbicarMuesca();
+            }
+            else
+            {
+                // Se fue el que se mostraba: murio, o cayo por el kill-Z. La roja se vacia y
+                // la blanca baja sola mientras la barra se va. Hasta el 24/9 las dos volvian
+                // a 1 aca, y en el tiro que lo mataba la barra se rellenaba entera al irse:
+                // parecia que el jefe se curaba. A 1 vuelven cuando termina de irse (Update)
+                // o con el jefe siguiente.
+                fraccion = 0f;
+            }
         }
         return jefe;
+    }
+
+    // La muesca va donde entra en furia (JefePatrones.fraccionFuria), no en la mitad fija:
+    // si se balancea la furia en el prefab, la barra sigue diciendo la verdad. Un jefe sin
+    // patrones no tiene furia, y no lleva muesca.
+    private void UbicarMuesca()
+    {
+        if (muesca == null) return;
+        muesca.gameObject.SetActive(patrones != null);
+        if (patrones == null) return;
+        muesca.anchorMin = muesca.anchorMax = new Vector2(Mathf.Clamp01(patrones.fraccionFuria), 0.5f);
+        muesca.anchoredPosition = Vector2.zero;
     }
 
     private static string Nombre(EnemyController zombi)

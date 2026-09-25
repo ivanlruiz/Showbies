@@ -209,6 +209,7 @@ public static class PruebasMejoras
             ProbarVidriosDelMenu(informe);
             ProbarOrdenDeEscenas(informe);
             ProbarJefeAlTerminar(informe);
+            ProbarPatronesDelJefe(informe);
             ProbarCurvaDeNivel(informe);
             ProbarRitmoDelNivel(informe);
             ProbarFamiliasDeLogros(informe);
@@ -1594,11 +1595,171 @@ public static class PruebasMejoras
         }
     }
 
-    // Al terminar de invocar el jefe no gira: el rumbo que se guarda al aturdirse es el de la
-    // carga anterior. Hasta el 23/9 Terminar lo aplicaba siempre, y al salir de invocar el
-    // jefe pegaba un salto de giro hasta el paso de fisica siguiente. Al terminar el
-    // aturdimiento si se endereza. Los estados son privados: por reflexion, con el prefab en
-    // una escena de vista previa (sin Awake, asi que el EnemyController se le pone a mano).
+    // Los patrones del jefe (auditoria del 24/9), con el prefab en una escena de vista previa
+    // (sin Awake: lo privado, por reflexion, y el EnemyController se le pone a mano):
+    // - La linea de la carga tiene el ancho de su cuerpo: media 1,4 m fijos y la capsula
+    //   barre casi 3, asi que el que se corria afuera de lo rojo se comia igual el golpe.
+    // - Aturdido no tira zarpazos (es la ventana para castigarlo), y al volver a perseguir,
+    //   o al postergar en plena embestida (el revivir), vuelven los zarpazos y el golpe normal.
+    // - La embestida arranca sin el intervalo ni el zarpazo a medias de uno de antes: el
+    //   primer choque no contaba (el jefe arrastraba al jugador) o la carga se cortaba sola.
+    // - Embistiendo corre con el paso de lo que avanza: velocidadDelClipDeCorrer sale de
+    //   Z_run_rm, que tiene que ser el clip de correr del controller.
+    // - Solo ataca si se lo ve: con la camara de WaveMode, en 16:9 y en 20:9.
+    static void ProbarPatronesDelJefe(Informe inf)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
+        if (!inf.Verdadero("jefe: esta el prefab", prefab != null)) return;
+        const System.Reflection.BindingFlags Privado = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        var tipo = typeof(JefePatrones);
+        var campoEstado = tipo.GetField("estado", Privado);
+        var campoZombi = tipo.GetField("zombi", Privado);
+        var aturdir = tipo.GetMethod("Aturdir", Privado);
+        var terminar = tipo.GetMethod("Terminar", Privado);
+        var estados = tipo.GetNestedType("Estado", System.Reflection.BindingFlags.NonPublic);
+        var proximoGolpe = typeof(EnemyController).GetField("proximoGolpe", Privado);
+        var golpeEnCurso = typeof(EnemyController).GetField("golpeEnCurso", Privado);
+        if (!inf.Verdadero("jefe: se llega a sus patrones y a los golpes del zombi",
+                           campoEstado != null && campoZombi != null && aturdir != null && terminar != null &&
+                           estados != null && proximoGolpe != null && golpeEnCurso != null)) return;
+
+        var escena = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var jefe = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, escena)).GetComponent<JefePatrones>();
+            var zombi = jefe.GetComponent<EnemyController>();
+            campoZombi.SetValue(jefe, zombi);
+
+            // La linea: tan ancha como la capsula, y las hitboxes caben adentro, a lo ancho y a
+            // lo largo (asoman menos de 5 cm por delante de la capsula).
+            var capsula = jefe.GetComponent<CapsuleCollider>();
+            if (inf.Verdadero("jefe: tiene su capsula", capsula != null))
+            {
+                Transform raiz = jefe.transform;
+                float radio, frente;
+                JefePatrones.MedirElCuerpo(capsula, raiz.lossyScale, out radio, out frente);
+                inf.Cerca("jefe: la linea de la carga tiene el ancho de la capsula",
+                          2.0 * capsula.radius * Mathf.Abs(raiz.lossyScale.x), 2.0 * radio, 1e-4);
+                float costado = 0f, adelante = float.NegativeInfinity;
+                foreach (var caja in raiz.GetComponentsInChildren<BoxCollider>(true))
+                {
+                    for (int esquina = 0; esquina < 8; esquina++)
+                    {
+                        var signo = new Vector3((esquina & 1) == 0 ? -0.5f : 0.5f, (esquina & 2) == 0 ? -0.5f : 0.5f, (esquina & 4) == 0 ? -0.5f : 0.5f);
+                        Vector3 enLaRaiz = raiz.InverseTransformPoint(caja.transform.TransformPoint(caja.center + Vector3.Scale(caja.size, signo)));
+                        costado = Mathf.Max(costado, Mathf.Abs(enLaRaiz.x) * Mathf.Abs(raiz.lossyScale.x));
+                        adelante = Mathf.Max(adelante, enLaRaiz.z * Mathf.Abs(raiz.lossyScale.z));
+                    }
+                }
+                inf.Verdadero("jefe: las hitboxes caben a lo ancho de la linea de la carga", costado > 0f && costado <= radio + 1e-3f);
+                inf.Verdadero("jefe: la linea llega hasta el frente de las hitboxes", adelante <= frente + 0.05f);
+            }
+
+            // Aturdido no ataca; volviendo a perseguir, si.
+            zombi.puedeZarpar = true;
+            aturdir.Invoke(jefe, new object[] { 10f });
+            inf.Verdadero("jefe: aturdido no tira zarpazos", !zombi.puedeZarpar);
+            inf.Verdadero("jefe: aturdido no pega con el cuerpo", !zombi.golpeaAlChocar);
+            terminar.Invoke(jefe, new object[] { 11.3f });
+            inf.Verdadero("jefe: al volver a perseguir vuelve a tirar zarpazos", zombi.puedeZarpar);
+
+            // El revivir en plena embestida (Postergar): vuelve a perseguir con todo en su lugar.
+            campoEstado.SetValue(jefe, Enum.Parse(estados, "Cargando"));
+            zombi.golpeaAlChocar = true;
+            zombi.multiplicadorGolpe = jefe.golpeDeLaCarga;
+            zombi.puedeZarpar = false;
+            jefe.Postergar(2.5f);
+            inf.Verdadero("jefe: postergar en plena embestida devuelve los zarpazos y el golpe normal",
+                          zombi.puedeZarpar && !zombi.golpeaAlChocar && zombi.multiplicadorGolpe == 1f);
+
+            // La embestida arranca limpia.
+            proximoGolpe.SetValue(zombi, 1e6f);
+            golpeEnCurso.SetValue(zombi, true);
+            zombi.EmpezarEmbestida();
+            inf.Verdadero("jefe: la embestida no espera el intervalo de un zarpazo de antes", (float)proximoGolpe.GetValue(zombi) <= 0f);
+            inf.Verdadero("jefe: la embestida corta el zarpazo a medias", !(bool)golpeEnCurso.GetValue(zombi));
+
+            // El paso al embestir: la raiz de Z_run_rm avanza 2 m por ciclo (medido del FBX:
+            // 78,74 pulgadas), asi que a escala 1 corre 2 m sobre lo que dura el clip.
+            var controlador = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>("Assets/Animaciones/Zombi.controller");
+            AnimationClip correr = null;
+            if (controlador != null && controlador.layers.Length > 0)
+            {
+                foreach (var hijo in controlador.layers[0].stateMachine.states)
+                {
+                    if (hijo.state.name != "Andar" || !(hijo.state.motion is UnityEditor.Animations.BlendTree arbol)) continue;
+                    foreach (var mezcla in arbol.children)
+                        if (Mathf.Approximately(mezcla.threshold, 1f)) correr = mezcla.motion as AnimationClip;
+                }
+            }
+            if (inf.Verdadero("jefe: el clip de correr del controller es Z_run_rm, el que se midio",
+                              correr != null && AssetDatabase.GetAssetPath(correr).EndsWith("Z_run_rm.FBX")))
+            {
+                inf.Cerca("jefe: velocidadDelClipDeCorrer es lo que avanza Z_run_rm (2 m por ciclo)",
+                          2.0 / correr.length, jefe.velocidadDelClipDeCorrer, 0.05);
+            }
+
+            // Solo ataca si se lo ve (su centro, con el margen), con la camara de WaveMode.
+            Vector3 posicionCamara = Vector3.zero, jugador = Vector3.zero;
+            Quaternion rotacionCamara = Quaternion.identity;
+            float campoVisual = 0f, cerca = 0.3f, lejos = 1000f;
+            LeerEscena("Assets/Escenas/WaveMode.unity", e =>
+            {
+                var seguidor = Buscar<CamaraJugador>(e);
+                var control = Buscar<PlayerController>(e);
+                var lente = seguidor != null ? seguidor.GetComponent<Camera>() : null;
+                if (lente == null || control == null) return;
+                posicionCamara = lente.transform.position;
+                rotacionCamara = lente.transform.rotation;
+                campoVisual = lente.fieldOfView;
+                cerca = lente.nearClipPlane;
+                lejos = lente.farClipPlane;
+                jugador = control.transform.position;
+            });
+            if (inf.Verdadero("jefe: esta la camara del juego en WaveMode", campoVisual > 0f && capsula != null))
+            {
+                var objeto = UnityEditor.EditorUtility.CreateGameObjectWithHideFlags("prueba_camara_jefe", HideFlags.HideAndDontSave, typeof(Camera));
+                try
+                {
+                    var camara = objeto.GetComponent<Camera>();
+                    camara.enabled = false;
+                    camara.transform.SetPositionAndRotation(posicionCamara, rotacionCamara);
+                    camara.fieldOfView = campoVisual;
+                    camara.nearClipPlane = cerca;
+                    camara.farClipPlane = lejos;
+                    // El centro del jefe parado en el piso: media capsula.
+                    float alto = capsula.height * 0.5f * Mathf.Abs(jefe.transform.lossyScale.y);
+                    foreach (var pantalla in new[] { new Vector2(16f, 9f), new Vector2(20f, 9f) })
+                    {
+                        camara.aspect = pantalla.x / pantalla.y;
+                        string en = " (" + pantalla.x + ":" + pantalla.y + ")";
+                        Func<float, float, bool> seVe = (x, z) => JefePatrones.DentroDelCuadro(
+                            camara.WorldToViewportPoint(new Vector3(jugador.x + x, alto, jugador.z + z)), jefe.margenEnPantalla);
+                        inf.Verdadero("jefe: a 3 m por delante del jugador se lo ve y ataca" + en, seVe(0f, 3f));
+                        inf.Verdadero("jefe: a 5 m al costado del jugador se lo ve y ataca" + en, seVe(5f, 0f));
+                        inf.Verdadero("jefe: a 12 m por detras, fuera de cuadro, no ataca" + en, !seVe(0f, -12f));
+                        inf.Verdadero("jefe: a 12 m por delante, fuera de cuadro, no ataca" + en, !seVe(0f, 12f));
+                    }
+                }
+                finally
+                {
+                    Object.DestroyImmediate(objeto);
+                }
+            }
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(escena);
+        }
+    }
+
+    // Al terminar un patron el jefe no gira: la raiz la gira EnemyController, mirando al
+    // jugador. Hasta el 23/9 Terminar le aplicaba un rumbo guardado al aturdirse, y al salir de
+    // invocar el jefe pegaba un salto de giro hasta el paso de fisica siguiente. Y aturdido la
+    // raiz no se tambalea, que el tambaleo es del modelo: hasta el 24/9 Mover la balanceaba en
+    // Z, a paso de fisica y sin decaer, encima del del modelo. Los estados son privados: por
+    // reflexion, con el prefab en una escena de vista previa (sin Awake, asi que el
+    // EnemyController se le pone a mano).
     static void ProbarJefeAlTerminar(Informe inf)
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
@@ -1607,10 +1768,9 @@ public static class PruebasMejoras
         var tipo = typeof(JefePatrones);
         var campoEstado = tipo.GetField("estado", Privado);
         var campoZombi = tipo.GetField("zombi", Privado);
-        var campoRumbo = tipo.GetField("rumboAlAturdirse", Privado);
         var terminar = tipo.GetMethod("Terminar", Privado);
         var estados = tipo.GetNestedType("Estado", System.Reflection.BindingFlags.NonPublic);
-        if (!inf.Verdadero("jefe: se llega a sus estados", campoEstado != null && campoZombi != null && campoRumbo != null && terminar != null && estados != null)) return;
+        if (!inf.Verdadero("jefe: se llega a sus estados", campoEstado != null && campoZombi != null && terminar != null && estados != null)) return;
 
         var escena = EditorSceneManager.NewPreviewScene();
         try
@@ -1618,20 +1778,24 @@ public static class PruebasMejoras
             var jefe = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, escena)).GetComponent<JefePatrones>();
             campoZombi.SetValue(jefe, jefe.GetComponent<EnemyController>());
 
-            // Saliendo de invocar: mira a 30 grados y lo guardado es de otra carga.
+            // Saliendo de invocar: mira a 30 grados.
             jefe.transform.rotation = Quaternion.Euler(0f, 30f, 0f);
-            campoRumbo.SetValue(jefe, 200f);
             campoEstado.SetValue(jefe, Enum.Parse(estados, "AvisandoInvocar"));
             terminar.Invoke(jefe, new object[] { 10f });
             inf.Cerca("jefe: al terminar de invocar no gira", 30, jefe.transform.eulerAngles.y, 0.01);
 
-            // Saliendo del aturdimiento: se saca el tambaleo y vuelve al rumbo de la carga.
-            jefe.transform.rotation = Quaternion.Euler(0f, 90f, 9f);
-            campoRumbo.SetValue(jefe, 90f);
+            // Aturdido, con el rumbo de la carga: ni Mover ni Terminar tocan la raiz.
+            var rumbo = Quaternion.Euler(0f, 90f, 0f);
+            jefe.transform.rotation = rumbo;
             campoEstado.SetValue(jefe, Enum.Parse(estados, "Aturdido"));
+            var cuerpo = jefe.GetComponent<Rigidbody>();
+            bool loMueve = true;
+            for (int paso = 0; paso < 5; paso++) loMueve &= jefe.Mover(cuerpo, jefe.transform);
+            inf.Verdadero("jefe: aturdido lo mueve JefePatrones (quieto)", loMueve);
+            inf.Verdadero("jefe: aturdido la raiz no se tambalea", Quaternion.Angle(jefe.transform.rotation, rumbo) < 0.01f);
             terminar.Invoke(jefe, new object[] { 10f });
-            inf.Verdadero("jefe: al terminar el aturdimiento se endereza",
-                          Quaternion.Angle(jefe.transform.rotation, Quaternion.Euler(0f, 90f, 0f)) < 0.01f);
+            inf.Verdadero("jefe: al terminar el aturdimiento sigue con el rumbo de la carga",
+                          Quaternion.Angle(jefe.transform.rotation, rumbo) < 0.01f);
         }
         finally
         {

@@ -4,11 +4,11 @@ using UnityEngine;
 // El jefe con patrones propios, pedido de Ivan: antes era un zombi grande y lento, y la
 // oleada 10 no se sentia como un evento. Alterna dos ataques, los dos con aviso:
 //
-// - CARGA: se frena, marca en el piso una linea roja hacia el jugador, ruge y embiste en
-//   linea recta sin corregir. Se esquiva moviendose de costado durante el aviso. Embistiendo
-//   pega mucho mas fuerte, y al terminar -haya chocado o no- **queda aturdido un rato**,
-//   tambaleandose y sin atacar: esa es la ventana para castigarlo. Asi la carga es una
-//   apuesta del jefe y no solo un golpe gratis.
+// - CARGA: se frena, marca en el piso una linea roja hacia el jugador, del ancho de su
+//   cuerpo, ruge y embiste en linea recta sin corregir. Se esquiva moviendose de costado
+//   durante el aviso. Embistiendo pega mucho mas fuerte, y al terminar -haya chocado o no-
+//   **queda aturdido un rato**, tambaleandose y sin atacar: esa es la ventana para
+//   castigarlo. Asi la carga es una apuesta del jefe y no solo un golpe gratis.
 // - INVOCACION: se frena, marca un anillo rojo alrededor y hace aparecer zombis normales
 //   con sus mismos multiplicadores. En WaveMode cuentan en la oleada (SumarALaOleada), asi
 //   no termina con ellos vivos.
@@ -29,12 +29,13 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     public float cadaCuanto = 5f;
     [Tooltip("Ataca solo con el jugador a esta distancia: de mas lejos el aviso no se ve.")]
     public float distanciaParaAtacar = 15f;
+    [Tooltip("Y solo con su centro en pantalla, a este margen de los costados (x) y de arriba y abajo (y), en fracciones de la pantalla: asi se ven el jefe y su pose, y no solo la linea entrando por el borde.")]
+    public Vector2 margenEnPantalla = new Vector2(0.08f, 0.1f);
 
     [Header("Carga")]
     public float avisoCarga = 0.9f;
     public float velocidadCarga = 16f;
     public float duracionCarga = 1f;
-    public float anchoLinea = 1.4f;
     [Tooltip("Lo que multiplica su golpe mientras embiste.")]
     public float golpeDeLaCarga = 2.5f;
     [Tooltip("Lo que queda quieto y tambaleandose despues de embestir.")]
@@ -68,6 +69,10 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     [Tooltip("Lo que tarda en llegar a la pose. Bajo es seco; alto, blando.")]
     public float suavidadDeLaPose = 12f;
 
+    [Header("Paso")]
+    [Tooltip("Lo que avanza el ciclo de correr (Z_run_rm) con el modelo a escala 1, en m/s. Medido del FBX: la raiz avanza 2 m en los 0,67 s del ciclo, con los pies apoyados. El paso de la embestida sale de aca, de velocidadCarga y de la escala del modelo, asi los pies no patinan; si se cambia el clip, hay que volver a medirlo. Mas alto da pasos mas lentos.")]
+    public float velocidadDelClipDeCorrer = 3f;
+
     [Header("Aviso")]
     public Material materialAviso;
     public Color colorAviso = new Color(1f, 0.2f, 0.15f, 0.85f);
@@ -84,10 +89,33 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private bool tocaCarga;
     private bool enFuria;
     private int golpesAlCargar;
-    private Quaternion rotacionAlAturdirse;
-    private float rumboAlAturdirse;
     private Vector3 direccion;
     private WaveManager oleadas;
+    private Camera camara;
+
+    // Lo que barre la embestida, medido de la capsula en Awake (ver MedirElCuerpo): el
+    // radio de su cuerpo y lo que asoma su frente por delante del centro. Sin capsula
+    // quedan la linea de 1,4 m de antes y el centro.
+    private float radioDelCuerpo = 0.7f;
+    private float frenteDelCuerpo;
+
+    // Los invocados no salen a menos de esto de una pared (ver PuntoDelAnillo): el radio
+    // de un zombi normal (0,36 m) y aire.
+    private const float MargenContraLasParedes = 1f;
+    private static readonly RaycastHit[] golpesContraLasParedes = new RaycastHit[8];
+
+    // El paso de las piernas en cada patron, con los parametros Paso y Ritmo del estado
+    // Andar (ver ConstructorAnimaciones). Hasta el 24/9 no se tocaban: al "frenarse" para
+    // avisar, invocar o aturdido caminaba en el lugar, y embestia a 16 m/s -ocho veces lo
+    // que camina- con el paso lento de caminar, patinando. Los valores propios del zombi
+    // (velocidadDeAnimacion y ritmoDeAndar de su EnemyController) se leen del Animator al
+    // pisarlos y se le devuelven al volver a perseguir.
+    private static readonly int IdPaso = Animator.StringToHash("Paso");
+    private static readonly int IdRitmo = Animator.StringToHash("Ritmo");
+    private Animator animador;
+    private float escalaDelModelo = 1f;
+    private bool pasoPisado;
+    private float pasoPropio, ritmoPropio;
 
     // La pose va sobre el modelo (el hijo con el Animator) y no sobre la raiz: la
     // raiz la maneja EnemyController -mira al jugador en cada paso de fisica y le
@@ -114,10 +142,11 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
 
         // El hijo que se ve: el del Animator con controller. Su transform local esta
         // libre porque los prefabs tienen Apply Root Motion apagado.
-        foreach (var animador in GetComponentsInChildren<Animator>(true))
+        foreach (var candidato in GetComponentsInChildren<Animator>(true))
         {
-            if (animador.runtimeAnimatorController == null || animador.transform == transform) continue;
-            modelo = animador.transform;
+            if (candidato.runtimeAnimatorController == null || candidato.transform == transform) continue;
+            animador = candidato;
+            modelo = candidato.transform;
             break;
         }
         if (modelo != null)
@@ -131,7 +160,12 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
             foreach (var r in renderers) alto = Mathf.Max(alto, r.bounds.size.y);
             float escala = Mathf.Abs(modelo.lossyScale.y);
             altoDelModelo = escala > 0.0001f ? Mathf.Max(0.1f, alto / escala) : 1f;
+            // Lo que mide el modelo en el mundo (el jefe: 2 x 1,2), para el paso al embestir.
+            escalaDelModelo = Mathf.Max(0.01f, Mathf.Abs(modelo.lossyScale.z));
         }
+
+        var capsula = GetComponent<CapsuleCollider>();
+        if (capsula != null) MedirElCuerpo(capsula, transform.lossyScale, out radioDelCuerpo, out frenteDelCuerpo);
 
         var go = new GameObject("AvisoJefe");
         linea = go.AddComponent<LineRenderer>();
@@ -156,12 +190,13 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         proximoAtaque = Time.time + esperaInicial;
         tocaCarga = true;
         enFuria = false;
-        rumboAlAturdirse = 0f;
-        rotacionAlAturdirse = Quaternion.identity;
+        // El Animator ya tiene el paso propio: EnemyController se lo pone en cada aparicion.
+        pasoPisado = false;
         if (linea != null) linea.enabled = false;
         inclinacion = balanceo = altura = 0f;
         if (modelo != null) modelo.SetLocalPositionAndRotation(posicionBaseDelModelo, rotacionBaseDelModelo);
         oleadas = FindAnyObjectByType<WaveManager>();
+        camara = Camera.main;
     }
 
     private void OnDisable()
@@ -170,10 +205,14 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         // Que no se lo lleve al pool torcido: la aparicion siguiente sale de aca.
         inclinacion = balanceo = altura = 0f;
         if (modelo != null) modelo.SetLocalPositionAndRotation(posicionBaseDelModelo, rotacionBaseDelModelo);
+        // El paso no se devuelve aca: el Animator se esta apagando, y la aparicion
+        // siguiente arranca con el de EnemyController.
+        pasoPisado = false;
         if (zombi != null)
         {
             zombi.multiplicadorGolpe = 1f;
             zombi.golpeaAlChocar = false;
+            zombi.puedeZarpar = true;
         }
     }
 
@@ -260,13 +299,13 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                 return true;
             }
             case Estado.Aturdido:
-            {
-                // Quieto y tambaleandose: se ve que esta expuesto.
-                float balanceo = Mathf.Sin((Time.time - desde) * 22f) * 9f;
-                transform.rotation = rotacionAlAturdirse * Quaternion.Euler(0f, 0f, balanceo);
+                // Quieto y con el rumbo con el que termino la carga: devolviendo verdadero,
+                // EnemyController no lo gira. El tambaleo es solo del modelo (LateUpdate):
+                // hasta el 24/9 la raiz tambien se balanceaba aca, a paso de fisica y sin
+                // decaer, y los dos vaivenes sumados daban un temblor irregular que ademas
+                // ladeaba la capsula y las hitboxes.
                 rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
                 return true;
-            }
             case Estado.AvisandoCarga:
             case Estado.AvisandoInvocar:
             {
@@ -287,11 +326,11 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         if (zombi == null || zombi.thePlayer == null) return;
 
         // Con el jugador muerto festeja con la horda (EnemyController), y lo que quedaba
-        // a medias (el aviso de la carga, la linea roja) se corta.
+        // a medias (el aviso de la carga, la linea roja) se corta. Tambien el paso: con
+        // las piernas quietas de un aviso iba patinando hasta su lugar del festejo.
         if (DerrotaEnLaPartida.Activa)
         {
-            if (linea != null) linea.enabled = false;
-            estado = Estado.Persiguiendo;
+            if (estado != Estado.Persiguiendo) VolverAPerseguir();
             return;
         }
 
@@ -301,8 +340,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         // despues de que la barra de arriba ya habia llegado a cero.
         if (!zombi.Vivo)
         {
-            if (linea != null) linea.enabled = false;
-            estado = Estado.Persiguiendo;
+            if (estado != Estado.Persiguiendo) VolverAPerseguir();
             return;
         }
         float ahora = Time.time;
@@ -321,6 +359,9 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                     estado = Estado.Cargando;
                     desde = ahora;
                     linea.enabled = false;
+                    // Sin un zarpazo a medias ni el intervalo de uno de antes: el unico
+                    // golpe que cuenta embistiendo es el del cuerpo (ver EmpezarEmbestida).
+                    zombi.EmpezarEmbestida();
                     // Embistiendo pega mucho mas fuerte: el golpe lo sigue dando
                     // EnemyController, con su intervalo, asi no hay dos daños.
                     golpesAlCargar = zombi.GolpesDados;
@@ -328,6 +369,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                     // Embistiendo pega con el cuerpo y en el acto, no con un zarpazo:
                     // a 16 m/s, esperar a que baje el brazo lo dejaria pasar de largo.
                     zombi.golpeaAlChocar = true;
+                    // Y corre al ritmo de lo que avanza.
+                    PisarElPaso(PasoParaCorrer(velocidadCarga, velocidadDelClipDeCorrer, escalaDelModelo), 1f);
                     CamaraJugador.Temblar(0.3f);
                 }
                 break;
@@ -369,6 +412,10 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         direccion = hacia.sqrMagnitude > 0.01f ? hacia.normalized : transform.forward;
         estado = tocaCarga ? Estado.AvisandoCarga : Estado.AvisandoInvocar;
         linea.enabled = true;
+        // Desde el aviso hasta volver a perseguir no tira zarpazos (ver
+        // EnemyController.puedeZarpar), y se frena tambien de piernas.
+        zombi.puedeZarpar = false;
+        Frenar();
         if (rugido != null) Sonidos.Tocar(rugido, 0.9f, tocaCarga ? 0.75f : 0.55f);
         CamaraJugador.Temblar(0.15f);
     }
@@ -378,17 +425,24 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     // sin poder hacer nada.
     public void Postergar(float segundos)
     {
-        if (estado != Estado.Persiguiendo)
-        {
-            estado = Estado.Persiguiendo;
-            if (linea != null) linea.enabled = false;
-            if (zombi != null)
-            {
-                zombi.multiplicadorGolpe = 1f;
-                zombi.golpeaAlChocar = false;
-            }
-        }
+        if (estado != Estado.Persiguiendo) VolverAPerseguir();
         proximoAtaque = Mathf.Max(proximoAtaque, Time.time + Mathf.Max(0f, segundos));
+    }
+
+    // Todas las salidas a perseguir pasan por aca -terminar un patron, el revivir, la
+    // derrota y la muerte del jefe-, asi no queda nada de lo que cambia cada patron: la
+    // linea, el golpe de la embestida, los zarpazos cortados y el paso.
+    private void VolverAPerseguir()
+    {
+        estado = Estado.Persiguiendo;
+        if (linea != null) linea.enabled = false;
+        if (zombi != null)
+        {
+            zombi.multiplicadorGolpe = 1f;
+            zombi.golpeaAlChocar = false;
+            zombi.puedeZarpar = true;
+        }
+        DevolverElPaso();
     }
 
     private bool CercaDelJugador()
@@ -400,7 +454,29 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
 
         Vector3 d = zombi.thePlayer.transform.position - transform.position;
         d.y = 0f;
-        return d.sqrMagnitude <= distanciaParaAtacar * distanciaParaAtacar;
+        if (d.sqrMagnitude > distanciaParaAtacar * distanciaParaAtacar) return false;
+        return EnPantalla();
+    }
+
+    // Si se lo ve. La distancia sola no alcanzaba: la camara del juego ve unos 6 m por
+    // detras del jugador y 10 por delante, y con el jefe a 7-15 m por debajo -que es lo
+    // normal al escaparle- sonaba el rugido y la linea roja entraba por el borde sin que
+    // se viera quien embestia. Fuera de cuadro sigue persiguiendo con el ataque vencido,
+    // asi que ataca apenas entra: el ritmo no cambia. Sin camara vale la distancia sola.
+    private bool EnPantalla()
+    {
+        if (camara == null) camara = Camera.main;
+        if (camara == null) return true;
+        return DentroDelCuadro(camara.WorldToViewportPoint(transform.position), margenEnPantalla);
+    }
+
+    // Un punto en coordenadas de la pantalla (0 a 1, y z la distancia) que esta delante de
+    // la camara y a margen de los bordes. Estatica para probarla con la camara del juego.
+    public static bool DentroDelCuadro(Vector3 enPantalla, Vector2 margen)
+    {
+        return enPantalla.z > 0f
+            && enPantalla.x >= margen.x && enPantalla.x <= 1f - margen.x
+            && enPantalla.y >= margen.y && enPantalla.y <= 1f - margen.y;
     }
 
     // Despues de embestir queda expuesto un rato, haya chocado o no: es la ventana para
@@ -411,23 +487,26 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         desde = ahora;
         zombi.multiplicadorGolpe = 1f;
         zombi.golpeaAlChocar = false;
-        rotacionAlAturdirse = transform.rotation;
-        rumboAlAturdirse = transform.eulerAngles.y;
+        // Sin atacar: ni el cuerpo ni un zarpazo. Hasta el 24/9 el que quedaba pegado al
+        // jefe se comia zarpazos en plena ventana para castigarlo, con el brazo pegando
+        // encima del tambaleo. Y con las piernas quietas.
+        zombi.puedeZarpar = false;
+        Frenar();
     }
 
+    // No lo gira: la raiz la gira EnemyController, mirando al jugador en el paso de fisica
+    // siguiente. Hasta el 23/9 le aplicaba un rumbo guardado, y saliendo de invocar (que
+    // era el de la carga anterior) el jefe pegaba un salto de giro.
     private void Terminar(float ahora)
     {
-        // Saliendo del aturdimiento, el rumbo de antes del tambaleo: con el balanceo en Z
-        // puesto, eulerAngles.y ya no es el mismo angulo. Solo ahi: saliendo de invocar,
-        // rumboAlAturdirse es el de la carga anterior, de hace unos nueve segundos, y hasta
-        // el 23/9 el jefe pegaba un salto de giro hasta el paso de fisica siguiente.
-        if (estado == Estado.Aturdido) transform.rotation = Quaternion.Euler(0f, rumboAlAturdirse, 0f);
-        estado = Estado.Persiguiendo;
-        zombi.multiplicadorGolpe = 1f;
-        zombi.golpeaAlChocar = false;
+        VolverAPerseguir();
         tocaCarga = !tocaCarga;
         proximoAtaque = ahora + cadaCuanto * (enFuria ? ritmoEnFuria : 1f);
     }
+
+    // Si ya entro en furia. La barra de arriba (BarraDelJefe) late con esto y pone su
+    // muesca en fraccionFuria: asi dice la verdad aunque se balancee la furia en el prefab.
+    public bool EnFuria => enFuria;
 
     private void RevisarFuria(float ahora)
     {
@@ -464,10 +543,15 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         n = Mathf.Min(n, EnemyController.LugarParaZombis);
         if (n <= 0) return;
 
+        // En el piso, donde se dibujo el anillo, y no a la altura del centro del jefe (2 m):
+        // nacian con los pies a metro y medio y caian, lejos del anillo. SubirSobreElPiso
+        // los para encima, como a los de los puntos de aparicion.
+        Vector3 centro = transform.position;
+        centro.y = 0f;
         for (int i = 0; i < n; i++)
         {
             float angulo = i * Mathf.PI * 2f / n;
-            Vector3 punto = transform.position + new Vector3(Mathf.Cos(angulo), 0f, Mathf.Sin(angulo)) * radioInvocacion;
+            Vector3 punto = PuntoDelAnillo(centro, new Vector3(Mathf.Cos(angulo), 0f, Mathf.Sin(angulo)));
             var nuevo = EnemyController.Aparecer(invocado, punto);
             if (nuevo == null) continue;
             invocados.Add(nuevo);
@@ -478,25 +562,116 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
             nuevo.multiplicadorMonedas = zombi.multiplicadorMonedas;
             nuevo.monedaPrefab = zombi.monedaPrefab;
             if (oleadas != null) oleadas.SumarALaOleada(nuevo);
-            Efectos.Caja(punto);
+            // Del cuerpo del que sale, ya parado en el piso: en el punto del anillo (y = 0)
+            // la mitad de las chispas quedaria bajo el piso.
+            Efectos.Caja(nuevo.transform.position);
         }
         CamaraJugador.Temblar(0.35f);
     }
 
-    // La linea de la carga en el piso, del jefe hasta donde llega, titilando.
+    // Donde sale un invocado: en el anillo y sin quedar dentro o detras de una pared. Con
+    // el jefe contra el borde del mapa (la carga recorre 16 m, y seguido termina ahi) parte
+    // del anillo caia fuera, y esos se iban por el kill-Z, contados muertos y sin monedas.
+    // El que no entra de su lado sale del de enfrente, que da al mapa: acortarlo contra la
+    // pared lo dejaba metido en el cuerpo del jefe, y la fisica lo empujaba contra la pared.
+    private Vector3 PuntoDelAnillo(Vector3 centro, Vector3 hacia)
+    {
+        float radio = RadioLibre(hacia);
+        if (radio < radioDelCuerpo + MargenContraLasParedes)
+        {
+            float delOtroLado = RadioLibre(-hacia);
+            if (delOtroLado > radio)
+            {
+                hacia = -hacia;
+                radio = delOtroLado;
+            }
+        }
+        return centro + hacia * radio;
+    }
+
+    // Hasta donde entra un invocado en esa direccion: el anillo, o MargenContraLasParedes
+    // antes de lo primero fijo que haya (las paredes invisibles del borde). Solo cuentan
+    // los colliders fijos, como en Moneda: ni un zombi ni el jugador achican el anillo, y
+    // las cajas son triggers.
+    private float RadioLibre(Vector3 hacia)
+    {
+        float alcance = radioInvocacion + MargenContraLasParedes;
+        int cantidad = Physics.RaycastNonAlloc(transform.position, hacia, golpesContraLasParedes, alcance, ~0, QueryTriggerInteraction.Ignore);
+        float libre = alcance;
+        for (int i = 0; i < cantidad; i++)
+        {
+            Collider golpeado = golpesContraLasParedes[i].collider;
+            if (golpeado.attachedRigidbody != null || golpeado.GetComponentInParent<BulletController>() != null) continue;
+            libre = Mathf.Min(libre, golpesContraLasParedes[i].distance);
+        }
+        return Mathf.Clamp(libre - MargenContraLasParedes, 0f, radioInvocacion);
+    }
+
+    // La linea de la carga en el piso, del jefe hasta donde llega, titilando. Es la franja
+    // que barre su cuerpo: tan ancha como el y hasta donde llega su frente al final de la
+    // carga, asi "no pisar lo rojo" es exactamente no comerse el golpe. Hasta el 24/9 media
+    // 1,4 m fijos y el cuerpo barre casi 3 (la capsula tiene 1,44 m de radio): el que se
+    // corria medio metro afuera de lo rojo se comia igual el golpe mas fuerte del juego.
     private void DibujarLinea(float ahora)
     {
         float titileo = 0.55f + 0.45f * Mathf.Abs(Mathf.Sin((ahora - desde) * 14f));
         Color c = colorAviso;
         c.a *= titileo;
         linea.startColor = linea.endColor = c;
-        linea.widthMultiplier = anchoLinea;
+        linea.widthMultiplier = 2f * radioDelCuerpo;
         linea.loop = false;
         linea.positionCount = 2;
         Vector3 desdeAca = transform.position;
         desdeAca.y = 0.06f;
         linea.SetPosition(0, desdeAca);
-        linea.SetPosition(1, desdeAca + direccion * velocidadCarga * duracionCarga);
+        linea.SetPosition(1, desdeAca + direccion * (velocidadCarga * duracionCarga + frenteDelCuerpo));
+    }
+
+    // El cuerpo del jefe en el piso, de su capsula (vertical): el radio con la escala y lo
+    // que asoma su frente por delante del centro (la capsula esta corrida hacia adelante).
+    // Las hitboxes quedan adentro. Estatica para probarla con el prefab.
+    public static void MedirElCuerpo(CapsuleCollider capsula, Vector3 escala, out float radio, out float frente)
+    {
+        radio = capsula.radius * Mathf.Max(Mathf.Abs(escala.x), Mathf.Abs(escala.z));
+        frente = capsula.center.z * Mathf.Abs(escala.z) + radio;
+    }
+
+    // El Paso con el que el ciclo de correr avanza a esa velocidad, sin que los pies
+    // patinen: el clip avanza velocidadDelClip por unidad de escala del modelo. El jefe
+    // (2 x 1,2 = 2,4) a 16 m/s: 2,2.
+    public static float PasoParaCorrer(float velocidad, float velocidadDelClip, float escalaDelModelo)
+    {
+        return velocidad / Mathf.Max(0.01f, velocidadDelClip * escalaDelModelo);
+    }
+
+    // Quieto: un cuadro del ciclo de caminar (Ritmo 0: caminando siempre hay un pie en el
+    // piso, y corriendo hay cuadros con los dos en el aire). La pose de cada patron va
+    // encima, en LateUpdate.
+    private void Frenar()
+    {
+        PisarElPaso(0f, 0f);
+    }
+
+    private void PisarElPaso(float paso, float ritmo)
+    {
+        if (animador == null || !animador.isActiveAndEnabled) return;
+        if (!pasoPisado)
+        {
+            pasoPropio = animador.GetFloat(IdPaso);
+            ritmoPropio = animador.GetFloat(IdRitmo);
+            pasoPisado = true;
+        }
+        animador.SetFloat(IdPaso, paso);
+        animador.SetFloat(IdRitmo, ritmo);
+    }
+
+    private void DevolverElPaso()
+    {
+        if (!pasoPisado) return;
+        pasoPisado = false;
+        if (animador == null || !animador.isActiveAndEnabled) return;
+        animador.SetFloat(IdPaso, pasoPropio);
+        animador.SetFloat(IdRitmo, ritmoPropio);
     }
 
     // El anillo de la invocacion, que se achica hasta el radio donde van a salir.

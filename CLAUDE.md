@@ -404,23 +404,31 @@ con `GetComponentInParent<EnemyController>(true)` para gastarse igual, y `DanoZo
 tutorial sigue haciendo `Instantiate`: esos zombis no tienen prefab de origen y al morir se destruyen como antes.
 
 **El jefe tiene patrones propios** (`JefePatrones`, en el prefab ZombiBOSS; pedido de Ivan: antes era un zombi grande y
-lento). Alterna dos ataques con aviso cuando el jugador está a menos de `distanciaParaAtacar` (15 m): la **carga** (se
-frena, marca en el piso una línea roja hacia el jugador 0,9 s, ruge y embiste en línea recta a 16 m/s, pegando ×2,5
-mientras embiste, y al terminar —haya chocado o no— **queda aturdido 1,3 s**, tambaleándose y sin atacar: esa es la
+lento). Alterna dos ataques con aviso cuando el jugador está a menos de `distanciaParaAtacar` (15 m) **y al jefe se lo
+ve en pantalla** (su centro, a `margenEnPantalla` de los bordes: fuera de cuadro sonaba el rugido y la línea entraba por
+el borde sin que se viera quién embestía): la **carga** (se frena, marca en el piso una línea roja hacia el jugador 0,9 s,
+**del ancho de su cuerpo** —medía 1,4 m y la cápsula barre casi 3—, ruge y embiste en línea recta a 16 m/s, pegando ×2,5
+mientras embiste, y al terminar —haya chocado o no— **queda aturdido 1,3 s**, tambaleándose y sin atacar (tampoco con
+zarpazos: `EnemyController.puedeZarpar` los corta desde el aviso hasta volver a perseguir): esa es la
 ventana para castigarlo, y es lo que hace que esquivar valga la pena) y la **invocación**
-(se frena, un anillo rojo que se achica y aparecen 4 zombis normales con sus multiplicadores). A la mitad de su vida
+(se frena, un anillo rojo que se achica y aparecen 4 zombis normales con sus multiplicadores, parados en el piso del
+anillo y dentro del mapa: el que no entra contra una pared sale del lado de enfrente). A la mitad de su vida
 entra en furia: ataca más seguido e invoca 6. Los invocados cuentan en la oleada y en el total del HUD
 (`WaveManager.SumarALaOleada`). Para moverse por su cuenta usa `IMovimientoPropio`: `EnemyController` lo busca en su
 `Awake` y en cada paso de física le pregunta primero; si devuelve verdadero, la persecución de siempre no corre ese paso.
 **Cada patrón tiene su pose** (`JefePatrones.LateUpdate`): se agazapa y baja el cuerpo mientras avisa la carga, va
-echado hacia adelante mientras embiste, se tambalea de lado a lado —cada vez menos— mientras está aturdido, y se
-arquea hacia atrás al invocar. No hay clips para nada de eso (el pack trae correr, pegar, morir, quieto y caminar),
-así que es rotación y altura sobre el **hijo del modelo**, no sobre la raíz, que la maneja `EnemyController`
+echado hacia adelante mientras embiste, se tambalea de lado a lado —cada vez menos, y solo el modelo: la raíz también
+se balanceaba, sin decaer— mientras está aturdido, y se arquea hacia atrás al invocar. No hay clips para nada de eso
+(el pack trae correr, pegar, morir, quieto y caminar), así que es rotación y altura sobre el **hijo del modelo**, no sobre la raíz, que la maneja `EnemyController`
 (mira al jugador en cada paso de física y le aplasta la escala al recibir un tiro). Va en `LateUpdate` porque el
 Animator escribe los huesos en el paso de animación y lo que se ponga antes se pierde, y el suavizado es
 `1 - exp(-k·dt)` para que tarde lo mismo a 30 FPS que a 200. La altura sale del alto real del modelo, medido de sus
 renderers, así se ve igual con cualquier escala. Es lo que hace legible el aturdimiento de 1,3 s, que es la ventana
-para castigarlo y hasta ahora no se leía en ninguna parte. **ShowBies > Pruebas > Grabar al jefe** lo saca al lado
+para castigarlo y hasta ahora no se leía en ninguna parte. **Las piernas también van con el patrón** (`Paso` y `Ritmo`,
+que `JefePatrones` pisa y devuelve al volver a perseguir): quietas mientras avisa, invoca o está aturdido —caminaba en
+el lugar—, y embistiendo corre con el paso de lo que avanza (`velocidadDelClipDeCorrer`: `Z_run_rm` avanza 2 m por ciclo
+de 0,67 s a escala 1, medido del FBX; el jefe, a 16 m/s y con el modelo a 2,4, va con `Paso` 2,2), así los pies no
+patinan. **ShowBies > Pruebas > Grabar al jefe** lo saca al lado
 del jugador y graba los patrones, sin tener que llegar a la oleada 10 jugando.
 
 Las líneas usan el material del indicador de la granada y el rugido es `explosion.wav` más grave, y van **planas
@@ -491,7 +499,8 @@ conserva el guid, así que los cinco prefabs (que lo pisan con un override de `m
   dura 1,33 s y `intervaloDeGolpe` es 0,8, así que pegado al jugador encadena zarpazos sin volver a andar.
 - **La embestida del jefe no es un zarpazo**: pega con el cuerpo, en el acto al chocar (`golpeaAlChocar`, que
   `JefePatrones` prende y apaga junto con `multiplicadorGolpe`). A 16 m/s, esperar a que baje el brazo lo dejaría pasar
-  de largo sin pegar, y la carga detecta que chocó mirando `GolpesDados`.
+  de largo sin pegar, y la carga detecta que chocó mirando `GolpesDados`. Arranca limpia (`EmpezarEmbestida`): un
+  zarpazo de justo antes dejaba el intervalo corriendo y el primer choque no contaba, o pegaba en plena carga y la cortaba.
 - **Morir dejó de ser "apagar el objeto".** `EnemyController.Morir` saca al zombi de la cuenta en el acto
   (`DejarDeContar`: `ZombisVivos--`, deja de ser jefe, se esconde la barra) y **deja el GameObject prendido
   `duracionDeLaMuerte` (1,4 s)** mientras se desploma, con los colliders apagados y el Rigidbody kinematic; recién
@@ -1136,8 +1145,9 @@ trampa).
   chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
   (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
 - **La barra del jefe** (`BarraDelJefe`, pedido de Ivan: como la de los jefes de Minecraft) va arriba al centro
-  mientras hay un jefe vivo, con su nombre, la muesca de la mitad (donde entra en furia, y ahí late en naranja) y una
-  barra blanca detrás que baja despacio, para que cada bala se vea. Se arma en código y vive en el canvas del prefab
+  mientras hay un jefe vivo, con su nombre, la muesca donde entra en furia (`JefePatrones.fraccionFuria`, la mitad; y
+  late en naranja cuando entra, con `EnFuria`) y una barra blanca detrás que baja despacio, para que cada bala se vea.
+  Al matarlo la roja se vacía mientras la barra se va (se rellenaba entera). Se arma en código y vive en el canvas del prefab
   `MenuPausa`, que está en las tres escenas de juego (como `CursorMira`), colgando del área segura y antes del panel
   de la pausa, que la tapa. Espera un segundo desde que el jefe aparece: la vida definitiva se la pone quien lo saca,
   con los multiplicadores de la oleada, y preguntarla antes la fijaría sin ellos.
@@ -1759,8 +1769,11 @@ enterrado.
   mira). También mira que cada farol de noche tenga su charco de luz y ninguna luz por píxel, que el texto de cada
   misión diga cuánto pide, que `Economia.ZombisPorPartida` sea la suma de lo que saca el `WaveManager` de WaveMode, que
   los avisos de la partida no se pisen, que todo botón de vidrio del menú lleve su `PintarConTema`, que la tienda sea
-  de carbón neón en los dos temas (sin `PintarConTema`, con sus brillos y con el contraste de cada texto medido) y que el jefe no gire al terminar de invocar (por reflexión, con el prefab en una escena de vista
-  previa). Y **el nivel del jugador y los logros**: la curva y sus bordes, el ritmo contra la mezcla de zombis de
+  de carbón neón en los dos temas (sin `PintarConTema`, con sus brillos y con el contraste de cada texto medido) y los
+  patrones del jefe (por reflexión, con el prefab en una escena de vista previa): que no gire al terminar un patrón ni
+  se tambalee de raíz, que la línea de la carga tenga el ancho de su cuerpo, que aturdido no tire zarpazos, que la
+  embestida arranque limpia, que el paso al embestir salga del clip de correr del controller y que solo ataque si se lo
+  ve con la cámara de WaveMode. Y **el nivel del jugador y los logros**: la curva y sus bordes, el ritmo contra la mezcla de zombis de
   WaveMode, el premio del nivel congelado al subir, la experiencia de una moneda congelada al ganarla, la migración a v6,
   que los puntos y las monedas copiados a mano coincidan con los assets de los zombis y los textos de cada familia. Lo que abre escenas las lee y las cierra sin guardar. Las pruebas fijan el idioma en español al empezar y lo devuelven al terminar. No corre en play. Escribe `Builds/pruebas_mejoras.txt` y termina en `RESULTADO: TODO OK` o `N FALLAS`.
 - **ShowBies > Pruebas > Disparo con el joystick (play)** (`PruebaDisparo`): el camino del teléfono, con los joysticks
