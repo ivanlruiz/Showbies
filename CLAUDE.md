@@ -562,6 +562,11 @@ primera vez sale cada pieza sola del piso y las siguientes sale el decorado ente
   taparía la partida), autos contra el cordón, contenedores, canteros y faroles con luz naranja en las cuatro esquinas
   del cruce. El piso es `PisoCiudad.mat` (Grey Stones repetida 70 veces).
 
+**Lo que tapa un edificio** (su huella y, del lado contrario a la cámara, la franja de piso que esconde el techo) lo mide
+`CapitulosDeEscenario` al armar el decorado y lo expone mientras está puesto (`Tapado`, `LoTapado`): sin colliders nada
+choca con ellos, y hasta la auditoría del 24/9 una de cada seis cajas de la ciudad nacía adentro de uno y vencía sin que
+nadie la viera. Las cajas vuelven a sortear el punto si cae tapado (`PowerUp.PuntoDeAparicion`) y las monedas no caen ahí.
+
 **Los faroles alumbran el piso con un charco de luz, no con su luz.** Cada farol lleva en el piso un cuadrado aditivo
 (`Charco`, con el shader `ShowBies/CharcoDeLuz`, que se apaga como la luz puntual que cuelga encima, calculado en el
 shader y sin textura) y su luz va **sólo por vértice** (`LightRenderMode.ForceVertex`): tiñe a los zombis y al jugador
@@ -615,11 +620,17 @@ premios de nivel, los logros y seis récords nuevos). No usa PlayerPrefs a prop�
 - **Las monedas no tienen Rigidbody ni collider**, no proyectan ni reciben sombra (con el material instanciado,
   para que no sean un draw call cada una) y salen de un pool, con un techo de 150 en escena (80 en
   móvil): el vuelo es una parábola a mano y el cobro, una distancia al jugador. Si el techo no deja soltar
-  todas, las que salen se reparten el valor de las que no. **Como no tienen collider, el vuelo no ve las paredes:**
+  todas, las que salen se reparten el valor de las que no, y **el techo es duro**: con el piso lleno igual sale una
+  por muerte y la lluvia del jefe (una muerte de `lluviaDesde`, 10 monedas, o más) sale entera, y el lugar lo hacen las
+  más viejas que no vuelan hacia el jugador, que se van con su valor, como si vencieran antes (pasárselo a la nueva
+  rescataba lo que vence sin que nadie lo junte: un 10-30 % más de lo cobrado con el techo lleno). Hasta la auditoría
+  del 24/9 cada muerte con el techo lleno sumaba una de más y la lluvia del jefe salía como una o dos monedas.
+  **Como no tienen collider, el vuelo no ve las paredes:**
   al salir, `FrenarAntesDeLasParedes` tira un raycast horizontal hasta lo máximo que puede recorrer (velocidad /
   frenado) y, si hay un collider fijo en el camino (sin Rigidbody y que no sea una bala), la frena para que caiga a
   `margenContraParedes` (0,3 m) de él. Sin eso caían detrás de las paredes invisibles del borde, y sin imán quedaban
-  perdidas.
+  perdidas. Lo mismo con lo que tapa un edificio de la ciudad (ver Capítulos), y las de un zombi que muere adentro de
+  uno salen por el borde más cercano.
 - **El modelo es el hijo `Modelo` del prefab** (hoy un cilindro dorado provisorio de 0,4 m, con el centro a 0,3 m del piso). Lo que gira es la raíz, de
   frente a la cámara: para cambiar el modelo se reemplaza el hijo, con la cara de la moneda mirando a +Z. El
   sonido es `Assets/otros/moneda.wav`, también provisorio: la bemol 5 y la bemol 6, la misma nota a una octava

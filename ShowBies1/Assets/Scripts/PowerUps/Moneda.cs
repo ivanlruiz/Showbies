@@ -59,6 +59,8 @@ public class Moneda : MonoBehaviour
     [Header("Techo")]
     public int maxMonedasEnEscena = 150;
     public int maxMonedasEnEscenaMovil = 80;
+    [Tooltip("Desde cuantas monedas una muerte es una lluvia (hoy solo la del jefe, 30 a 40; el tanque suelta 8 como mucho): sale entera aunque el techo este lleno.")]
+    public int lluviaDesde = 10;
 
     private const float SeparacionEntreSonidos = 0.05f;
 
@@ -69,7 +71,9 @@ public class Moneda : MonoBehaviour
     private static float ultimaNotaEn = float.NegativeInfinity;
 
     private static readonly Stack<Moneda> pool = new Stack<Moneda>();
-    private static int enEscena;
+    // Las que estan en uso, sin orden: el techo las cuenta y, lleno, busca aca la mas
+    // vieja (ver Soltar). Cada una sabe su lugar, asi sacarla no recorre la lista.
+    private static readonly List<Moneda> enEscena = new List<Moneda>();
     private static float radioImanDeLaPartida = -1f;
 
     // Para el raycast de salida. No guarda nada entre una moneda y otra, asi que no
@@ -88,7 +92,7 @@ public class Moneda : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         pool.Clear();
-        enEscena = 0;
+        enEscena.Clear();
         radioImanDeLaPartida = -1f;
         jugador = null;
         frameDeBusqueda = -1;
@@ -109,22 +113,66 @@ public class Moneda : MonoBehaviour
     private bool reboto;
     private bool enElPiso;
     private bool atraida;
+    private int lugarEnEscena = -1;
     private Renderer[] renderers;
 
-    // Suelta 'cantidad' monedas de 'valor' cada una. Si el techo no deja soltarlas
-    // todas, las que entran se reparten el valor de las que no: no se pierde nada.
+    // Suelta 'cantidad' monedas de 'valor' cada una sin pasarse del techo de monedas en
+    // escena, que esta por rendimiento. Si el techo no deja soltarlas todas, las que salen
+    // se reparten el valor de las que no: no se pierde nada. Igual sale al menos una, para
+    // que se vea que el zombi solto algo, y una lluvia (la del jefe) sale entera: el lugar
+    // lo hacen las mas viejas del piso, que se van como si vencieran (ver LaMasVieja).
+    // Antes, con el techo lleno, cada muerte sumaba una de mas, asi que en las oleadas mas
+    // pesadas el techo del telefono (80) no atajaba nada, y la lluvia del jefe salia como
+    // una o dos monedas iguales a las demas.
     public static void Soltar(Moneda prefab, Vector3 origen, int cantidad, double valor)
     {
         if (prefab == null || cantidad <= 0 || valor <= 0) return;
 
         int techo = Plataforma.EsMovil ? prefab.maxMonedasEnEscenaMovil : prefab.maxMonedasEnEscena;
-        int entran = Mathf.Clamp(techo - enEscena, 1, cantidad);
-        double valorPorMoneda = valor * cantidad / entran;
+        int hacenLugar;
+        int salen = CuantasSalen(cantidad, enEscena.Count, techo, prefab.lluviaDesde, out hacenLugar);
+        for (int i = 0; i < hacenLugar; i++)
+        {
+            Moneda vieja = LaMasVieja();
+            if (vieja == null) break;   // todas vuelan al jugador: se pasa del techo un instante
+            vieja.Devolver();
+        }
 
-        for (int i = 0; i < entran; i++)
+        double valorPorMoneda = valor * cantidad / salen;
+        origen = SacarDeLoTapado(origen, prefab.margenContraParedes);
+        for (int i = 0; i < salen; i++)
         {
             Obtener(prefab).Salir(origen, valorPorMoneda);
         }
+    }
+
+    // Cuantas salen de una muerte que suelta 'cantidad' con 'enElPiso' monedas en escena, y
+    // cuantas de las del piso se van para hacerles lugar. Estatico para probarlo sin escena.
+    public static int CuantasSalen(int cantidad, int enElPiso, int techo, int lluviaDesde, out int hacenLugar)
+    {
+        int minimo = cantidad >= lluviaDesde ? cantidad : 1;
+        int salen = Mathf.Clamp(techo - enElPiso, minimo, cantidad);
+        // Pasado del techo (si alguna vez no hubo a quien sacar) no se sacan de mas: baja solo.
+        hacenLugar = Mathf.Max(0, Mathf.Min(salen, enElPiso + salen - techo));
+        return salen;
+    }
+
+    // La que se va para hacer lugar: la mas vieja, que es la que iba a vencer primero, y
+    // nunca una que ya vuela hacia el jugador. Se va con lo que valia, como si venciera
+    // antes. Pasarle su valor a la nueva rescataria lo que hoy vence sin que nadie lo junte:
+    // en una simulacion del techo del telefono lleno, con la mezcla de WaveMode a su ritmo
+    // mas alto, lo cobrado subia un 10-30 %, y yendose con su valor queda como estaba.
+    // Juntarlas es parte del juego: por eso no hay iman global.
+    private static Moneda LaMasVieja()
+    {
+        Moneda vieja = null;
+        for (int i = 0; i < enEscena.Count; i++)
+        {
+            Moneda moneda = enEscena[i];
+            if (moneda == null || moneda.atraida) continue;
+            if (vieja == null || moneda.salioEn < vieja.salioEn) vieja = moneda;
+        }
+        return vieja;
     }
 
     // El alcance del iman en esta partida: lo fija AplicarMejoras al empezar, con la
@@ -163,7 +211,8 @@ public class Moneda : MonoBehaviour
     {
         valor = valorMoneda;
         enUso = true;
-        enEscena++;
+        lugarEnEscena = enEscena.Count;
+        enEscena.Add(this);
         salioEn = Time.time;
         venceEn = salioEn + vida;
         reboto = false;
@@ -208,12 +257,75 @@ public class Moneda : MonoBehaviour
             if (golpeado.attachedRigidbody != null || golpeado.GetComponentInParent<BulletController>() != null) continue;
             libre = Mathf.Min(libre, golpesDeSalida[i].distance);
         }
+        // Los edificios de la ciudad no tienen collider, pero la taparian igual: se frena
+        // antes, como contra una pared.
+        libre = LibreHastaLoTapado(origen, direccion, libre);
         if (libre >= alcance) return v;
 
         float nuevaRapidez = Mathf.Max(0f, libre - margenContraParedes) * frenadoHorizontal;
         v.x = direccion.x * nuevaRapidez;
         v.z = direccion.z * nuevaRapidez;
         return v;
+    }
+
+    // Un zombi que muere cruzando un edificio de la ciudad (no tienen collider: los zombis
+    // se trabarian) soltaba las monedas adentro, donde el techo las tapa y sin iman habia
+    // que entrar a buscarlas a ciegas. Salen por el borde mas cercano de lo que tapa el
+    // edificio (ver CapitulosDeEscenario.Tapado), a 'margen' de el; afuera, nada cambia. Las
+    // zonas no se tocan (entre dos edificios hay una calle): con salir de una alcanza.
+    // Publico para la prueba de logica.
+    public static Vector3 SacarDeLoTapado(Vector3 punto, float margen)
+    {
+        var tapado = CapitulosDeEscenario.LoTapado;
+        for (int i = 0; i < tapado.Count; i++)
+        {
+            Rect zona = tapado[i];
+            float oeste = zona.xMin - margen, este = zona.xMax + margen;
+            float sur = zona.yMin - margen, norte = zona.yMax + margen;
+            if (punto.x <= oeste || punto.x >= este || punto.z <= sur || punto.z >= norte) continue;
+
+            float hastaOeste = punto.x - oeste, hastaEste = este - punto.x;
+            float hastaSur = punto.z - sur, hastaNorte = norte - punto.z;
+            float menor = Mathf.Min(Mathf.Min(hastaOeste, hastaEste), Mathf.Min(hastaSur, hastaNorte));
+            if (menor == hastaOeste) punto.x = oeste;
+            else if (menor == hastaEste) punto.x = este;
+            else if (menor == hastaSur) punto.z = sur;
+            else punto.z = norte;
+            return punto;
+        }
+        return punto;
+    }
+
+    // Cuanto puede avanzar desde 'origen' hacia 'direccion' (horizontal y de largo 1) sin
+    // entrar en lo que tapa un edificio, hasta 'libre'. El rayo contra cada rectangulo, eje
+    // por eje: se entra donde empiezan a coincidir el tramo entre los dos bordes de x y el
+    // tramo entre los dos de z. Publico para la prueba de logica.
+    public static float LibreHastaLoTapado(Vector3 origen, Vector3 direccion, float libre)
+    {
+        var tapado = CapitulosDeEscenario.LoTapado;
+        for (int i = 0; i < tapado.Count; i++)
+        {
+            Rect zona = tapado[i];
+            float entra = 0f, sale = libre;
+            if (Tramo(origen.x, direccion.x, zona.xMin, zona.xMax, ref entra, ref sale) &&
+                Tramo(origen.z, direccion.z, zona.yMin, zona.yMax, ref entra, ref sale))
+            {
+                libre = entra;
+            }
+        }
+        return libre;
+    }
+
+    // Recorta [entra, sale] a lo que el rayo pasa entre 'min' y 'max' en un eje. Falso si
+    // no queda nada.
+    private static bool Tramo(float desde, float paso, float min, float max, ref float entra, ref float sale)
+    {
+        if (Mathf.Abs(paso) < 1e-6f) return desde >= min && desde <= max;
+        float a = (min - desde) / paso, b = (max - desde) / paso;
+        if (a > b) { float c = a; a = b; b = c; }
+        entra = Mathf.Max(entra, a);
+        sale = Mathf.Min(sale, b);
+        return entra <= sale;
     }
 
     private void Update()
@@ -385,16 +497,30 @@ public class Moneda : MonoBehaviour
         if (!enUso) return;
 
         enUso = false;
-        enEscena--;
+        DejarDeContar();
         gameObject.SetActive(false);
         pool.Push(this);
+    }
+
+    // Sale de la cuenta del techo: la ultima de la lista pasa a su lugar.
+    private void DejarDeContar()
+    {
+        int ultima = enEscena.Count - 1;
+        if (lugarEnEscena >= 0 && lugarEnEscena <= ultima && ReferenceEquals(enEscena[lugarEnEscena], this))
+        {
+            Moneda otra = enEscena[ultima];
+            enEscena[lugarEnEscena] = otra;
+            otra.lugarEnEscena = lugarEnEscena;
+            enEscena.RemoveAt(ultima);
+        }
+        lugarEnEscena = -1;
     }
 
     // Las que estan en uso cuando se descarga la escena no pasan por Devolver:
     // sin esto el techo quedaria contando monedas que ya no existen.
     private void OnDestroy()
     {
-        if (enUso) enEscena--;
+        if (enUso) DejarDeContar();
     }
 
     private void Mostrar(bool visible)

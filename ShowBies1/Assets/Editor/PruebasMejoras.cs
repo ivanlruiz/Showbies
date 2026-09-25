@@ -197,6 +197,7 @@ public static class PruebasMejoras
             ProbarEscalado(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
+            ProbarCajasYMonedas(informe);
             ProbarFaroles(informe);
             ProbarCalidadDeAndroid(informe);
             ProbarPuntoDeLaGranada(informe);
@@ -880,6 +881,163 @@ public static class PruebasMejoras
             total += GunController.TirosDelFrame(ref contador, dt, intervalo, maximo, out atraso);
         }
         return total / (frames * (double)dt);
+    }
+
+    // Las cajas no nacen y las monedas no caen donde las tapa un edificio de la ciudad, y el
+    // techo de monedas en escena es duro. Los edificios no tienen collider (los zombis se
+    // trabarian): hasta la auditoria del 24/9 una de cada seis cajas nacia adentro de uno y
+    // vencia sin que nadie la viera, y las monedas de un zombi que moria cruzandolo caian
+    // adentro. Y con el techo lleno cada muerte sumaba una moneda de mas, mientras la lluvia
+    // del jefe salia como una o dos iguales a las demas.
+    static void ProbarCajasYMonedas(Informe inf)
+    {
+        // El techo: cuantas salen de una muerte y cuantas del piso se van para hacerles lugar.
+        int lugar;
+        inf.Igual("techo de monedas: con lugar salen todas", 3, Moneda.CuantasSalen(3, 10, 80, 10, out lugar));
+        inf.Igual("techo de monedas: con lugar no se va ninguna del piso", 0, lugar);
+        inf.Igual("techo de monedas: casi lleno salen las que entran", 2, Moneda.CuantasSalen(3, 78, 80, 10, out lugar));
+        inf.Igual("techo de monedas: casi lleno no se va ninguna", 0, lugar);
+        inf.Igual("techo de monedas: lleno sale una igual", 1, Moneda.CuantasSalen(3, 80, 80, 10, out lugar));
+        inf.Igual("techo de monedas: lleno se va la mas vieja", 1, lugar);
+        inf.Igual("techo de monedas: pasado del techo sale una", 1, Moneda.CuantasSalen(3, 85, 80, 10, out lugar));
+        inf.Igual("techo de monedas: pasado del techo se va una y no crece", 1, lugar);
+        inf.Igual("techo de monedas: la lluvia del jefe sale entera con el techo lleno", 35, Moneda.CuantasSalen(35, 80, 80, 10, out lugar));
+        inf.Igual("techo de monedas: y le hacen lugar las 35 mas viejas", 35, lugar);
+        inf.Igual("techo de monedas: con 60 en el piso la lluvia sale entera", 35, Moneda.CuantasSalen(35, 60, 80, 10, out lugar));
+        inf.Igual("techo de monedas: y le hacen lugar 15", 15, lugar);
+        bool nuncaPasa = true, siempreUna = true;
+        for (int cantidad = 1; cantidad <= 45; cantidad++)
+        {
+            for (int enElPiso = 0; enElPiso <= 80; enElPiso++)
+            {
+                int salen = Moneda.CuantasSalen(cantidad, enElPiso, 80, 10, out lugar);
+                if (enElPiso - lugar + salen > 80 || lugar > enElPiso) nuncaPasa = false;
+                if (salen < 1 || salen > cantidad) siempreUna = false;
+            }
+        }
+        inf.Verdadero("techo de monedas: con hasta 80 en el piso nunca pasa de 80", nuncaPasa);
+        inf.Verdadero("techo de monedas: siempre sale al menos una y nunca mas de las que suelta", siempreUna);
+
+        // Moneda no sabe quien las suelta: la lluvia se reconoce por la cantidad. La del jefe
+        // tiene que llegar siempre (en el libre, en promedio: ahi cada moneda sale con
+        // probabilidad 0,5 o mas) y la de ningun otro zombi.
+        var objetoMoneda = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Moneda.prefab");
+        var moneda = objetoMoneda != null ? objetoMoneda.GetComponent<Moneda>() : null;
+        if (inf.Verdadero("techo de monedas: esta el prefab de la moneda", moneda != null))
+        {
+            foreach (string tipo in Bestiario.Tipos)
+            {
+                var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>("Assets/Zombies/" + tipo + ".asset");
+                if (!inf.Verdadero("techo de monedas: esta el asset de " + tipo, enemigo != null)) continue;
+                if (tipo == Bestiario.Jefe)
+                    inf.Verdadero("techo de monedas: el jefe suelta una lluvia, tambien en el libre", enemigo.monedasMin * 0.5 >= moneda.lluviaDesde);
+                else
+                    inf.Verdadero("techo de monedas: " + tipo + " no llega a una lluvia", enemigo.monedasMax < moneda.lluviaDesde);
+            }
+        }
+
+        // Lo que tapan los edificios, con la camara de WaveMode: 70 grados, mirando hacia +z.
+        Vector3 mirada = Quaternion.Euler(70f, 0f, 0f) * Vector3.forward;
+        var tapado = new List<Rect>();
+        var cementerio = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Escenarios/Cementerio.prefab");
+        if (inf.Verdadero("edificios: esta el prefab del cementerio", cementerio != null))
+        {
+            CapitulosDeEscenario.LoQueTapanLosEdificios(cementerio, mirada, tapado);
+            inf.Igual("edificios: el cementerio no tapa nada", 0, tapado.Count);
+        }
+        var ciudad = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Escenarios/Ciudad.prefab");
+        if (!inf.Verdadero("edificios: esta el prefab de la ciudad", ciudad != null)) return;
+        CapitulosDeEscenario.LoQueTapanLosEdificios(ciudad, mirada, tapado);
+        var edificios = new List<Transform>();
+        foreach (Transform t in ciudad.GetComponentsInChildren<Transform>(true))
+        {
+            if (t.name == "Edificio") edificios.Add(t);
+        }
+        inf.Verdadero("edificios: la ciudad tiene", edificios.Count > 0);
+        inf.Igual("edificios: una zona tapada por edificio", edificios.Count, tapado.Count);
+
+        var estadoDelAzar = UnityEngine.Random.state;
+        try
+        {
+            CapitulosDeEscenario.UsarParaPruebas(tapado);
+            bool centrosTapados = true;
+            foreach (var edificio in edificios) centrosTapados &= CapitulosDeEscenario.Tapado(edificio.position);
+            inf.Verdadero("edificios: el centro de cada uno esta tapado", centrosTapados);
+
+            // Cada edificio es un cuadrado centrado en su grupo. Del lado de la camara (-z) tapa
+            // solo su huella; del otro, tambien la franja que esconde el techo (mas de un metro
+            // con 3,5 m de alto).
+            bool haciaAtras = true, haciaLaCamara = true;
+            foreach (var edificio in edificios)
+            {
+                Vector3 centro = edificio.position;
+                Rect zona = default;
+                foreach (var z in tapado)
+                {
+                    if (z.Contains(new Vector2(centro.x, centro.z))) zona = z;
+                }
+                float mitad = zona.width / 2f;
+                if (Mathf.Abs(centro.z - mitad - zona.yMin) > 0.1f) haciaLaCamara = false;
+                if (zona.yMax - (centro.z + mitad) < 1f) haciaAtras = false;
+            }
+            inf.Verdadero("edificios: tapan una franja detras del techo, del lado contrario a la camara", haciaAtras);
+            inf.Verdadero("edificios: del lado de la camara tapan solo la huella", haciaLaCamara);
+
+            // Las calles no quedan tapadas: el cruce del centro, donde arranca el jugador, y las
+            // lineas del medio de las calles.
+            bool callesLibres = true;
+            for (int t = -45; t <= 45; t++)
+            {
+                foreach (float calle in new[] { -24f, 0f, 24f })
+                {
+                    if (CapitulosDeEscenario.Tapado(new Vector3(calle, 0f, t)) || CapitulosDeEscenario.Tapado(new Vector3(t, 0f, calle))) callesLibres = false;
+                }
+            }
+            inf.Verdadero("edificios: las calles del medio quedan libres", callesLibres);
+
+            // Las cajas: ninguna nace tapada y todas en el area de siempre.
+            UnityEngine.Random.InitState(1234);
+            int tapadas = 0, afuera = 0;
+            for (int i = 0; i < 5000; i++)
+            {
+                Vector3 caja = PowerUp.PuntoDeAparicion();
+                if (CapitulosDeEscenario.Tapado(caja, PowerUp.MargenContraLosEdificios)) tapadas++;
+                if (caja.x < -48f || caja.x > 48f || caja.z < -45f || caja.z > 44f || !Mathf.Approximately(caja.y, 0.5f)) afuera++;
+            }
+            inf.Igual("edificios: ninguna caja nace tapada (de 5000)", 0, tapadas);
+            inf.Igual("edificios: las cajas nacen en el area de siempre", 0, afuera);
+
+            // Las monedas: las de un zombi que muere adentro salen por el borde mas cercano, y
+            // las que vuelan hacia un edificio se frenan antes, como contra una pared.
+            bool salenAfuera = true, frenanAntes = true, siguenDeLargo = true;
+            foreach (var zona in tapado)
+            {
+                var adentro = new Vector3(zona.center.x, 1f, zona.center.y);
+                Vector3 afueraDelEdificio = Moneda.SacarDeLoTapado(adentro, 0.3f);
+                if (CapitulosDeEscenario.Tapado(afueraDelEdificio) || !CapitulosDeEscenario.Tapado(afueraDelEdificio, 0.31f) ||
+                    !Mathf.Approximately(afueraDelEdificio.y, 1f)) salenAfuera = false;
+                Vector3 haciaElEdificio = new Vector3(zona.center.x - afueraDelEdificio.x, 0f, zona.center.y - afueraDelEdificio.z).normalized;
+                if (Mathf.Abs(Moneda.LibreHastaLoTapado(afueraDelEdificio, haciaElEdificio, 3f) - 0.3f) > 1e-3f) frenanAntes = false;
+                if (Mathf.Abs(Moneda.LibreHastaLoTapado(afueraDelEdificio, -haciaElEdificio, 3f) - 3f) > 1e-3f) siguenDeLargo = false;
+                var alSur = new Vector3(zona.center.x, 1f, zona.yMin - 5f);
+                if (Mathf.Abs(Moneda.LibreHastaLoTapado(alSur, Vector3.forward, 10f) - 5f) > 1e-3f) frenanAntes = false;
+            }
+            inf.Verdadero("edificios: las monedas de un zombi que muere adentro salen al borde, a 0,3 m", salenAfuera);
+            inf.Verdadero("edificios: una moneda que vuela hacia un edificio se frena en el borde", frenanAntes);
+            inf.Verdadero("edificios: una que se aleja no se frena", siguenDeLargo);
+            var libre = new Vector3(0f, 1f, 0f);
+            inf.Verdadero("edificios: en la calle la moneda sale donde murio el zombi", Moneda.SacarDeLoTapado(libre, 0.3f) == libre);
+
+            // Sin decorado (la pradera, el modo libre) no hay nada tapado.
+            CapitulosDeEscenario.UsarParaPruebas(null);
+            inf.Verdadero("edificios: sin decorado no hay nada tapado",
+                          edificios.Count == 0 || !CapitulosDeEscenario.Tapado(edificios[0].position));
+        }
+        finally
+        {
+            CapitulosDeEscenario.UsarParaPruebas(null);
+            UnityEngine.Random.state = estadoDelAzar;
+        }
     }
 
     // 6. El daño con decimales de los zombis escalados se acumula y sale entero.

@@ -89,6 +89,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         public readonly List<float> alturas = new List<float>();
         public readonly List<float> demoras = new List<float>();
         public float saliendoDesde = -1f;
+        public readonly List<Rect> tapado = new List<Rect>();   // lo que tapan sus edificios (ver Tapado)
     }
 
     private Puesta[] puestas;
@@ -128,6 +129,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         // La niebla y la luz ambiente son de la aplicacion: el menu no hereda la noche.
         RenderSettings.fog = false;
         RenderSettings.ambientLight = ambienteDeLaEscena;
+        loTapado.Clear();
         if (puestas == null) return;
         foreach (var puesta in puestas) if (puesta.objeto != null) Destroy(puesta.objeto);
     }
@@ -203,7 +205,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         var escenario = escenarios[siguiente];
         var puesta = puestas[siguiente];
         if (escenario.decorado == null || puesta.objeto != null) yield break;
-        Armar(escenario, puesta);
+        Armar(escenario, puesta, Mirada());
     }
 
     private void Aplicar()
@@ -246,8 +248,11 @@ public class CapitulosDeEscenario : MonoBehaviour
         var escenario = escenarios[indice];
         var puesta = puestas[indice];
         if (escenario.decorado == null) return;
-        if (puesta.objeto == null) Armar(escenario, puesta);
+        if (puesta.objeto == null) Armar(escenario, puesta, Mirada());
         puesta.objeto.SetActive(true);
+        // Desde que empieza a salir del piso: una caja que nace ahora queda adentro.
+        loTapado.Clear();
+        loTapado.AddRange(puesta.tapado);
 
         if (!saliendo)
         {
@@ -276,7 +281,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         CamaraJugador.Temblar(0.35f);
     }
 
-    private static void Armar(EscenarioDeCapitulo escenario, Puesta puesta)
+    private static void Armar(EscenarioDeCapitulo escenario, Puesta puesta, Vector3 mirada)
     {
         puesta.objeto = Instantiate(escenario.decorado);
         puesta.objeto.SetActive(false);
@@ -289,6 +294,8 @@ public class CapitulosDeEscenario : MonoBehaviour
                 puesta.demoras.Add(Random.Range(0f, 1.4f));
             }
         }
+        // Recien instanciado: todo en su lugar y sin juntar todavia.
+        LoQueTapanLosEdificios(puesta.objeto, mirada, puesta.tapado);
     }
 
     // Todo en su lugar y, la primera vez, pegado en una sola malla.
@@ -315,6 +322,8 @@ public class CapitulosDeEscenario : MonoBehaviour
         var puesta = puestas[indice];
         if (puesta.objeto != null) puesta.objeto.SetActive(false);
         puesta.saliendoDesde = -1f;
+        // Se saca siempre el que esta puesto (el de antes del fundido).
+        loTapado.Clear();
     }
 
     private void AnimarDecorado()
@@ -345,6 +354,107 @@ public class CapitulosDeEscenario : MonoBehaviour
             }
             if (termino) Aterrizar(puesta);
         }
+    }
+
+    // --- Lo que tapan los edificios ---------------------------------------------------
+    //
+    // Los decorados no tienen colliders, asi que nada choca con un edificio de la ciudad,
+    // pero desde la camara del juego (arriba y atras del jugador, mirando siempre hacia el
+    // mismo lado) el techo tapa todo lo que queda adentro y una franja del piso del lado de
+    // atras. Una de cada seis cajas nacia adentro de un edificio y vencia sin que nadie la
+    // viera, y las monedas de un zombi que moria cruzandolo caian adentro. Aca queda, en el
+    // piso (x, z), lo que tapan los edificios del decorado que esta puesto: lo miran
+    // PowerUp (Tapado) y Moneda (LoTapado). Sin decorado, o en uno sin edificios, no hay nada.
+
+    // El nombre del grupo de cada edificio en el prefab (ConstructorEscenarios.Edificio).
+    private const string Edificio = "Edificio";
+
+    private static readonly List<Rect> loTapado = new List<Rect>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        loTapado.Clear();
+    }
+
+    // Un rectangulo por edificio: x es x y y es z.
+    public static IReadOnlyList<Rect> LoTapado => loTapado;
+
+    // Si un edificio del decorado puesto tapa ese punto del piso, agrandando lo tapado en
+    // 'margen' (lo que mide lo que se quiere ver).
+    public static bool Tapado(Vector3 punto, float margen = 0f)
+    {
+        for (int i = 0; i < loTapado.Count; i++)
+        {
+            Rect zona = loTapado[i];
+            if (punto.x >= zona.xMin - margen && punto.x <= zona.xMax + margen &&
+                punto.z >= zona.yMin - margen && punto.z <= zona.yMax + margen) return true;
+        }
+        return false;
+    }
+
+    // Para la prueba de logica, sin escena: fija lo tapado a mano (null lo vacia).
+    public static void UsarParaPruebas(List<Rect> tapado)
+    {
+        loTapado.Clear();
+        if (tapado != null) loTapado.AddRange(tapado);
+    }
+
+    // Lo que tapan los edificios de un decorado con la camara mirando hacia 'mirada': la
+    // huella de cada uno y, del lado contrario a la camara, el piso que esconde su techo (el
+    // rayo que pasa rozando el borde del techo llega al piso tanto mas alla). Se mide con las
+    // mallas y no con Renderer.bounds, que en un objeto apagado viene vacio (el decorado se
+    // arma apagado), y antes de juntarlo con StaticBatchingUtility, que les cambia la malla.
+    public static void LoQueTapanLosEdificios(GameObject decorado, Vector3 mirada, List<Rect> tapado)
+    {
+        tapado.Clear();
+        if (decorado == null) return;
+        foreach (Transform grupo in decorado.transform)
+        {
+            foreach (Transform pieza in grupo)
+            {
+                if (pieza.name != Edificio) continue;
+                bool hay = false;
+                Bounds caja = default;
+                foreach (var filtro in pieza.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if (filtro.sharedMesh == null) continue;
+                    Bounds b = EnElMundo(filtro.sharedMesh.bounds, filtro.transform.localToWorldMatrix);
+                    if (hay) caja.Encapsulate(b);
+                    else { caja = b; hay = true; }
+                }
+                if (!hay) continue;
+
+                Rect zona = Rect.MinMaxRect(caja.min.x, caja.min.z, caja.max.x, caja.max.z);
+                if (mirada.y < -0.01f)
+                {
+                    float porAltura = caja.max.y / -mirada.y;
+                    float dx = mirada.x * porAltura, dz = mirada.z * porAltura;
+                    zona.xMin += Mathf.Min(0f, dx);
+                    zona.xMax += Mathf.Max(0f, dx);
+                    zona.yMin += Mathf.Min(0f, dz);
+                    zona.yMax += Mathf.Max(0f, dz);
+                }
+                tapado.Add(zona);
+            }
+        }
+    }
+
+    // La caja de una malla en el mundo, sin armar sus ocho esquinas.
+    private static Bounds EnElMundo(Bounds local, Matrix4x4 m)
+    {
+        Vector3 e = local.extents;
+        var extension = new Vector3(
+            Mathf.Abs(m.m00) * e.x + Mathf.Abs(m.m01) * e.y + Mathf.Abs(m.m02) * e.z,
+            Mathf.Abs(m.m10) * e.x + Mathf.Abs(m.m11) * e.y + Mathf.Abs(m.m12) * e.z,
+            Mathf.Abs(m.m20) * e.x + Mathf.Abs(m.m21) * e.y + Mathf.Abs(m.m22) * e.z);
+        return new Bounds(m.MultiplyPoint3x4(local.center), extension * 2f);
+    }
+
+    // Hacia donde mira la camara del juego, que no gira (el temblor la rota sobre ese eje).
+    private Vector3 Mirada()
+    {
+        return camara != null ? camara.transform.forward : Vector3.down;
     }
 
     // --- El cartel -------------------------------------------------------------------
