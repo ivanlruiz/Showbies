@@ -1336,7 +1336,6 @@ public static class PruebasMejoras
         }
     }
 
-    // 7. Migracion desde v1, archivos rotos y normalizacion.
     // Los faroles de noche alumbran el piso tambien en el telefono. Hasta el 23/9 sus luces
     // iban en Auto: en Android (calidad Medium, una sola luz por pixel, que se lleva la luna)
     // caian a luz por vertice, y el piso tiene un vertice cada diez metros, asi que no se
@@ -1380,8 +1379,6 @@ public static class PruebasMejoras
         }
     }
 
-    // El gris de poca vida (pedido de Ivan): nada hasta un cuarto de la vida y de ahi, en
-    // linea recta, hasta medio gris con la vida en cero. Al gris total llega recien al morir.
     // Android sale en Medium (ver Rendimiento en movil). Entrar y salir de play le borra el
     // bloque a QualitySettings.asset sin avisar; la build tambien lo controla
     // (ConstructorAndroid), pero esto lo avisa antes, justo despues de un banco en play.
@@ -1568,6 +1565,8 @@ public static class PruebasMejoras
         inf.Verdadero("importacion: la musica del menu sigue en estereo, con su volumen", musica != null && !musica.forceToMono);
     }
 
+    // El gris de poca vida (pedido de Ivan): nada hasta un cuarto de la vida y de ahi, en
+    // linea recta, hasta medio gris con la vida en cero. Al gris total llega recien al morir.
     static void ProbarGrisDePocaVida(Informe inf)
     {
         inf.Cerca("gris: con la vida llena, nada", 0, GrisDePocaVida.CantidadDeGris(1f, 0.25f, 0.5f), 1e-6);
@@ -2156,6 +2155,7 @@ public static class PruebasMejoras
         }
     }
 
+    // 7. Migracion desde v1, archivos rotos y normalizacion.
     static void ProbarGuardado(Informe inf)
     {
         // La oleada a medias: un JSON sin los campos la lee como 0, se guarda y se
