@@ -141,6 +141,8 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
   plena partida.
 - **Los Animators de los zombis** (Humanoid, ~27 huesos como GameObjects): si pesan más de ~2 ms por cuadro, Optimize
   Game Objects exponiendo `HEAD_CONTAINER`.
+- **Detrás de la tienda abierta** la cámara ya no dibuja, pero `FondoMenu` sigue sacando zombis y `MonedasDelFondo`
+  sigue rearmando el canvas del menú en cada cuadro. Pausarlos con la tienda abierta si el Profiler lo muestra.
 
 ## 3. Para decidir
 
@@ -251,6 +253,10 @@ Todo lo de la auditoría se aplicó sin Unity: compila (con el chequeo de refere
   - la muerte del jugador (golpe grave, temblor y borde rojo), las notas de furia lista y de fin de la furia, la
     muerte del jefe (que ya no se pierde), un solo jingle al pasar a la oleada 11 y la escalera de la barra del nivel;
   - la música del menú, que ahora arranca unos cuadros tarde: medir cuánto tarda `LoadScene(0)` antes y después.
+- **El menú y la tienda**: que abrir y cerrar la tienda no parpadee ni deje un cuadro de color liso (con VOLVER, el
+  atrás, ¡A JUGAR! y MEJORAS desde la derrota), y que el menú se vea igual sin HDR (el título en la niebla, la
+  noche). En el Profiler, durante una caja de arma, `TextMeshPro.GenerateTextMesh` ya no tendría que aparecer por
+  cada número de daño que se desvanece.
 
 ## 5. Antes de integrar la red de anuncios
 
