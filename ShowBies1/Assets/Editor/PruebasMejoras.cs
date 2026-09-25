@@ -211,6 +211,8 @@ public static class PruebasMejoras
             ProbarAvisosSinPisarse(informe);
             ProbarTiendaTapaLaEscena(informe);
             ProbarVidriosDelMenu(informe);
+            ProbarPartidaNeon(informe);
+            ProbarFuenteDelJuego(informe);
             ProbarOrdenDeEscenas(informe);
             ProbarJefeAlTerminar(informe);
             ProbarPatronesDelJefe(informe);
@@ -1836,6 +1838,127 @@ public static class PruebasMejoras
         });
         inf.Verdadero("tema: el menu tiene botones de vidrio", conVidrio > 0);
         inf.Verdadero("tema: todos los botones de vidrio del menu cambian con el tema" + (sinPapel == 0 ? "" : " (" + cuales.Trim() + ")"), sinPapel == 0);
+    }
+
+    // La partida es de carbon neon (fase 2 del neon, 25/9; la viste ConstructorNeon.VestirPartida):
+    // la pausa, el revivir, la furia, el HUD de las tres escenas de juego y la derrota. Las escenas
+    // se leen de disco, asi que tambien mira que se hayan guardado los colores de los joysticks, que
+    // son instancias del prefab del Joystick Pack y solo guardan lo que se anota como override. Lo
+    // que se lee, se lee: el texto de cada boton contra su relleno, con la formula de la WCAG.
+    static void ProbarPartidaNeon(Informe inf)
+    {
+        bool Parecido(Color a, Color b) =>
+            Mathf.Abs(a.r - b.r) < 0.01f && Mathf.Abs(a.g - b.g) < 0.01f && Mathf.Abs(a.b - b.b) < 0.01f && Mathf.Abs(a.a - b.a) < 0.01f;
+        bool EsNeon(TMPro.TMP_Text texto) =>
+            texto != null && texto.fontSharedMaterial != null && texto.fontSharedMaterial.name == "Bangers SDF - Neon";
+        bool TieneBrillo(Transform t, string sprite)
+        {
+            var hijo = t != null ? t.Find("Neon") : null;
+            var imagen = hijo != null ? hijo.GetComponent<UnityEngine.UI.Image>() : null;
+            return imagen != null && imagen.sprite != null && imagen.sprite.name == sprite;
+        }
+        // El color que se ve: el del papel, si lo tiene, y si no el que tiene guardado.
+        Color Visto(Transform t)
+        {
+            var pintor = t.GetComponent<PintarConTema>();
+            return pintor != null ? pintor.Actual() : t.GetComponent<UnityEngine.UI.Graphic>().color;
+        }
+        // Un vidrio translucido se lee contra lo que tiene detras, que en la partida es oscuro.
+        void Botones(string donde, Transform padre, params string[] nombres)
+        {
+            foreach (var nombre in nombres)
+            {
+                var boton = padre != null ? padre.Find(nombre) : null;
+                var fondo = boton != null ? boton.Find("Visual/Fondo") : null;
+                var texto = boton != null ? boton.Find("Visual/Texto") : null;
+                if (!inf.Verdadero(donde + ": esta el boton " + nombre, fondo != null && texto != null)) continue;
+                Color relleno = Visto(fondo);
+                if (relleno.a < 0.95f) relleno = Color.Lerp(Tema.FondoOscuro, relleno, relleno.a);
+                Contraste(inf, donde + ": el texto de " + nombre, Visto(texto), relleno, 4.5);
+            }
+        }
+
+        var pausa = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/MenuPausa.prefab");
+        var revivir = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/OfertaRevivir.prefab");
+        var furia = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/BotonFuria.prefab");
+        if (inf.Verdadero("partida neon: estan los prefabs de la pausa, el revivir y la furia", pausa != null && revivir != null && furia != null))
+        {
+            var panel = pausa.transform.Find("Panel");
+            Color tapa = panel.GetComponent<UnityEngine.UI.Image>().color;
+            inf.Verdadero("partida neon: la pausa tapa la partida de negro", Luminancia(tapa) < 0.01 && tapa.a >= 0.75f);
+            inf.Verdadero("partida neon: el titulo de la pausa es de neon", EsNeon(panel.Find("Titulo").GetComponent<TMPro.TMP_Text>()));
+            inf.Verdadero("partida neon: el boton de pausa tiene su anillo", TieneBrillo(pausa.transform.Find("AreaSegura/BotonPausa"), "NeonAnillo"));
+            Botones("partida neon: la pausa", panel, "BotonContinuar", "BotonReiniciar", "BotonMenu");
+
+            var ventana = revivir.transform.Find("Panel/Ventana");
+            inf.Verdadero("partida neon: la ventanita de revivir tiene el borde de neon", TieneBrillo(ventana, "NeonBorde"));
+            var titulo = ventana.Find("Titulo").GetComponent<TMPro.TMP_Text>();
+            inf.Verdadero("partida neon: HAS MUERTO es rojo con el halo del neon", EsNeon(titulo) && Parecido(titulo.color, ConstructorUI.Rojo));
+            var no = ventana.Find("BotonNo").GetComponent<UnityEngine.UI.Image>();
+            inf.Verdadero("partida neon: NO, GRACIAS es una pildora y no un ovalo",
+                          no.sprite != null && no.sprite.name == "Pildora" && no.type == UnityEngine.UI.Image.Type.Sliced);
+
+            inf.Verdadero("partida neon: la furia lista es roja", Parecido(furia.GetComponent<BotonFuria>().colorListo, ConstructorUI.Rojo));
+            inf.Verdadero("partida neon: el boton de la furia tiene su anillo", TieneBrillo(furia.transform.Find("Boton"), "NeonAnillo"));
+        }
+
+        var celeste = new Color(ConstructorUI.Celeste.r, ConstructorUI.Celeste.g, ConstructorUI.Celeste.b, 0.75f);
+        foreach (var ruta in new[] { "Assets/Escenas/ShowBies1.unity", "Assets/Escenas/WaveMode.unity", "Assets/Escenas/Tutorial.unity" })
+        {
+            string nombre = Path.GetFileNameWithoutExtension(ruta);
+            LeerEscena(ruta, escena =>
+            {
+                Transform helper = null;
+                foreach (var raiz in escena.GetRootGameObjects())
+                    if (raiz.name == "Canvas") helper = raiz.transform.Find("CanvasHelper");
+                if (!inf.Verdadero("partida neon: " + nombre + " tiene su HUD", helper != null)) return;
+                var textos = helper.Find("Textos");
+                int deAntes = 0;
+                foreach (var texto in textos.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                    if (texto.fontSharedMaterial != null && texto.fontSharedMaterial.name == "Bangers SDF - Outline") deAntes++;
+                inf.Igual("partida neon: " + nombre + ": ningun texto del HUD con el contorno de antes", 0, deAntes);
+                foreach (var joystick in new[] { "MoveJoystick", "ShootJoystick" })
+                {
+                    var aro = helper.Find(joystick);
+                    inf.Verdadero("partida neon: " + nombre + ": " + joystick + " es celeste",
+                                  aro != null && Parecido(aro.GetComponent<UnityEngine.UI.Image>().color, celeste));
+                }
+                inf.Verdadero("partida neon: " + nombre + ": la granada tiene su anillo", TieneBrillo(helper.Find("BotonGranada"), "NeonAnillo"));
+                if (nombre != "Tutorial") return;
+                inf.Verdadero("partida neon: la instruccion del tutorial tiene el borde de neon", TieneBrillo(textos.Find("PanelInstruccion"), "NeonBorde"));
+                inf.Verdadero("partida neon: el final del tutorial tiene el borde de neon", TieneBrillo(textos.Find("PanelFinal"), "NeonBorde"));
+                Botones("partida neon: el final del tutorial", textos.Find("PanelFinal"), "BotonJugar", "BotonMenu");
+            });
+        }
+
+        LeerEscena("Assets/Escenas/Perdiste.unity", escena =>
+        {
+            MenuPerdiste menu = null;
+            foreach (var raiz in escena.GetRootGameObjects())
+                if (menu == null) menu = raiz.GetComponentInChildren<MenuPerdiste>(true);
+            var bg = menu != null ? menu.transform.Find("Canvas/BG") : null;
+            if (!inf.Verdadero("partida neon: esta la pantalla de la derrota", bg != null)) return;
+            var titulo = bg.Find("Perdiste").GetComponent<TMPro.TMP_Text>();
+            inf.Verdadero("partida neon: GAME OVER es rojo con el halo del neon", EsNeon(titulo) && Parecido(titulo.color, ConstructorUI.Rojo));
+            Botones("partida neon: la derrota", bg, "Jugar", "Mejoras", "AlMenu");
+        });
+
+        inf.Verdadero("partida neon: la vida llena es verde", Parecido(PlayerHealth.ColorDeVida(1f), ConstructorUI.Verde));
+        inf.Verdadero("partida neon: la vida a la mitad es amarilla", Parecido(PlayerHealth.ColorDeVida(0.5f), ConstructorUI.Amarillo));
+        inf.Verdadero("partida neon: la vida baja es roja", Parecido(PlayerHealth.ColorDeVida(0.1f), ConstructorUI.Rojo));
+    }
+
+    // La fuente del juego es dinamica y en la build arranca vacia: cada letra que aparece se suma
+    // a su atlas. En 1024 x 1024 y a 144 puntos entran unas 90, y entre el ingles, el español, los
+    // numeros y los signos el juego usa mas: con un solo atlas, las que ya no entraban salian con
+    // la fuente de reserva de TextMesh Pro (paso el 25/9, en el tutorial: "JOYSTICk DE LA Izquierda").
+    // Con varios atlas, cuando uno se llena se abre otro.
+    static void ProbarFuenteDelJuego(Informe inf)
+    {
+        var fuente = AssetDatabase.LoadAssetAtPath<TMPro.TMP_FontAsset>("Assets/Fuentes/Bangers SDF.asset");
+        if (!inf.Verdadero("fuente: esta Bangers SDF", fuente != null)) return;
+        inf.Verdadero("fuente: es dinamica", fuente.atlasPopulationMode == TMPro.AtlasPopulationMode.Dynamic);
+        inf.Verdadero("fuente: cuando se llena el atlas abre otro, no cae en la de reserva", fuente.isMultiAtlasTexturesEnabled);
     }
 
     // La tienda es de carbon neon (pedido de Ivan, 24/9; la viste ConstructorTienda): su

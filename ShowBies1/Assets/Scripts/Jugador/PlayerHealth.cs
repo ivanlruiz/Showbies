@@ -97,13 +97,13 @@ public class PlayerHealth : MonoBehaviour
         RecordNuevo = false;
     }
 
-    // Verde de 60 para arriba, amarillo hasta 30 y rojo abajo de eso. Estatico
-    // para probarlo sin escena.
+    // Verde de 60 para arriba, amarillo hasta 30 y rojo abajo de eso: los del neón
+    // (ConstructorUI). Estatico para probarlo sin escena.
     public static Color ColorDeVida(float fraccion)
     {
-        if (fraccion > 0.6f) return new Color(0.55f, 0.9f, 0.4f, 1f);
-        if (fraccion > 0.3f) return new Color(1f, 0.82f, 0.25f, 1f);
-        return new Color(1f, 0.35f, 0.3f, 1f);
+        if (fraccion > 0.6f) return ConstructorUI.Verde;
+        if (fraccion > 0.3f) return ConstructorUI.Amarillo;
+        return ConstructorUI.Rojo;
     }
 
     // La clave del record de un modo, por el buildIndex de su escena. La pantalla

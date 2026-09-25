@@ -1046,7 +1046,7 @@ mostrar si todavía se puede ofrecer (hasta la auditoría del 24/9 desaparecía 
 Cuando el jugador muere y hay un video, la partida **no termina**: `PlayerHealth` le pregunta a
 `OfertaDeRevivir` y, si esta se hace cargo, el juego queda congelado (`Time.timeScale = 0`) con el jugador
 muerto en el lugar donde cayó. El mundo **se queda en blanco y negro** en 5 s mientras una ventanita chica y semitransparente
-(620 x 340 sobre un canvas de 1920 x 1080) muestra "¡HAS MUERTO!" y un botón con una claqueta y un anillo que
+(620 x 360 sobre un canvas de 1920 x 1080) muestra "¡HAS MUERTO!" y un botón con una claqueta y un anillo que
 se cierra en 10 s. Recién cuando el jugador dice que no,
 o se vence el reloj, se llama a `PlayerHealth.Terminar` (récord, `TerminarPartida` y la derrota, que va encima de la
 partida y la descongela: ver La derrota encima de la partida).
@@ -1153,10 +1153,11 @@ precio de las tarjetas, los idiomas, el video de la derrota, NO, GRACIAS) son so
 **El mundo de las partidas es claro, "pasto de dia"** (elegido por Ivan): cielo celeste (0,66; 0,86; 0,96) en las
 camaras; pasto verde claro (`Materiales/PisoGrilla.png` con `prototype_512x512_green2`, que ya no es metalico: con
 `_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas. La interfaz es de carbón neón (ver
-Tema: carbón neón), y Ivan pidió el mundo de noche también: está en TAREAS. **Todo texto que va directo sobre el mundo o sobre un fondo claro lleva
-contorno** con el material `Bangers SDF - Outline` (HUD, derrota, titulos): sin contorno, el blanco y el amarillo se pierden.
-La pausa, el revivir y los
-paneles del tutorial siguen oscuros a proposito: tapan la partida.
+Tema: carbón neón), y Ivan pidió el mundo de noche también: está en TAREAS. **Todo texto que va directo sobre el mundo lleva
+contorno**: sin contorno, el blanco y el amarillo se pierden sobre el pasto. El del HUD es el material
+`Bangers SDF - Neon HUD` (el contorno oscuro de `Bangers SDF - Outline`, más fino, con un halo celeste), y los títulos
+que van sobre el mundo (el cartel de la oleada, GAME OVER) llevan el de neón. La pausa, el revivir y los paneles del
+tutorial son ventanas de neón, oscuras a propósito: tapan la partida.
 
 **El `ColorTint` del Button va en blanco.** Los botones viejos lo tenian casi negro para esconder un Image que
 ya no existe; con el fondo nuevo, eso lo tenia todo de color negro. Apagar la transicion tampoco va (ver la
@@ -1212,8 +1213,9 @@ Desde el 24/9 la interfaz tiene **un solo tema, carbón neón** (pedido de Ivan:
 seis maquetas, y "la idea es que todo el juego tenga esa temática"). Son paneles casi negros, textos blancos y grises
 azulados, bordes celestes que brillan, títulos rosa con halo magenta y botones rellenos de neón con su halo. Antes había
 un claro ("pasto de día", paneles crema) y un oscuro que se prendía en Opciones; el claro se fue, el oscuro pasó a ser el
-neón y el interruptor se sacó (`PlayerPrefs["TemaOscuro"]` ya no se lee). Faltan las pantallas de la partida y el mundo
-(ver TAREAS).
+neón y el interruptor se sacó (`PlayerPrefs["TemaOscuro"]` ya no se lee). Desde el 25/9 también son de neón las
+pantallas de la partida (la pausa, el revivir, la furia, el HUD, el tutorial y la derrota); falta el mundo, que sigue de
+día (ver TAREAS).
 
 - **El mecanismo de papeles sigue igual.** Los colores guardados en las escenas y los prefabs son los del claro de
   antes: `PintarConTema` se acuerda de ese color (`colorClaro`) y las ventanas que se arman en código lo pasan por
@@ -1255,6 +1257,23 @@ neón y el interruptor se sacó (`PlayerPrefs["TemaOscuro"]` ya no se lee). Falt
   - Les da los colores y el material del título a las ventanas del menú que se arman en código.
 
   La tienda la viste `ConstructorTienda`.
+- **La partida la viste `ConstructorNeon.VestirPartida`** (ShowBies > Neón > Vestir la partida), sobre los prefabs de la
+  pausa, el revivir y la furia, las tres escenas de juego y la derrota. Tampoco se edita a mano:
+  - La pausa: el panel casi negro, el título de neón, los tres botones y el anillo del botón de pausa.
+  - El revivir: la ventanita de neón, 20 más alta que antes para que NO, GRACIAS no quede pegado a la línea del borde,
+    ¡HAS MUERTO! rojo con el halo, el vídeo en naranja y NO, GRACIAS como píldora de vidrio (era un óvalo: la `Pildora`
+    en Simple, estirada).
+  - La furia: roja cuando está lista, amarilla mientras dura y casi negra mientras se recarga, con su anillo rojo, y
+    ¡FURIA! con el halo.
+  - El HUD: los textos con `Bangers SDF - Neon HUD` (lo arma el constructor desde el de contorno), las monedas en
+    amarillo, los joysticks celestes, la granada naranja con su anillo, el cartel de la oleada con el halo de los títulos
+    y, en el tutorial, la instrucción y el final como ventanas de neón. La vida pasa por el verde, el amarillo y el rojo
+    del neón (`PlayerHealth.ColorDeVida`).
+  - La derrota: GAME OVER rojo con el halo, las monedas en amarillo, los botones de neón y la barra del próximo objetivo
+    en verde.
+
+  Los joysticks son instancias del prefab del Joystick Pack: lo que se les cambia se anota como override (`Anotar`), o
+  la escena guarda el color del prefab (ver la trampa).
 - **El título de neón** es el material `Bangers SDF - Neon`: el underlay del shader móvil de Bangers, magenta y
   desenfocado, hace de halo, porque el glow es del shader de escritorio.
 - **Un texto sobre un fondo de color fijo no lleva el papel `Texto`**: la fila de una misión cobrada (verde), el
@@ -1762,6 +1781,17 @@ enterrado.
 - **Construir UI en el editor ensucia el atlas dinámico de Bangers** (`Bangers SDF.asset`) y el fallback de
   LiberationSans. Si aparecen modificados en git sin haber tocado fuentes, se restauran. Bangers no tiene `→`: la
   flecha de las tarjetas es un sprite.
+- **El atlas de Bangers se llena.** Es dinámico, de 1024 x 1024 y a 144 puntos (entran unos 90 glifos), y en la build
+  arranca vacío y va sumando las letras a medida que aparecen. Entre el inglés, el español, los números y los signos el
+  juego usa más: con un solo atlas, las que ya no entraban salían con LiberationSans, la fuente de reserva de TextMesh
+  Pro (se vio el 25/9 en el tutorial: "JOYSTICk DE LA Izquierda"). Por eso tiene prendidas las texturas múltiples
+  (`isMultiAtlasTexturesEnabled`): cuando una se llena, abre otra, y los materiales de contorno y de neón se copian solos
+  a la nueva. La prueba de lógica lo mira.
+- **Lo que un constructor le cambia por código a una instancia de prefab de una escena no se guarda solo.** La escena
+  guarda de una instancia solo las diferencias con su prefab que están anotadas como override, y un cambio hecho por
+  código no se anota si no se llama a `PrefabUtility.RecordPrefabInstancePropertyModifications` (o se hace con `Undo`):
+  la escena se guarda sin error y al abrirla vuelve el valor del prefab. Les pasa a los joysticks de las escenas de juego
+  (`ConstructorNeon.Anotar`). La prueba de lógica lee las escenas de disco, así que lo nota.
 
 - **Después de una sesión de play, el registro de menús del editor tarda en rehacerse**: `ExecuteMenuItem` contesta
   "no menu named …" y `Menu.GetEnabled` da falso hasta para entradas que acaban de correr, aunque la clase esté cargada
@@ -1829,7 +1859,10 @@ enterrado.
   ciudad), que el texto de cada
   misión diga cuánto pide, que `Economia.ZombisPorPartida` sea la suma de lo que saca el `WaveManager` de WaveMode, que
   los avisos de la partida no se pisen, que todo botón de vidrio del menú lleve su `PintarConTema`, que la tienda sea
-  de carbón neón en los dos temas (sin `PintarConTema`, con sus brillos y con el contraste de cada texto medido) y los
+  de carbón neón en los dos temas (sin `PintarConTema`, con sus brillos y con el contraste de cada texto medido), que
+  la partida sea de carbón neón (la pausa, el revivir, la furia, el HUD de las tres escenas de juego, leídas de disco para
+  ver también si se guardaron los colores de los joysticks, y la derrota, con el contraste del texto de cada botón), que
+  la fuente del juego abra otro atlas cuando se llena y los
   patrones del jefe (por reflexión, con el prefab en una escena de vista previa): que no gire al terminar un patrón ni
   se tambalee de raíz, que la línea de la carga tenga el ancho de su cuerpo, que aturdido no tire zarpazos, que la
   embestida arranque limpia, que el paso al embestir salga del clip de correr del controller y que solo ataque si se lo

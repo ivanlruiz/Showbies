@@ -354,7 +354,10 @@ Lo que quedó anotado, de mayor a menor:
   Un solo tema (el claro y el interruptor de Opciones se fueron), el menú siempre de noche, los botones rellenos de neón
   con su halo, los botones redondos con su anillo celeste y las ventanas con borde celeste y título rosa. Lo viste
   `ConstructorNeon` en la escena y `ConstructorUI` en lo que se arma en código.
-- [ ] **Fase 2: las pantallas de la partida**: la derrota, la pausa, el revivir, el tutorial y el HUD.
+- [x] **Fase 2: las pantallas de la partida** (25/9): la pausa, el revivir, la furia, el HUD, el tutorial y la
+  derrota. Lo viste `ConstructorNeon.VestirPartida`; el HUD lleva un material propio (contorno fino y halo celeste). De
+  paso: NO, GRACIAS del revivir era un óvalo, y la fuente se quedaba sin lugar en su atlas y ponía letras con otra fuente
+  ("JOYSTICk DE LA Izquierda" en el tutorial): ahora abre otro atlas cuando se llena.
 - [ ] **Fase 3: el mundo de noche** (elegido por Ivan): todas las oleadas y el modo libre de noche, con luces de neón en
   el escenario.
 - [ ] Ver en el teléfono la ventana de logros y el botón del nivel: se verificaron con capturas en 16:9 y 20:9, pero con
