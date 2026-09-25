@@ -66,8 +66,14 @@ public static class ConstructorNeon
                                      "GameModesMenu/WaveMode", "GameModesMenu/Back", "GameModesMenu/Tutorial" })
             VestirBoton(canvas.Find(ruta));
 
-        // El globo y su anillo, que heredan sus copias.
+        // El globo y su anillo, que heredan sus copias. Su sombra de antes, un circulo negro
+        // corrido abajo, se apaga: con el anillo se veia como un borde doble.
         if (menu.botonGlobo != null) Anillo(menu.botonGlobo.transform);
+        if (menu.sombraGlobo != null)
+        {
+            menu.sombraGlobo.enabled = false;
+            EditorUtility.SetDirty(menu.sombraGlobo);
+        }
 
         // La ventana del idioma: el borde, el titulo, el VOLVER y los dos idiomas (el elegido
         // en amarillo, el otro en gris azulado; los pinta SelectorIdioma).
@@ -135,6 +141,7 @@ public static class ConstructorNeon
             EditorUtility.SetDirty(salir);
         }
 
+        foreach (var raizDeLaEscena in escena.GetRootGameObjects()) RedondearBotones(raizDeLaEscena);
         EditorSceneManager.MarkSceneDirty(escena);
         EditorSceneManager.SaveScene(escena);
         Debug.Log("ConstructorNeon: el menú quedó de carbón neón");
@@ -196,8 +203,7 @@ public static class ConstructorNeon
             // Una pildora de verdad: en Simple, la Pildora estirada a 250 x 52 era un ovalo.
             var no = ventana.Find("BotonNo").GetComponent<Image>();
             no.color = Tema.VidrioClaro;
-            no.type = Image.Type.Sliced;
-            no.pixelsPerUnitMultiplier = 127f / (no.rectTransform.sizeDelta.y * 0.5f);
+            ConstructorUI.RedondearPildora(no);
         });
 
         // La furia: el boton redondo con su anillo rojo, sus tres colores y el cartel.
@@ -232,6 +238,7 @@ public static class ConstructorNeon
         try
         {
             vestir(raiz);
+            RedondearBotones(raiz);
             PrefabUtility.SaveAsPrefabAsset(raiz, ruta);
         }
         finally
@@ -317,6 +324,7 @@ public static class ConstructorNeon
             EditorUtility.SetDirty(avisos);
         }
 
+        foreach (var raizDeLaEscena in escena.GetRootGameObjects()) RedondearBotones(raizDeLaEscena);
         EditorSceneManager.MarkSceneDirty(escena);
         EditorSceneManager.SaveScene(escena);
     }
@@ -348,6 +356,7 @@ public static class ConstructorNeon
             objetivo.colorFondoBarra = new Color(1f, 1f, 1f, 0.14f);
             EditorUtility.SetDirty(objetivo);
         }
+        foreach (var raizDeLaEscena in escena.GetRootGameObjects()) RedondearBotones(raizDeLaEscena);
         EditorSceneManager.MarkSceneDirty(escena);
         EditorSceneManager.SaveScene(escena);
     }
@@ -405,7 +414,24 @@ public static class ConstructorNeon
         }
         var sombra = boton.Find("Sombra");
         if (sombra != null) ConstructorUI.HaloDeBoton(sombra.GetComponent<Image>(), vidrio ? Tema.VidrioClaro : relleno);
+        ConstructorUI.RedondearPildora(fondo);
         EditorUtility.SetDirty(boton.gameObject);
+    }
+
+    // Las pildoras de los botones (el Fondo del molde de siempre) y sus halos, con las puntas
+    // redondas de verdad (ver ConstructorUI.RedondearPildora). Tambien las que no pasan por
+    // VestirBoton: los idiomas, que los pinta SelectorIdioma, y los de los prefabs.
+    public static void RedondearBotones(GameObject raiz)
+    {
+        foreach (var img in raiz.GetComponentsInChildren<Image>(true))
+        {
+            if (img.sprite == null) continue;
+            bool pildora = img.sprite.name == "Pildora" && img.name == "Fondo" && img.transform.parent != null && img.transform.parent.name == "Visual";
+            bool halo = img.sprite.name == "NeonPildora";
+            if (!pildora && !halo) continue;
+            ConstructorUI.RedondearPildora(img);
+            Anotar(img);
+        }
     }
 
     // El neon que le toca a un color de boton de antes, por su tono.

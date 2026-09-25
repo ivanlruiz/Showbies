@@ -358,8 +358,13 @@ Lo que quedó anotado, de mayor a menor:
   derrota. Lo viste `ConstructorNeon.VestirPartida`; el HUD lleva un material propio (contorno fino y halo celeste). De
   paso: NO, GRACIAS del revivir era un óvalo, y la fuente se quedaba sin lugar en su atlas y ponía letras con otra fuente
   ("JOYSTICk DE LA Izquierda" en el tutorial): ahora abre otro atlas cuando se llena.
-- [ ] **Fase 3: el mundo de noche** (elegido por Ivan): todas las oleadas y el modo libre de noche, con luces de neón en
-  el escenario.
+- [x] **Fase 3: el mundo de noche** (25/9; Ivan eligió entre maquetas una estética por capítulo): la pradera con faroles
+  y flores de neón (también el modo libre y el tutorial), el cementerio con cruces y faroles verdes y violetas, y la ciudad
+  con carteles, faroles y el carril en neón. Los personajes con una luz de relleno propia (la capa `Personajes`). De paso,
+  por lo que vio Ivan: las píldoras tenían las puntas de media elipse y el halo no les calzaba, y el charco de las cruces de
+  neón inclinadas quedaba medio enterrado.
+- [ ] Ver en el teléfono el mundo de noche: el costo de los charcos y halos aditivos (con muchos zombis) y si la luz de
+  relleno alcanza con la calidad Medium.
 - [ ] Ver en el teléfono la ventana de logros y el botón del nivel: se verificaron con capturas en 16:9 y 20:9, pero con
   el juego quieto en el primer cuadro (ver la trampa del editor en segundo plano).
 

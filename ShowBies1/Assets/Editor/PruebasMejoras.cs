@@ -212,6 +212,8 @@ public static class PruebasMejoras
             ProbarTiendaTapaLaEscena(informe);
             ProbarVidriosDelMenu(informe);
             ProbarPartidaNeon(informe);
+            ProbarMundoDeNoche(informe);
+            ProbarPildorasRedondas(informe);
             ProbarFuenteDelJuego(informe);
             ProbarOrdenDeEscenas(informe);
             ProbarJefeAlTerminar(informe);
@@ -1346,7 +1348,7 @@ public static class PruebasMejoras
     // calidades. Lo que se ve lo mide ShowBies > Escenarios > Fotos de los faroles.
     static void ProbarFaroles(Informe inf)
     {
-        foreach (string ruta in new[] { "Assets/Prefabs/Escenarios/Cementerio.prefab", "Assets/Prefabs/Escenarios/Ciudad.prefab" })
+        foreach (string ruta in new[] { ConstructorEscenarios.RutaPrefabPradera, "Assets/Prefabs/Escenarios/Cementerio.prefab", "Assets/Prefabs/Escenarios/Ciudad.prefab" })
         {
             string nombre = Path.GetFileNameWithoutExtension(ruta);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ruta);
@@ -1357,11 +1359,12 @@ public static class PruebasMejoras
             {
                 if (farol.name != "Farol") continue;
                 faroles++;
+                // Por el nombre: el halo del neon usa el mismo shader, parado a la altura del tubo.
                 Renderer charco = null;
                 foreach (var render in farol.GetComponentsInChildren<Renderer>(true))
                 {
                     var material = render.sharedMaterial;
-                    if (material != null && material.shader != null && material.shader.name == "ShowBies/CharcoDeLuz") charco = render;
+                    if (render.name == "Charco" && material != null && material.shader != null && material.shader.name == "ShowBies/CharcoDeLuz") charco = render;
                 }
                 if (charco != null) conCharco++;
 
@@ -1374,6 +1377,17 @@ public static class PruebasMejoras
                     if (new Vector2(a.x - b.x, a.z - b.z).magnitude > 0.3f || b.y < 0f || b.y > 0.25f) charcosCorridos++;
                 }
             }
+            // Todo lo que pinta el piso (los charcos y los resplandores) va acostado y a ras: con una
+            // cruz inclinada el charco quedaba medio enterrado, como una franja cortada.
+            int enElPiso = 0, torcidos = 0;
+            foreach (var render in prefab.GetComponentsInChildren<Renderer>(true))
+            {
+                if (render.name != "Charco" && render.name != "Brillo") continue;
+                enElPiso++;
+                var t = render.transform;
+                if (Mathf.Abs(Vector3.Dot(t.forward, Vector3.down)) < 0.999f || t.position.y < -0.01f || t.position.y > 0.25f) torcidos++;
+            }
+            inf.Igual("faroles: los charcos y resplandores del " + nombre + " van acostados y a ras del piso (" + enElPiso + ")", 0, torcidos);
             inf.Verdadero("faroles: el " + nombre + " tiene faroles", faroles > 0);
             inf.Igual("faroles: cada farol del " + nombre + " tiene su charco de luz en el piso", faroles, conCharco);
             inf.Igual("faroles: las luces del " + nombre + " van solo por vertice (asi el editor ve lo del telefono)", 0, lucesPorPixel);
@@ -1950,6 +1964,146 @@ public static class PruebasMejoras
         inf.Verdadero("partida neon: la vida llena es verde", Parecido(PlayerHealth.ColorDeVida(1f), ConstructorUI.Verde));
         inf.Verdadero("partida neon: la vida a la mitad es amarilla", Parecido(PlayerHealth.ColorDeVida(0.5f), ConstructorUI.Amarillo));
         inf.Verdadero("partida neon: la vida baja es roja", Parecido(PlayerHealth.ColorDeVida(0.1f), ConstructorUI.Rojo));
+    }
+
+    // El mundo es de noche (fase 3 del neon, 25/9; lo pone ConstructorEscenarios.PonerLaNoche):
+    // las tres escenas de juego guardan la noche de la pradera (el cielo oscuro, la niebla, la
+    // luz ambiente baja, la luna tenue y el piso de noche) y la luz de relleno que solo alumbra
+    // a los personajes; WaveMode tiene los tres capitulos de noche, y el libre y el tutorial, la
+    // pradera puesta y fija. Los halos del neon miran a la camara del juego con un giro fijo:
+    // tiene que ser el de las escenas. Y la capa: un zombi pasa sus mallas, no sus colliders.
+    static void ProbarMundoDeNoche(Informe inf)
+    {
+        inf.Igual("noche: la capa de los personajes se llama Personajes", "Personajes", LayerMask.LayerToName(Personajes.Capa));
+        var pradera = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorEscenarios.RutaPrefabPradera);
+        var pisoDeNoche = AssetDatabase.LoadAssetAtPath<Material>(ConstructorEscenarios.RutaPisoPradera);
+        if (!inf.Verdadero("noche: estan la pradera y su piso", pradera != null && pisoDeNoche != null)) return;
+
+        foreach (var ruta in new[] { "Assets/Escenas/WaveMode.unity", "Assets/Escenas/ShowBies1.unity", "Assets/Escenas/Tutorial.unity" })
+        {
+            string nombre = Path.GetFileNameWithoutExtension(ruta);
+            bool niebla = false, ambienteBajo = false, cieloOscuro = false, giro = false, lunaTenue = false, piso = false, relleno = false, decorado = false;
+            LeerEscena(ruta, escena =>
+            {
+                // La niebla y la luz ambiente son de cada escena: se leen con ella activa.
+                var activa = SceneManager.GetActiveScene();
+                SceneManager.SetActiveScene(escena);
+                niebla = RenderSettings.fog && RenderSettings.fogEndDistance < 80f;
+                ambienteBajo = Luminancia(RenderSettings.ambientLight) < 0.06;
+                SceneManager.SetActiveScene(activa);
+
+                foreach (var raiz in escena.GetRootGameObjects())
+                {
+                    foreach (var camara in raiz.GetComponentsInChildren<Camera>(true))
+                    {
+                        if (!camara.CompareTag("MainCamera")) continue;
+                        cieloOscuro = Luminancia(camara.backgroundColor) < 0.01;
+                        giro = Quaternion.Angle(camara.transform.rotation, ConstructorEscenarios.GiroDeLaCamara) < 0.5f;
+                    }
+                    foreach (var luz in raiz.GetComponentsInChildren<Light>(true))
+                    {
+                        if (luz.type != LightType.Directional) continue;
+                        if (raiz.name == "Relleno")
+                            relleno = luz.cullingMask == 1 << Personajes.Capa && luz.renderMode == LightRenderMode.ForceVertex && luz.shadows == LightShadows.None;
+                        else
+                            lunaTenue = luz.intensity <= 0.7f;
+                    }
+                    foreach (var render in raiz.GetComponentsInChildren<MeshRenderer>(true))
+                        if (render.sharedMaterial == pisoDeNoche) piso = true;
+                    if (PrefabUtility.GetCorrespondingObjectFromSource(raiz) == pradera && raiz.GetComponent<DecoradoFijo>() != null) decorado = true;
+                }
+                var capitulos = Buscar<CapitulosDeEscenario>(escena);
+                if (capitulos != null && capitulos.escenarios != null && capitulos.escenarios.Length >= 3)
+                {
+                    decorado = capitulos.escenarios[0].decorado == pradera;
+                    for (int i = 1; i < capitulos.escenarios.Length; i++)
+                        decorado &= capitulos.escenarios[i].conNiebla && Luminancia(capitulos.escenarios[i].cielo) < 0.02;
+                }
+            });
+            inf.Verdadero("noche: " + nombre + " tiene la niebla prendida y cerca", niebla);
+            inf.Verdadero("noche: " + nombre + " tiene la luz ambiente baja", ambienteBajo);
+            inf.Verdadero("noche: " + nombre + " tiene el cielo oscuro", cieloOscuro);
+            inf.Verdadero("noche: " + nombre + " tiene la luna tenue", lunaTenue);
+            inf.Verdadero("noche: " + nombre + " tiene el piso de noche", piso);
+            inf.Verdadero("noche: " + nombre + " tiene la luz de relleno solo para los personajes", relleno);
+            inf.Verdadero("noche: la camara de " + nombre + " tiene el giro al que miran los halos", giro);
+            inf.Verdadero("noche: " + nombre + (nombre == "WaveMode" ? " tiene la pradera de capitulo 1 y los otros de noche" : " tiene la pradera puesta y fija"), decorado);
+        }
+
+        var zombi = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/Zombi.prefab");
+        if (!inf.Verdadero("noche: esta el prefab del zombi", zombi != null)) return;
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var copia = (GameObject)PrefabUtility.InstantiatePrefab(zombi, vista);
+            Personajes.PonerEnLaCapa(copia);
+            int mallas = 0, enLaCapa = 0, collidersMovidos = 0;
+            foreach (var render in copia.GetComponentsInChildren<Renderer>(true))
+            {
+                if (render.GetComponent<Collider>() != null)
+                {
+                    if (render.gameObject.layer == Personajes.Capa) collidersMovidos++;
+                    continue;
+                }
+                mallas++;
+                if (render.gameObject.layer == Personajes.Capa) enLaCapa++;
+            }
+            inf.Verdadero("noche: el zombi tiene mallas que se ven", mallas > 0);
+            inf.Igual("noche: las mallas del zombi pasan a la capa de los personajes", mallas, enLaCapa);
+            inf.Igual("noche: los colliders del zombi se quedan en su capa", 0, collidersMovidos);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
+    }
+
+    // Las pildoras con las puntas redondas de verdad (ConstructorUI.RedondearPildora). En
+    // Sliced, Unity achica los bordes de cada eje por separado, y con el multiplicador en 1 los
+    // botones tenian las puntas de media elipse (el del nivel era un ovalo) y el halo, que es
+    // redondo, no les calzaba: lo vio Ivan el 25/9. En cada pildora de un boton y cada halo, el
+    // borde de arriba y el de abajo suman el alto. Y el globo del menu, sin la sombra corrida.
+    static void ProbarPildorasRedondas(Informe inf)
+    {
+        int pildoras = 0, torcidas = 0;
+        string cuales = "";
+        void Mirar(GameObject raiz, string donde)
+        {
+            foreach (var img in raiz.GetComponentsInChildren<UnityEngine.UI.Image>(true))
+            {
+                if (img.sprite == null) continue;
+                bool pildora = img.sprite.name == "Pildora" && img.name == "Fondo" && img.transform.parent != null && img.transform.parent.name == "Visual";
+                bool halo = img.sprite.name == "NeonPildora";
+                if (!pildora && !halo) continue;
+                pildoras++;
+                float alto = img.rectTransform.rect.height;
+                float bordes = (img.sprite.border.y + img.sprite.border.w) / (img.pixelsPerUnit * img.pixelsPerUnitMultiplier);
+                if (img.type == UnityEngine.UI.Image.Type.Sliced && Mathf.Abs(bordes - alto) <= 1f) continue;
+                torcidas++;
+                var boton = img.transform.parent != null ? (pildora ? img.transform.parent.parent : img.transform.parent) : null;
+                if (torcidas <= 5) cuales += donde + ":" + (boton != null ? boton.name : img.name) + " ";
+            }
+        }
+        foreach (var ruta in new[] { "Assets/Escenas/Menu.unity", "Assets/Escenas/Perdiste.unity", "Assets/Escenas/Tutorial.unity" })
+        {
+            string donde = Path.GetFileNameWithoutExtension(ruta);
+            LeerEscena(ruta, escena => { foreach (var raiz in escena.GetRootGameObjects()) Mirar(raiz, donde); });
+        }
+        foreach (var ruta in new[] { "Assets/Prefabs/UI/MenuPausa.prefab", "Assets/Prefabs/UI/OfertaRevivir.prefab", "Assets/Prefabs/UI/Tienda.prefab", "Assets/Prefabs/UI/TarjetaMejora.prefab" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ruta);
+            if (inf.Verdadero("pildoras: esta el prefab " + Path.GetFileNameWithoutExtension(ruta), prefab != null)) Mirar(prefab, Path.GetFileNameWithoutExtension(ruta));
+        }
+        inf.Verdadero("pildoras: hay botones para mirar (" + pildoras + ")", pildoras > 20);
+        inf.Igual("pildoras: los botones y sus halos tienen las puntas redondas" + (torcidas == 0 ? "" : " (" + cuales.Trim() + ")"), 0, torcidas);
+
+        bool sinSombra = false;
+        LeerEscena("Assets/Escenas/Menu.unity", escena =>
+        {
+            var selector = Buscar<SelectorIdioma>(escena);
+            sinSombra = selector != null && selector.sombraGlobo != null && !selector.sombraGlobo.enabled;
+        });
+        inf.Verdadero("pildoras: el globo del menu (y sus copias) no tiene la sombra corrida, que con el anillo parecia un borde doble", sinSombra);
     }
 
     // La fuente del juego es dinamica y en la build arranca vacia: cada letra que aparece se suma

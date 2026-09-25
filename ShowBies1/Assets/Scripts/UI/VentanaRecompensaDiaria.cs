@@ -388,7 +388,8 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         var visual = Rect(raiz, "Visual", Vector2.zero, tamanio);
         var fondo = Rect(visual, "Fondo", Vector2.zero, tamanio);
         var imgFondo = fondo.gameObject.AddComponent<Image>();
-        imgFondo.sprite = pildora; imgFondo.type = Image.Type.Sliced;
+        imgFondo.sprite = pildora;
+        ConstructorUI.RedondearPildora(imgFondo);
         imgFondo.color = color;
         imgFondo.raycastTarget = false;
 

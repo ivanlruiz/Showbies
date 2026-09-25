@@ -654,7 +654,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 0.6344086
 --- !u!1 &2750380490854541973
 GameObject:
   m_ObjectHideFlags: 0
@@ -1490,7 +1490,6 @@ MonoBehaviour:
   barraNivel: {fileID: 0}
   rellenoNivel: {fileID: 0}
   raizBoton: {fileID: 7162515119831655269}
-  simbolo: {fileID: 0}
   nombre: {fileID: 2809451756752798117}
   nivel: {fileID: 1792844774855053485}
   valorActual: {fileID: 4583822808375699978}
@@ -2849,7 +2848,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 2.1525424
 --- !u!1 &9038433023019583923
 GameObject:
   m_ObjectHideFlags: 0

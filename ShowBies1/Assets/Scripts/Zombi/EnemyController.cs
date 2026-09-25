@@ -443,6 +443,8 @@ public class EnemyController : MonoBehaviour
         colliders = GetComponentsInChildren<Collider>(true);
         capsula = GetComponent<CapsuleCollider>();
         BuscarElModelo();
+        // De noche, la luz de relleno de la escena solo alumbra la capa de los personajes.
+        Personajes.PonerEnLaCapa(gameObject);
         movimientoPropio = GetComponent<IMovimientoPropio>();
         PrepararDestello();
     }

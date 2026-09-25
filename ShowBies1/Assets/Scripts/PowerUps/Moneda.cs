@@ -205,6 +205,8 @@ public class Moneda : MonoBehaviour
     private void Awake()
     {
         renderers = GetComponentsInChildren<Renderer>(true);
+        // De noche, con la luz de relleno de los personajes: sin ella el dorado se apagaba.
+        Personajes.PonerEnLaCapa(gameObject);
     }
 
     private void Salir(Vector3 origen, double valorMoneda)

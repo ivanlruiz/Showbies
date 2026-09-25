@@ -76,6 +76,9 @@ public class PlayerHealth : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        // El modelo, que cada escena le agrega a su instancia: de noche, la luz de relleno
+        // solo alumbra la capa de los personajes.
+        Personajes.PonerEnLaCapa(gameObject);
         empezoEn = Time.time;
         RecordNuevo = false;
         Progreso.EmpezarPartida();

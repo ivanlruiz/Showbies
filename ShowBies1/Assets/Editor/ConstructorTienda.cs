@@ -180,6 +180,7 @@ public static class ConstructorTienda
 
             // Ningun PintarConTema: la tarjeta es igual en los dos temas.
             foreach (var pintor in raiz.GetComponentsInChildren<PintarConTema>(true)) Object.DestroyImmediate(pintor);
+            ConstructorNeon.RedondearBotones(raiz);
             PrefabUtility.SaveAsPrefabAsset(raiz, RutaTarjeta);
         }
         finally
@@ -230,6 +231,7 @@ public static class ConstructorTienda
             SinTema(pie.Find("BotonJugar/Visual/Texto"), VerdeTexto);
 
             foreach (var pintor in raiz.GetComponentsInChildren<PintarConTema>(true)) Object.DestroyImmediate(pintor);
+            ConstructorNeon.RedondearBotones(raiz);
             PrefabUtility.SaveAsPrefabAsset(raiz, RutaTienda);
         }
         finally

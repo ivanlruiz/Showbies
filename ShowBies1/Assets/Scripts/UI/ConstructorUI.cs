@@ -68,9 +68,26 @@ public static class ConstructorUI
         rt.offsetMin = new Vector2(-34f, -34f);
         rt.offsetMax = new Vector2(34f, 34f);
         sombra.sprite = halo;
-        sombra.type = Image.Type.Sliced;
-        sombra.pixelsPerUnitMultiplier = 1f;
+        RedondearPildora(sombra);
         sombra.color = ColorDeHalo(colorDelBoton);
+    }
+
+    // Una pildora con las puntas redondas de verdad. En Sliced, Unity achica los bordes de
+    // cada eje por separado cuando no entran: con los 127 px del dibujo, un boton de 700 x 120
+    // tenia las puntas de media elipse de 127 x 60 (y uno de 300 x 110 era un ovalo), y el
+    // halo, que es redondo, no les calzaba: lo vio Ivan el 25/9. Escalada para que el borde de
+    // arriba y el de abajo sumen justo el alto, las puntas son medio circulo con cualquier
+    // ancho, y las del halo, que es 34 mas grande de cada lado, les quedan concentricas. Vale
+    // para la pildora de un boton, para su halo (NeonPildora) y para las barras. Solo depende
+    // del alto: una barra que crece a lo ancho sigue redonda.
+    public static void RedondearPildora(Image img)
+    {
+        if (img == null || img.sprite == null) return;
+        Vector4 borde = img.sprite.border;
+        float alto = img.rectTransform.rect.height;
+        if (alto <= 0f || borde.y + borde.w <= 0f) return;
+        img.type = Image.Type.Sliced;
+        img.pixelsPerUnitMultiplier = (borde.y + borde.w) / (alto * img.pixelsPerUnit);
     }
 
     // Para un boton que cambia de color (el cofre de las misiones): el halo lo sigue.
@@ -146,13 +163,15 @@ public static class ConstructorUI
     {
         var barra = Rect(padre, nombre, posicion, tamanio);
         var img = barra.gameObject.AddComponent<Image>();
-        Redondear(img, pildora, 6f);
+        img.sprite = pildora;
+        RedondearPildora(img);
         img.color = fondo;
         img.raycastTarget = false;
         var relleno = Estirar(barra, "Relleno");
         relleno.anchorMax = new Vector2(0f, 1f);
         var imgRelleno = relleno.gameObject.AddComponent<Image>();
-        Redondear(imgRelleno, pildora, 6f);
+        imgRelleno.sprite = pildora;
+        RedondearPildora(imgRelleno);
         imgRelleno.color = color;
         imgRelleno.raycastTarget = false;
         return relleno;
@@ -174,7 +193,7 @@ public static class ConstructorUI
         var fondo = Rect(visual, "Fondo", Vector2.zero, tamanio);
         var imgFondo = fondo.gameObject.AddComponent<Image>();
         imgFondo.sprite = pildora;
-        imgFondo.type = Image.Type.Sliced;
+        RedondearPildora(imgFondo);
         imgFondo.color = color;
         imgFondo.raycastTarget = false;
 

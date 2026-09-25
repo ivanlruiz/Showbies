@@ -482,7 +482,7 @@ public class VentanaMisiones : MonoBehaviour
 
         var barra = Rect(s.raiz, "Barra", new Vector2(-230f, -44f), new Vector2(460f, 18f));
         var imgBarra = barra.gameObject.AddComponent<Image>();
-        Redondear(imgBarra, 6f);
+        Pildora(imgBarra);
         imgBarra.color = Tema.Elegir(new Color(0f, 0f, 0f, 0.12f), RolDeTema.Surco);
         s.relleno = Rect(barra, "Relleno", Vector2.zero, Vector2.zero);
         s.relleno.anchorMin = Vector2.zero;
@@ -490,7 +490,7 @@ public class VentanaMisiones : MonoBehaviour
         s.relleno.pivot = new Vector2(0f, 0.5f);
         s.relleno.offsetMin = s.relleno.offsetMax = Vector2.zero;
         var imgRelleno = s.relleno.gameObject.AddComponent<Image>();
-        Redondear(imgRelleno, 6f);
+        Pildora(imgRelleno);
         imgRelleno.color = colorMoneda;
 
         s.cuenta = Texto(s.raiz, "Cuenta", "", 32f, ColorDeTexto, new Vector2(100f, -44f), new Vector2(200f, 40f));
@@ -558,7 +558,7 @@ public class VentanaMisiones : MonoBehaviour
         // Image Filled no llena; ver las trampas de CLAUDE.md).
         var barra = Rect(fila.raiz, "Barra", new Vector2(-230f, -24f), new Vector2(460f, 18f));
         var imgBarra = barra.gameObject.AddComponent<Image>();
-        Redondear(imgBarra, 6f);
+        Pildora(imgBarra);
         imgBarra.color = Tema.Elegir(new Color(0f, 0f, 0f, 0.12f), RolDeTema.Surco);
         fila.relleno = Rect(barra, "Relleno", Vector2.zero, Vector2.zero);
         fila.relleno.anchorMin = Vector2.zero;
@@ -566,7 +566,7 @@ public class VentanaMisiones : MonoBehaviour
         fila.relleno.pivot = new Vector2(0f, 0.5f);
         fila.relleno.offsetMin = fila.relleno.offsetMax = Vector2.zero;
         var imgRelleno = fila.relleno.gameObject.AddComponent<Image>();
-        Redondear(imgRelleno, 6f);
+        Pildora(imgRelleno);
         imgRelleno.color = colorBarra;
 
         // Con cinco cifras de cada lado ("12.180 / 20.300") se metia debajo de la moneda: se
@@ -612,6 +612,13 @@ public class VentanaMisiones : MonoBehaviour
     private void Redondear(Image img, float multiplicador)
     {
         ConstructorUI.Redondear(img, pildora, multiplicador);
+    }
+
+    // Una barra con las puntas redondas (ver ConstructorUI.RedondearPildora).
+    private void Pildora(Image img)
+    {
+        img.sprite = pildora;
+        ConstructorUI.RedondearPildora(img);
     }
 
     // Un numero que se achica hasta 'minimo' para no salirse de su caja (en una sola linea):

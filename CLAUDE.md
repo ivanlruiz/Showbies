@@ -55,7 +55,7 @@ Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, Efec
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
-Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: pradera de día y cementerio de noche)
+Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
@@ -67,7 +67,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma el prefab del cementerio), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota y PruebaDisparo (bancos en play), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón
 ```
@@ -571,12 +571,15 @@ prefab, así que la altura sirve). Se destruye con el zombi.
 ### Capítulos: la pradera, el cementerio y la ciudad
 
 Pedido de Ivan: escenarios que cambien. Las oleadas van por **capítulos de 10** (`CapitulosDeEscenario`, objeto
-`Capitulos` de WaveMode), que recorren la lista `escenarios` y vuelven a empezar: 1-10 la **pradera de día**, 11-20 el
-**cementerio de noche**, 21-30 la **ciudad de noche**, 31-40 otra vez la pradera. El modo libre queda de día.
+`Capitulos` de WaveMode), que recorren la lista `escenarios` y vuelven a empezar: 1-10 la **pradera**, 11-20 el
+**cementerio**, 21-30 la **ciudad**, 31-40 otra vez la pradera. **Los tres son de noche, cada uno con su neón** (fase 3 del
+neón, 25/9: Ivan eligió entre maquetas una estética por capítulo), y el modo libre y el tutorial son la pradera.
 
 Cada escenario es un `EscenarioDeCapitulo`: el id de su nombre en la tabla, su decorado, su piso, el cielo, la luz (color,
-intensidad y ángulo), la luz ambiente y la niebla. **El primero de la lista es lo que trae la escena**: sus colores y su
-piso se leen en el `Start` en vez de cargarse a mano, así el capítulo 1 se ve igual que siempre. Para sumar un escenario
+intensidad y ángulo), la luz ambiente y la niebla. **El primero de la lista es lo que trae la escena**: sus colores, su
+niebla y su piso se leen en el `Start` en vez de cargarse a mano, así la noche de la pradera está una sola vez, guardada en
+las tres escenas de juego (la deja ahí **ShowBies > Escenarios > Poner la noche**, `ConstructorEscenarios.PonerLaNoche`,
+con la noche del cementerio y de la ciudad en la lista). Para sumar un escenario
 nuevo alcanza con un elemento más en el array, su prefab y su fila en la tabla de textos.
 
 Al pasar de capítulo, en el descanso de la oleada: el cartel "CAPÍTULO 3 / LA CIUDAD" arriba de todo (al medio está el de
@@ -591,13 +594,23 @@ trabarían), y **cada uno se arma una sola vez por partida**: después se prende
 junta con `StaticBatchingUtility` en pocos draw calls, y desde ahí las piezas ya no se mueven por separado, así que **la
 primera vez sale cada pieza sola del piso y las siguientes sale el decorado entero**.
 
-- `Prefabs/Escenarios/Cementerio`: lápidas, cruces, árboles pelados, la reja del borde y cuatro faroles con luz cálida,
-  sobre tierra (`PisoCementerio.mat`, la textura Brown Stony repetida 45 veces).
+- `Prefabs/Escenarios/Pradera`: dieciséis faroles de neón celestes y magenta (cuatro alrededor del centro, que se ven
+  al empezar, y el resto en ronda), matas, grupitos de flores de neón por todo el pasto (los puntos de color de donde se
+  juega) y la cerca del borde con su línea de neón magenta. En el modo libre y el tutorial está puesta en la escena, fija:
+  `DecoradoFijo` la junta al empezar (no va en el prefab, que en las oleadas sale del piso pieza por pieza).
+- `Prefabs/Escenarios/Cementerio`: lápidas, cruces (algunas de neón, verdes o violetas), árboles pelados, la reja del
+  borde con la baranda de arriba en neón violeta y cuatro faroles verdes y violetas, sobre tierra (`PisoCementerio.mat`,
+  la textura Brown Stony repetida 45 veces, teñida de violeta; también es el piso del menú). **La cruz de neón va con el
+  grupo derecho y solo el cuerpo inclinado**: con todo inclinado, su charco quedaba medio enterrado y se veía como una
+  franja cortada (lo vio Ivan el 25/9).
 - `Prefabs/Escenarios/Ciudad`: una cuadrícula de manzanas de 14 m con vereda y cordón, **corrida media manzana para que
   el cruce quede en el centro** (el jugador arranca en la calle: parado sobre una vereda lisa no se entendía que fuera
-  una ciudad), las líneas blancas del medio de cada calle, edificios bajos sólo a más de 30 m (desde arriba, uno cerca
-  taparía la partida), autos contra el cordón, contenedores, canteros y faroles con luz naranja en las cuatro esquinas
-  del cruce. El piso es `PisoCiudad.mat` (Grey Stones repetida 70 veces).
+  una ciudad), las líneas del medio de cada calle en neón amarillo, edificios bajos sólo a más de 30 m (desde arriba, uno
+  cerca taparía la partida), cada uno con un cartel de neón (BAR, 24H, MOTEL...) en su cara sur, que es la que ve la
+  cámara, y el reflejo de su color en la calle; dos letreros bajos arriba del cruce, autos contra el cordón con una luz de
+  color debajo, contenedores, canteros y faroles magenta y celestes en las esquinas. El piso es `PisoCiudad.mat` (Grey
+  Stones repetida 70 veces), oscuro y con brillo, como mojado. **El texto de los carteles es TextMeshPro y no se junta con
+  el resto** (`CapitulosDeEscenario.Juntar`): su malla la arma TextMeshPro, y juntada la pisaría al volver a escribirla.
 
 **Lo que tapa un edificio** (su huella y, del lado contrario a la cámara, la franja de piso que esconde el techo) lo mide
 `CapitulosDeEscenario` al armar el decorado y lo expone mientras está puesto (`Tapado`, `LoTapado`): sin colliders nada
@@ -618,11 +631,26 @@ juego, y mide cuánto sube el brillo del piso bajo cada farol con la calidad del
 contra +0,08 en el editor, y con el charco es +0,12 en los dos. La prueba de lógica verifica que cada farol tenga su
 charco bajo su luz y que ninguna luz vaya por píxel.
 
+**El neón tampoco es luz de verdad.** Cada tubo es un material que no recibe luz (`Unlit/Color`, que trae la niebla), con
+un halo aditivo de frente a la cámara (el shader del charco en un cuadrado parado con el giro fijo de la cámara del juego,
+`ConstructorEscenarios.GiroDeLaCamara`, que la prueba compara con las escenas) y un charco de su color en el piso. Las
+líneas largas (la cerca, la reja, el carril) llevan su resplandor en tramos que se pisan: el charco se apaga hacia las
+puntas y uno solo de 96 m brillaría solo en el medio. La pradera, que es "lo que trae la escena", la fotografía
+`FotosDeLosFaroles` con el piso y la noche de WaveMode, como la lee el juego: hasta el 25/9 salía sin material, rosa, y
+el farol magenta no llegaba al mínimo sobre el rosa.
+
+**De noche los personajes se leen por una luz de relleno.** Con la luna sola, el jugador y los zombis eran siluetas
+negras. Cada escena de juego tiene una luz direccional `Relleno` de frente, como la cámara, que solo alumbra la capa 8
+(`Personajes`), sin sombras y por vértice (la de píxel es de la luna): el piso queda oscuro, con sus charcos de neón, y
+ellos se ven. Pasan a esa capa al arrancar (`Personajes.PonerEnLaCapa`) las mallas de cada zombi (`EnemyController`),
+el modelo del jugador (`PlayerHealth`), su pistola (`ArmaEnLaMano`) y las monedas: solo lo que se ve y no tiene collider,
+así la física no cambia.
+
 El decorado del capítulo que viene **se arma apagado unos segundos después de entrar al anterior**
 (`PrepararElSiguiente`): instanciar ochocientos objetos en el frame del cambio era un tirón justo en el momento del
 evento, con el cartel y el fundido.
 
-Ninguno se edita a mano: los arman **ShowBies > Escenarios > Armar cementerio** y **Armar ciudad**
+Ninguno se edita a mano: los arman **ShowBies > Escenarios > Armar pradera**, **Armar cementerio** y **Armar ciudad**
 (`ConstructorEscenarios`, con semilla fija), que se vuelven a correr para cambiarlos. La niebla funciona en la build
 porque el menú la tiene guardada en su escena (ver El fondo del menú vivo).
 
@@ -1141,8 +1169,8 @@ El color dice que hace cada uno, en neón y con su halo (ver Tema: carbón neón
 modo (RESTART), **naranja** las oleadas, **vidrio oscuro** lo secundario (TUTORIAL, QUIT, MENU, BACK, NO THANKS).
 
 **Todos los botones son pildoras con icono** (estilo elegido por Ivan): el mismo molde, pero `Fondo` y `Sombra`
-usan `Sprites/UI/Pildora` en Sliced (un circulo con bordes de 127 px: Unity achica los bordes al alto del boton y
-queda redondo en las puntas) y `Visual` suma un hijo `Icono` (`Sprites/UI/Icono*`, dibujados en blanco y teñidos con el
+usan `Sprites/UI/Pildora` en Sliced (un círculo con bordes de 127 px), escalada para que las puntas sean medio círculo
+(`ConstructorUI.RedondearPildora`, ver la trampa del Sliced), y `Visual` suma un hijo `Icono` (`Sprites/UI/Icono*`, dibujados en blanco y teñidos con el
 color del texto). `IconoDeBoton` lo pega a la izquierda del texto y centra los dos juntos, midiendo el texto cada
 vez que cambia (idioma, CONTINUE WAVE N). Colores: fondo saturado con texto oscuro de su tono, y lo secundario
 (QUIT, TUTORIAL, BACK, MENU) en vidrio oscuro translucido con texto blanco (el blanco no se veia sobre el pasto claro). Llevan icono los botones de accion (jugar,
@@ -1150,11 +1178,11 @@ reiniciar, mejoras, menu, volver, salir y los modos); los que ya dicen todo con 
 precio de las tarjetas, los idiomas, el video de la derrota, NO, GRACIAS) son solo pildora. Para uno nuevo: la forma de
 `Pildora`, un `Icono` con `IconoDeBoton` y los colores de arriba.
 
-**El mundo de las partidas es claro, "pasto de dia"** (elegido por Ivan): cielo celeste (0,66; 0,86; 0,96) en las
-camaras; pasto verde claro (`Materiales/PisoGrilla.png` con `prototype_512x512_green2`, que ya no es metalico: con
-`_Metallic` 1 el piso casi no tomaba luz); luz ambiente plana y clara en las escenas. La interfaz es de carbón neón (ver
-Tema: carbón neón), y Ivan pidió el mundo de noche también: está en TAREAS. **Todo texto que va directo sobre el mundo lleva
-contorno**: sin contorno, el blanco y el amarillo se pierden sobre el pasto. El del HUD es el material
+**El mundo de las partidas es de noche** (fase 3 del neón, 25/9), cada capítulo con su neón (ver Capítulos). La pradera
+—las oleadas 1-10, el modo libre y el tutorial— tiene su noche guardada en las tres escenas: cielo azul casi negro, luna
+tenue, niebla del color del cielo, luz ambiente baja y el pasto de siempre teñido (`Escenarios/Pradera/PisoPradera.mat`,
+copia de `prototype_512x512_green2`, que queda como el pasto de día del menú). Hasta el 25/9 era claro, "pasto de día".
+**Todo texto que va directo sobre el mundo lleva contorno**: sin contorno, el blanco y el amarillo se pierden. El del HUD es el material
 `Bangers SDF - Neon HUD` (el contorno oscuro de `Bangers SDF - Outline`, más fino, con un halo celeste), y los títulos
 que van sobre el mundo (el cartel de la oleada, GAME OVER) llevan el de neón. La pausa, el revivir y los paneles del
 tutorial son ventanas de neón, oscuras a propósito: tapan la partida.
@@ -1214,8 +1242,8 @@ seis maquetas, y "la idea es que todo el juego tenga esa temática"). Son panele
 azulados, bordes celestes que brillan, títulos rosa con halo magenta y botones rellenos de neón con su halo. Antes había
 un claro ("pasto de día", paneles crema) y un oscuro que se prendía en Opciones; el claro se fue, el oscuro pasó a ser el
 neón y el interruptor se sacó (`PlayerPrefs["TemaOscuro"]` ya no se lee). Desde el 25/9 también son de neón las
-pantallas de la partida (la pausa, el revivir, la furia, el HUD, el tutorial y la derrota); falta el mundo, que sigue de
-día (ver TAREAS).
+pantallas de la partida (la pausa, el revivir, la furia, el HUD, el tutorial y la derrota), y el mundo es de noche con
+luces de neón (ver Capítulos).
 
 - **El mecanismo de papeles sigue igual.** Los colores guardados en las escenas y los prefabs son los del claro de
   antes: `PintarConTema` se acuerda de ese color (`colorClaro`) y las ventanas que se arman en código lo pasan por
@@ -1241,7 +1269,12 @@ día (ver TAREAS).
   cargue sin cablear nada:
   - `NeonBorde`: el borde de las ventanas y las tarjetas, en Sliced, con 40 de margen afuera de la línea y las puntas de
     radio 26. Las ventanas se redondean igual (`ConstructorUI.RadioNeon`) para que la línea les quede justa.
-  - `NeonPildora`: el halo detrás de un botón.
+  - `NeonPildora`: el halo detrás de un botón. Se escala parejo, como el botón (`RedondearPildora`), para que sus puntas
+    queden concéntricas con las de él, así que el borde del botón cae entre los 32 y los 43 px del centro del dibujo: es un
+    núcleo grande con un desenfoque corto, que brilla justo ahí; el de antes, más chico y más borroso, escalado así casi no
+    se veía. Se dibuja con PIL (el script no está en el repo): 200 x 120 px, una píldora blanca de 45 px de radio con los
+    centros de las puntas a 60 px de cada costado, desenfocada 9 px, y bordes de 9-slice de 70 a los costados y 59 arriba y
+    abajo.
   - `NeonAnillo`: el de los botones redondos.
 - **Lo que se arma en código lo viste `ConstructorUI`**:
   - `VentanaNeon`: el fondo redondeado y el borde.
@@ -1840,6 +1873,18 @@ enterrado.
   primer frame por eso; ahora mueve el ancho del `RectTransform`. Lo mismo vale para cualquier medidor que se
   arme por código con un rectángulo de color.
 
+- **En Sliced, Unity achica los bordes de cada eje por separado cuando no entran.** Con los 127 px de la `Pildora`, un
+  botón de 700 x 120 tenía las puntas de media elipse de 127 x 60 (uno de 300 x 110, como el del nivel del menú, era un
+  óvalo), y el halo de neón, que es redondo, no les calzaba: Ivan lo vio como "luces re bugeadas" el 25/9. Hasta ese día
+  este mismo archivo decía que Unity achicaba los bordes al alto y quedaba redondo. `ConstructorUI.RedondearPildora` pone
+  el multiplicador que hace que el borde de arriba y el de abajo sumen el alto; solo depende del alto, así que una barra
+  que crece a lo ancho sigue redonda. Lo usan los botones y las barras armados en código y los constructores
+  (`ConstructorNeon.RedondearBotones`), y la prueba de lógica lo mide en las escenas y los prefabs.
+
+- **La capa 8 es la de los personajes** (`Personajes`, en el TagManager): la luz de relleno de las escenas de juego solo
+  alumbra esa capa. Algo nuevo que tenga que leerse de noche (una caja, un efecto con malla) va con
+  `Personajes.PonerEnLaCapa`; lo que tiene collider no se pasa, para no tocar la física.
+
 - **La transición de un botón es ColorTint con el normal en blanco.** Los botones viejos tenían un Image negro
   que el ColorTint dejaba invisible, así que ponérselo en None lo hacía aparecer; hoy ese Image ya no está,
   pero el ColorTint sigue: si el normal no es blanco, tiñe el fondo de color del botón.
@@ -1862,7 +1907,9 @@ enterrado.
   de carbón neón en los dos temas (sin `PintarConTema`, con sus brillos y con el contraste de cada texto medido), que
   la partida sea de carbón neón (la pausa, el revivir, la furia, el HUD de las tres escenas de juego, leídas de disco para
   ver también si se guardaron los colores de los joysticks, y la derrota, con el contraste del texto de cada botón), que
-  la fuente del juego abra otro atlas cuando se llena y los
+  la fuente del juego abra otro atlas cuando se llena, que el mundo sea de noche (las tres escenas y los capítulos, con la
+  luz de relleno solo para los personajes y el giro de la cámara al que miran los halos), que los charcos y resplandores de
+  los decorados vayan acostados y a ras del piso, que las píldoras de los botones y sus halos tengan las puntas redondas y los
   patrones del jefe (por reflexión, con el prefab en una escena de vista previa): que no gire al terminar un patrón ni
   se tambalee de raíz, que la línea de la carga tenga el ancho de su cuerpo, que aturdido no tire zarpazos, que la
   embestida arranque limpia, que el paso al embestir salga del clip de correr del controller y que solo ataque si se lo

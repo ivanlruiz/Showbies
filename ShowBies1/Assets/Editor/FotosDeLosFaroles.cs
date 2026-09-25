@@ -68,9 +68,11 @@ public static class FotosDeLosFaroles
             else
             {
                 inf.AppendLine("Calidad del telefono: " + QualitySettings.names[calidadDelTelefono] + "; del editor: " + QualitySettings.names[calidadDelEditor]);
-                foreach (var escenario in capitulos.escenarios)
+                for (int i = 0; i < capitulos.escenarios.Length; i++)
                 {
+                    var escenario = capitulos.escenarios[i];
                     if (escenario.decorado == null) continue;
+                    if (i == 0) escenario = LoQueTraeLaEscena(escenario, capitulos, camaraDelJuego, waveMode);
                     todo &= Fotografiar(escenario, camaraDelJuego, calidadDelTelefono, calidadDelEditor, rt, inf);
                 }
             }
@@ -88,6 +90,32 @@ public static class FotosDeLosFaroles
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(Ruta)));
         File.WriteAllText(Ruta, inf.ToString());
         Debug.Log(inf.ToString());
+    }
+
+    // El primer escenario es "lo que trae la escena" (la pradera): CapitulosDeEscenario lee al
+    // empezar su piso, su cielo, su luna, su luz ambiente y su niebla de WaveMode, y en la lista
+    // quedan los valores de fabrica, sin piso. Aca se leen igual: sin esto la pradera salia con
+    // el piso rosa de "sin material" y de dia.
+    static EscenarioDeCapitulo LoQueTraeLaEscena(EscenarioDeCapitulo primero, CapitulosDeEscenario capitulos, Camera camara, Scene escena)
+    {
+        var e = new EscenarioDeCapitulo { idTexto = primero.idTexto, decorado = primero.decorado };
+        e.piso = capitulos.piso != null ? capitulos.piso.sharedMaterial : primero.piso;
+        e.cielo = camara.backgroundColor;
+        if (capitulos.sol != null)
+        {
+            e.luz = capitulos.sol.color;
+            e.intensidadLuz = capitulos.sol.intensity;
+            e.rotacionLuz = capitulos.sol.transform.rotation.eulerAngles;
+        }
+        // La luz ambiente y la niebla son de cada escena: se leen con ella activa.
+        var activa = SceneManager.GetActiveScene();
+        SceneManager.SetActiveScene(escena);
+        e.ambiente = RenderSettings.ambientLight;
+        e.conNiebla = RenderSettings.fog;
+        e.nieblaInicio = RenderSettings.fogStartDistance;
+        e.nieblaFin = RenderSettings.fogEndDistance;
+        SceneManager.SetActiveScene(activa);
+        return e;
     }
 
     static bool Fotografiar(EscenarioDeCapitulo escenario, Camera camaraDelJuego, int calidadDelTelefono, int calidadDelEditor,

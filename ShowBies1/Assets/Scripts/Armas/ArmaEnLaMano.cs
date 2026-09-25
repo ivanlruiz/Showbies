@@ -79,6 +79,7 @@ public class ArmaEnLaMano : MonoBehaviour
         instancia.localPosition = Vector3.zero;
         instancia.localRotation = GiroEnLaMano;
         instancia.localScale = Vector3.one;
+        Personajes.PonerEnLaCapa(instancia.gameObject);
         Boca = instancia.Find("Boca");
         arma.boca = Boca;
         fogonazo = Boca != null ? Boca.Find("Fogonazo") : null;

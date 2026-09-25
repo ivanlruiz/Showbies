@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 
 // Un escenario de los capitulos: como se ve el mundo y que decorado tiene. El primero de
-// la lista es "lo que trae la escena" (la pradera de dia): sus colores y su piso se leen
+// la lista es "lo que trae la escena" (la pradera): sus colores, su niebla y su piso se leen
 // al empezar y no se cargan a mano.
 [System.Serializable]
 public class EscenarioDeCapitulo
@@ -23,15 +23,16 @@ public class EscenarioDeCapitulo
     public Vector3 rotacionLuz = new Vector3(50f, -30f, 0f);
     public Color ambiente = new Color(0.55f, 0.55f, 0.55f, 1f);
 
-    [Tooltip("De dia la niebla queda lejisimos; de noche se acerca y tapa el borde del mapa.")]
+    [Tooltip("Sin niebla, queda lejisimos; con niebla se acerca y tapa el borde del mapa.")]
     public bool conNiebla;
     public float nieblaInicio = 16f;
     public float nieblaFin = 52f;
 }
 
 // Los capitulos de las oleadas, pedido de Ivan: cada 10 oleadas cambia el escenario. Van
-// en el orden de `escenarios` y despues vuelven a empezar: 1-10 la pradera de dia, 11-20
-// el cementerio de noche, 21-30 la ciudad de noche y 31-40 otra vez la pradera.
+// en el orden de `escenarios` y despues vuelven a empezar: 1-10 la pradera, 11-20 el
+// cementerio, 21-30 la ciudad y 31-40 otra vez la pradera. Los tres son de noche, cada uno
+// con su neon (desde el 25/9; hasta ahi la pradera era de dia).
 //
 // Al pasar de capitulo, en el descanso de la oleada: el cartel "CAPITULO 3 / LA CIUDAD",
 // la luz, el cielo, la luz ambiente y la niebla se funden de un escenario al otro, el
@@ -118,7 +119,10 @@ public class CapitulosDeEscenario : MonoBehaviour
         }
         dia.ambiente = ambienteDeLaEscena;
         if (piso != null) dia.piso = piso.sharedMaterial;
-        dia.conNiebla = false;
+        // La niebla tambien sale de la escena: la pradera es de noche y la trae guardada.
+        dia.conNiebla = RenderSettings.fog;
+        dia.nieblaInicio = RenderSettings.fogStartDistance;
+        dia.nieblaFin = RenderSettings.fogEndDistance;
 
         puestas = new Puesta[escenarios.Length];
         for (int i = 0; i < puestas.Length; i++) puestas[i] = new Puesta();
@@ -313,8 +317,21 @@ public class CapitulosDeEscenario : MonoBehaviour
             p.y = puesta.alturas[i];
             puesta.piezas[i].localPosition = p;
         }
-        StaticBatchingUtility.Combine(puesta.objeto);
+        Juntar(puesta.objeto);
         puesta.combinado = true;
+    }
+
+    // Junta un decorado en pocos draw calls, menos los carteles de la ciudad: la malla de un
+    // texto la arma TextMeshPro, y juntada con las demas la pisaria al volver a escribirla.
+    public static void Juntar(GameObject decorado)
+    {
+        var piezas = new List<GameObject>();
+        foreach (var filtro in decorado.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (filtro.GetComponent<TMP_Text>() != null) continue;
+            piezas.Add(filtro.gameObject);
+        }
+        StaticBatchingUtility.Combine(piezas.ToArray(), decorado);
     }
 
     private void Sacar(int indice)
