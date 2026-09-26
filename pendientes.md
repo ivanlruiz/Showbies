@@ -21,16 +21,17 @@ lo verificó leyendo el código (los commits "Aplicar ... de la auditoria" y los
 
 Quince escépticos, uno por hallazgo, intentaron tumbar cada uno leyendo el código y los YAML de HEAD (7276891), sin
 Unity, y recalcularon los números con los valores serializados. Quedaron 2 refutados, 6 confirmados y 7 parciales
-(pasan, pero distinto o menos grave de lo que se había anotado). Lo confirmado pasó a la sección 2, lo que pide una
-decisión de Ivan a la 3 y lo refutado a la 6. Lo marcado "sin medir" sale de un modelo: medirlo antes de arreglar.
-La ronda encontró además cosas que no estaban anotadas: el decorado que se arma en plena pelea, los shaders que se
-compilan en el primer golpe, los niveles baratos de los probadores, dos pruebas circulares y una frase falsa en la
-política de privacidad publicada.
+(pasan, pero distinto o menos grave de lo que se había anotado). Lo confirmado pasó a la sección 2, con las tres
+decisiones que tomó Ivan ese mismo día (el empuje de la bala, el récord de una partida abandonada y los niveles de los
+probadores), y lo refutado a la 6. Lo marcado "sin medir" sale de un modelo: medirlo antes de arreglar. La ronda
+encontró además cosas que no estaban anotadas: el decorado que se arma en plena pelea, los shaders que se compilan en
+el primer golpe, los niveles baratos de los probadores, dos pruebas circulares y una frase falsa en la política de
+privacidad publicada.
 
 | hallazgo | veredicto | gravedad | sección |
 |---|---|---|---|
 | Los jefes se farmean | confirmado | media (era alta) | 2 |
-| La migración a v6 | parcial: solo pasa con archivos v4 y v5 | baja (era media) | 2 y 3 |
+| La migración a v6 | parcial: solo pasa con archivos v4 y v5 | baja (era media) | 2 |
 | Las monedas de logro sin cobrar | confirmado | baja (era media) | 2 |
 | "Gana N monedas" | parcial: la causa es otra | baja (era media) | 2 |
 | La misión de críticos | parcial: el arreglo propuesto regala | baja | 2 |
@@ -38,9 +39,9 @@ política de privacidad publicada.
 | Cerrar la app en ¡HAS MUERTO! | parcial: hoy solo en la APK de prueba | baja hoy, media con anuncios | 2 |
 | Morir por el kill-Z | refutado | — | 6 |
 | El kill-Z en el tutorial | refutado | — | 6 |
-| El récord al reiniciar | parcial: el arreglo propuesto rompe las oleadas | baja | 3 |
+| El récord al reiniciar | parcial: el arreglo propuesto rompe las oleadas | baja | 2 |
 | Las balas atraviesan al FASTER | parcial: no es cosa de los 30 FPS | baja a 60 FPS, media a 20-30 | 2 |
-| El empuje de la bala | confirmado, y más fuerte | media | 3 |
+| El empuje de la bala | confirmado, y más fuerte | media | 2 |
 | La cámara a 50 Hz | confirmado | media | 2 |
 | Los pools en plena pelea | parcial: el tirón es otro | baja | 2 |
 | `progreso.json` en el almacenamiento externo | confirmado | baja | 2 |
@@ -123,9 +124,10 @@ política de privacidad publicada.
   migración le da 0 de experiencia, y en la oleada 35 cobra ~6.600 monedas de logros. **Lo que sí le toca**: arranca
   en el nivel 1 con la mejor oleada alta, y cada nivel barato paga como esa oleada. Uno de la 35 sube del nivel 3 al
   14 en su primera partida y cobra ~49.600 monedas (2,2 veces lo que deja esa partida), ~370.000 en 40 partidas.
-  Decidir (sección 3). El arreglo para v4 y v5 no puede ir adentro de `MigrarAlNivel` (`Logros` usa
-  `Progreso.Jugador`, que llama a `Cargar()` con `datos` en null: recursión): una marca, y un paso después de `datos =
-  leidos`.
+  **Decidido el 26/9**: sembrarle la experiencia desde su mejor oleada, con `nivelPremiado` en ese nivel, así no cobra
+  esos niveles (como pretende la migración de los v4 y v5). El arreglo para v4 y v5 no puede ir adentro de
+  `MigrarAlNivel` (`Logros` usa `Progreso.Jugador`, que llama a `Cargar()` con `datos` en null: recursión): una marca,
+  y un paso después de `datos = leidos`.
 - **"Gana N monedas" y la misión de críticos se miden con varas que no son las del juego** (baja):
   - **Las monedas.** `MonedasPorPartida` toma el multiplicador de la oleada a mitad de camino (1,08^(m/2)), y la media
     real, pesada por zombis, es casi el doble (8,99 contra 4,66 en la oleada 40); además la mezcla suelta 2,41 monedas
@@ -158,8 +160,8 @@ política de privacidad publicada.
   auditoría, pero en `FixedUpdate` y estirado ~0,24 m hacia atrás (en `Update` no cubre lo que avanza el zombi con 2 o
   3 pasos por cuadro), con `QueryTriggerInteraction.Ignore`, una máscara sin Player ni Bala y aceptando solo
   `EnemyController` (hoy las balas atraviesan las paredes, y un barrido las chocaría). `SphereCastNonAlloc` devuelve
-  con distancia 0 lo que ya se superpone y no ordena. Quita también el empuje de la bala (sección 3). Para medirlo,
-  `PruebaDisparo` necesita fijar los FPS y sacar zombis: a 20, 30 y 60.
+  con distancia 0 lo que ya se superpone y no ordena. Quita también el empuje de PhysX (ver el empuje, abajo). Para
+  medirlo, `PruebaDisparo` necesita fijar los FPS y sacar zombis: a 20, 30 y 60.
 - **`progreso.json` está en el almacenamiento externo** (baja). En Android, `persistentDataPath` es
   `getExternalFilesDir` (`/storage/emulated/0/Android/data/com.ivanruiz.showbies/files/`, siempre con minSdk 25). Se
   edita con un explorador de archivos en Android 7.1-10, con el truco del selector de carpetas en 11-12 y desde la PC
@@ -171,6 +173,21 @@ política de privacidad publicada.
   o la nube. Si se hace: por JNI, moviendo todas las copias (`.tmp`, `.anterior`, `.roto` y los `.bak`), sin migrar si
   hubo `NoSePudoLeer` o una versión futura, borrando el externo después de verificar el interno, y para siempre
   (restaurar una copia vieja de Android lo devuelve al externo).
+- **El empuje de la bala** (media). La bala es un collider sin Rigidbody que aparece adentro del zombi, y PhysX lo
+  saca empujándolo (`m_DefaultMaxDepenetrationVelocity` sin tope): cada bala lo corre ~10-14 cm y le hace perder su
+  paso. Con fuego sostenido (modelo, sin medir): el normal va al 85 % de su velocidad con 4 tiros/s, al 50-63 % con 12
+  y al ~10 % con 20; el tanque retrocede con 20; el jefe persiguiendo va al 22-39 % con 8, y su carga cubre el 72-75 %
+  de la línea con 12. En el tanque y el jefe depende de los FPS, y el juego se balanceó con esto sin saberlo.
+  **Decidido el 26/9: queda, pero a propósito y parejo**: en `DanoZombi`, igual a cualquier FPS y con resistencia por
+  tipo (el tanque y el jefe, más pesados). Antes, medir el de ahora en play (el avance de un tanque y del jefe bajo
+  fuego, a 60 y a 30 FPS) para que se sienta igual. Va con el barrido de las balas, que quita el empuje de PhysX; si
+  en cambio la bala pasa a trigger, su `OnCollisionEnter` pasa a `OnTriggerEnter`.
+- **El récord de una partida abandonada** (baja). En el libre la partida se pierde sin compararla con MENÚ, REINICIAR,
+  la R y cerrando la app; en oleadas, solo con REINICIAR y la R (MENÚ la guarda para retomarla, y se compara al
+  morir). **Decidido el 26/9: en el libre cuenta**: `GuardarRecord` en `MenuPausa.Pausar` y en la R (sus puntos solo
+  suben, y perder el foco pausa, así que cubre cerrar la app). En oleadas, solo dentro de `OlvidarPartidaSiEsOleadas`
+  (REINICIAR y la R). No en `IrAlMenu`, como decía la auditoría: al retomar no saldría NEW BEST. El tutorial no
+  escribe récord.
 
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
@@ -236,10 +253,6 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 - **Con el techo de monedas lleno, la que se va para hacer lugar se va con su valor** (decidido así al aplicar el techo
   duro): pasárselo a la nueva rescataba lo que vence sin que nadie lo junte, un 10-30 % más de lo cobrado con el techo
   lleno. Si se prefiere que no se pierda nada, es una línea en `Moneda.Soltar`.
-- **Los niveles baratos de los probadores** (ver la migración a v6 en la sección 2): un progreso v3 de la oleada 35
-  arranca en el nivel 1 y cobra ~49.600 monedas en su primera partida y ~370.000 en 40 partidas. **Propuesta**:
-  sembrarle la experiencia desde la mejor oleada, con `nivelPremiado` en ese nivel, como pretende la migración de los
-  v4 y v5. O regalárselo por probar el juego.
 
 ### Diseño y retención
 
@@ -265,11 +278,6 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 - **PLAY y SALIR quedan a 20 unidades en 20:9 y 21:9**: angostar MEJORAS y SALIR a 560, o esconder SALIR en el
   teléfono (el atrás ya pregunta si salir).
 - **Los segundos de gracia después de revivir no se ven**: que el modelo parpadee (toca `PlayerHealth`).
-- **¿Una partida abandonada cuenta para el récord?** (baja; parcial en la ronda `refutar:`). En el libre la partida se
-  pierde sin compararla con MENÚ, REINICIAR, la R y cerrando la app; en oleadas, solo con REINICIAR y la R (MENÚ la
-  guarda para retomarla). El arreglo de la auditoría empeora las oleadas: guardar el récord en `IrAlMenu` haría que al
-  retomar no salga NEW BEST. Si se decide que sí cuenta: `GuardarRecord` en `MenuPausa.Pausar` y en la R para el libre
-  (sus puntos solo suben), y en oleadas dentro de `OlvidarPartidaSiEsOleadas`. El tutorial no escribe récord.
 
 ### Anuncios
 
@@ -287,15 +295,6 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 - **Zona muerta en el joystick de disparo**: cualquier roce dispara hacia un lado al azar. Probar en el teléfono.
 - **En PC las balas no pasan por la mira**: el rayo del mouse corta Y=0 y la bala sale de la mano.
 - **Balas a 11 m/s**, más lentas que el FASTER: 22-25 m/s con `lifeTime` 1 s, pero junto con el barrido.
-- **El empuje de la bala** (media; confirmado en la ronda `refutar:`, y más fuerte de lo que se creía). La bala es un
-  collider sin Rigidbody que aparece adentro del zombi, y PhysX lo saca empujándolo
-  (`m_DefaultMaxDepenetrationVelocity` sin tope): cada bala lo corre ~10-14 cm y le hace perder su paso. Con fuego
-  sostenido (modelo, sin medir): el normal va al 85 % de su velocidad con 4 tiros/s, al 50-63 % con 12 y al ~10 % con
-  20; el tanque retrocede con 20; el jefe persiguiendo va al 22-39 % con 8, y su carga cubre el 72-75 % de la línea
-  con 12. En el tanque y el jefe depende de los FPS. El juego se balanceó con esto sin saberlo, y el barrido de las
-  balas (sección 2) o `IsTrigger` lo quitan. **Decidir**: sacarlo (y rebalancear), o dejarlo a propósito y parejo, en
-  `DanoZombi`, quizá con resistencia por tipo. Si la bala pasa a trigger, su `OnCollisionEnter` pasa a
-  `OnTriggerEnter`.
 
 ### Textos y plataforma
 
