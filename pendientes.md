@@ -2,14 +2,14 @@
 
 La auditoría tuvo 20 frentes. En cada uno, un agente `buscar:` salió a buscar errores, riesgos y mejoras, y un
 `mejoras:` revisó las mejoras contra el código. **La ronda `refutar:`** (un escéptico que intenta tumbar cada error
-antes de arreglarlo) **quedó para después**, por pedido de Ivan: solo pasaron por ella los frentes de calidad y de
-diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verificó leyendo el código (los commits "Aplicar
-... de la auditoria" y los que siguen). Este archivo se llamaba `AUDITORIA.md`. Acá queda:
+antes de arreglarlo) pasó al principio solo por los frentes de calidad y de diseño, por pedido de Ivan, y **el 26/9
+por los quince hallazgos que quedaban** (ver la sección 1). **Lo chico y seguro ya está aplicado**, y quien lo aplicó
+lo verificó leyendo el código (los commits "Aplicar ... de la auditoria" y los que siguen). Este archivo se llamaba
+`AUDITORIA.md`. Acá queda:
 
-1. **Sin verificar**: errores y riesgos que encontró un `buscar:` y que nadie refutó ni aplicó. Son la ronda
-   `refutar:` que falta: antes de arreglar uno, confirmar que pasa.
-2. **Verificados, para después**: confirmados leyendo el código, pero grandes, en archivos de la fase 2 (que está sin
-   commit en la PC de Ivan: `PlayerHealth.cs` y el constructor de neón) o con algo para decidir.
+1. **La ronda `refutar:` del 26/9**: el veredicto de cada hallazgo que estaba sin verificar, y adónde fue a parar.
+2. **Verificados, para después**: confirmados leyendo el código, pero grandes, con algo para decidir o que esperaban
+   la fase 2 (`PlayerHealth.cs` y el constructor de neón, que ya están en main).
 3. **Para decidir**: mejoras y cambios de diseño que valen la pena pero cambian el juego o una decisión de Ivan.
 4. **Para mirar en Unity**: lo que se aplicó sin poder probarlo.
 5. **Antes de integrar la red de anuncios**: ver `publicacion/pasos.md`.
@@ -17,71 +17,33 @@ diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verific�
 
 ---
 
-## 1. Sin verificar (la ronda `refutar:` que falta)
+## 1. La ronda `refutar:` del 26/9
 
-### Premios que se farmean
+Quince escépticos, uno por hallazgo, intentaron tumbar cada uno leyendo el código y los YAML de HEAD (7276891), sin
+Unity, y recalcularon los números con los valores serializados. Quedaron 2 refutados, 6 confirmados y 7 parciales
+(pasan, pero distinto o menos grave de lo que se había anotado). Lo confirmado pasó a la sección 2, lo que pide una
+decisión de Ivan a la 3 y lo refutado a la 6. Lo marcado "sin medir" sale de un modelo: medirlo antes de arreglar.
+La ronda encontró además cosas que no estaban anotadas: el decorado que se arma en plena pelea, los shaders que se
+compilan en el primer golpe, los niveles baratos de los probadores, dos pruebas circulares y una frase falsa en la
+política de privacidad publicada.
 
-- **Los jefes de las misiones, del semanal y del bestiario se farmean** (alta; lo encontraron dos auditores). El modo
-  libre saca un jefe cada 30 s con la vida del nivel 1 (y la R lo vuelve al nivel 1), y retomar una oleada de jefe
-  (pausa → MENÚ → OLEADAS) lo vuelve a sacar aunque ya se lo haya matado. Con mejor oleada 40, la misión "derrota 10
-  jefes" (cotizada en 2,5 partidas) sale en ~5 min, y el semanal de 60 jefes (~257.000 monedas, cotizado en 15
-  partidas) en ~30 min. **Arreglo**: un contador aparte de jefes de oleada (`EsJefeDeOleada` puesto en
-  `WaveManager.Aparecer`) que lean `MisionesDiarias` y `DesafioSemanal`; y anotar con la oleada en curso si su jefe ya
-  murió, para no volver a sacarlo al retomar. Es un campo nuevo en el progreso (subir la versión, como con los
-  contadores de la v4).
-- **La migración a v6 devuelve de golpe los premios que quería evitar** (media). `MigrarAlNivel` no da premios por
-  los niveles viejos, pero no marca los logros que ese progreso ya cumple: el primer `Logros.Revisar` los anota todos
-  al nivel migrado (alto) y al cobrarlos cruzan ~17 niveles con premio. Un probador de la oleada 35 cobra ~76.000
-  monedas al entrar; uno de la 45, más de 250.000. Le toca a todos los de la prueba cerrada con el próximo AAB.
-  **Arreglo**: marcar en la migración que el progreso viene de v5 y, en el primer `Revisar` con esa marca, anotar las
-  ganadas como cobradas, sumar su experiencia y subir `nivelPremiado` sin crear `PremioDeNivel`. O decidir que sí se
-  premian y documentarlo.
-- **Guardar las monedas de logro sin cobrar rinde más** (media). La experiencia se congela al ganar la moneda, pero
-  los niveles que cruza al cobrarla pagan con la mejor oleada de ese momento: guardarla de la 30 a la 45 da ~3× las
-  monedas. **Arreglo**: anotar la oleada al ganar (`oleadaAlGanar`, −1 de centinela) y pagar con
-  `min(MejorOleada, oleadaAlGanar)`; o sumar la experiencia en el acto y dejar COBRAR solo como festejo.
-- **`'Gana N monedas'` se mide con un modelo que se queda corto** (media; misión y semanal, 1,3-2,6×, y 6× con el botín
-  al máximo): con botín alto el semanal de monedas sale en ~2,5 partidas en vez de 15. **Arreglo**: una vara "de más"
-  para los objetivos de monedas (la suma real por oleada con el botín comprado) y dejar `MonedasPorPartida` para los
-  premios.
-- **La misión de críticos es más cara cuanto más crítico se tiene** (baja): dividir por `1 + p`.
-- **El bestiario es el único premio sin congelar** (baja): guardar la oleada al ganar cada estrella.
-
-### En `PlayerHealth.cs` (fase 2)
-
-- **Cerrar la app en ¡HAS MUERTO! conserva la oleada en curso: es un revivir gratis y sin límite** (media; lo
-  encontraron dos auditores). Con la oferta abierta, `Terminar` todavía no corrió y el archivo ya tiene la oleada
-  guardada. **Arreglo**: olvidar la oleada y guardar justo antes de ofrecer revivir, y volver a guardarla en `Revivir`.
-- **Morir por el kill-Z**: sin caída y con la cámara bajo el piso detrás de la derrota, y la horda festeja fuera del
-  mapa. **Arreglo**: `Caer()` antes de `Terminar` y que la cámara no siga la Y bajo el piso.
-- **Kill-Z en el tutorial**: sale GAME OVER, cuenta la partida (se pierde la guía de la primera partida) y
-  `UltimoModo` queda en 4. **Arreglo**: en el tutorial, devolver al jugador a su posición inicial.
-- **El récord solo se escribe al morir**: REINICIAR, la R y MENÚ tiran la partida sin compararla. **Arreglo**:
-  `GuardarRecord` accesible y llamado antes de cargar en `MenuPausa.Reiniciar`, `IrAlMenu` y la R.
-
-### Combate
-
-- **Las balas pueden atravesar al FASTER sin tocarlo** (media). La bala avanza por `Translate` y el choque es
-  discreto: a 30 FPS salta ~0,37 m por cuadro contra un zombi de 0,44 m que viene a 12 m/s. **Arreglo**: barrido con
-  `Physics.SphereCastNonAlloc` entre la posición anterior y la nueva, y sacar el collider de la bala. Medirlo antes
-  con `PruebaDisparo` a 20 y 30 FPS.
-- **Cada bala empuja al zombi que toca** (hipótesis). La bala no es trigger y aparece de golpe adentro: PhysX lo
-  separa empujándolo, más a menos FPS. Con el barrido se va solo; si no, `IsTrigger` en `Bullet.prefab`.
-
-### Rendimiento
-
-- **La cámara repite posición 1 de cada 6 cuadros** (media): física a 50 Hz, juego a 60 FPS y nada interpolado; se ve
-  como un tironeo del mundo aunque el contador diga 60. **El arreglo es para decidir**: `Fixed Timestep` a 1/60 (≈20 %
-  más pasos de física) o interpolar los Rigidbody (hay que girar con `MoveRotation`). Medirlo en el teléfono.
-- **Los pools se llenan en plena pelea** (baja): zombis, monedas, números, barras, partículas y letras de la fuente se
-  crean cuando hacen falta. **Arreglo**: precalentarlos durante el cartel de la oleada 1.
-
-### Otros
-
-- **`progreso.json` probablemente vive en el almacenamiento externo de la app** y la política de privacidad dice
-  "privado". En un Android 9 se edita con un explorador de archivos. **Primero medir**: loguear
-  `Application.persistentDataPath` en la APK de prueba. Si es externo, migrar a interno una vez y ajustar la frase de
-  `publicacion/privacidad.html` (y de la rama `gh-pages`, que es la publicada).
+| hallazgo | veredicto | gravedad | sección |
+|---|---|---|---|
+| Los jefes se farmean | confirmado | media (era alta) | 2 |
+| La migración a v6 | parcial: solo pasa con archivos v4 y v5 | baja (era media) | 2 y 3 |
+| Las monedas de logro sin cobrar | confirmado | baja (era media) | 2 |
+| "Gana N monedas" | parcial: la causa es otra | baja (era media) | 2 |
+| La misión de críticos | parcial: el arreglo propuesto regala | baja | 2 |
+| El bestiario sin congelar | confirmado | baja | 2 |
+| Cerrar la app en ¡HAS MUERTO! | parcial: hoy solo en la APK de prueba | baja hoy, media con anuncios | 2 |
+| Morir por el kill-Z | refutado | — | 6 |
+| El kill-Z en el tutorial | refutado | — | 6 |
+| El récord al reiniciar | parcial: el arreglo propuesto rompe las oleadas | baja | 3 |
+| Las balas atraviesan al FASTER | parcial: no es cosa de los 30 FPS | baja a 60 FPS, media a 20-30 | 2 |
+| El empuje de la bala | confirmado, y más fuerte | media | 3 |
+| La cámara a 50 Hz | confirmado | media | 2 |
+| Los pools en plena pelea | parcial: el tirón es otro | baja | 2 |
+| `progreso.json` en el almacenamiento externo | confirmado | baja | 2 |
 
 ## 2. Verificados, para después
 
@@ -121,6 +83,95 @@ diseño. **Lo chico y seguro ya está aplicado**, y quien lo aplicó lo verific�
   esperar ~1 s después del último cartel); un tono distinto por caja (hoy las tres tocan `pop.mp3`); un clic al
   intentar la granada en recarga; y un disparo sintetizado propio si el de ahora cansa.
 
+### De la ronda `refutar:`
+
+- **Los jefes de las misiones y del semanal se farmean** (media). `EnemyController.cs:874` suma a `jefesMatados` todo
+  zombi con `EsJefe`, sin mirar el modo, y lo leen `MisionesDiarias.cs:208` y `DesafioSemanal.cs:124`. En el libre
+  sale un jefe cada 30 s (`ShowBies1.unity:1330-1337`) con 500 de vida en el nivel 1, y REINICIAR o la R lo vuelven al
+  nivel 1: con mejor oleada 40, los 10 jefes de la misión (cotizada en 59 min, paga 51.450) salen en ~5 min, y los 60
+  del semanal (cotizado en 5,9 h, paga 257.300) en ~30 min (en móvil, con el techo de 35 zombis, quizá uno cada ~67
+  s). Retomar la oleada 10 (pausa → MENÚ → OLEADAS) vuelve a sacar su jefe, en un ciclo de ~20 s. Pega solo cuando
+  sale ese tipo: la difícil, ~1 de cada 5 días, y el semanal, 1 de cada 4 semanas. **Arreglo**, más simple que el de
+  la auditoría: sumar `jefesMatados` en `WaveManager` al completar una oleada con jefe, al lado de
+  `RegistrarOleadaCompletada`, y no al morir el zombi. Cierra el libre y el retomar sin campo nuevo ni subir la
+  versión (solo lo leen las misiones y el semanal). Costo: no cuenta un jefe matado en una oleada en la que después se
+  muere. Ajustar `PruebasMejoras.cs` (~3072-3105, 3254-3276 y 3574). Las estrellas del jefe en el bestiario siguen
+  contando muertes: se cobran una sola vez, y farmearlas solo las adelanta.
+- **Dos premios pagan con la oleada del cobro y no con la de cuando se ganaron** (baja):
+  - **Las monedas de logro.** `Logros.Revisar` anota la moneda con su experiencia congelada (`Logros.cs:199-200`),
+    pero la experiencia entra recién en `Cobrar` (`:212-218`), y los niveles que cruza crean su `PremioDeNivel` con la
+    mejor oleada de ese momento (`NivelJugador.cs:126-130`). Guardar un bronce de la oleada 30 a la 45 paga ~2,7 veces
+    (unas 4.900 monedas más el bronce y 19.300 el oro, entre el 0,2 y el 0,6 % de lo que se gana en ese tramo);
+    guardar las 36 hasta la 50, ~394.000 (un 31 % más de premios de nivel). Rompe una regla escrita: "guardarla para
+    cobrarla más arriba no rinde". **Arreglo**: sumar la experiencia en `Revisar`, al anotar la moneda, y dejar COBRAR
+    como festejo. El `min(MejorOleada, oleadaAlGanar)` de la auditoría deja entre el 25 y el 100 % del hueco, porque
+    los niveles que suben los zombis mientras la experiencia espera también se cruzan más tarde. Cambia las pruebas de
+    logros (`PruebasMejoras.cs:3962-3969`) y **va junto con el arreglo de la migración**: si no, el primer `Revisar`
+    de un progreso migrado sube de golpe todos esos niveles.
+  - **Las estrellas del bestiario.** `Bestiario.cs:109` cobra con la mejor oleada de ahora, y la tarjeta muestra ese
+    monto (`VentanaBestiario.cs:187` y `:220`). La 2ª estrella del caminante pasa de 1.450 a 4.650 guardándola de la
+    oleada 10 a la 40 (3,17 veces), y las 15, guardadas hasta la 40-50, dan de 49.000 a 269.000 más (del 4 al 7 % de
+    lo ganado jugando). Guardada más de 18 oleadas rompe la regla "el premio no pasa lo que dejan esas muertes", que
+    la prueba (`PruebasMejoras.cs:3674`) solo mira con la misma oleada. **Arreglo**: una lista {tipo, estrella,
+    oleada} anotada al ver la estrella (desde `AvisoDeMisiones.AnotarEstrellas` y `VentanaBestiario`, como
+    `Logros.Revisar`), sin subir la versión: un JSON viejo deja la lista vacía y congela al ver. El +N de la tarjeta
+    tiene que usar la misma oleada.
+- **La migración a v6** (baja). El mecanismo de la auditoría es real (`MigrarAlNivel` deja `nivelPremiado` en el nivel
+  migrado, y el primer `Revisar` anota los logros ya cumplidos con ese nivel alto, que al cobrarlos cruzan ~17 niveles
+  con premio), pero solo con archivos v4 y v5, que hay solo en las APK de prueba y el editor de Ivan: la prueba
+  cerrada salió con la 1.2.0 (5), del commit 16d8a38, con `VersionActual = 3`, y después no hubo otro AAB. A un v3 la
+  migración le da 0 de experiencia, y en la oleada 35 cobra ~6.600 monedas de logros. **Lo que sí le toca**: arranca
+  en el nivel 1 con la mejor oleada alta, y cada nivel barato paga como esa oleada. Uno de la 35 sube del nivel 3 al
+  14 en su primera partida y cobra ~49.600 monedas (2,2 veces lo que deja esa partida), ~370.000 en 40 partidas.
+  Decidir (sección 3). El arreglo para v4 y v5 no puede ir adentro de `MigrarAlNivel` (`Logros` usa
+  `Progreso.Jugador`, que llama a `Cargar()` con `datos` en null: recursión): una marca, y un paso después de `datos =
+  leidos`.
+- **"Gana N monedas" y la misión de críticos se miden con varas que no son las del juego** (baja):
+  - **Las monedas.** `MonedasPorPartida` toma el multiplicador de la oleada a mitad de camino (1,08^(m/2)), y la media
+    real, pesada por zombis, es casi el doble (8,99 contra 4,66 en la oleada 40); además la mezcla suelta 2,41 monedas
+    por zombi, no 2. El bono pesa poco (el 4 % en la 40). Juntándolas todas, una partida da 1,2 (m = 5), 1,5 (10), 1,7
+    (20) y 2,5 veces (40) lo que dice el modelo, y 6 veces con el botín al máximo en la 40: el semanal de monedas
+    cuesta 6,1 partidas sin botín y 2,5 con botín 15, en vez de 15. No regala (la misión paga igual el 40-60 % de lo
+    ganado al cumplirla), pero en los jugadores avanzados el semanal deja de durar una semana. **Arreglo**: una vara
+    "de más" solo para el objetivo de monedas: la suma exacta por oleada con la mezcla de WaveMode (en constantes que
+    una prueba compare con la escena), el botín comprado y un factor de cobro. Medir cuánto se junta de verdad: las
+    monedas vencen a los 20 s y hay techo.
+  - **Los críticos.** `BalasPorPartida` (`Economia.cs:58-63`) no mira ni el daño ni los críticos. Con la mejor oleada
+    quieta, comprar críticos o daño encarece la misión (la media al 100 % cuesta 1,85-1,94 partidas en vez de 1); con
+    la oleada de frontera se cancela. Dividir por `1 + p` corrige solo p, y si `BalasPorPartida` estuviera bien
+    calibrada regalaría (la difícil al 100 % costaría ~1,25 partidas y pagaría 1,5). **Arreglo**: calcular los golpes
+    con el daño real, `p·Σvida/(D·(1+p))`, o primero medir los críticos por partida contra el objetivo.
+  - **Las dos pruebas son circulares** (`PruebasMejoras.cs:3432` y `:3436`): calculan el costo con la misma fórmula
+    que el objetivo, así que nunca pueden ver esto. Tienen que medir contra la vara nueva.
+- **Cerrar la app en ¡HAS MUERTO! conserva la oleada en curso** (baja hoy, media con anuncios). Pasa como decía la
+  auditoría, pero solo con la oferta de revivir: hoy en la APK de prueba, que fuerza el proveedor Falso. La build de
+  Play va en Nulo, y sin oferta `Terminar` corre en el mismo cuadro del golpe. No gasta ningún tope (un uso se anota
+  solo si el vídeo premia) y la cuenta atrás se congela en recientes: es ilimitado. **Arreglo** (el de la auditoría,
+  con cuidados): olvidar con `WaveManager.OlvidarPartidaSiEsOleadas()` (solo actúa en WaveMode, y el libre también
+  ofrece revivir), anotar antes `OleadaEnCurso` y `PuntosEnCurso` para restaurarlos y guardar en `Revivir`, y hacerlo
+  después de que `Ofrecer` devuelva verdadero. Costo que se acepta: si Android mata la app durante el vídeo, aunque se
+  haya visto entero, se pierde la partida. Hacerlo antes de integrar la red de anuncios.
+- **Las balas pueden atravesar al FASTER** (baja a 60 FPS, media a 20-30). No alcanza con el salto de la bala sola
+  (0,37 m contra una ventana de contacto de ~0,6 m): lo que la supera es sumarle lo que avanza el zombi entre pasos de
+  física (0,24 m). Tiros al cuerpo que lo cruzan sin tocarlo (modelo, sin medir): 0-2 % a 60 FPS, 0-5 % a 30 y 16-20 %
+  a 20; contando los que rozan, 6-8, 11-15 y 23-26 %. Al rápido, 2 % a 60 y 9-12 % a 20. **Arreglo**: el barrido de la
+  auditoría, pero en `FixedUpdate` y estirado ~0,24 m hacia atrás (en `Update` no cubre lo que avanza el zombi con 2 o
+  3 pasos por cuadro), con `QueryTriggerInteraction.Ignore`, una máscara sin Player ni Bala y aceptando solo
+  `EnemyController` (hoy las balas atraviesan las paredes, y un barrido las chocaría). `SphereCastNonAlloc` devuelve
+  con distancia 0 lo que ya se superpone y no ordena. Quita también el empuje de la bala (sección 3). Para medirlo,
+  `PruebaDisparo` necesita fijar los FPS y sacar zombis: a 20, 30 y 60.
+- **`progreso.json` está en el almacenamiento externo** (baja). En Android, `persistentDataPath` es
+  `getExternalFilesDir` (`/storage/emulated/0/Android/data/com.ivanruiz.showbies/files/`, siempre con minSdk 25). Se
+  edita con un explorador de archivos en Android 7.1-10, con el truco del selector de carpetas en 11-12 y desde la PC
+  (USB, adb) en 13 o más. No tiene datos personales: "privado" es una frase inexacta, no una fuga, y el interno
+  tampoco frenaría las trampas. **Lo urgente es el texto de la política**, que vive en tres lugares
+  (`publicacion/privacidad.html`, el repo `showbies-privacidad` y la rama `gh-pages`, que es la enlazada en Play):
+  sacar "privado", y la de `gh-pages` dice además "never leaves your phone", que es falso con la copia de seguridad
+  automática de Android (prendida: la APK no declara `allowBackup`). La mudanza al interno puede esperar a las tablas
+  o la nube. Si se hace: por JNI, moviendo todas las copias (`.tmp`, `.anterior`, `.roto` y los `.bak`), sin migrar si
+  hubo `NoSePudoLeer` o una versión futura, borrando el externo después de verificar el interno, y para siempre
+  (restaurar una copia vieja de Android lo devuelve al externo).
+
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
 Aprobado por el revisor, pero son materiales, prefabs o ajustes del proyecto, y conviene ver el antes y el después con
@@ -143,6 +194,28 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
   Game Objects exponiendo `HEAD_CONTAINER`.
 - **Detrás de la tienda abierta** la cámara ya no dibuja, pero `FondoMenu` sigue sacando zombis y `MonedasDelFondo`
   sigue rearmando el canvas del menú en cada cuadro. Pausarlos con la tienda abierta si el Profiler lo muestra.
+- **La cámara repite posición 1 de cada 6 cuadros** (media; confirmado en la ronda `refutar:`). Física a 1/50
+  (`TimeManager.asset:6`), `m_Interpolate: 0` en el jugador y en los cinco zombis, el jugador se mueve con
+  `linearVelocity` en `FixedUpdate` y `CamaraJugador` copia su posición en `Update` sin suavizar: a 60 FPS el piso
+  avanza 24, 24, 24, 24, 24 y 0 px, un tirón diez veces por segundo. **Arreglo recomendado**: `Fixed Timestep` a 1/60,
+  una línea, liso a 60 y a 30 FPS. Suma un 20 % a la física (medirlo en el teléfono con 35 zombis) y
+  `recuperacionDelAplastado` termina un 20 % antes. Interpolar arregla además los monitores de 90 a 144 Hz (en Windows
+  va con vSync), pero pisa las escrituras al Transform de los zombis (el `LookAt`, el festejo, la subida al aparecer,
+  el deslizamiento del cadáver) y atrasa la puntería.
+- **El decorado del capítulo siguiente se arma en plena pelea** (encontrado en la ronda `refutar:`).
+  `PrepararElSiguiente` espera 6 s desde que empieza el capítulo: en la oleada 1 cae a los ~3 s de pelea. Y `Armar`
+  instancia el prefab prendido y lo apaga después (`CapitulosDeEscenario.cs:290-291`): 733 objetos el cementerio y
+  1.218 la ciudad, con sus luces y sus textos. En el editor costaba 5-13 ms. **Arreglo**: `Object.InstantiateAsync`
+  (Unity 6) debajo de un padre apagado, que reparte el trabajo en varios cuadros; o, más simple, armarlo durante un
+  cartel de oleada, sin zombis vivos. Es la mejora 5 de `REVISION.md`.
+- **Los pools se llenan en plena pelea** (baja; parcial en la ronda `refutar:`). Ninguno se precalienta, pero lo que
+  crean es chico y llega repartido (un zombi cada 0,35 s, fuera de la vista). Lo que podría notarse: el primer zombi
+  de cada tipo, las invocaciones del jefe (hasta 6 `Aparecer` en un cuadro si no hay normales en la pila) y **los
+  shaders**, que es lo nuevo: sin `ShaderVariantCollection` ni shaders precargados, el destello, los números de daño,
+  las barras y las partículas se compilan en el primer golpe o la primera muerte, sobre todo en la primera partida
+  después de instalar. Un objeto apagado no calienta shaders, así que precalentar los pools no lo arregla. Medir con
+  el Profiler (Development Build) los primeros 15 s de oleadas y los primeros 35 s del libre, en la primera partida
+  después de instalar y en la segunda.
 
 ## 3. Para decidir
 
@@ -163,6 +236,10 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 - **Con el techo de monedas lleno, la que se va para hacer lugar se va con su valor** (decidido así al aplicar el techo
   duro): pasárselo a la nueva rescataba lo que vence sin que nadie lo junte, un 10-30 % más de lo cobrado con el techo
   lleno. Si se prefiere que no se pierda nada, es una línea en `Moneda.Soltar`.
+- **Los niveles baratos de los probadores** (ver la migración a v6 en la sección 2): un progreso v3 de la oleada 35
+  arranca en el nivel 1 y cobra ~49.600 monedas en su primera partida y ~370.000 en 40 partidas. **Propuesta**:
+  sembrarle la experiencia desde la mejor oleada, con `nivelPremiado` en ese nivel, como pretende la migración de los
+  v4 y v5. O regalárselo por probar el juego.
 
 ### Diseño y retención
 
@@ -188,6 +265,11 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 - **PLAY y SALIR quedan a 20 unidades en 20:9 y 21:9**: angostar MEJORAS y SALIR a 560, o esconder SALIR en el
   teléfono (el atrás ya pregunta si salir).
 - **Los segundos de gracia después de revivir no se ven**: que el modelo parpadee (toca `PlayerHealth`).
+- **¿Una partida abandonada cuenta para el récord?** (baja; parcial en la ronda `refutar:`). En el libre la partida se
+  pierde sin compararla con MENÚ, REINICIAR, la R y cerrando la app; en oleadas, solo con REINICIAR y la R (MENÚ la
+  guarda para retomarla). El arreglo de la auditoría empeora las oleadas: guardar el récord en `IrAlMenu` haría que al
+  retomar no salga NEW BEST. Si se decide que sí cuenta: `GuardarRecord` en `MenuPausa.Pausar` y en la R para el libre
+  (sus puntos solo suben), y en oleadas dentro de `OlvidarPartidaSiEsOleadas`. El tutorial no escribe récord.
 
 ### Anuncios
 
@@ -205,6 +287,15 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 - **Zona muerta en el joystick de disparo**: cualquier roce dispara hacia un lado al azar. Probar en el teléfono.
 - **En PC las balas no pasan por la mira**: el rayo del mouse corta Y=0 y la bala sale de la mano.
 - **Balas a 11 m/s**, más lentas que el FASTER: 22-25 m/s con `lifeTime` 1 s, pero junto con el barrido.
+- **El empuje de la bala** (media; confirmado en la ronda `refutar:`, y más fuerte de lo que se creía). La bala es un
+  collider sin Rigidbody que aparece adentro del zombi, y PhysX lo saca empujándolo
+  (`m_DefaultMaxDepenetrationVelocity` sin tope): cada bala lo corre ~10-14 cm y le hace perder su paso. Con fuego
+  sostenido (modelo, sin medir): el normal va al 85 % de su velocidad con 4 tiros/s, al 50-63 % con 12 y al ~10 % con
+  20; el tanque retrocede con 20; el jefe persiguiendo va al 22-39 % con 8, y su carga cubre el 72-75 % de la línea
+  con 12. En el tanque y el jefe depende de los FPS. El juego se balanceó con esto sin saberlo, y el barrido de las
+  balas (sección 2) o `IsTrigger` lo quitan. **Decidir**: sacarlo (y rebalancear), o dejarlo a propósito y parejo, en
+  `DanoZombi`, quizá con resistencia por tipo. Si la bala pasa a trigger, su `OnCollisionEnter` pasa a
+  `OnTriggerEnter`.
 
 ### Textos y plataforma
 
@@ -275,3 +366,10 @@ el proveedor dé un solo resultado final.
   lista de `pasos.md`.
 - **El modo libre da el doble de experiencia por minuto**. Es cierto, pero no da ventaja económica.
 - **La derrota suena con `pedo.mp3`**. Refutado.
+- **Morir por el kill-Z** y **el kill-Z en el tutorial** (refutados en la ronda `refutar:`, por dos escépticos). El
+  jugador tiene congelada la posición Y en `Jugador.prefab` (`m_Constraints: 116`, desde noviembre de 2022) y ninguna
+  escena ni script lo cambia; además `FixedUpdate` le pone la velocidad vertical en 0 y las paredes (1,17 m) son más
+  gruesas que lo que avanza por paso (0,39 m con la furia). El kill-Z del jugador es código muerto. Si algún día se
+  saca ese congelado: `Caer()` antes de `Terminar` y, en el tutorial, devolverlo al inicio. Queda algo chico: una
+  línea en la prueba de lógica que verifique el 116, y corregir el comentario de `PlayerHealth.cs:51-52` y el
+  CLAUDE.md ("Caer al vacío no se revive", y que el kill-Z "no es decorativo", que para el jugador sí lo es).
