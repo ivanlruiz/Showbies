@@ -69,6 +69,9 @@ public static class PruebaDisparo
     {
         // Dos arranques seguidos pisarian lo que se anoto del teclado.
         if (SessionState.GetBool(Clave, false) || EditorApplication.isPlayingOrWillChangePlaymode) return;
+        // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
+        // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
+        RespaldoDelBanco.Guardar("PruebaDisparo");
         // El camino del telefono: con "Teclado y mouse en el editor" prendido, PlayerJS no
         // corre. Se apaga mientras dura y se devuelve como estaba.
         ModoTelefono(Clave);

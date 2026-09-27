@@ -321,8 +321,8 @@ banco: la tienda (abre con DAÑO a la vista, el toque que frena no compra, la gu
 antes que la tienda (cobrando, con vídeo y con el atrás), el desbloqueo del libre (el aviso una sola vez y el ¡NUEVO!
 en los dos idiomas), el tutorial (la granada al grupo y afuera, las cajas y lo que nace contra las paredes) y el menú
 con la tienda (ningún cuadro liso al abrir y cerrar por los cuatro caminos, y el menú igual sin HDR): TODO OK, 89
-chequeos. Los cinco quedaron fuera del proyecto, en `Builds/bancos_nube/`, porque tocan el progreso real sin
-devolverlo. Además se grabaron y revisaron cuadro a cuadro el jefe y la derrota, y lo que salió de ahí se arregló (las
+chequeos. Los cinco quedaron como bancos fijos (ver Pruebas y medición en CLAUDE.md), y todos los bancos en play
+devuelven ahora el progreso real al terminar (`RespaldoDelBanco`). Además se grabaron y revisaron cuadro a cuadro el jefe y la derrota, y lo que salió de ahí se arregló (las
 cajas después de morir, el color del próximo objetivo, el festejo cortado por el borde, la línea del aviso y el
 zarpazo que seguía en el aviso del jefe). Queda:
 

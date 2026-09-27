@@ -54,6 +54,9 @@ public static class GrabarDisparo
     static void Arrancar(bool deCerca)
     {
         if (SessionState.GetBool(Clave, false) || EditorApplication.isPlayingOrWillChangePlaymode) return;
+        // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
+        // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
+        RespaldoDelBanco.Guardar("GrabarDisparo");
         SessionState.SetBool(Clave + ".cerca", deCerca);
         string carpeta = Path.GetFullPath(Carpeta);
         if (Directory.Exists(carpeta)) Directory.Delete(carpeta, true);

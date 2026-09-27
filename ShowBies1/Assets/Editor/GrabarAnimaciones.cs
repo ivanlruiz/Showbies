@@ -41,6 +41,9 @@ public static class GrabarAnimaciones
     // entrada no se encuentra, aunque la clase este cargada.
     public static void Arrancar()
     {
+        // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
+        // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
+        RespaldoDelBanco.Guardar("GrabarAnimaciones");
         PlayerSettings.runInBackground = true;
         string carpeta = Path.GetFullPath(Carpeta);
         if (Directory.Exists(carpeta)) Directory.Delete(carpeta, true);

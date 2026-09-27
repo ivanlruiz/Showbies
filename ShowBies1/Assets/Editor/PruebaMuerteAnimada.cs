@@ -46,6 +46,9 @@ public static class PruebaMuerteAnimada
     // registro de menus tarda en rehacerse (ver la trampa en CLAUDE.md).
     public static void Arrancar()
     {
+        // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
+        // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
+        RespaldoDelBanco.Guardar("PruebaMuerteAnimada");
         PlayerSettings.runInBackground = true;
         EditorSceneManager.OpenScene("Assets/Escenas/WaveMode.unity");
         SessionState.SetBool(Clave, true);

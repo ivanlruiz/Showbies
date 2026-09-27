@@ -133,6 +133,9 @@ public static class PruebaDerrota
 
     static void Arrancar(bool grabando)
     {
+        // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
+        // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
+        RespaldoDelBanco.Guardar("PruebaDerrota");
         SessionState.SetBool(Clave + ".grabar", grabando);
         PlayerSettings.runInBackground = true;
         EditorSceneManager.OpenScene("Assets/Escenas/WaveMode.unity");
