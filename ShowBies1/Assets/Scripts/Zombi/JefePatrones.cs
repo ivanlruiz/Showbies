@@ -411,10 +411,17 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         hacia.y = 0f;
         direccion = hacia.sqrMagnitude > 0.01f ? hacia.normalized : transform.forward;
         estado = tocaCarga ? Estado.AvisandoCarga : Estado.AvisandoInvocar;
+        // Dibujada antes de prenderla: el Update siguiente llega tarde para este cuadro, y
+        // hasta el 27/9 el primer cuadro del aviso mostraba lo que tenia la linea (en el
+        // primer ataque, una rayita roja suelta junto al origen del mundo).
+        if (tocaCarga) DibujarLinea(ahora);
+        else DibujarAnillo(ahora);
         linea.enabled = true;
         // Desde el aviso hasta volver a perseguir no tira zarpazos (ver
-        // EnemyController.puedeZarpar), y se frena tambien de piernas.
+        // EnemyController.puedeZarpar), ni termina el que venia tirando, y se frena
+        // tambien de piernas.
         zombi.puedeZarpar = false;
+        zombi.CortarZarpazo();
         Frenar();
         if (rugido != null) Sonidos.Tocar(rugido, 0.9f, tocaCarga ? 0.75f : 0.55f);
         CamaraJugador.Temblar(0.15f);

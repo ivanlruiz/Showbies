@@ -38,6 +38,10 @@ public class PowerUp : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(interval);
+            // Con el jugador muerto la partida sigue detras de la derrota: una caja que nadie
+            // puede agarrar nacia en cualquier lado, a veces al lado de HAS PERDIDO, soltando
+            // su brillo encima del titulo (lo vio la revision de la derrota del 27/9).
+            if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) continue;
             Instantiate(powerup, PuntoDeAparicion(), Quaternion.identity);
         }
     }

@@ -52,6 +52,24 @@ public class CamaraJugador : MonoBehaviour
     // Cuanto va corrida, de 0 a 1. Para las pruebas.
     public static float Corrimiento { get { return activa != null ? activa.corrimiento : 0f; } }
 
+    // Donde va a quedar un punto del mundo en la pantalla (de 0 a 1, como
+    // WorldToViewportPoint) cuando la camara termine de correrse para mostrar el cuerpo.
+    // La horda elige su lugar del festejo cuando la camara recien empieza a correrse, y con
+    // la pantalla de ahora se salia de cuadro (lo vio la revision de la derrota del 27/9).
+    // Correrla es trasladarla sin girar, asi que alcanza con correr el punto al reves.
+    public static bool EnLaPantallaAlMostrarElCuerpo(Vector3 punto, out Vector3 enLaPantalla)
+    {
+        enLaPantalla = Vector3.zero;
+        if (activa == null || activa.personaje == null) return false;
+        var camara = activa.GetComponentInChildren<Camera>();
+        if (camara == null) camara = Camera.main;
+        if (camara == null) return false;
+        Vector3 alFinal = activa.personaje.transform.position + activa.posicionRelativa +
+                          (activa.mostrandoElCuerpo ? activa.desvio : Vector3.zero);
+        enLaPantalla = camara.WorldToViewportPoint(punto - (alFinal - activa.transform.position));
+        return enLaPantalla.z > 0f;
+    }
+
     private Vector3 posicionRelativa;
     private Quaternion rotacionBase;
     private float trauma;

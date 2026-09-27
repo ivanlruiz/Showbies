@@ -431,7 +431,8 @@ ve en pantalla** (su centro, a `margenEnPantalla` de los bordes: fuera de cuadro
 el borde sin que se viera quién embestía): la **carga** (se frena, marca en el piso una línea roja hacia el jugador 0,9 s,
 **del ancho de su cuerpo** —medía 1,4 m y la cápsula barre casi 3—, ruge y embiste en línea recta a 16 m/s, pegando ×2,5
 mientras embiste, y al terminar —haya chocado o no— **queda aturdido 1,3 s**, tambaleándose y sin atacar (tampoco con
-zarpazos: `EnemyController.puedeZarpar` los corta desde el aviso hasta volver a perseguir): esa es la
+zarpazos: `EnemyController.puedeZarpar` los corta desde el aviso hasta volver a perseguir, y `CortarZarpazo` corta el
+que venía tirando, que hasta el 27/9 pegaba en pleno aviso y tapaba la pose): esa es la
 ventana para castigarlo, y es lo que hace que esquivar valga la pena) y la **invocación**
 (se frena, un anillo rojo que se achica y aparecen 4 zombis normales con sus multiplicadores, parados en el piso del
 anillo y dentro del mapa: el que no entra contra una pared sale del lado de enfrente). A la mitad de su vida
@@ -450,8 +451,11 @@ para castigarlo y hasta ahora no se leía en ninguna parte. **Las piernas tambi�
 que `JefePatrones` pisa y devuelve al volver a perseguir): quietas mientras avisa, invoca o está aturdido —caminaba en
 el lugar—, y embistiendo corre con el paso de lo que avanza (`velocidadDelClipDeCorrer`: `Z_run_rm` avanza 2 m por ciclo
 de 0,67 s a escala 1, medido del FBX; el jefe, a 16 m/s y con el modelo a 2,4, va con `Paso` 2,2), así los pies no
-patinan. **ShowBies > Pruebas > Grabar al jefe** lo saca al lado
-del jugador y graba los patrones, sin tener que llegar a la oleada 10 jugando.
+patinan. **ShowBies > Pruebas > Grabar al jefe** lo saca a 13 m
+del jugador y graba los patrones, sin tener que llegar a la oleada 10 jugando: el jugador queda fijo (kinematic) y la
+oleada parada y despejada. Hasta el 27/9 el choque de la carga mandaba al jugador deslizando fuera de cuadro, el jefe
+quedaba fuera de pantalla y la invocación no llegaba a grabarse. **La línea y el anillo se dibujan antes de prenderse**
+(`JefePatrones.Empezar`): el primer cuadro del aviso mostraba lo que la línea tenía de antes.
 
 Las líneas usan el material del indicador de la granada y el rugido es `explosion.wav` más grave, y van **planas
 sobre el piso** (`LineAlignment.TransformZ` con el objeto rotado −90° en X): con la alineación de siempre, que mira a
@@ -1195,7 +1199,8 @@ trampa).
 
 - **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
   record chicos, el renglon de la oferta de video o el aviso de compras, **el proximo objetivo** (`ProximoObjetivo`, armado
-  en codigo en y = -155: la mision a medias o la mejora que todavia no alcanza con mas avance, con una barra que se llena)
+  en codigo en y = -155: la mision a medias o la mejora que todavia no alcanza con mas avance, con una barra que se llena;
+  el color sale del papel del aviso de compras, `Acento`, y no de su color, que en Perdiste arranca apagado y sin pintar)
   y abajo los tres botones, en y = -290 (se bajaron para hacerle lugar; en 21:9 terminan a 50 del borde). Si la partida
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`, que mira
   `PlayerHealth.RecordNuevo`: solo superarlo cuenta, un empate no).
@@ -1505,8 +1510,9 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   balas y la granada que quedaron en el aire seguían matando, con puntos y monedas); las monedas no vuelan a un muerto
   (`Moneda.Jugador`); las cajas no se agarran (los triggers llegan igual a los componentes apagados); el jefe no ataca
   a un muerto (`JefePatrones.CercaDelJugador`: seguía embistiendo y rugiendo encima de la pantalla) y el modo libre no
-  sigue subiendo de nivel (`GeneradorZombis.Update`: sonaba el jingle cada 45 s). **Si agregás algo que cambie la
-  partida por su cuenta, que mire lo mismo.**
+  sigue subiendo de nivel (`GeneradorZombis.Update`: sonaba el jingle cada 45 s), y no nacen cajas (`PowerUp`: hasta
+  el 27/9 seguían naciendo, y una nació al lado de HAS PERDIDO soltando su brillo encima del título). **Si agregás algo
+  que cambie la partida por su cuenta, que mire lo mismo.**
 - **El jugador no se destruye**, aunque antes sí: el `WaveManager` espera mientras el jugador esté muerto (por si
   revive), y con el jugador destruido el bucle salía y la oleada se daba por completada después de morir, con su bono.
 - **`MenuPausa.JuegoCongelado` incluye la derrota** aunque el tiempo corra (el nombre es de cuando congelaba): corta el
@@ -1524,7 +1530,10 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   dispersarse o festejar). Con `DerrotaEnLaPartida.Activa`, `EnemyController.MoverseAlFestejo` reemplaza la persecución
   (también la del jefe, antes que sus patrones): cada zombi va a un lugar en esa franja libre, alrededor del cuerpo
   (de 5 m a su izquierda a 1,8 m a su derecha, donde empiezan los textos, y 4,5 m hacia arriba y hacia abajo, nunca a
-  menos de 1,6 m de él), se da vuelta a mirarlo y festeja. Antes, con el cuerpo tapado en el centro, se abrían a los
+  menos de 1,6 m de él, y **dentro de cuadro**: el lugar se corre hasta quedar a un 5 % del borde en la pantalla tal
+  como va a quedar con la cámara corrida, `CamaraJugador.EnLaPantallaAlMostrarElCuerpo`, porque se elige cuando la
+  cámara recién empieza a correrse; hasta el 27/9 dos o tres festejaban cortados por el borde izquierdo), se da vuelta a
+  mirarlo y festeja. Antes, con el cuerpo tapado en el centro, se abrían a los
   costados de la pantalla, a 9-12,5 m, lejos de él. **El que no se acerca a su lugar en medio segundo prueba otro, y
   si tampoco, festeja donde está** (`EnemyController.SinAcercarse`): el lugar se sortea sin mirar si se puede pisar, y
   hasta el 25/9 los que caían detrás de una pared invisible, o adentro de un tanque o del jefe, quedaban corriendo
@@ -1533,13 +1542,16 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   arqueado hacia atrás como el jefe al invocar, y un desfase de hasta 0,45 s por zombi para que no sea un baile
   sincronizado. **Lo que se lee desde la cámara es el salto** (medio alto del zombi, con estirón): a esa distancia un
   zombi mide unos 40 px, el puño apunta a la cámara y el arco casi no cambia la silueta; con un salto del 12 % no se
-  notaba nada. **Rugen** (`Efectos.FestejoZombis`: el estruendo grave del jefe, a dos voces) sólo en las tres primeras
-  oleadas: después festejan callados, que la derrota sigue en pantalla. `Golpear` no arranca zarpazos a un jugador
-  muerto, y `JefePatrones` deja de moverse y de posar mientras festeja.
+  notaba nada. **Festejan callados** (pedido de Ivan, 27/9): hasta ahí rugían con el estruendo grave del jefe
+  (`explosion.wav`), y sonaba a que había un jefe. `Golpear` no arranca zarpazos a un jugador muerto, y `JefePatrones`
+  deja de moverse y de posar mientras festeja.
 - **ShowBies > Pruebas > Derrota encima de la partida** mata al jugador con horda encima y verifica todo esto cuadro a
-  cuadro (29 chequeos, en `Builds/prueba_derrota.txt`, que además anota cualquier excepción que salte); **Grabar la derrota** además la graba en
+  cuadro (30 chequeos, en `Builds/prueba_derrota.txt`, que además anota cualquier excepción que salte); **Grabar la derrota** además la graba en
   `Builds/derrota_video/`. El camino de rechazar el revivir no lo recorre: en el editor el proveedor es `Nulo` y no hay
-  oferta.
+  oferta. Juega la oleada que haya guardada en el progreso del editor, así que la horda cambia de una corrida a otra:
+  que la horda se mueve se mide con el cuerpo dibujado de cada zombi (el salto del festejo mueve el modelo, no la raíz,
+  y en una oleada chica todos llegan a su lugar enseguida) y el festejo, con los que estaban a menos de 15 m al morir
+  (en una grande, los que nacen después todavía vienen caminando).
 
 ## Pausa y botón atrás
 

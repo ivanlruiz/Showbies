@@ -57,8 +57,6 @@ privacidad publicada.
   `OnDestroy { if (instance == this) instance = null; }`.
 - **La caja de vida se consume con la vida llena** (fase 2). **Arreglo**: no tomarla con la vida llena (salvo en el
   tutorial) y tomarla con `OnTriggerStay` cuando baje.
-- **Prueba de `ColorDeVida`**: es estática "para probarla" y ninguna prueba la llama (esperar a los colores de la fase
-  2).
 - **Tienda**: la rueda del mouse casi no mueve la fila (`m_ScrollSensitivity: 1` en el prefab; hay que decidir la
   dirección, en uGUI la rueda hacia arriba la lleva a la derecha); en 21:9 la flecha de la guía, en lo más bajo del
   rebote, se mete unos 10 px en el pie; y el toque que frena la fila ya no compra, pero el botón igual suena y se
@@ -83,6 +81,15 @@ privacidad publicada.
 - **Sonido, lo que quedó afuera**: `AvisoDeMisiones` toca su copia del jingle encima del cartel de la oleada (hay que
   esperar ~1 s después del último cartel); un tono distinto por caja (hoy las tres tocan `pop.mp3`); un clic al
   intentar la granada en recarga; y un disparo sintetizado propio si el de ahora cansa.
+- **El borde rojo del golpe que mata se corta enseguida** (baja; lo vio la revisión de la derrota del 27/9).
+  `VinetaDanio` vive en el canvas del HUD, y `DerrotaEnLaPartida` apaga los canvas del juego apenas carga la derrota,
+  unos 0,11 s después del golpe: el borde entero de `Efectos.MuerteJugador` casi no se ve, y con el proveedor Nulo
+  todas las muertes van directo a la derrota. **Arreglo**: que la viñeta tenga su propio canvas y la derrota no lo
+  apague hasta que se desvanezca (0,4 s).
+- **Con el jefe encima del jugador, un invocado nace pegado a él** (baja; de la grabación del jefe del 27/9).
+  `PuntoDelAnillo` esquiva las paredes pero no al jugador: con el jefe a 2 m y el anillo de 3,5 m, uno de los cuatro
+  sale a 1,2 m. El anillo pasa por detrás del jugador durante el aviso, así que está avisado. Si molesta, que el punto
+  que cae cerca del jugador se corra por el anillo.
 
 ### De la ronda `refutar:`
 
@@ -273,8 +280,8 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
   (sin usar el camino de los críticos, que inflaría la misión).
 - **Las cajas nacen en cualquier punto del mapa**: sortearlas en un anillo de 10-22 m alrededor del jugador.
 - **La moneda no muestra lo que vale**: un "+N" junto al contador del HUD mientras dura la escalera.
-- **Detrás de la derrota los generadores siguen sacando zombis, jefes y cajas**: esperar mientras el jugador esté
-  muerto (no cortar: puede revivir). ¿Es parte del festejo o sobra?
+- **Detrás de la derrota los generadores siguen sacando zombis y jefes** (las cajas ya no: 27/9): esperar mientras el
+  jugador esté muerto (no cortar: puede revivir). ¿Es parte del festejo o sobra?
 - **PLAY y SALIR quedan a 20 unidades en 20:9 y 21:9**: angostar MEJORAS y SALIR a 560, o esconder SALIR en el
   teléfono (el atrás ya pregunta si salir).
 - **Los segundos de gracia después de revivir no se ven**: que el modelo parpadee (toca `PlayerHealth`).
@@ -308,33 +315,30 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 
 ## 4. Para mirar en Unity
 
-Todo lo de la auditoría se aplicó sin Unity: compila (con el chequeo de referencias) pero nada corrió.
+Todo lo de la auditoría se aplicó sin Unity. **El 27/9 se corrió en el editor**: Lógica de mejoras (TODO OK, 1158),
+los bancos en play de siempre (golpe, muerte, derrota y disparo: TODO OK) y cinco bancos nuevos para lo que no tenía
+banco: la tienda (abre con DAÑO a la vista, el toque que frena no compra, la guía de la primera compra), la diaria
+antes que la tienda (cobrando, con vídeo y con el atrás), el desbloqueo del libre (el aviso una sola vez y el ¡NUEVO!
+en los dos idiomas), el tutorial (la granada al grupo y afuera, las cajas y lo que nace contra las paredes) y el menú
+con la tienda (ningún cuadro liso al abrir y cerrar por los cuatro caminos, y el menú igual sin HDR): TODO OK, 89
+chequeos. Los cinco quedaron fuera del proyecto, en `Builds/bancos_nube/`, porque tocan el progreso real sin
+devolverlo. Además se grabaron y revisaron cuadro a cuadro el jefe y la derrota, y lo que salió de ahí se arregló (las
+cajas después de morir, el color del próximo objetivo, el festejo cortado por el borde, la línea del aviso y el
+zarpazo que seguía en el aviso del jefe). Queda:
 
-- **ShowBies > Pruebas > Logica de mejoras**: hay pruebas nuevas en casi todos los frentes.
-- **El jefe**: el paso de las piernas al embestir salió 2,2 (medido del clip: su raíz avanza 2 m por ciclo) y los otros
-  zombis patinan entre 1,5 y 6 veces; si se ve frenético al lado de ellos, se sube `velocidadDelClipDeCorrer`. Y
-  **solo ataca con el jefe en pantalla** (para que se lea el aviso): con la cámara de WaveMode eso es ~4,7 m detrás
-  del jugador, ~6 m delante y 9-11,5 m al costado, contra los 15 m de radio de antes; se ajusta con
-  `margenEnPantalla`. Mirarlo con **Grabar al jefe**.
-- **La tienda**: el toque que frena la fila es un `MonoBehaviour` anidado agregado con `AddComponent`
-  (`TarjetaMejora.ToqueQueFrena`), como el cartel del anuncio falso; si molesta, va a su propio archivo.
+- **El jefe en el teléfono**: las piernas al embestir no patinan y los patrones se ven bien (grabación del 27/9), pero
+  que **solo ataque con el jefe en pantalla** (~4,7 m detrás del jugador, ~6 m delante y 9-11,5 m al costado, contra
+  los 15 m de radio de antes) no lo puede mostrar el banco, que mueve la cámara: ver jugando que no se vuelva fácil de
+  evitar; se ajusta con `margenEnPantalla`.
 - **El techo de monedas duro**: que no se note la moneda vieja que se va cuando cae la lluvia del jefe.
 - **El menú en 20:9**: las ventanas de misiones y logros se ven un 8 % más chicas, para que entre el halo.
 - **720p nativo en el teléfono** (antes quedaba en 540): medir los FPS en la oleada 10+ con 35 zombis; si no llega a
   60, bajar `AltoMinimoMovil`.
-- **El tutorial**: tirar la granada al grupo y afuera (el paso cambia después de la explosión, los muertos se caen y
-  los que quedan se van con partículas); en el paso 4 agarrar la caja de balas (sigue "Cógela" hasta agarrar la de
-  arma); y correr contra una pared antes de los pasos 3, 4 y 5 (todo tiene que nacer del lado de adentro).
-- **La diaria antes que la tienda**: derrota → MEJORAS con la diaria disponible, cobrando, con vídeo y cerrándola con
-  el atrás. La tienda (y la flecha de la primera compra) tienen que llegar después; sin diaria, abre como siempre.
-- **El desbloqueo del libre**: completar la oleada 11 (con **ShowBies > Progreso**) y ver el aviso en la partida y el
-  "¡NUEVO!" en el panel de modos, también cambiando de idioma.
-- **La horda**: el festejo con una muerte contra la pared oeste (**Derrota encima de la partida**), las barras de vida
-  cruzadas en una horda apretada, y las manchas de sangre, que ahora van a 0,2 m (para no quedar debajo de las
-  veredas de la ciudad) y tapan unos 20 cm de lo que las pisa durante sus 2 s.
+- **La horda**: las barras de vida cruzadas en una horda apretada, y las manchas de sangre, que ahora van a 0,2 m
+  (para no quedar debajo de las veredas de la ciudad) y tapan unos 20 cm de lo que las pisa durante sus 2 s.
 - **Las medallas de logros**: cada familia con su símbolo de una o dos letras, que entre en el círculo.
-- **La build**: ahora se niega con un paquete, un nombre o un orden de escenas que no son los de Play, y por
-  línea de comandos sale con código 1 si falla. Hacer una APK y un AAB para ver que sigan saliendo.
+- **La build**: ahora se niega con un paquete, un nombre o un orden de escenas que no son los de Play, y por línea de
+  comandos sale con código 1 si falla. La APK sale (27/9, tres veces); falta hacer un AAB.
 - **El sonido, en el teléfono**:
   - que las granadas no crujan sobre un grupo ni sobre un tanque (la que mata suena ~2,6 dB más baja: ver si se
     siente débil), y que la horda densa y los arpegios de la tienda no se sientan apagados (bajan ~1 y ~3 dB);
@@ -343,10 +347,8 @@ Todo lo de la auditoría se aplicó sin Unity: compila (con el chequeo de refere
   - la muerte del jugador (golpe grave, temblor y borde rojo), las notas de furia lista y de fin de la furia, la
     muerte del jefe (que ya no se pierde), un solo jingle al pasar a la oleada 11 y la escalera de la barra del nivel;
   - la música del menú, que ahora arranca unos cuadros tarde: medir cuánto tarda `LoadScene(0)` antes y después.
-- **El menú y la tienda**: que abrir y cerrar la tienda no parpadee ni deje un cuadro de color liso (con VOLVER, el
-  atrás, ¡A JUGAR! y MEJORAS desde la derrota), y que el menú se vea igual sin HDR (el título en la niebla, la
-  noche). En el Profiler, durante una caja de arma, `TextMeshPro.GenerateTextMesh` ya no tendría que aparecer por
-  cada número de daño que se desvanece.
+- **El menú y la tienda**: en el Profiler, durante una caja de arma, `TextMeshPro.GenerateTextMesh` ya no tendría que
+  aparecer por cada número de daño que se desvanece.
 
 ## 5. Antes de integrar la red de anuncios
 

@@ -129,7 +129,13 @@ public class ProximoObjetivo : MonoBehaviour
         {
             tmp.font = estilo.font;
             tmp.fontSharedMaterial = estilo.fontSharedMaterial;
-            tmp.color = estilo.color;
+            // El color va por el papel del aviso y no por su color: el aviso de compras
+            // arranca apagado en Perdiste, su PintarConTema pinta recien al prenderse, y
+            // hasta el 27/9 esto copiaba el verde oscuro del tema claro (3,8:1 de contraste
+            // sobre el fondo de la derrota, el unico texto sin neon).
+            var pintor = estilo.GetComponent<PintarConTema>();
+            if (pintor != null) Tema.Pintar(tmp, pintor.rol, pintor.colorClaro);
+            else tmp.color = estilo.color;
         }
         tmp.text = texto;
         tmp.fontSize = 32f;

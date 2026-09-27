@@ -138,12 +138,11 @@ public class EnemyController : MonoBehaviour
     // alrededor del cuerpo, en la franja de la pantalla que la derrota deja libre (la
     // camara corre el cuerpo a un costado, CamaraJugador.MostrarElCuerpo), se da vuelta
     // a mirarlo y, en oleadas cada PeriodoDelFestejo, salta tres veces
-    // con el puño en alto y el cuerpo arqueado hacia atras. Los primeros rugidos los
-    // tira el primero que entra en cada oleada.
+    // con el puño en alto y el cuerpo arqueado hacia atras. Festejan callados (pedido de
+    // Ivan): hasta el 27/9 rugian con el estruendo del jefe, y sonaba a que estaba el jefe.
     const float PeriodoDelFestejo = 2.4f;
     const float DuracionDelFestejo = 1.3f;
     const int PuñosPorFestejo = 3;
-    const int OleadasConRugido = 3;          // despues festejan callados: la derrota sigue en pantalla
     const float DesfaseMaximo = 0.45f;       // para que no sea un baile sincronizado
     // Del muestreo de Z_attack_A (ver momentoDelImpacto): la mano derecha abajo al
     // principio, a la altura del hombro a los 0,15 s y por encima de la cabeza a los
@@ -154,8 +153,6 @@ public class EnemyController : MonoBehaviour
     const float ManoArriba = 0.29f / LargoDelZarpazo;
 
     private static float festejoDesde;
-    private static int ultimaOleadaRugida;
-    public static int RugidosDelFestejo { get; private set; }   // para las pruebas
 
     private bool festejando;
     private bool tieneLugarDelFestejo;
@@ -184,7 +181,6 @@ public class EnemyController : MonoBehaviour
     public static void EmpezarFestejo()
     {
         festejoDesde = Time.time;
-        ultimaOleadaRugida = -1;
     }
 
     public bool Festejando => festejando;
@@ -290,8 +286,6 @@ public class EnemyController : MonoBehaviour
         ZarpazosEmpezados = 0;
         ZarpazosQuePegaron = 0;
         festejoDesde = 0f;
-        ultimaOleadaRugida = -1;
-        RugidosDelFestejo = 0;
         MonedasEsperadas = 0;
         MonedasSoltadas = 0;
     }
@@ -1071,6 +1065,22 @@ public class EnemyController : MonoBehaviour
         golpeEnCurso = false;
     }
 
+    // Lo llama el jefe al empezar un patron (JefePatrones.Empezar): el zarpazo que venia
+    // tirando no sigue. puedeZarpar solo frena los nuevos, y hasta el 27/9 el de antes
+    // pegaba durante el aviso y el clip de atacar tapaba la pose de agazaparse o de
+    // invocar (lo vio la revision de la grabacion del jefe).
+    public void CortarZarpazo()
+    {
+        golpeEnCurso = false;
+        foreach (var animador in animadores)
+        {
+            if (animador == null || !animador.isActiveAndEnabled) continue;
+            if (animador.GetCurrentAnimatorStateInfo(0).shortNameHash == idAtacar ||
+                animador.GetNextAnimatorStateInfo(0).shortNameHash == idAtacar)
+                animador.CrossFadeInFixedTime(idAndar, 0.15f, 0);
+        }
+    }
+
     // El momento del impacto: pega si el jugador sigue al alcance del brazo. Si se fue
     // mientras el zombi levantaba el brazo, lo esquivo. Es alcance y no contacto porque
     // en el impacto la mano se estira casi un metro adelante: exigiendo que siga
@@ -1168,7 +1178,42 @@ public class EnemyController : MonoBehaviour
         // Si ninguno quedo lejos del cuerpo, el ultimo se corre hasta la distancia minima.
         if (lugar.sqrMagnitude < cercaDelCuerpo * cercaDelCuerpo)
             lugar = (lugar.sqrMagnitude > 0.0001f ? lugar.normalized : Vector2.left) * cercaDelCuerpo;
-        lugarDelFestejo = cuerpo + derecha * lugar.x + adelante * lugar.y;
+        lugarDelFestejo = DentroDeLaPantalla(cuerpo + derecha * lugar.x + adelante * lugar.y, derecha, adelante);
+    }
+
+    // Lo que falta de la pantalla para que el zombi entero se vea, de cada lado: con el
+    // cuerpo en el 22 % del ancho, los 5 m de la franja a su izquierda pasaban del borde y
+    // dos o tres festejaban cortados, medio afuera del cuadro.
+    const float MargenDelFestejoEnLaPantalla = 0.05f;
+
+    // Corre el lugar del festejo hasta que quede dentro de la pantalla tal como va a
+    // quedar con la camara corrida (CamaraJugador.EnLaPantallaAlMostrarElCuerpo). La
+    // pantalla sobre el piso no es un rectangulo (la camara mira inclinada), asi que se
+    // corrige con lo que se mueve el punto en la pantalla por cada metro, y dos veces.
+    private static Vector3 DentroDeLaPantalla(Vector3 lugar, Vector3 derecha, Vector3 adelante)
+    {
+        const float m = MargenDelFestejoEnLaPantalla;
+        for (int vuelta = 0; vuelta < 2; vuelta++)
+        {
+            Vector3 aca, aLaDerecha, adelanteEnPantalla;
+            if (!CamaraJugador.EnLaPantallaAlMostrarElCuerpo(lugar, out aca) ||
+                !CamaraJugador.EnLaPantallaAlMostrarElCuerpo(lugar + derecha, out aLaDerecha) ||
+                !CamaraJugador.EnLaPantallaAlMostrarElCuerpo(lugar + adelante, out adelanteEnPantalla))
+                return lugar;
+            float porMetroX = aLaDerecha.x - aca.x;
+            float porMetroY = adelanteEnPantalla.y - aca.y;
+            if (porMetroX > 0.0001f)
+            {
+                if (aca.x < m) lugar += derecha * ((m - aca.x) / porMetroX);
+                else if (aca.x > 1f - m) lugar -= derecha * ((aca.x - (1f - m)) / porMetroX);
+            }
+            if (porMetroY > 0.0001f)
+            {
+                if (aca.y < m) lugar += adelante * ((m - aca.y) / porMetroY);
+                else if (aca.y > 1f - m) lugar -= adelante * ((aca.y - (1f - m)) / porMetroY);
+            }
+        }
+        return lugar;
     }
 
     // Si hace EsperaSinAcercarse que no se acerca AcercamientoMinimo al lugar al que va, a
@@ -1215,13 +1260,6 @@ public class EnemyController : MonoBehaviour
                 float u = enLaOleada / DuracionDelFestejo;
                 envolvente = Mathf.Sin(u * Mathf.PI);
                 puño = Mathf.Abs(Mathf.Sin(u * PuñosPorFestejo * Mathf.PI));
-
-                if (oleada > ultimaOleadaRugida && oleada < OleadasConRugido)
-                {
-                    ultimaOleadaRugida = oleada;
-                    RugidosDelFestejo++;
-                    Efectos.FestejoZombis();
-                }
             }
         }
 
