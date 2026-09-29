@@ -1,4 +1,4 @@
-# Pendientes de la auditoría del 24/9
+# Pendientes de las auditorías (24/9 y superauditoría del 29/9)
 
 La auditoría tuvo 20 frentes. En cada uno, un agente `buscar:` salió a buscar errores, riesgos y mejoras, y un
 `mejoras:` revisó las mejoras contra el código. **La ronda `refutar:`** (un escéptico que intenta tumbar cada error
@@ -7,17 +7,61 @@ por los quince hallazgos que quedaban** (ver la sección 1). **Lo chico y seguro
 lo verificó leyendo el código (los commits "Aplicar ... de la auditoria" y los que siguen). Este archivo se llamaba
 `AUDITORIA.md`. Acá queda:
 
-1. **La ronda `refutar:` del 26/9**: el veredicto de cada hallazgo que estaba sin verificar, y adónde fue a parar.
+1. **Las rondas `refutar:`**: la superauditoría del 29/9 y la ronda del 26/9, con el veredicto de cada hallazgo y
+   adónde fue a parar.
 2. **Verificados, para después**: confirmados leyendo el código, pero grandes, con algo para decidir o que esperaban
    la fase 2 (`PlayerHealth.cs` y el constructor de neón, que ya están en main).
 3. **Para decidir**: mejoras y cambios de diseño que valen la pena pero cambian el juego o una decisión de Ivan.
 4. **Para mirar en Unity**: lo que se aplicó sin poder probarlo.
 5. **Antes de integrar la red de anuncios**: ver `publicacion/pasos.md`.
 6. **Descartados**: lo que se refutó (no pasa hoy), con la recomendación para cuando cambie algo.
+7. **Sin refutar**: los hallazgos bajos de la superauditoría del 29/9, una línea cada uno.
 
 ---
 
-## 1. La ronda `refutar:` del 26/9
+## 1. Las rondas `refutar:`
+
+### La superauditoría del 29/9
+
+La superauditoría del 29/9 tuvo 26 frentes (uno por sistema y los transversales: estado estático, tiempo y pausa,
+Android, rendimiento, build y Play, trampas, pruebas, CLAUDE.md, herramientas y código muerto). Leyó HEAD (d17c32c)
+sin Unity y miró con más cuidado lo que vino después de la auditoría del 24/9 (`e6556d9..HEAD`: el neón de la partida,
+la noche, las píldoras, los arreglos del 27/9 y los bancos nuevos), que nunca se había auditado. De 162 hallazgos en
+bruto quedaron 123 únicos; uno ya estaba anotado (las balas que atraviesan al FASTER). Los 23 de gravedad media o alta
+pasaron por la ronda `refutar:` (dos escépticos para el único alto; con dos miradas, gana la más desfavorable si trae
+evidencia concreta): 15 confirmados, 7 parciales y 1 refutado, y ninguno quedó alto. Los 100 bajos no se refutaron. Lo
+marcado "sin medir" sale de un modelo: medirlo antes de arreglar. Lo nuevo del tramo sin auditar: los halos de neón
+que roban toques (H01), el botón de pausa encima de los carteles (H13), la noche que apaga las balas y las cajas
+(H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23).
+
+| hallazgo | veredicto | gravedad | sección |
+|---|---|---|---|
+| H01: el halo de REINICIAR se lleva toques de CONTINUAR | parcial: todavía no está en Play | media (era alta) | 2 |
+| H02: la furia arranca lista en cada partida | parcial: adelanta, no multiplica | baja (era media) | 2 |
+| H03: el reloj confiable solo se ancla al cobrar la diaria | confirmado | media | 3 |
+| H04: retomar vuelve opcional la muerte en oleadas | parcial: en monedas no es granja | baja (era media) | 3 |
+| H05: REINICIAR y la R sin confirmación | confirmado | media (baja con H01 arreglado) | 2 |
+| H06: la tienda compra con un toque de la diaria | confirmado | media | 2 |
+| H07: el versionCode 5 ya se usó | parcial: ya estaba en TAREAS | baja (era media) | 2 |
+| H08: la librería de reseñas y Seguridad de los datos | parcial: la lectura queda abierta | baja (era media) | 3 |
+| H09: Storage Location decide dónde vive `progreso.json` | parcial: no destruye, se revierte | baja (era media) | 2 |
+| H10: la invocación del jefe sale vacía con el techo lleno | parcial: el arreglo propuesto no alcanza | media | 2 |
+| H11: al jefe se lo mata sin que ataque | confirmado | media | 3 |
+| H12: el borde rojo se corta en el área segura | confirmado | baja (era media) | 2 |
+| H13: la pausa del teléfono tapa lo de arriba al centro | confirmado | media | 2 |
+| H14: MODO LIBRE bloqueado con el halo verde | confirmado | baja (era media) | 2 |
+| H15: en PC se corre un 41 % más rápido en diagonal | confirmado | baja (era media) | 2 |
+| H16: los zombis patinan (el paso del tanque, en la 3) | confirmado, y el tanque también | media | 2 |
+| H17: de noche las balas y las cajas se ven oscuras | confirmado | media | 2 |
+| H18: los edificios de la ciudad tapan al jugador | confirmado | media | 3 |
+| H19: el pitch acotado a 3 | refutado | — | 6 |
+| H20: las veredas tapan la línea del jefe | confirmado, y la granada también | media | 2 |
+| H21: la caja de arma del tutorial detrás del panel | confirmado | baja (era media) | 2 |
+| H22: un banco cortado secuestra el próximo Play | confirmado | media | 2 |
+| H23: los bancos abren escenas sin mirar si están sucias | confirmado | media | 2 |
+| H24 a H123 (100 hallazgos bajos) | sin refutar | baja | sin refutar |
+
+### La ronda del 26/9
 
 Quince escépticos, uno por hallazgo, intentaron tumbar cada uno leyendo el código y los YAML de HEAD (7276891), sin
 Unity, y recalcularon los números con los valores serializados. Quedaron 2 refutados, 6 confirmados y 7 parciales
@@ -196,6 +240,220 @@ privacidad publicada.
   (REINICIAR y la R). No en `IrAlMenu`, como decía la auditoría: al retomar no saldría NEW BEST. El tutorial no
   escribe récord.
 
+### De la superauditoría del 29/9
+
+- **Los halos de neón roban toques: el de REINICIAR se lleva el borde de abajo de CONTINUAR** (media, era alta; H01,
+  parcial). `ConstructorUI.HaloDeBoton` (`ConstructorUI.cs:60-73`) estira la `Sombra` 34 u por lado con `NeonPildora`
+  y no apaga `raycastTarget`: quedaron 15 imágenes con `m_RaycastTarget: 1` (`MenuPausa.prefab:946`, `:1866` y
+  `:1941`, diez en `Menu.unity` y `Tutorial.unity:1548` y `:1774`; Perdiste, la tienda y `ConstructorUI.Boton` están
+  bien). En la pausa, el halo de REINICIAR, que va después en la jerarquía, se queda con el hueco de 30 u y con los 4
+  u de abajo de CONTINUAR (0,28 mm; toda la franja son 2,4 mm), y REINICIAR olvida la oleada y recarga
+  (`MenuPausa.cs:89-94`). Vino con `0a4cc87` (25/9) y **no está en Play** (la prueba cerrada es la 1.2.0 (5), de
+  `16d8a38`): es un bloqueante del próximo AAB. Solo cuesta en la pausa: rehacer 14-23 min en la oleada 30-40, sin
+  perder monedas ni mejoras. En el menú todo se deshace con un toque: SALIR se lleva 14 u de MEJORAS y, en 20:9 y
+  21:9, de JUGAR; en la ventana del idioma y en el panel de modos los vecinos se reparten los huecos. Amplía «PLAY y
+  SALIR quedan a 20 unidades en 20:9 y 21:9». **Arreglo**: `sombra.raycastPadding = new Vector4(34f, 34f, 34f, 34f)`
+  en `HaloDeBoton`, que deja el área tocable del tamaño del botón y quieta (con `raycastTarget = false` solo tocaría
+  el `Fondo`, que `BotonJugoso` achica a 0,9 al apretar, y un toque en el borde puede apretar sin hacer clic), y lo
+  mismo en las 15 líneas `m_RaycastPadding` (o volver a correr Vestir el menú y Vestir la partida, con el constructor
+  ya cambiado). Confirmar el signo en Unity (el rectángulo verde al seleccionar la imagen). Una prueba que lea de
+  disco: toda `NeonPildora` con `m_RaycastTarget: 0` o con padding de 34 o más por lado. Pasaría a alta si se mide que
+  el 2 % o más de los toques a CONTINUAR caen por debajo de su borde (ver la sección 4).
+- **REINICIAR de la pausa y la R borran la partida de oleadas sin preguntar** (media mientras H01 siga abierto, baja
+  con H01 arreglado; H05, confirmado). `MenuPausa.Reiniciar` (`MenuPausa.cs:89-94`) y la R (`RestartScene.cs:22-27`,
+  que solo mira el vídeo y el ¡HAS MUERTO!, así que anda con la pausa abierta) llaman a
+  `WaveManager.OlvidarPartidaSiEsOleadas` (`WaveManager.cs:28-33`), que olvida y guarda; aunque no guardara, la oleada
+  1 recargada se guarda sola (`:121-125`). La R es solo de PC (el HUD la anuncia) y está encima de la F de la furia;
+  en el teléfono el camino es tocar REINICIAR sin querer (H01). Rehacer las oleadas: 6,5 min hasta la 20, 13-14 hasta
+  la 30 y 22-23 hasta la 40, que igual pagan un 40-47 % de lo que paga la frontera. Ivan ya pidió confirmación para
+  SALIR, que no pierde nada. **Arreglo**: confirmar solo en WaveMode y con `Progreso.OleadaEnCurso > 1` («¿EMPEZAR DE
+  CERO? Perderás la oleada {0}», con SEGUIR grande y verde), en una ventana propia armada con `ConstructorUI` en el
+  canvas de la pausa y en tiempo sin escalar (`ConfirmarSalir` copia el panel del idioma, que solo existe en el menú).
+  Trampa: `MenuPausa.Update` convierte Escape (el atrás) en Reanudar; la ventana tiene que tomar Escape primero. La R
+  abre la misma confirmación, o hay que mantenerla ~0,6 s; no bloquearla en la pausa. Ponerla antes de la llamada
+  donde va `GuardarRecord` («El récord de una partida abandonada») y hacer los dos cambios juntos. Una prueba: con
+  `OleadaEnCurso > 1`, REINICIAR no olvida sin confirmar y Escape con la ventana abierta no reanuda.
+- **La tienda que se abre sola después de la diaria compra con un toque que empezó a ciegas** (media; H06,
+  confirmado). `TiendaMejoras.Abrir` (`:261-315`) solo baja el alfa: los `CanvasGroup` quedan interactivos
+  (`Tienda.prefab:1665-1666`, `TarjetaMejora.prefab:1928-1929`) e `IntentarComprar` no mira el tiempo. Con la fila en
+  0, COBRAR (0,−208; 560x130) tapa el 97 % del botón de CRÍTICOS en 16:9 y el 82 % en 20:9, y el día 1 la diaria paga
+  150, justo lo que cuesta CRÍTICOS: después de cobrar siempre alcanza, y la guía de la primera compra salta a ¡A
+  JUGAR! sin el daño. Hace falta un toque **nuevo** que empiece entre ~1,55 y ~2 s después de COBRAR en esa zona (el
+  que toca para cerrar el cartel de cobrado); el camino de VOLVER y del vídeo es solo de la APK de prueba.
+  **Arreglo**: no con `blocksRaycasts = false` (los toques pasarían al canvas del menú) ni con `interactable` (el
+  `Button` decide al soltar): en `ToqueQueFrena.OnPointerDown`, `eventData.eligibleForClick = false` si la fila se
+  mueve o si la tarjeta todavía está entrando (`tiempoAbierta` menor a ~0,45 s; la fila entera tarda 0,72 s). Un caso
+  en `PruebaDiaria` con raycast de verdad (`EventSystem.RaycastAll` y los tres eventos en el centro de COBRAR a ~0,05
+  s de `Abrir`: no compra; a ~1 s, sí), porque hoy cobra con `onClick.Invoke()` y no lo puede ver.
+- **Con el techo de zombis lleno, la invocación del jefe hace el aviso entero y no sale nadie** (media; H10, parcial).
+  `JefePatrones.Empezar` (`:407-428`) elige invocar sin mirar si hay lugar y paga el anillo, el rugido y 0,8 s quieto;
+  `Invocar` (`:545-551`) recorta con `LugarParaZombis` y `maxInvocadosVivos` (8), con 0 vuelve en silencio, y
+  `Terminar` da vuelta `tocaCarga` igual: la invocación se pierde. Con uno solo, sale siempre al +X. El camino de
+  `maxInvocadosVivos` pasa también en PC en la oleada 10 (la tercera invocación sin furia; en furia salen 6, 2 y 0).
+  Corrige al hallazgo: los generadores no llenan el lugar en un cuadro (uno cada 0,35 s en oleadas y cada 0,25 s en el
+  libre), así que pega sobre todo en el teléfono desde la oleada 20 (90 zombis contra un techo de 35) y en el libre
+  cuando el nivel le gana al jugador (60-90 % vacías, modelo sin medir); en la oleada 10 del teléfono casi siempre
+  sale entera. **Arreglo**: reservar el lugar en `Empezar` con un `static int EnemyController.Reservados` que reste
+  `LugarParaZombis` y que miren los dos generadores (`WaveManager.cs:148` y `GeneradorZombis.cs:169`), soltado en
+  `Invocar`, `VolverAPerseguir` y `OnDisable` y puesto en el reset de `SubsystemRegistration`; si la reserva da 0,
+  cargar sin dar vuelta `tocaCarga`. Mirar el lugar en `Empezar` sin reservarlo no alcanza: el generador lo ocupa
+  antes de que termine el aviso. La otra opción, que la invocación pase el techo hasta `maxInvocadosVivos` (35 → 43 en
+  el teléfono), se decide con la medición de «720p nativo en el teléfono». Aparte, un desfase al azar en los ángulos
+  para uno a tres invocados.
+- **El botón de pausa del teléfono tapa lo que va arriba al centro** (media; H13, confirmado). El disco (de 24 a 154 u
+  desde arriba, x ±65, alfa 0,92 y con el anillo celeste desde `0a4cc87`) se dibuja encima de: (1) el cartel «CAPÍTULO
+  N / NOMBRE» (`CapitulosDeEscenario.cs:485-495`, centro en +385), cuya primera línea cae entera en esa franja en
+  16:9, 18:9, 20:9 y 21:9 (en 20:9 tapa la Í, la T, la U y la L de «CAPÍTULO 2»), también al retomar en la 11 o más
+  (`:179` corre fuera del if/else); (2) el nombre del jefe: `6b8ea40` subió `desdeArriba` a 170 solo en el .cs, y
+  `MenuPausa.prefab:2364` sigue en 100 (letras en 151-183 u); (3) `PanelInstruccion` del tutorial
+  (`Tutorial.unity:726-727`, de 145 a 315 u), que toca el anillo en cualquier proporción. `ProbarAvisosSinPisarse`
+  (`PruebasMejoras.cs:1740`) nunca mira el botón. **Arreglo**: el capítulo no entra más abajo en ningún teléfono
+  cuando el cartel de la oleada lleva el bono; lo más simple es un `CanvasGroup` en `BotonPausa` que baje el alfa a
+  ~0,25 mientras dura el cartel (tocable igual), o poner «CAPÍTULO N · NOMBRE» como primer renglón del cartel de la
+  oleada. El jefe: `desdeArriba` ~140 en el prefab y el mismo valor en el .cs. El tutorial: `PanelInstruccion` en y
+  −260/−265 (ver la caja de arma del tutorial, abajo). Que la prueba lea de `MenuPausa.prefab` los rects de
+  `AreaSegura/BotonPausa` y de su halo, y los compare con el capítulo, la barra del jefe y el panel del tutorial.
+- **Los zombis patinan: las piernas cubren entre el 16 y el 36 % de lo que avanzan** (media; H16, confirmado). Del
+  FBX: `Z_run_rm` avanza 3 m/s a escala 1 y `Z_walk_rm`, 1 m/s; los prefabs no usan root motion y se mueven a
+  `enemyType.velocidad` (`EnemyController.cs:805-807`). Con la cuenta de `JefePatrones.PasoParaCorrer`, que ya calibra
+  la carga del jefe sin patinar, el normal pide `Paso` 2,78 y tiene 1 (36 %), el rápido 6,25 y 1 (16 %), el FASTER
+  11,1 y 2,5 (22,5 %) y **el tanque**, en `Z_walk_rm`, 2,5 y 0,8 (32 %, el más visible); el jefe persiguiendo, 66 %.
+  `FondoMenu.cs:91-94` copia el mismo valor, así que el fondo del menú patina igual. Estaba anotado (`e09c0d6`) y
+  `8219044` lo borró al reescribir «El jefe en el teléfono»; CLAUDE.md dice que `velocidadDeAnimacion` ajusta el paso
+  a lo que camina cada uno, y es falso. **Arreglo**: una función pura `EnemyController.PasoPara(velocidad, ritmo,
+  escala)` con el avance de cada clip y un tope en `Paso` 3-4 (a 30 FPS el FASTER completo serían 1,8 cuadros por
+  ciclo: estroboscopio), usada en `OnEnable` y en `FondoMenu`; o serializar el `Paso` en los prefabs (normal 2,78,
+  rápido 4, FASTER 4). Con tope 4 el rápido cubre el 64 % y el FASTER el 36 %: el FASTER no se arregla entero sin
+  tocar su escala o su velocidad. El tanque es una decisión (sección 3). Una prueba como la del jefe
+  (`PruebasMejoras.cs:2316-2333`) y verlo con Grabar animaciones. Corregir la frase de CLAUDE.md.
+- **De noche las balas, las cajas y la granada quedan fuera de la luz de relleno** (media; H17, confirmado). `Relleno`
+  alumbra solo la capa 8 (`WaveMode.unity:3083`, igual en ShowBies1 y Tutorial) y `Personajes.PonerEnLaCapa` solo se
+  llama para los zombis, el jugador, la pistola y las monedas (y saltea lo que tiene collider, `Personajes.cs:20`).
+  `Bullet.mat` es Standard sin emisión (capa 7), `PUVida.mat` y `balas.mat` también son Standard, y `PUArma` y
+  `Granada` usan el Default-Material. Con un modelo de luz calibrado contra cuatro capturas, la bala de noche da (79,
+  86, 13), 1,69:1 contra el piso (2,52 de día), y **la caja de vida queda más oscura que el piso** (1,14:1, L* 15), y
+  el gris de poca vida le quita el color justo cuando más hace falta. Los faroles con luz cubren un ~8 % del mapa.
+  Vino con la noche (`7276891`). **Arreglo**: la bala por el material, no por la capa: Standard con emisión amarilla
+  (la keyword `_EMISSION` se prende desde el inspector o con `EnableKeyword`; tocar `_EmissionColor` en el YAML no
+  alcanza) o `Unlit/Color` (10,3:1 y sin sombra, que va junto con «Las balas» de rendimiento); `Bullet.mat` también
+  tiñe el brillo de `PUBalas`. Las cajas y la granada: la raíz entera a la capa 8 en el prefab (la fila de la 8 en la
+  matriz de física es igual a la de la 0 y nadie usa `IgnoreLayerCollision`). No partirlas con el collider en un hijo:
+  el agarre hace `CompareTag` y `Destroy` sobre `other.gameObject`. Verificarlo con una foto como la de los faroles
+  (sección 4).
+- **En la ciudad las veredas tapan la línea de la carga y el anillo de la invocación** (media; H20, confirmado). Se
+  dibujan a y 0,06 (`JefePatrones.cs:633` y `:696`) con Sprites-Default (`ZombiBOSS.prefab:221`), que respeta la
+  profundidad, y las 16 veredas opacas llegan a 0,14 (el cordón a 0,18) y cubren el 34 % del piso (el 51 % alrededor
+  del cruce). Modelo sin medir: el 86-90 % de las cargas pierde algo, el 36-42 % pierde la mitad, y el tramo donde
+  está parado el jugador queda tapado el 43-50 % de las veces. Pasa con el jefe de la 30 (y el de la 60 y la 90). **El
+  anillo de la granada tiene lo mismo**, a y 0,05 (`Granade.cs:117`, y el de puntería, `PlayerController.cs:320`), en
+  las diez oleadas de la ciudad. **Arreglo**: una constante `JefePatrones.AlturaDelAviso =
+  ManchaDeSangre.AlturaSobreElPiso` (0,2) en las dos líneas, lo mismo en `Granade.DibujarAnillo`, y las dos alturas en
+  el chequeo de `PruebasMejoras.cs:1321-1340`, que ya compara la mancha con la vereda. El costo es el que ya se aceptó
+  con la mancha: la cinta pinta los 20 cm de abajo de lo que la pisa. De paso: `anchoLinea` 1.4
+  (`ZombiBOSS.prefab:203`) ya no existe en el código.
+- **Un banco en play cortado a mano queda armado y secuestra el próximo Play del editor, sin respaldo** (media; H22,
+  confirmado). Cada banco guarda en `SessionState` que está corriendo (su clave, `.empezo`, `.desde` y `.listo`) y
+  solo lo apaga al terminar; solo `PruebaDiaria` lo limpia al volver a edición (`:830-855`). `RespaldoDelBanco`
+  (`:111-114` y `:155`) sí devuelve el progreso y borra su marca, así que en el Play siguiente el banco sigue sin
+  respaldo y con los estáticos en cero (cada Play recarga el dominio). Derrota deja al jugador al 10 %, lo mata,
+  cuenta una partida, olvida la oleada en curso del progreso real y pisa su informe; Tienda, Tutorial, ModoLibre,
+  MenuYTienda y GolpeAnimado cortan el Play en el primer cuadro con un HAY FALLAS falso; MuerteAnimada mata zombis con
+  puntos y monedas si el Play llega antes de los 55 s; los Grabar le apagan el control al jugador. Y en cascada: el
+  banco colgado corta el Play del siguiente banco, al que `RespaldoDelBanco` también le borra la marca. **Arreglo**:
+  la regla "un banco sin respaldo no corre": `RespaldoDelBanco.EsDe(banco)` y, en cada `Tick`, después de `isPlaying`,
+  si la marca no es suya, apagar su clave, `LogWarning` y salir. Cubre el Stop, la cascada y el error de compilación
+  (que no pasa por `EnteredEditMode`). La otra forma es limpiar las cuatro claves adentro de `Restaurar`. Además, un
+  `LogWarning` en los `Arrancar` que hoy se niegan callados (Disparo, MenuYTienda, ModoLibre y GrabarDisparo) y la
+  guarda de play de `PruebaTienda.cs:202` en Derrota, GolpeAnimado, MuerteAnimada, GrabarJefe y GrabarAnimaciones.
+- **Los doce bancos y «Poner la noche» abren escenas en modo Single sin mirar si hay cambios sin guardar** (media;
+  H23, confirmado). `isDirty` solo aparece en `ConstructorNeon.cs:47` y `:164`. Los bancos (`PruebaTutorial.cs:175`,
+  `PruebaTienda.cs:216` y los demás) y `PonerLaNoche` (`ConstructorEscenarios.cs:938-940`, que además relee las tres
+  escenas de juego, las guarda y termina en el menú) cierran lo abierto sin preguntar, y `RespaldoDelBanco` no mira
+  escenas. Lo más filoso: un agente toca WaveMode por unity-mcp, corre un banco para verificarlo, el banco prueba la
+  versión de disco, escribe TODO OK y el cambio desaparece. `ConstructorNeon` no sirve de molde: perdona justo al menú
+  sucio y solo mira la escena activa. (La documentación de Unity no dice que `OpenScene` no pregunte; lo dan por hecho
+  `ConstructorNeon` y la comunidad.) **Arreglo**, sin ventanas: un ayudante común (`EscenasSinGuardar.Hay(quien)`) que
+  recorra todas las escenas cargadas y, si alguna está sucia, dé `LogError` con la lista y cómo salir sin clics
+  (`EditorSceneManager.SaveOpenScenes()` o reabrirla), como **primera** instrucción de las 14 entradas de menú de los
+  bancos (varios borran carpetas o reinician el progreso antes del `OpenScene`), de `PonerLaNoche` y de las dos de
+  `ConstructorNeon`. `PonerLaNoche` y `VestirPartida` vuelven a lo que estaba abierto con `GetSceneManagerSetup` y
+  `RestoreSceneManagerSetup`. Mejor en el mismo andamiaje que el de arriba. Y un chequeo en la prueba de lógica que
+  falle si un `.cs` de `Assets/Editor` llama a `OpenScene(` sin `Additive` ni el ayudante.
+- **La furia arranca lista en cada partida y cuenta para la misión y FURIOSO reiniciando** (baja, era media; H02,
+  parcial). `activadaEn` arranca en `float.NegativeInfinity` (`Furia.cs:43`; que arranque lista es a propósito,
+  `BotonFuria.cs:34-36`) y `Activar` suma `Progreso.ContarFuria` (`Furia.cs:99-109`), que es de por vida. Con
+  REINICIAR, la R o pausa → MENÚ → OLEADAS (en el libre o entre carreras: en WaveMode REINICIAR y la R borran la
+  oleada), cada vuelta da una furia: la difícil de la oleada 40 (29 furias, cotizada en 58 min, paga 51.450) sale en 1
+  a 7 min según lo que tarde la vuelta (sin medir). La misión de furia sale el 47-67 % de los días. Adelanta, no
+  multiplica: el cofre pide las tres misiones, FURIOSO llega igual jugando (~3,3 h) y el semanal no tiene furia. Con
+  la granada, la vuelta rinde ×2,5 solo si dura 2 s. Amplía «Las dos pruebas son circulares»: `PruebasMejoras.cs:3434`
+  tiene la misma forma, y si modelara la furia gratis de cada partida fallaría en la oleada 10. **Arreglo**, del lado
+  del contador: un `static float` con los segundos jugados (tiempo escalado, sumado en `Furia.Update`) desde la última
+  furia contada, en 0 en `SubsystemRegistration`; `ContarFuria` cuenta solo si pasaron `enfriamiento` segundos, y los
+  descuenta. La furia sigue arrancando lista y el objetivo mide exactamente N×120 s. No llevar el enfriamiento entre
+  partidas con tiempo real: rompe la pausa y le cambia el juego al honesto (eso lo decidiría Ivan).
+- **El versionCode 5 ya se usó y la build del AAB no lo revisa** (baja, era media; H07, parcial).
+  `ProjectSettings.asset:178` dice 5 y `:147`, 1.2.0; el AAB del 18/9 (`16d8a38`) salió con el 5 (leído de su
+  manifiesto) y Play no deja repetirlo. `ArmarAab` y `Construir` revisan seis cosas y el versionCode no: solo lo
+  anotan (`ConstructorAndroid.cs:332`). `TAREAS.md:130` ya dice subir a 6, y el rechazo llega al subir, con el mensaje
+  exacto. De paso, `publicacion/pasos.md:55` todavía dice «versionCode 4 y versión 1.1.0», contra su propia línea 33.
+  **Arreglo**: subir a 6 antes de armar; `publicacion/ultimo_aab.txt` versionado (arranca en 5); una función pura
+  `ConstructorAndroid.ProblemaDeVersionCode(actual, ultimo)` que `ArmarAab` mire antes de tocar el keystore; y que
+  `Construir`, con un AAB exitoso, escriba el versionCode en ese archivo (así cada AAB armado cuenta como usado y
+  nadie tiene que acordarse de actualizarlo). Casos en `PruebasMejoras.cs:1410-1442`, y corregir `pasos.md:55` y
+  CLAUDE.md.
+- **Dónde vive `progreso.json` lo decide un ajuste que nada vigila** (baja, era media; H09, parcial).
+  `AndroidPreferredDataLocation: 1` (`ProjectSettings.asset:182`) es PreferExternal (el enum de 6000.3.14:
+  PreferExternal = 1, ForceInternal = 2; el `boot.config` de la APK dice 1). En el Inspector se llama **Storage
+  Location**. Pasarlo a Force Internal, el arreglo "obvio" de la política, hace que `Progreso.Ruta()` (`:1099-1101`)
+  mire la carpeta interna, que `Leer` dé `NoExiste` en los tres candidatos y que el juego arranque de cero, sin
+  `soloLectura`. No destruye (volver a PreferExternal lo recupera, menos lo jugado entretanto) y hoy solo hay
+  probadores. Amplía «`progreso.json` está en el almacenamiento externo»: si Unity cae al interno con el externo sin
+  montar (está documentado; improbable con minSdk 25), queda un `progreso.json` casi vacío en el interno, y una
+  mudanza que tome "el interno existe" como "ya se mudó" dejaría huérfano el verdadero. **Arreglo**: una constante en
+  el código (`Progreso.UbicacionEsperada`) y una guarda en `ProbarCalidadDeAndroid` y en `ConstructorAndroid` (un
+  `ProblemaDeUbicacion` que niegue la APK y el AAB). La mudanza, si se hace, con una marca propia en `PlayerPrefs`
+  (`ProgresoMudado`) y, si hay archivo en las dos carpetas, eligiendo por contenido; y antes de producción.
+- **El borde rojo del daño se corta en recto del lado de la cámara del teléfono** (baja, era media; H12, confirmado).
+  `androidRenderOutsideSafeArea: 1` (`ProjectSettings.asset:71`) y `VinetaDanio` cuelga de `CanvasHelper`, que se
+  ajusta a `Screen.safeArea` (`CanvasHelper.cs:16-29`; `WaveMode.unity:418-445`, igual en ShowBies1 y Tutorial). Con
+  cámara perforada o muesca, en horizontal, el rojo termina en una línea vertical a un 3-9 % del ancho, según el
+  teléfono (sin medir), con 0,38 de opacidad a media altura y 0,70 en la esquina (con la furia, 0,13-0,24). Dura 0,4 s
+  y, rodeado, titila cada 0,4 s. No viene del neón: la viñeta no cambia desde `8b212f2` (14/9). De paso, el cartel de
+  la oleada se centra en el área segura y los del capítulo y de misión en el canvas entero (36-63 u de desfase en un
+  2400x1080). **Arreglo**, junto con «El borde rojo del golpe que mata se corta enseguida»: la viñeta en su propio
+  objeto raíz, con un Canvas overlay sin área segura y detrás del HUD, y que `EsconderElHud` la deje desvanecerse. Lo
+  mínimo, sin tocar escenas: en `VinetaDanio.Awake`, `SetParent` al canvas raíz, `SetAsFirstSibling()` y anclas 0-1.
+  Opcional: los tres carteles en un mismo marco.
+- **MODO LIBRE bloqueado: una píldora gris con el halo y el texto verdes de "jugar"** (baja, era media; H14,
+  confirmado). `BotonModoLibre.Pintar` solo cambia `fondo.color` (`:50`) al gris del tema viejo (`Menu.unity:4771`,
+  0,45/0,45/0,52); la `Sombra` (`:6129`), el icono y el texto siguen con el verde que les puso `ConstructorNeon` (el
+  texto a 3,70:1). Se ve en `Builds/libre_boton_5_bloqueado_en.png`, y el banco solo mira el fondo
+  (`PruebaModoLibre.cs:739`). La tienda ya resuelve "todavía no se puede" con `ApagadoOscuro`, `TextoSuaveClaro` y el
+  halo apagado. Lo menor: el idioma elegido es amarillo con el halo celeste. **Arreglo**: pasar `Menu.unity:4771` a
+  `Tema.ApagadoOscuro` (0.086, 0.102, 0.141) y seguir pintando con el campo (si no, el banco falla); el texto y el
+  icono en `TextoSuaveClaro` (5,73:1); **apagar el halo** (alfa 0 en la `Sombra`), porque `PintarHalo` con
+  `ApagadoOscuro` da un halo casi negro. El icono se busca con `fondo.transform.parent.Find("Icono")`. Al desbloquear,
+  devolver los colores leídos en `Awake`. En el banco, el color de la `Sombra`, el del texto y un contraste de 4,5 o
+  más. En `SelectorIdioma.Pintar`, `PintarHalo` con el color de cada botón. Corregir "lo pinta gris" en CLAUDE.md.
+- **En PC el jugador corre un 41 % más rápido en diagonal** (baja, era media; H15, confirmado). `HandleMovement`
+  (`PlayerController.cs:156-157`) multiplica los dos `GetAxis` por `moveSpeed` (15 en las tres escenas) sin topar:
+  21,2 m/s en diagonal y 27,6 con la furia, contra el FASTER a 12. En el teléfono no pasa: el Joystick Pack normaliza
+  y los `snap` están apagados. Es baja porque solo se distribuye Android, pero probar con el teclado del editor da un
+  juego más fácil que el del teléfono. La reproducción con F1 no sirve: `MedidorBalance` no muestra velocidad.
+  **Arreglo**: `moveInput = Vector3.ClampMagnitude(moveInput, 1f);` antes de calcular `moveVelocity` (conserva la
+  rampa de `GetAxis` y el umbral de `run`, y topa también los ejes del gamepad).
+- **La caja de arma del tutorial nace detrás del panel de instrucciones** (baja, era media; H21, confirmado). Nace 4 m
+  al norte del jugador (`TutorialManager.cs:174`) y, con la cámara del juego, cae entre 278 y 318 px de 1080;
+  `PanelInstruccion` (`Tutorial.unity:726-727`) llega a 315 px en 16:9 y 352 en 20:9, más 40 u de halo, y desde
+  `0a4cc87` es casi negro al 90 %: la caja queda tapada al 92 % en 16:9 y entera de 18:9 a 21:9 (se ve en
+  `Builds/tutorial_caja_arma.png`). `PruebaTutorial.cs:534` solo mira `activeSelf`. Es baja porque el tutorial es
+  opcional y se destapa con menos de un segundo de movimiento. **Arreglo**: hacerla nacer al sur, `new Vector3(0f, 0f,
+  -2.5f)` (738-776 px, del lado contrario a la marcha: no la tapan ni el panel movido de H13 ni el texto de la vida).
+  No en `(0, 0, 2)`: con el panel bajado a −265 vuelve el problema en 21:9, y queda en el camino de quien viene de las
+  cajas del paso 4. El desplazamiento como constante pública y un chequeo en la prueba de lógica que la proyecte con
+  la cámara y el panel leídos de disco en 16:9, 20:9 y 21:9 (`PruebaTutorial` corre en la proporción del Game view).
+
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
 Aprobado por el revisor, pero son materiales, prefabs o ajustes del proyecto, y conviene ver el antes y el después con
@@ -313,6 +571,82 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 - **Más código muerto de la tarjeta de la tienda**: `borde`, `franja`, `icono`, `barraNivel`, `estampa` y sus hijos
   apagados. Pide correr `ConstructorTienda` en Unity.
 
+### De la superauditoría del 29/9
+
+- **El reloj confiable solo se ancla al cobrar la diaria** (media; H03, confirmado). La marca (`relojUtc`, `relojMs` y
+  `relojArranques`) solo la escribe `RegistrarRecompensaDiaria` (`Progreso.cs:353-357`), y `HoraConfiable` devuelve el
+  reloj crudo sin marca, si falla la lectura o si la marca es de otro arranque (`:592`, `:596`;
+  `RelojConfiable.cs:53-54`). Desde cualquier reinicio posterior al último cobro (y sin reinicio, si nunca se cobró),
+  cerrando la diaria con el atrás, cada día adelantado cierra el día, arma misiones y semanal nuevos y cobra lo
+  cumplido; las misiones ni siquiera piden el menú (`AvisoDeMisiones.Start`). Además el día se puede **sortear** (`new
+  Random(dia)`, `MisionesDiarias.cs:132`) hasta que la difícil sea barata. Modelo sin medir: +60 a +140 % de ingreso
+  en la oleada 10 con 30 min a 2 h por día; en la 40, de −22 % (quien juega poco pierde más con la diaria que lo que
+  gana) a +100 % sorteando. Los topes de vídeo hoy no pesan (proveedor Nulo). **Paso claro**: anclar la marca en el
+  primer `HoraConfiable` de cada arranque (sin marca, o de otro arranque) y no reanclar hacia adelante en el mismo,
+  con la prueba "mismo arranque, +1 h 59, anclar, +1 h 59 otra vez, y el día no avanza". **Para decidir**: eso lo pasa
+  a "un reinicio por salto" y de paso mata el sorteo (un reinicio por intento), pero un reinicio por hora de juego no
+  frena al que ya cambia la fecha. Es la postura escrita ("fricción, no un candado"): decidir si alcanza. Va junto con
+  H70 (anclar en el primer uso agranda el caso del teléfono que arranca con la hora mal) y con «Una fecha guardada en
+  el futuro bloquea la diaria, las misiones, el semanal y los vídeos hasta esa fecha». `auto_time` como alivio está
+  sin verificar en modo avión (sección 4).
+- **Al jefe se lo puede matar sin que ataque nunca** (media; H11, confirmado). Solo ataca a 15 m o menos **y** con el
+  pivote en pantalla (`JefePatrones.cs:352` y `:455-478`; `margenEnPantalla` no está serializado y vale 0,08/0,1): la
+  ventana va de 4,7 m detrás a 6 m delante (±9-11,5 m al costado), y las balas llegan a 22 m (11 m/s por 2 s,
+  `WaveMode.unity:694-695` y `Bullet.prefab:112`), con el jefe a 2 m/s y el jugador a 15. El propio comentario
+  (`:468-472`) llama "lo normal al escaparle" a tener al jefe a 7-15 m por debajo. El ataque cubre el 13-16 % del
+  disco de 1,5 a 22 m (el 46 % antes del 25/9); el jefe de la 10 (1.279 de vida) muere en 16 a 64 s. La banda de 15 a
+  22 m, donde nunca atacó, es anterior. Amplía «El jefe en el teléfono». **Para decidir jugando**: medir la ventana
+  con el cuerpo entero (27-30 %) o atacar siempre a menos de 8 m (16-19 %) no cierran la banda de 15-22 m; la cierran
+  que camine más rápido fuera de cuadro, o dejar que invoque fuera de cuadro (sin el rugido si no se lo ve) y atar a
+  la pantalla solo la carga, que es la que necesita que se lea la pose. Que `PruebasMejoras.cs:2369-2374` mida qué
+  fracción del disco queda cubierta, y no cuatro puntos.
+- **El jugador y los zombis entran en los edificios de la ciudad y desaparecen** (media; H18, confirmado). Los 12
+  edificios (11 × 11 m, de 3,7 a 6,4 m de alto, centros en ±12/±36) no tienen collider (`ConstructorEscenarios.cs:861`
+  y `:906`; `Ciudad.prefab`), están dentro de las paredes (el 15 % del área) y son opacos: con la cámara a 12 m, el
+  jugador de 2 m queda tapado entero. Los zombis no nacen adentro (los `spawnPoints` están en la calle), pero los
+  cruzan en línea recta: desde (35, 0) hacia un jugador en (36, 19), uno aparece a 1,5 m y pega a los 0,2-0,3 s.
+  Además, en la oleada 30 los invocados del jefe pueden nacer adentro (`PuntoDelAnillo` no mira `Tapado`), el jefe
+  puede avisar la carga desde adentro (`EnPantalla` no mira la oclusión), los números de daño se ven a través del
+  techo y, si el jugador muere adentro, la cámara corrida muestra un cuerpo que no se ve. **Paso claro, para el
+  jugador**: un `BoxCollider` por edificio en la capa 9 (libre) que choque solo con la 6; las balas y los zombis pasan
+  igual, y el raycast de las monedas lo toma como pared. Prenderlo en `Aterrizar`, corriendo antes al jugador fuera de
+  la huella (sin la franja de `Tapado`, con 0,72 y 0,5 m de margen: PhysX lo expulsaría hasta 5,5 m en un paso), con
+  pruebas de la capa, la matriz y la huella. **Para decidir**, porque eso deja a los zombis cruzando escondidos: (a)
+  sacar los edificios fuera de las paredes (|x| o |z| mayor a 50), que cierra todo y deja `Tapado` vacío; o (b)
+  desvanecer el techo del edificio que tiene a alguien adentro, que choca con el static batching.
+- **Retomar vuelve opcional la muerte en oleadas** (baja, era media; H04, parcial). MENÚ no olvida la oleada
+  (`MenuPausa.cs:96-100`) y perder el foco pausa y guarda (`:54-79`): solo morir, REINICIAR y la R la olvidan. Retomar
+  (`WaveManager.cs:104-125`) crea un jugador nuevo: vida llena, `GolpesRecibidos` en 0, 500 balas, el revivir por
+  vídeo disponible otra vez y las mejoras compradas entretanto (`AplicarMejoras.Awake`). En monedas no es granja
+  (×1,2-1,6 por minuto con ~10 s por ciclo, modelo sin medir). INTOCABLE y el bronce y la plata de SUPERVIVIENTE solo
+  se adelantan (~1 partida de monedas); el oro de SUPERVIVIENTE, `MejorOleada` y `HighScore_3` dejan de pedir
+  sobrevivir las oleadas seguidas (hoy son solo locales). Con el proveedor Nulo el golpe que mata olvida la oleada en
+  el mismo cuadro: hay que pausar antes. Quedan falsos `WaveManager.cs:76-77`, `AplicarMejoras.cs:8-10` y CLAUDE.md
+  ("no se puede comprar en medio de la partida"). Amplía «Punto de control por capítulo en las oleadas» (el revivir
+  gratis de MENÚ), cuyo arreglo deja MENÚ → OLEADAS igual. **Para decidir**, porque todo cambia el pedido de `d6005e6`
+  (el que cierra en la 24 para dormir). La propuesta, sin subir la versión: (1) un bool "la oleada en curso ya recibió
+  un golpe", guardado junto a `oleadaEnCurso`, para que retomarla no cuente como intacta; (2) guardar la vida y las
+  balas al empezar cada oleada y retomar con eso, topado al máximo nuevo; (3) una sola retoma por oleada: la segunda
+  vuelve al principio del capítulo, que es lo que cuida las futuras tablas y el oro. Marcar la partida entera como
+  retomada castiga al que cerró para dormir, y congelar las mejoras deja la tienda mostrando compras que no se
+  aplican.
+- **La próxima subida es la primera con la librería de reseñas: decidir Seguridad de los datos** (baja, era media;
+  H08, parcial). La 1.2.0 (5) salió de `16d8a38` sin ella (el dex del AAB no tiene `play/core/review`); `a0b1b76` la
+  sumó (`mainTemplate.gradle:11`, `review` 2.0.1, y de rebote `play-services-basement` y `tasks`), y la APK del 27/9
+  ya la trae. La guía de Google (Data safety de In-App Review) dice que la valoración y el texto se comparten con el
+  desarrollador en una pista cerrada; el formulario, la política (`privacidad.html:32-33`) y la ficha (`ficha.md:53` y
+  `:100`) dicen "no recopila". La lectura queda abierta: el dato lo maneja la Play Store en su propio proceso y el
+  juego nunca lo ve, y no hay permisos nuevos (0 `uses-permission` en los dos manifiestos). No hay regla ni caso
+  conocido de rechazo. **Para decidir antes del próximo AAB**, con las dos páginas de Google a la vista: lo
+  recomendado es "no recopila", con el porqué anotado en `pasos.md`; si se declara "Otro contenido generado por el
+  usuario" (Funcionalidad, no compartido), hay que sacar "no recopila tus datos" de `ficha.md:53` y `:100`. En los dos
+  casos, una línea en la política ("el juego puede mostrar la ventana de valoración de Google Play; lo que escribas
+  ahí lo maneja Google según sus políticas") en los tres lugares, junto con el arreglo de "privado". Actualizar
+  `pasos.md:26` y `:85` junto con H114.
+- **El paso del tanque** (media, con H16). Camina con `Z_walk_rm` a `Paso` 0,8 y pide 2,5 para no patinar, que es una
+  marcha rápida, contra el "pesado" que se buscó; corriendo pediría 0,83, la cámara lenta que se rechazó. Opciones:
+  aceptarlo, un término medio con `Ritmo` 0,3-0,5, o bajarle la velocidad (balance).
+
 ## 4. Para mirar en Unity
 
 Todo lo de la auditoría se aplicó sin Unity. **El 27/9 se corrió en el editor**: Lógica de mejoras (TODO OK, 1158),
@@ -322,9 +656,9 @@ antes que la tienda (cobrando, con vídeo y con el atrás), el desbloqueo del li
 en los dos idiomas), el tutorial (la granada al grupo y afuera, las cajas y lo que nace contra las paredes) y el menú
 con la tienda (ningún cuadro liso al abrir y cerrar por los cuatro caminos, y el menú igual sin HDR): TODO OK, 89
 chequeos. Los cinco quedaron como bancos fijos (ver Pruebas y medición en CLAUDE.md), y todos los bancos en play
-devuelven ahora el progreso real al terminar (`RespaldoDelBanco`). Además se grabaron y revisaron cuadro a cuadro el jefe y la derrota, y lo que salió de ahí se arregló (las
-cajas después de morir, el color del próximo objetivo, el festejo cortado por el borde, la línea del aviso y el
-zarpazo que seguía en el aviso del jefe). Queda:
+devuelven ahora el progreso real al terminar (`RespaldoDelBanco`). Además se grabaron y revisaron cuadro a cuadro el
+jefe y la derrota, y lo que salió de ahí se arregló (las cajas después de morir, el color del próximo objetivo, el
+festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el aviso del jefe). Queda:
 
 - **El jefe en el teléfono**: las piernas al embestir no patinan y los patrones se ven bien (grabación del 27/9), pero
   que **solo ataque con el jefe en pantalla** (~4,7 m detrás del jugador, ~6 m delante y 9-11,5 m al costado, contra
@@ -350,6 +684,32 @@ zarpazo que seguía en el aviso del jefe). Queda:
 - **El menú y la tienda**: en el Profiler, durante una caja de arma, `TextMeshPro.GenerateTextMesh` ya no tendría que
   aparecer por cada número de daño que se desvanece.
 
+### De la superauditoría del 29/9
+
+- **Los toques de la pausa** (H01): medir cuánto se desvía el dedo al tocar CONTINUAR (el desvío y el sesgo hacia
+  abajo): con 2 mm o más de desvío, o con el 2 % o más de los toques por debajo del borde, H01 pasa a alta. Y
+  confirmar en Unity el signo de `raycastPadding` (el rectángulo verde al seleccionar la imagen) antes de aplicar el
+  arreglo.
+- **El jefe en el teléfono** (amplía, con H10 y H11): además de ver que no se vuelva fácil de evitar, contar cuántas
+  invocaciones salen vacías o con uno solo en el teléfono desde la oleada 20 y en el libre cuando el nivel le gana al
+  jugador; si se elige que la invocación pase el techo, medir los FPS con 43 zombis.
+- **Las piernas de la horda** (H16): Grabar animaciones con la cámara del juego antes y después, y mirar a 30 FPS que
+  el rápido y el FASTER no se vean estroboscópicos con el tope.
+- **La noche** (H17 y H20): una foto con la calidad del teléfono (como `FotosDeLosFaroles`) del chorro de balas y las
+  tres cajas lejos de los faroles, antes y después, y otra con el gris de poca vida en 0,5; en la ciudad, la cinta y
+  el anillo a 0,2 m encima del jefe, el jugador y los zombis.
+- **El borde rojo** (H12): en un teléfono con cámara perforada o muesca, en horizontal, recibir un golpe, mirar el
+  borde del lado de la cámara y, con el arreglo, que llegue al borde real.
+- **El reloj** (H03): si `auto_time` resincroniza con el modo avión, antes de usarlo como alivio.
+- **La diagonal en PC** (H15): loguear `rb.linearVelocity.magnitude` con W y con W+D (F1 no muestra velocidad).
+- **La tienda después de la diaria** (H06): correr el caso nuevo de `PruebaDiaria`, con raycast de verdad.
+- **De los bajos sin refutar, piden play o teléfono**: H41 (el orden de `OnApplicationFocus` con la granada apuntada),
+  H50 (el `Paso` y el `Ritmo` de un tanque que vuelve del pool), H61 (auriculares Bluetooth y la música del menú), H64
+  (la latencia del audio, filmando un disparo), H77 (la luz ambiente al entrar a ShowBies1 desde el menú), H84
+  (`Progreso.Guardar` en el Profiler al subir de nivel en el libre), H85 a H90 (el `Juntar` del decorado, el HUD, el
+  aplastado, los 22 materiales, el Maximum Allowed Timestep y el GPU Instancing de los zombis) y H93 (un banco del
+  revivir y del x2).
+
 ## 5. Antes de integrar la red de anuncios
 
 La lista está en `publicacion/pasos.md`: clasificación máxima de contenido, consentimiento (UMP) con botón de
@@ -374,3 +734,122 @@ el proveedor dé un solo resultado final.
   saca ese congelado: `Caer()` antes de `Terminar` y, en el tutorial, devolverlo al inicio. Queda algo chico: una
   línea en la prueba de lógica que verifique el 116, y corregir el comentario de `PlayerHealth.cs:51-52` y el
   CLAUDE.md ("Caer al vacío no se revive", y que el kill-Z "no es decorativo", que para el jugador sí lo es).
+- **Si Unity 6 acota el pitch a 3, las escaleras y los arpegios repiten la nota de arriba** (H19; refutado en la
+  superauditoría del 29/9). Desensamblando `libunity` de 6000.3.14f1 (Android IL2CPP Release, arm64 y x86_64):
+  `AudioSource::SetPitch` guarda el valor crudo y lo pasa a cada canal sin acotar, `GetPitch` lo devuelve tal cual y
+  FMOD solo corta la frecuencia en 1.000.000 Hz (pitch ~22,7). El [−3, 3] de la documentación es `CheckConsistency`,
+  la validación de lo serializado y del inspector. El juego pide como mucho 24 semitonos (pitch 4) y todas las notas
+  suenan distintas. Queda algo chico: un comentario en `Sonidos.PitchDe` para que nadie "corrija" las tablas (verlo en
+  el editor es opcional: `s.pitch = 4f; Debug.Log(s.pitch)` imprime 4).
+- **Corregir un Descartado, «La derrota suena con `pedo.mp3`»** (H102, sin refutar): el YAML dice que sí suena
+  (`Perdiste.unity:717-735`, el `AudioSource` del objeto `Menu` con `pedo.mp3` y `m_PlayOnAwake: 1`), y el descarte
+  (`2af1549`) no anotó por qué. No es un error del juego: documentarlo como intencional en CLAUDE.md (o quitarlo si no
+  lo es) y sacarlo de esta lista.
+
+## 7. Sin refutar
+
+Los 100 hallazgos bajos de la superauditoría del 29/9 (H24 a H123), que no pasaron por la ronda `refutar:`: antes
+de arreglar uno, confirmar que pasa. El detalle de cada uno está en `auditorias/29-9/unicos.md`.
+
+No quedaron medios sin refutar. Los 100 bajos, uno por renglón (el arreglo de cada uno está en `informe.md`):
+
+- **H24** FURIA mientras dura (1,3:1) y la G recargando (2,2:1) no se leen (`BotonFuria.cs:102-106`).
+- **H25** Los avisos de misión se vacían con el juego congelado: se pisan en la pausa y suenan tras la derrota.
+- **H26** Los carteles del capítulo, de la guía de monedas y de la furia se vencen detrás de la pausa.
+- **H27** En PC, tocar el panel final del tutorial con la mira dispara (`TutorialManager.cs:177-183`).
+- **H28** Los zombis del tutorial pueden nacer a la vista, a 14 m (`TutorialManager.cs:142` y `:152`).
+- **H29** El tutorial dice que el cargador grande queda «para siempre», y dura la partida (`Textos.txt:226`).
+- **H30** Derrota con el x2: el próximo objetivo no se entera del cobro y cae dentro del halo del vídeo.
+- **H31** En PC, Espacio o Enter vuelven a comprar la última tarjeta tocada (`TarjetaMejora.prefab:2451`).
+- **H32** La granada y la furia se muestran como NIVEL 0/1, y la furia no dice qué hace (`TarjetaMejora.cs:200`).
+- **H33** Precio y saldo se truncan al mismo número (157K, 1,2 M) y la tarjeta queda gris (`FormatoNumeros.cs:26`).
+- **H34** «Mejor oleada: N» de la tienda es la completada, una menos que la alcanzada (`TiendaMejoras.cs:409`).
+- **H35** SEGUIR JUGANDO de ¿SALIR? no es píldora: VOLVER agrandado sin redondear (`ConfirmarSalir.cs:72`).
+- **H36** Tocar el COFRE y cerrar las misiones enseguida no lo abre hasta volver (`VentanaMisiones.cs:207`).
+- **H37** Al volver por MEJORAS, la barra del nivel se llena tras la tienda y suena (`VentanaLogros.cs:302`).
+- **H38** El aviso de misión pisa los botones de furia y granada en 16:9, 16:10 y 4:3 (`AvisoDeMisiones.cs:37`).
+- **H39** Sin neón lo armado en código: capítulo, guía, barra del jefe, volúmenes y el VOLVER de la diaria.
+- **H40** La diaria no sale al volver a la app en un día nuevo (`VentanaRecompensaDiaria.cs:97-131`).
+- **H41** Al perder el foco, la granada que se apuntaba se tira sola (`JoystickGranada.cs:71-80`; sin confirmar).
+- **H42** La derrota no entra en un monitor 32:9 de Windows (`Perdiste.unity:1168-1173`, match 0).
+- **H43** La embestida pega a quien la toca al arrancar, fuera de la cinta roja (`EnemyController.cs:1037`).
+- **H44** Con la derrota, el jefe va a festejar congelado en la pose de su patrón (`JefePatrones.cs:331-335`).
+- **H45** El jefe cae bajo el techo de cadáveres y en el teléfono se va de golpe (`EnemyController.cs:599-606`).
+- **H46** El zombi normal flota 10 cm: su modelo va en y −0,794 y no en −1 (`Zombi.prefab:433`).
+- **H47** Los invocados del jefe caminan con las piernas sincronizadas (`EnemyController.cs:513`).
+- **H48** El jefe muestra dos barras de vida, la flotante y la de arriba (`EnemyController.cs:845-848`).
+- **H49** Una excepción en el bloque de muerte deja un zombi inmortal que traba la oleada (`EnemyController.cs:850`).
+- **H50** Verificar en play que un tanque o un FASTER que vuelve del pool conserve `Paso` y `Ritmo`.
+- **H51** Decorados: autos sobre el vacío, faroles en autos, tumbas encimadas y una cerca que el jugador cruza.
+- **H52** En la ciudad el jugador y los zombis se hunden 14 cm en las veredas (`ConstructorEscenarios.cs:467`).
+- **H53** Las cajas nacen en filas de Z por el `Random.Range` de enteros (`PowerUp.cs:67`).
+- **H54** El cartel de la oleada pasa a mayúsculas con la cultura del teléfono: en turco sale COİNS.
+- **H55** «Nivel» nombra el del jugador y el del libre en la misma pantalla (`Textos.txt:91` y `:178`).
+- **H56** «faltan 1» en la tarjeta de la tienda (`TarjetaMejora.cs:262`).
+- **H57** El porcentaje sale «30%» en la tienda y «30 %» en los logros (`Mejora.cs:107`, `Textos.txt:105`).
+- **H58** El cartel de neón ZOMBIS de la ciudad está en español (`ConstructorEscenarios.cs:364`).
+- **H59** Redacción: tres filas en inglés poco naturales y una en español desparejada (`Textos.txt:105`, `:225`).
+- **H60** `IconoDeBoton` mide el texto con su margen y el icono queda ~4 veces más lejos (`IconoDeBoton.cs:37`).
+- **H61** Conectar auriculares Bluetooth corta la música del menú hasta recargarlo (`FuenteConVolumen.cs:33`).
+- **H62** Amplía «El limitador de sonido no llega a todo»: al revivir, la explosión y el cartel pasan la escala.
+- **H63** El control MÚSICA de la pausa no cambia nada que se oiga (`VolumenEnPausa.cs:34`; decide Ivan).
+- **H64** El buffer de audio en 1024 puede atrasar el sonido respecto de la imagen (`AudioManager.asset:12`).
+- **H65** Amplía «"Gana N monedas"...»: «completa N oleadas» sale en un tercio repitiendo las primeras.
+- **H66** Amplía «Los jefes de las misiones y del semanal se farmean»: cuenta m/10 jefes y no floor(m/10).
+- **H67** IMPARABLE (combo x25/x50/x100) se regala en el modo libre (`ContadorCombo.cs:81-86`; decide Ivan).
+- **H68** `Guardar` falla callado con el almacenamiento lleno: la sesión queda en memoria (`Progreso.cs:797`).
+- **H69** `Cargar` prefiere un principal viejo a un `.tmp` entero y más nuevo (`Progreso.cs:834-841`).
+- **H70** El reloj confiable puede quedar atrasado para un jugador legítimo hasta reiniciar; va con H03.
+- **H71** Amplía «Cerrar la app en ¡HAS MUERTO!...»: con red real, el x2 se pierde si Android mata la app.
+- **H72** Los botones de la derrota andan mientras se pide el vídeo del x2 (`MenuPerdiste.cs:61`, `:71`, `:80`).
+- **H73** Amplía «Antes de integrar la red de anuncios»: el x2 de la diaria se pregunta una sola vez.
+- **H74** Va con «Antes de integrar la red de anuncios»: el atrás que cierra un vídeo real llegaría a Unity.
+- **H75** Amplía «Antes de integrar la red de anuncios»: AdMob pide App ID, EDM4U y callbacks (`pasos.md`).
+- **H76** Amplía «Antes de integrar la red de anuncios»: la APK de prueba fuerza Falso y no probaría el SDK.
+- **H77** `FondoMenu` y `CapitulosDeEscenario` limpian `RenderSettings` en `OnDestroy` (inerte hoy, sin verificar).
+- **H78** Las ventanas del menú apagan su `Abierta` estático solo si el panel sigue vivo.
+- **H79** `installLocation=preferExternal` (`ProjectSettings.asset:181`; no mueve `progreso.json`).
+- **H80** El paquete preview ai.assistant mete tres DLL de runtime en el juego (`manifest.json:3`).
+- **H81** `CalidadDeAndroid` lee `QualitySettings` del disco y no lo cargado en Unity (confianza baja).
+- **H82** Las capturas y el banner de la ficha de Play son de antes de la noche y del neón.
+- **H83** El contador de FPS se ve en la versión de Play y en las capturas (`ContadorFps.cs:15-25`).
+- **H84** `Progreso.Guardar` hace fsync y dos renombres en el hilo principal en plena acción (sin medir).
+- **H85** Amplía «El decorado del capítulo siguiente se arma en plena pelea»: el `Juntar` de la 11 y la 21.
+- **H86** El HUD rearma textos en cada cuadro: las balas, los colores de monedas y combo, los radiales.
+- **H87** El aplastado del golpe escala la raíz física del zombi en cada paso (`EnemyController.cs:930-936`).
+- **H88** Amplía «El piso: sin Specular Highlights...»: son 22 materiales más del decorado.
+- **H89** Maximum Allowed Timestep 0,333: un tirón se paga con hasta 16 pasos de física (`TimeManager.asset`).
+- **H90** Amplía «Los zombis: GPU Instancing...»: solo juntaría las cabezas.
+- **H91** El tutorial busca la granada en toda la escena en cada cuadro (`TutorialManager.cs:86-94`).
+- **H92** Muerte animada juega la oleada guardada y falla sola en múltiplos de 10 y desde la ~35.
+- **H93** El revivir y el x2 de la derrota no los recorre ningún banco.
+- **H94** Amplía «Las dos pruebas son circulares»: son siete, y el 120 y el 5 no se comparan con el prefab.
+- **H95** El libre no lo juega ningún banco, ni se prueba que desbloqueado lleve a la escena 1.
+- **H96** Tienda, Tutorial y MenuYTienda hacen la acción por atrás si el camino real falla, y pasan igual.
+- **H97** El arreglo del 27/9 en `JefePatrones.Empezar` no lo cubre ninguna prueba.
+- **H98** «Reiniciar todo» abre un modal y los atajos dicen que guardaron en solo lectura (`HerramientasProgreso`).
+- **H99** Con dos copias de ShowBies abiertas, los respaldos de los bancos se pisan (`RespaldoDelBanco.cs:23`).
+- **H100** La restauración de los bancos quedó duplicada, en parte sin efecto e incompleta.
+- **H101** CLAUDE.md manda cortar el input con `Pausado`; lo que corta es `JuegoCongelado` (paso 9 de la receta).
+- **H102** Corrige el Descartado «La derrota suena con `pedo.mp3`»: suena (`Perdiste.unity:717-735`).
+- **H103** El menú no usa la noche del cementerio desde el 25/9: cielo azul sobre la tierra violeta.
+- **H104** «Un enemigo nuevo no pide tocar código» es falso desde el bestiario y la v6 (CLAUDE.md:1972).
+- **H105** La trampa de QualitySettings dice que nada lo delata, y la build ya se niega (CLAUDE.md:1845).
+- **H106** Frases viejas en CLAUDE.md: «único momento», «hoy, el x2», «todavía no los muestra nada».
+- **H107** «Mismo mapa que el libre»: el decorado de las oleadas cambia cada 10 (CLAUDE.md:18).
+- **H108** Desactualizaciones chicas del layout y del texto de CLAUDE.md.
+- **H109** Comentarios de la derrota vieja: jugador destruido y partida congelada (`CamaraJugador.cs:127`).
+- **H110** `VigiaAplicacion` guarda al ir a segundo plano, no al perder el foco como dicen el código y CLAUDE.md.
+- **H111** La diaria también sale con la primera oleada completada, no solo con la primera partida terminada.
+- **H112** La niebla no se ve en la partida y el borde del mapa queda a la vista, aunque la doc diga que lo tapa.
+- **H113** `LeerEscena` lee la escena abierta en memoria, no el disco (`PruebasMejoras.cs:1605-1622`).
+- **H114** `pasos.md` no refleja el estado de Play, y el repo sigue público con `gh-pages`.
+- **H115** `MainMenu.PlayGame` no lo llama nadie y CLAUDE.md lo da como camino al libre.
+- **H116** Anuncios: código muerto, comentarios viejos y el cartel del anuncio de prueba con voseo y sin Bangers.
+- **H117** `FondoMenu`: la rama del día parece muerta pero sostiene el piso de noche (`FondoMenu.cs:140-150`).
+- **H118** `Assets/NewAudioMixer.mixer`, sin trackear: un mixer vacío que no usa nadie.
+- **H119** Assets propios sin referencias (12 .mat de halos, 3 materiales y 2 .jpg de licencia desconocida).
+- **H120** Overrides y claves serializadas de campos que ya no existen (tres escenas, Moneda y ZombiBOSS).
+- **H121** Cinco paquetes sin uso en el manifest (`manifest.json:4`, `:5`, `:8`, `:9` y `:11`).
+- **H122** Terceros sin uso: ~19 MB y 205 archivos (Gridbox, docs de TMP, ejemplos del Joystick Pack).
+- **H123** Las cuatro ventanas del menú y los doce bancos están copiados; `PruebasMejoras` tiene 4.578 líneas.

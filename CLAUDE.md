@@ -76,6 +76,8 @@ Y **fuera del proyecto de Unity**, en la raíz del repo:
 
 ```
 Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README
+auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
+pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
