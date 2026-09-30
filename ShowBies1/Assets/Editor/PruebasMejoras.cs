@@ -1444,11 +1444,26 @@ public static class PruebasMejoras
         inf.Verdadero("build: con otra escena en el medio no sale", ConstructorAndroid.ProblemaDeEscenas(conOtra) != null);
         inf.Verdadero("build: sin escenas no sale", ConstructorAndroid.ProblemaDeEscenas(new List<string>()) != null);
 
+        // El versionCode del AAB tiene que pasar al del ultimo armado (Play no deja repetirlo ni
+        // bajarlo), y el registro esta en el repo (superauditoria del 29/9).
+        inf.Verdadero("build: el AAB sale con un versionCode mayor al ultimo", ConstructorAndroid.ProblemaDeVersionCode(6, 5) == null);
+        inf.Verdadero("build: el AAB no sale con el mismo versionCode que el ultimo", ConstructorAndroid.ProblemaDeVersionCode(5, 5) != null);
+        inf.Verdadero("build: el AAB no sale con un versionCode menor", ConstructorAndroid.ProblemaDeVersionCode(4, 5) != null);
+        inf.Verdadero("build: sin registro, cualquier versionCode sale", ConstructorAndroid.ProblemaDeVersionCode(1, 0) == null);
+        inf.Verdadero("build: esta el registro del ultimo AAB, con el 5 o mas (" + ConstructorAndroid.LeerUltimoVersionCode() + ")",
+                      ConstructorAndroid.LeerUltimoVersionCode() >= 5);
+        // La Storage Location decide donde vive progreso.json en Android: otra lo pierde.
+        inf.Verdadero("build: con la Storage Location esperada sale", ConstructorAndroid.ProblemaDeUbicacion(Progreso.UbicacionEsperada) == null);
+        inf.Verdadero("build: con Force Internal no sale", ConstructorAndroid.ProblemaDeUbicacion(2) != null);
+
         // Y lo que tiene hoy el proyecto pasa: si no, la build se va a negar.
         inf.Verdadero("build: el proyecto tiene el paquete y el nombre de Play (si falla, revertir ProjectSettings/ProjectSettings.asset)",
                       ConstructorAndroid.ProblemaDelAab(ConstructorAndroid.PaqueteAndroid, PlayerSettings.productName) == null);
         inf.Verdadero("build: las escenas prendidas del proyecto son las del juego, en su orden",
                       ConstructorAndroid.ProblemaDeEscenas(ConstructorAndroid.EscenasHabilitadas()) == null);
+        inf.Verdadero("build: la Storage Location del proyecto es la esperada (" + ConstructorAndroid.UbicacionDelProgreso()
+                      + "; si falla, revertir ProjectSettings/ProjectSettings.asset)",
+                      ConstructorAndroid.ProblemaDeUbicacion(ConstructorAndroid.UbicacionDelProgreso()) == null);
     }
 
     // Donde cae la granada: PlayerController.PuntoEnElPiso, estatica para probarla sin input.

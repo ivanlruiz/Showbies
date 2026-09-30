@@ -34,6 +34,8 @@ public static class ConstructorAndroid
     const string RutaKeystoreLocal = "keystore.local";
     const string SufijoPaquetePrueba = ".prueba";
     const string SufijoNombrePrueba = " (prueba)";
+    // El versionCode del ultimo AAB armado, versionado en el repo (ver ProblemaDeVersionCode).
+    public const string RutaUltimoAab = "../publicacion/ultimo_aab.txt";
 
     // El paquete con que la app esta registrada en Play Console: una app publicada no lo
     // cambia nunca, y con otro Play no acepta el AAB.
@@ -160,6 +162,61 @@ public static class ConstructorAndroid
             + ": los indices estan escritos en el codigo (ver la tabla de escenas en CLAUDE.md)";
     }
 
+    // Por que el AAB no puede salir con ese versionCode, o null si puede. Play no deja repetir
+    // uno ya subido ni bajarlo, y el rechazo llega recien al subir: el 5 ya salio con la 1.2.0
+    // (superauditoria del 29/9). 'ultimo' es el del ultimo AAB armado (LeerUltimoVersionCode),
+    // 0 si no hay registro.
+    public static string ProblemaDeVersionCode(int actual, int ultimo)
+    {
+        if (actual > ultimo) return null;
+        return "el versionCode es " + actual + " y el ultimo AAB se armo con el " + ultimo
+            + ": Play no deja repetirlo ni bajarlo. Subilo a " + (ultimo + 1)
+            + " o mas (Player Settings > Other Settings > Bundle Version Code), y la version si hace falta.";
+    }
+
+    // El versionCode del ultimo AAB armado: la primera linea que no es un comentario de
+    // publicacion/ultimo_aab.txt, o 0 si no hay archivo o no se entiende.
+    public static int LeerUltimoVersionCode()
+    {
+        if (!File.Exists(RutaUltimoAab)) return 0;
+        foreach (var linea in File.ReadAllLines(RutaUltimoAab))
+        {
+            var l = linea.Trim();
+            if (l.Length == 0 || l.StartsWith("#")) continue;
+            int n;
+            return int.TryParse(l, out n) ? n : 0;
+        }
+        return 0;
+    }
+
+    // Cada AAB armado cuenta como usado, aunque no se suba: asi nadie tiene que acordarse de
+    // anotarlo, y un AAB viejo que se suba despues no choca con uno nuevo.
+    static void AnotarUltimoVersionCode(int versionCode)
+    {
+        File.WriteAllText(RutaUltimoAab, versionCode + "\n"
+            + "# El versionCode del ultimo AAB armado. Lo escribe ConstructorAndroid al armar uno, y no deja\n"
+            + "# armar otro con este numero o uno menor: Play no los acepta.\n");
+    }
+
+    // La Storage Location de Android (AndroidPreferredDataLocation en ProjectSettings), que
+    // decide la carpeta del progreso (ver Progreso.UbicacionEsperada).
+    public static int UbicacionDelProgreso()
+    {
+        var ajustes = new SerializedObject(Unsupported.GetSerializedAssetInterfaceSingleton("PlayerSettings"));
+        var p = ajustes.FindProperty("AndroidPreferredDataLocation");
+        return p != null ? p.intValue : -1;
+    }
+
+    // Por que la build no puede salir con esa Storage Location, o null si puede: con otra, el
+    // juego busca progreso.json en otra carpeta y arranca de cero, sin avisar.
+    public static string ProblemaDeUbicacion(int actual)
+    {
+        if (actual == Progreso.UbicacionEsperada) return null;
+        return "la Storage Location de Android (AndroidPreferredDataLocation) es " + actual + " y tiene que ser "
+            + Progreso.UbicacionEsperada + " (PreferExternal): con otra, el juego busca el progreso en otra carpeta "
+            + "y arranca de cero. Revertir ProjectSettings/ProjectSettings.asset; ver Progreso.UbicacionEsperada.";
+    }
+
     // Cambia el proveedor del asset para esta build y devuelve el que habia, o null
     // si no hay asset. Al terminar se restaura, asi la build no deja el asset
     // cambiado en el repo.
@@ -199,6 +256,14 @@ public static class ConstructorAndroid
 
     static void ArmarAab()
     {
+        // Antes de tocar el keystore: con un versionCode ya usado, Play lo rechaza al subir.
+        string problemaDeVersion = ProblemaDeVersionCode(PlayerSettings.Android.bundleVersionCode, LeerUltimoVersionCode());
+        if (problemaDeVersion != null)
+        {
+            Fallar(problemaDeVersion);
+            return;
+        }
+
         var datos = LeerKeystoreLocal();
         if (datos == null) return;
 
@@ -317,6 +382,13 @@ public static class ConstructorAndroid
             return;
         }
 
+        string problemaDeUbicacion = ProblemaDeUbicacion(UbicacionDelProgreso());
+        if (problemaDeUbicacion != null)
+        {
+            Fallar(problemaDeUbicacion);
+            return;
+        }
+
         try
         {
             BuildReport reporte = BuildPipeline.BuildPlayer(
@@ -324,6 +396,7 @@ public static class ConstructorAndroid
 
             var s = reporte.summary;
             if (s.result != BuildResult.Succeeded) fallo = true;
+            else if (rutaSalida == RutaAab) AnotarUltimoVersionCode(PlayerSettings.Android.bundleVersionCode);
             // La version y el versionCode, para saber que se armo sin abrir el editor: el
             // versionCode tiene que subir en cada subida a Play.
             string resumen =

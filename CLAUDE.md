@@ -1707,6 +1707,13 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   IL2CPP + ARM64, minSdk 25, **targetSdk 36** (fijo: Google lo exige a las apps nuevas desde el 31/8/2026, y en
   "automático" depende del SDK que tenga instalado la máquina), `bundleVersion` / `AndroidBundleVersionCode` en
   `ProjectSettings.asset` (el versionCode tiene que subir en cada subida a la Play Store).
+- **El AAB no sale con un versionCode ya usado** (`ConstructorAndroid.ProblemaDeVersionCode`, antes de leer el
+  keystore): el del último AAB armado está en `publicacion/ultimo_aab.txt`, versionado, que la build escribe sola
+  cada vez que arma uno, y Play no acepta repetirlo ni bajarlo (el rechazo llegaba recién al subir; el 5 ya salió con
+  la 1.2.0). **Y ninguna build sale si cambió la Storage Location** (`AndroidPreferredDataLocation`, que decide la
+  carpeta de `progreso.json`: `Progreso.UbicacionEsperada`, PreferExternal): pasarla a Force Internal, el arreglo
+  "obvio" de la política de privacidad, hace que el juego no encuentre el progreso de nadie y arranque de cero. Una
+  mudanza al interno se hace aparte, con cuidado (ver `pendientes.md`). La prueba de lógica mira las dos.
 - Orientación: rotación automática sólo entre los dos horizontales (`defaultScreenOrientation: 4`, sin
   portrait). Antes estaba fija en uno solo (`reverseLandscape` en el manifest) y no giraba con el
   teléfono al revés.

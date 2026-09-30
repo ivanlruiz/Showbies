@@ -1096,6 +1096,14 @@ public static class Progreso
         return entrada;
     }
 
+    // Donde vive el archivo en Android lo decide un ajuste del proyecto, Storage Location
+    // (AndroidPreferredDataLocation en ProjectSettings): 1 es PreferExternal, 2 ForceInternal.
+    // persistentDataPath sale de ahi, y pasarlo a Force Internal (el arreglo "obvio" de la
+    // politica de privacidad) haria que el juego no encuentre el progreso de nadie y arranque
+    // de cero. No hay que cambiarlo sin una mudanza: ConstructorAndroid no arma la APK ni el
+    // AAB si no es este, y la prueba de logica lo mira (superauditoria del 29/9).
+    public const int UbicacionEsperada = 1;
+
     private static string Ruta()
     {
         if (carpetaPruebas == null) return Path.Combine(Application.persistentDataPath, NombreArchivo);

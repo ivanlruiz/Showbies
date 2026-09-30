@@ -33,7 +33,7 @@ evidencia concreta): 15 confirmados, 7 parciales y 1 refutado, y ninguno quedó 
 marcado "sin medir" sale de un modelo: medirlo antes de arreglar. Lo nuevo del tramo sin auditar: los halos de neón
 que roban toques (H01), el botón de pausa encima de los carteles (H13), la noche que apaga las balas y las cajas
 (H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23). H01, H05,
-H06 y H17 se arreglaron el 29/9, y H13, H15, H20, H21, H22 y H23 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
+H06 y H17 se arreglaron el 29/9, y H07, H09, H13, H15, H20, H21, H22 y H23 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
 `PruebaTutorial` y el banco nuevo `PruebaReiniciar`. Los cinco
 que pedían una decisión (H03, H04, H08, H11 y H18) los decidió Ivan ese mismo día y pasaron a la sección 2; el paso
 del tanque, que venía con H16, queda como está (sección 6).
@@ -46,9 +46,9 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H04: retomar vuelve opcional la muerte en oleadas | parcial: en monedas no es granja | baja (era media) | 2 |
 | H05: REINICIAR y la R sin confirmación | confirmado | media (baja con H01 arreglado) | arreglado el 29/9 |
 | H06: la tienda compra con un toque de la diaria | confirmado | media | arreglado el 29/9 |
-| H07: el versionCode 5 ya se usó | parcial: ya estaba en TAREAS | baja (era media) | 2 |
+| H07: el versionCode 5 ya se usó | parcial: ya estaba en TAREAS | baja (era media) | arreglado el 30/9 |
 | H08: la librería de reseñas y Seguridad de los datos | parcial: la lectura queda abierta | baja (era media) | 2 |
-| H09: Storage Location decide dónde vive `progreso.json` | parcial: no destruye, se revierte | baja (era media) | 2 |
+| H09: Storage Location decide dónde vive `progreso.json` | parcial: no destruye, se revierte | baja (era media) | arreglado el 30/9 |
 | H10: la invocación del jefe sale vacía con el techo lleno | parcial: el arreglo propuesto no alcanza | media | 2 |
 | H11: al jefe se lo mata sin que ataque | confirmado | media | 2 |
 | H12: el borde rojo se corta en el área segura | confirmado | baja (era media) | 2 |
@@ -340,28 +340,6 @@ privacidad publicada.
   furia contada, en 0 en `SubsystemRegistration`; `ContarFuria` cuenta solo si pasaron `enfriamiento` segundos, y los
   descuenta. La furia sigue arrancando lista y el objetivo mide exactamente N×120 s. No llevar el enfriamiento entre
   partidas con tiempo real: rompe la pausa y le cambia el juego al honesto (eso lo decidiría Ivan).
-- **El versionCode 5 ya se usó y la build del AAB no lo revisa** (baja, era media; H07, parcial).
-  `ProjectSettings.asset:178` dice 5 y `:147`, 1.2.0; el AAB del 18/9 (`16d8a38`) salió con el 5 (leído de su
-  manifiesto) y Play no deja repetirlo. `ArmarAab` y `Construir` revisan seis cosas y el versionCode no: solo lo
-  anotan (`ConstructorAndroid.cs:332`). `TAREAS.md:130` ya dice subir a 6, y el rechazo llega al subir, con el mensaje
-  exacto. De paso, `publicacion/pasos.md:55` todavía dice «versionCode 4 y versión 1.1.0», contra su propia línea 33.
-  **Arreglo**: subir a 6 antes de armar; `publicacion/ultimo_aab.txt` versionado (arranca en 5); una función pura
-  `ConstructorAndroid.ProblemaDeVersionCode(actual, ultimo)` que `ArmarAab` mire antes de tocar el keystore; y que
-  `Construir`, con un AAB exitoso, escriba el versionCode en ese archivo (así cada AAB armado cuenta como usado y
-  nadie tiene que acordarse de actualizarlo). Casos en `PruebasMejoras.cs:1410-1442`, y corregir `pasos.md:55` y
-  CLAUDE.md.
-- **Dónde vive `progreso.json` lo decide un ajuste que nada vigila** (baja, era media; H09, parcial).
-  `AndroidPreferredDataLocation: 1` (`ProjectSettings.asset:182`) es PreferExternal (el enum de 6000.3.14:
-  PreferExternal = 1, ForceInternal = 2; el `boot.config` de la APK dice 1). En el Inspector se llama **Storage
-  Location**. Pasarlo a Force Internal, el arreglo "obvio" de la política, hace que `Progreso.Ruta()` (`:1099-1101`)
-  mire la carpeta interna, que `Leer` dé `NoExiste` en los tres candidatos y que el juego arranque de cero, sin
-  `soloLectura`. No destruye (volver a PreferExternal lo recupera, menos lo jugado entretanto) y hoy solo hay
-  probadores. Amplía «`progreso.json` está en el almacenamiento externo»: si Unity cae al interno con el externo sin
-  montar (está documentado; improbable con minSdk 25), queda un `progreso.json` casi vacío en el interno, y una
-  mudanza que tome "el interno existe" como "ya se mudó" dejaría huérfano el verdadero. **Arreglo**: una constante en
-  el código (`Progreso.UbicacionEsperada`) y una guarda en `ProbarCalidadDeAndroid` y en `ConstructorAndroid` (un
-  `ProblemaDeUbicacion` que niegue la APK y el AAB). La mudanza, si se hace, con una marca propia en `PlayerPrefs`
-  (`ProgresoMudado`) y, si hay archivo en las dos carpetas, eligiendo por contenido; y antes de producción.
 - **El borde rojo del daño se corta en recto del lado de la cámara del teléfono** (baja, era media; H12, confirmado).
   `androidRenderOutsideSafeArea: 1` (`ProjectSettings.asset:71`) y `VinetaDanio` cuelga de `CanvasHelper`, que se
   ajusta a `Screen.safeArea` (`CanvasHelper.cs:16-29`; `WaveMode.unity:418-445`, igual en ShowBies1 y Tutorial). Con

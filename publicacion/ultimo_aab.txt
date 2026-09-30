@@ -1,0 +1,3 @@
+5
+# El versionCode del ultimo AAB armado. Lo escribe ConstructorAndroid al armar uno, y no deja
+# armar otro con este numero o uno menor: Play no los acepta.

@@ -52,8 +52,10 @@ en el menú ⋮ de abajo a la derecha.
 - [x] **Target API 36**, obligatorio para apps nuevas desde el 31/8/2026. Estaba en "automático", que depende de
       qué SDK tenga instalado la máquina.
 - [x] **64 bits** (ARM64 + IL2CPP), que Play exige.
-- [x] **versionCode 4** y versión **1.1.0**. Cada subida a Play necesita un versionCode mayor que el anterior:
-      si rechazan un AAB y subís otro, hay que volver a subirlo.
+- [ ] **versionCode 6** para la próxima subida (la última, la 1.2.0, salió con el 5). Cada subida a Play necesita
+      un versionCode mayor que el anterior: si rechazan un AAB y subís otro, hay que volver a subirlo. El
+      versionCode del último AAB armado queda en `publicacion/ultimo_aab.txt`, que lo escribe la build, y la build
+      del AAB se niega a salir con ese número o uno menor.
 - [x] **Sin anuncios en esta versión** (`ConfigAnuncios.proveedor = Nulo`). Ver "Anuncios" abajo.
 - [x] Orientación horizontal en las dos rotaciones, botón atrás de Android, icono de app.
 
