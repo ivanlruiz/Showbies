@@ -104,6 +104,13 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private const float MargenContraLasParedes = 1f;
     private static readonly RaycastHit[] golpesContraLasParedes = new RaycastHit[8];
 
+    // La altura de la linea de la carga y del anillo de la invocacion: la de la mancha de
+    // sangre, por encima de la vereda y el cordon de la ciudad. A 0,06 m las veredas (hasta
+    // 0,18) tapaban la mitad de la linea en la mayoria de las cargas, y justo el tramo donde
+    // esta parado el jugador (superauditoria del 29/9). La cinta pinta los 20 cm de abajo de
+    // lo que la pisa: el mismo costo que ya se acepto con la mancha.
+    public const float AlturaDelAviso = ManchaDeSangre.AlturaSobreElPiso;
+
     // El paso de las piernas en cada patron, con los parametros Paso y Ritmo del estado
     // Andar (ver ConstructorAnimaciones). Hasta el 24/9 no se tocaban: al "frenarse" para
     // avisar, invocar o aturdido caminaba en el lugar, y embestia a 16 m/s -ocho veces lo
@@ -630,7 +637,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         linea.loop = false;
         linea.positionCount = 2;
         Vector3 desdeAca = transform.position;
-        desdeAca.y = 0.06f;
+        desdeAca.y = AlturaDelAviso;
         linea.SetPosition(0, desdeAca);
         linea.SetPosition(1, desdeAca + direccion * (velocidadCarga * duracionCarga + frenteDelCuerpo));
     }
@@ -693,7 +700,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         linea.loop = true;
         linea.positionCount = Puntos;
         Vector3 centro = transform.position;
-        centro.y = 0.06f;
+        centro.y = AlturaDelAviso;
         for (int i = 0; i < Puntos; i++)
         {
             float a = i * Mathf.PI * 2f / Puntos;

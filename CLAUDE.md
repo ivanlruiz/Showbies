@@ -464,7 +464,9 @@ quedaba fuera de pantalla y la invocación no llegaba a grabarse. **La línea y 
 
 Las líneas usan el material del indicador de la granada y el rugido es `explosion.wav` más grave, y van **planas
 sobre el piso** (`LineAlignment.TransformZ` con el objeto rotado −90° en X): con la alineación de siempre, que mira a
-la cámara, la cinta quedaba parada y medio enterrada.
+la cámara, la cinta quedaba parada y medio enterrada. **Van a 0,2 m** (`JefePatrones.AlturaDelAviso`, la altura de la
+mancha de sangre), por encima de la vereda y el cordón de la ciudad: a 0,06 m las veredas tapaban la mitad de la línea
+en la mayoría de las cargas (superauditoría del 29/9). Los anillos de la granada, lo mismo (`Granade.AlturaDelAnillo`).
 
 **Las invocaciones respetan el techo de población.** El generador de cada escena lo fija al empezar
 (`EnemyController.FijarTecho`, 60 o 35 en móvil) y el jefe saca `min(los suyos, maxInvocadosVivos,
@@ -1633,6 +1635,8 @@ en el editor con target Android los joysticks se veían pero no respondían.
 Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`), no del proyecto, y hace que
 `Plataforma.EsMovil` dé falso en el editor aunque el target sea Android. Se aplica al entrar en play. Ojo que
 también cambia los techos que dependen de la plataforma: 60 zombis vivos y 150 monedas en vez de 35 y 80.
+**El teclado va topado a 1 en diagonal** (`PlayerController.DireccionDelTeclado`), como el joystick: hasta el 30/9
+W+D daba 1,41 y en PC se corría un 41 % más rápido que en el teléfono.
 
 **En PC el puntero es una mira** mientras se juega (pedido de Ivan): `CursorMira`, en la raíz de `MenuPausa.prefab`, así
 está en las tres escenas de juego. La textura es `Sprites/UI/Mira.png`, importada como **Cursor** (legible, RGBA32 y sin

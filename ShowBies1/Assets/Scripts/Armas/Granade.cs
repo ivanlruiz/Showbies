@@ -105,7 +105,12 @@ public class Granade : MonoBehaviour
         indicador.gameObject.SetActive(true);
     }
 
-    // Un circulo apenas por encima del piso, con los puntos en espacio de mundo.
+    // La altura del anillo (el de la explosion y el de apuntar, en PlayerController): la de la
+    // mancha de sangre, por encima de la vereda y el cordon de la ciudad, que a 0,05 m lo
+    // tapaban en las diez oleadas de la ciudad (superauditoria del 29/9).
+    public const float AlturaDelAnillo = ManchaDeSangre.AlturaSobreElPiso;
+
+    // Un circulo por encima del piso, con los puntos en espacio de mundo.
     public static void DibujarAnillo(LineRenderer linea, Vector3 centro, float radio, int segmentos = 48)
     {
         linea.useWorldSpace = true;
@@ -114,7 +119,7 @@ public class Granade : MonoBehaviour
         for (int i = 0; i < segmentos; i++)
         {
             float angulo = i * Mathf.PI * 2f / segmentos;
-            linea.SetPosition(i, new Vector3(centro.x + Mathf.Cos(angulo) * radio, 0.05f, centro.z + Mathf.Sin(angulo) * radio));
+            linea.SetPosition(i, new Vector3(centro.x + Mathf.Cos(angulo) * radio, AlturaDelAnillo, centro.z + Mathf.Sin(angulo) * radio));
         }
     }
 

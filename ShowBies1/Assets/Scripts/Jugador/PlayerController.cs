@@ -151,9 +151,18 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // La direccion de los dos ejes del teclado, topada a 1: con los dos juntos (W+D) daba 1,41
+    // y en diagonal se corria un 41 % mas rapido, 21 m/s contra el FASTER a 12 (superauditoria
+    // del 29/9). El joystick del telefono ya viene normalizado. Conserva la rampa de GetAxis y
+    // el umbral de "run". Estatica para probarla sin input.
+    public static Vector3 DireccionDelTeclado(float horizontal, float vertical)
+    {
+        return Vector3.ClampMagnitude(new Vector3(horizontal, 0f, vertical), 1f);
+    }
+
     private void HandleMovement()
     {
-        moveInput = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
+        moveInput = DireccionDelTeclado(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
         moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad;
 
         if (moveInput.magnitude > 0.1f)

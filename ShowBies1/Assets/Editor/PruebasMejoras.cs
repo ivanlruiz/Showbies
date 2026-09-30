@@ -1339,6 +1339,13 @@ public static class PruebasMejoras
             inf.Verdadero("horda: la ciudad tiene manzanas con vereda", piezas > 0);
             inf.Verdadero("horda: la mancha de sangre queda por encima de la vereda y el cordon de la ciudad (" + Numero(techo, "0.00") + " m)",
                           piezas > 0 && ManchaDeSangre.AlturaSobreElPiso > techo);
+            // Lo mismo con los avisos del piso: la linea de la carga y el anillo de la invocacion
+            // del jefe, y los anillos de la granada. A 0,06 y 0,05 m las veredas los tapaban
+            // (superauditoria del 29/9).
+            inf.Verdadero("horda: los avisos del jefe van por encima de la vereda y el cordon (" + Numero(JefePatrones.AlturaDelAviso, "0.00") + " m)",
+                          piezas > 0 && JefePatrones.AlturaDelAviso > techo);
+            inf.Verdadero("horda: los anillos de la granada van por encima de la vereda y el cordon (" + Numero(Granade.AlturaDelAnillo, "0.00") + " m)",
+                          piezas > 0 && Granade.AlturaDelAnillo > techo);
         }
     }
 
@@ -1463,6 +1470,12 @@ public static class PruebasMejoras
         inf.Cerca("granada: cae en el piso aunque el origen y lo apuntado esten en otra altura", 0, p.y, 1e-5);
         p = PlayerController.PuntoEnElPiso(origen, origen + new Vector3(0.5f, 0f, 0f), adelante, 8f, 8f);
         inf.Verdadero("granada: con minima = maxima, como el toque rapido del telefono, siempre a esa distancia", Cerca(p, new Vector3(10f, 0f, 3f)));
+
+        // El teclado de PC en diagonal no corre mas que derecho (superauditoria del 29/9).
+        inf.Cerca("teclado: W+D mide 1, como W sola", 1f, PlayerController.DireccionDelTeclado(1f, 1f).magnitude, 1e-4);
+        inf.Cerca("teclado: W sola mide 1", 1f, PlayerController.DireccionDelTeclado(0f, 1f).magnitude, 1e-4);
+        inf.Cerca("teclado: la rampa de GetAxis se conserva (0,5 mide 0,5)", 0.5f, PlayerController.DireccionDelTeclado(0.5f, 0f).magnitude, 1e-4);
+        inf.Verdadero("teclado: en diagonal va a 45 grados", Cerca(PlayerController.DireccionDelTeclado(1f, 1f), new Vector3(0.7071f, 0f, 0.7071f)));
 
         // La tarjeta de la granada dice cada cuanto se tira ("granada cada 5 s") con el numero
         // escrito a mano en la tabla, y el de verdad es PlayerController.granadaCooldown, del

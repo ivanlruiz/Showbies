@@ -33,7 +33,7 @@ evidencia concreta): 15 confirmados, 7 parciales y 1 refutado, y ninguno quedó 
 marcado "sin medir" sale de un modelo: medirlo antes de arreglar. Lo nuevo del tramo sin auditar: los halos de neón
 que roban toques (H01), el botón de pausa encima de los carteles (H13), la noche que apaga las balas y las cajas
 (H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23). H01, H05,
-H06 y H17 se arreglaron el 29/9, y H13, H21, H22 y H23 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
+H06 y H17 se arreglaron el 29/9, y H13, H15, H20, H21, H22 y H23 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
 `PruebaTutorial` y el banco nuevo `PruebaReiniciar`. Los cinco
 que pedían una decisión (H03, H04, H08, H11 y H18) los decidió Ivan ese mismo día y pasaron a la sección 2; el paso
 del tanque, que venía con H16, queda como está (sección 6).
@@ -54,12 +54,12 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H12: el borde rojo se corta en el área segura | confirmado | baja (era media) | 2 |
 | H13: la pausa del teléfono tapa lo de arriba al centro | confirmado | media | arreglado el 30/9 |
 | H14: MODO LIBRE bloqueado con el halo verde | confirmado | baja (era media) | 2 |
-| H15: en PC se corre un 41 % más rápido en diagonal | confirmado | baja (era media) | 2 |
+| H15: en PC se corre un 41 % más rápido en diagonal | confirmado | baja (era media) | arreglado el 30/9 |
 | H16: los zombis patinan (el paso del tanque quedó como está, en la 6) | confirmado, y el tanque también | media | 2 |
 | H17: de noche las balas y las cajas se ven oscuras | confirmado | media | arreglado el 29/9 |
 | H18: los edificios de la ciudad tapan al jugador | confirmado | media | 2 |
 | H19: el pitch acotado a 3 | refutado | — | 6 |
-| H20: las veredas tapan la línea del jefe | confirmado, y la granada también | media | 2 |
+| H20: las veredas tapan la línea del jefe | confirmado, y la granada también | media | arreglado el 30/9 |
 | H21: la caja de arma del tutorial detrás del panel | confirmado | baja (era media) | arreglado el 30/9 |
 | H22: un banco cortado secuestra el próximo Play | confirmado | media | arreglado el 30/9 |
 | H23: los bancos abren escenas sin mirar si están sucias | confirmado | media | arreglado el 30/9 |
@@ -276,17 +276,6 @@ privacidad publicada.
   rápido 4, FASTER 4). Con tope 4 el rápido cubre el 64 % y el FASTER el 36 %: el FASTER no se arregla entero sin
   tocar su escala o su velocidad. El tanque queda como está (decidido el 29/9): la función no lo toca. Una prueba
   como la del jefe (`PruebasMejoras.cs:2316-2333`) y verlo con Grabar animaciones. Corregir la frase de CLAUDE.md.
-- **En la ciudad las veredas tapan la línea de la carga y el anillo de la invocación** (media; H20, confirmado). Se
-  dibujan a y 0,06 (`JefePatrones.cs:633` y `:696`) con Sprites-Default (`ZombiBOSS.prefab:221`), que respeta la
-  profundidad, y las 16 veredas opacas llegan a 0,14 (el cordón a 0,18) y cubren el 34 % del piso (el 51 % alrededor
-  del cruce). Modelo sin medir: el 86-90 % de las cargas pierde algo, el 36-42 % pierde la mitad, y el tramo donde
-  está parado el jugador queda tapado el 43-50 % de las veces. Pasa con el jefe de la 30 (y el de la 60 y la 90). **El
-  anillo de la granada tiene lo mismo**, a y 0,05 (`Granade.cs:117`, y el de puntería, `PlayerController.cs:320`), en
-  las diez oleadas de la ciudad. **Arreglo**: una constante `JefePatrones.AlturaDelAviso =
-  ManchaDeSangre.AlturaSobreElPiso` (0,2) en las dos líneas, lo mismo en `Granade.DibujarAnillo`, y las dos alturas en
-  el chequeo de `PruebasMejoras.cs:1321-1340`, que ya compara la mancha con la vereda. El costo es el que ya se aceptó
-  con la mancha: la cinta pinta los 20 cm de abajo de lo que la pisa. De paso: `anchoLinea` 1.4
-  (`ZombiBOSS.prefab:203`) ya no existe en el código.
 - **Adelantar la fecha del teléfono cobra días: el reloj confiable solo se ancla al cobrar la diaria** (media; H03,
   confirmado). La marca (`relojUtc`, `relojMs` y `relojArranques`) solo la escribe `RegistrarRecompensaDiaria`
   (`Progreso.cs:353-357`), y `HoraConfiable` devuelve el reloj crudo sin marca, si falla la lectura o si la marca es de
@@ -395,13 +384,6 @@ privacidad publicada.
   `ApagadoOscuro` da un halo casi negro. El icono se busca con `fondo.transform.parent.Find("Icono")`. Al desbloquear,
   devolver los colores leídos en `Awake`. En el banco, el color de la `Sombra`, el del texto y un contraste de 4,5 o
   más. En `SelectorIdioma.Pintar`, `PintarHalo` con el color de cada botón. Corregir "lo pinta gris" en CLAUDE.md.
-- **En PC el jugador corre un 41 % más rápido en diagonal** (baja, era media; H15, confirmado). `HandleMovement`
-  (`PlayerController.cs:156-157`) multiplica los dos `GetAxis` por `moveSpeed` (15 en las tres escenas) sin topar:
-  21,2 m/s en diagonal y 27,6 con la furia, contra el FASTER a 12. En el teléfono no pasa: el Joystick Pack normaliza
-  y los `snap` están apagados. Es baja porque solo se distribuye Android, pero probar con el teclado del editor da un
-  juego más fácil que el del teléfono. La reproducción con F1 no sirve: `MedidorBalance` no muestra velocidad.
-  **Arreglo**: `moveInput = Vector3.ClampMagnitude(moveInput, 1f);` antes de calcular `moveVelocity` (conserva la
-  rampa de `GetAxis` y el umbral de `run`, y topa también los ejes del gamepad).
 - **Retomar vuelve opcional la muerte en oleadas** (baja, era media; H04, parcial). MENÚ no olvida la oleada
   (`MenuPausa.cs:96-100`) y perder el foco pausa y guarda (`:54-79`): solo morir, REINICIAR y la R la olvidan. Retomar
   (`WaveManager.cs:104-125`) crea un jugador nuevo: vida llena, `GolpesRecibidos` en 0, 500 balas, el revivir por
@@ -593,7 +575,7 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
   jugador; si se elige que la invocación pase el techo, medir los FPS con 43 zombis.
 - **Las piernas de la horda** (H16): Grabar animaciones con la cámara del juego antes y después, y mirar a 30 FPS que
   el rápido y el FASTER no se vean estroboscópicos con el tope.
-- **La noche** (H17, arreglado, y H20): la foto del chorro de balas y las tres cajas del 29/9
+- **La noche** (H17 y H20, arreglados): la foto del chorro de balas y las tres cajas del 29/9
   (`Builds/noche_cajas_balas.png`, de `PruebaReiniciar`) es con la calidad del editor y cerca de dos faroles: falta una
   con la calidad del teléfono (como `FotosDeLosFaroles`) lejos de los faroles, y otra con el gris de poca vida en 0,5.
   El brillo de las cajas son cuadrados de partículas lisos, que ahora sí se ven: mirar si se quieren más lindos. En la
@@ -608,7 +590,6 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
   la PC libre, dio TODO OK.
 - **Los edificios de la ciudad** (H18): con la cámara del juego, que el techo se transparente a tiempo con un zombi, el
   jefe o el jugador en la huella o detrás, y los FPS de la ciudad en el teléfono con los edificios fuera del batching.
-- **La diagonal en PC** (H15): loguear `rb.linearVelocity.magnitude` con W y con W+D (F1 no muestra velocidad).
 - **De los bajos sin refutar, piden play o teléfono**: H41 (el orden de `OnApplicationFocus` con la granada apuntada),
   H50 (el `Paso` y el `Ritmo` de un tanque que vuelve del pool), H61 (auriculares Bluetooth y la música del menú), H64
   (la latencia del audio, filmando un disparo), H77 (la luz ambiente al entrar a ShowBies1 desde el menú), H84
