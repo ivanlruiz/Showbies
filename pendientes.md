@@ -297,7 +297,17 @@ privacidad publicada.
   necesita que se lea la pose. Si le toca la carga y no se lo ve, invoca sin dar vuelta el turno de la carga. Va con
   H10 (la reserva de lugar), porque fuera de cuadro también respeta el techo. Que `PruebasMejoras.cs:2369-2374` mida
   qué fracción del disco de 1,5 a 22 m queda cubierta por algún ataque, y no cuatro puntos, y verlo jugando («El jefe
-  en el teléfono», sección 4).
+  en el teléfono», sección 4). **Ojo, desde el 30/9**: con la invocación solo en furia (ver «El golpe al piso», abajo),
+  debajo de la mitad de la vida la banda de 15 a 22 m vuelve a quedar sin ataque, y el golpe al piso no la cubre
+  (castiga al que está cerca). Hay que volver a decidir cómo se cierra ahí: por ejemplo, que camine más rápido fuera
+  de cuadro.
+- **El golpe al piso del jefe** (idea de Ivan, **decidido el 30/9**). En vez de solo invocar, el jefe salta y golpea
+  el piso, y si el jugador está dentro del anillo lo levanta por el aire y lo tira hacia afuera, con un golpe. Se suma
+  como tercer ataque: carga, golpe al piso, y **la invocación solo desde la mitad de su vida** (en furia). El ataque se
+  elige por distancia (cerca, el golpe; lejos, la carga), y en furia cada tanto invoca si hay lugar. El jugador no
+  puede despegarse del piso (la altura está congelada en el prefab): el vuelo es un empujón horizontal por la física
+  (las paredes lo frenan) y la altura, un arco sobre el modelo. Después del golpe queda aturdido, la misma ventana que
+  tras la carga.
 - **El jugador y los zombis entran en los edificios de la ciudad y desaparecen** (media; H18, confirmado). Los 12
   edificios (11 × 11 m, de 3,7 a 6,4 m de alto, centros en ±12/±36) no tienen collider (`ConstructorEscenarios.cs:861`
   y `:906`; `Ciudad.prefab`), están dentro de las paredes (el 15 % del área) y son opacos: con la cámara a 12 m, el
