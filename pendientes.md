@@ -539,8 +539,9 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
 - **El jefe en el teléfono** (amplía, con H10 y H11): además de ver que no se vuelva fácil de evitar y que invocar
   fuera de cuadro no se sienta injusto (los invocados llegan sin que se vea al jefe). Desde el 30/9 la invocación
   aparta su lugar y, sin lugar, el jefe carga (H10): contar en el teléfono, desde la oleada 20 y en el libre cuando el
-  nivel le gana al jugador, cuántas veces carga por falta de lugar y cuántas invoca con uno solo, y verlo grabado
-  (Grabar al jefe) al menos una vez; si se elige que la invocación pase el techo, medir los FPS con 43 zombis.
+  nivel le gana al jugador, cuántas veces carga por falta de lugar y cuántas invoca con uno solo (con lugar, Grabar
+  al jefe lo vio el 30/9: carga, aturdido e invocación con los cuatro alrededor); si se elige que la invocación pase
+  el techo, medir los FPS con 43 zombis.
 - **Las piernas de la horda** (H16): Grabar animaciones con la cámara del juego antes y después, y mirar a 30 FPS que
   el rápido y el FASTER no se vean estroboscópicos con el tope.
 - **La noche** (H17 y H20, arreglados): la foto del chorro de balas y las tres cajas del 29/9
