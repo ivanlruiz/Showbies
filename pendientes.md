@@ -652,6 +652,11 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
   borde del lado de la cámara y, con el arreglo, que llegue al borde real.
 - **El reloj** (H03, con la hora de internet): en el teléfono, sin conexión (modo avión), que el día no avance aunque
   se adelante la fecha, y que al volver la conexión salgan la diaria y las misiones del día.
+- **Volver a correr `PruebaTutorial` con la PC libre** (29/9, después de arreglar H01, H05, H06 y H17): la primera
+  vuelta se quedó sin cuadros al final (la ventana de Unity atrás) y la segunda pasó todos los chequeos del tutorial,
+  pero atrapó dos errores de una R apretada en otra ventana (el editor estaba traído al frente a la fuerza), que llegó
+  a `MenuPausa.ReiniciarYa` con `buildIndex` −1. Mirar también por qué en el banco la escena del tutorial da −1: la R
+  ahí no recarga nada (ya pasaba antes del arreglo).
 - **Los edificios de la ciudad** (H18): con la cámara del juego, que el techo se transparente a tiempo con un zombi, el
   jefe o el jugador en la huella o detrás, y los FPS de la ciudad en el teléfono con los edificios fuera del batching.
 - **La diagonal en PC** (H15): loguear `rb.linearVelocity.magnitude` con W y con W+D (F1 no muestra velocidad).
