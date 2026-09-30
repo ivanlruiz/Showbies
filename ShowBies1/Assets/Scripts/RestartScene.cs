@@ -19,11 +19,21 @@ public class RestartScene : MonoBehaviour
         // Ni con un video en pantalla ni con el ¡HAS MUERTO! abierto: recargar ahi perdia
         // el premio del video, o terminaba la partida sin pasar por PlayerHealth.Terminar
         // (sin contarla como terminada ni olvidar la oleada en curso).
+        // En las oleadas pasada la 1 pregunta antes, con la pausa (MenuPausa.PedirReiniciar):
+        // la R esta al lado de la F de la furia, y borraba la partida sin preguntar.
         if (ServicioAnuncios.MostrandoAnuncio || OfertaDeRevivir.Activa) return;
         if (Input.GetKeyDown(KeyCode.R))
         {
+            if (menuPausa == null) menuPausa = FindAnyObjectByType<MenuPausa>();
+            if (menuPausa != null)
+            {
+                menuPausa.PedirReiniciar();
+                return;
+            }
             WaveManager.OlvidarPartidaSiEsOleadas();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }
+
+    private MenuPausa menuPausa;
 }

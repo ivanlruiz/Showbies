@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 3952536358953460128}
   - component: {fileID: 3369886559091101946}
   - component: {fileID: 5345779952726656504}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PUBalas
   m_TagString: PUBalas
   m_Icon: {fileID: 0}

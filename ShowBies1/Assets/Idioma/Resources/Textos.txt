@@ -194,6 +194,8 @@ pausa_titulo	PAUSED	PAUSA
 pausa_continuar	RESUME	CONTINUAR
 pausa_reiniciar	RESTART	REINICIAR
 pausa_menu	MAIN MENU	MENÚ PRINCIPAL
+reiniciar_titulo	START OVER?	¿EMPEZAR DE CERO?
+reiniciar_aviso	YOU'LL LOSE YOUR RUN AT WAVE {0}	PERDERÁS TU PARTIDA EN LA OLEADA {0}
 
 # --- Derrota
 derrota_titulo	GAME OVER	HAS PERDIDO

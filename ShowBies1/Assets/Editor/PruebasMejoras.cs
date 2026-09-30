@@ -2030,6 +2030,30 @@ public static class PruebasMejoras
             inf.Verdadero("noche: " + nombre + (nombre == "WaveMode" ? " tiene la pradera de capitulo 1 y los otros de noche" : " tiene la pradera puesta y fija"), decorado);
         }
 
+        // Las balas, las cajas y la granada se leen de noche (superauditoria del 29/9: la caja de
+        // vida quedaba mas oscura que el piso). La bala por su material, que no recibe luz; las
+        // cajas y la granada (su malla y su collider, en la raiz) en la capa de la luz de relleno:
+        // la fila de esa capa en la matriz de fisica es la de la 0. La explosion de la granada es
+        // otro prefab, de particulas, y se queda en la suya.
+        var bala = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materiales/Bullet.mat");
+        inf.Verdadero("noche: la bala no depende de la luz (" + (bala != null ? bala.shader.name : "sin material") + ")",
+                      bala != null && bala.shader.name.StartsWith("Unlit/"));
+        foreach (var n in new[] { "PUBalas", "PUVida", "PUArma", "Granada" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/" + n + ".prefab");
+            bool enLaCapa = prefab != null && prefab.layer == Personajes.Capa;
+            if (prefab != null)
+            {
+                foreach (var m in prefab.GetComponentsInChildren<MeshRenderer>(true)) enLaCapa &= m.gameObject.layer == Personajes.Capa;
+                foreach (var c in prefab.GetComponentsInChildren<Collider>(true)) enLaCapa &= c.gameObject.layer == Personajes.Capa;
+            }
+            inf.Verdadero("noche: " + n + " (la malla y el collider) esta en la capa de los personajes", enLaCapa);
+        }
+        bool mismaFisica = true;
+        for (int i = 0; i < 32; i++)
+            mismaFisica &= Physics.GetIgnoreLayerCollision(i, Personajes.Capa) == Physics.GetIgnoreLayerCollision(i, 0);
+        inf.Verdadero("noche: la capa de los personajes choca con todo igual que la 0", mismaFisica);
+
         var zombi = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/Zombi.prefab");
         if (!inf.Verdadero("noche: esta el prefab del zombi", zombi != null)) return;
         var vista = EditorSceneManager.NewPreviewScene();
@@ -2063,10 +2087,14 @@ public static class PruebasMejoras
     // botones tenian las puntas de media elipse (el del nivel era un ovalo) y el halo, que es
     // redondo, no les calzaba: lo vio Ivan el 25/9. En cada pildora de un boton y cada halo, el
     // borde de arriba y el de abajo suman el alto. Y el globo del menu, sin la sombra corrida.
+    // Y que ningun halo reciba toques mas alla de su boton: en los botones de las escenas la
+    // sombra es la que recibe el toque, y estirada como halo el de REINICIAR se llevaba el borde
+    // de abajo de CONTINUAR (superauditoria del 29/9). O no recibe toques, o su padding le
+    // devuelve el area del boton (positivo achica: lo verifico GraphicRaycaster).
     static void ProbarPildorasRedondas(Informe inf)
     {
-        int pildoras = 0, torcidas = 0;
-        string cuales = "";
+        int pildoras = 0, torcidas = 0, halos = 0, robanToques = 0;
+        string cuales = "", ladrones = "";
         void Mirar(GameObject raiz, string donde)
         {
             foreach (var img in raiz.GetComponentsInChildren<UnityEngine.UI.Image>(true))
@@ -2075,6 +2103,17 @@ public static class PruebasMejoras
                 bool pildora = img.sprite.name == "Pildora" && img.name == "Fondo" && img.transform.parent != null && img.transform.parent.name == "Visual";
                 bool halo = img.sprite.name == "NeonPildora";
                 if (!pildora && !halo) continue;
+                if (halo)
+                {
+                    halos++;
+                    Vector4 p = img.raycastPadding;
+                    float m = ConstructorUI.MargenDelHalo - 0.5f;
+                    if (img.raycastTarget && (p.x < m || p.y < m || p.z < m || p.w < m))
+                    {
+                        robanToques++;
+                        if (robanToques <= 5) ladrones += donde + ":" + (img.transform.parent != null ? img.transform.parent.name : img.name) + " ";
+                    }
+                }
                 pildoras++;
                 float alto = img.rectTransform.rect.height;
                 float bordes = (img.sprite.border.y + img.sprite.border.w) / (img.pixelsPerUnit * img.pixelsPerUnitMultiplier);
@@ -2096,6 +2135,8 @@ public static class PruebasMejoras
         }
         inf.Verdadero("pildoras: hay botones para mirar (" + pildoras + ")", pildoras > 20);
         inf.Igual("pildoras: los botones y sus halos tienen las puntas redondas" + (torcidas == 0 ? "" : " (" + cuales.Trim() + ")"), 0, torcidas);
+        inf.Verdadero("pildoras: hay halos para mirar (" + halos + ")", halos > 15);
+        inf.Igual("pildoras: ningun halo recibe toques mas alla de su boton" + (robanToques == 0 ? "" : " (" + ladrones.Trim() + ")"), 0, robanToques);
 
         bool sinSombra = false;
         LeerEscena("Assets/Escenas/Menu.unity", escena =>

@@ -67,7 +67,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial y PruebaMenuYTienda (bancos en play, que devuelven el progreso con RespaldoDelBanco), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón
 ```
@@ -408,8 +408,9 @@ consultando `EnemyController.ZombisVivos`:
   oleada y los puntos (`Progreso.GuardarOleadaEnCurso`) y escribe el archivo. Si se sale al menú o se cierra la app,
   la próxima vez arranca esa oleada desde cero (todos sus zombis, vida llena) con esos puntos, y el botón OLEADAS
   del menú avisa "CONTINUE WAVE N" (`BotonOleadas`). **Se olvida al morir** (`PlayerHealth.Terminar`) **y al
-  reiniciar** (REINICIAR de la pausa y la R, con `WaveManager.OlvidarPartidaSiEsOleadas`): las dos cosas empiezan una
-  partida nueva. Salir en mitad de una oleada que se estaba perdiendo la reinicia sin morir: es a propósito.
+  reiniciar** (REINICIAR de la pausa y la R, con `WaveManager.OlvidarPartidaSiEsOleadas`, que pasada la 1 preguntan
+  antes: ver Pausa y botón atrás): las dos cosas empiezan una partida nueva. Salir en mitad de una oleada que se
+  estaba perdiendo la reinicia sin morir: es a propósito.
 
   La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
   `OleadaActual` y los multiplicadores de la oleada actual.
@@ -650,7 +651,10 @@ negras. Cada escena de juego tiene una luz direccional `Relleno` de frente, como
 (`Personajes`), sin sombras y por vértice (la de píxel es de la luna): el piso queda oscuro, con sus charcos de neón, y
 ellos se ven. Pasan a esa capa al arrancar (`Personajes.PonerEnLaCapa`) las mallas de cada zombi (`EnemyController`),
 el modelo del jugador (`PlayerHealth`), su pistola (`ArmaEnLaMano`) y las monedas: solo lo que se ve y no tiene collider,
-así la física no cambia.
+así la física no cambia. **Las tres cajas y la granada están en esa capa desde su prefab**, collider incluido (la fila
+de la 8 en la matriz de física es igual a la de la 0, y la prueba de lógica lo mira), y **la bala no recibe luz**
+(`Bullet.mat` es `Unlit/Color`, que también pinta el brillo de la caja de balas): hasta el 29/9 la caja de vida quedaba
+más oscura que el piso y la bala casi no se veía (superauditoría).
 
 El decorado del capítulo que viene **se arma apagado unos segundos después de entrar al anterior**
 (`PrepararElSiguiente`): instanciar ochocientos objetos en el frame del cambio era un tirón justo en el momento del
@@ -776,6 +780,10 @@ terminada: ver Primera vez).
   arma en `Start` y prende `VentanaRecompensaDiaria.Ocupada` hasta que termina de irse, y la tienda que se abre sola
   la espera (`TiendaMejoras.Update`). Hasta el 25/9 era al revés: la diaria esperaba a que se cerrara la tienda, y el
   circuito de la primera vez (MEJORAS, comprar, ¡A JUGAR!) carga la partida sin cerrarla, así que el día 1 no salía.
+  **La tienda no compra con un toque que empieza en sus primeros 0,45 s** (`TiendaMejoras.SinComprarAlAbrir`) ni con
+  la tarjeta entrando (`TarjetaMejora.ToqueQueFrena`): el dedo que iba a cerrar el cartel de cobrado caía sobre las
+  tarjetas, y COBRAR tapa casi entero el botón de CRÍTICOS, que cuesta justo lo que paga el día 1 (superauditoría del
+  29/9).
 - Cada casillero se etiqueta con el mismo día de racha que usa su monto: desde el día 8 el casillero de hoy dice DÍA 8.
 - Las pruebas cubren racha, corte, reloj atrasado, fin de mes y de año, bisiesto, montos y el cobro guardado.
 
@@ -1285,7 +1293,11 @@ luces de neón (ver Capítulos).
   - `NeonAnillo`: el de los botones redondos.
 - **Lo que se arma en código lo viste `ConstructorUI`**:
   - `VentanaNeon`: el fondo redondeado y el borde.
-  - `HaloDeBoton`: la sombra de cada botón pasa a ser su halo, del color del botón, o celeste y tenue si es de vidrio.
+  - `HaloDeBoton`: la sombra de cada botón pasa a ser su halo, del color del botón, o celeste y tenue si es de vidrio,
+    **con un `raycastPadding` de 34 por lado** (`MargenDelHalo`, lo que sobresale): en los botones de las escenas la
+    sombra es la que recibe el toque, y estirada como halo el de REINICIAR se llevaba el borde de abajo de CONTINUAR
+    (superauditoría del 29/9). El padding le devuelve el área del botón, quieta. La prueba de lógica mira que ningún
+    halo reciba toques más allá de su botón.
   - La paleta de los botones: `Verde` (jugar, cobrar), `Amarillo` (la tienda, el tope), `Naranja` (las oleadas, el
     vídeo), `Celeste` (los bordes) y `Rojo`.
 - **Lo que está en las escenas lo viste `ConstructorNeon`** (ShowBies > Neón > Vestir el menú), que no se edita a mano:
@@ -1571,6 +1583,13 @@ click en otra ventana.
 - `timeScale` y `AudioListener.pause` son globales y cruzan escenas. Los botones del panel los
   restauran antes de cargar otra escena, y `OnDestroy` también, por si la escena se descarga en pausa
   por otro camino (la R de `RestartScene`).
+- **REINICIAR pregunta antes en las oleadas pasada la 1** (`WaveManager.OleadaQueSePierdeAlReiniciar`): borra la
+  partida guardada, y rehacerla son 13 minutos hasta la 30. `MenuPausa.Reiniciar` cambia el panel por una copia suya
+  armada la primera vez que hace falta (`PanelReiniciar`): "¿EMPEZAR DE CERO?", "PERDERÁS TU PARTIDA EN LA OLEADA N",
+  SEGUIR JUGANDO (el CONTINUAR verde, latiendo: reanuda) y REINICIAR más abajo (`ReiniciarYa`). El atrás con la
+  confirmación abierta vuelve a la pausa, sin reanudar. **La R de PC pasa por lo mismo** (`MenuPausa.PedirReiniciar`:
+  pausa y pregunta), que está al lado de la F de la furia. En el libre, el tutorial y la oleada 1 reinicia como antes.
+  Lo prueba **ShowBies > Pruebas > Reiniciar y la noche (play)** (ver Pruebas y medición).
 - **El botón atrás de Android llega como `KeyCode.Escape`**, también con el back predictivo activado
   (`androidPredictiveBackSupport: 1`, targetSdk 36): el player de Unity registra su propio
   `OnBackInvokedCallback` y reinyecta `KEYCODE_BACK` a la actividad. Deja de llegar si alguien pone
@@ -1871,7 +1890,10 @@ enterrado.
   `QueuePlayerLoopUpdate` ni apagar la sincronización lo movieron, y `EditorApplication.Step` avanza un cuadro cada
   varias llamadas). Para fotografiar la UI sin depender de eso: las cámaras a una `RenderTexture`, los canvas overlay
   pasados un instante a `ScreenSpaceCamera` con una cámara lejos del mundo, `Canvas.ForceUpdateCanvases`, y lo que
-  haría `Update` (la escala de entrada de una ventana, una barra que se llena), a mano.
+  haría `Update` (la escala de entrada de una ventana, una barra que se llena), a mano. Pasó otra vez el 29/9, con un
+  solo editor: con la ventana traída al frente los bancos andan, pero **traerla al frente mientras alguien usa la PC le
+  manda al editor lo que escribe en otra ventana**: una R suelta reinició el tutorial en medio de un banco. Correr los
+  bancos con la PC libre, o avisar antes.
 
 - **Con dos editores de Unity abiertos, el servidor unity-mcp se conecta a uno solo**, que puede no ser el de ShowBies:
   todo comando empieza mirando `Application.dataPath`. El relay (`~/.unity/relay/relay_win.exe`) acepta
@@ -1896,8 +1918,10 @@ enterrado.
   (`ConstructorNeon.RedondearBotones`), y la prueba de lógica lo mide en las escenas y los prefabs.
 
 - **La capa 8 es la de los personajes** (`Personajes`, en el TagManager): la luz de relleno de las escenas de juego solo
-  alumbra esa capa. Algo nuevo que tenga que leerse de noche (una caja, un efecto con malla) va con
-  `Personajes.PonerEnLaCapa`; lo que tiene collider no se pasa, para no tocar la física.
+  alumbra esa capa. Algo nuevo que tenga que leerse de noche (un efecto con malla) va con
+  `Personajes.PonerEnLaCapa`, que no pasa lo que tiene collider. Las cajas y la granada, con collider, van en la 8
+  desde el prefab: se puede porque la fila de la 8 en la matriz de física es la de la 0; si alguien la cambia, cambian
+  ellas.
 
 - **La transición de un botón es ColorTint con el normal en blanco.** Los botones viejos tenían un Image negro
   que el ColorTint dejaba invisible, así que ponérselo en None lo hacía aparecer; hoy ese Image ya no está,
@@ -1939,7 +1963,8 @@ enterrado.
 - **Cinco bancos más en play**, del 27/9, para lo que la auditoría de la nube cambió sin poder correrlo. Cada uno escribe
   `Builds/prueba_<nombre>.txt` con sus chequeos y `RESULTADO: TODO OK` o `HAY FALLAS`:
   - **Tienda de mejoras** (`PruebaTienda`): que abra al principio con DAÑO a la vista, que el toque que frena la fila no
-    compre y la guía de la primera compra (a qué apunta y que quede dentro de la pantalla).
+    compre, que tampoco compre uno que empieza al abrirse la tienda (el de la diaria) y la guía de la primera compra (a
+    qué apunta y que quede dentro de la pantalla).
   - **Diaria antes que la tienda** (`PruebaDiaria`): MEJORAS de la derrota con la diaria disponible, cobrando, con vídeo
     (un proveedor de prueba) y con el atrás; sin diaria, la tienda abre enseguida.
   - **Desbloqueo del modo libre** (`PruebaModoLibre`): completa la oleada 11 y mira el aviso (una sola vez) y el ¡NUEVO!,
@@ -1949,6 +1974,12 @@ enterrado.
   - **Menú y tienda sin parpadeo** (`PruebaMenuYTienda`): captura cada cuadro al abrir y cerrar la tienda por los cuatro
     caminos y mide que ninguno sea liso ni de escena vacía, y que el menú se vea igual sin HDR (capturas en
     `Builds/menu_tienda/`).
+- **ShowBies > Pruebas > Reiniciar y la noche (play)** (`PruebaReiniciar`, del 29/9): en WaveMode con una partida
+  guardada en la 5, que los toques de verdad en los bordes de CONTINUAR y REINICIAR caigan en su botón y no en el halo
+  del vecino, y todo el circuito de la confirmación de REINICIAR (pregunta sin olvidar la oleada, el atrás vuelve a la
+  pausa, SEGUIR JUGANDO reanuda, la R pausa y pregunta, REINICIAR recarga en la 1, y en la 1 ya no pregunta), con el
+  título en un renglón. Saca además una foto de noche de las tres cajas y el chorro de balas
+  (`Builds/noche_cajas_balas.png`) y otra de la confirmación. Escribe `Builds/prueba_reiniciar.txt`.
 - **Los bancos en play devuelven el progreso** (`RespaldoDelBanco`): cada uno guarda al arrancar el progreso real del
   editor, los PlayerPrefs del juego, `runInBackground` y "Teclado y mouse en el editor", y los devuelve al volver a modo
   edición (antes no: al salir de play, Progreso guarda lo que tiene). La copia va a `Library/ShowBies/RespaldoDelBanco`,

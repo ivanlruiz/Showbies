@@ -146,6 +146,17 @@ public class TiendaMejoras : MonoBehaviour
         get { return abierta; }
     }
 
+    // Lo que dura, desde que se abre, la tienda sin comprar. Cuando se abre sola después de la
+    // recompensa diaria, el dedo que iba a cerrar el cartel de cobrado cae sobre las tarjetas:
+    // COBRAR tapa casi entero el botón de CRÍTICOS, que cuesta justo lo que paga el día 1
+    // (superauditoría del 29/9). Un toque que empieza antes de esto se hizo a ciegas.
+    public const float SinComprarAlAbrir = 0.45f;
+
+    public bool RecienAbierta
+    {
+        get { return abierta && tiempoAbierta < SinComprarAlAbrir; }
+    }
+
     // Si la fila se está deslizando sola. Lo pregunta cada tarjeta al apoyar el dedo (ver
     // TarjetaMejora): en uGUI el toque que la frena también llega como click al botón de abajo.
     public bool FilaEnMovimiento

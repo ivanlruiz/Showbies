@@ -20,7 +20,10 @@ using UnityEngine.EventSystems;
 //     y un toque con la fila quieta si. Los toques se simulan como los manda el modulo de
 //     entrada del EventSystem: el raycast de lo que hay debajo del dedo, el pointerDown por
 //     la jerarquia, el initializePotentialDrag al ScrollRect (que es lo que la frena) y, al
-//     levantar, el pointerUp y el click solo si el toque sigue siendo elegible.
+//     levantar, el pointerUp y el click solo si el toque sigue siendo elegible. Tampoco compra
+//     un toque que empieza con la tienda recien abierta (TiendaMejoras.SinComprarAlAbrir): el
+//     dedo que iba a cerrar el cartel de la recompensa diaria y cae sobre una tarjeta cuando la
+//     tienda se abre sola (superauditoria del 29/9).
 //  3. La guia de la primera compra (GuiaPrimeraCompra): con un progreso que nunca compro, la
 //     flecha senala desde abajo el boton de comprar del danio; al comprarlo pasa a A JUGAR,
 //     desde su izquierda. Se mide a donde apunta, que la flecha y el cartel queden dentro de
@@ -79,8 +82,9 @@ public static class PruebaTienda
         TocarQuieta,        // mide que no compro y toca la misma tarjeta con la fila quieta
         SoltarQuieta,
         MedirCompra,        // mide que compro, corre la fila al final y toca VOLVER
-        AbrirTercera,       // toca MEJORAS
-        TerceraAbierta,     // mide la fila
+        AbrirTercera,       // toca MEJORAS y, en el mismo cuadro, apoya el dedo en DANIO
+        SoltarRecienAbierta,
+        TerceraAbierta,     // mide que no compro y mide la fila
         CerrarTercera,      // toca VOLVER
         Listo,
     }
@@ -159,6 +163,11 @@ public static class PruebaTienda
     static double monedasAntesQuieta, monedasDespuesQuieta, precioQuieta;
     static int nivelAntesQuieta = -1, nivelDespuesQuieta = -1;
     static string caidaQuieta = "";
+    // El toque con la tienda recien abierta.
+    static bool recienAbiertaAlTocar, elegibleRecienAbierta = true, clicRecienAbierta = true;
+    static double monedasAntesRecien, monedasDespuesRecien;
+    static int nivelAntesRecien = -1, nivelDespuesRecien = -2;
+    static string caidaRecien = "";
     static readonly List<string> capturas = new List<string>();
 
     // Los errores y excepciones que salten mientras corre. No se ponen en cero al empezar:
@@ -462,11 +471,25 @@ public static class PruebaTienda
                 if (Espero(ahora, 0.4)) return;
                 abrio[2] = Abrir();
                 if (!abrio[2]) { Terminar("el boton MEJORAS no abrio la tienda la tercera vez"); return; }
+                // Como el dedo que cae sobre la tienda que se abre sola despues de la diaria.
+                recienAbiertaAlTocar = tienda.RecienAbierta;
+                monedasAntesRecien = Progreso.Monedas;
+                nivelAntesRecien = Progreso.Nivel(IdDano);
+                Apoyar(tarjetaDano.boton.gameObject, out caidaRecien);
+                elegibleRecienAbierta = dedo.eligibleForClick;
+                Pasar(Paso.SoltarRecienAbierta, ahora);
+                return;
+
+            case Paso.SoltarRecienAbierta:
+                if (Espero(ahora, 0.1)) return;
+                clicRecienAbierta = Levantar();
                 Pasar(Paso.TerceraAbierta, ahora);
                 return;
 
             case Paso.TerceraAbierta:
                 if (Espero(ahora, 0.5)) return;
+                monedasDespuesRecien = Progreso.Monedas;
+                nivelDespuesRecien = Progreso.Nivel(IdDano);
                 tercera = MedirApertura("Tercera apertura", finalAlCerrar[1]);
                 Pasar(Paso.CerrarTercera, ahora);
                 return;
@@ -914,6 +937,10 @@ public static class PruebaTienda
                        + " u/s, FilaEnMovimiento " + !filaQuietaAlTocar + ", elegible para click " + elegibleQuieta + ", click " + clicQuieta
                        + "; nivel " + nivelAntesQuieta + " -> " + nivelDespuesQuieta + ", monedas " + F(monedasAntesQuieta) + " -> "
                        + F(monedasDespuesQuieta) + " (precio " + F(precioQuieta) + ")");
+        inf.AppendLine("Toque sobre DANIO en el cuadro en que se abre la tienda (cayo en " + caidaRecien + "): RecienAbierta "
+                       + recienAbiertaAlTocar + ", elegible para click " + elegibleRecienAbierta + ", click " + clicRecienAbierta
+                       + "; nivel " + nivelAntesRecien + " -> " + nivelDespuesRecien + ", monedas " + F(monedasAntesRecien) + " -> "
+                       + F(monedasDespuesRecien));
         inf.AppendLine("Capturas en Builds/: " + (capturas.Count > 0 ? string.Join(", ", capturas) : "ninguna"));
         inf.AppendLine("Errores y excepciones durante la prueba: " + cuantasExcepciones);
         if (cuantasExcepciones > 0) inf.Append(excepciones);
@@ -940,6 +967,8 @@ public static class PruebaTienda
             Mathf.Abs(velocidadTrasApoyar) < 1f && Mathf.Abs(posDespuesDeFrenar - posAlApoyar) < 2f,
             filaQuietaAlTocar && clicQuieta && nivelAntesQuieta >= 0 && nivelDespuesQuieta == nivelAntesQuieta + 1
                 && System.Math.Abs(monedasAntesQuieta - monedasDespuesQuieta - precioQuieta) < 0.5,
+            recienAbiertaAlTocar && !elegibleRecienAbierta && !clicRecienAbierta && nivelAntesRecien >= 0
+                && nivelDespuesRecien == nivelAntesRecien && System.Math.Abs(monedasDespuesRecien - monedasAntesRecien) < 1e-6,
         };
         string[] que =
         {
@@ -959,6 +988,7 @@ public static class PruebaTienda
             "el toque que frena la fila no compra: sin click, y ni las monedas ni el nivel de la tarjeta cambian",
             "el toque frena la fila: la velocidad queda en cero y no se mueve mas",
             "con la fila quieta, un toque sobre la misma tarjeta la compra (nivel +1, cobra su precio)",
+            "un toque que empieza en el cuadro en que se abre la tienda no compra (el dedo de la diaria)",
         };
         bool todo = true;
         for (int i = 0; i < ok.Length; i++)

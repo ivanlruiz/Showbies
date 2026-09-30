@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4638410047729973175}
   - component: {fileID: 4638410047729973168}
   - component: {fileID: 9019199833472116777}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PUArma
   m_TagString: PUArma
   m_Icon: {fileID: 0}

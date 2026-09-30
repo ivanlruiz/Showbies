@@ -580,6 +580,12 @@ public class TarjetaMejora : MonoBehaviour
         if (objeto != null && objeto.activeSelf != activo) objeto.SetActive(activo);
     }
 
+    // Si la tarjeta todavía está entrando (la entrada escalonada al abrir la tienda).
+    public bool Entrando
+    {
+        get { return entrando; }
+    }
+
     // Un toque que frena la fila mientras se desliza no compra. En uGUI ese toque hace las
     // dos cosas: el ScrollRect se frena (initializePotentialDrag le pone la velocidad en cero)
     // y, si el dedo no se arrastra, el mismo toque llega como click al botón que quedó
@@ -587,14 +593,18 @@ public class TarjetaMejora : MonoBehaviour
     // Button: el pointerDown se reparte entre los componentes del primero de la jerarquía que
     // lo atiende, y llega antes que initializePotentialDrag, cuando todavía se sabe si la fila
     // se movía. Le saca el click a ese toque y nada más, sin marcas que queden colgadas: el
-    // siguiente compra.
+    // siguiente compra. Lo mismo con un toque que empieza con la tienda recién abierta o la
+    // tarjeta entrando: se hizo sin verla (ver TiendaMejoras.SinComprarAlAbrir). No sirven
+    // blocksRaycasts (el toque pasaría al menú de abajo) ni interactable (el Button decide al
+    // soltar).
     private class ToqueQueFrena : MonoBehaviour, IPointerDownHandler
     {
         public TarjetaMejora tarjeta;
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (tarjeta != null && tarjeta.tienda != null && tarjeta.tienda.FilaEnMovimiento)
+            if (tarjeta == null || tarjeta.tienda == null) return;
+            if (tarjeta.tienda.FilaEnMovimiento || tarjeta.tienda.RecienAbierta || tarjeta.Entrando)
                 eventData.eligibleForClick = false;
         }
     }

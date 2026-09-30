@@ -32,6 +32,18 @@ public class WaveManager : MonoBehaviour
         Progreso.Guardar();
     }
 
+    // La oleada que se pierde si se reinicia ahora, o 0 si no se pierde nada que valga
+    // preguntar: fuera de las oleadas, o en la 1. La mira la pausa antes de REINICIAR.
+    public static int OleadaQueSePierdeAlReiniciar
+    {
+        get
+        {
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != TiendaMejoras.EscenaOleadas) return 0;
+            int oleada = Progreso.OleadaEnCurso;
+            return oleada > 1 ? oleada : 0;
+        }
+    }
+
     [Header("Zombis")]
     public TipoEnOleada[] tipos;
     public GameObject jefe;

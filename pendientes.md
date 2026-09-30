@@ -32,18 +32,19 @@ pasaron por la ronda `refutar:` (dos escépticos para el único alto; con dos mi
 evidencia concreta): 15 confirmados, 7 parciales y 1 refutado, y ninguno quedó alto. Los 100 bajos no se refutaron. Lo
 marcado "sin medir" sale de un modelo: medirlo antes de arreglar. Lo nuevo del tramo sin auditar: los halos de neón
 que roban toques (H01), el botón de pausa encima de los carteles (H13), la noche que apaga las balas y las cajas
-(H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23). Los cinco
+(H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23). H01, H05,
+H06 y H17 se arreglaron el 29/9, probados con `PruebaTienda` y el banco nuevo `PruebaReiniciar`. Los cinco
 que pedían una decisión (H03, H04, H08, H11 y H18) los decidió Ivan ese mismo día y pasaron a la sección 2; el paso
 del tanque, que venía con H16, queda como está (sección 6).
 
 | hallazgo | veredicto | gravedad | sección |
 |---|---|---|---|
-| H01: el halo de REINICIAR se lleva toques de CONTINUAR | parcial: todavía no está en Play | media (era alta) | 2 |
+| H01: el halo de REINICIAR se lleva toques de CONTINUAR | parcial: todavía no está en Play | media (era alta) | arreglado el 29/9 |
 | H02: la furia arranca lista en cada partida | parcial: adelanta, no multiplica | baja (era media) | 2 |
 | H03: el reloj confiable solo se ancla al cobrar la diaria | confirmado | media | 2 |
 | H04: retomar vuelve opcional la muerte en oleadas | parcial: en monedas no es granja | baja (era media) | 2 |
-| H05: REINICIAR y la R sin confirmación | confirmado | media (baja con H01 arreglado) | 2 |
-| H06: la tienda compra con un toque de la diaria | confirmado | media | 2 |
+| H05: REINICIAR y la R sin confirmación | confirmado | media (baja con H01 arreglado) | arreglado el 29/9 |
+| H06: la tienda compra con un toque de la diaria | confirmado | media | arreglado el 29/9 |
 | H07: el versionCode 5 ya se usó | parcial: ya estaba en TAREAS | baja (era media) | 2 |
 | H08: la librería de reseñas y Seguridad de los datos | parcial: la lectura queda abierta | baja (era media) | 2 |
 | H09: Storage Location decide dónde vive `progreso.json` | parcial: no destruye, se revierte | baja (era media) | 2 |
@@ -54,7 +55,7 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H14: MODO LIBRE bloqueado con el halo verde | confirmado | baja (era media) | 2 |
 | H15: en PC se corre un 41 % más rápido en diagonal | confirmado | baja (era media) | 2 |
 | H16: los zombis patinan (el paso del tanque quedó como está, en la 6) | confirmado, y el tanque también | media | 2 |
-| H17: de noche las balas y las cajas se ven oscuras | confirmado | media | 2 |
+| H17: de noche las balas y las cajas se ven oscuras | confirmado | media | arreglado el 29/9 |
 | H18: los edificios de la ciudad tapan al jugador | confirmado | media | 2 |
 | H19: el pitch acotado a 3 | refutado | — | 6 |
 | H20: las veredas tapan la línea del jefe | confirmado, y la granada también | media | 2 |
@@ -241,53 +242,11 @@ privacidad publicada.
   morir). **Decidido el 26/9: en el libre cuenta**: `GuardarRecord` en `MenuPausa.Pausar` y en la R (sus puntos solo
   suben, y perder el foco pausa, así que cubre cerrar la app). En oleadas, solo dentro de `OlvidarPartidaSiEsOleadas`
   (REINICIAR y la R). No en `IrAlMenu`, como decía la auditoría: al retomar no saldría NEW BEST. El tutorial no
-  escribe récord.
+  escribe récord. Desde el 29/9 REINICIAR y la R pasan por `MenuPausa.ReiniciarYa` (después de la confirmación, H05):
+  el `GuardarRecord` del libre en la R va ahí, o en `PedirReiniciar`, que es por donde entra la R.
 
 ### De la superauditoría del 29/9
 
-- **Los halos de neón roban toques: el de REINICIAR se lleva el borde de abajo de CONTINUAR** (media, era alta; H01,
-  parcial). `ConstructorUI.HaloDeBoton` (`ConstructorUI.cs:60-73`) estira la `Sombra` 34 u por lado con `NeonPildora`
-  y no apaga `raycastTarget`: quedaron 15 imágenes con `m_RaycastTarget: 1` (`MenuPausa.prefab:946`, `:1866` y
-  `:1941`, diez en `Menu.unity` y `Tutorial.unity:1548` y `:1774`; Perdiste, la tienda y `ConstructorUI.Boton` están
-  bien). En la pausa, el halo de REINICIAR, que va después en la jerarquía, se queda con el hueco de 30 u y con los 4
-  u de abajo de CONTINUAR (0,28 mm; toda la franja son 2,4 mm), y REINICIAR olvida la oleada y recarga
-  (`MenuPausa.cs:89-94`). Vino con `0a4cc87` (25/9) y **no está en Play** (la prueba cerrada es la 1.2.0 (5), de
-  `16d8a38`): es un bloqueante del próximo AAB. Solo cuesta en la pausa: rehacer 14-23 min en la oleada 30-40, sin
-  perder monedas ni mejoras. En el menú todo se deshace con un toque: SALIR se lleva 14 u de MEJORAS y, en 20:9 y
-  21:9, de JUGAR; en la ventana del idioma y en el panel de modos los vecinos se reparten los huecos. Amplía «PLAY y
-  SALIR quedan a 20 unidades en 20:9 y 21:9». **Arreglo**: `sombra.raycastPadding = new Vector4(34f, 34f, 34f, 34f)`
-  en `HaloDeBoton`, que deja el área tocable del tamaño del botón y quieta (con `raycastTarget = false` solo tocaría
-  el `Fondo`, que `BotonJugoso` achica a 0,9 al apretar, y un toque en el borde puede apretar sin hacer clic), y lo
-  mismo en las 15 líneas `m_RaycastPadding` (o volver a correr Vestir el menú y Vestir la partida, con el constructor
-  ya cambiado). Confirmar el signo en Unity (el rectángulo verde al seleccionar la imagen). Una prueba que lea de
-  disco: toda `NeonPildora` con `m_RaycastTarget: 0` o con padding de 34 o más por lado. Pasaría a alta si se mide que
-  el 2 % o más de los toques a CONTINUAR caen por debajo de su borde (ver la sección 4).
-- **REINICIAR de la pausa y la R borran la partida de oleadas sin preguntar** (media mientras H01 siga abierto, baja
-  con H01 arreglado; H05, confirmado). `MenuPausa.Reiniciar` (`MenuPausa.cs:89-94`) y la R (`RestartScene.cs:22-27`,
-  que solo mira el vídeo y el ¡HAS MUERTO!, así que anda con la pausa abierta) llaman a
-  `WaveManager.OlvidarPartidaSiEsOleadas` (`WaveManager.cs:28-33`), que olvida y guarda; aunque no guardara, la oleada
-  1 recargada se guarda sola (`:121-125`). La R es solo de PC (el HUD la anuncia) y está encima de la F de la furia;
-  en el teléfono el camino es tocar REINICIAR sin querer (H01). Rehacer las oleadas: 6,5 min hasta la 20, 13-14 hasta
-  la 30 y 22-23 hasta la 40, que igual pagan un 40-47 % de lo que paga la frontera. Ivan ya pidió confirmación para
-  SALIR, que no pierde nada. **Arreglo**: confirmar solo en WaveMode y con `Progreso.OleadaEnCurso > 1` («¿EMPEZAR DE
-  CERO? Perderás la oleada {0}», con SEGUIR grande y verde), en una ventana propia armada con `ConstructorUI` en el
-  canvas de la pausa y en tiempo sin escalar (`ConfirmarSalir` copia el panel del idioma, que solo existe en el menú).
-  Trampa: `MenuPausa.Update` convierte Escape (el atrás) en Reanudar; la ventana tiene que tomar Escape primero. La R
-  abre la misma confirmación, o hay que mantenerla ~0,6 s; no bloquearla en la pausa. Ponerla antes de la llamada
-  donde va `GuardarRecord` («El récord de una partida abandonada») y hacer los dos cambios juntos. Una prueba: con
-  `OleadaEnCurso > 1`, REINICIAR no olvida sin confirmar y Escape con la ventana abierta no reanuda.
-- **La tienda que se abre sola después de la diaria compra con un toque que empezó a ciegas** (media; H06,
-  confirmado). `TiendaMejoras.Abrir` (`:261-315`) solo baja el alfa: los `CanvasGroup` quedan interactivos
-  (`Tienda.prefab:1665-1666`, `TarjetaMejora.prefab:1928-1929`) e `IntentarComprar` no mira el tiempo. Con la fila en
-  0, COBRAR (0,−208; 560x130) tapa el 97 % del botón de CRÍTICOS en 16:9 y el 82 % en 20:9, y el día 1 la diaria paga
-  150, justo lo que cuesta CRÍTICOS: después de cobrar siempre alcanza, y la guía de la primera compra salta a ¡A
-  JUGAR! sin el daño. Hace falta un toque **nuevo** que empiece entre ~1,55 y ~2 s después de COBRAR en esa zona (el
-  que toca para cerrar el cartel de cobrado); el camino de VOLVER y del vídeo es solo de la APK de prueba.
-  **Arreglo**: no con `blocksRaycasts = false` (los toques pasarían al canvas del menú) ni con `interactable` (el
-  `Button` decide al soltar): en `ToqueQueFrena.OnPointerDown`, `eventData.eligibleForClick = false` si la fila se
-  mueve o si la tarjeta todavía está entrando (`tiempoAbierta` menor a ~0,45 s; la fila entera tarda 0,72 s). Un caso
-  en `PruebaDiaria` con raycast de verdad (`EventSystem.RaycastAll` y los tres eventos en el centro de COBRAR a ~0,05
-  s de `Abrir`: no compra; a ~1 s, sí), porque hoy cobra con `onClick.Invoke()` y no lo puede ver.
 - **Con el techo de zombis lleno, la invocación del jefe hace el aviso entero y no sale nadie** (media; H10, parcial).
   `JefePatrones.Empezar` (`:407-428`) elige invocar sin mirar si hay lugar y paga el anillo, el rugido y 0,8 s quieto;
   `Invocar` (`:545-551`) recorta con `LugarParaZombis` y `maxInvocadosVivos` (8), con 0 vuelve en silencio, y
@@ -329,20 +288,6 @@ privacidad publicada.
   rápido 4, FASTER 4). Con tope 4 el rápido cubre el 64 % y el FASTER el 36 %: el FASTER no se arregla entero sin
   tocar su escala o su velocidad. El tanque queda como está (decidido el 29/9): la función no lo toca. Una prueba
   como la del jefe (`PruebasMejoras.cs:2316-2333`) y verlo con Grabar animaciones. Corregir la frase de CLAUDE.md.
-- **De noche las balas, las cajas y la granada quedan fuera de la luz de relleno** (media; H17, confirmado). `Relleno`
-  alumbra solo la capa 8 (`WaveMode.unity:3083`, igual en ShowBies1 y Tutorial) y `Personajes.PonerEnLaCapa` solo se
-  llama para los zombis, el jugador, la pistola y las monedas (y saltea lo que tiene collider, `Personajes.cs:20`).
-  `Bullet.mat` es Standard sin emisión (capa 7), `PUVida.mat` y `balas.mat` también son Standard, y `PUArma` y
-  `Granada` usan el Default-Material. Con un modelo de luz calibrado contra cuatro capturas, la bala de noche da (79,
-  86, 13), 1,69:1 contra el piso (2,52 de día), y **la caja de vida queda más oscura que el piso** (1,14:1, L* 15), y
-  el gris de poca vida le quita el color justo cuando más hace falta. Los faroles con luz cubren un ~8 % del mapa.
-  Vino con la noche (`7276891`). **Arreglo**: la bala por el material, no por la capa: Standard con emisión amarilla
-  (la keyword `_EMISSION` se prende desde el inspector o con `EnableKeyword`; tocar `_EmissionColor` en el YAML no
-  alcanza) o `Unlit/Color` (10,3:1 y sin sombra, que va junto con «Las balas» de rendimiento); `Bullet.mat` también
-  tiñe el brillo de `PUBalas`. Las cajas y la granada: la raíz entera a la capa 8 en el prefab (la fila de la 8 en la
-  matriz de física es igual a la de la 0 y nadie usa `IgnoreLayerCollision`). No partirlas con el collider en un hijo:
-  el agarre hace `CompareTag` y `Destroy` sobre `other.gameObject`. Verificarlo con una foto como la de los faroles
-  (sección 4).
 - **En la ciudad las veredas tapan la línea de la carga y el anillo de la invocación** (media; H20, confirmado). Se
   dibujan a y 0,06 (`JefePatrones.cs:633` y `:696`) con Sprites-Default (`ZombiBOSS.prefab:221`), que respeta la
   profundidad, y las 16 veredas opacas llegan a 0,14 (el cordón a 0,18) y cubren el 34 % del piso (el 51 % alrededor
@@ -692,19 +637,17 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
 
 ### De la superauditoría del 29/9
 
-- **Los toques de la pausa** (H01): medir cuánto se desvía el dedo al tocar CONTINUAR (el desvío y el sesgo hacia
-  abajo): con 2 mm o más de desvío, o con el 2 % o más de los toques por debajo del borde, H01 pasa a alta. Y
-  confirmar en Unity el signo de `raycastPadding` (el rectángulo verde al seleccionar la imagen) antes de aplicar el
-  arreglo.
 - **El jefe en el teléfono** (amplía, con H10 y H11): además de ver que no se vuelva fácil de evitar y que invocar
   fuera de cuadro no se sienta injusto (los invocados llegan sin que se vea al jefe), contar cuántas
   invocaciones salen vacías o con uno solo en el teléfono desde la oleada 20 y en el libre cuando el nivel le gana al
   jugador; si se elige que la invocación pase el techo, medir los FPS con 43 zombis.
 - **Las piernas de la horda** (H16): Grabar animaciones con la cámara del juego antes y después, y mirar a 30 FPS que
   el rápido y el FASTER no se vean estroboscópicos con el tope.
-- **La noche** (H17 y H20): una foto con la calidad del teléfono (como `FotosDeLosFaroles`) del chorro de balas y las
-  tres cajas lejos de los faroles, antes y después, y otra con el gris de poca vida en 0,5; en la ciudad, la cinta y
-  el anillo a 0,2 m encima del jefe, el jugador y los zombis.
+- **La noche** (H17, arreglado, y H20): la foto del chorro de balas y las tres cajas del 29/9
+  (`Builds/noche_cajas_balas.png`, de `PruebaReiniciar`) es con la calidad del editor y cerca de dos faroles: falta una
+  con la calidad del teléfono (como `FotosDeLosFaroles`) lejos de los faroles, y otra con el gris de poca vida en 0,5.
+  El brillo de las cajas son cuadrados de partículas lisos, que ahora sí se ven: mirar si se quieren más lindos. En la
+  ciudad, la cinta y el anillo a 0,2 m encima del jefe, el jugador y los zombis.
 - **El borde rojo** (H12): en un teléfono con cámara perforada o muesca, en horizontal, recibir un golpe, mirar el
   borde del lado de la cámara y, con el arreglo, que llegue al borde real.
 - **El reloj** (H03, con la hora de internet): en el teléfono, sin conexión (modo avión), que el día no avance aunque
@@ -712,7 +655,6 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
 - **Los edificios de la ciudad** (H18): con la cámara del juego, que el techo se transparente a tiempo con un zombi, el
   jefe o el jugador en la huella o detrás, y los FPS de la ciudad en el teléfono con los edificios fuera del batching.
 - **La diagonal en PC** (H15): loguear `rb.linearVelocity.magnitude` con W y con W+D (F1 no muestra velocidad).
-- **La tienda después de la diaria** (H06): correr el caso nuevo de `PruebaDiaria`, con raycast de verdad.
 - **De los bajos sin refutar, piden play o teléfono**: H41 (el orden de `OnApplicationFocus` con la granada apuntada),
   H50 (el `Paso` y el `Ritmo` de un tanque que vuelve del pool), H61 (auriculares Bluetooth y la música del menú), H64
   (la latencia del audio, filmando un disparo), H77 (la luz ambiente al entrar a ShowBies1 desde el menú), H84

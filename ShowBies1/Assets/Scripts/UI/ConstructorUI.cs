@@ -55,8 +55,15 @@ public static class ConstructorUI
         return vidrio ? new Color(Celeste.r, Celeste.g, Celeste.b, 0.3f) : new Color(boton.r, boton.g, boton.b, 0.5f);
     }
 
+    // Lo que el halo sobresale del boton, de cada lado.
+    public const float MargenDelHalo = 34f;
+
     // La sombra de un boton pasa a ser su halo de neón: la pildora borrosa, 34 mas grande
-    // de cada lado y sin correrse. Sin el sprite, la sombra oscura de antes.
+    // de cada lado y sin correrse. Sin el sprite, la sombra oscura de antes. En los botones
+    // de las escenas la sombra es la que recibe el toque, y estirada se llevaba los de los
+    // vecinos: el halo de REINICIAR tomaba el borde de abajo de CONTINUAR (superauditoria
+    // del 29/9). El padding le devuelve el area tocable del boton, quieta: sin toque, solo
+    // quedaria el Fondo, que BotonJugoso achica al apretar.
     public static void HaloDeBoton(Image sombra, Color colorDelBoton)
     {
         if (sombra == null) return;
@@ -65,8 +72,9 @@ public static class ConstructorUI
         var rt = sombra.rectTransform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
-        rt.offsetMin = new Vector2(-34f, -34f);
-        rt.offsetMax = new Vector2(34f, 34f);
+        rt.offsetMin = new Vector2(-MargenDelHalo, -MargenDelHalo);
+        rt.offsetMax = new Vector2(MargenDelHalo, MargenDelHalo);
+        sombra.raycastPadding = new Vector4(MargenDelHalo, MargenDelHalo, MargenDelHalo, MargenDelHalo);
         sombra.sprite = halo;
         RedondearPildora(sombra);
         sombra.color = ColorDeHalo(colorDelBoton);
