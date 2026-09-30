@@ -44,22 +44,40 @@ public static class GrabarJefe
         EditorApplication.update += Tick;
     }
 
+    // El salto hacia el jugador (30/9), que es su primer ataque: el jugador suelto (no
+    // kinematic y con su control), para que el golpe lo pueda tirar por el aire. Sin nadie
+    // tocando el teclado se queda quieto hasta que lo levantan. En Builds/jefe_golpe.
+    const string CarpetaGolpe = "../Builds/jefe_golpe";
+    const float DistanciaParaElGolpe = 13f;
+
     [MenuItem("ShowBies/Pruebas/Grabar al jefe")]
     // Publico para poder correrlo por codigo y no solo por el menu: despues de
     // una sesion de play el registro de menus de Unity tarda en rehacerse y la
     // entrada no se encuentra, aunque la clase este cargada.
     public static void Arrancar()
     {
+        Arrancar(false);
+    }
+
+    [MenuItem("ShowBies/Pruebas/Grabar el salto del jefe")]
+    public static void ArrancarElGolpe()
+    {
+        Arrancar(true);
+    }
+
+    static void Arrancar(bool golpe)
+    {
         if (!RespaldoDelBanco.PuedeArrancar("GrabarJefe")) return;
         // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
         // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
         RespaldoDelBanco.Guardar("GrabarJefe");
         PlayerSettings.runInBackground = true;
-        string carpeta = Path.GetFullPath(Carpeta);
+        string carpeta = Path.GetFullPath(golpe ? CarpetaGolpe : Carpeta);
         if (Directory.Exists(carpeta)) Directory.Delete(carpeta, true);
         Directory.CreateDirectory(carpeta);
 
         EditorSceneManager.OpenScene("Assets/Escenas/WaveMode.unity");
+        SessionState.SetBool(Clave + ".golpe", golpe);
         SessionState.SetBool(Clave, true);
         SessionState.SetBool(Clave + ".listo", false);
         SessionState.SetBool(Clave + ".jefe", false);
@@ -82,16 +100,21 @@ public static class GrabarJefe
         var jugador = PlayerHealth.instance;
         if (jugador == null) return;
         jugador.health = 80;                          // que aguante los doce segundos
+        bool golpe = SessionState.GetBool(Clave + ".golpe", false);
 
-        var control = jugador.GetComponent<PlayerController>();
-        if (control != null) control.enabled = false;
-        var joysticks = jugador.GetComponent<PlayerJS>();
-        if (joysticks != null) joysticks.enabled = false;
-        var cuerpo = jugador.GetComponent<Rigidbody>();
-        if (cuerpo != null && !cuerpo.isKinematic)
+        // Grabando el golpe al piso el jugador queda suelto: lo tiene que poder tirar.
+        if (!golpe)
         {
-            cuerpo.linearVelocity = Vector3.zero;
-            cuerpo.isKinematic = true;
+            var control = jugador.GetComponent<PlayerController>();
+            if (control != null) control.enabled = false;
+            var joysticks = jugador.GetComponent<PlayerJS>();
+            if (joysticks != null) joysticks.enabled = false;
+            var cuerpo = jugador.GetComponent<Rigidbody>();
+            if (cuerpo != null && !cuerpo.isKinematic)
+            {
+                cuerpo.linearVelocity = Vector3.zero;
+                cuerpo.isKinematic = true;
+            }
         }
         var oleadas = Object.FindFirstObjectByType<WaveManager>();
         if (oleadas != null && oleadas.enabled)
@@ -113,7 +136,7 @@ public static class GrabarJefe
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabJefe);
             if (prefab != null)
             {
-                Vector3 donde = jugador.transform.position + new Vector3(0f, 0f, DistanciaDelJefe);
+                Vector3 donde = jugador.transform.position + new Vector3(0f, 0f, golpe ? DistanciaParaElGolpe : DistanciaDelJefe);
                 var jefe = EnemyController.Aparecer(prefab, donde);
                 if (jefe != null)
                 {
@@ -141,7 +164,7 @@ public static class GrabarJefe
                                                     Quaternion.Euler(52f, 0f, 0f));
         }
 
-        ScreenCapture.CaptureScreenshot(Path.Combine(Path.GetFullPath(Carpeta), "f" + frame.ToString("0000") + ".png"));
+        ScreenCapture.CaptureScreenshot(Path.Combine(Path.GetFullPath(golpe ? CarpetaGolpe : Carpeta), "f" + frame.ToString("0000") + ".png"));
         frame++;
         if (frame < Frames) return;
 
@@ -150,6 +173,6 @@ public static class GrabarJefe
         EditorApplication.ExitPlaymode();
         PlayerSettings.runInBackground = false;
         AssetDatabase.SaveAssets();
-        Debug.Log("Grabados " + frame + " frames del jefe en " + Path.GetFullPath(Carpeta));
+        Debug.Log("Grabados " + frame + " frames del jefe en " + Path.GetFullPath(golpe ? CarpetaGolpe : Carpeta));
     }
 }

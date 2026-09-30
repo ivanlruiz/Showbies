@@ -431,17 +431,28 @@ con `GetComponentInParent<EnemyController>(true)` para gastarse igual, y `DanoZo
 tutorial sigue haciendo `Instantiate`: esos zombis no tienen prefab de origen y al morir se destruyen como antes.
 
 **El jefe tiene patrones propios** (`JefePatrones`, en el prefab ZombiBOSS; pedido de Ivan: antes era un zombi grande y
-lento). Alterna dos ataques con aviso cuando el jugador está a menos de `distanciaParaAtacar` (15 m) **y al jefe se lo
-ve en pantalla** (su centro, a `margenEnPantalla` de los bordes: fuera de cuadro sonaba el rugido y la línea entraba por
-el borde sin que se viera quién embestía): la **carga** (se frena, marca en el piso una línea roja hacia el jugador 0,9 s,
+lento). Tiene tres ataques con aviso, y ataca cuando el jugador está a menos de `distanciaParaAtacar` (15 m) **y al jefe
+se lo ve en pantalla** (su centro, a `margenEnPantalla` de los bordes: fuera de cuadro sonaba el rugido y la línea entraba
+por el borde sin que se viera quién embestía). **Alterna el salto y la carga, empezando por el salto** (la oleada del
+jefe abre con el jefe cayéndole encima al jugador), y en furia, cada tres ataques, invoca si hay lugar; sin lugar hace el
+que tocaba (`JefePatrones.ElegirAtaque`). El **salto** (idea de Ivan, 30/9): se agacha 0,9 s mientras marca en el piso un
+anillo **justo donde está el jugador** (`radioGolpe`, 4,5 m), da un salto gigante hasta ahí (de 0,45 s y 1,2 m de alto
+con el jugador pegado a 0,9 s y 4 m a la distancia a la que ataca; la raíz va en línea recta, kinematic, así cruza la
+horda sin chocar, y lo alto es del modelo) y cae golpeando el suelo (`Efectos.Explosion`). Al que no salió del anillo le
+pega ×1,5 y lo tira por el aire 6 m hacia afuera (`PlayerController.Lanzar`: la altura del jugador está congelada en el
+Rigidbody, así que el vuelo es la velocidad horizontal por la física, que las paredes frenan, y un arco de 2,2 m sobre el
+modelo; sin control mientras vuela, y si muere en el aire cae donde está), y después queda aturdido como tras la carga.
+Se esquiva saliendo del anillo durante el aviso, como la carga saliendo de la línea.
+La **carga** (se frena, marca en el piso una línea roja hacia el jugador 0,9 s,
 **del ancho de su cuerpo** —medía 1,4 m y la cápsula barre casi 3—, ruge y embiste en línea recta a 16 m/s, pegando ×2,5
 mientras embiste, y al terminar —haya chocado o no— **queda aturdido 1,3 s**, tambaleándose y sin atacar (tampoco con
 zarpazos: `EnemyController.puedeZarpar` los corta desde el aviso hasta volver a perseguir, y `CortarZarpazo` corta el
 que venía tirando, que hasta el 27/9 pegaba en pleno aviso y tapaba la pose): esa es la
-ventana para castigarlo, y es lo que hace que esquivar valga la pena) y la **invocación**
-(se frena, un anillo rojo que se achica y aparecen 4 zombis normales con sus multiplicadores, parados en el piso del
-anillo y dentro del mapa: el que no entra contra una pared sale del lado de enfrente). A la mitad de su vida
-entra en furia: ataca más seguido e invoca 6. Los invocados cuentan en la oleada y en el total del HUD
+ventana para castigarlo, y es lo que hace que esquivar valga la pena). La **invocación**, solo en furia (se frena, un
+anillo rojo que se achica y aparecen 6 zombis normales con sus multiplicadores, parados en el piso del anillo y dentro
+del mapa: el que no entra contra una pared sale del lado de enfrente). A la mitad de su vida entra en furia: ataca más
+seguido y empieza a invocar. **ShowBies > Pruebas > Grabar el salto del jefe** lo saca a 13 m con el jugador suelto,
+para ver el salto y el vuelo (en `Builds/jefe_golpe/`). Los invocados cuentan en la oleada y en el total del HUD
 (`WaveManager.SumarALaOleada`). Para moverse por su cuenta usa `IMovimientoPropio`: `EnemyController` lo busca en su
 `Awake` y en cada paso de física le pregunta primero; si devuelve verdadero, la persecución de siempre no corre ese paso.
 **Cada patrón tiene su pose** (`JefePatrones.LateUpdate`): se agazapa y baja el cuerpo mientras avisa la carga, va

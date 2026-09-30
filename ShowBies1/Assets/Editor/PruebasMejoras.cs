@@ -2426,6 +2426,41 @@ public static class PruebasMejoras
         }
     }
 
+    // El salto hacia el jugador (idea de Ivan, 30/9): alterna con la carga, y en furia invoca
+    // cuando le toca si hay lugar (sin lugar, el que tocaba). Cae en linea recta donde estaba
+    // el jugador. El jugador sale por el aire en un arco que arranca y termina en el piso.
+    static void ProbarGolpeAlPiso(Informe inf)
+    {
+        inf.Verdadero("jefe: si toca el salto, salta", JefePatrones.ElegirAtaque(true, false, false) == JefePatrones.Ataque.Salto);
+        inf.Verdadero("jefe: si no, carga", JefePatrones.ElegirAtaque(false, false, false) == JefePatrones.Ataque.Carga);
+        inf.Verdadero("jefe: si le toca invocar y hay lugar, invoca", JefePatrones.ElegirAtaque(true, true, true) == JefePatrones.Ataque.Invocacion);
+        inf.Verdadero("jefe: si le toca invocar sin lugar, hace el que tocaba (salto)", JefePatrones.ElegirAtaque(true, true, false) == JefePatrones.Ataque.Salto);
+        inf.Verdadero("jefe: si le toca invocar sin lugar, hace el que tocaba (carga)", JefePatrones.ElegirAtaque(false, true, false) == JefePatrones.Ataque.Carga);
+        var origen = new Vector3(0f, 2f, 0f);
+        var destino = new Vector3(12f, 2f, -5f);
+        inf.Verdadero("jefe: el salto sale de donde esta", Cerca(JefePatrones.PuntoDelSalto(origen, destino, 0f), origen));
+        inf.Verdadero("jefe: el salto cae donde estaba el jugador", Cerca(JefePatrones.PuntoDelSalto(origen, destino, 1f), destino));
+        inf.Verdadero("jefe: a mitad del salto va por la mitad", Cerca(JefePatrones.PuntoDelSalto(origen, destino, 0.5f), new Vector3(6f, 2f, -2.5f)));
+        inf.Verdadero("jefe: el salto no se pasa de donde cae", Cerca(JefePatrones.PuntoDelSalto(origen, destino, 1.3f), destino));
+        inf.Cerca("vuelo: sale del piso", 0, PlayerController.AlturaDelVuelo(0f, 2.2f), 1e-6);
+        inf.Cerca("vuelo: a mitad de camino esta en lo mas alto", 2.2, PlayerController.AlturaDelVuelo(0.5f, 2.2f), 1e-5);
+        inf.Cerca("vuelo: cae en el piso", 0, PlayerController.AlturaDelVuelo(1f, 2.2f), 1e-6);
+        inf.Verdadero("vuelo: nunca baja del piso", PlayerController.AlturaDelVuelo(0.1f, 2.2f) > 0f && PlayerController.AlturaDelVuelo(0.9f, 2.2f) > 0f);
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
+        var jefe = prefab != null ? prefab.GetComponent<JefePatrones>() : null;
+        if (!inf.Verdadero("jefe: el prefab tiene sus patrones", jefe != null)) return;
+        // El jugador sale despedido mas alla del anillo, y cuanto mas lejos salta el jefe, mas
+        // dura y mas sube el salto.
+        inf.Verdadero("jefe: el golpe tira al jugador fuera del anillo", jefe.empujeDelGolpe >= jefe.radioGolpe);
+        inf.Verdadero("jefe: el vuelo del jugador dura algo y sube algo", jefe.duracionDelVuelo > 0f && jefe.alturaDelVuelo > 0f);
+        inf.Verdadero("jefe: el salto largo dura mas y sube mas que el corto",
+                      jefe.duracionDelSalto.x > 0f && jefe.duracionDelSalto.y >= jefe.duracionDelSalto.x
+                      && jefe.alturaDelSalto.x > 0f && jefe.alturaDelSalto.y >= jefe.alturaDelSalto.x);
+        // Del anillo se sale: en el aviso, a la velocidad de base (15 m/s), se cruza el radio.
+        inf.Verdadero("jefe: del anillo se sale durante el aviso", jefe.avisoSalto * 15f > jefe.radioGolpe + 0.5f);
+    }
+
     // Los patrones del jefe (auditoria del 24/9), con el prefab en una escena de vista previa
     // (sin Awake: lo privado, por reflexion, y el EnemyController se le pone a mano):
     // - La linea de la carga tiene el ancho de su cuerpo: media 1,4 m fijos y la capsula
@@ -2440,6 +2475,7 @@ public static class PruebasMejoras
     static void ProbarPatronesDelJefe(Informe inf)
     {
         ProbarReservaDeLaInvocacion(inf);
+        ProbarGolpeAlPiso(inf);
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
         if (!inf.Verdadero("jefe: esta el prefab", prefab != null)) return;
         const System.Reflection.BindingFlags Privado = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;

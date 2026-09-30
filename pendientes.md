@@ -297,17 +297,10 @@ privacidad publicada.
   necesita que se lea la pose. Si le toca la carga y no se lo ve, invoca sin dar vuelta el turno de la carga. Va con
   H10 (la reserva de lugar), porque fuera de cuadro también respeta el techo. Que `PruebasMejoras.cs:2369-2374` mida
   qué fracción del disco de 1,5 a 22 m queda cubierta por algún ataque, y no cuatro puntos, y verlo jugando («El jefe
-  en el teléfono», sección 4). **Ojo, desde el 30/9**: con la invocación solo en furia (ver «El golpe al piso», abajo),
-  debajo de la mitad de la vida la banda de 15 a 22 m vuelve a quedar sin ataque, y el golpe al piso no la cubre
-  (castiga al que está cerca). Hay que volver a decidir cómo se cierra ahí: por ejemplo, que camine más rápido fuera
-  de cuadro.
-- **El golpe al piso del jefe** (idea de Ivan, **decidido el 30/9**). En vez de solo invocar, el jefe salta y golpea
-  el piso, y si el jugador está dentro del anillo lo levanta por el aire y lo tira hacia afuera, con un golpe. Se suma
-  como tercer ataque: carga, golpe al piso, y **la invocación solo desde la mitad de su vida** (en furia). El ataque se
-  elige por distancia (cerca, el golpe; lejos, la carga), y en furia cada tanto invoca si hay lugar. El jugador no
-  puede despegarse del piso (la altura está congelada en el prefab): el vuelo es un empujón horizontal por la física
-  (las paredes lo frenan) y la altura, un arco sobre el modelo. Después del golpe queda aturdido, la misma ventana que
-  tras la carga.
+  en el teléfono», sección 4). **Ojo, desde el 30/9**: la invocación quedó solo para la furia y el jefe ganó un salto
+  hacia el jugador (idea de Ivan, ver CLAUDE.md), que también ataca solo a 15 m o menos y con el jefe en pantalla.
+  Debajo de la mitad de la vida, la banda de 15 a 22 m sigue sin ataque. Hay que volver a decidir cómo se cierra: por
+  ejemplo, que el salto llegue más lejos, o que camine más rápido fuera de cuadro.
 - **El jugador y los zombis entran en los edificios de la ciudad y desaparecen** (media; H18, confirmado). Los 12
   edificios (11 × 11 m, de 3,7 a 6,4 m de alto, centros en ±12/±36) no tienen collider (`ConstructorEscenarios.cs:861`
   y `:906`; `Ciudad.prefab`), están dentro de las paredes (el 15 % del área) y son opacos: con la cámara a 12 m, el
@@ -552,6 +545,12 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
   nivel le gana al jugador, cuántas veces carga por falta de lugar y cuántas invoca con uno solo (con lugar, Grabar
   al jefe lo vio el 30/9: carga, aturdido e invocación con los cuatro alrededor); si se elige que la invocación pase
   el techo, medir los FPS con 43 zombis.
+- **El salto del jefe, jugando** (idea de Ivan, hecho el 30/9): Grabar el salto del jefe lo vio (el anillo donde está
+  el jugador, el jefe por el aire, el golpe y el jugador volando hacia afuera), pero desde la cámara de arriba el salto
+  se lee más por la sombra que por la altura. Mirar en el teléfono: si se esquiva a tiempo (0,9 s de aviso, 4,5 m de
+  anillo), si el vuelo del jugador se entiende o conviene más alto, más largo o con un giro, si el daño ×1,5 está bien,
+  y si hace falta una sombra o un anillo que crezca bajo el jefe mientras cae. Con la invocación solo en furia, la
+  banda de 15 a 22 m (H11) sigue abierta debajo de la mitad de la vida.
 - **Las piernas de la horda** (H16): Grabar animaciones con la cámara del juego antes y después, y mirar a 30 FPS que
   el rápido y el FASTER no se vean estroboscópicos con el tope.
 - **La noche** (H17 y H20, arreglados): la foto del chorro de balas y las tres cajas del 29/9

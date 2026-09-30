@@ -2,18 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // El jefe con patrones propios, pedido de Ivan: antes era un zombi grande y lento, y la
-// oleada 10 no se sentia como un evento. Alterna dos ataques, los dos con aviso:
+// oleada 10 no se sentia como un evento. Tiene tres ataques, todos con aviso. Alterna el
+// salto y la carga, empezando por el salto, y en furia, cada tres ataques, invoca (ver
+// ElegirAtaque):
 //
 // - CARGA: se frena, marca en el piso una linea roja hacia el jugador, del ancho de su
 //   cuerpo, ruge y embiste en linea recta sin corregir. Se esquiva moviendose de costado
 //   durante el aviso. Embistiendo pega mucho mas fuerte, y al terminar -haya chocado o no-
 //   **queda aturdido un rato**, tambaleandose y sin atacar: esa es la ventana para
 //   castigarlo. Asi la carga es una apuesta del jefe y no solo un golpe gratis.
-// - INVOCACION: se frena, marca un anillo rojo alrededor y hace aparecer zombis normales
-//   con sus mismos multiplicadores. En WaveMode cuentan en la oleada (SumarALaOleada), asi
-//   no termina con ellos vivos.
+// - SALTO: idea de Ivan (30/9). Se agacha, marca un anillo en el piso justo donde esta el
+//   jugador, da un salto gigante hasta ahi y cae golpeando el suelo: al que no salio del
+//   anillo le pega y lo tira por el aire hacia afuera (PlayerController.Lanzar). Cuanto mas
+//   lejos, mas largo y alto el salto. Despues queda aturdido, como tras la carga. Se
+//   esquiva saliendo del anillo, como la carga saliendo de la linea.
+// - INVOCACION, solo en furia: se frena, marca un anillo rojo alrededor y hace aparecer
+//   zombis normales con sus mismos multiplicadores. En WaveMode cuentan en la oleada
+//   (SumarALaOleada), asi no termina con ellos vivos.
 //
-// A la mitad de su vida entra en furia: ataca mas seguido e invoca mas. Los relojes van en
+// A la mitad de su vida entra en furia: ataca mas seguido y empieza a invocar. Los relojes van en
 // tiempo escalado, asi la pausa los congela. Va en el prefab ZombiBOSS; el estado arranca
 // de cero en cada aparicion, por el pool.
 //
@@ -41,7 +48,23 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     [Tooltip("Lo que queda quieto y tambaleandose despues de embestir.")]
     public float duracionAturdido = 1.3f;
 
-    [Header("Invocacion")]
+    [Header("Salto hacia el jugador")]
+    [Tooltip("Hasta donde alcanza el golpe al caer: el anillo que se marca donde esta el jugador.")]
+    public float radioGolpe = 4.5f;
+    public float avisoSalto = 0.9f;
+    [Tooltip("Lo que esta en el aire con el jugador pegado (x) y a la distancia a la que ataca (y), en segundos: cuanto mas lejos, mas largo el salto.")]
+    public Vector2 duracionDelSalto = new Vector2(0.45f, 0.9f);
+    [Tooltip("Cuanto sube el jefe, en metros, con el jugador pegado (x) y a la distancia a la que ataca (y).")]
+    public Vector2 alturaDelSalto = new Vector2(1.2f, 4f);
+    [Tooltip("Lo que multiplica su golpe al caer.")]
+    public float golpeDelPiso = 1.5f;
+    [Tooltip("Cuantos metros sale despedido el jugador, hacia afuera.")]
+    public float empujeDelGolpe = 6f;
+    [Tooltip("Cuanto sube el jugador por el aire, en metros.")]
+    public float alturaDelVuelo = 2.2f;
+    public float duracionDelVuelo = 0.7f;
+
+    [Header("Invocacion (en furia)")]
     public GameObject invocado;
     public int cantidadInvocados = 4;
     [Tooltip("Cuantos invocados suyos pueden estar vivos a la vez.")]
@@ -78,7 +101,16 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     public Color colorAviso = new Color(1f, 0.2f, 0.15f, 0.85f);
     public AudioClip rugido;
 
-    private enum Estado { Persiguiendo, AvisandoCarga, Cargando, AvisandoInvocar, Aturdido }
+    private enum Estado { Persiguiendo, AvisandoCarga, Cargando, AvisandoInvocar, Aturdido, AvisandoSalto, Saltando }
+
+    public enum Ataque { Carga, Salto, Invocacion }
+
+    // En furia invoca despues de tantos ataques de los otros.
+    public const int AtaquesEntreInvocaciones = 2;
+
+    // Lo que alcanza el golpe mas alla del anillo: el radio del jugador, que cuenta desde su
+    // centro.
+    private const float MargenDelJugador = 0.5f;
 
     private EnemyController zombi;
     private LineRenderer linea;
@@ -86,7 +118,15 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private float desde;
     private float proximoAtaque;
     private float aparecio;
-    private bool tocaCarga;
+    private Ataque ataque;
+    private int ataquesSinInvocar;
+    // Alterna el salto y la carga: el que toca la proxima vez que no invoque.
+    private bool tocaSalto;
+    // El salto: de donde sale, adonde cae (donde estaba el jugador al empezar el aviso), cuanto
+    // dura y cuanto sube. En el aire la raiz va kinematic, para cruzar la horda sin chocar.
+    private Vector3 origenDelSalto, destinoDelSalto;
+    private float duracionDeEsteSalto, alturaDeEsteSalto;
+    private bool saltoKinematico;
     private bool enFuria;
     private int golpesAlCargar;
     private Vector3 direccion;
@@ -146,9 +186,12 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     // EnemyController.Reservar), y que suelta al invocar o al volver a perseguir.
     private int reservados;
 
+    private Rigidbody cuerpo;
+
     private void Awake()
     {
         zombi = GetComponent<EnemyController>();
+        cuerpo = GetComponent<Rigidbody>();
 
         // El hijo que se ve: el del Animator con controller. Su transform local esta
         // libre porque los prefabs tienen Apply Root Motion apagado.
@@ -198,7 +241,11 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         numerosInvocados.Clear();
         aparecio = Time.time;
         proximoAtaque = Time.time + esperaInicial;
-        tocaCarga = true;
+        ataque = Ataque.Carga;
+        ataquesSinInvocar = 0;
+        // Arranca saltando: la oleada del jefe abre con el jefe cayendole encima al jugador.
+        tocaSalto = true;
+        saltoKinematico = false;
         enFuria = false;
         // El Animator ya tiene el paso propio: EnemyController se lo pone en cada aparicion.
         pasoPisado = false;
@@ -213,6 +260,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     {
         // Si se va (muere, vuelve al pool) con lugares apartados, que no queden ocupados.
         SoltarLaReserva();
+        saltoKinematico = false;
         if (linea != null) linea.enabled = false;
         // Que no se lo lleve al pool torcido: la aparicion siguiente sale de aca.
         inclinacion = balanceo = altura = 0f;
@@ -275,6 +323,28 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                     break;
                 }
 
+                // Antes del salto se agacha mas que para la carga, echado hacia adelante:
+                // junta fuerza.
+                case Estado.AvisandoSalto:
+                {
+                    float cuanto = avisoSalto > 0f ? Mathf.Clamp01((Time.time - desde) / avisoSalto) : 1f;
+                    inclinacionQueVa = gradosAlAgazaparse * 0.5f * cuanto;
+                    alturaQueVa = -fraccionQueSeAgacha * altoDelModelo * 1.5f * cuanto;
+                    break;
+                }
+
+                // En el aire: sube y baja en un arco, arqueado hacia atras al subir y
+                // echandose adelante al caer, que es el golpe.
+                case Estado.Saltando:
+                {
+                    float t = Mathf.Clamp01((Time.time - desde) / duracionDeEsteSalto);
+                    inclinacionQueVa = Mathf.Lerp(-gradosAlInvocar, gradosAlEmbestir, t);
+                    // La altura va en las unidades del padre del modelo (la raiz, a escala 2).
+                    float escala = modelo.parent != null ? Mathf.Max(0.0001f, Mathf.Abs(modelo.parent.lossyScale.y)) : 1f;
+                    alturaQueVa = PlayerController.AlturaDelVuelo(t, alturaDeEsteSalto) / escala;
+                    break;
+                }
+
                 // Invocando se arquea hacia atras y se estira hacia arriba.
                 case Estado.AvisandoInvocar:
                 {
@@ -290,7 +360,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         // tarda lo mismo en llegar a la pose.
         float paso = 1f - Mathf.Exp(-suavidadDeLaPose * Time.deltaTime);
         inclinacion = Mathf.Lerp(inclinacion, inclinacionQueVa, paso);
-        altura = Mathf.Lerp(altura, alturaQueVa, paso);
+        // El salto no se suaviza: suavizado llegaria tarde al piso y el golpe caeria en el aire.
+        altura = estado == Estado.Saltando ? alturaQueVa : Mathf.Lerp(altura, alturaQueVa, paso);
         // El tambaleo no se suaviza: es un vaiven y suavizarlo lo aplanaria.
         balanceo = balanceoQueVa;
 
@@ -318,11 +389,24 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                 // ladeaba la capsula y las hitboxes.
                 rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
                 return true;
+            case Estado.Saltando:
+            {
+                // En el aire, la raiz va en linea recta sobre el piso hasta donde cae, kinematic:
+                // cruza la horda sin chocar y sin que la fisica la frene. Lo alto es del modelo.
+                float t = Mathf.Clamp01((Time.time - desde) / duracionDeEsteSalto);
+                Vector3 punto = PuntoDelSalto(origenDelSalto, destinoDelSalto, t);
+                punto.y = rb.position.y;
+                rb.MovePosition(punto);
+                return true;
+            }
             case Estado.AvisandoCarga:
             case Estado.AvisandoInvocar:
+            case Estado.AvisandoSalto:
             {
-                // Quieto, mirando hacia donde va a cargar (o al jugador, si invoca).
-                Vector3 mirar = estado == Estado.AvisandoCarga ? transform.position + direccion : jugador.position;
+                // Quieto, mirando hacia donde va a cargar, adonde va a saltar o, si invoca, al
+                // jugador.
+                Vector3 mirar = estado == Estado.AvisandoCarga ? transform.position + direccion
+                              : estado == Estado.AvisandoSalto ? destinoDelSalto : jugador.position;
                 mirar.y = transform.position.y;
                 if ((mirar - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(mirar);
                 rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
@@ -404,6 +488,31 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                 if (ahora - desde >= duracionAturdido) Terminar(ahora);
                 break;
 
+            case Estado.AvisandoSalto:
+                DibujarAnilloDelGolpe(ahora);
+                if (ahora - desde >= avisoSalto)
+                {
+                    estado = Estado.Saltando;
+                    desde = ahora;
+                    // Sale desde donde esta ahora (el aviso lo deja quieto, pero lo pueden
+                    // haber empujado) y vuela kinematic: ver Mover.
+                    origenDelSalto = transform.position;
+                    if (cuerpo != null && !cuerpo.isKinematic)
+                    {
+                        cuerpo.linearVelocity = Vector3.zero;
+                        cuerpo.isKinematic = true;
+                        saltoKinematico = true;
+                    }
+                    CamaraJugador.Temblar(0.2f);
+                }
+                break;
+
+            case Estado.Saltando:
+                // El anillo sigue marcado mientras esta en el aire: es donde va a caer el golpe.
+                DibujarAnilloDelGolpe(ahora);
+                if (ahora - desde >= duracionDeEsteSalto) Aterrizar(ahora);
+                break;
+
             case Estado.AvisandoInvocar:
                 DibujarAnillo(ahora);
                 if (ahora - desde >= avisoInvocar)
@@ -423,18 +532,29 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         hacia.y = 0f;
         direccion = hacia.sqrMagnitude > 0.01f ? hacia.normalized : transform.forward;
         // La invocacion aparta su lugar ya, para que no sea un aviso entero sin nadie al final.
-        // Sin lugar (el techo lleno, o los suyos al tope), esta vez carga, y la proxima vuelve
-        // a probar invocar: Terminar da vuelta tocaCarga.
-        if (!tocaCarga)
+        // Sin lugar (el techo lleno, o los suyos al tope) esta vez hace otro ataque, y el
+        // proximo vuelve a probar invocar: el turno no se gasta.
+        bool tocaInvocar = enFuria && ataquesSinInvocar >= AtaquesEntreInvocaciones;
+        if (tocaInvocar) reservados = EnemyController.Reservar(InvocadosQueTocan());
+        ataque = ElegirAtaque(tocaSalto, tocaInvocar, reservados > 0);
+        if (ataque != Ataque.Invocacion) SoltarLaReserva();
+        estado = ataque == Ataque.Carga ? Estado.AvisandoCarga
+               : ataque == Ataque.Salto ? Estado.AvisandoSalto : Estado.AvisandoInvocar;
+        if (ataque == Ataque.Salto)
         {
-            reservados = EnemyController.Reservar(InvocadosQueTocan());
-            if (reservados == 0) tocaCarga = true;
+            // Cae donde esta el jugador ahora: el anillo lo marca, y el que se mueve se salva.
+            origenDelSalto = transform.position;
+            destinoDelSalto = zombi.thePlayer.transform.position;
+            destinoDelSalto.y = origenDelSalto.y;
+            float lejos = distanciaParaAtacar > 0f ? Mathf.Clamp01(hacia.magnitude / distanciaParaAtacar) : 1f;
+            duracionDeEsteSalto = Mathf.Max(0.1f, Mathf.Lerp(duracionDelSalto.x, duracionDelSalto.y, lejos));
+            alturaDeEsteSalto = Mathf.Lerp(alturaDelSalto.x, alturaDelSalto.y, lejos);
         }
-        estado = tocaCarga ? Estado.AvisandoCarga : Estado.AvisandoInvocar;
         // Dibujada antes de prenderla: el Update siguiente llega tarde para este cuadro, y
         // hasta el 27/9 el primer cuadro del aviso mostraba lo que tenia la linea (en el
         // primer ataque, una rayita roja suelta junto al origen del mundo).
-        if (tocaCarga) DibujarLinea(ahora);
+        if (ataque == Ataque.Carga) DibujarLinea(ahora);
+        else if (ataque == Ataque.Salto) DibujarAnilloDelGolpe(ahora);
         else DibujarAnillo(ahora);
         linea.enabled = true;
         // Desde el aviso hasta volver a perseguir no tira zarpazos (ver
@@ -443,8 +563,24 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         zombi.puedeZarpar = false;
         zombi.CortarZarpazo();
         Frenar();
-        if (rugido != null) Sonidos.Tocar(rugido, 0.9f, tocaCarga ? 0.75f : 0.55f);
+        if (rugido != null)
+            Sonidos.Tocar(rugido, 0.9f, ataque == Ataque.Carga ? 0.75f : ataque == Ataque.Salto ? 0.65f : 0.55f);
         CamaraJugador.Temblar(0.15f);
+    }
+
+    // Que ataque toca: la invocacion si es su turno y hay lugar; si no, el salto o la carga,
+    // que se alternan (sin lugar, el turno de invocar no se gasta). Estatica para probarla.
+    public static Ataque ElegirAtaque(bool tocaSalto, bool tocaInvocar, bool hayLugar)
+    {
+        if (tocaInvocar && hayLugar) return Ataque.Invocacion;
+        return tocaSalto ? Ataque.Salto : Ataque.Carga;
+    }
+
+    // Donde va la raiz a la fraccion t del salto: en linea recta sobre el piso. La altura es
+    // del modelo (LateUpdate). Estatica para probarla.
+    public static Vector3 PuntoDelSalto(Vector3 origen, Vector3 destino, float t)
+    {
+        return Vector3.Lerp(origen, destino, Mathf.Clamp01(t));
     }
 
     // Le corta el ataque que estaba por hacer y lo deja quieto un rato. Lo llama el
@@ -463,6 +599,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     {
         estado = Estado.Persiguiendo;
         SoltarLaReserva();
+        DevolverElCuerpo();
         if (linea != null) linea.enabled = false;
         if (zombi != null)
         {
@@ -507,6 +644,64 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
             && enPantalla.y >= margen.y && enPantalla.y <= 1f - margen.y;
     }
 
+    // Cae del salto: el golpe al piso. Al jugador que esta adentro del anillo le pega y lo
+    // tira por el aire, hacia afuera. Despues queda aturdido, como tras la carga: el golpe
+    // tambien es una apuesta.
+    private void Aterrizar(float ahora)
+    {
+        linea.enabled = false;
+        // Justo en el centro del anillo: el ultimo paso de fisica puede no haber llegado.
+        transform.position = new Vector3(destinoDelSalto.x, transform.position.y, destinoDelSalto.z);
+        DevolverElCuerpo();
+        Efectos.Explosion(destinoDelSalto);
+        var jugador = PlayerHealth.instance;
+        if (jugador != null && !jugador.EstaMuerto)
+        {
+            // Desde donde cayo, que es el centro del anillo.
+            Vector3 hacia = jugador.transform.position - destinoDelSalto;
+            hacia.y = 0f;
+            if (hacia.magnitude <= radioGolpe + MargenDelJugador)
+            {
+                jugador.TakeDamage(zombi.DanoPorGolpe * golpeDelPiso);
+                var control = jugador.GetComponent<PlayerController>();
+                Vector3 afuera = hacia.sqrMagnitude > 0.01f ? hacia.normalized : transform.forward;
+                // Si el golpe lo mato, se desploma donde esta.
+                if (control != null && !jugador.EstaMuerto) control.Lanzar(afuera * empujeDelGolpe, alturaDelVuelo, duracionDelVuelo);
+            }
+        }
+        Aturdir(ahora);
+    }
+
+    // El jefe vuelve a la fisica al caer (o si el salto se corta: la derrota, el revivir).
+    // Muerto no: EnemyController lo deja kinematic para el desplome.
+    private void DevolverElCuerpo()
+    {
+        if (!saltoKinematico) return;
+        saltoKinematico = false;
+        if (cuerpo != null && zombi != null && zombi.Vivo) cuerpo.isKinematic = false;
+    }
+
+    // El anillo del salto: donde va a caer, que es donde estaba el jugador, del tamaño de lo
+    // que alcanza el golpe; titilando mientras se agacha y quieto mientras esta en el aire.
+    // Mas grueso que el de la invocacion, que se achica alrededor del jefe.
+    private void DibujarAnilloDelGolpe(float ahora)
+    {
+        const int Puntos = 48;
+        Color c = colorAviso;
+        if (estado == Estado.AvisandoSalto) c.a *= 0.55f + 0.45f * Mathf.Abs(Mathf.Sin((ahora - desde) * 14f));
+        linea.startColor = linea.endColor = c;
+        linea.widthMultiplier = 0.5f;
+        linea.loop = true;
+        linea.positionCount = Puntos;
+        Vector3 centro = destinoDelSalto;
+        centro.y = AlturaDelAviso;
+        for (int i = 0; i < Puntos; i++)
+        {
+            float a = i * Mathf.PI * 2f / Puntos;
+            linea.SetPosition(i, centro + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * radioGolpe);
+        }
+    }
+
     // Despues de embestir queda expuesto un rato, haya chocado o no: es la ventana para
     // pegarle, y lo que hace que esquivar valga la pena.
     private void Aturdir(float ahora)
@@ -528,7 +723,12 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private void Terminar(float ahora)
     {
         VolverAPerseguir();
-        tocaCarga = !tocaCarga;
+        if (ataque == Ataque.Invocacion) ataquesSinInvocar = 0;
+        else
+        {
+            ataquesSinInvocar++;
+            tocaSalto = ataque != Ataque.Salto;
+        }
         proximoAtaque = ahora + cadaCuanto * (enFuria ? ritmoEnFuria : 1f);
     }
 

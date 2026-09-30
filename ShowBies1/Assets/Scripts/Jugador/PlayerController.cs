@@ -51,6 +51,81 @@ public class PlayerController : MonoBehaviour
     // Segundos que faltan para poder tirar otra granada. Lo muestra el boton de granada.
     public float GranadaRestante { get { return Mathf.Max(0f, granadaDisponibleEn - Time.time); } }
 
+    // El vuelo del golpe al piso del jefe (JefePatrones, idea de Ivan): el jugador sale
+    // despedido hacia afuera, por el aire. La altura del cuerpo esta congelada en el
+    // Rigidbody (y todo el juego lo supone), asi que el vuelo son dos cosas: la velocidad
+    // horizontal por la fisica -las paredes lo frenan- y el arco, sobre el modelo, como el
+    // salto del festejo de los zombis. La camara sigue a la raiz y no se sacude con el arco.
+    // Mientras vuela no hay control. Con tiempo escalado: la pausa lo congela.
+    private float vueloDesde = -1f;
+    private float vueloDuracion;
+    private float vueloAltura;
+    private Vector3 vueloVelocidad;
+    private Transform modeloEnVuelo;
+    private Vector3 posicionBaseDelModelo;
+
+    public bool EnElAire { get { return vueloDesde >= 0f; } }
+
+    // Lo despide 'desplazamiento' (en el piso) en 'duracion' segundos, con el cuerpo subiendo
+    // hasta 'altura' metros a mitad de camino.
+    public void Lanzar(Vector3 desplazamiento, float altura, float duracion)
+    {
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
+        TerminarVuelo();
+        desplazamiento.y = 0f;
+        vueloDuracion = Mathf.Max(0.05f, duracion);
+        vueloAltura = Mathf.Max(0f, altura);
+        vueloVelocidad = desplazamiento / vueloDuracion;
+        moveVelocity = vueloVelocidad;
+        vueloDesde = Time.time;
+        modeloEnVuelo = trans != null ? trans.transform : null;
+        if (modeloEnVuelo != null) posicionBaseDelModelo = modeloEnVuelo.localPosition;
+        FijarDisparo(false);
+        if (trans != null && trans.anim != null) trans.anim.SetBool("run", false);
+    }
+
+    // La altura del cuerpo a la fraccion t del vuelo: una parabola que sale y cae en el piso.
+    // Estatica para probarla sin escena.
+    public static float AlturaDelVuelo(float t, float altura)
+    {
+        if (t <= 0f || t >= 1f) return 0f;
+        return 4f * altura * t * (1f - t);
+    }
+
+    // Aterriza, o corta el vuelo (murio en el aire, se apago): el modelo vuelve al piso.
+    private void TerminarVuelo()
+    {
+        if (vueloDesde < 0f) return;
+        vueloDesde = -1f;
+        vueloVelocidad = Vector3.zero;
+        moveVelocity = Vector3.zero;
+        if (modeloEnVuelo != null) modeloEnVuelo.localPosition = posicionBaseDelModelo;
+        modeloEnVuelo = null;
+    }
+
+    // Despues del Animator, como toda pose por codigo encima de un clip.
+    private void LateUpdate()
+    {
+        if (vueloDesde < 0f) return;
+        float t = (Time.time - vueloDesde) / vueloDuracion;
+        if (t >= 1f)
+        {
+            TerminarVuelo();
+            CamaraJugador.Temblar(0.25f);
+            return;
+        }
+        if (modeloEnVuelo == null) return;
+        // En las unidades del padre (el jugador esta a escala 0,5): la altura va en metros.
+        float escala = modeloEnVuelo.parent != null ? Mathf.Max(0.0001f, Mathf.Abs(modeloEnVuelo.parent.lossyScale.y)) : 1f;
+        modeloEnVuelo.localPosition = posicionBaseDelModelo + Vector3.up * (AlturaDelVuelo(t, vueloAltura) / escala);
+    }
+
+    private void OnDisable()
+    {
+        // Apagado en el aire (la muerte apaga el control): que no quede flotando.
+        TerminarVuelo();
+    }
+
     private void Start()
     {
         myRigidbody = GetComponent<Rigidbody>();
@@ -81,6 +156,9 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        // Volando por el golpe del jefe no hay control.
+        if (EnElAire) return;
+
         // En móvil el input lo maneja PlayerJS con los joysticks. Si además
         // corriera esto, los dos se pelearían por moveVelocity y por isFiring.
         if (Plataforma.EsMovil) return;
@@ -93,6 +171,7 @@ public class PlayerController : MonoBehaviour
     // La entrada del joystick de movimiento. La llama PlayerJS.
     public void Move(Vector2 input)
     {
+        if (EnElAire) return;
         moveInput = new Vector3(input.x, 0f, input.y);
         moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad;
 
@@ -109,7 +188,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        myRigidbody.linearVelocity = moveVelocity;
+        myRigidbody.linearVelocity = EnElAire ? vueloVelocidad : moveVelocity;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -226,6 +305,8 @@ public class PlayerController : MonoBehaviour
     // el lugar, porque nadie volvia a apagar "run".
     public void Soltar()
     {
+        // Si lo mataron en el aire, al piso: el cuerpo no queda flotando.
+        TerminarVuelo();
         moveInput = Vector3.zero;
         moveVelocity = Vector3.zero;
         FijarDisparo(false);
