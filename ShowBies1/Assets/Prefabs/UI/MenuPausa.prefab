@@ -2361,7 +2361,7 @@ MonoBehaviour:
   pildora: {fileID: 21300000, guid: 0f913b6593a72244dac6d78bf50adbd0, type: 3}
   ancho: 820
   alto: 26
-  desdeArriba: 100
+  desdeArriba: 140
   colorFondo: {r: 0, g: 0, b: 0, a: 0.55}
   colorVida: {r: 0.87, g: 0.18, b: 0.2, a: 1}
   colorFuria: {r: 1, g: 0.45, b: 0.1, a: 1}

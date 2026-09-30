@@ -33,7 +33,8 @@ evidencia concreta): 15 confirmados, 7 parciales y 1 refutado, y ninguno quedó 
 marcado "sin medir" sale de un modelo: medirlo antes de arreglar. Lo nuevo del tramo sin auditar: los halos de neón
 que roban toques (H01), el botón de pausa encima de los carteles (H13), la noche que apaga las balas y las cajas
 (H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23). H01, H05,
-H06 y H17 se arreglaron el 29/9, probados con `PruebaTienda` y el banco nuevo `PruebaReiniciar`. Los cinco
+H06 y H17 se arreglaron el 29/9, y H13 y H21 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
+`PruebaTutorial` y el banco nuevo `PruebaReiniciar`. Los cinco
 que pedían una decisión (H03, H04, H08, H11 y H18) los decidió Ivan ese mismo día y pasaron a la sección 2; el paso
 del tanque, que venía con H16, queda como está (sección 6).
 
@@ -51,7 +52,7 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H10: la invocación del jefe sale vacía con el techo lleno | parcial: el arreglo propuesto no alcanza | media | 2 |
 | H11: al jefe se lo mata sin que ataque | confirmado | media | 2 |
 | H12: el borde rojo se corta en el área segura | confirmado | baja (era media) | 2 |
-| H13: la pausa del teléfono tapa lo de arriba al centro | confirmado | media | 2 |
+| H13: la pausa del teléfono tapa lo de arriba al centro | confirmado | media | arreglado el 30/9 |
 | H14: MODO LIBRE bloqueado con el halo verde | confirmado | baja (era media) | 2 |
 | H15: en PC se corre un 41 % más rápido en diagonal | confirmado | baja (era media) | 2 |
 | H16: los zombis patinan (el paso del tanque quedó como está, en la 6) | confirmado, y el tanque también | media | 2 |
@@ -59,7 +60,7 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H18: los edificios de la ciudad tapan al jugador | confirmado | media | 2 |
 | H19: el pitch acotado a 3 | refutado | — | 6 |
 | H20: las veredas tapan la línea del jefe | confirmado, y la granada también | media | 2 |
-| H21: la caja de arma del tutorial detrás del panel | confirmado | baja (era media) | 2 |
+| H21: la caja de arma del tutorial detrás del panel | confirmado | baja (era media) | arreglado el 30/9 |
 | H22: un banco cortado secuestra el próximo Play | confirmado | media | 2 |
 | H23: los bancos abren escenas sin mirar si están sucias | confirmado | media | 2 |
 | H24 a H123 (100 hallazgos bajos) | sin refutar | baja | sin refutar |
@@ -262,19 +263,6 @@ privacidad publicada.
   antes de que termine el aviso. La otra opción, que la invocación pase el techo hasta `maxInvocadosVivos` (35 → 43 en
   el teléfono), se decide con la medición de «720p nativo en el teléfono». Aparte, un desfase al azar en los ángulos
   para uno a tres invocados.
-- **El botón de pausa del teléfono tapa lo que va arriba al centro** (media; H13, confirmado). El disco (de 24 a 154 u
-  desde arriba, x ±65, alfa 0,92 y con el anillo celeste desde `0a4cc87`) se dibuja encima de: (1) el cartel «CAPÍTULO
-  N / NOMBRE» (`CapitulosDeEscenario.cs:485-495`, centro en +385), cuya primera línea cae entera en esa franja en
-  16:9, 18:9, 20:9 y 21:9 (en 20:9 tapa la Í, la T, la U y la L de «CAPÍTULO 2»), también al retomar en la 11 o más
-  (`:179` corre fuera del if/else); (2) el nombre del jefe: `6b8ea40` subió `desdeArriba` a 170 solo en el .cs, y
-  `MenuPausa.prefab:2364` sigue en 100 (letras en 151-183 u); (3) `PanelInstruccion` del tutorial
-  (`Tutorial.unity:726-727`, de 145 a 315 u), que toca el anillo en cualquier proporción. `ProbarAvisosSinPisarse`
-  (`PruebasMejoras.cs:1740`) nunca mira el botón. **Arreglo**: el capítulo no entra más abajo en ningún teléfono
-  cuando el cartel de la oleada lleva el bono; lo más simple es un `CanvasGroup` en `BotonPausa` que baje el alfa a
-  ~0,25 mientras dura el cartel (tocable igual), o poner «CAPÍTULO N · NOMBRE» como primer renglón del cartel de la
-  oleada. El jefe: `desdeArriba` ~140 en el prefab y el mismo valor en el .cs. El tutorial: `PanelInstruccion` en y
-  −260/−265 (ver la caja de arma del tutorial, abajo). Que la prueba lea de `MenuPausa.prefab` los rects de
-  `AreaSegura/BotonPausa` y de su halo, y los compare con el capítulo, la barra del jefe y el panel del tutorial.
 - **Los zombis patinan: las piernas cubren entre el 16 y el 36 % de lo que avanzan** (media; H16, confirmado). Del
   FBX: `Z_run_rm` avanza 3 m/s a escala 1 y `Z_walk_rm`, 1 m/s; los prefabs no usan root motion y se mueven a
   `enemyType.velocidad` (`EnemyController.cs:805-807`). Con la cuenta de `JefePatrones.PasoParaCorrer`, que ya calibra
@@ -442,16 +430,6 @@ privacidad publicada.
   juego más fácil que el del teléfono. La reproducción con F1 no sirve: `MedidorBalance` no muestra velocidad.
   **Arreglo**: `moveInput = Vector3.ClampMagnitude(moveInput, 1f);` antes de calcular `moveVelocity` (conserva la
   rampa de `GetAxis` y el umbral de `run`, y topa también los ejes del gamepad).
-- **La caja de arma del tutorial nace detrás del panel de instrucciones** (baja, era media; H21, confirmado). Nace 4 m
-  al norte del jugador (`TutorialManager.cs:174`) y, con la cámara del juego, cae entre 278 y 318 px de 1080;
-  `PanelInstruccion` (`Tutorial.unity:726-727`) llega a 315 px en 16:9 y 352 en 20:9, más 40 u de halo, y desde
-  `0a4cc87` es casi negro al 90 %: la caja queda tapada al 92 % en 16:9 y entera de 18:9 a 21:9 (se ve en
-  `Builds/tutorial_caja_arma.png`). `PruebaTutorial.cs:534` solo mira `activeSelf`. Es baja porque el tutorial es
-  opcional y se destapa con menos de un segundo de movimiento. **Arreglo**: hacerla nacer al sur, `new Vector3(0f, 0f,
-  -2.5f)` (738-776 px, del lado contrario a la marcha: no la tapan ni el panel movido de H13 ni el texto de la vida).
-  No en `(0, 0, 2)`: con el panel bajado a −265 vuelve el problema en 21:9, y queda en el camino de quien viene de las
-  cajas del paso 4. El desplazamiento como constante pública y un chequeo en la prueba de lógica que la proyecte con
-  la cámara y el panel leídos de disco en 16:9, 20:9 y 21:9 (`PruebaTutorial` corre en la proporción del Game view).
 - **Retomar vuelve opcional la muerte en oleadas** (baja, era media; H04, parcial). MENÚ no olvida la oleada
   (`MenuPausa.cs:96-100`) y perder el foco pausa y guarda (`:54-79`): solo morir, REINICIAR y la R la olvidan. Retomar
   (`WaveManager.cs:104-125`) crea un jugador nuevo: vida llena, `GolpesRecibidos` en 0, 500 balas, el revivir por

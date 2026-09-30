@@ -37,6 +37,12 @@ public class TutorialManager : MonoBehaviour
     private const float CostadoDeLasCajas = 4f;
     private const float SeparacionDelGrupo = 1.5f;
 
+    // La caja de arma nace al sur del jugador, del lado contrario a la marcha: 4 m al norte,
+    // con la camara del juego, caia detras del panel de instrucciones (tapada al 92 % en
+    // 16:9 y entera de 18:9 a 21:9: superauditoria del 29/9), y el panel ahora esta mas
+    // abajo, lejos del boton de pausa. La prueba de logica la proyecta contra el panel.
+    public static readonly Vector3 DondeNaceLaCajaDeArma = new Vector3(0f, 0f, -2.5f);
+
     private enum Paso { Moverse, Disparar, Granada, Pickups, Arma, Fin }
     private Paso paso;
 
@@ -171,7 +177,7 @@ public class TutorialManager : MonoBehaviour
             case Paso.Arma:
                 esperandoQueVenzaLaMejora = false;
                 textoInstruccion.text = Textos.De("tut_caja_arma");
-                Spawnear(puArmaPrefab, CercaDelJugador(new Vector3(0f, 0f, 4f), 0f));
+                Spawnear(puArmaPrefab, CercaDelJugador(DondeNaceLaCajaDeArma, 0f));
                 break;
 
             case Paso.Fin:

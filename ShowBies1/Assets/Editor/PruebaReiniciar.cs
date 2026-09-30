@@ -9,7 +9,8 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // Banco de lo que la superauditoria del 29/9 encontro en la pausa y en la noche, en play, en
-// WaveMode con una partida guardada en la oleada 5:
+// WaveMode con una partida guardada en la oleada 11 (al retomarla sale el cartel del capitulo 2,
+// y el boton de pausa, que lo tapaba, tiene que desvanecerse mientras dura y volver despues):
 //
 //  1. Los halos de los botones de la pausa no se llevan toques de los vecinos: un raycast como
 //     el del EventSystem justo adentro del borde de abajo de CONTINUAR cae en CONTINUAR, y en el
@@ -35,7 +36,8 @@ public static class PruebaReiniciar
     const string Clave = "ShowBies.PruebaReiniciar";
     const string Ruta = "../Builds/prueba_reiniciar.txt";
     const string Escena = "Assets/Escenas/WaveMode.unity";
-    const int OleadaGuardada = 5;
+    // La 11: al retomarla sale el cartel del capitulo 2, que el boton de pausa tapaba.
+    const int OleadaGuardada = 11;
     const double TopePorPaso = 15.0;
     const double TopeTotal = 90.0;
 
@@ -74,6 +76,9 @@ public static class PruebaReiniciar
     static string avisoTexto = "";
     static int lineasDelTitulo = -1;
     static float huecoTituloAviso = float.NaN;
+    static bool cartelAlEmpezar, cartelDespues = true;
+    static double sinCartelDesde = -1.0;
+    static float alfaConCartel = float.NaN, alfaSinCartel = float.NaN;
     static bool atrasVolvioALaPausa, atrasSeguiaPausado;
     static bool seguirReanudo, seguirSinConfirmacion, oleadaIgualAlSeguir;
     static bool rPauso, rPregunto;
@@ -160,6 +165,10 @@ public static class PruebaReiniciar
                 if (menu == null) menu = Object.FindAnyObjectByType<MenuPausa>();
                 if (menu == null || PlayerHealth.instance == null || EventSystem.current == null || Espero(ahora, 1.5)) return;
                 oleadaAlEmpezar = Progreso.OleadaEnCurso;
+                // El cartel del capitulo esta en pantalla y el boton de pausa, desvanecido.
+                var capitulos = Object.FindAnyObjectByType<CapitulosDeEscenario>();
+                cartelAlEmpezar = capitulos != null && capitulos.CartelEnPantalla;
+                alfaConCartel = AlfaDelBotonDePausa();
                 PonerCajas();
                 Disparar(true);
                 Pasar(Paso.FotoNoche, ahora);
@@ -226,12 +235,22 @@ public static class PruebaReiniciar
             }
 
             case Paso.Atras:
+            {
                 if (Espero(ahora, 0.4)) return;
+                // Antes, que se vaya el cartel del capitulo (3,2 s, en tiempo sin escalar: la
+                // pausa no lo congela), y medio segundo mas para que el boton vuelva.
+                var capitulosAhora = Object.FindAnyObjectByType<CapitulosDeEscenario>();
+                if (capitulosAhora != null && capitulosAhora.CartelEnPantalla) { sinCartelDesde = -1.0; return; }
+                if (sinCartelDesde < 0.0) { sinCartelDesde = ahora; return; }
+                if (ahora - sinCartelDesde < 0.5) return;
+                cartelDespues = false;
+                alfaSinCartel = AlfaDelBotonDePausa();
                 menu.CerrarConfirmacion();
                 atrasVolvioALaPausa = !menu.ConfirmandoReiniciar && menu.panel.activeSelf;
                 atrasSeguiaPausado = MenuPausa.Pausado && Time.timeScale == 0f;
                 Pasar(Paso.Seguir, ahora);
                 return;
+            }
 
             case Paso.Seguir:
             {
@@ -330,6 +349,15 @@ public static class PruebaReiniciar
         bordeReiniciarBien = enBordeR != null && enBordeR.transform.IsChildOf(reiniciar);
     }
 
+    // El alfa del boton de pausa (su CanvasGroup, que pone MenuPausa). Aunque en PC el boton
+    // este apagado, el grupo sigue su cuenta.
+    static float AlfaDelBotonDePausa()
+    {
+        var boton = menu != null ? menu.transform.Find("AreaSegura/BotonPausa") : null;
+        var grupo = boton != null ? boton.GetComponent<CanvasGroup>() : null;
+        return grupo != null ? grupo.alpha : float.NaN;
+    }
+
     static GameObject Tocar(Vector2 punto)
     {
         var dedo = new PointerEventData(EventSystem.current) { position = punto };
@@ -390,6 +418,8 @@ public static class PruebaReiniciar
         inf.AppendLine();
         if (error != null) inf.AppendLine("ERROR: " + error);
         inf.AppendLine("Al empezar: oleada en curso " + oleadaAlEmpezar + ", cajas puestas " + cajasPuestas + ", balas en el aire " + disparaba);
+        inf.AppendLine("Boton de pausa: con el cartel del capitulo (" + cartelAlEmpezar + ") alfa " + alfaConCartel.ToString("0.00")
+                       + "; despues (cartel " + cartelDespues + ") alfa " + alfaSinCartel.ToString("0.00"));
         inf.AppendLine("Toques: borde de abajo de CONTINUAR -> " + toqueBordeContinuar + "; hueco -> " + toqueHueco
                        + "; borde de arriba de REINICIAR -> " + toqueBordeReiniciar);
         inf.AppendLine("REINICIAR: confirmacion " + confirmoAlTocar + ", pausa tapada " + pausaTapadaAlConfirmar + ", pausado " + seguiaPausado
@@ -421,6 +451,7 @@ public static class PruebaReiniciar
             recargo && oleadaDespues == 1 && sinPausaDespues,
             noPreguntaEnLaUno,
             cajasPuestas == 3 && disparaba,
+            cartelAlEmpezar && alfaConCartel < 0.5f && !cartelDespues && alfaSinCartel > 0.99f,
         };
         string[] que =
         {
@@ -438,6 +469,7 @@ public static class PruebaReiniciar
             "REINICIAR de la confirmacion recarga la escena y empieza de la 1, sin pausa",
             "en la oleada 1 REINICIAR ya no pregunta",
             "la foto de noche tiene las tres cajas y balas en el aire",
+            "el boton de pausa se desvanece con el cartel del capitulo y vuelve cuando se va",
         };
         bool todo = true;
         for (int i = 0; i < ok.Length; i++)

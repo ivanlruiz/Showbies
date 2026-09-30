@@ -138,6 +138,13 @@ public class CapitulosDeEscenario : MonoBehaviour
         foreach (var puesta in puestas) if (puesta.objeto != null) Destroy(puesta.objeto);
     }
 
+    // Si el cartel del capitulo esta en pantalla. Lo mira la pausa: su boton, arriba al
+    // centro en el telefono, tapa la primera linea del cartel, y mientras dura se desvanece.
+    public bool CartelEnPantalla
+    {
+        get { return cartel != null; }
+    }
+
     public static int CapituloDe(int oleada, int oleadasPorCapitulo)
     {
         return oleada <= 0 ? 0 : (oleada - 1) / Mathf.Max(1, oleadasPorCapitulo);

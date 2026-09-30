@@ -23,8 +23,11 @@ public class BarraDelJefe : MonoBehaviour
     [Header("Medidas")]
     public float ancho = 820f;
     public float alto = 26f;
+    // Con el nombre debajo del anillo de neon del boton de pausa (que baja hasta ~179 desde
+    // arriba): el prefab tenia 100 y el codigo 170, y las letras quedaban en 151-183, encima
+    // del anillo (superauditoria del 29/9). La prueba de logica lo mide.
     [Tooltip("Debajo del boton de pausa, que en movil va arriba al centro.")]
-    public float desdeArriba = 170f;
+    public float desdeArriba = 140f;
 
     [Header("Colores")]
     public Color colorFondo = new Color(0f, 0f, 0f, 0.55f);

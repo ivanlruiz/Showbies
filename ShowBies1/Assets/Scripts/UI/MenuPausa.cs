@@ -28,6 +28,13 @@ public class MenuPausa : MonoBehaviour
     private TMP_Text avisoReiniciar;
     private int oleadaQueSePierde;
 
+    // El boton de pausa del telefono va arriba al centro, encima de la primera linea del cartel
+    // del capitulo ("CAPITULO 2" quedaba tapada en todas las proporciones: superauditoria del
+    // 29/9). Mientras el cartel esta en pantalla el boton se desvanece, y se puede tocar igual.
+    public float alfaConElCartel = 0.25f;
+    private CanvasGroup grupoDelBoton;
+    private CapitulosDeEscenario capitulos;
+
     public static bool Pausado { get; private set; }
 
     public bool ConfirmandoReiniciar
@@ -58,8 +65,26 @@ public class MenuPausa : MonoBehaviour
         Pausado = false;
     }
 
+    private void Start()
+    {
+        var boton = transform.Find("AreaSegura/BotonPausa");
+        if (boton != null)
+        {
+            grupoDelBoton = boton.GetComponent<CanvasGroup>();
+            if (grupoDelBoton == null) grupoDelBoton = boton.gameObject.AddComponent<CanvasGroup>();
+        }
+        // Solo las oleadas tienen capitulos.
+        capitulos = FindAnyObjectByType<CapitulosDeEscenario>();
+    }
+
     private void Update()
     {
+        if (grupoDelBoton != null)
+        {
+            float alfa = capitulos != null && capitulos.CartelEnPantalla ? alfaConElCartel : 1f;
+            grupoDelBoton.alpha = Mathf.MoveTowards(grupoDelBoton.alpha, alfa, Mathf.Min(Time.unscaledDeltaTime, 0.1f) * 4f);
+        }
+
         // Con la oferta de revivir o la derrota en pantalla el juego ya esta congelado y
         // el jugador, muerto. Escape en la derrota es de MenuPerdiste (vuelve al menu).
         if (OtroLoCongela) return;

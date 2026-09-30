@@ -162,7 +162,9 @@ El de la granada termina cuando **explota** la que se tiró en ese paso, no al t
 caerse solos y los que quedan se van con sus partículas de muerte, sin puntos (`TutorialManager.Sacar`). El de la caja
 de arma, cuando se agarra esa caja: `MejoraActiva` la prende también la de balas. Todo nace adentro del área jugable
 (`TutorialManager.PuntoDelMapa`, ±44 m; las paredes invisibles están en ±49): del otro lado de una pared, una caja
-—que acá no caduca— trababa el paso.
+—que acá no caduca— trababa el paso. **La caja de arma nace 2,5 m al sur del jugador** (`DondeNaceLaCajaDeArma`):
+4 m al norte caía detrás del panel de instrucciones, que además está en y −265, debajo del anillo del botón de pausa
+(superauditoría del 29/9). La prueba de lógica proyecta la caja con la cámara de la escena en 16:9, 20:9 y 21:9.
 
 ## Arquitectura: singletons y referencias de inspector
 
@@ -1226,7 +1228,9 @@ trampa).
   Al matarlo la roja se vacía mientras la barra se va (se rellenaba entera). Se arma en código y vive en el canvas del prefab
   `MenuPausa`, que está en las tres escenas de juego (como `CursorMira`), colgando del área segura y antes del panel
   de la pausa, que la tapa. Espera un segundo desde que el jefe aparece: la vida definitiva se la pone quien lo saca,
-  con los multiplicadores de la oleada, y preguntarla antes la fijaría sin ellos.
+  con los multiplicadores de la oleada, y preguntarla antes la fijaría sin ellos. **El nombre va debajo del anillo del
+  botón de pausa** (`desdeArriba` 140, igual en el prefab y en el código: el prefab tenía 100 y las letras caían
+  encima del anillo). La prueba de lógica lo mide.
 
 **El fondo del menu es de noche** (ver Tema: carbón neón).
 
@@ -1590,6 +1594,10 @@ click en otra ventana.
   confirmación abierta vuelve a la pausa, sin reanudar. **La R de PC pasa por lo mismo** (`MenuPausa.PedirReiniciar`:
   pausa y pregunta), que está al lado de la F de la furia. En el libre, el tutorial y la oleada 1 reinicia como antes.
   Lo prueba **ShowBies > Pruebas > Reiniciar y la noche (play)** (ver Pruebas y medición).
+- **El botón de pausa del teléfono se desvanece mientras está el cartel del capítulo** (a `alfaConElCartel`, 0,25, y
+  se puede tocar igual): va arriba al centro y tapaba la primera línea, "CAPÍTULO 2", en todas las proporciones, y el
+  cartel no tiene más abajo adonde ir, que ahí sale el de la oleada (superauditoría del 29/9). Lo que va debajo del
+  botón (el nombre del jefe, el panel del tutorial) empieza debajo de su anillo, y la prueba de lógica lo mide.
 - **El botón atrás de Android llega como `KeyCode.Escape`**, también con el back predictivo activado
   (`androidPredictiveBackSupport: 1`, targetSdk 36): el player de Unity registra su propio
   `OnBackInvokedCallback` y reinyecta `KEYCODE_BACK` a la actividad. Deja de llegar si alguien pone
@@ -1975,10 +1983,10 @@ enterrado.
     caminos y mide que ninguno sea liso ni de escena vacía, y que el menú se vea igual sin HDR (capturas en
     `Builds/menu_tienda/`).
 - **ShowBies > Pruebas > Reiniciar y la noche (play)** (`PruebaReiniciar`, del 29/9): en WaveMode con una partida
-  guardada en la 5, que los toques de verdad en los bordes de CONTINUAR y REINICIAR caigan en su botón y no en el halo
+  guardada en la 11, que los toques de verdad en los bordes de CONTINUAR y REINICIAR caigan en su botón y no en el halo
   del vecino, y todo el circuito de la confirmación de REINICIAR (pregunta sin olvidar la oleada, el atrás vuelve a la
   pausa, SEGUIR JUGANDO reanuda, la R pausa y pregunta, REINICIAR recarga en la 1, y en la 1 ya no pregunta), con el
-  título en un renglón. Saca además una foto de noche de las tres cajas y el chorro de balas
+  título en un renglón; y que el botón de pausa se desvanezca con el cartel del capítulo 2 y vuelva cuando se va. Saca además una foto de noche de las tres cajas y el chorro de balas
   (`Builds/noche_cajas_balas.png`) y otra de la confirmación. Escribe `Builds/prueba_reiniciar.txt`.
 - **Los bancos en play devuelven el progreso** (`RespaldoDelBanco`): cada uno guarda al arrancar el progreso real del
   editor, los PlayerPrefs del juego, `runInBackground` y "Teclado y mouse en el editor", y los devuelve al volver a modo

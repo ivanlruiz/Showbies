@@ -209,6 +209,7 @@ public static class PruebasMejoras
             ProbarZombisPorPartida(informe);
             ProbarCrecimientoDeMonedas(informe);
             ProbarAvisosSinPisarse(informe);
+            ProbarBotonDePausa(informe);
             ProbarTiendaTapaLaEscena(informe);
             ProbarVidriosDelMenu(informe);
             ProbarPartidaNeon(informe);
@@ -1779,6 +1780,72 @@ public static class PruebasMejoras
             inf.Verdadero("avisos: el de mision no pisa la vida" + en, !SePisan(mision, vidaAbajo));
             inf.Verdadero("avisos: el del capitulo no pisa el de la oleada" + en, !SePisan(capitulo, oleada));
         }
+    }
+
+    // El boton de pausa del telefono, arriba al centro, no tapa lo que va debajo (superauditoria
+    // del 29/9): el nombre del jefe y el panel de instrucciones del tutorial empiezan debajo
+    // de su anillo de neon, y la caja de arma del tutorial, proyectada con la camara de la
+    // escena, no nace detras de ese panel, en 16:9, 20:9 y 21:9. El cartel del capitulo si
+    // cae debajo del boton: ahi el boton se desvanece mientras dura (MenuPausa).
+    static void ProbarBotonDePausa(Informe inf)
+    {
+        var pausa = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/MenuPausa.prefab");
+        var boton = pausa != null ? pausa.transform.Find("AreaSegura/BotonPausa") as RectTransform : null;
+        var anillo = boton != null ? boton.Find("Neon") as RectTransform : null;
+        var barra = pausa != null ? pausa.GetComponentInChildren<BarraDelJefe>(true) : null;
+        if (!inf.Verdadero("boton de pausa: estan el boton, su anillo y la barra del jefe", boton != null && anillo != null && barra != null)) return;
+
+        // Desde el borde de arriba del area segura, en unidades del canvas.
+        float techoBoton = -boton.anchoredPosition.y - boton.sizeDelta.y * (1f - boton.pivot.y);
+        float centroBoton = techoBoton + boton.sizeDelta.y * 0.5f;
+        float pisoAnillo = centroBoton - anillo.anchoredPosition.y + anillo.sizeDelta.y * 0.5f;
+        inf.Verdadero("boton de pausa: el nombre del jefe empieza debajo del anillo (" + barra.TechoDesdeArriba.ToString("0") + " contra "
+                      + pisoAnillo.ToString("0") + ")", barra.TechoDesdeArriba >= pisoAnillo);
+
+        float techoPanel = float.NaN, pisoPanel = float.NaN;
+        Vector3 jugador = Vector3.zero;
+        Camera camara = null;
+        var proyecciones = new List<string>();
+        bool cajaAfuera = true, hayCamara = false;
+        LeerEscena("Assets/Escenas/Tutorial.unity", escena =>
+        {
+            var tutorial = Buscar<TutorialManager>(escena);
+            var panel = tutorial != null && tutorial.textoInstruccion != null ? tutorial.textoInstruccion.transform.parent as RectTransform : null;
+            if (panel != null)
+            {
+                techoPanel = -panel.anchoredPosition.y - panel.sizeDelta.y * (1f - panel.pivot.y);
+                pisoPanel = techoPanel + panel.sizeDelta.y;
+            }
+            var seguidora = Buscar<CamaraJugador>(escena);
+            camara = seguidora != null ? seguidora.GetComponentInChildren<Camera>(true) : null;
+            if (camara == null || tutorial == null || tutorial.jugador == null || float.IsNaN(techoPanel)) return;
+            hayCamara = true;
+            jugador = tutorial.jugador.transform.position;
+            // La caja, a la altura a la que nace; lo que se proyecta es su centro, con medio
+            // metro de margen hacia el panel (la caja mide ~1 m).
+            Vector3 caja = jugador + TutorialManager.DondeNaceLaCajaDeArma;
+            caja.y = 0.5f;
+            float aspectoAntes = camara.aspect;
+            foreach (var p in new[] { new Vector2(16f, 9f), new Vector2(20f, 9f), new Vector2(21f, 9f) })
+            {
+                camara.aspect = p.x / p.y;
+                float alto = MedioAltoDelCanvas(p) * 2f;
+                float centro = (1f - camara.WorldToViewportPoint(caja).y) * alto;
+                float borde = (1f - camara.WorldToViewportPoint(caja + camara.transform.up * 0.5f).y) * alto;
+                // Lo mas alto de la caja en la pantalla contra el piso del panel, con su halo (40).
+                bool afuera = borde > pisoPanel + 40f || centro < techoPanel - 40f;
+                cajaAfuera &= afuera;
+                proyecciones.Add(p.x + ":" + p.y + " caja de " + borde.ToString("0") + " a " + centro.ToString("0"));
+            }
+            camara.aspect = aspectoAntes;
+            camara.ResetAspect();
+        });
+        if (!inf.Verdadero("boton de pausa: esta el panel de instrucciones del tutorial", !float.IsNaN(techoPanel))) return;
+        inf.Verdadero("boton de pausa: el panel del tutorial empieza debajo del anillo (" + techoPanel.ToString("0") + " contra "
+                      + pisoAnillo.ToString("0") + ")", techoPanel >= pisoAnillo);
+        if (!inf.Verdadero("boton de pausa: esta la camara del tutorial", hayCamara)) return;
+        inf.Verdadero("boton de pausa: la caja de arma del tutorial no nace detras del panel (" + string.Join(", ", proyecciones)
+                      + "; el panel va de " + techoPanel.ToString("0") + " a " + pisoPanel.ToString("0") + ")", cajaAfuera);
     }
 
     // De donde a donde va un texto centrado en y, en unidades del canvas.
