@@ -157,7 +157,8 @@ public class WaveManager : MonoBehaviour
 
             for (int i = 0; i < cantidad; i++)
             {
-                while (EnemyController.ZombisVivos >= maxZombisVivos)
+                // Los lugares que reservo un jefe que esta por invocar cuentan como ocupados.
+                while (EnemyController.ZombisVivos + EnemyController.Reservados >= maxZombisVivos)
                 {
                     yield return null;
                 }

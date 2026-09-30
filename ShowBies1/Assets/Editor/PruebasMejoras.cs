@@ -2394,6 +2394,38 @@ public static class PruebasMejoras
         }
     }
 
+    // La invocacion aparta su lugar en el techo de poblacion al empezar el aviso (superauditoria
+    // del 29/9): con el techo lleno hacia el aviso entero y no salia nadie. Con los estaticos de
+    // EnemyController, que en modo edicion no usa nadie, y devueltos como estaban.
+    static void ProbarReservaDeLaInvocacion(Informe inf)
+    {
+        int techoAntes = EnemyController.TechoDeZombis;
+        EnemyController.Soltar(EnemyController.Reservados);
+        try
+        {
+            EnemyController.FijarTecho(10);
+            int vivos = EnemyController.ZombisVivos;
+            int lugar = EnemyController.LugarParaZombis;
+            int primera = EnemyController.Reservar(4);
+            inf.Igual("jefe: reservar 4 con lugar aparta 4", 4, primera);
+            inf.Igual("jefe: lo reservado ya no cuenta como lugar", lugar - 4, EnemyController.LugarParaZombis);
+            int segunda = EnemyController.Reservar(100);
+            inf.Igual("jefe: no reserva mas de lo que entra", lugar - 4, segunda);
+            inf.Igual("jefe: con todo reservado no queda lugar", 0, EnemyController.LugarParaZombis);
+            inf.Igual("jefe: con el techo lleno reservar da 0 (y el jefe carga en vez de invocar)", 0, EnemyController.Reservar(4));
+            EnemyController.Soltar(primera + segunda);
+            inf.Igual("jefe: soltar devuelve el lugar", lugar, EnemyController.LugarParaZombis);
+            EnemyController.Soltar(5);
+            inf.Igual("jefe: soltar de mas no deja reservas negativas", 0, EnemyController.Reservados);
+            inf.Igual("jefe: nada de esto toca los zombis vivos", vivos, EnemyController.ZombisVivos);
+        }
+        finally
+        {
+            EnemyController.Soltar(EnemyController.Reservados);
+            EnemyController.FijarTecho(techoAntes);
+        }
+    }
+
     // Los patrones del jefe (auditoria del 24/9), con el prefab en una escena de vista previa
     // (sin Awake: lo privado, por reflexion, y el EnemyController se le pone a mano):
     // - La linea de la carga tiene el ancho de su cuerpo: media 1,4 m fijos y la capsula
@@ -2407,6 +2439,7 @@ public static class PruebasMejoras
     // - Solo ataca si se lo ve: con la camara de WaveMode, en 16:9 y en 20:9.
     static void ProbarPatronesDelJefe(Informe inf)
     {
+        ProbarReservaDeLaInvocacion(inf);
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
         if (!inf.Verdadero("jefe: esta el prefab", prefab != null)) return;
         const System.Reflection.BindingFlags Privado = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;

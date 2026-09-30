@@ -471,6 +471,11 @@ en la mayoría de las cargas (superauditoría del 29/9). Los anillos de la grana
 **Las invocaciones respetan el techo de población.** El generador de cada escena lo fija al empezar
 (`EnemyController.FijarTecho`, 60 o 35 en móvil) y el jefe saca `min(los suyos, maxInvocadosVivos,
 EnemyController.LugarParaZombis)`: sin eso, en el modo libre se juntaban jefes invocando y el teléfono se trababa.
+**El lugar lo aparta al empezar el aviso** (`EnemyController.Reservar`, y lo suelta al invocar, al volver a perseguir
+o al irse): mirarlo recién al invocar no alcanzaba, porque en los 0,8 s del anillo el generador lo ocupaba, y con el
+techo lleno el jefe hacía el aviso entero, con el rugido, y no salía nadie (superauditoría del 29/9). Los generadores
+cuentan lo reservado como ocupado (`ZombisVivos + Reservados`). **Sin lugar, esa vez carga**, y la próxima vuelve a
+probar invocar. Los invocados salen girados al azar alrededor del jefe: con uno solo salía siempre al este.
 En el libre, además, **no sale otro jefe mientras haya uno vivo** (`GeneradorZombis` lo sigue con su número de
 aparición). `EnemyController.Jefes` es la lista de los que hay, que se lleva desde el setter de `EsJefe` (se marca
 después de aparecer, así que `OnEnable` no sirve) y la mira la barra de arriba.

@@ -166,7 +166,8 @@ public class GeneradorZombis : MonoBehaviour
         {
             yield return new WaitForSeconds(interval);                   //X                         //Y                     //Z
 
-            if (EnemyController.ZombisVivos >= maxZombisVivos) continue;
+            // Los lugares que reservo un jefe que esta por invocar cuentan como ocupados.
+            if (EnemyController.ZombisVivos + EnemyController.Reservados >= maxZombisVivos) continue;
 
             // Un jefe por vez: con su corrutina cada 30 s se juntaban varios, y cada uno
             // invoca. El que hay se sigue con su numero de aparicion, que no se reusa.

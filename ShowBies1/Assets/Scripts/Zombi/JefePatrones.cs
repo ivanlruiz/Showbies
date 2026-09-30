@@ -142,6 +142,9 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     // nuevo, asi que se guarda con su numero de aparicion (ver EnemyController.SigueVivo).
     private readonly List<EnemyController> invocados = new List<EnemyController>();
     private readonly List<int> numerosInvocados = new List<int>();
+    // Los lugares que aparto en el techo de poblacion al empezar a avisar la invocacion (ver
+    // EnemyController.Reservar), y que suelta al invocar o al volver a perseguir.
+    private int reservados;
 
     private void Awake()
     {
@@ -208,6 +211,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
 
     private void OnDisable()
     {
+        // Si se va (muere, vuelve al pool) con lugares apartados, que no queden ocupados.
+        SoltarLaReserva();
         if (linea != null) linea.enabled = false;
         // Que no se lo lleve al pool torcido: la aparicion siguiente sale de aca.
         inclinacion = balanceo = altura = 0f;
@@ -417,6 +422,14 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         Vector3 hacia = zombi.thePlayer.transform.position - transform.position;
         hacia.y = 0f;
         direccion = hacia.sqrMagnitude > 0.01f ? hacia.normalized : transform.forward;
+        // La invocacion aparta su lugar ya, para que no sea un aviso entero sin nadie al final.
+        // Sin lugar (el techo lleno, o los suyos al tope), esta vez carga, y la proxima vuelve
+        // a probar invocar: Terminar da vuelta tocaCarga.
+        if (!tocaCarga)
+        {
+            reservados = EnemyController.Reservar(InvocadosQueTocan());
+            if (reservados == 0) tocaCarga = true;
+        }
         estado = tocaCarga ? Estado.AvisandoCarga : Estado.AvisandoInvocar;
         // Dibujada antes de prenderla: el Update siguiente llega tarde para este cuadro, y
         // hasta el 27/9 el primer cuadro del aviso mostraba lo que tenia la linea (en el
@@ -449,6 +462,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     private void VolverAPerseguir()
     {
         estado = Estado.Persiguiendo;
+        SoltarLaReserva();
         if (linea != null) linea.enabled = false;
         if (zombi != null)
         {
@@ -546,25 +560,41 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         return vivos;
     }
 
+    // Cuantos le tocan ahora: ni mas de los suyos de los que se banca, ni mas de los que
+    // entran en la escena (el techo lo fija el generador, 60 o 35 en movil, y sin mirarlo el
+    // modo libre junta una pantalla de zombis y el telefono se traba). El lugar en la escena
+    // lo mira EnemyController.Reservar.
+    private int InvocadosQueTocan()
+    {
+        int n = cantidadInvocados + (enFuria ? invocadosExtraEnFuria : 0);
+        return Mathf.Min(n, Mathf.Max(0, maxInvocadosVivos - InvocadosVivos()));
+    }
+
+    private void SoltarLaReserva()
+    {
+        if (reservados <= 0) return;
+        EnemyController.Soltar(reservados);
+        reservados = 0;
+    }
+
     private void Invocar()
     {
-        if (invocado == null) return;
-        int n = cantidadInvocados + (enFuria ? invocadosExtraEnFuria : 0);
-        // Ni mas de los suyos de los que se banca, ni mas de los que entran en la escena:
-        // el techo lo fija el generador (60, o 35 en movil) y sin mirarlo el modo libre
-        // junta una pantalla de zombis y el telefono se traba.
-        n = Mathf.Min(n, Mathf.Max(0, maxInvocadosVivos - InvocadosVivos()));
-        n = Mathf.Min(n, EnemyController.LugarParaZombis);
-        if (n <= 0) return;
+        // Los que aparto al empezar el aviso: se sueltan y salen ellos, que el lugar es suyo.
+        int n = reservados;
+        SoltarLaReserva();
+        if (invocado == null || n <= 0) return;
 
         // En el piso, donde se dibujo el anillo, y no a la altura del centro del jefe (2 m):
         // nacian con los pies a metro y medio y caian, lejos del anillo. SubirSobreElPiso
         // los para encima, como a los de los puntos de aparicion.
         Vector3 centro = transform.position;
         centro.y = 0f;
+        // Girados al azar: con uno solo salia siempre al este del jefe, y con dos o tres,
+        // siempre en los mismos lugares.
+        float giro = Random.value * Mathf.PI * 2f;
         for (int i = 0; i < n; i++)
         {
-            float angulo = i * Mathf.PI * 2f / n;
+            float angulo = giro + i * Mathf.PI * 2f / n;
             Vector3 punto = PuntoDelAnillo(centro, new Vector3(Mathf.Cos(angulo), 0f, Mathf.Sin(angulo)));
             var nuevo = EnemyController.Aparecer(invocado, punto);
             if (nuevo == null) continue;

@@ -33,7 +33,7 @@ evidencia concreta): 15 confirmados, 7 parciales y 1 refutado, y ninguno quedó 
 marcado "sin medir" sale de un modelo: medirlo antes de arreglar. Lo nuevo del tramo sin auditar: los halos de neón
 que roban toques (H01), el botón de pausa encima de los carteles (H13), la noche que apaga las balas y las cajas
 (H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23). H01, H05,
-H06 y H17 se arreglaron el 29/9, y H07, H09, H13, H15, H20, H21, H22 y H23 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
+H06 y H17 se arreglaron el 29/9, y H07, H09, H10, H13, H15, H20, H21, H22 y H23 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
 `PruebaTutorial` y el banco nuevo `PruebaReiniciar`. Los cinco
 que pedían una decisión (H03, H04, H08, H11 y H18) los decidió Ivan ese mismo día y pasaron a la sección 2; el paso
 del tanque, que venía con H16, queda como está (sección 6).
@@ -49,7 +49,7 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H07: el versionCode 5 ya se usó | parcial: ya estaba en TAREAS | baja (era media) | arreglado el 30/9 |
 | H08: la librería de reseñas y Seguridad de los datos | parcial: la lectura queda abierta | baja (era media) | 2 |
 | H09: Storage Location decide dónde vive `progreso.json` | parcial: no destruye, se revierte | baja (era media) | arreglado el 30/9 |
-| H10: la invocación del jefe sale vacía con el techo lleno | parcial: el arreglo propuesto no alcanza | media | 2 |
+| H10: la invocación del jefe sale vacía con el techo lleno | parcial: el arreglo propuesto no alcanza | media | arreglado el 30/9 |
 | H11: al jefe se lo mata sin que ataque | confirmado | media | 2 |
 | H12: el borde rojo se corta en el área segura | confirmado | baja (era media) | 2 |
 | H13: la pausa del teléfono tapa lo de arriba al centro | confirmado | media | arreglado el 30/9 |
@@ -252,21 +252,6 @@ privacidad publicada.
 
 ### De la superauditoría del 29/9
 
-- **Con el techo de zombis lleno, la invocación del jefe hace el aviso entero y no sale nadie** (media; H10, parcial).
-  `JefePatrones.Empezar` (`:407-428`) elige invocar sin mirar si hay lugar y paga el anillo, el rugido y 0,8 s quieto;
-  `Invocar` (`:545-551`) recorta con `LugarParaZombis` y `maxInvocadosVivos` (8), con 0 vuelve en silencio, y
-  `Terminar` da vuelta `tocaCarga` igual: la invocación se pierde. Con uno solo, sale siempre al +X. El camino de
-  `maxInvocadosVivos` pasa también en PC en la oleada 10 (la tercera invocación sin furia; en furia salen 6, 2 y 0).
-  Corrige al hallazgo: los generadores no llenan el lugar en un cuadro (uno cada 0,35 s en oleadas y cada 0,25 s en el
-  libre), así que pega sobre todo en el teléfono desde la oleada 20 (90 zombis contra un techo de 35) y en el libre
-  cuando el nivel le gana al jugador (60-90 % vacías, modelo sin medir); en la oleada 10 del teléfono casi siempre
-  sale entera. **Arreglo**: reservar el lugar en `Empezar` con un `static int EnemyController.Reservados` que reste
-  `LugarParaZombis` y que miren los dos generadores (`WaveManager.cs:148` y `GeneradorZombis.cs:169`), soltado en
-  `Invocar`, `VolverAPerseguir` y `OnDisable` y puesto en el reset de `SubsystemRegistration`; si la reserva da 0,
-  cargar sin dar vuelta `tocaCarga`. Mirar el lugar en `Empezar` sin reservarlo no alcanza: el generador lo ocupa
-  antes de que termine el aviso. La otra opción, que la invocación pase el techo hasta `maxInvocadosVivos` (35 → 43 en
-  el teléfono), se decide con la medición de «720p nativo en el teléfono». Aparte, un desfase al azar en los ángulos
-  para uno a tres invocados.
 - **Los zombis patinan: las piernas cubren entre el 16 y el 36 % de lo que avanzan** (media; H16, confirmado). Del
   FBX: `Z_run_rm` avanza 3 m/s a escala 1 y `Z_walk_rm`, 1 m/s; los prefabs no usan root motion y se mueven a
   `enemyType.velocidad` (`EnemyController.cs:805-807`). Con la cuenta de `JefePatrones.PasoParaCorrer`, que ya calibra
@@ -552,9 +537,10 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
 ### De la superauditoría del 29/9
 
 - **El jefe en el teléfono** (amplía, con H10 y H11): además de ver que no se vuelva fácil de evitar y que invocar
-  fuera de cuadro no se sienta injusto (los invocados llegan sin que se vea al jefe), contar cuántas
-  invocaciones salen vacías o con uno solo en el teléfono desde la oleada 20 y en el libre cuando el nivel le gana al
-  jugador; si se elige que la invocación pase el techo, medir los FPS con 43 zombis.
+  fuera de cuadro no se sienta injusto (los invocados llegan sin que se vea al jefe). Desde el 30/9 la invocación
+  aparta su lugar y, sin lugar, el jefe carga (H10): contar en el teléfono, desde la oleada 20 y en el libre cuando el
+  nivel le gana al jugador, cuántas veces carga por falta de lugar y cuántas invoca con uno solo, y verlo grabado
+  (Grabar al jefe) al menos una vez; si se elige que la invocación pase el techo, medir los FPS con 43 zombis.
 - **Las piernas de la horda** (H16): Grabar animaciones con la cámara del juego antes y después, y mirar a 30 FPS que
   el rápido y el FASTER no se vean estroboscópicos con el tope.
 - **La noche** (H17 y H20, arreglados): la foto del chorro de balas y las tres cajas del 29/9

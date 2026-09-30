@@ -222,10 +222,29 @@ public class EnemyController : MonoBehaviour
         TechoDeZombis = Mathf.Max(0, techo);
     }
 
-    // Cuantos mas entran sin pasarse del techo.
+    // Cuantos mas entran sin pasarse del techo, sin contar los lugares reservados.
     public static int LugarParaZombis
     {
-        get { return TechoDeZombis <= 0 ? int.MaxValue : Mathf.Max(0, TechoDeZombis - ZombisVivos); }
+        get { return TechoDeZombis <= 0 ? int.MaxValue : Mathf.Max(0, TechoDeZombis - ZombisVivos - Reservados); }
+    }
+
+    // Los lugares que tiene apartados un jefe mientras avisa su invocacion. Mirar el lugar al
+    // empezar el aviso no alcanzaba: en los 0,8 s del anillo el generador lo ocupaba, y con el
+    // techo lleno el jefe hacia el aviso entero, rugido incluido, y no salia nadie
+    // (superauditoria del 29/9). Los generadores los cuentan como ocupados.
+    public static int Reservados { get; private set; }
+
+    // Aparta hasta 'cuantos' lugares y devuelve cuantos pudo.
+    public static int Reservar(int cuantos)
+    {
+        int dados = Mathf.Clamp(cuantos, 0, LugarParaZombis);
+        Reservados += dados;
+        return dados;
+    }
+
+    public static void Soltar(int cuantos)
+    {
+        Reservados = Mathf.Max(0, Reservados - Mathf.Max(0, cuantos));
     }
 
     // Los zombis se reusan, como las balas y las monedas: con decenas muriendo por
@@ -277,6 +296,7 @@ public class EnemyController : MonoBehaviour
         ZombisVivos = 0;
         cadaveres = 0;
         TechoDeZombis = 0;
+        Reservados = 0;
         jefes.Clear();
         pool.Clear();
         ultimaAparicion = 0;
