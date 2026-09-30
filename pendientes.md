@@ -228,7 +228,11 @@ privacidad publicada.
   automática de Android (prendida: la APK no declara `allowBackup`). La mudanza al interno puede esperar a las tablas
   o la nube. Si se hace: por JNI, moviendo todas las copias (`.tmp`, `.anterior`, `.roto` y los `.bak`), sin migrar si
   hubo `NoSePudoLeer` o una versión futura, borrando el externo después de verificar el interno, y para siempre
-  (restaurar una copia vieja de Android lo devuelve al externo).
+  (restaurar una copia vieja de Android lo devuelve al externo). Y (H09, de la superauditoría): con una marca propia
+  en `PlayerPrefs` (`ProgresoMudado`) y, si hay archivo en las dos carpetas, eligiendo por contenido, porque Unity
+  puede caer al interno con el externo sin montar y dejar ahí un `progreso.json` casi vacío; antes de producción; y
+  cambiando junto `Progreso.UbicacionEsperada`, que desde el 30/9 no deja salir ninguna build con otra Storage
+  Location.
 - **El empuje de la bala** (media). La bala es un collider sin Rigidbody que aparece adentro del zombi, y PhysX lo
   saca empujándolo (`m_DefaultMaxDepenetrationVelocity` sin tope): cada bala lo corre ~10-14 cm y le hace perder su
   paso. Con fuego sostenido (modelo, sin medir): el normal va al 85 % de su velocidad con 4 tiros/s, al 50-63 % con 12
