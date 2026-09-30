@@ -125,6 +125,8 @@ public static class PruebaDerrota
     [MenuItem("ShowBies/Pruebas/Grabar la derrota (play)")]
     public static void Grabar()
     {
+        // Antes de borrar el video de la vez anterior.
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaDerrota")) return;
         string carpeta = Path.GetFullPath(CarpetaVideo);
         if (Directory.Exists(carpeta)) Directory.Delete(carpeta, true);
         Directory.CreateDirectory(carpeta);
@@ -133,6 +135,7 @@ public static class PruebaDerrota
 
     static void Arrancar(bool grabando)
     {
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaDerrota")) return;
         // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
         // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
         RespaldoDelBanco.Guardar("PruebaDerrota");
@@ -148,6 +151,7 @@ public static class PruebaDerrota
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaDerrota", Clave)) return;
 
         double ahora = EditorApplication.timeSinceStartup;
         float desde = SessionState.GetFloat(Clave + ".desde", -1f);

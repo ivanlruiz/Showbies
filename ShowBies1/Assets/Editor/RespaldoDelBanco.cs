@@ -70,6 +70,58 @@ public static class RespaldoDelBanco
     // Si hay una copia sin devolver.
     public static bool Pendiente { get { return File.Exists(Path.Combine(CarpetaCompleta, Marca)); } }
 
+    // El banco de la copia sin devolver, leido de la marca una vez por dominio: lo pregunta cada
+    // banco en cada vuelta del editor. Null sin copia.
+    static string bancoDeLaMarca;
+    static bool marcaLeida;
+
+    static string BancoDeLaMarca
+    {
+        get
+        {
+            if (!marcaLeida)
+            {
+                string marca = Path.Combine(CarpetaCompleta, Marca);
+                bancoDeLaMarca = File.Exists(marca) ? File.ReadAllText(marca) : null;
+                marcaLeida = true;
+            }
+            return bancoDeLaMarca;
+        }
+    }
+
+    // Si la copia sin devolver es de ese banco.
+    public static bool EsDe(string banco)
+    {
+        return BancoDeLaMarca == banco;
+    }
+
+    // Lo primero de cada banco, en su entrada de menu: ni en play ni con escenas sin guardar
+    // (el banco las cerraria sin preguntar: ver EscenasSinGuardar). Avisa por que no arranca;
+    // antes varios se negaban callados.
+    public static bool PuedeArrancar(string banco)
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            Debug.LogWarning(banco + ": se arranca desde modo edicion, no en play.");
+            return false;
+        }
+        return !EscenasSinGuardar.Hay(banco);
+    }
+
+    // Un banco sin su respaldo no corre. Cada banco se arma con una clave de SessionState y la
+    // apaga al terminar; cortado a mano (Stop, un error de compilacion), la clave quedaba
+    // prendida, este respaldo devolvia el progreso y borraba su marca, y el banco se adueñaba
+    // del Play siguiente sin respaldo: mataba al jugador, olvidaba la oleada del progreso real y
+    // pisaba su informe (superauditoria del 29/9). Lo llama cada banco en su Tick, ya en play:
+    // si la copia no es suya, apaga su clave, avisa y no corre.
+    public static bool SigueArmado(string banco, string clave)
+    {
+        if (EsDe(banco)) return true;
+        SessionState.SetBool(clave, false);
+        Debug.LogWarning(banco + ": quedo armado de una corrida cortada, sin su respaldo; no corre en este Play. Se vuelve a arrancar desde su menu.");
+        return false;
+    }
+
     // Lo llama cada banco al principio de Arrancar, antes de preparar nada.
     public static void Guardar(string banco)
     {
@@ -106,6 +158,8 @@ public static class RespaldoDelBanco
 
         // La marca va ultima: si esta, la copia esta entera.
         File.WriteAllText(Path.Combine(carpeta, Marca), banco);
+        bancoDeLaMarca = banco;
+        marcaLeida = true;
     }
 
     static void AlCambiarDeModo(PlayModeStateChange cambio)
@@ -153,6 +207,8 @@ public static class RespaldoDelBanco
         else Debug.LogWarning("RespaldoDelBanco: no se encontro Progreso.datos; el progreso en memoria sigue siendo el del banco hasta recargar el dominio.");
 
         File.Delete(marca);
+        bancoDeLaMarca = null;
+        marcaLeida = true;
         Debug.Log("RespaldoDelBanco: el progreso y los PlayerPrefs volvieron a como estaban antes de " + banco + ".");
     }
 }

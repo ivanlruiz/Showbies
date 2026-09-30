@@ -50,6 +50,7 @@ public static class GrabarJefe
     // entrada no se encuentra, aunque la clase este cargada.
     public static void Arrancar()
     {
+        if (!RespaldoDelBanco.PuedeArrancar("GrabarJefe")) return;
         // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
         // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
         RespaldoDelBanco.Guardar("GrabarJefe");
@@ -69,6 +70,7 @@ public static class GrabarJefe
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("GrabarJefe", Clave)) return;
 
         if (!SessionState.GetBool(Clave + ".listo", false))
         {

@@ -161,11 +161,7 @@ public static class PruebaTutorial
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
-        if (EditorApplication.isPlayingOrWillChangePlaymode)
-        {
-            Debug.LogWarning("PruebaTutorial: el editor ya esta en play; hay que salir antes de arrancarla.");
-            return;
-        }
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaTutorial")) return;
         RespaldoDelBanco.Guardar("PruebaTutorial");
         // El tutorial lo anota al terminar: se borra para ver que lo anote. RespaldoDelBanco
         // guarda los PlayerPrefs antes y los devuelve despues.
@@ -182,6 +178,7 @@ public static class PruebaTutorial
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaTutorial", Clave)) return;
 
         double ahora = EditorApplication.timeSinceStartup;
         // Entrar en play recarga el dominio (EditorSettings: sin opciones de entrada rapida),

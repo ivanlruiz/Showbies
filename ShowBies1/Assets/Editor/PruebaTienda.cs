@@ -208,11 +208,7 @@ public static class PruebaTienda
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
-        if (EditorApplication.isPlayingOrWillChangePlaymode)
-        {
-            Debug.LogWarning("PruebaTienda: se arranca desde modo edicion, no en play.");
-            return;
-        }
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaTienda")) return;
         RespaldoDelBanco.Guardar("PruebaTienda");
         PlayerSettings.runInBackground = true;
 
@@ -232,6 +228,7 @@ public static class PruebaTienda
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaTienda", Clave)) return;
 
         double ahora = EditorApplication.timeSinceStartup;
         if (!SessionState.GetBool(Clave + ".empezo", false))

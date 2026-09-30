@@ -41,6 +41,7 @@ public static class GrabarAnimaciones
     // entrada no se encuentra, aunque la clase este cargada.
     public static void Arrancar()
     {
+        if (!RespaldoDelBanco.PuedeArrancar("GrabarAnimaciones")) return;
         // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
         // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
         RespaldoDelBanco.Guardar("GrabarAnimaciones");
@@ -59,6 +60,7 @@ public static class GrabarAnimaciones
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("GrabarAnimaciones", Clave)) return;
 
         if (!SessionState.GetBool(Clave + ".listo", false))
         {

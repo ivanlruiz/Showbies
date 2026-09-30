@@ -169,7 +169,7 @@ public static class PruebaMenuYTienda
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
-        if (SessionState.GetBool(Clave, false) || EditorApplication.isPlayingOrWillChangePlaymode) return;
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaMenuYTienda")) return;
         RespaldoDelBanco.Guardar("PruebaMenuYTienda");
 
         // Con la recarga de dominio al entrar en play (EnterPlayModeOptions apagado) lo de
@@ -274,6 +274,7 @@ public static class PruebaMenuYTienda
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaMenuYTienda", Clave)) return;
 
         ahora = EditorApplication.timeSinceStartup;
         if (!SessionState.GetBool(Clave + ".empezo", false))

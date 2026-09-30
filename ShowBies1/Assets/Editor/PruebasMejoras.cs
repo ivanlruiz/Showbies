@@ -210,6 +210,7 @@ public static class PruebasMejoras
             ProbarCrecimientoDeMonedas(informe);
             ProbarAvisosSinPisarse(informe);
             ProbarBotonDePausa(informe);
+            ProbarEscenasSinGuardar(informe);
             ProbarTiendaTapaLaEscena(informe);
             ProbarVidriosDelMenu(informe);
             ProbarPartidaNeon(informe);
@@ -1846,6 +1847,35 @@ public static class PruebasMejoras
         if (!inf.Verdadero("boton de pausa: esta la camara del tutorial", hayCamara)) return;
         inf.Verdadero("boton de pausa: la caja de arma del tutorial no nace detras del panel (" + string.Join(", ", proyecciones)
                       + "; el panel va de " + techoPanel.ToString("0") + " a " + pisoPanel.ToString("0") + ")", cajaAfuera);
+    }
+
+    // Nada del editor abre una escena en modo Single sin mirar antes si hay escenas con cambios
+    // sin guardar (EscenasSinGuardar, o RespaldoDelBanco.PuedeArrancar en los bancos): cerrarlas
+    // sin preguntar perdia el cambio, y un banco que lo verificaba probaba la version de disco
+    // (superauditoria del 29/9). Se lee el codigo: cada archivo de Assets/Editor que llame a
+    // OpenScene sin Additive tiene que pasar por uno de los dos.
+    static void ProbarEscenasSinGuardar(Informe inf)
+    {
+        int miran = 0;
+        var sinMirar = new List<string>();
+        foreach (var ruta in Directory.GetFiles("Assets/Editor", "*.cs"))
+        {
+            if (Path.GetFileName(ruta) == "EscenasSinGuardar.cs") continue;
+            string codigo = File.ReadAllText(ruta);
+            bool abreSingle = false;
+            foreach (var linea in codigo.Split('\n'))
+            {
+                string l = linea.Trim();
+                if (l.StartsWith("//") || !l.Contains("OpenScene(") || l.Contains("Additive")) continue;
+                abreSingle = true;
+            }
+            if (!abreSingle) continue;
+            if (codigo.Contains("EscenasSinGuardar.Hay(") || codigo.Contains("RespaldoDelBanco.PuedeArrancar(")) miran++;
+            else sinMirar.Add(Path.GetFileNameWithoutExtension(ruta));
+        }
+        inf.Verdadero("escenas sin guardar: hay herramientas que abren escenas (" + miran + ")", miran >= 10);
+        inf.Igual("escenas sin guardar: todas miran antes de abrir en modo Single" + (sinMirar.Count == 0 ? "" : " (" + string.Join(", ", sinMirar) + ")"),
+                  0, sinMirar.Count);
     }
 
     // De donde a donde va un texto centrado en y, en unidades del canvas.

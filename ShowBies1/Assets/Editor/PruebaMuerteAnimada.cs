@@ -46,6 +46,7 @@ public static class PruebaMuerteAnimada
     // registro de menus tarda en rehacerse (ver la trampa en CLAUDE.md).
     public static void Arrancar()
     {
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaMuerteAnimada")) return;
         // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
         // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
         RespaldoDelBanco.Guardar("PruebaMuerteAnimada");
@@ -60,6 +61,7 @@ public static class PruebaMuerteAnimada
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaMuerteAnimada", Clave)) return;
 
         double ahora = EditorApplication.timeSinceStartup;
         float desde = SessionState.GetFloat(Clave + ".desde", -1f);

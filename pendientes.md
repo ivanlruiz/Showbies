@@ -33,7 +33,7 @@ evidencia concreta): 15 confirmados, 7 parciales y 1 refutado, y ninguno quedó 
 marcado "sin medir" sale de un modelo: medirlo antes de arreglar. Lo nuevo del tramo sin auditar: los halos de neón
 que roban toques (H01), el botón de pausa encima de los carteles (H13), la noche que apaga las balas y las cajas
 (H17), la caja de arma del tutorial tapada (H21) y los bancos que se cuelgan o pisan escenas (H22, H23). H01, H05,
-H06 y H17 se arreglaron el 29/9, y H13 y H21 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
+H06 y H17 se arreglaron el 29/9, y H13, H21, H22 y H23 el 30/9, probados con la prueba de lógica, `PruebaTienda`,
 `PruebaTutorial` y el banco nuevo `PruebaReiniciar`. Los cinco
 que pedían una decisión (H03, H04, H08, H11 y H18) los decidió Ivan ese mismo día y pasaron a la sección 2; el paso
 del tanque, que venía con H16, queda como está (sección 6).
@@ -61,8 +61,8 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H19: el pitch acotado a 3 | refutado | — | 6 |
 | H20: las veredas tapan la línea del jefe | confirmado, y la granada también | media | 2 |
 | H21: la caja de arma del tutorial detrás del panel | confirmado | baja (era media) | arreglado el 30/9 |
-| H22: un banco cortado secuestra el próximo Play | confirmado | media | 2 |
-| H23: los bancos abren escenas sin mirar si están sucias | confirmado | media | 2 |
+| H22: un banco cortado secuestra el próximo Play | confirmado | media | arreglado el 30/9 |
+| H23: los bancos abren escenas sin mirar si están sucias | confirmado | media | arreglado el 30/9 |
 | H24 a H123 (100 hallazgos bajos) | sin refutar | baja | sin refutar |
 
 ### La ronda del 26/9
@@ -287,34 +287,6 @@ privacidad publicada.
   el chequeo de `PruebasMejoras.cs:1321-1340`, que ya compara la mancha con la vereda. El costo es el que ya se aceptó
   con la mancha: la cinta pinta los 20 cm de abajo de lo que la pisa. De paso: `anchoLinea` 1.4
   (`ZombiBOSS.prefab:203`) ya no existe en el código.
-- **Un banco en play cortado a mano queda armado y secuestra el próximo Play del editor, sin respaldo** (media; H22,
-  confirmado). Cada banco guarda en `SessionState` que está corriendo (su clave, `.empezo`, `.desde` y `.listo`) y
-  solo lo apaga al terminar; solo `PruebaDiaria` lo limpia al volver a edición (`:830-855`). `RespaldoDelBanco`
-  (`:111-114` y `:155`) sí devuelve el progreso y borra su marca, así que en el Play siguiente el banco sigue sin
-  respaldo y con los estáticos en cero (cada Play recarga el dominio). Derrota deja al jugador al 10 %, lo mata,
-  cuenta una partida, olvida la oleada en curso del progreso real y pisa su informe; Tienda, Tutorial, ModoLibre,
-  MenuYTienda y GolpeAnimado cortan el Play en el primer cuadro con un HAY FALLAS falso; MuerteAnimada mata zombis con
-  puntos y monedas si el Play llega antes de los 55 s; los Grabar le apagan el control al jugador. Y en cascada: el
-  banco colgado corta el Play del siguiente banco, al que `RespaldoDelBanco` también le borra la marca. **Arreglo**:
-  la regla "un banco sin respaldo no corre": `RespaldoDelBanco.EsDe(banco)` y, en cada `Tick`, después de `isPlaying`,
-  si la marca no es suya, apagar su clave, `LogWarning` y salir. Cubre el Stop, la cascada y el error de compilación
-  (que no pasa por `EnteredEditMode`). La otra forma es limpiar las cuatro claves adentro de `Restaurar`. Además, un
-  `LogWarning` en los `Arrancar` que hoy se niegan callados (Disparo, MenuYTienda, ModoLibre y GrabarDisparo) y la
-  guarda de play de `PruebaTienda.cs:202` en Derrota, GolpeAnimado, MuerteAnimada, GrabarJefe y GrabarAnimaciones.
-- **Los doce bancos y «Poner la noche» abren escenas en modo Single sin mirar si hay cambios sin guardar** (media;
-  H23, confirmado). `isDirty` solo aparece en `ConstructorNeon.cs:47` y `:164`. Los bancos (`PruebaTutorial.cs:175`,
-  `PruebaTienda.cs:216` y los demás) y `PonerLaNoche` (`ConstructorEscenarios.cs:938-940`, que además relee las tres
-  escenas de juego, las guarda y termina en el menú) cierran lo abierto sin preguntar, y `RespaldoDelBanco` no mira
-  escenas. Lo más filoso: un agente toca WaveMode por unity-mcp, corre un banco para verificarlo, el banco prueba la
-  versión de disco, escribe TODO OK y el cambio desaparece. `ConstructorNeon` no sirve de molde: perdona justo al menú
-  sucio y solo mira la escena activa. (La documentación de Unity no dice que `OpenScene` no pregunte; lo dan por hecho
-  `ConstructorNeon` y la comunidad.) **Arreglo**, sin ventanas: un ayudante común (`EscenasSinGuardar.Hay(quien)`) que
-  recorra todas las escenas cargadas y, si alguna está sucia, dé `LogError` con la lista y cómo salir sin clics
-  (`EditorSceneManager.SaveOpenScenes()` o reabrirla), como **primera** instrucción de las 14 entradas de menú de los
-  bancos (varios borran carpetas o reinician el progreso antes del `OpenScene`), de `PonerLaNoche` y de las dos de
-  `ConstructorNeon`. `PonerLaNoche` y `VestirPartida` vuelven a lo que estaba abierto con `GetSceneManagerSetup` y
-  `RestoreSceneManagerSetup`. Mejor en el mismo andamiaje que el de arriba. Y un chequeo en la prueba de lógica que
-  falle si un `.cs` de `Assets/Editor` llama a `OpenScene(` sin `Additive` ni el ayudante.
 - **Adelantar la fecha del teléfono cobra días: el reloj confiable solo se ancla al cobrar la diaria** (media; H03,
   confirmado). La marca (`relojUtc`, `relojMs` y `relojArranques`) solo la escribe `RegistrarRecompensaDiaria`
   (`Progreso.cs:353-357`), y `HoraConfiable` devuelve el reloj crudo sin marca, si falla la lectura o si la marca es de

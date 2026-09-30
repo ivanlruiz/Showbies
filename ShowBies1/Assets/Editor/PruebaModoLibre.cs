@@ -161,8 +161,7 @@ public static class PruebaModoLibre
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
-        // Dos arranques seguidos pisarian lo que se anoto de los PlayerPrefs.
-        if (SessionState.GetBool(Clave, false) || EditorApplication.isPlayingOrWillChangePlaymode) return;
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaModoLibre")) return;
         RespaldoDelBanco.Guardar("PruebaModoLibre");
 
         // Lo que se toca de los PlayerPrefs se anota para devolverlo al terminar.
@@ -207,6 +206,7 @@ public static class PruebaModoLibre
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaModoLibre", Clave)) return;
 
         double ahora = EditorApplication.timeSinceStartup;
         if (!SessionState.GetBool(Clave + ".empezo", false))

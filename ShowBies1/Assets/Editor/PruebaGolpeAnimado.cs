@@ -64,6 +64,7 @@ public static class PruebaGolpeAnimado
     // registro de menus tarda en rehacerse (ver la trampa en CLAUDE.md).
     public static void Arrancar()
     {
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaGolpeAnimado")) return;
         // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
         // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
         RespaldoDelBanco.Guardar("PruebaGolpeAnimado");
@@ -80,6 +81,7 @@ public static class PruebaGolpeAnimado
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaGolpeAnimado", Clave)) return;
 
         float desde = SessionState.GetFloat(Clave + ".desde", -1f);
         if (desde < 0f)

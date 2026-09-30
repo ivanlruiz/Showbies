@@ -43,12 +43,8 @@ public static class ConstructorNeon
             Debug.LogError("ConstructorNeon: en play no");
             return;
         }
-        var activa = SceneManager.GetActiveScene();
-        if (activa.isDirty && activa.path != RutaMenu)
-        {
-            Debug.LogError("ConstructorNeon: la escena abierta (" + activa.path + ") tiene cambios sin guardar");
-            return;
-        }
+        // Todas las abiertas, el menu incluido: abrirlo en Single tira lo que tenga sin guardar.
+        if (EscenasSinGuardar.Hay("ConstructorNeon")) return;
         ImportarAnillo();
         var escena = EditorSceneManager.OpenScene(RutaMenu, OpenSceneMode.Single);
         var neon = AssetDatabase.LoadAssetAtPath<Material>(RutaMaterialNeon);
@@ -161,11 +157,8 @@ public static class ConstructorNeon
             Debug.LogError("ConstructorNeon: en play no");
             return;
         }
-        if (SceneManager.GetActiveScene().isDirty)
-        {
-            Debug.LogError("ConstructorNeon: la escena abierta tiene cambios sin guardar");
-            return;
-        }
+        if (EscenasSinGuardar.Hay("ConstructorNeon")) return;
+        var abiertas = EscenasSinGuardar.Recordar();
         ImportarAnillo();
         var neon = AssetDatabase.LoadAssetAtPath<Material>(RutaMaterialNeon);
         var hud = MaterialHud();
@@ -221,6 +214,8 @@ public static class ConstructorNeon
 
         foreach (var ruta in EscenasDeJuego) VestirEscenaDeJuego(ruta, hud, neon, pildora, naranjaAnillo);
         VestirDerrota(neon);
+        // Recorrio cuatro escenas: vuelve a lo que estaba abierto.
+        EscenasSinGuardar.Volver(abiertas);
         Debug.Log("ConstructorNeon: la partida quedó de carbón neón");
     }
 

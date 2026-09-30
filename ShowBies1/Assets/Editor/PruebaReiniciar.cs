@@ -106,18 +106,7 @@ public static class PruebaReiniciar
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
-        if (EditorApplication.isPlayingOrWillChangePlaymode)
-        {
-            Debug.LogWarning("PruebaReiniciar: se arranca desde modo edicion, no en play.");
-            return;
-        }
-        // Abrir la escena cierra lo que este abierto sin preguntar.
-        for (int i = 0; i < SceneManager.sceneCount; i++)
-        {
-            if (!SceneManager.GetSceneAt(i).isDirty) continue;
-            Debug.LogError("PruebaReiniciar: " + SceneManager.GetSceneAt(i).path + " tiene cambios sin guardar; guardala o reabrila antes de correr el banco.");
-            return;
-        }
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaReiniciar")) return;
         RespaldoDelBanco.Guardar("PruebaReiniciar");
         PlayerSettings.runInBackground = true;
         // Una partida de oleadas guardada en la 5: es lo que REINICIAR borraria.
@@ -133,6 +122,7 @@ public static class PruebaReiniciar
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaReiniciar", Clave)) return;
 
         double ahora = EditorApplication.timeSinceStartup;
         if (!SessionState.GetBool(Clave + ".empezo", false))

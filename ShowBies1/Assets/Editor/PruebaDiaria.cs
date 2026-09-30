@@ -172,11 +172,7 @@ public static class PruebaDiaria
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
-        if (EditorApplication.isPlayingOrWillChangePlaymode)
-        {
-            Debug.LogWarning("PruebaDiaria: el editor ya esta en play; se arranca desde el modo edicion.");
-            return;
-        }
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaDiaria")) return;
         RespaldoDelBanco.Guardar("PruebaDiaria");
         excepciones.Length = 0;
         cuantasExcepciones = 0;
@@ -194,6 +190,7 @@ public static class PruebaDiaria
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaDiaria", Clave)) return;
 
         double ahora = EditorApplication.timeSinceStartup;
         if (!SessionState.GetBool(Clave + ".empezo", false))

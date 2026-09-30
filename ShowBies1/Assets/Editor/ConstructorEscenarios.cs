@@ -926,6 +926,9 @@ public static class ConstructorEscenarios
             Debug.LogError("ConstructorEscenarios: en play no");
             return;
         }
+        // Abre las tres escenas de juego una por una: lo que estuviera sin guardar se perderia.
+        if (EscenasSinGuardar.Hay("ConstructorEscenarios")) return;
+        var abiertas = EscenasSinGuardar.Recordar();
         NombrarLaCapa();
         var pradera = AssetDatabase.LoadAssetAtPath<GameObject>(RutaPrefabPradera);
         var piso = AssetDatabase.LoadAssetAtPath<Material>(RutaPisoPradera);
@@ -1017,7 +1020,8 @@ public static class ConstructorEscenarios
             EditorSceneManager.MarkSceneDirty(escena);
             EditorSceneManager.SaveScene(escena);
         }
-        EditorSceneManager.OpenScene("Assets/Escenas/Menu.unity", OpenSceneMode.Single);
+        // Vuelve a lo que estaba abierto (antes terminaba siempre en el menu).
+        EscenasSinGuardar.Volver(abiertas);
         Debug.Log("ConstructorEscenarios: la noche quedo en las escenas de juego");
     }
 

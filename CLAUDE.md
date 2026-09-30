@@ -67,7 +67,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón
 ```
@@ -1872,6 +1872,14 @@ enterrado.
   y el `[MenuItem]` esté ahí. Por eso los bancos que se manejan desde afuera tienen su `Arrancar` **público**, para
   poder llamarlos por código; si agregás otro, hacé lo mismo.
 
+- **`EditorSceneManager.OpenScene` en modo Single cierra lo que esté abierto sin preguntar** (en código no sale la
+  ventana de "¿guardar?"): el cambio sin guardar se pierde, y un banco que se corría para verificar un cambio probaba
+  la versión de disco y decía TODO OK. Toda herramienta que abra escenas así mira antes `EscenasSinGuardar.Hay(quien)`
+  (los bancos, por `RespaldoDelBanco.PuedeArrancar`), que se niega con un error y dice cómo salir, sin ventanas; las
+  que recorren varias escenas (Poner la noche, Vestir la partida) vuelven al final a lo que estaba abierto
+  (`EscenasSinGuardar.Recordar` y `Volver`). La prueba de lógica lee el código de `Assets/Editor` y falla si alguno
+  abre en Single sin mirar.
+
 - **Entrar y salir de play re-serializa `ProjectSettings/`, y `QualitySettings.asset` pierde
   `m_PerPlatformDefaultQuality`** — el bloque que pone **Android en el nivel Medium** (ver Rendimiento en móvil).
   Pasa en cada sesión de play manejada desde el editor y no avisa nada: la build de Android saldría en el nivel por
@@ -1993,8 +2001,14 @@ enterrado.
   edición (antes no: al salir de play, Progreso guarda lo que tiene). La copia va a `Library/ShowBies/RespaldoDelBanco`,
   con una marca: si el editor se cae en medio de un banco, se devuelve al abrirlo. Hasta el 27/9 los bancos dejaban el
   progreso como terminaba la prueba (una partida más, la oleada en curso), y `runInBackground` quedaba prendido: lo
-  apagaban en play, al terminar, y eso no queda. **Un banco en play nuevo llama a `RespaldoDelBanco.Guardar` al
-  principio de `Arrancar`, antes de tocar nada.** `MedirPartida` no: se corre ya en play.
+  apagaban en play, al terminar, y eso no queda. **Un banco en play nuevo arranca con
+  `if (!RespaldoDelBanco.PuedeArrancar("Nombre")) return;` y `RespaldoDelBanco.Guardar("Nombre")`, antes de tocar
+  nada, y en su `Tick`, después de mirar `isPlaying`, pone `if (!RespaldoDelBanco.SigueArmado("Nombre", Clave))
+  return;`.** `PuedeArrancar` se niega en play y con escenas sin guardar, avisando (antes varios se negaban callados).
+  `SigueArmado` es la regla "un banco sin su respaldo no corre": un banco cortado a mano (Stop, un error de
+  compilación) quedaba con su clave de `SessionState` prendida, el respaldo se devolvía igual, y el banco se adueñaba
+  del Play siguiente sin respaldo: mataba al jugador, olvidaba la oleada del progreso real y pisaba su informe
+  (superauditoría del 29/9). Ahora se desarma y lo avisa. `MedirPartida` no: se corre ya en play.
 - **ShowBies > Escenarios > Fotos de los faroles** (`FotosDeLosFaroles`), sin play: los capítulos de noche con la
   calidad del teléfono y con la del editor (ver Capítulos).
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata

@@ -67,8 +67,7 @@ public static class PruebaDisparo
     // Publico para poder correrlo por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
     {
-        // Dos arranques seguidos pisarian lo que se anoto del teclado.
-        if (SessionState.GetBool(Clave, false) || EditorApplication.isPlayingOrWillChangePlaymode) return;
+        if (!RespaldoDelBanco.PuedeArrancar("PruebaDisparo")) return;
         // El progreso y los PlayerPrefs del editor vuelven a como estaban al volver a modo
         // edicion (jugar los cambia: una partida mas, la oleada en curso, el record).
         RespaldoDelBanco.Guardar("PruebaDisparo");
@@ -100,6 +99,7 @@ public static class PruebaDisparo
     {
         if (!SessionState.GetBool(Clave, false)) return;
         if (!EditorApplication.isPlaying) return;
+        if (!RespaldoDelBanco.SigueArmado("PruebaDisparo", Clave)) return;
 
         if (!SessionState.GetBool(Clave + ".empezo", false))
         {
