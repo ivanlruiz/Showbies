@@ -394,7 +394,8 @@ privacidad publicada.
   anclar el reloj en cada arranque, que pedía un reinicio por salto). El cambio de día de la diaria, las misiones y el
   semanal (con su cobro solo de lo cumplido) sale de la hora de un servidor; sin conexión, o si el servidor no
   contesta, el día no avanza hasta que vuelva: se juega igual y lo que se gana jugando cuenta, pero no se cobra la
-  diaria ni cambian las misiones (tampoco salen las primeras). Mata también el sorteo. Al hacerlo: el servidor (la
+  diaria ni cambian las misiones (tampoco salen las primeras). Mata también el sorteo, y anclar el reloj en cada
+  arranque ya no hace falta: sin conexión el día no avanza. Al hacerlo: el servidor (la
   cabecera `Date` de una respuesta HTTPS, como `generate_204` de Google, o NTP), el permiso de internet (hoy
   `ForceInternetPermission: 0` y ningún script usa la red; `UnityWebRequest` lo agrega solo), una consulta por
   arranque y al volver del segundo plano, con esa hora más `SystemClock.elapsedRealtime` en el medio (como hace hoy la
