@@ -545,12 +545,14 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
   nivel le gana al jugador, cuántas veces carga por falta de lugar y cuántas invoca con uno solo (con lugar, Grabar
   al jefe lo vio el 30/9: carga, aturdido e invocación con los cuatro alrededor); si se elige que la invocación pase
   el techo, medir los FPS con 43 zombis.
-- **El salto del jefe, jugando** (idea de Ivan, hecho el 30/9): Grabar el salto del jefe lo vio (el anillo donde está
-  el jugador, el jefe por el aire, el golpe y el jugador volando hacia afuera), pero desde la cámara de arriba el salto
-  se lee más por la sombra que por la altura. Mirar en el teléfono: si se esquiva a tiempo (0,9 s de aviso, 4,5 m de
-  anillo), si el vuelo del jugador se entiende o conviene más alto, más largo o con un giro, si el daño ×1,5 está bien,
-  y si hace falta una sombra o un anillo que crezca bajo el jefe mientras cae. Con la invocación solo en furia, la
-  banda de 15 a 22 m (H11) sigue abierta debajo de la mitad de la vida.
+- **El salto del jefe, jugando** (idea de Ivan, hecho el 30/9). **Visto** con Grabar el salto del jefe, con el jugador
+  quieto y la vida repuesta en cada cuadro: el anillo donde está el jugador, el jefe por el aire, el golpe y el jugador
+  volando hacia afuera; desde la cámara de arriba el salto se lee más por la sombra que por la altura. **Sin ver**:
+  esquivarlo (0,9 s de aviso, 4,5 m de anillo), el daño ×1,5 de verdad, morir en el aire (tendría que caer donde está),
+  el vuelo contra una pared (la física lo frena) y el jefe cruzando la horda kinematic, que puede aparecer encima de
+  zombis que estaban en el camino. Y decidir jugando si el vuelo conviene más alto, más largo o con un giro, y si hace
+  falta una sombra o un anillo que crezca bajo el jefe mientras cae. Con la invocación solo en furia, la banda de 15 a
+  22 m (H11) sigue abierta debajo de la mitad de la vida.
 - **Las piernas de la horda** (H16): Grabar animaciones con la cámara del juego antes y después, y mirar a 30 FPS que
   el rápido y el FASTER no se vean estroboscópicos con el tope.
 - **La noche** (H17 y H20, arreglados): la foto del chorro de balas y las tres cajas del 29/9

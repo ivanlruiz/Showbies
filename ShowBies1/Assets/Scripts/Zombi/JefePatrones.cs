@@ -260,6 +260,8 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
     {
         // Si se va (muere, vuelve al pool) con lugares apartados, que no queden ocupados.
         SoltarLaReserva();
+        // Si se va en pleno salto (el kill-Z lo devuelve al pool) queda kinematic, y alcanza
+        // con olvidar la marca: EnemyController.OnEnable le devuelve la fisica al reaparecer.
         saltoKinematico = false;
         if (linea != null) linea.enabled = false;
         // Que no se lo lleve al pool torcido: la aparicion siguiente sale de aca.
