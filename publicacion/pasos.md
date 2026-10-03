@@ -34,9 +34,22 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
 - [x] **Los 12 testers y los 14 días**: el 2/10 el panel tiene las tres tareas tildadas (versión de prueba cerrada
       publicada, 12 testers que aceptaron y 14 días con ellos) y habilita **Solicitar acceso a producción**. Sin
       fallos ni ANR en los últimos 28 días, sin problemas de políticas y sin comentarios de los testers.
-- [ ] **Solicitar acceso a producción**: un formulario de tres pasos (cómo se reclutaron los testers y qué tan
-      difícil fue, qué hicieron y qué comentaron, sobre el juego, y por qué está listo). Las respuestas son de Ivan.
-      Que Google lo apruebe no publica nada: habilita el canal de producción, y ahí se sube la versión que se elija.
+- [x] **Solicitar acceso a producción**: enviada el 2/10/2026 a las 22:20. Google avisa por mail al dueño de la
+      cuenta, y suele tardar 7 días o menos. Que lo apruebe no publica nada: habilita el canal de producción, y ahí se
+      sube la versión que se elija (hoy en Play está la 1.2.0). Las respuestas, de Ivan, por si hay que mandarla de
+      nuevo (si la rechazan, suele ser por pocos testers o poco uso, y piden seguir la prueba cerrada):
+      - Cómo se reclutó: una mezcla, amigos y familia con el enlace de la prueba y una comunidad de desarrolladores
+        donde se prueban las apps entre ellos. Qué tan fácil: ni difícil ni fácil.
+      - Qué hicieron: partidas de oleadas en sus teléfonos; con varios Ivan jugó al lado (se movían, compraban mejoras
+        y volvían a jugar), otros escribieron por chat; partidas cortas y repetidas, como en producción.
+      - Qué comentaron: en persona y por chat; que se divirtieron mucho, que es muy adictivo, y sugerencias de
+        controles, interfaz y dificultad, que se fueron aplicando.
+      - Público: de 13 en adelante, partidas cortas en el teléfono, shooters de acción y zombis, inglés y español.
+        Qué lo destaca: dos joysticks desde arriba, incremental, jefe cada 10 que salta, embiste e invoca, capítulos
+        de noche con neón, modo libre, misiones y logros. Descargas el primer año: entre 0 y 10.000.
+      - Qué se cambió: botones grandes cerca del pulgar, confirmar salir y reiniciar, guía de la primera partida y la
+        primera compra, jefe con ataques que se esquivan, rendimiento y arreglos. Por qué está listo: sin fallos ni
+        ANR ni problemas de políticas, pruebas automáticas enteras y semanas jugándolo en el teléfono.
 - [x] **Versión 5 (1.2.0)** enviada a revisión el 18/9/2026, también de `main`, y aprobada: está disponible para los
       testers en 178 de 178 países. Menú con fondo vivo, botones en
       píldora, paleta clara, recompensa diaria, más zombis por oleada, retomar la oleada, volumen y los arreglos de la
