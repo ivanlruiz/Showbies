@@ -1,7 +1,8 @@
 # Publicar ShowBies en Google Play
 
-Estado al 2026-09-16. Lo tildado ya está hecho en el proyecto; lo demás es en la web de Play Console,
-que es la parte que no puedo hacer yo.
+Estado al 2026-10-02 (mirado en Play Console ese día). Lo tildado ya está hecho; lo demás es en la web de Play
+Console. La cuenta es "j'ntr", en el Gmail de la ficha (en el Chrome de Ivan, `play.google.com/console/u/2`): la
+consola abre por defecto la del otro Gmail, "IvRu", que Google cerró por inactividad el 3/11/2024 y no tiene nada.
 
 ## Lo que ya está cargado en Play Console
 
@@ -21,16 +22,23 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
 - [x] **Política de privacidad**: `https://ivanlruiz.github.io/showbies-privacidad/`, desde el repo público
       `ivanlruiz/showbies-privacidad` (`index.html` y `privacidad.html`, copias de `privacidad.html` de acá: al
       cambiar uno hay que actualizar los otros). Se mudó ahí el 19/9 para poder pasar este repo a privado. El link
-      nuevo está **guardado sin enviar** en Play Console, para no reiniciar la revisión de la versión 5. El viejo
-      (`ivanlruiz.github.io/Showbies/privacidad.html`, rama `gh-pages`) sigue vivo hasta que Play muestre el nuevo.
-- [ ] **Seguridad de los datos**: respondida (no recopila ni comparte) pero sin enviar; el guardado final no
-      se aplicó desde la extensión.
+      nuevo se cargó el 19/9 y salió con la publicación del 21/9 (no queda nada pendiente en Resumen de
+      publicación). El viejo (`ivanlruiz.github.io/Showbies/privacidad.html`, rama `gh-pages`) sigue vivo.
+- [x] **Seguridad de los datos**: no recopila ni comparte; completada el 16/9. La próxima subida (versionCode 6) es
+      la primera con la librería de reseñas: revisarla antes de subirla (H08 en `pendientes.md`).
 - [x] **Ficha de Play Store** (borrador): textos en inglés (principal), español de España y de Latinoamérica
       (`ficha.md`); icono 512, banner 1024x500 y 4 capturas 1920x1080 en inglés, en `Builds/ficha/` (fuera de git).
 
 - [x] **Prueba cerrada (Alpha)**: 177 países y notas de la versión en los tres idiomas. El AAB (versionCode 4,
-      1.1.0) salió de `main`; se sube a mano porque pesa 32 MB. Faltan los testers (12 como mínimo) y enviar a revisión.
-- [x] **Versión 5 (1.2.0)** enviada a revisión el 18/9/2026, también de `main`: menú con fondo vivo, botones en
+      1.1.0) salió de `main`; se sube a mano porque pesa 32 MB.
+- [x] **Los 12 testers y los 14 días**: el 2/10 el panel tiene las tres tareas tildadas (versión de prueba cerrada
+      publicada, 12 testers que aceptaron y 14 días con ellos) y habilita **Solicitar acceso a producción**. Sin
+      fallos ni ANR en los últimos 28 días, sin problemas de políticas y sin comentarios de los testers.
+- [ ] **Solicitar acceso a producción**: un formulario de tres pasos (cómo se reclutaron los testers y qué tan
+      difícil fue, qué hicieron y qué comentaron, sobre el juego, y por qué está listo). Las respuestas son de Ivan.
+      Que Google lo apruebe no publica nada: habilita el canal de producción, y ahí se sube la versión que se elija.
+- [x] **Versión 5 (1.2.0)** enviada a revisión el 18/9/2026, también de `main`, y aprobada: está disponible para los
+      testers en 178 de 178 países. Menú con fondo vivo, botones en
       píldora, paleta clara, recompensa diaria, más zombis por oleada, retomar la oleada, volumen y los arreglos de la
       auditoría. Sin Sentis el AAB bajó a unos 24 MB de descarga (35 MB con los símbolos nativos, que Play no reparte).
       La advertencia de "archivo de desofuscación" se ignora: el juego no ofusca Java (no usa R8).
