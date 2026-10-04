@@ -140,6 +140,13 @@ rol Player). Es un servidor de Comunidad, todo en inglés (pedido de Ivan, que p
 - **SHOWBIES**: #feedback y #bugs son foros con pautas y etiquetas (Fixed, en #bugs, solo la pone Ivan) y #ideas.
 - **VOICE**: Lounge.
 - Roles: Dev (Ivan), Tester (a mano, para los de la prueba cerrada) y Player (lo da la invitación).
+- **AutoMod de Discord** prendido: spam, menciones masivas y palabras marcadas (lenguaje muy inapropiado, insultos y
+  contenido sexual); bloquea el mensaje y avisa en #dev.
+- **Carl-bot** (configurable en carl.gg con la misma cuenta), con solo seis permisos y sin Administrador: gestionar
+  roles, ver canales, enviar mensajes, insertar enlaces, leer el historial y ver el registro de auditoría. Da Player a
+  todo el que entra (para los que entren por otro link) y registra en #dev los mensajes borrados y editados, las
+  entradas y salidas, los baneos y los cambios de roles. Su rol tiene que quedar justo encima de Player: más arriba
+  podría repartir Tester o Dev, más abajo no puede dar Player.
 
 Cuando se use para afuera (la ficha de Play, un botón en el juego, redes), el link es el de arriba.
 
