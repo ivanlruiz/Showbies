@@ -128,6 +128,21 @@ subida. Play App Signing no hace falta activarlo: con AAB es obligatorio para la
 Google firma con su clave lo que se instala. Si perdés el keystore, pedís en Play Console que te reseteen la clave de
 subida (por eso la copia: te ahorra ese trámite).
 
+## Comunidad en Discord
+
+Servidor **ShowBies**, creado el 4/10/2026 desde la cuenta de Discord "j'ntr" (la otra que hay en el Chrome de Ivan
+no). **Invitación permanente: https://discord.gg/XsKgU7BBUd** (no vence, sin límite de usos, entra a #welcome y da el
+rol Player). Es un servidor de Comunidad, todo en inglés (pedido de Ivan, que primero lo quería en español):
+
+- **INFO**, solo lectura para los miembros: #welcome y #rules (con su mensaje fijado), #announcements y #patch-notes
+  (canales de anuncios, se pueden seguir) y #dev, privado, donde llegan los avisos de Discord para moderadores.
+- **COMMUNITY**: #general (ahí salen los "X se unió"), #screenshots-and-clips y #high-scores.
+- **SHOWBIES**: #feedback y #bugs son foros con pautas y etiquetas (Fixed, en #bugs, solo la pone Ivan) y #ideas.
+- **VOICE**: Lounge.
+- Roles: Dev (Ivan), Tester (a mano, para los de la prueba cerrada) y Player (lo da la invitación).
+
+Cuando se use para afuera (la ficha de Play, un botón en el juego, redes), el link es el de arriba.
+
 ## Anuncios
 
 **AdMob ya está creado** (16/9/2026, cuenta de Play Console). No son secretos: van en el código.
