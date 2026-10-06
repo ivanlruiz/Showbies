@@ -211,10 +211,13 @@ monedas (ver CLAUDE.md, Anuncios).
 
 **Para que salgan anuncios de verdad**, en este orden (todo esto es de afuera: se hace con Ivan, de a un paso):
 1. [x] La 1.3.0 publicada en producción: Google la aprobó el 6/10 (activa en 178 países; ese día, 9 descargas).
-2. En AdMob, **Configuración de la app → Añadir tienda** (`com.ivanruiz.showbies`).
-3. **app-ads.txt sin dominio pago**: un repo público `ivanlruiz/ivanlruiz.github.io` con GitHub Pages y `app-ads.txt`
-   en la raíz, con la línea `google.com, pub-5295383586829735, DIRECT, f08c47fec0942fa0`.
-4. En Play Console, el **sitio web** de los datos de contacto de la ficha en `https://ivanlruiz.github.io/...` (la URL
+2. [x] En AdMob, **Configuración de la app → Añadir tienda** (`com.ivanruiz.showbies`): vinculada el 6/10. La primera
+   verificación falló por falta del app-ads.txt, que es el paso siguiente.
+3. [x] **app-ads.txt sin dominio pago**: el repo público `ivanlruiz/ivanlruiz.github.io` (6/10, carpeta local
+   `A:\GitHub\ivanlruiz.github.io`) con GitHub Pages, el `app-ads.txt` en la raíz con la línea
+   `google.com, pub-5295383586829735, DIRECT, f08c47fec0942fa0` y una portada (`index.html`). El primer deploy de
+   Pages quedó trabado por un incidente de GitHub; cuando `/app-ads.txt` dé 200, en AdMob "Buscar actualizaciones".
+4. [x] (6/10: `https://ivanlruiz.github.io/`, publicado) En Play Console, el **sitio web** de los datos de contacto de la ficha en `https://ivanlruiz.github.io/...` (la URL
    de la política sirve): AdMob lee ese campo, no el de la política. Después, en AdMob, "Verificar la app"; tarda
    hasta 24 h, y la revisión de la app 2 o 3 días, con anuncios limitados mientras tanto.
 5. [x] En AdMob, el bloque **intersticial** `automatico` (6/10), con su id en `ConfigAnuncios` (`bloqueAutomatico`).
