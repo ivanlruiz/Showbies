@@ -222,9 +222,11 @@ monedas (ver CLAUDE.md, Anuncios).
    recopila y comparte identificadores del dispositivo, ubicación aproximada, interacciones y diagnósticos, para
    publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí** → sacar de la ficha
    (`ficha.md`) el "no recopila tus datos".
-7. En AdMob, **bloquear las categorías sensibles** (juegos de azar, citas, alcohol, sexualidad, dinero fácil) y
-   crear el **mensaje de consentimiento europeo** en Privacidad y mensajes (sin él, UMP no muestra nada), más el de
-   los estados de EE. UU.
+7. [x] En AdMob (6/10, con permiso de Ivan en cada paso): **categorías sensibles bloqueadas** (citas, ganar dinero
+   rápidamente, juegos de casino sociales, referencias al sexo y salud reproductiva y sexual; alcohol y apuestas ya
+   venían bloqueadas) y **mensaje de consentimiento europeo publicado** en Privacidad y mensajes, para ShowBies, en
+   inglés y español, con Consentir, **No consentir** (elegido por Ivan, para todos los países: lo pide la AEPD) y
+   Gestionar opciones, y la política de privacidad cargada en la app. Falta, si se quiere, el de los estados de EE. UU.
 8. La 1.4.0: `admob` a `main`, AAB y subida.
 
 **Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
