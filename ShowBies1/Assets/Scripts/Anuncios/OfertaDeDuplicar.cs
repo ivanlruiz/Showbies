@@ -39,23 +39,43 @@ public class OfertaDeDuplicar : MonoBehaviour
         TapaElAviso = false;
     }
 
+    // Cada cuanto se vuelve a mirar si aparecio el video mientras la oferta no esta.
+    private const float CadaCuantoMirar = 0.5f;
+    private float proximaMirada;
+
     private void Start()
     {
         if (raiz != null) raiz.SetActive(false);
         TapaElAviso = false;
         if (avisoDeDescanso != null) avisoDeDescanso.SetActive(MostrarDescanso());
-
-        if (!SePuedeOfrecer()) return;
-
-        if (etiqueta != null)
-        {
-            etiqueta.text = Textos.Formato("oferta_duplicar", FormatoNumeros.Compacto(Progreso.MonedasDeLaPartida));
-        }
         if (boton != null)
         {
             boton.onClick.RemoveListener(Apretar);
             boton.onClick.AddListener(Apretar);
         }
+
+        if (SePuedeOfrecer()) Ofrecer();
+    }
+
+    // Con la red de verdad el video puede terminar de cargar despues de abrirse la derrota,
+    // y el que se cerro antes de tiempo ya se gasto: el siguiente tarda unos segundos. Mientras
+    // la oferta no esta, se vuelve a mirar, y aparece cuando hay video. Cobrada no vuelve:
+    // SePuedeOfrecer mira YaSeDuplicoLaPartida.
+    private void Update()
+    {
+        if (raiz == null || raiz.activeSelf || ServicioAnuncios.MostrandoAnuncio) return;
+        if (Time.unscaledTime < proximaMirada) return;
+        proximaMirada = Time.unscaledTime + CadaCuantoMirar;
+        if (SePuedeOfrecer()) Ofrecer();
+    }
+
+    private void Ofrecer()
+    {
+        if (etiqueta != null)
+        {
+            etiqueta.text = Textos.Formato("oferta_duplicar", FormatoNumeros.Compacto(Progreso.MonedasDeLaPartida));
+        }
+        if (boton != null) boton.interactable = true;
         if (raiz != null) raiz.SetActive(true);
         TapaElAviso = true;
     }
@@ -110,7 +130,7 @@ public class OfertaDeDuplicar : MonoBehaviour
 
     // Cerrar el video antes no castiga (CLAUDE.md, Anuncios): si la oferta sigue en pie,
     // vuelve. Si ya no se puede (no arranco, no hay video o el cobro fallo despues de
-    // gastar el uso), se va sin ruido, como antes.
+    // gastar el uso), se va sin ruido, y vuelve sola si llega otro video (Update).
     private void NoSeCobro()
     {
         if (!SePuedeOfrecer())
@@ -118,9 +138,7 @@ public class OfertaDeDuplicar : MonoBehaviour
             Esconder();
             return;
         }
-        if (boton != null) boton.interactable = true;
-        if (raiz != null) raiz.SetActive(true);
-        TapaElAviso = true;
+        Ofrecer();
     }
 
     private void Esconder()

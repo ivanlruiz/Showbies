@@ -53,7 +53,8 @@ Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (l
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
-Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
+Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
+Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña) y ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle)
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
 Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
@@ -1065,8 +1066,11 @@ Recompensa diaria). **Un solo video premiado por partida**
 |---|---|
 | `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir`, `duplicar_derrota` y `regalo_x2` (la recompensa diaria). |
 | `IProveedorAnuncios` | quién muestra el video: `Listo(lugar)` y `Mostrar(lugar, aviso)`. Cambiar de red es escribir otra clase. |
-| `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows (fuera del editor, en PC se fuerza aunque el asset diga otra cosa) y el de "todavía no hay red". |
-| `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet, y anda igual en el teléfono. |
+| `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows (fuera del editor, en PC se fuerza aunque el asset diga otra cosa), el del editor con el asset en `Real` y el de "no hay red". |
+| `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet; se usa poniendo el asset en `Falso`. |
+| `ProveedorAdMob` | AdMob, solo en Android: escucha al puente de Java y vigila que cada video termine (ver AdMob). |
+| `PuenteAdMobAndroid` | lo que llama a `PuenteAnuncios.java` por JNI; ninguna llamada le tira una excepción al juego. |
+| `IConsentimientoAnuncios` | el cartel de consentimiento y PRIVACIDAD, aparte de los videos: solo lo tiene AdMob. |
 | `ConfigAnuncios` | todos los números, en `Assets/Anuncios/Resources/ConfigAnuncios.asset`. Si falta, no se ofrece nada (con un LogError). |
 | `ServicioAnuncios` | la puerta: `PuedeOfrecer(lugar)` y `Mostrar(lugar, alPremiar, alNoPremiar)`. |
 | `VigiaAplicacion` | un objeto con `DontDestroyOnLoad` que se instala solo. Vacía los avisos de los videos en el hilo principal y **guarda el progreso cuando la app pierde el foco en cualquier escena** (antes eso lo hacía sólo `MenuPausa`, que no está ni en el menú ni en la derrota). Al instalarse, con la app recién abierta, arranca el proveedor (`ServicioAnuncios.Arrancar`): una red de verdad tarda segundos en tener un video, y si arrancara con la primera oferta, esa oferta no lo tendría nunca. |
@@ -1160,12 +1164,41 @@ partida y la descongela: ver La derrota encima de la partida).
   de `Shader.Find`: **un shader que no usa ninguna escena no entra en la build** y en el teléfono se vería
   rosa. Como la UI en overlay no pasa por la cámara, la ventanita (y el HUD) quedan a color.
 
-**Todavía no hay red de anuncios de verdad.** `ConfigAnuncios.proveedor` está en `Nulo` (la primera versión
-para Play sale sin publicidad; la APK de prueba igual fuerza `Falso`) y `Real` no existe:
-cuando se integre (AdMob o LevelPlay) es una clase nueva que implemente `IProveedorAnuncios` y un `case` en
-`ServicioAnuncios`. Nada del juego se entera. Ojo con dos cosas al integrarla: el plugin de AdMob para Unity
-está roto en Unity 6000.3.17 y posteriores (issue 4212 del repo), y AdMob sólo sirve anuncios de verdad cuando
-la app ya está publicada y vinculada a su ficha de Play.
+### AdMob
+
+La red de verdad es **AdMob, sin el plugin de Unity** (6/10, en la rama `admob`, para la 1.4.0): el plugin depende de
+EDM4U, que Google archiva el 26/10/2026 y que ya se peleó con Unity 6 acá. Es el mismo camino que la reseña: la
+librería de Google y JNI.
+
+- **El lado de Android es una librería propia**, `Assets/Plugins/Android/ShowBiesAnuncios.androidlib` (Unity la suma
+  sola a `unityLibrary`): su `build.gradle` pide `play-services-ads` 25.5.0 y UMP 4.0.0 (no la plantilla de Gradle),
+  su manifiesto lleva el id de la app de AdMob (`ConfigAnuncios.IdAppAdMob`, el mismo en la APK y en el AAB) y
+  `PuenteAnuncios.java` maneja el SDK, carga un video por lugar, lo vuelve a pedir al usarlo, al fallar (cada vez
+  más espaciado) y al vencer (a la hora), y avisa todo con texto por `OyenteAnuncios`, una interfaz que del lado de C#
+  implementa un `AndroidJavaProxy` (las devoluciones del SDK son clases abstractas, y el proxy solo implementa
+  interfaces). **Cada pedido de mostrar termina en un solo aviso `terminado`**, pase lo que pase.
+- **`ProveedorAdMob`** encola los avisos y los atiende en el hilo de Unity (`ServicioAnuncios.AtenderAvisos`). **`Listo`
+  no cruza a Java**: se pregunta en el golpe que mata, y sale de lo que avisó el puente. **El premio llega antes del
+  cierre y se avisa recién al cerrarse**, como `Recompensado`. **Dos vigías** lo resuelven si el SDK no avisa: el
+  video que no se abrió en 6 s con la app delante es `NoDisponible`, y al volver a la app, si en 1,5 s no llegó el
+  cierre, cuenta lo que se vio (el botón de inicio con el video abierto). El puente es una interfaz y el reloj se
+  inyecta: la prueba de lógica lo recorre entero sin teléfono.
+- **El consentimiento de Europa, el Reino Unido y Suiza (UMP)**: al abrir la app se pregunta sin mostrar nada, y si
+  se pueden pedir anuncios (fuera de Europa, o con el consentimiento de antes) arranca el SDK. **El cartel sale recién
+  desde la segunda partida terminada** (elegido por Ivan): en el menú con todo cerrado, antes que la reseña
+  (`ServicioAnuncios.PedirConsentimientoSiHaceFalta`, desde `PedidoDeResena`). **PRIVACIDAD** en OPCIONES aparece
+  solo cuando UMP lo pide (`ServicioAnuncios.PrivacidadRequerida`) y abre el cartel para cambiarlo.
+- **La clasificación máxima es T** (`ConfigAnuncios.clasificacionMaxima`, elegida por Ivan; PG era la recomendada),
+  y en AdMob se bloquean aparte apuestas, citas, alcohol y lo de adultos.
+- **La APK de prueba usa siempre el bloque de prueba de Google** (`BloqueDePruebaDeGoogle`, el paquete `.prueba` lo
+  decide en runtime) y hace que UMP crea que el teléfono está en Europa (`simularEuropaEnLaPrueba`): mirar anuncios
+  reales propios es tráfico no válido. Fuera de Android, con el asset en `Real`, no hay videos (`Nulo`).
+- **Las ofertas vuelven a mirar si hay video mientras están abiertas**: con la red de verdad, el video puede cargar
+  después de abrirse la derrota, y el que se cerró antes ya se gastó. La derrota y la diaria lo muestran cuando
+  llega; el botón del revivir se apaga hasta que haya otro.
+- **AdMob sirve anuncios de verdad recién con la app publicada, vinculada a su ficha y verificada con app-ads.txt**;
+  los pasos están en `publicacion/pasos.md`. El SDK clásico deja de tener soporte el 30/6/2027: antes hay que pasar
+  al Next-Gen, que con el puente es un archivo Java y una línea de Gradle.
 
 ## Reseña de Google Play
 
@@ -1180,7 +1213,8 @@ Play (una APK a mano) no muestra nada.
 en `Assets/Plugins/Android/mainTemplate.gradle` (la plantilla propia está prendida en Player Settings) y se llama por JNI,
 con un `AndroidJavaProxy` para el `OnCompleteListener`. El plugin trae el External Dependency Manager, que se pelea con
 Unity 6. **Si se actualiza Unity, hay que volver a copiar su `mainTemplate.gradle` y sumarle la línea.** Solo en Android,
-decidido en runtime; en el editor loguea "se pediría".
+decidido en runtime; en el editor loguea "se pediría". **En el mismo momento tranquilo, y antes, va el cartel de
+consentimiento de los anuncios** cuando hace falta (ver AdMob); si sale, la reseña queda para otra visita.
 
 ## Pantallas: idioma, fuente y botones
 
@@ -1482,7 +1516,8 @@ uno cada 0,2 s como mucho, por `Sonidos.TocarUI`: en la pausa también suena), a
   responden sin componente.
 - **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
   (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes y el interruptor MOSTRAR FPS (`ContadorFps`,
-  pedido de Ivan el 6/10). Se llama OPCIONES y no SONIDO porque tuvo el modo oscuro, que se fue con el neón (ver Tema:
+  pedido de Ivan el 6/10), más PRIVACIDAD cuando UMP lo pide (ver AdMob): la ventana crece al abrirse y todo sube
+  (`OpcionesSonido.Acomodar`). Se llama OPCIONES y no SONIDO porque tuvo el modo oscuro, que se fue con el neón (ver Tema:
   carbón neón); la clase conserva el nombre de antes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
   los arma debajo de los botones de la pausa. El atrás de Android cierra la ventana de sonido primero.
 - Se escribe a disco medio segundo después de soltar el control o al cerrarse la ventana, no en cada movimiento.
@@ -1750,10 +1785,12 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   test-framework.performance, que sólo traía él (este último creaba un `Assets/Resources` vacío). Los ejemplos de
   TextMesh Pro tampoco van: estaban gitignoreados pero su `Resources` entraba igual en la build.
 - Los restos de Unity Mediation (discontinuado por Unity) ya se borraron; el paquete nunca estuvo
-  en `manifest.json`. La red de anuncios de verdad todavía no está (ver Anuncios).
-- **La APK fuerza el proveedor de anuncios Falso** mientras dura la build y después deja el asset como
-  estaba, así el cartel de prueba llega siempre al teléfono. **El AAB se niega a construirse si el
-  proveedor está en Falso**: un anuncio de prueba en la Play Store no.
+  en `manifest.json`. La red de anuncios de verdad es AdMob, sin plugin (ver Anuncios).
+- **La APK fuerza el proveedor de anuncios Real** mientras dura la build y después deja el asset como
+  estaba: AdMob de verdad con el bloque de prueba de Google, que es lo que pide el paquete `.prueba`. **El AAB se
+  niega a construirse si el proveedor está en Falso** (un anuncio de prueba en la Play Store no) **y, con AdMob, si
+  algún lugar no tiene su bloque, tiene uno de prueba o la clasificación no es G, PG, T o MA**
+  (`ConstructorAndroid.ProblemaDeAnuncios`).
 - El `totalSize` del BuildReport miente: cuenta símbolos e intermedios (~430 MB); el APK real son
   ~32 MB. La carpeta `*_BurstDebugInformation_DoNotShip` que aparece al lado del APK no se
   distribuye.

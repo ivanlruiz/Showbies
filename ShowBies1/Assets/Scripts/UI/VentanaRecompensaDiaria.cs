@@ -69,6 +69,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
     private double montoHoy;
     private bool esperandoVideo;
     private bool cobrado;
+    private bool duplicado;                 // el x2 del video ya se cobro: la oferta no vuelve
     private float relojGolpe = -1f;       // tiempo desde el ultimo festejo, para el salto del casillero
     private Texture2D texturaMoneda;
     private Texture2D texturaClaqueta;
@@ -198,6 +199,7 @@ public class VentanaRecompensaDiaria : MonoBehaviour
         bool lanzado = ServicioAnuncios.Mostrar(LugarAnuncio.DuplicarRegalo, () =>
         {
             esperandoVideo = false;
+            duplicado = true;
             double extra = RecompensaDiaria.CobrarDuplicado();
             if (extra > 0)
             {
@@ -280,8 +282,19 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
         if (esperaParaIrse >= 0f)
         {
-            esperaParaIrse -= dt;
-            if (esperaParaIrse <= 0f) { esperaParaIrse = -1f; Cerrar(); }
+            // Con la red de verdad, el video del x2 puede terminar de cargar mientras la
+            // ventana espera para irse (despues de cobrar, o de cerrar uno antes de tiempo):
+            // si llega, la oferta vuelve. Con el x2 ya cobrado, no.
+            if (cobrado && !duplicado && !esperandoVideo && ServicioAnuncios.PuedeOfrecer(LugarAnuncio.DuplicarRegalo))
+            {
+                esperaParaIrse = -1f;
+                MostrarOferta(true);
+            }
+            else
+            {
+                esperaParaIrse -= dt;
+                if (esperaParaIrse <= 0f) { esperaParaIrse = -1f; Cerrar(); }
+            }
         }
     }
 

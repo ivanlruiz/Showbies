@@ -179,43 +179,42 @@ Los nombres de los bloques son los de `LugarAnuncio`. Mientras la app no esté v
 limita los anuncios: para probar se usan los bloques de prueba de Google. Al publicar en producción, vincular la
 tienda desde **Configuración de la app → Añadir tienda** (`com.ivanruiz.showbies`).
 
-La primera versión sale **sin anuncios**, y es a propósito: el proveedor real (AdMob) todavía no está integrado,
-y **AdMob no sirve anuncios de verdad hasta que la app esté publicada y vinculada a su ficha**. O sea que el
-orden natural es publicar → crear la cuenta de AdMob → vincular la app → integrar el SDK → actualizar.
+**La integración está hecha** (6/10/2026, rama `admob`, para la 1.4.0): sin el plugin de Unity, con una librería
+propia (`Assets/Plugins/Android/ShowBiesAnuncios.androidlib`: el SDK clásico `play-services-ads` 25.5.0, UMP 4.0.0
+y un puente en Java) y `ProveedorAdMob` del lado de C#. Lo de cómo funciona está en CLAUDE.md (Anuncios → AdMob).
+Decisiones de Ivan del 6/10: **el cartel de consentimiento sale desde la segunda partida terminada**, en el menú, y
+**los anuncios llegan hasta la clasificación T** (PG era la recomendada). La APK de prueba usa siempre el bloque de
+prueba de Google y hace como si el teléfono estuviera en Europa, para ver el cartel y el botón PRIVACIDAD.
 
-Cuando llegue ese momento, además hay que (casi todo lo sumó la auditoría del 24/9):
-- **Declarar los anuncios antes de subir el AAB, no después.** El SDK agrega por su cuenta el permiso `AD_ID` al
-  manifiesto y, con la declaración en "no", Play bloquea la versión. El orden: la política nueva publicada, con
-  fecha → rehacer **Seguridad de los datos** (AdMob recopila y comparte identificadores del dispositivo, ubicación
-  aproximada, interacciones y diagnósticos, para publicidad, analíticas y prevención de fraude) → **Anuncios: sí**
-  e **ID de publicidad: sí** → recién ahí subir. Y sacar de la ficha (`ficha.md`) el "no recopila tus datos".
-- **Tope de clasificación**: `MaxAdContentRating` en PG (T como mucho) en la `RequestConfiguration`, antes del
-  primer pedido, y en AdMob bloquear las categorías sensibles (juegos de azar, citas, alcohol, sexualidad, dinero
-  fácil). La app es E10+ con público desde los 13, y sin tocar nada AdMob sirve hasta anuncios para adultos.
-- **Consentimiento (UMP)** para el Espacio Económico Europeo, el Reino Unido y Suiza, más el mensaje de los estados
-  de EE. UU. en AdMob. El SDK no pide anuncios hasta que UMP termina, así que `Inicializar` tiene que poder
-  esperarlo. Mostrá el formulario en el menú desde la segunda partida terminada (antes no hay videos), no al abrir
-  la app por primera vez, y sumá a OPCIONES un botón **PRIVACIDAD** que aparezca cuando UMP lo pida, para poder
-  retirarlo.
-- **Ids de bloque y de prueba en `ConfigAnuncios`**: un campo por lugar con los de la tabla de arriba, y la APK de
-  prueba (el paquete `.prueba`) siempre con el bloque de prueba de Google, `ca-app-pub-3940256099942544/5224354917`,
-  con tu teléfono registrado como dispositivo de prueba. Mirar y tocar anuncios reales propios es tráfico no
-  válido, y AdMob cierra cuentas por eso. El AAB se tiene que negar a salir con un id de prueba.
-- **app-ads.txt, sin dominio pago**: un repo público `ivanlruiz/ivanlruiz.github.io` con GitHub Pages y
-  `app-ads.txt` en la raíz, con la línea `google.com, pub-5295383586829735, DIRECT, f08c47fec0942fa0`. El sitio
-  web de la ficha tiene que caer en `ivanlruiz.github.io` (la URL de la política sirve). AdMob lo verifica recién
-  después de vincular la app a la ficha, y tarda hasta 24 h.
-- **Inicializar y precargar al arrancar**: `ServicioAnuncios.Arrancar` ya se llama al abrir la app, así que es en
-  el `Inicializar` del proveedor real donde se arranca el SDK y se piden los videos. Cada video de AdMob sirve una vez y
-  vence a la hora: hay que pedir otro después de mostrarlo y al vencer. Ni `Inicializar` ni `Listo` pueden tirar
-  excepciones: `Listo` se pregunta en el golpe que mata al jugador.
-- **Volver a preguntar `Listo` mientras las ofertas están abiertas**: hoy cada lugar pregunta una sola vez (la
-  derrota al abrirse, el revivir al morir, la diaria al cobrar), porque el proveedor falso siempre está listo. Con
-  la red real, un video que termina de cargar un segundo tarde no aparece, y el revivir, al volver de un video
-  cerrado, habilita el botón sin preguntar.
-- **Un solo resultado final por video**: el proveedor avisa una vez, al cerrarse el anuncio, con `Recompensado` si
-  el premio llegó en cualquier momento (AdMob lo manda antes del cierre, y avisar ahí reanudaría el juego detrás
-  del anuncio). Si el SDK puede no avisar nunca (volver a la app desde el ícono con el video abierto), hace falta
-  un vigía que lo resuelva como cerrado al volver.
-- **No subir Unity a 6000.3.17 o posterior**: el plugin de AdMob está roto ahí (issue #4212 del repo del
-  plugin). Hoy estás en 6000.3.14, que está bien.
+La rama `admob` **no va a `main` hasta la 1.4.0**: el SDK suma solo el permiso `AD_ID`, y un arreglo urgente de la
+1.3.x armado con eso no pasaría la declaración de "sin anuncios" de Play.
+
+**Para probarla:** compilar y correr la prueba de lógica, armar la APK y jugarla en el teléfono: los videos tienen que
+decir "Test Ad", y el cartel de consentimiento salir en el menú desde la segunda partida, con PRIVACIDAD en
+OPCIONES. El cartel y PRIVACIDAD aparecen recién cuando esté creado el mensaje europeo en AdMob (paso 6). En la primera APK, mirar el manifiesto combinado: si trae `FOREGROUND_SERVICE` o el `SystemForegroundService`
+de WorkManager (que mete el SDK, issue 4092 del plugin), sacarlos con `tools:node="remove"` en el manifiesto de la
+librería, o Play pide la declaración de servicios en primer plano.
+
+**Para que salgan anuncios de verdad**, en este orden (todo esto es de afuera: se hace con Ivan, de a un paso):
+1. La 1.3.0 publicada en producción.
+2. En AdMob, **Configuración de la app → Añadir tienda** (`com.ivanruiz.showbies`).
+3. **app-ads.txt sin dominio pago**: un repo público `ivanlruiz/ivanlruiz.github.io` con GitHub Pages y `app-ads.txt`
+   en la raíz, con la línea `google.com, pub-5295383586829735, DIRECT, f08c47fec0942fa0`.
+4. En Play Console, el **sitio web** de los datos de contacto de la ficha en `https://ivanlruiz.github.io/...` (la URL
+   de la política sirve): AdMob lee ese campo, no el de la política. Después, en AdMob, "Verificar la app"; tarda
+   hasta 24 h, y la revisión de la app 2 o 3 días, con anuncios limitados mientras tanto.
+5. **Antes de subir el AAB**: la política nueva publicada, con fecha → rehacer **Seguridad de los datos** (AdMob
+   recopila y comparte identificadores del dispositivo, ubicación aproximada, interacciones y diagnósticos, para
+   publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí** → sacar de la ficha
+   (`ficha.md`) el "no recopila tus datos".
+6. En AdMob, **bloquear las categorías sensibles** (juegos de azar, citas, alcohol, sexualidad, dinero fácil) y
+   crear el **mensaje de consentimiento europeo** en Privacidad y mensajes (sin él, UMP no muestra nada), más el de
+   los estados de EE. UU.
+7. La 1.4.0: `admob` a `main`, AAB y subida.
+
+**Antes del 30/6/2027, pasar al SDK Next-Gen** (`com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk`): ese día
+Google deja de dar soporte al clásico, y el 30/6/2028 lo apaga. Con el puente es un archivo Java y una línea de Gradle.
+
+**Ya no hay que quedarse en Unity 6000.3.16 o menos**: lo del issue 4212 era del plugin. Al subir de versión, eso sí,
+Unity 6000.3.17 pasa a AGP 9: hay que volver a copiar la plantilla de Gradle (como ya dice CLAUDE.md por la reseña) y
+probar que la librería compila.

@@ -5,10 +5,11 @@ using UnityEngine.UI;
 // El engranaje del menu y la ventana de opciones que abre: los volumenes de efectos y
 // de musica y MOSTRAR FPS (el contador del HUD, ContadorFps; desde el 6/10). Hasta el
 // 24/9 tenia tambien el modo oscuro, que se fue cuando el neon paso a ser el unico tema
-// (ver Tema), y el interruptor de los FPS ocupa su lugar. No tiene objetos propios en la
-// escena: al arrancar copia el globo y la ventana del idioma (SelectorIdioma) y los
-// adapta, asi se ven igual sin mantener dos copias a mano. El engranaje queda a la
-// derecha del globo.
+// (ver Tema), y el interruptor de los FPS ocupa su lugar. Con anuncios de AdMob suma
+// PRIVACIDAD, para cambiar el consentimiento de Europa, solo cuando UMP lo pide. No tiene
+// objetos propios en la escena: al arrancar copia el globo y la ventana del idioma
+// (SelectorIdioma) y los adapta, asi se ven igual sin mantener dos copias a mano. El
+// engranaje queda a la derecha del globo.
 //
 // Se llamaba "sonido" cuando solo tenia los dos volumenes; el nombre de la clase quedo
 // porque es lo que esta cableado en la escena.
@@ -24,12 +25,27 @@ public class OpcionesSonido : MonoBehaviour
     [Tooltip("El texto de los controles sobre la ventana crema; con el tema oscuro lo cambia Tema.")]
     public Color colorTexto = new Color(0.16f, 0.14f, 0.2f, 1f);
 
-    // La del idioma mide 620 x 480 y tiene dos botones; esta tiene tres controles.
+    // La del idioma mide 620 x 480 y tiene dos botones; esta tiene tres controles, y un
+    // cuarto, PRIVACIDAD, solo si UMP lo pide: la ventana crece y todo sube (Acomodar).
     private const float AltoVentana = 640f;
     private const float AnchoControl = 500f;
+    private const float YTitulo = 255f;
+    private const float YEfectos = 140f;
+    private const float YMusica = 25f;
+    private const float YFps = -95f;
+    private const float YVolver = -255f;
+    private const float DePrivacidadAlFps = 135f;
+    private const float CrecidaConPrivacidad = 130f;
 
     private GameObject panel;
     private RectTransform ventana;
+    private RectTransform titulo;
+    private RectTransform controlEfectos;
+    private RectTransform controlMusica;
+    private RectTransform controlFps;
+    private RectTransform botonVolver;
+    private RectTransform botonPrivacidad;
+    private int privacidadAcomodada = -1;   // -1 sin acomodar, 0 sin PRIVACIDAD, 1 con
     private Texture2D texturaEngranaje;
     private Texture2D texturaPerilla;
     private Sprite spriteEngranaje;
@@ -97,12 +113,12 @@ public class OpcionesSonido : MonoBehaviour
         // Mas alta que la del idioma: entran tres controles en vez de dos botones.
         ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana);
 
-        // El titulo pasa a OPCIONES y sube, que la ventana creció.
+        // El titulo pasa a OPCIONES y sube, que la ventana creció (Acomodar).
         foreach (var t in panel.GetComponentsInChildren<TextoTraducido>(true))
         {
             if (t.id != "idioma_titulo") continue;
             t.id = "opciones_titulo";
-            ((RectTransform)t.transform).anchoredPosition = new Vector2(0f, 255f);
+            titulo = (RectTransform)t.transform;
         }
 
         // Los botones de idioma se van; en su lugar, los volumenes y MOSTRAR FPS. De paso,
@@ -137,7 +153,7 @@ public class OpcionesSonido : MonoBehaviour
                 boton.onClick.RemoveAllListeners();
                 boton.onClick.AddListener(Cerrar);
             }
-            ((RectTransform)volver).anchoredPosition = new Vector2(0f, -255f);
+            botonVolver = (RectTransform)volver;
         }
 
         // El texto y el surco van con el tema, con el pintor puesto: como el resto de la
@@ -145,30 +161,98 @@ public class OpcionesSonido : MonoBehaviour
         Color colorDelTexto = Tema.Elegir(colorTexto, RolDeTema.Texto);
         Color colorDelSurco = Tema.Elegir(SliderVolumen.ColorBarra, RolDeTema.Surco);
         // El de efectos suena al moverlo (FijarEfectosConMuestra).
-        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 140f), AnchoControl, fuente,
-                                         Volumen.Efectos, SliderVolumen.FijarEfectosConMuestra, spritePerilla, colorDelTexto, colorDelSurco));
-        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, 25f), AnchoControl, fuente,
-                                         Volumen.Musica, Volumen.FijarMusica, spritePerilla, colorDelTexto, colorDelSurco));
+        controlEfectos = RectDe(SeguirElTema(SliderVolumen.Crear(ventana, "sonido_efectos", Vector2.zero, AnchoControl, fuente,
+                                           Volumen.Efectos, SliderVolumen.FijarEfectosConMuestra, spritePerilla, colorDelTexto, colorDelSurco)));
+        controlMusica = RectDe(SeguirElTema(SliderVolumen.Crear(ventana, "sonido_musica", Vector2.zero, AnchoControl, fuente,
+                                          Volumen.Musica, Volumen.FijarMusica, spritePerilla, colorDelTexto, colorDelSurco)));
         // Se escribe a disco al cerrar la ventana, con los volumenes (Volumen.Guardar).
-        SeguirElTema(Interruptor.Crear(ventana, "opciones_fps", new Vector2(0f, -95f), AnchoControl, fuente,
-                                       () => ContadorFps.Mostrar, ContadorFps.FijarMostrar, pildora, spritePerilla, sonidoClick, colorDelTexto));
+        controlFps = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_fps", Vector2.zero, AnchoControl, fuente,
+                                       () => ContadorFps.Mostrar, ContadorFps.FijarMostrar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
+
+        CrearPrivacidad(fuente, pildora, sonidoClick);
+        Acomodar(false);
+    }
+
+    // PRIVACIDAD: el cartel de consentimiento de Europa para cambiar lo que se eligio (lo
+    // pide la politica de Google). Solo si UMP lo pide (ServicioAnuncios.PrivacidadRequerida),
+    // y eso se sabe recien cuando contesta, despues de armada la ventana: se acomoda al
+    // abrirla. Es un boton de vidrio como VOLVER, y toma de el el color, el tamanio y la letra.
+    private void CrearPrivacidad(TMP_FontAsset fuente, Sprite pildora, AudioClip sonidoClick)
+    {
+        if (botonVolver == null) return;
+        var fondoVolver = botonVolver.Find("Visual/Fondo");
+        var imgVolver = fondoVolver != null ? fondoVolver.GetComponent<Image>() : null;
+        var textoVolver = botonVolver.GetComponentInChildren<TMP_Text>(true);
+        Color color = imgVolver != null ? imgVolver.color : Tema.Elegir(Color.gray, RolDeTema.Vidrio);
+        Color colorDelTexto = textoVolver != null ? textoVolver.color : Color.white;
+        float tamanioTexto = textoVolver != null ? textoVolver.fontSize : 50f;
+        if (pildora == null && imgVolver != null) pildora = imgVolver.sprite;
+
+        var boton = ConstructorUI.Boton(ventana, "BotonPrivacidad", Vector2.zero, botonVolver.sizeDelta, color, colorDelTexto,
+                                        null, "", tamanioTexto, fuente, pildora, sonidoClick);
+        boton.onClick.AddListener(ServicioAnuncios.MostrarPrivacidad);
+        // Apagado mientras se le pone el id: TextoTraducido escribe en OnEnable, y sin id
+        // mostraria "[]". Asi tambien cambia con el idioma, como los otros controles.
+        var texto = boton.GetComponentInChildren<TMP_Text>(true);
+        if (texto != null)
+        {
+            texto.gameObject.SetActive(false);
+            var traducido = texto.gameObject.AddComponent<TextoTraducido>();
+            traducido.id = "opciones_privacidad";
+            texto.gameObject.SetActive(true);
+        }
+        botonPrivacidad = (RectTransform)boton.transform;
+    }
+
+    // Sin PRIVACIDAD, los tres controles de siempre; con, la ventana crece y todo sube para
+    // hacerle lugar entre MOSTRAR FPS y VOLVER.
+    private void Acomodar(bool conPrivacidad)
+    {
+        int cual = conPrivacidad ? 1 : 0;
+        if (cual == privacidadAcomodada || ventana == null) return;
+        privacidadAcomodada = cual;
+
+        float subir = conPrivacidad ? CrecidaConPrivacidad * 0.5f : 0f;
+        ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana + 2f * subir);
+        Poner(titulo, YTitulo + subir);
+        Poner(controlEfectos, YEfectos + subir);
+        Poner(controlMusica, YMusica + subir);
+        Poner(controlFps, YFps + subir);
+        Poner(botonVolver, YVolver - subir);
+        if (botonPrivacidad != null)
+        {
+            Poner(botonPrivacidad, YFps + subir - DePrivacidadAlFps);
+            botonPrivacidad.gameObject.SetActive(conPrivacidad);
+        }
+    }
+
+    private static void Poner(RectTransform rt, float y)
+    {
+        if (rt != null) rt.anchoredPosition = new Vector2(0f, y);
+    }
+
+    private static RectTransform RectDe(Component control)
+    {
+        return control != null ? (RectTransform)control.transform : null;
     }
 
     // Le pone su papel a los textos y al surco de un control recien armado, para que
-    // cambien en el acto al tocar el modo oscuro.
-    private void SeguirElTema(Component control)
+    // cambien en el acto si cambia el tema. Devuelve el mismo control.
+    private Component SeguirElTema(Component control)
     {
-        if (control == null) return;
+        if (control == null) return null;
         foreach (var t in control.GetComponentsInChildren<TMP_Text>(true))
             Tema.Pintar(t, RolDeTema.Texto, colorTexto);
         var barra = control.transform.Find("Barra");
         if (barra != null) Tema.Pintar(barra.GetComponent<Image>(), RolDeTema.Surco, SliderVolumen.ColorBarra);
+        return control;
     }
 
     public void Abrir()
     {
         if (panel == null) return;
         if (selectorIdioma != null) selectorIdioma.Cerrar();
+        Acomodar(ServicioAnuncios.PrivacidadRequerida);
         panel.SetActive(true);
         abiertaDesde = Time.unscaledTime;
         if (ventana != null) ventana.localScale = Vector3.zero;

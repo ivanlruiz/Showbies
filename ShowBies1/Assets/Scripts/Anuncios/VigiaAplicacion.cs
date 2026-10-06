@@ -5,6 +5,7 @@ using UnityEngine;
 //
 // 1. Vacia en el hilo principal los avisos de los videos. El SDK avisa cuando
 //    quiere y desde donde quiere, y tocar Unity fuera del hilo principal explota.
+//    Tambien le avisa al proveedor cuando la app recupera el foco (el vigia de AdMob).
 // 2. Guarda el progreso cuando la app pierde el foco en CUALQUIER escena. Hasta
 //    ahora eso lo hacia MenuPausa, que no esta ni en el menu ni en la derrota: si
 //    Android mataba la app ahi, se perdia lo ultimo.
@@ -79,6 +80,9 @@ public class VigiaAplicacion : MonoBehaviour
     private void OnApplicationFocus(bool conFoco)
     {
         Ausencia(!conFoco);
+        // El video de AdMob saca el foco a la app: al volver, si el SDK no avisa como
+        // termino, el proveedor lo resuelve igual (ver ProveedorAdMob).
+        ServicioAnuncios.CambioElFoco(conFoco);
     }
 
     private static void Ausencia(bool empieza)

@@ -15,6 +15,9 @@ using UnityEngine;
 // Las reglas de Play: no se pregunta antes "¿te gusta?" para mandar solo a los contentos,
 // y no se da nada a cambio de reseñar.
 //
+// En ese mismo momento tranquilo, y antes, pide el cartel de consentimiento de los anuncios
+// cuando hace falta (ServicioAnuncios.PedirConsentimientoSiHaceFalta).
+//
 // Llama a la libreria oficial (com.google.android.play:review, sumada en
 // Plugins/Android/mainTemplate.gradle) por JNI, sin el plugin de Unity. Solo en Android:
 // se decide en runtime, sin #if (ver la trampa en CLAUDE.md). Fuera de una build de Play
@@ -104,7 +107,8 @@ public class PedidoDeResena : MonoBehaviour
                          && (confirmarSalir == null || !confirmarSalir.Abierta)
                          && (selectorIdioma == null || !selectorIdioma.Abierto)
                          && (opcionesSonido == null || !opcionesSonido.Abierto)
-                         && (menuModos == null || !menuModos.activeSelf);
+                         && (menuModos == null || !menuModos.activeSelf)
+                         && !ServicioAnuncios.ConsentimientoEnPantalla;
         if (!tranquilo)
         {
             tranquiloDesde = -1f;
@@ -115,6 +119,13 @@ public class PedidoDeResena : MonoBehaviour
 
         // Una sola evaluacion por visita al menu.
         pedida = true;
+
+        // Antes que la reseña, el cartel de consentimiento de los anuncios (Europa, el Reino
+        // Unido y Suiza), que pide el mismo momento tranquilo: desde la segunda partida
+        // terminada, si UMP dice que hace falta. Sin el, ahi no hay videos. Si sale, la reseña
+        // queda para otra visita: dos ventanas seguidas son demasiado.
+        if (ServicioAnuncios.PedirConsentimientoSiHaceFalta()) return;
+
         if (!Corresponde(Progreso.MejorOleada, Progreso.PartidasTerminadas, PlayerPrefs.GetString(ClaveUltimoPedido, ""),
                          DateTime.Now, oleadaMinima, partidasMinimas, diasEntrePedidos)) return;
 

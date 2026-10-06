@@ -83,6 +83,7 @@ public class OfertaDeRevivir : MonoBehaviour
     private float desde;
     private float aceptadoEn = -1f;   // cuando toco el video, para devolverle su tiempo
     private float ignorarAtrasHasta;  // el atras que cerro el video no rechaza
+    private float proximaMiradaDelVideo;  // cuando se vuelve a mirar si hay video (Update)
 
     // La cuenta atras tambien se congela con la app sin foco (la cortina de notificaciones,
     // una llamada encima) o en segundo plano: MenuPausa no pausa encima de la oferta, y el
@@ -256,6 +257,15 @@ public class OfertaDeRevivir : MonoBehaviour
             return;
         }
 
+        // Con la red de verdad, el video que se cerro antes de tiempo ya se gasto y el
+        // siguiente tarda unos segundos en cargar: el boton se apaga hasta que haya otro, en
+        // vez de prometer uno que no esta, y se prende solo cuando llega.
+        if (botonVideo != null && Time.unscaledTime >= proximaMiradaDelVideo)
+        {
+            proximaMiradaDelVideo = Time.unscaledTime + 0.25f;
+            botonVideo.interactable = ServicioAnuncios.PuedeOfrecer(LugarAnuncio.Revivir);
+        }
+
         // Congelada mientras la app esta afuera: sin foco, Update sigue corriendo.
         float pasado = pasadoAlIrse >= 0f ? pasadoAlIrse : Time.unscaledTime - desde;
 
@@ -350,8 +360,8 @@ public class OfertaDeRevivir : MonoBehaviour
 
         if (!ServicioAnuncios.Mostrar(LugarAnuncio.Revivir, Volver, SinPremio))
         {
-            // Dejó de haber video entre que murió y que tocó: no se le cobra la duda, pero
-            // tampoco tiene sentido volver a ofrecérselo.
+            // Dejó de haber video entre que murió y que tocó: no se le cobra la duda, y el
+            // botón queda apagado hasta que haya otro (lo mira Update).
             SinPremio();
             if (botonVideo != null) botonVideo.interactable = false;
         }
@@ -377,7 +387,9 @@ public class OfertaDeRevivir : MonoBehaviour
         aceptadoEn = -1f;
         ignorarAtrasHasta = Time.unscaledTime + 0.4f;
 
-        if (botonVideo != null) botonVideo.interactable = true;
+        // El video vuelve a ofrecerse cuando haya otro (lo mira Update).
+        if (botonVideo != null) botonVideo.interactable = ServicioAnuncios.PuedeOfrecer(LugarAnuncio.Revivir);
+        proximaMiradaDelVideo = Time.unscaledTime + 0.25f;
         if (botonNo != null) botonNo.interactable = true;
 
         // Si el aviso llego con la app todavia sin foco, la cuenta sigue congelada hasta que

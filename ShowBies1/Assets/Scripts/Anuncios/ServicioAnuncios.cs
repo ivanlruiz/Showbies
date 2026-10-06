@@ -75,21 +75,84 @@ public static class ServicioAnuncios
             // Fuera del editor, en PC no hay anuncios (Nulo es el de Windows): asi el cartel
             // de prueba no llega a una build de Windows si el asset quedo en Falso.
             if (!Application.isEditor && !Plataforma.EsMovil) cual = ConfigAnuncios.Proveedor.Nulo;
-            if (cual == ConfigAnuncios.Proveedor.Real)
-                Debug.LogError("ServicioAnuncios: el proveedor Real todavia no existe; no se ofrecen videos.");
-            switch (cual)
-            {
-                case ConfigAnuncios.Proveedor.Falso:
-                    proveedor = new ProveedorFalso();
-                    break;
-                // Real todavia no existe: hasta que se integre la red, no hay anuncios.
-                default:
-                    proveedor = new ProveedorNulo();
-                    break;
-            }
+            proveedor = CrearProveedor(cual, config, Application.platform == RuntimePlatform.Android,
+                                       Application.identifier);
             proveedor.Inicializar();
             return proveedor;
         }
+    }
+
+    // Cual proveedor corresponde, sin inicializarlo: separado para probarlo sin telefono.
+    // AdMob solo existe en Android: en el editor y en Windows, con el asset en Real, no hay
+    // videos (Nulo), sin tocar JNI. En la APK de prueba (el paquete .prueba) se piden los
+    // bloques de prueba de Google, y UMP puede hacer como si el telefono estuviera en Europa.
+    public static IProveedorAnuncios CrearProveedor(ConfigAnuncios.Proveedor cual, ConfigAnuncios config,
+                                                    bool enAndroid, string paquete)
+    {
+        switch (cual)
+        {
+            case ConfigAnuncios.Proveedor.Falso:
+                return new ProveedorFalso();
+            case ConfigAnuncios.Proveedor.Real:
+                if (!enAndroid || config == null) return new ProveedorNulo();
+                bool deprueba = ConfigAnuncios.EsPaqueteDePrueba(paquete);
+                string[] lugares = ConfigAnuncios.LugaresConVideo;
+                var bloques = new string[lugares.Length];
+                for (int i = 0; i < lugares.Length; i++) bloques[i] = config.BloquePara(lugares[i], deprueba);
+                return new ProveedorAdMob(new PuenteAdMobAndroid(), lugares, bloques, config.clasificacionMaxima,
+                                          deprueba && config.simularEuropaEnLaPrueba);
+            default:
+                return new ProveedorNulo();
+        }
+    }
+
+    // --- el consentimiento de Europa (hoy, el de AdMob) ---------------------------------
+    // Del proveedor ya creado y no del que se crearia: lo arranca VigiaAplicacion al abrir
+    // la app, y sin el no hay nada que pedir.
+    private static IConsentimientoAnuncios Consentimiento
+    {
+        get { return proveedor as IConsentimientoAnuncios; }
+    }
+
+    // Si las opciones tienen que mostrar el boton PRIVACIDAD.
+    public static bool PrivacidadRequerida
+    {
+        get { IConsentimientoAnuncios c = Consentimiento; return c != null && c.PrivacidadRequerida; }
+    }
+
+    // El cartel de UMP esta pedido o en pantalla: el menu no saca otra ventana encima.
+    public static bool ConsentimientoEnPantalla
+    {
+        get { IConsentimientoAnuncios c = Consentimiento; return c != null && c.ConsentimientoEnPantalla; }
+    }
+
+    // El cartel de consentimiento, si hace falta: en Europa y sin respuesta, y recien desde la
+    // segunda partida terminada, que es cuando puede haber videos (lo eligio Ivan el 6/10: la
+    // primera vez que se abre el juego no sale nada). Lo pide el menu con todo cerrado
+    // (PedidoDeResena). Devuelve si lo pidio.
+    public static bool PedirConsentimientoSiHaceFalta()
+    {
+        IConsentimientoAnuncios c = Consentimiento;
+        ConfigAnuncios config = ConfigEnUso;
+        if (c == null || config == null || !c.ConsentimientoRequerido || c.ConsentimientoEnPantalla) return false;
+        if (!Progreso.OfrecerVideos || Progreso.PartidasTerminadas < config.partidasTerminadasMinimas) return false;
+        c.PedirConsentimiento();
+        return true;
+    }
+
+    // El boton PRIVACIDAD de las opciones.
+    public static void MostrarPrivacidad()
+    {
+        IConsentimientoAnuncios c = Consentimiento;
+        if (c != null && !c.ConsentimientoEnPantalla) c.MostrarPrivacidad();
+    }
+
+    // Lo avisa VigiaAplicacion: el proveedor de AdMob vigila que el video no quede sin
+    // resolver si el SDK no avisa al volver a la app.
+    public static void CambioElFoco(bool conFoco)
+    {
+        var admob = proveedor as ProveedorAdMob;
+        if (admob != null) admob.CambioElFoco(conFoco);
     }
 
     // Crea e inicializa el proveedor al abrir la app: lo llama VigiaAplicacion.Asegurar. Si
@@ -221,6 +284,11 @@ public static class ServicioAnuncios
     // La vacia VigiaAplicacion en su Update, en el hilo principal.
     public static void AtenderAvisos()
     {
+        // Primero los avisos de AdMob, que pueden terminar el video y encolar su resultado
+        // aca: asi se resuelve en el mismo cuadro.
+        var admob = proveedor as ProveedorAdMob;
+        if (admob != null) admob.Atender();
+
         while (true)
         {
             KeyValuePair<int, ResultadoAnuncio> aviso;

@@ -234,6 +234,7 @@ public static class PruebasMejoras
                     ProbarGuardado(informe);
                     ProbarAnuncios(informe);
                     ProbarCircuitoDeAnuncios(informe);
+                    ProbarProveedorAdMob(informe);
                     ProbarRecompensaDiaria(informe);
                     ProbarEstadisticas(informe);
                     ProbarPrimeraVez(informe);
@@ -3291,6 +3292,342 @@ public static class PruebasMejoras
             ServicioAnuncios.UsarParaPruebas(null, null);
             Object.DestroyImmediate(config);
         }
+    }
+
+    // Un puente de AdMob de mentira: anota lo que se le pide y deja mandar avisos como los
+    // manda el de Android (PuenteAnuncios.java).
+    class PuenteDePrueba : ProveedorAdMob.IPuente
+    {
+        public Action<string, string, string> avisar;
+        public string[] bloques;
+        public string clasificacion;
+        public bool simularEuropa;
+        public int iniciados;
+        public int olvidos;
+        public int consentimientos;
+        public int privacidades;
+        public readonly List<string> mostrados = new List<string>();
+
+        public void Iniciar(Action<string, string, string> alEvento, string[] lugares, string[] bloques,
+                            string clasificacion, bool simularEuropa)
+        {
+            iniciados++;
+            avisar = alEvento;
+            this.bloques = bloques;
+            this.clasificacion = clasificacion;
+            this.simularEuropa = simularEuropa;
+        }
+
+        public void Mostrar(string lugar) { mostrados.Add(lugar); }
+        public void OlvidarElQueSeMuestra() { olvidos++; }
+        public void PedirConsentimiento() { consentimientos++; }
+        public void MostrarPrivacidad() { privacidades++; }
+    }
+
+    static string UltimoResultado(List<ResultadoAnuncio> resultados)
+    {
+        return resultados.Count > 0 ? resultados[resultados.Count - 1].ToString() : "ninguno";
+    }
+
+    // 13b. AdMob sin telefono: el proveedor con un puente de mentira y un reloj a mano (un
+    // solo resultado por video, el premio que llega antes del cierre, los dos vigias y el
+    // consentimiento), los bloques de prueba y de verdad, lo que no deja salir al AAB y que
+    // los archivos de Android digan lo mismo que el codigo de C#.
+    static void ProbarProveedorAdMob(Informe inf)
+    {
+        string lugar = LugarAnuncio.Revivir;
+        string otro = LugarAnuncio.DuplicarDerrota;
+        float ahora = 100f;
+        var puente = new PuenteDePrueba();
+        var resultados = new List<ResultadoAnuncio>();
+        Action<ResultadoAnuncio> anotar = r => resultados.Add(r);
+        var admob = new ProveedorAdMob(puente, ConfigAnuncios.LugaresConVideo, new[] { "a", "b", "c" }, "T", true, () => ahora);
+
+        admob.Inicializar();
+        admob.Inicializar();
+        inf.Igual("admob: se inicia una sola vez", 1, puente.iniciados);
+        inf.Igual("admob: le pasa la clasificacion al puente", "T", puente.clasificacion);
+        inf.Verdadero("admob: y si simula Europa", puente.simularEuropa);
+        inf.Igual("admob: y un bloque por lugar", ConfigAnuncios.LugaresConVideo.Length, puente.bloques != null ? puente.bloques.Length : -1);
+
+        // --- cargado ----------------------------------------------------------------------
+        inf.Verdadero("admob: sin aviso de cargado no esta listo", !admob.Listo(lugar));
+        puente.avisar(lugar, "cargado", "");
+        inf.Verdadero("admob: el aviso no cambia nada hasta atenderlo", !admob.Listo(lugar));
+        admob.Atender();
+        inf.Verdadero("admob: cargado, listo", admob.Listo(lugar));
+        inf.Verdadero("admob: los otros lugares no", !admob.Listo(otro));
+
+        // --- se vio entero ----------------------------------------------------------------
+        admob.Mostrar(lugar, anotar);
+        inf.Igual("admob: le pide al puente ese video", lugar, puente.mostrados.Count > 0 ? puente.mostrados[puente.mostrados.Count - 1] : "");
+        inf.Verdadero("admob: el video pedido se gasta", !admob.Listo(lugar));
+        admob.CambioElFoco(false);
+        puente.avisar(lugar, "abierto", "");
+        puente.avisar(lugar, "ganado", "");
+        admob.Atender();
+        inf.Igual("admob: el premio solo no termina el video", 0, resultados.Count);
+        puente.avisar(lugar, "terminado", "recompensado");
+        puente.avisar(lugar, "terminado", "recompensado");
+        admob.CambioElFoco(true);
+        admob.Atender();
+        inf.Igual("admob: un solo resultado aunque avise dos veces", 1, resultados.Count);
+        inf.Igual("admob: y es el premio", ResultadoAnuncio.Recompensado.ToString(), UltimoResultado(resultados));
+        ahora += 10f;
+        admob.Atender();
+        inf.Igual("admob: despues el vigia no agrega otro", 1, resultados.Count);
+        inf.Igual("admob: ni olvida nada en el puente", 0, puente.olvidos);
+
+        // --- lo cerro antes ---------------------------------------------------------------
+        resultados.Clear();
+        puente.avisar(lugar, "cargado", "");
+        admob.Atender();
+        admob.Mostrar(lugar, anotar);
+        admob.CambioElFoco(false);
+        puente.avisar(lugar, "abierto", "");
+        puente.avisar(lugar, "terminado", "cerrado");
+        admob.CambioElFoco(true);
+        admob.Atender();
+        inf.Igual("admob: cerrarlo antes es Cerrado", ResultadoAnuncio.Cerrado.ToString(), UltimoResultado(resultados));
+
+        inf.Igual("admob traducir: el premio cuenta aunque despues falle", ResultadoAnuncio.Recompensado.ToString(),
+                  ProveedorAdMob.Traducir("falla", true).ToString());
+        inf.Igual("admob traducir: una falla sin premio", ResultadoAnuncio.FallaAlMostrar.ToString(),
+                  ProveedorAdMob.Traducir("falla", false).ToString());
+        inf.Igual("admob traducir: no habia video", ResultadoAnuncio.NoDisponible.ToString(),
+                  ProveedorAdMob.Traducir("no_disponible", false).ToString());
+        inf.Igual("admob traducir: algo desconocido no premia", ResultadoAnuncio.NoDisponible.ToString(),
+                  ProveedorAdMob.Traducir("???", false).ToString());
+
+        // --- volvio a la app y el SDK no aviso el cierre (el boton de inicio) -------------
+        resultados.Clear();
+        int olvidosAntes = puente.olvidos;
+        puente.avisar(lugar, "cargado", "");
+        admob.Atender();
+        admob.Mostrar(lugar, anotar);
+        admob.CambioElFoco(false);
+        puente.avisar(lugar, "abierto", "");
+        puente.avisar(lugar, "ganado", "");
+        admob.CambioElFoco(true);
+        admob.Atender();
+        inf.Igual("admob vigia: recien vuelto, espera el cierre", 0, resultados.Count);
+        ahora += ProveedorAdMob.SegundosParaCerrar + 0.1f;
+        admob.Atender();
+        inf.Igual("admob vigia: sin cierre, se resuelve solo", 1, resultados.Count);
+        inf.Igual("admob vigia: con lo que se vio (el premio habia llegado)", ResultadoAnuncio.Recompensado.ToString(), UltimoResultado(resultados));
+        inf.Igual("admob vigia: y el puente olvida ese video", olvidosAntes + 1, puente.olvidos);
+        puente.avisar(lugar, "terminado", "recompensado");
+        admob.Atender();
+        inf.Igual("admob vigia: el cierre que llega tarde no premia de nuevo", 1, resultados.Count);
+
+        // --- nunca se abrio, con la app delante -------------------------------------------
+        resultados.Clear();
+        puente.avisar(lugar, "cargado", "");
+        admob.Atender();
+        admob.Mostrar(lugar, anotar);
+        admob.Atender();
+        ahora += ProveedorAdMob.SegundosParaAbrir - 1f;
+        admob.Atender();
+        inf.Igual("admob vigia: antes de tiempo sigue esperando que se abra", 0, resultados.Count);
+        ahora += 2f;
+        admob.Atender();
+        inf.Igual("admob vigia: si no se abrio, no habia video", ResultadoAnuncio.NoDisponible.ToString(), UltimoResultado(resultados));
+
+        // --- con la app tapada el reloj de abrir no corre ----------------------------------
+        resultados.Clear();
+        puente.avisar(lugar, "cargado", "");
+        admob.Atender();
+        admob.Mostrar(lugar, anotar);
+        admob.CambioElFoco(false);
+        ahora += 60f;
+        admob.Atender();
+        inf.Igual("admob vigia: con el video delante no se da por perdido", 0, resultados.Count);
+        puente.avisar(lugar, "abierto", "");
+        puente.avisar(lugar, "terminado", "cerrado");
+        admob.CambioElFoco(true);
+        admob.Atender();
+        inf.Igual("admob vigia: al volver resuelve con lo que aviso el SDK", ResultadoAnuncio.Cerrado.ToString(), UltimoResultado(resultados));
+
+        // --- uno a la vez -----------------------------------------------------------------
+        resultados.Clear();
+        puente.avisar(lugar, "cargado", "");
+        puente.avisar(otro, "cargado", "");
+        admob.Atender();
+        admob.Mostrar(lugar, anotar);
+        inf.Verdadero("admob: con uno en pantalla no hay otro listo", !admob.Listo(otro));
+        var segundo = new List<ResultadoAnuncio>();
+        admob.Mostrar(otro, r => segundo.Add(r));
+        inf.Igual("admob: un segundo pedido no pisa al primero", ResultadoAnuncio.NoDisponible.ToString(), UltimoResultado(segundo));
+        puente.avisar(lugar, "terminado", "cerrado");
+        admob.Atender();
+        inf.Igual("admob: y el primero termina igual", ResultadoAnuncio.Cerrado.ToString(), UltimoResultado(resultados));
+        inf.Verdadero("admob: despues el otro vuelve a estar listo", admob.Listo(otro));
+
+        // --- vencido y sin cargar ---------------------------------------------------------
+        puente.avisar(lugar, "cargado", "");
+        puente.avisar(lugar, "vencido", "");
+        admob.Atender();
+        inf.Verdadero("admob: vencido, no esta listo", !admob.Listo(lugar));
+        puente.avisar(lugar, "cargado", "");
+        puente.avisar(lugar, "no_cargado", "3");
+        admob.Atender();
+        inf.Verdadero("admob: si no cargo, no esta listo", !admob.Listo(lugar));
+
+        // --- el consentimiento ------------------------------------------------------------
+        inf.Verdadero("admob consentimiento: arranca sin pedirlo", !admob.ConsentimientoRequerido);
+        puente.avisar("", "consentimiento", "requerido");
+        puente.avisar("", "privacidad", "requerida");
+        admob.Atender();
+        inf.Verdadero("admob consentimiento: UMP lo pide", admob.ConsentimientoRequerido);
+        inf.Verdadero("admob consentimiento: y el boton PRIVACIDAD", admob.PrivacidadRequerida);
+        admob.PedirConsentimiento();
+        admob.PedirConsentimiento();
+        inf.Igual("admob consentimiento: se pide una vez aunque se toque dos", 1, puente.consentimientos);
+        inf.Verdadero("admob consentimiento: en pantalla", admob.ConsentimientoEnPantalla);
+        puente.avisar("", "consentimiento", "obtenido");
+        puente.avisar("", "consentimiento_cerrado", "");
+        admob.Atender();
+        inf.Verdadero("admob consentimiento: al cerrarse ya no esta en pantalla", !admob.ConsentimientoEnPantalla);
+        inf.Verdadero("admob consentimiento: dado, ya no hace falta", !admob.ConsentimientoRequerido);
+        admob.MostrarPrivacidad();
+        inf.Igual("admob privacidad: el boton abre el cartel", 1, puente.privacidades);
+        puente.avisar("", "consentimiento_cerrado", "");
+        admob.Atender();
+
+        var config = ScriptableObject.CreateInstance<ConfigAnuncios>();
+        try
+        {
+            // --- por ServicioAnuncios: el consentimiento espera a la segunda partida ---------
+            config.partidasTerminadasMinimas = 2;
+            config.segundosJugadosMinimos = 0f;
+            EmpezarConMonedas(0);
+            var puente2 = new PuenteDePrueba();
+            var admob2 = new ProveedorAdMob(puente2, ConfigAnuncios.LugaresConVideo, new[] { "a", "b", "c" }, "T", false, () => ahora);
+            ServicioAnuncios.UsarParaPruebas(admob2, config);
+            admob2.Inicializar();
+            puente2.avisar("", "consentimiento", "requerido");
+            ServicioAnuncios.AtenderAvisos();
+            inf.Verdadero("servicio consentimiento: antes de la segunda partida no se pide",
+                          !ServicioAnuncios.PedirConsentimientoSiHaceFalta());
+            Progreso.TerminarPartida(100f);
+            Progreso.TerminarPartida(100f);
+            inf.Verdadero("servicio consentimiento: desde la segunda, si", ServicioAnuncios.PedirConsentimientoSiHaceFalta());
+            inf.Igual("servicio consentimiento: llega al puente", 1, puente2.consentimientos);
+            inf.Verdadero("servicio consentimiento: el menu lo ve en pantalla", ServicioAnuncios.ConsentimientoEnPantalla);
+            inf.Verdadero("servicio consentimiento: no se pide dos veces", !ServicioAnuncios.PedirConsentimientoSiHaceFalta());
+            puente2.avisar("", "consentimiento", "obtenido");
+            puente2.avisar("", "privacidad", "requerida");
+            puente2.avisar("", "consentimiento_cerrado", "");
+            ServicioAnuncios.AtenderAvisos();
+            inf.Verdadero("servicio consentimiento: cerrado", !ServicioAnuncios.ConsentimientoEnPantalla);
+            inf.Verdadero("servicio: PRIVACIDAD aparece cuando UMP lo pide", ServicioAnuncios.PrivacidadRequerida);
+            Progreso.OfrecerVideos = false;
+            puente2.avisar("", "consentimiento", "requerido");
+            ServicioAnuncios.AtenderAvisos();
+            inf.Verdadero("servicio consentimiento: con los videos apagados no se pide",
+                          !ServicioAnuncios.PedirConsentimientoSiHaceFalta());
+            Progreso.OfrecerVideos = true;
+
+            // --- el video entero por ServicioAnuncios ----------------------------------------
+            EmpezarConMonedas(0);
+            config.partidasTerminadasMinimas = 0;
+            ServicioAnuncios.UsarParaPruebas(admob2, config);
+            int premios = 0;
+            int cierres = 0;
+            puente2.avisar(otro, "cargado", "");
+            ServicioAnuncios.AtenderAvisos();
+            inf.Verdadero("servicio admob: con el video cargado se ofrece", ServicioAnuncios.PuedeOfrecer(otro));
+            inf.Verdadero("servicio admob: Mostrar arranca", ServicioAnuncios.Mostrar(otro, () => premios++, () => cierres++));
+            ServicioAnuncios.CambioElFoco(false);
+            puente2.avisar(otro, "abierto", "");
+            puente2.avisar(otro, "ganado", "");
+            puente2.avisar(otro, "terminado", "recompensado");
+            ServicioAnuncios.CambioElFoco(true);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("servicio admob: el premio llega en el mismo cuadro", 1, premios);
+            inf.Igual("servicio admob: sin el de sin premio", 0, cierres);
+            inf.Verdadero("servicio admob: ya no esta mostrando", !ServicioAnuncios.MostrandoAnuncio);
+            inf.Igual("servicio admob: gasta un uso del dia", 1, Progreso.UsosDeHoy(otro));
+
+            // --- que proveedor sale -----------------------------------------------------------
+            inf.Verdadero("crear: Real fuera de Android no hay videos",
+                          ServicioAnuncios.CrearProveedor(ConfigAnuncios.Proveedor.Real, config, false, ConstructorAndroid.PaqueteDePlay) is ProveedorNulo);
+            inf.Verdadero("crear: Real sin config tampoco",
+                          ServicioAnuncios.CrearProveedor(ConfigAnuncios.Proveedor.Real, null, true, ConstructorAndroid.PaqueteDePlay) is ProveedorNulo);
+            inf.Verdadero("crear: Real en Android es AdMob",
+                          ServicioAnuncios.CrearProveedor(ConfigAnuncios.Proveedor.Real, config, true, ConstructorAndroid.PaqueteDePlay) is ProveedorAdMob);
+            inf.Verdadero("crear: Falso es el falso",
+                          ServicioAnuncios.CrearProveedor(ConfigAnuncios.Proveedor.Falso, config, true, ConstructorAndroid.PaqueteDePlay) is ProveedorFalso);
+            inf.Verdadero("crear: Nulo es el nulo",
+                          ServicioAnuncios.CrearProveedor(ConfigAnuncios.Proveedor.Nulo, config, true, ConstructorAndroid.PaqueteDePlay) is ProveedorNulo);
+
+            // --- los bloques ------------------------------------------------------------------
+            var vistos = new HashSet<string>();
+            foreach (string l in ConfigAnuncios.LugaresConVideo)
+            {
+                string real = config.BloqueReal(l);
+                inf.Verdadero("bloques: " + l + " tiene el suyo de verdad", !string.IsNullOrEmpty(real) && !ConfigAnuncios.EsBloqueDePrueba(real));
+                inf.Igual("bloques: la APK de prueba pide el de Google para " + l, ConfigAnuncios.BloqueDePruebaDeGoogle, config.BloquePara(l, true));
+                inf.Igual("bloques: la de Play pide el de verdad para " + l, real, config.BloquePara(l, false));
+                if (real != null) vistos.Add(real);
+            }
+            inf.Igual("bloques: uno distinto por lugar", ConfigAnuncios.LugaresConVideo.Length, vistos.Count);
+            inf.Verdadero("bloques: el de Google es de prueba", ConfigAnuncios.EsBloqueDePrueba(ConfigAnuncios.BloqueDePruebaDeGoogle));
+            inf.Verdadero("paquete: el de la APK es de prueba", ConfigAnuncios.EsPaqueteDePrueba(ConstructorAndroid.PaqueteDePlay + ConfigAnuncios.SufijoPaqueteDePrueba));
+            inf.Verdadero("paquete: el de Play no", !ConfigAnuncios.EsPaqueteDePrueba(ConstructorAndroid.PaqueteDePlay));
+
+            // --- lo que no deja salir al AAB ------------------------------------------------
+            config.proveedor = ConfigAnuncios.Proveedor.Real;
+            inf.Verdadero("aab: con los bloques de verdad sale", ConstructorAndroid.ProblemaDeAnuncios(config) == null);
+            string regalo = config.bloqueRegaloX2;
+            config.bloqueRegaloX2 = ConfigAnuncios.BloqueDePruebaDeGoogle;
+            inf.Verdadero("aab: con un bloque de prueba de Google no sale", ConstructorAndroid.ProblemaDeAnuncios(config) != null);
+            config.bloqueRegaloX2 = "";
+            inf.Verdadero("aab: con un lugar sin bloque no sale", ConstructorAndroid.ProblemaDeAnuncios(config) != null);
+            config.bloqueRegaloX2 = regalo;
+            config.clasificacionMaxima = "X";
+            inf.Verdadero("aab: con una clasificacion que AdMob no entiende no sale", ConstructorAndroid.ProblemaDeAnuncios(config) != null);
+            config.clasificacionMaxima = "T";
+            config.proveedor = ConfigAnuncios.Proveedor.Nulo;
+            config.bloqueRevivir = "";
+            inf.Verdadero("aab: sin AdMob los bloques no importan", ConstructorAndroid.ProblemaDeAnuncios(config) == null);
+            inf.Verdadero("aab: el asset de verdad deja salir", ConstructorAndroid.ProblemaDeAnuncios(ConfigAnuncios.Instancia) == null);
+            inf.Igual("asset: la clasificacion que eligio Ivan", "T",
+                      ConfigAnuncios.Instancia != null ? ConfigAnuncios.Instancia.clasificacionMaxima : "sin asset");
+        }
+        finally
+        {
+            ServicioAnuncios.UsarParaPruebas(null, null);
+            Object.DestroyImmediate(config);
+        }
+
+        // --- los archivos de Android dicen lo mismo que C# --------------------------------
+        string carpeta = Path.Combine(Application.dataPath, "Plugins/Android/ShowBiesAnuncios.androidlib");
+        string manifiesto = LeerSiExiste(Path.Combine(carpeta, "src/main/AndroidManifest.xml"));
+        inf.Verdadero("android: el manifiesto lleva el id de la app de AdMob",
+                      manifiesto != null && manifiesto.Contains("com.google.android.gms.ads.APPLICATION_ID")
+                      && manifiesto.Contains(ConfigAnuncios.IdAppAdMob));
+        inf.Verdadero("android: y no el de prueba de Google", manifiesto != null && !manifiesto.Contains("ca-app-pub-3940256099942544"));
+        string gradle = LeerSiExiste(Path.Combine(carpeta, "build.gradle"));
+        inf.Verdadero("android: la libreria pide el SDK de anuncios", gradle != null && gradle.Contains("'com.google.android.gms:play-services-ads:"));
+        inf.Verdadero("android: y el de consentimiento (UMP)", gradle != null && gradle.Contains("'com.google.android.ump:user-messaging-platform:"));
+        string plantilla = LeerSiExiste(Path.Combine(Application.dataPath, "Plugins/Android/mainTemplate.gradle"));
+        inf.Verdadero("android: la plantilla de Gradle no los pide de nuevo", plantilla != null && !plantilla.Contains("play-services-ads"));
+        string paquete = Path.Combine(carpeta, "src/main/java/com/ivanruiz/showbies/anuncios");
+        string java = LeerSiExiste(Path.Combine(paquete, "PuenteAnuncios.java"));
+        string oyente = LeerSiExiste(Path.Combine(paquete, "OyenteAnuncios.java"));
+        inf.Verdadero("android: el puente esta donde lo busca C#",
+                      java != null && java.Contains("package com.ivanruiz.showbies.anuncios;")
+                      && PuenteAdMobAndroid.ClasePuente == "com.ivanruiz.showbies.anuncios.PuenteAnuncios");
+        foreach (string metodo in new[] { "iniciar", "mostrar", "olvidarElQueSeMuestra", "pedirConsentimiento", "mostrarPrivacidad" })
+            inf.Verdadero("android: el puente tiene " + metodo, java != null && java.Contains("public static void " + metodo + "("));
+        foreach (string evento in new[] { "cargado", "no_cargado", "vencido", "abierto", "ganado", "terminado", "consentimiento",
+                                          "privacidad", "consentimiento_cerrado", "recompensado", "cerrado", "falla", "no_disponible",
+                                          "requerido", "requerida" })
+            inf.Verdadero("android: el puente avisa \"" + evento + "\"", java != null && java.Contains("\"" + evento + "\""));
+        inf.Verdadero("android: el oyente tiene la firma que implementa C#",
+                      oyente != null && oyente.Contains("void alEvento(String lugar, String evento, String dato)")
+                      && PuenteAdMobAndroid.InterfazOyente == "com.ivanruiz.showbies.anuncios.OyenteAnuncios");
     }
 
     // La recompensa diaria: racha, corte, reloj atrasado, monto y cobro.

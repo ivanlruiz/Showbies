@@ -30,6 +30,7 @@ opciones_titulo	OPTIONS	OPCIONES
 sonido_efectos	EFFECTS	EFECTOS
 sonido_musica	MUSIC	MÚSICA
 opciones_fps	SHOW FPS	MOSTRAR FPS
+opciones_privacidad	PRIVACY	PRIVACIDAD
 idioma_titulo	LANGUAGE	IDIOMA
 
 # --- Primera vez (GuiaPrimeraPartida y GuiaPrimeraCompra)

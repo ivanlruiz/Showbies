@@ -32,7 +32,8 @@ public static class ConstructorAndroid
     const string RutaAab = CarpetaSalida + "/ShowBies.aab";
     const string RutaResultado = CarpetaSalida + "/build_result.txt";
     const string RutaKeystoreLocal = "keystore.local";
-    const string SufijoPaquetePrueba = ".prueba";
+    // El mismo que mira ServicioAnuncios para pedir los bloques de prueba de Google.
+    const string SufijoPaquetePrueba = ConfigAnuncios.SufijoPaqueteDePrueba;
     const string SufijoNombrePrueba = " (prueba)";
     // El versionCode del ultimo AAB armado, versionado en el repo (ver ProblemaDeVersionCode).
     public const string RutaUltimoAab = "../publicacion/ultimo_aab.txt";
@@ -75,9 +76,10 @@ public static class ConstructorAndroid
         EditorUserBuildSettings.buildAppBundle = false;
         PlayerSettings.Android.useCustomKeystore = false;
 
-        // La APK es para probar en el telefono: el anuncio falso (el cartel con la
-        // barra) tiene que llegar si o si, sin importar como quedo el asset.
-        var proveedorAnterior = FijarProveedorDeAnuncios(ConfigAnuncios.Proveedor.Falso);
+        // La APK es para probar en el telefono: AdMob de verdad, sin importar como quedo el
+        // asset. Con el paquete .prueba pide los bloques de prueba de Google (que dicen "Test
+        // Ad"), nunca los nuestros: mirar anuncios reales propios es trafico no valido.
+        var proveedorAnterior = FijarProveedorDeAnuncios(ConfigAnuncios.Proveedor.Real);
 
         // Otro paquete y otro nombre: la de Play esta firmada con otra clave y Android no
         // deja instalar una encima de la otra (habia que desinstalar y se perdia el
@@ -217,6 +219,29 @@ public static class ConstructorAndroid
             + "y arranca de cero. Revertir ProjectSettings/ProjectSettings.asset; ver Progreso.UbicacionEsperada.";
     }
 
+    // Por que el AAB no puede salir con estos anuncios, o null si puede. Con AdMob, cada lugar
+    // tiene que llevar su bloque de verdad: uno de prueba de Google en Play no paga, y uno
+    // vacio deja ese lugar sin videos sin avisar. Y la clasificacion tiene que ser una de las
+    // que entiende AdMob: con otra, el puente cae en T sin decir nada.
+    public static string ProblemaDeAnuncios(ConfigAnuncios config)
+    {
+        if (config == null || config.proveedor != ConfigAnuncios.Proveedor.Real) return null;
+        foreach (string lugar in ConfigAnuncios.LugaresConVideo)
+        {
+            string bloque = config.BloqueReal(lugar);
+            if (string.IsNullOrEmpty(bloque))
+                return "el lugar de anuncios '" + lugar + "' no tiene bloque de AdMob: cargalo en "
+                    + "Assets/Anuncios/Resources/ConfigAnuncios (estan en publicacion/pasos.md).";
+            if (ConfigAnuncios.EsBloqueDePrueba(bloque))
+                return "el lugar de anuncios '" + lugar + "' tiene un bloque de prueba de Google (" + bloque
+                    + "): en Play no paga. Poné el de verdad en Assets/Anuncios/Resources/ConfigAnuncios.";
+        }
+        if (System.Array.IndexOf(ConfigAnuncios.ClasificacionesValidas, config.clasificacionMaxima) < 0)
+            return "la clasificacion maxima de los anuncios es '" + config.clasificacionMaxima
+                + "' y tiene que ser G, PG, T o MA (Assets/Anuncios/Resources/ConfigAnuncios).";
+        return null;
+    }
+
     // Cambia el proveedor del asset para esta build y devuelve el que habia, o null
     // si no hay asset. Al terminar se restaura, asi la build no deja el asset
     // cambiado en el repo.
@@ -274,6 +299,12 @@ public static class ConstructorAndroid
         {
             Fallar("el proveedor de anuncios esta en Falso: no se sube a Play con el anuncio de prueba. "
                 + "Cambialo en Assets/Anuncios/Resources/ConfigAnuncios.");
+            return;
+        }
+        string problemaDeAnuncios = ProblemaDeAnuncios(configAnuncios);
+        if (problemaDeAnuncios != null)
+        {
+            Fallar(problemaDeAnuncios);
             return;
         }
 
