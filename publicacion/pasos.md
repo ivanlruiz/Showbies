@@ -225,7 +225,8 @@ monedas (ver CLAUDE.md, Anuncios).
    hasta 24 h, y la revisión de la app 2 o 3 días, con anuncios limitados mientras tanto.
 5. [x] En AdMob, el bloque **intersticial** `automatico` (6/10), con su id en `ConfigAnuncios` (`bloqueAutomatico`).
    Es el de los automáticos.
-6. **Antes de subir el AAB**: la política nueva publicada, con fecha → rehacer **Seguridad de los datos** (AdMob
+6. **Antes de subir el AAB**: la política nueva publicada, con fecha (hecho el 6/10 a la noche, con permiso de Ivan:
+   `80686d5` en `showbies-privacidad`, `index.html` y `privacidad.html`, y verificada en vivo) → rehacer **Seguridad de los datos** (AdMob
    recopila y comparte identificadores del dispositivo, ubicación aproximada, interacciones y diagnósticos, para
    publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí**. La ficha ya no dice
    "no recopila tus datos": desde la 1.3.0 termina en "Free to play" / "Gratis". La política nueva, con su párrafo
