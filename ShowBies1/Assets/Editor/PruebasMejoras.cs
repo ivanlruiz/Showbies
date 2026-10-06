@@ -213,6 +213,7 @@ public static class PruebasMejoras
             ProbarEscenasSinGuardar(informe);
             ProbarTiendaTapaLaEscena(informe);
             ProbarVidriosDelMenu(informe);
+            ProbarBotonDiscord(informe);
             ProbarPartidaNeon(informe);
             ProbarMundoDeNoche(informe);
             ProbarPildorasRedondas(informe);
@@ -1982,6 +1983,54 @@ public static class PruebasMejoras
         });
         inf.Verdadero("tema: el menu tiene botones de vidrio", conVidrio > 0);
         inf.Verdadero("tema: todos los botones de vidrio del menu cambian con el tema" + (sinPapel == 0 ? "" : " (" + cuales.Trim() + ")"), sinPapel == 0);
+    }
+
+    // El boton de Discord del menu (BotonDiscord, 1.4.0): cableado en Menu.unity, con el logo,
+    // abriendo una invitacion de Discord, y la fila de arriba sin pisarse. Los botones de las
+    // esquinas se arman en codigo al jugar, asi que se mide con los numeros de la escena: el
+    // globo (posicion, ancho y pivote), la separacion de la medalla y la de Discord, el ancho
+    // del boton del nivel y el del canvas, que escala por ancho. Entre el nivel y Discord tiene
+    // que sobrar lugar: cuelgan del area segura, que en un telefono con camara en la pantalla
+    // le saca un pedazo a un costado.
+    static void ProbarBotonDiscord(Informe inf)
+    {
+        inf.Verdadero("discord: la invitacion es de discord.gg", BotonDiscord.Invitacion.StartsWith("https://discord.gg/"));
+        var logo = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/UI/IconoDiscord.png");
+        inf.Verdadero("discord: el logo es un sprite", logo != null);
+
+        bool cableado = false, mismoGlobo = false, conLogo = false, porAncho = false;
+        float conElNivel = float.NaN, conLaMedalla = float.NaN, minimo = float.NaN;
+        LeerEscena("Assets/Escenas/Menu.unity", escena =>
+        {
+            var boton = Buscar<BotonDiscord>(escena);
+            var selector = Buscar<SelectorIdioma>(escena);
+            var logros = Buscar<VentanaLogros>(escena);
+            cableado = boton != null && boton.selectorIdioma != null && boton.icono != null;
+            if (!cableado || selector == null || selector.botonGlobo == null || logros == null) return;
+            mismoGlobo = boton.selectorIdioma == selector;
+            conLogo = logo != null && boton.icono == logo;
+
+            var globo = (RectTransform)selector.botonGlobo.transform;
+            var escalador = globo.GetComponentInParent<UnityEngine.UI.CanvasScaler>(true);
+            porAncho = escalador != null && escalador.uiScaleMode == UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize
+                       && Mathf.Approximately(escalador.matchWidthOrHeight, 0f);
+            if (!porAncho) return;
+            float ancho = globo.rect.width;
+            minimo = 2f * ancho;
+
+            // Arriba a la izquierda, desde el borde izquierdo: el globo, el engranaje y el nivel.
+            float bordeDelGlobo = globo.anchoredPosition.x - globo.pivot.x * ancho;
+            float finDelNivel = bordeDelGlobo + 2f * (ancho + logros.separacion) + VentanaLogros.AnchoDelNivel;
+            // Arriba a la derecha, desde el borde derecho (pivote 1, como los arma ConstructorUI).
+            float medalla = globo.anchoredPosition.x + 2f * (ancho + logros.separacion);
+            float discord = BotonDiscord.DesdeLaDerecha(globo.anchoredPosition.x, ancho, boton.separacion);
+            conLaMedalla = discord - (medalla + ancho);
+            conElNivel = escalador.referenceResolution.x - (discord + ancho) - finDelNivel;
+        });
+        inf.Verdadero("discord: esta en la raiz del menu con el globo y el logo", cableado && mismoGlobo && conLogo);
+        inf.Verdadero("discord: el canvas del menu escala por ancho, que es lo que mide esta prueba", porAncho);
+        inf.Verdadero("discord: no se pisa con la medalla (le quedan " + conLaMedalla + ")", conLaMedalla >= 0f);
+        inf.Verdadero("discord: entre el nivel y Discord sobran " + conElNivel + ", al menos " + minimo, conElNivel >= minimo);
     }
 
     // La partida es de carbon neon (fase 2 del neon, 25/9; la viste ConstructorNeon.VestirPartida):

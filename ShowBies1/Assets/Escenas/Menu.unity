@@ -5212,6 +5212,7 @@ GameObject:
   - component: {fileID: 1452757541}
   - component: {fileID: 1452757542}
   - component: {fileID: 1452757543}
+  - component: {fileID: 1452757544}
   m_Layer: 5
   m_Name: Main Menu
   m_TagString: Untagged
@@ -5683,6 +5684,21 @@ MonoBehaviour:
   colorExperiencia: {r: 0, g: 0.898, b: 1, a: 1}
   colorVidrio: {r: 0.06, g: 0.12, b: 0.05, a: 0.45}
   llenado: 3.5
+--- !u!114 &1452757544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1452757527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba8aa238907a4c40a280852aa71ff5f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BotonDiscord
+  selectorIdioma: {fileID: 1452757534}
+  icono: {fileID: 21300000, guid: 929f056b4899411d81294e5c326a54c4, type: 3}
+  separacion: 24
 --- !u!1 &1509229833
 GameObject:
   m_ObjectHideFlags: 0

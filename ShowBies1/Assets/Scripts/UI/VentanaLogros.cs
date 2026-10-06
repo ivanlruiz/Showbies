@@ -59,6 +59,9 @@ public class VentanaLogros : MonoBehaviour
 
     // Las medidas de la lista: alto de cada fila y de la vista que se desplaza.
     private const float AltoFila = 112f, PasoFila = 124f, AltoVista = 410f;
+    // El ancho del boton del nivel, arriba a la izquierda. Publico porque la prueba de
+    // logica mide con el que la fila de arriba entre sin pisarse con el boton de Discord.
+    public const float AnchoDelNivel = 300f;
 
     public static bool Abierta { get; private set; }
 
@@ -164,7 +167,7 @@ public class VentanaLogros : MonoBehaviour
         // del globo corrida su ancho y la separacion). Una pildora de vidrio como el fondo
         // del globo, con la moneda del nivel y la barra. Con las anclas del globo y el borde
         // izquierdo medido desde el suyo, sea cual sea su pivote.
-        var boton = ConstructorUI.Boton((RectTransform)globo.parent, "BotonNivel", Vector2.zero, new Vector2(300f, alto),
+        var boton = ConstructorUI.Boton((RectTransform)globo.parent, "BotonNivel", Vector2.zero, new Vector2(AnchoDelNivel, alto),
                                         Color.white, Color.white, null, "", 10f, fuente, pildora, sonidoClick);
         var rt = (RectTransform)boton.transform;
         rt.anchorMin = globo.anchorMin;
@@ -181,7 +184,7 @@ public class VentanaLogros : MonoBehaviour
 
         var visual = (RectTransform)boton.transform.Find("Visual");
         enElBoton = new Medidor();
-        enElBoton.moneda = MonedaDeNivel(visual, new Vector2(-150f + alto * 0.5f, 0f), alto - 16f, 40f, out enElBoton.numero);
+        enElBoton.moneda = MonedaDeNivel(visual, new Vector2(-AnchoDelNivel * 0.5f + alto * 0.5f, 0f), alto - 16f, 40f, out enElBoton.numero);
         enElBoton.titulo = ConstructorUI.Texto(visual, "Titulo", "", 30f, Color.white, new Vector2(50f, 16f), new Vector2(180f, 40f), fuente);
         enElBoton.titulo.alignment = TextAlignmentOptions.Left;
         enElBoton.relleno = ConstructorUI.Barra(visual, "Barra", new Vector2(50f, -18f), new Vector2(180f, 14f), pildora,

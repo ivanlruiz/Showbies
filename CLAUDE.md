@@ -48,7 +48,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
@@ -127,6 +127,15 @@ real de la pantalla.
 para tapar los botones del menú, y la arma como "¿SALIR DEL JUEGO?" con SEGUIR JUGANDO (verde, late) y SALIR (vidrio).
 La abren `MainMenu.QuitGame` y el atrás de Android en el principal; el atrás con la ventana abierta la cierra. Si no se
 pudo armar, las dos cosas cierran el juego como antes.
+
+**El botón de Discord** (pedido de Ivan, 1.4.0): `BotonDiscord` (raíz del canvas "Main Menu") arma con
+`ConstructorUI.BotonDeEsquina` el cuarto botón redondo de arriba a la derecha, después de la medalla, con el logo oficial
+de Discord en blanco (`Sprites/UI/IconoDiscord.png`: el "Clyde" de `discord-mark-white.svg`, rasterizado con PIL; las
+reglas de la marca dejan usarlo para llevar a un servidor, sin cambiarle la forma ni el color), y abre la invitación
+permanente (`BotonDiscord.Invitacion`, la de `publicacion/pasos.md`) con `Application.OpenURL`: en el teléfono, la app de
+Discord si está, y si no el navegador. El juego no le manda nada a Discord, y la política de privacidad lo dice. La prueba
+de lógica mira que esté cableado y que entre el botón del nivel y Discord sobre lugar para el área segura de un teléfono
+con cámara en la pantalla (`VentanaLogros.AnchoDelNivel`).
 
 ### Primera vez
 
@@ -1295,7 +1304,8 @@ trampa).
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`, que mira
   `PlayerHealth.RecordNuevo`: solo superarlo cuenta, un empate no).
 - **Menu**: el nombre del juego arriba (en el fondo 3D, no en el canvas), UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
-  idioma y el engranaje del sonido arriba a la izquierda, y las misiones arriba a la derecha. Sin monedas: se ven en la tienda.
+  idioma, el engranaje del sonido y el nivel arriba a la izquierda, y arriba a la derecha las misiones, el bestiario, la
+  medalla y Discord. Sin monedas: se ven en la tienda.
 
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
   chicos y translucidos, solo si se prenden en OPCIONES (MOSTRAR FPS, apagado de fábrica). La vida, grande abajo al
