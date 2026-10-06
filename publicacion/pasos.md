@@ -235,7 +235,10 @@ monedas (ver CLAUDE.md, Anuncios).
    venían bloqueadas) y **mensaje de consentimiento europeo publicado** en Privacidad y mensajes, para ShowBies, en
    inglés y español, con Consentir, **No consentir** (elegido por Ivan, para todos los países: lo pide la AEPD) y
    Gestionar opciones, y la política de privacidad cargada en la app. Falta, si se quiere, el de los estados de EE. UU.
-8. La 1.4.0: `admob` a `main`, AAB y subida.
+8. La 1.4.0: `admob` a `main`, AAB y subida. **El 6/10 Ivan probó la APK 1.4.0 (7) en el teléfono ("funciona
+   joya": Discord, el cartel europeo, PRIVACIDAD, los automáticos y los videos)**, `admob` pasó a `idiomas` y a
+   `main`, y se armó el AAB 7 (`Builds/ShowBies.aab`, 42,3 MB, 20:04): `com.ivanruiz.showbies` 1.4.0, con `AD_ID`, sin
+   el servicio en primer plano, con el id de la app de AdMob y los símbolos nativos. Falta lo del paso 6 y subirlo.
 
 **Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
 Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
