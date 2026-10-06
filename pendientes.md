@@ -379,7 +379,14 @@ privacidad publicada.
   lugares (`publicacion/privacidad.html`, el repo `showbies-privacidad` y la rama `gh-pages`), una línea: "el juego
   puede mostrar la ventana de valoración de Google Play; lo que escribas ahí lo maneja Google según sus políticas",
   junto con el arreglo de "privado". Actualizar `pasos.md:26` y `:85` junto con H114. Con la hora de internet (H03),
-  mirar también si la consulta de la hora cambia algo del formulario.
+  mirar también si la consulta de la hora cambia algo del formulario. **6/10, con la 1.3.0 (6):** la política del
+  repo ya tiene la sección de reseñas y dice "la carpeta de la app" en vez de "privado", y `ficha.md` ya no dice "no
+  recopila". La página de Google (In-App Review, "Data safety") dice que se recopila lo que el usuario escribe (la
+  valoración y el texto) para dejar la reseña, cifrado, y que se comparte con el desarrollador en una pista cerrada; y
+  que la respuesta al formulario es responsabilidad del desarrollador. Play Console tiene enlazada
+  `ivanlruiz.github.io/showbies-privacidad/`, no `gh-pages`. Falta publicarlo afuera: la política en
+  `showbies-privacidad` (y `gh-pages`, que sigue en línea con "never leaves your phone"), el formulario y la ficha en
+  Play Console, en el mismo envío que el AAB.
 
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 

@@ -50,7 +50,7 @@ They all hit harder as the waves go up.
 • Plays in landscape, with touch controls made for thumbs
 • No internet needed — everything runs on your phone
 • No accounts, no sign-ups, nothing to fill in
-• Free, and it doesn't collect your data
+• Free to play
 ```
 
 ---
@@ -97,7 +97,7 @@ pegan más fuerte a medida que suben las oleadas.
 • Se juega en horizontal, con controles táctiles pensados para los pulgares
 • No necesita internet: todo funciona en tu móvil
 • Sin cuentas ni registros
-• Gratis, y no recopila tus datos
+• Gratis
 ```
 
 ---
