@@ -45,10 +45,13 @@ public class ConfigAnuncios : ScriptableObject
     public int monedasMinimasParaDuplicar = 20;
 
     [Header("Topes")]
+    [Tooltip("Videos premiados por día, sumando los lugares. 0 = sin tope (lo que tiene el asset desde el 6/10, "
+        + "pedido de Ivan).")]
     public int vecesPorDia = 3;
-    [Tooltip("Videos premiados en una misma partida. 1 = o revivís o duplicás, no las dos.")]
+    [Tooltip("Videos premiados en una misma partida. 1 = o revivís o duplicás, no las dos. 0 = sin tope (el asset, "
+        + "desde el 6/10: se puede revivir y duplicar en la misma partida).")]
     public int vecesPorPartida = 1;
-    [Tooltip("Segundos reales entre dos videos.")]
+    [Tooltip("Segundos reales entre dos videos. 0 = sin espera (el asset, desde el 6/10).")]
     public float segundosEntreAnuncios = 60f;
     [Tooltip("Cuántas veces por día se premia igual un video que falló al mostrarse.")]
     public int fallasPremiadasPorDia = 1;

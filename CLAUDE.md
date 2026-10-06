@@ -1040,10 +1040,11 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 ## Anuncios
 
 Los videos con recompensa son la única monetización del juego y entran por **tres lugares**: **revivir** al morir,
-si no revivió, el **x2 de las monedas en la pantalla de derrota**, y en el menú el **x2 de la recompensa diaria** (ver
-Recompensa diaria). **Un solo video premiado por partida**
-(`vecesPorPartida`), así que en la práctica es o uno o el otro. Todo lo demás (topes, proveedor, hilos) vive en
-`Assets/Scripts/Anuncios/` y el juego no habla nunca con una red de anuncios.
+el **x2 de las monedas en la pantalla de derrota**, y en el menú el **x2 de la recompensa diaria** (ver
+Recompensa diaria). **Desde el 6/10 no hay topes de videos** (pedido de Ivan: "quiero que vean anuncios"): en una
+misma partida se puede revivir con un video y después duplicar con otro, sin tope por día ni espera entre videos. Lo
+que queda son las reglas del juego (revivir una vez por partida, duplicar una vez) y que AdMob tenga video. Todo lo
+demás (topes, proveedor, hilos) vive en `Assets/Scripts/Anuncios/` y el juego no habla nunca con una red de anuncios.
 
 **Las reglas que no se negocian**, porque son la diferencia entre un premio y una trampa:
 
@@ -1077,12 +1078,13 @@ Recompensa diaria). **Un solo video premiado por partida**
 | `OfertaDeDuplicar` | el botón de la derrota (objeto `OfertaVideo` en `Perdiste.unity`, componente en `Menu`). |
 | `OfertaDeRevivir` | la ventanita de "¡HAS MUERTO!" (prefab `Prefabs/UI/OfertaRevivir` en ShowBies1 y WaveMode). |
 
-**Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada, con 180 s jugados en total, hasta
-3 veces por día, 1 por partida y con 60 s entre un video y otro. **El tope del día es global y se cuenta con
-`Progreso.UsosDeHoyEnTotal()`, sumando los lugares**: contándolo por lugar (`UsosDeHoy(lugar)`), "3 por día" eran
-3 de revivir más 3 del x2 de la derrota más 3 del x2 de la diaria, o sea nueve. Si sumás un lugar nuevo, no le des
-su propio tope. El x2 pide además una partida de 90 s y 20
-monedas; revivir, una partida de 30 s.
+**Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada y con 180 s jugados en total (solo
+partidas terminadas: el revivir se decide antes de sumar la que está en curso). El x2 pide además una partida de 90 s
+y 20 monedas; revivir, una partida de 30 s. **Los topes (`vecesPorDia`, `vecesPorPartida`, `segundosEntreAnuncios`)
+están en 0, que es "sin tope"**; hasta el 6/10 eran 3 por día, 1 por partida y 60 s entre videos. Si se vuelve a
+poner uno, **el del día es global y se cuenta con `Progreso.UsosDeHoyEnTotal()`, sumando los lugares**: contándolo por
+lugar (`UsosDeHoy(lugar)`), "3 por día" eran 3 de revivir más 3 del x2 de la derrota más 3 del x2 de la diaria, o sea
+nueve. Si sumás un lugar nuevo, no le des su propio tope.
 El día es un `aaaammdd` local guardado en el progreso, y **atrasar el reloj del teléfono no reinicia los topes**
 (sólo cuenta un día mayor al guardado).
 

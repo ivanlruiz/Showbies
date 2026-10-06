@@ -3053,8 +3053,25 @@ public static class PruebasMejoras
             inf.Verdadero("puede ofrecer: con el tope por partida en 2, el segundo si", ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, true, 1));
             config.vecesPorPartida = 1;
 
+            // Un tope en 0 es "sin tope" (desde el 6/10, pedido de Ivan: que vean los videos que quieran).
             config.vecesPorDia = 0;
-            inf.Verdadero("puede ofrecer: con el tope en 0, nunca", !(ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 0, 999f, true, 0)));
+            inf.Verdadero("puede ofrecer: con el tope del dia en 0 no hay tope",
+                          ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 500, 999f, true, 0));
+            config.vecesPorPartida = 0;
+            inf.Verdadero("puede ofrecer: con el tope por partida en 0, revivir y duplicar en la misma partida",
+                          ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 500, 999f, true, 7));
+            config.segundosEntreAnuncios = 0f;
+            inf.Verdadero("puede ofrecer: sin espera, un video detras del otro",
+                          ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 500, 0f, true, 7));
+            inf.Verdadero("puede ofrecer: sin topes igual hace falta un video cargado",
+                          !ServicioAnuncios.PuedeOfrecerConDatos(config, true, false, 9, 9999, 500, 0f, false, 7));
+            inf.Verdadero("puede ofrecer: y que el jugador no los haya apagado",
+                          !ServicioAnuncios.PuedeOfrecerConDatos(config, false, false, 9, 9999, 500, 0f, true, 7));
+
+            // El asset de verdad: sin topes por dia ni por partida ni espera, lo que pidio Ivan.
+            ConfigAnuncios real = ConfigAnuncios.Instancia;
+            inf.Verdadero("asset: sin tope de videos por dia, por partida ni espera entre videos",
+                          real != null && real.vecesPorDia == 0 && real.vecesPorPartida == 0 && real.segundosEntreAnuncios == 0f);
         }
         finally
         {

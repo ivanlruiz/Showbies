@@ -214,8 +214,11 @@ public static class ServicioAnuncios
         if (config == null || !ofrecerVideos || mostrandoAnuncio || !proveedorListo) return false;
         if (partidasTerminadas < config.partidasTerminadasMinimas) return false;
         if (segundosJugados < config.segundosJugadosMinimos) return false;
-        if (usosDeHoy >= config.vecesPorDia) return false;
-        if (videosDeLaPartida >= config.vecesPorPartida) return false;
+        // Un tope en 0 es "sin tope": desde el 6/10 el asset no tiene ninguno (pedido de Ivan:
+        // que se vean los videos que se quieran). Lo que queda son las reglas del juego
+        // (revivir y duplicar una vez por partida) y que AdMob tenga video.
+        if (config.vecesPorDia > 0 && usosDeHoy >= config.vecesPorDia) return false;
+        if (config.vecesPorPartida > 0 && videosDeLaPartida >= config.vecesPorPartida) return false;
         return segundosDesdeElUltimo >= config.segundosEntreAnuncios;
     }
 

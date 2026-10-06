@@ -65,7 +65,8 @@ public class DiagnosticoAnuncios : MonoBehaviour
         ConfigAnuncios config = ServicioAnuncios.ConfigEnUso;
         if (config != null)
         {
-            sb.Append("hoy ").Append(Progreso.UsosDeHoyEnTotal()).Append('/').Append(config.vecesPorDia)
+            sb.Append("hoy ").Append(Progreso.UsosDeHoyEnTotal()).Append('/')
+              .Append(config.vecesPorDia > 0 ? config.vecesPorDia.ToString() : "sin tope")
               .Append(" | partidas ").Append(Progreso.PartidasTerminadas).Append('/').Append(config.partidasTerminadasMinimas)
               .Append(" | jugado ").Append((int)Progreso.SegundosJugados).Append('/').Append((int)config.segundosJugadosMinimos)
               .Append(" s | videos ").Append(Progreso.OfrecerVideos ? "si" : "no");
