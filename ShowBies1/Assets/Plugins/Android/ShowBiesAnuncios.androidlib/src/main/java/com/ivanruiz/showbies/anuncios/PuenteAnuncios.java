@@ -46,6 +46,7 @@ import java.util.Map;
 //   consentimiento (requerido, obtenido, no_requerido, desconocido)
 //   privacidad (requerida, no)
 //   consentimiento_cerrado                             se cerro el cartel de UMP (o no hacia falta)
+//   puede_pedir (si, no)                               si UMP deja pedir anuncios
 //   sdk_listo, error (dato: el mensaje)
 public final class PuenteAnuncios {
     private static final String ETIQUETA = "ShowBiesAnuncios";
@@ -217,6 +218,8 @@ public final class PuenteAnuncios {
             boolean privacidad = info.getPrivacyOptionsRequirementStatus()
                     == ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED;
             avisar("", "privacidad", privacidad ? "requerida" : "no");
+            // Si con esto se pueden pedir anuncios: sin consentimiento en Europa, no.
+            avisar("", "puede_pedir", info.canRequestAds() ? "si" : "no");
         } catch (Throwable t) {
             avisar("", "error", "estado del consentimiento: " + t);
         }

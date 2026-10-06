@@ -18,6 +18,15 @@ public class PuenteAdMobAndroid : ProveedorAdMob.IPuente
     // Se guarda para que el recolector no suelte el proxy mientras Java lo usa.
     private Oyente oyente;
 
+    // La ultima llamada a Java que fallo, para el diagnostico de la APK de prueba.
+    public static string UltimoFallo { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        UltimoFallo = null;
+    }
+
     public void Iniciar(Action<string, string, string> alEvento, string[] lugares, string[] bloques,
                         string clasificacion, bool simularEuropa)
     {
@@ -39,6 +48,7 @@ public class PuenteAdMobAndroid : ProveedorAdMob.IPuente
         }
         catch (Exception e)
         {
+            UltimoFallo = "olvidarElQueSeMuestra: " + e.Message;
             Debug.LogWarning("AdMob: no se pudo olvidar el video: " + e.Message);
         }
     }
@@ -73,6 +83,7 @@ public class PuenteAdMobAndroid : ProveedorAdMob.IPuente
         }
         catch (Exception e)
         {
+            UltimoFallo = metodo + ": " + e.Message;
             Debug.LogWarning("AdMob: fallo " + metodo + ": " + e.Message);
             return false;
         }

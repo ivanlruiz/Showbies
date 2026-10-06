@@ -70,8 +70,10 @@ public class ConfigAnuncios : ScriptableObject
     public string clasificacionMaxima = "T";
 
     [Tooltip("Solo en la APK de prueba: UMP hace como si el teléfono estuviera en Europa, para ver el cartel "
-        + "de consentimiento y el botón PRIVACIDAD desde acá.")]
-    public bool simularEuropaEnLaPrueba = true;
+        + "de consentimiento y el botón PRIVACIDAD desde acá. Prenderlo recién con el mensaje europeo creado en "
+        + "AdMob: sin él el cartel no puede salir, y los anuncios de la prueba se quedan esperando un "
+        + "consentimiento que no llega.")]
+    public bool simularEuropaEnLaPrueba = false;
 
     // El id de la app en AdMob. Va en el manifiesto de Plugins/Android/ShowBiesAnuncios.androidlib;
     // aca esta para que la prueba de logica compare los dos.

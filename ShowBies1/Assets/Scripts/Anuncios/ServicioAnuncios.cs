@@ -56,6 +56,12 @@ public static class ServicioAnuncios
         get { return Proveedor != null ? Proveedor.Nombre : "ninguno"; }
     }
 
+    // El proveedor ya creado, o null: para el diagnostico de la APK de prueba, sin crearlo.
+    public static IProveedorAnuncios ProveedorCreado
+    {
+        get { return proveedor; }
+    }
+
     // Si hay alguien que pueda llegar a mostrar un video. Lo mira el interruptor del
     // menu, que no tiene sentido en una build sin anuncios.
     public static bool HayProveedor

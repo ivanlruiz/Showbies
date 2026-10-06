@@ -53,7 +53,7 @@ Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (l
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
-Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
+Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, DiagnosticoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
 Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña) y ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle)
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
 Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno)
@@ -1193,8 +1193,11 @@ librería de Google y JNI.
 - **La clasificación máxima es T** (`ConfigAnuncios.clasificacionMaxima`, elegida por Ivan; PG era la recomendada),
   y en AdMob se bloquean aparte apuestas, citas, alcohol y lo de adultos.
 - **La APK de prueba usa siempre el bloque de prueba de Google** (`BloqueDePruebaDeGoogle`, el paquete `.prueba` lo
-  decide en runtime) y hace que UMP crea que el teléfono está en Europa (`simularEuropaEnLaPrueba`): mirar anuncios
-  reales propios es tráfico no válido. Fuera de Android, con el asset en `Real`, no hay videos (`Nulo`).
+  decide en runtime): mirar anuncios reales propios es tráfico no válido. Puede hacer que UMP crea que el teléfono
+  está en Europa (`simularEuropaEnLaPrueba`), pero va apagado hasta que esté creado el mensaje europeo en AdMob: sin
+  él, los anuncios de la prueba se quedan esperando un consentimiento que no llega. Y muestra en el menú una caja con
+  el estado de los anuncios (`DiagnosticoAnuncios`: si arrancó el SDK, el consentimiento, cada video con su error,
+  los avisos que llegaron de Java y los topes). Fuera de Android, con el asset en `Real`, no hay videos (`Nulo`).
 - **Las ofertas vuelven a mirar si hay video mientras están abiertas**: con la red de verdad, el video puede cargar
   después de abrirse la derrota, y el que se cerró antes ya se gastó. La derrota y la diaria lo muestran cuando
   llega; el botón del revivir se apaga hasta que haya otro.

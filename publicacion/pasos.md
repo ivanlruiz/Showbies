@@ -184,7 +184,9 @@ propia (`Assets/Plugins/Android/ShowBiesAnuncios.androidlib`: el SDK clásico `p
 y un puente en Java) y `ProveedorAdMob` del lado de C#. Lo de cómo funciona está en CLAUDE.md (Anuncios → AdMob).
 Decisiones de Ivan del 6/10: **el cartel de consentimiento sale desde la segunda partida terminada**, en el menú, y
 **los anuncios llegan hasta la clasificación T** (PG era la recomendada). La APK de prueba usa siempre el bloque de
-prueba de Google y hace como si el teléfono estuviera en Europa, para ver el cartel y el botón PRIVACIDAD.
+prueba de Google y muestra en el menú una caja con el estado de los anuncios. Puede hacer como si el teléfono
+estuviera en Europa, para ver el cartel y el botón PRIVACIDAD (`simularEuropaEnLaPrueba`), pero eso se prende recién
+con el mensaje europeo creado en AdMob (paso 6): sin él, los anuncios de la prueba se quedan esperando.
 
 La rama `admob` **no va a `main` hasta la 1.4.0**: el SDK suma solo el permiso `AD_ID`, y un arreglo urgente de la
 1.3.x armado con eso no pasaría la declaración de "sin anuncios" de Play.

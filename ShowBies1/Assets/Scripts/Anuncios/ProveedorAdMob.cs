@@ -64,6 +64,27 @@ public class ProveedorAdMob : IProveedorAnuncios, IConsentimientoAnuncios
     public bool ConsentimientoEnPantalla { get; private set; }
     public bool PrivacidadRequerida { get; private set; }
 
+    // Lo que muestra el diagnostico de la APK de prueba (DiagnosticoAnuncios): que avisó el
+    // puente, sin conectar el telefono a la PC.
+    private readonly Dictionary<string, string> estados = new Dictionary<string, string>();
+    private int avisosRecibidos;
+    public bool SdkListo { get; private set; }
+    public string EstadoConsentimiento { get; private set; }
+    public string PuedePedir { get; private set; }
+    public string UltimoError { get; private set; }
+    public string UltimoAviso { get; private set; }
+
+    public int AvisosRecibidos
+    {
+        get { lock (candado) return avisosRecibidos; }
+    }
+
+    public string EstadoDe(string lugar)
+    {
+        string estado;
+        return lugar != null && estados.TryGetValue(lugar, out estado) ? estado : "sin aviso";
+    }
+
     public ProveedorAdMob(IPuente puente, string[] lugares, string[] bloques, string clasificacion,
                           bool simularEuropa, Func<float> reloj = null)
     {
@@ -73,6 +94,10 @@ public class ProveedorAdMob : IProveedorAnuncios, IConsentimientoAnuncios
         this.clasificacion = clasificacion;
         this.simularEuropa = simularEuropa;
         this.reloj = reloj ?? (() => Time.realtimeSinceStartup);
+        EstadoConsentimiento = "sin respuesta";
+        PuedePedir = "sin respuesta";
+        UltimoError = "";
+        UltimoAviso = "";
     }
 
     public string Nombre { get { return "admob"; } }
@@ -112,7 +137,11 @@ public class ProveedorAdMob : IProveedorAnuncios, IConsentimientoAnuncios
     // Desde el hilo de Android: solo se encola.
     public void AlEvento(string lugar, string evento, string dato)
     {
-        lock (candado) avisos.Enqueue(new[] { lugar ?? "", evento ?? "", dato ?? "" });
+        lock (candado)
+        {
+            avisos.Enqueue(new[] { lugar ?? "", evento ?? "", dato ?? "" });
+            avisosRecibidos++;
+        }
     }
 
     // En el hilo de Unity, una vez por cuadro.
@@ -166,34 +195,50 @@ public class ProveedorAdMob : IProveedorAnuncios, IConsentimientoAnuncios
 
     private void Aplicar(string lugar, string evento, string dato)
     {
+        UltimoAviso = evento + (lugar != "" ? " [" + lugar + "]" : "") + (dato != "" ? " " + dato : "");
         switch (evento)
         {
             case "cargado":
                 cargados[lugar] = true;
+                estados[lugar] = "cargado";
                 break;
             case "no_cargado":
+                cargados[lugar] = false;
+                estados[lugar] = "no cargo (" + dato + ")";
+                break;
             case "vencido":
                 cargados[lugar] = false;
+                estados[lugar] = "vencido";
                 break;
             case "abierto":
                 if (lugar == lugarEnPantalla) abrio = true;
+                estados[lugar] = "en pantalla";
                 break;
             case "ganado":
                 if (lugar == lugarEnPantalla) ganado = true;
                 break;
             case "terminado":
+                estados[lugar] = "termino: " + dato;
                 if (alTerminar != null && lugar == lugarEnPantalla) Terminar(Traducir(dato, ganado));
                 break;
             case "consentimiento":
                 ConsentimientoRequerido = dato == "requerido";
+                EstadoConsentimiento = dato;
                 break;
             case "privacidad":
                 PrivacidadRequerida = dato == "requerida";
                 break;
+            case "puede_pedir":
+                PuedePedir = dato;
+                break;
             case "consentimiento_cerrado":
                 ConsentimientoEnPantalla = false;
                 break;
+            case "sdk_listo":
+                SdkListo = true;
+                break;
             case "error":
+                UltimoError = dato;
                 Debug.LogWarning("AdMob: " + dato);
                 break;
         }

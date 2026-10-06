@@ -42,6 +42,8 @@ public class VigiaAplicacion : MonoBehaviour
         var objeto = new GameObject("VigiaAplicacion");
         DontDestroyOnLoad(objeto);
         instancia = objeto.AddComponent<VigiaAplicacion>();
+        // Solo la APK de prueba: el estado de los anuncios en el menu.
+        if (ConfigAnuncios.EsPaqueteDePrueba(Application.identifier)) objeto.AddComponent<DiagnosticoAnuncios>();
 
         // Esto corre al abrir la app, que es cuando tiene que arrancar el proveedor de
         // anuncios (ver ServicioAnuncios.Arrancar). Despues de crear el vigia: si una red
