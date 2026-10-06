@@ -80,11 +80,17 @@ en el menú ⋮ de abajo a la derecha.
       necesita un versionCode mayor que el anterior: si rechazan un AAB y subís otro, hay que volver a subirlo. El
       versionCode del último AAB armado queda en `publicacion/ultimo_aab.txt`, que lo escribe la build, y la build
       del AAB se niega a salir con ese número o uno menor.
-- [ ] **1.3.0 a producción**: la APK de prueba se armó el 6/10 desde `eb25e5b` (sin la R de reiniciar, `96d07b3`) y
-      la está probando Ivan en el teléfono. Con su OK (ya aprobado el orden): la política nueva a
-      `showbies-privacidad`, después el AAB y un solo envío a Play con la seguridad de los datos, la ficha sin "no
-      recopila tus datos" en los tres idiomas, las notas de la versión y producción al 100 %, mostrándoselo antes de
-      enviar.
+- [x] **1.3.0 a producción**: **enviada a revisión el 6/10/2026 a las 11:10**, desde `eb25e5b` (sin la R de
+      reiniciar, `96d07b3`), después de que Ivan probara la APK en el teléfono. La política nueva se subió antes a
+      `showbies-privacidad`. Un solo envío con 7 cambios: producción 6 (1.3.0) al 100 % con las notas de
+      `notas_1.3.0.md` en en-US, es-419 y es-ES; los países (los 177 de la prueba cerrada más "el resto del mundo");
+      la descripción de la ficha en los tres idiomas, que termina en "Free to play" / "Gratis"; y la seguridad de
+      los datos: "Otro contenido generado por el usuario" (la reseña), recogido, no compartido, opcional, para la
+      funcionalidad, cifrado en tránsito, sin cuentas ni inicio de sesión (la pregunta opcional de borrado quedó sin
+      responder: las reseñas las borra cada uno desde su cuenta de Google). Google dice que la revisión suele tardar
+      hasta 7 días; con la publicación gestionada apagada, al aprobarse sale sola. El AAB pesa 35,6 MB y lo subió
+      Ivan arrastrándolo a la consola (la extensión sube hasta 10 MB). La declaración de recursos de IA de la ficha ya
+      estaba en "Etiquetar recursos como creados o editados con IA" y no se tocó.
 - [x] **Sin anuncios en esta versión** (`ConfigAnuncios.proveedor = Nulo`). Ver "Anuncios" abajo.
 - [x] Orientación horizontal en las dos rotaciones, botón atrás de Android, icono de app.
 

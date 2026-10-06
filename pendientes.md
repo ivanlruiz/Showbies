@@ -47,7 +47,7 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H05: REINICIAR y la R sin confirmación | confirmado | media (baja con H01 arreglado) | arreglado el 29/9 |
 | H06: la tienda compra con un toque de la diaria | confirmado | media | arreglado el 29/9 |
 | H07: el versionCode 5 ya se usó | parcial: ya estaba en TAREAS | baja (era media) | arreglado el 30/9 |
-| H08: la librería de reseñas y Seguridad de los datos | parcial: la lectura queda abierta | baja (era media) | 2 |
+| H08: la librería de reseñas y Seguridad de los datos | parcial: la lectura queda abierta | baja (era media) | arreglado el 6/10 (con la 1.3.0) |
 | H09: Storage Location decide dónde vive `progreso.json` | parcial: no destruye, se revierte | baja (era media) | arreglado el 30/9 |
 | H10: la invocación del jefe sale vacía con el techo lleno | parcial: el arreglo propuesto no alcanza | media | arreglado el 30/9 |
 | H11: al jefe se lo mata sin que ataque | confirmado | media | 2 |
@@ -284,7 +284,8 @@ privacidad publicada.
   marca), el tiempo de espera y un aviso en la ventana de la diaria y en la de misiones para cuando falte la conexión
   (textos en la tabla). En PC, que no se distribuye, alcanza con el reloj, como hoy. Con esto H70 desaparece con
   conexión y «Una fecha guardada en el futuro» se puede topar contra el día de internet. La consulta manda la IP del
-  teléfono al servidor de la hora: mirarlo junto con H08 antes del próximo AAB.
+  teléfono al servidor de la hora: cuando se haga, revisar la política ("funciona sin conexión") y la seguridad de
+  los datos antes de subir esa versión.
 - **Al jefe se lo puede matar sin que ataque nunca** (media; H11, confirmado). Solo ataca a 15 m o menos **y** con el
   pivote en pantalla (`JefePatrones.cs:352` y `:455-478`; `margenEnPantalla` no está serializado y vale 0,08/0,1): la
   ventana va de 4,7 m detrás a 6 m delante (±9-11,5 m al costado), y las balas llegan a 22 m (11 m/s por 2 s,
@@ -367,27 +368,6 @@ privacidad publicada.
   pedido de `d6005e6`. Amplía «Punto de control por capítulo en las oleadas» (el revivir gratis de MENÚ). En la misma
   tanda, corregir `WaveManager.cs:76-77`, `AplicarMejoras.cs:8-10` y CLAUDE.md ("no se puede comprar en medio de la
   partida"), que ya son falsos.
-- **La próxima subida es la primera con la librería de reseñas: Seguridad de los datos** (baja, era media; H08,
-  parcial). La 1.2.0 (5) salió de `16d8a38` sin ella (el dex del AAB no tiene `play/core/review`); `a0b1b76` la sumó
-  (`mainTemplate.gradle:11`, `review` 2.0.1, y de rebote `play-services-basement` y `tasks`), y la APK del 27/9 ya la
-  trae. La guía de Google (Data safety de In-App Review) dice que la valoración y el texto se comparten con el
-  desarrollador en una pista cerrada; el formulario, la política (`privacidad.html:32-33`) y la ficha (`ficha.md:53` y
-  `:100`) dicen "no recopila". No hay permisos nuevos (0 `uses-permission` en los dos manifiestos). **Decidido el 29/9:
-  declararla, por las dudas.** Antes del próximo AAB, con las dos páginas de Google a la vista: en el formulario,
-  "Otro contenido generado por el usuario" (la valoración y el texto), por Funcionalidad y sin compartir (confirmarlo
-  con la página al llenarlo); sacar "no recopila tus datos" de `ficha.md:53` y `:100`; y en la política, en los tres
-  lugares (`publicacion/privacidad.html`, el repo `showbies-privacidad` y la rama `gh-pages`), una línea: "el juego
-  puede mostrar la ventana de valoración de Google Play; lo que escribas ahí lo maneja Google según sus políticas",
-  junto con el arreglo de "privado". Actualizar `pasos.md:26` y `:85` junto con H114. Con la hora de internet (H03),
-  mirar también si la consulta de la hora cambia algo del formulario. **6/10, con la 1.3.0 (6):** la política del
-  repo ya tiene la sección de reseñas y dice "la carpeta de la app" en vez de "privado", y `ficha.md` ya no dice "no
-  recopila". La página de Google (In-App Review, "Data safety") dice que se recopila lo que el usuario escribe (la
-  valoración y el texto) para dejar la reseña, cifrado, y que se comparte con el desarrollador en una pista cerrada; y
-  que la respuesta al formulario es responsabilidad del desarrollador. Play Console tiene enlazada
-  `ivanlruiz.github.io/showbies-privacidad/`, no `gh-pages`, que desde el 6/10 redirige ahí (decía "never leaves
-  your phone"). Falta publicar la política nueva en `showbies-privacidad`, y el formulario y la ficha en Play Console
-  en el mismo envío que el AAB (`publicacion/notas_1.3.0.md`).
-
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
 Aprobado por el revisor, pero son materiales, prefabs o ajustes del proyecto, y conviene ver el antes y el después con
@@ -716,7 +696,8 @@ No quedaron medios sin refutar. Los 100 bajos, uno por renglón (el arreglo de c
 - **H111** La diaria también sale con la primera oleada completada, no solo con la primera partida terminada.
 - **H112** La niebla no se ve en la partida y el borde del mapa queda a la vista, aunque la doc diga que lo tapa.
 - **H113** `LeerEscena` lee la escena abierta en memoria, no el disco (`PruebasMejoras.cs:1605-1622`).
-- **H114** `pasos.md` no refleja el estado de Play, y el repo sigue público con `gh-pages`.
+- **H114** `pasos.md` no refleja el estado de Play, y el repo sigue público con `gh-pages`. Desde el 6/10 `pasos.md`
+  está al día y `gh-pages` redirige a la política nueva; el repo sigue público (lo pasa Ivan a privado).
 - **H115** `MainMenu.PlayGame` no lo llama nadie y CLAUDE.md lo da como camino al libre.
 - **H116** Anuncios: código muerto, comentarios viejos y el cartel del anuncio de prueba con voseo y sin Bangers.
 - **H117** `FondoMenu`: la rama del día parece muerta pero sostiene el piso de noche (`FondoMenu.cs:140-150`).
