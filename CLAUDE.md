@@ -1238,7 +1238,8 @@ trampa).
   idioma y el engranaje del sonido arriba a la izquierda, y las misiones arriba a la derecha. Sin monedas: se ven en la tienda.
 
 - **HUD**: arriba a la izquierda, en orden de importancia, monedas, puntos y oleada o nivel; los FPS al final,
-  chicos y translucidos. La vida, grande abajo al centro, **cambia de color** con lo que queda
+  chicos y translucidos, solo si se prenden en OPCIONES (MOSTRAR FPS, apagado de fábrica). La vida, grande abajo al
+  centro, **cambia de color** con lo que queda
   (`PlayerHealth.ColorDeVida`: verde arriba del 60 %, amarillo hasta el 30 %, rojo abajo).
 - **La barra del jefe** (`BarraDelJefe`, pedido de Ivan: como la de los jefes de Minecraft) va arriba al centro
   mientras hay un jefe vivo, con su nombre, la muesca donde entra en furia (`JefePatrones.fraccionFuria`, la mitad; y
@@ -1354,7 +1355,7 @@ luces de neón (ver Capítulos).
   casillero de hoy de la diaria (amarillo) y la inicial del bestiario (el círculo del color del zombi) no cambian con el
   tema, así que su texto va oscuro siempre.
 - **Lo que se arma en código sobre un panel recibe su color de quien lo crea** (`SliderVolumen.Crear` toma el color del
-  texto y el del surco). El interruptor (`Interruptor`) quedó sin uso al irse el modo oscuro; se deja para cuando haga falta otro (la vibración, el contador de FPS).
+  texto y el del surco). El interruptor (`Interruptor`), que era del modo oscuro, lo usa desde el 6/10 MOSTRAR FPS en OPCIONES; sirve para el próximo que haga falta (la vibración).
 - **Si agregás una pantalla**: negra, con los papeles puestos a lo que sea panel, fila o texto; los botones del molde de
   siempre, y se corre el constructor (o `ConstructorUI` si se arma en código).
 
@@ -1480,8 +1481,9 @@ uno cada 0,2 s como mucho, por `Sonidos.TocarUI`: en la pausa también suena), a
 - **`Sonidos` multiplica por el volumen de efectos** al tocar y al programar, así golpes, monedas, explosiones y la tienda
   responden sin componente.
 - **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
-  (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes. Se llama OPCIONES y no SONIDO porque tuvo
-  el modo oscuro, que se fue con el neón (ver Tema: carbón neón); la clase conserva el nombre de antes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
+  (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes y el interruptor MOSTRAR FPS (`ContadorFps`,
+  pedido de Ivan el 6/10). Se llama OPCIONES y no SONIDO porque tuvo el modo oscuro, que se fue con el neón (ver Tema:
+  carbón neón); la clase conserva el nombre de antes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
   los arma debajo de los botones de la pausa. El atrás de Android cierra la ventana de sonido primero.
 - Se escribe a disco medio segundo después de soltar el control o al cerrarse la ventana, no en cada movimiento.
 
@@ -1500,6 +1502,7 @@ progreso):
 | `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
 | `"TemaOscuro"` | nadie desde el 24/9 (era el interruptor del modo oscuro) | nadie: el neón es el único tema |
 | `"ResenaPedidaEn"` | `PedidoDeResena`, la fecha `yyyy-MM-dd` del último pedido | `PedidoDeResena` |
+| `"MostrarFps"` | el interruptor MOSTRAR FPS de OPCIONES (`OpcionesSonido`), 1 o 0 | `ContadorFps`; sin nada guardado, apagado |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
@@ -1698,7 +1701,8 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   controller y no por `animador.speed` (ver Las animaciones de los zombis). Antes el tanque, el jefe y el
   FASTER eran la cápsula y los cubos a la vista.
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
-  Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí.
+  Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí. Desde el 6/10 está apagado de fábrica: se prende
+  con MOSTRAR FPS en OPCIONES (`PlayerPrefs["MostrarFps"]`).
 
 ### Build de Android
 

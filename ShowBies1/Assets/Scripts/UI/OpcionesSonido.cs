@@ -3,10 +3,12 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // El engranaje del menu y la ventana de opciones que abre: los volumenes de efectos y
-// de musica. Hasta el 24/9 tenia tambien el modo oscuro, que se fue cuando el neon paso
-// a ser el unico tema (ver Tema). No tiene objetos propios en la escena: al arrancar copia
-// el globo y la ventana del idioma (SelectorIdioma) y los adapta, asi se ven igual sin
-// mantener dos copias a mano. El engranaje queda a la derecha del globo.
+// de musica y MOSTRAR FPS (el contador del HUD, ContadorFps; desde el 6/10). Hasta el
+// 24/9 tenia tambien el modo oscuro, que se fue cuando el neon paso a ser el unico tema
+// (ver Tema), y el interruptor de los FPS ocupa su lugar. No tiene objetos propios en la
+// escena: al arrancar copia el globo y la ventana del idioma (SelectorIdioma) y los
+// adapta, asi se ven igual sin mantener dos copias a mano. El engranaje queda a la
+// derecha del globo.
 //
 // Se llamaba "sonido" cuando solo tenia los dos volumenes; el nombre de la clase quedo
 // porque es lo que esta cableado en la escena.
@@ -22,8 +24,8 @@ public class OpcionesSonido : MonoBehaviour
     [Tooltip("El texto de los controles sobre la ventana crema; con el tema oscuro lo cambia Tema.")]
     public Color colorTexto = new Color(0.16f, 0.14f, 0.2f, 1f);
 
-    // La del idioma mide 620 x 480 y tiene dos botones; esta tiene dos controles.
-    private const float AltoVentana = 520f;
+    // La del idioma mide 620 x 480 y tiene dos botones; esta tiene tres controles.
+    private const float AltoVentana = 640f;
     private const float AnchoControl = 500f;
 
     private GameObject panel;
@@ -92,7 +94,7 @@ public class OpcionesSonido : MonoBehaviour
 
         var ventanaOriginal = selectorIdioma.ventana;
         ventana = (RectTransform)panel.transform.Find(Ruta(ventanaOriginal, (RectTransform)original.transform));
-        // Un poco mas alta que la del idioma: los dos controles ocupan mas que dos botones.
+        // Mas alta que la del idioma: entran tres controles en vez de dos botones.
         ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana);
 
         // El titulo pasa a OPCIONES y sube, que la ventana creció.
@@ -100,12 +102,13 @@ public class OpcionesSonido : MonoBehaviour
         {
             if (t.id != "idioma_titulo") continue;
             t.id = "opciones_titulo";
-            ((RectTransform)t.transform).anchoredPosition = new Vector2(0f, 200f);
+            ((RectTransform)t.transform).anchoredPosition = new Vector2(0f, 255f);
         }
 
-        // Los botones de idioma se van; en su lugar, los volumenes. De paso, de uno sale
-        // la fuente con que se arman los controles.
+        // Los botones de idioma se van; en su lugar, los volumenes y MOSTRAR FPS. De paso,
+        // de uno salen la pildora y la fuente con que se arman los controles.
         TMP_FontAsset fuente = null;
+        Sprite pildora = null;
         var botones = selectorIdioma.botonesIdioma;
         for (int i = 0; i < botones.Length; i++)
         {
@@ -114,21 +117,27 @@ public class OpcionesSonido : MonoBehaviour
             if (copiaBoton == null) continue;
             var texto = copiaBoton.GetComponentInChildren<TMP_Text>(true);
             if (fuente == null && texto != null) fuente = texto.font;
+            var fondo = copiaBoton.Find("Visual/Fondo");
+            var imagen = fondo != null ? fondo.GetComponent<Image>() : null;
+            if (pildora == null && imagen != null) pildora = imagen.sprite;
             Destroy(copiaBoton.gameObject);
         }
 
         var volver = selectorIdioma.botonVolver != null
             ? panel.transform.Find(Ruta(selectorIdioma.botonVolver.transform, (RectTransform)original.transform))
             : null;
+        AudioClip sonidoClick = null;
         if (volver != null)
         {
+            var jugoso = volver.GetComponent<BotonJugoso>();
+            if (jugoso != null) sonidoClick = jugoso.sonidoClick;
             var boton = volver.GetComponent<Button>();
             if (boton != null)
             {
                 boton.onClick.RemoveAllListeners();
                 boton.onClick.AddListener(Cerrar);
             }
-            ((RectTransform)volver).anchoredPosition = new Vector2(0f, -195f);
+            ((RectTransform)volver).anchoredPosition = new Vector2(0f, -255f);
         }
 
         // El texto y el surco van con el tema, con el pintor puesto: como el resto de la
@@ -136,10 +145,13 @@ public class OpcionesSonido : MonoBehaviour
         Color colorDelTexto = Tema.Elegir(colorTexto, RolDeTema.Texto);
         Color colorDelSurco = Tema.Elegir(SliderVolumen.ColorBarra, RolDeTema.Surco);
         // El de efectos suena al moverlo (FijarEfectosConMuestra).
-        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 85f), AnchoControl, fuente,
+        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_efectos", new Vector2(0f, 140f), AnchoControl, fuente,
                                          Volumen.Efectos, SliderVolumen.FijarEfectosConMuestra, spritePerilla, colorDelTexto, colorDelSurco));
-        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, -35f), AnchoControl, fuente,
+        SeguirElTema(SliderVolumen.Crear(ventana, "sonido_musica", new Vector2(0f, 25f), AnchoControl, fuente,
                                          Volumen.Musica, Volumen.FijarMusica, spritePerilla, colorDelTexto, colorDelSurco));
+        // Se escribe a disco al cerrar la ventana, con los volumenes (Volumen.Guardar).
+        SeguirElTema(Interruptor.Crear(ventana, "opciones_fps", new Vector2(0f, -95f), AnchoControl, fuente,
+                                       () => ContadorFps.Mostrar, ContadorFps.FijarMostrar, pildora, spritePerilla, sonidoClick, colorDelTexto));
     }
 
     // Le pone su papel a los textos y al surco de un control recien armado, para que

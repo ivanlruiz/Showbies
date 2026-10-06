@@ -5,7 +5,8 @@ using UnityEngine.UI;
 
 // Un interruptor de si o no armado en codigo, con el mismo molde que SliderVolumen:
 // el nombre a la izquierda y, a la derecha, una pildora con una perilla que se corre
-// de un lado al otro. Lo usa el modo oscuro en la ventana de opciones del menu.
+// de un lado al otro. Lo usa MOSTRAR FPS en la ventana de opciones del menu (antes, el
+// modo oscuro).
 //
 // Se arma en codigo, como los volumenes, para no sumar prefabs: quien lo crea le pasa
 // los dos dibujos (la pildora y el circulo de la perilla) y es duenio de ellos.
@@ -18,7 +19,8 @@ public class Interruptor : MonoBehaviour
     public const float Ancho = 132f;
     public const float Alto = 64f;
 
-    private static readonly Color ColorEncendido = new Color(0.49f, 0.878f, 0.29f, 1f);
+    // El verde neon de jugar y cobrar: el lima de antes era del tema claro.
+    private static readonly Color ColorEncendido = ConstructorUI.Verde;
     private static readonly Color ColorApagadoClaro = new Color(0f, 0f, 0f, 0.35f);
 
     // Apagado es un hueco en la ventana, asi que sigue al tema: negro sobre la crema y
@@ -41,8 +43,8 @@ public class Interruptor : MonoBehaviour
     // SliderVolumen.
     //
     // `leer` es de donde sale lo que muestra, y no una foto del valor al crearlo: si
-    // alguien mas lo cambia, la perilla se corre igual. Hoy el unico que cambia el tema
-    // es este mismo interruptor, pero una foto se queda vieja en silencio.
+    // alguien mas lo cambia, la perilla se corre igual. Una foto se queda vieja en
+    // silencio.
     public static Interruptor Crear(RectTransform padre, string idTexto, Vector2 posicion, float ancho,
                                     TMP_FontAsset fuente, Func<bool> leer, Action<bool> alCambiar,
                                     Sprite pildora, Sprite circulo, AudioClip sonidoClick, Color colorTexto)
@@ -111,8 +113,8 @@ public class Interruptor : MonoBehaviour
 
     private void Update()
     {
-        // Este mismo interruptor es el que cambia el tema: mientras se desliza ya se pinta
-        // con el nuevo, y quieto se repinta cuando cambia.
+        // El apagado sigue al tema: mientras se desliza ya se pinta con el nuevo, y quieto
+        // se repinta cuando cambia (hoy solo cambia en las pruebas).
         bool cambioElTema = revisionVista != Tema.Revision;
         revisionVista = Tema.Revision;
 
