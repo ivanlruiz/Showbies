@@ -191,9 +191,10 @@ La rama `admob` **no va a `main` hasta la 1.4.0**: el SDK suma solo el permiso `
 
 **Para probarla:** compilar y correr la prueba de lógica, armar la APK y jugarla en el teléfono: los videos tienen que
 decir "Test Ad", y el cartel de consentimiento salir en el menú desde la segunda partida, con PRIVACIDAD en
-OPCIONES. El cartel y PRIVACIDAD aparecen recién cuando esté creado el mensaje europeo en AdMob (paso 6). En la primera APK, mirar el manifiesto combinado: si trae `FOREGROUND_SERVICE` o el `SystemForegroundService`
-de WorkManager (que mete el SDK, issue 4092 del plugin), sacarlos con `tools:node="remove"` en el manifiesto de la
-librería, o Play pide la declaración de servicios en primer plano.
+OPCIONES. El cartel y PRIVACIDAD aparecen recién cuando esté creado el mensaje europeo en AdMob (paso 6). La primera
+APK (6/10) trajo el `SystemForegroundService` de WorkManager y el permiso `FOREGROUND_SERVICE` (los mete el SDK, issue
+4092 del plugin): Play pide una declaración aparte por los servicios en primer plano, y los anuncios no los usan. Se
+sacan con `tools:node="remove"` en el manifiesto de la librería, y en la APK siguiente ya no estaban.
 
 **Para que salgan anuncios de verdad**, en este orden (todo esto es de afuera: se hace con Ivan, de a un paso):
 1. La 1.3.0 publicada en producción.

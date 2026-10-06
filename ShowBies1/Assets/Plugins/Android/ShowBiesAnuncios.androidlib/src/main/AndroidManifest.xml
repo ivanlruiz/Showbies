@@ -3,10 +3,19 @@
      arrancar el SDK. Es el mismo en la APK de prueba y en el AAB: lo que cambia en la de
      prueba son los bloques, que son los de prueba de Google (ver ConfigAnuncios).
      El permiso del id de publicidad (AD_ID) lo agrega solo el SDK. -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+    <!-- El SDK trae WorkManager, que declara un servicio en primer plano y su permiso.
+         Los anuncios no lo usan, y con la app apuntando a Android 14 o mas, Play pide una
+         declaracion aparte por los servicios en primer plano. Se sacan aca, que pesa mas
+         que las librerias de las que depende esta (issue 4092 del plugin de Google). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove"/>
     <application>
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-5295383586829735~6982656335"/>
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            tools:node="remove"/>
     </application>
 </manifest>

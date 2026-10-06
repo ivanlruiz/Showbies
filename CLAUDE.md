@@ -1172,7 +1172,9 @@ librería de Google y JNI.
 
 - **El lado de Android es una librería propia**, `Assets/Plugins/Android/ShowBiesAnuncios.androidlib` (Unity la suma
   sola a `unityLibrary`): su `build.gradle` pide `play-services-ads` 25.5.0 y UMP 4.0.0 (no la plantilla de Gradle),
-  su manifiesto lleva el id de la app de AdMob (`ConfigAnuncios.IdAppAdMob`, el mismo en la APK y en el AAB) y
+  su manifiesto lleva el id de la app de AdMob (`ConfigAnuncios.IdAppAdMob`, el mismo en la APK y en el AAB) y **saca
+  el servicio en primer plano de WorkManager y su permiso** (`tools:node="remove"`), que trae el SDK sin usarlos y por
+  los que Play pide una declaración aparte, y
   `PuenteAnuncios.java` maneja el SDK, carga un video por lugar, lo vuelve a pedir al usarlo, al fallar (cada vez
   más espaciado) y al vencer (a la hora), y avisa todo con texto por `OyenteAnuncios`, una interfaz que del lado de C#
   implementa un `AndroidJavaProxy` (las devoluciones del SDK son clases abstractas, y el proxy solo implementa

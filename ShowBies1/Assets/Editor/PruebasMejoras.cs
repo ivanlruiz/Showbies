@@ -3608,6 +3608,11 @@ public static class PruebasMejoras
                       manifiesto != null && manifiesto.Contains("com.google.android.gms.ads.APPLICATION_ID")
                       && manifiesto.Contains(ConfigAnuncios.IdAppAdMob));
         inf.Verdadero("android: y no el de prueba de Google", manifiesto != null && !manifiesto.Contains("ca-app-pub-3940256099942544"));
+        // Lo trae el SDK (WorkManager), los anuncios no lo usan y Play pide una declaracion por el.
+        inf.Verdadero("android: el manifiesto saca el servicio en primer plano y su permiso",
+                      manifiesto != null && manifiesto.Contains("xmlns:tools=")
+                      && manifiesto.Contains("\"androidx.work.impl.foreground.SystemForegroundService\"")
+                      && manifiesto.Contains("\"android.permission.FOREGROUND_SERVICE\" tools:node=\"remove\""));
         string gradle = LeerSiExiste(Path.Combine(carpeta, "build.gradle"));
         inf.Verdadero("android: la libreria pide el SDK de anuncios", gradle != null && gradle.Contains("'com.google.android.gms:play-services-ads:"));
         inf.Verdadero("android: y el de consentimiento (UMP)", gradle != null && gradle.Contains("'com.google.android.ump:user-messaging-platform:"));
