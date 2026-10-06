@@ -18,7 +18,10 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       así; cuando suba la build con anuncios hay que cambiar estas dos, la seguridad de los datos y la política.
 - [x] **Contenido y audiencia objetivo**: 13-15, 16-17 y 18+.
 - [x] **Clasificación de contenido** (IARC): violencia fantástica contra no humanos, sangre limitada, miedo.
-      Salió ESRB E10+, ClassInd 10 y GRAC 12+.
+      Salió ESRB E10+, ClassInd 10 y GRAC 12+. El cuestionario mandado con la 1.3.0 quedó activo el 6/10/2026
+      ("Live Rating Notice" de IARC, Global Rating ID `5b6d86a1-864c-8c4c-88b0-3fa3d2cff6ee`, por si otra tienda lo
+      pide). Si una actualización cambia alguna respuesta, hay que volver a llenarlo: mirarlo con la 1.4.0, aunque
+      los anuncios van en otra declaración (Anuncios: sí).
 - [x] **Política de privacidad**: `https://ivanlruiz.github.io/showbies-privacidad/`, desde el repo público
       `ivanlruiz/showbies-privacidad` (`index.html` y `privacidad.html`, copias de `privacidad.html` de acá: al
       cambiar uno hay que actualizar los otros). Se mudó ahí el 19/9 para poder pasar este repo a privado, pero **el
