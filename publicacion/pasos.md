@@ -215,6 +215,11 @@ sacan con `tools:node="remove"` en el manifiesto de la librería, y en la APK si
    los estados de EE. UU.
 7. La 1.4.0: `admob` a `main`, AAB y subida.
 
+**Anuncios automáticos (intersticiales): después, cuando anden los videos con premio** (lo decidió Ivan el 6/10).
+Van con el mismo puente y un bloque intersticial nuevo en AdMob, y con estas reglas: solo al salir de la derrota
+(al tocar OTRA VEZ o MENÚ), nunca en las primeras partidas, como mucho uno cada 3 partidas y nunca si en esa partida
+se miró un video con premio. Google castiga mostrarlos al abrir la app, al salir o en medio de la partida.
+
 **Antes del 30/6/2027, pasar al SDK Next-Gen** (`com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk`): ese día
 Google deja de dar soporte al clásico, y el 30/6/2028 lo apaga. Con el puente es un archivo Java y una línea de Gradle.
 
