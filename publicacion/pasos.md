@@ -246,7 +246,17 @@ monedas (ver CLAUDE.md, Anuncios).
 8. La 1.4.0: `admob` a `main`, AAB y subida. **El 6/10 Ivan probó la APK 1.4.0 (7) en el teléfono ("funciona
    joya": Discord, el cartel europeo, PRIVACIDAD, los automáticos y los videos)**, `admob` pasó a `idiomas` y a
    `main`, y se armó el AAB 7 (`Builds/ShowBies.aab`, 42,3 MB, 20:04): `com.ivanruiz.showbies` 1.4.0, con `AD_ID`, sin
-   el servicio en primer plano, con el id de la app de AdMob y los símbolos nativos. Falta lo del paso 6 y subirlo.
+   el servicio en primer plano, con el id de la app de AdMob y los símbolos nativos.
+   **[x] Enviada a revisión el 6/10/2026 a las 20:36**, con el OK de Ivan en cada paso: Ivan arrastró el AAB a una
+   versión nueva de Producción (7 (1.4.0), al 100 % y en todos los países, la 6 "no incluida") con las notas de
+   `notas_1.4.0.md` en en-US, es-419 y es-ES. Un solo envío de 4 cambios: esa versión, **la misma 7 en la prueba
+   cerrada (Alpha)**, la declaración de anuncios y la seguridad de los datos (la del ID de publicidad va como
+   información). La prueba cerrada se actualizó por el control del ID de publicidad: con la declaración en "sí", Play
+   no deja guardar una versión si otra pista tiene una versión activa sin el permiso `AD_ID`; la de producción chocaba
+   con la 5 (1.2.0) de Alpha, y la de Alpha con la 6 de producción. La de Alpha se guardó con **"Publicar sin permiso"**,
+   que ignora el error solo para esa versión (no toca la declaración); la de producción ya no tuvo error. La única
+   advertencia fue que no hay archivo de desofuscación (no se usa R8). Con la publicación gestionada apagada, al
+   aprobarse sale sola. Falta, en AdMob, "Buscar actualizaciones" del app-ads.txt.
 
 **Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
 Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
