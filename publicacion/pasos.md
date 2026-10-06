@@ -198,6 +198,12 @@ APK (6/10) trajo el `SystemForegroundService` de WorkManager y el permiso `FOREG
 4092 del plugin): Play pide una declaración aparte por los servicios en primer plano, y los anuncios no los usan. Se
 sacan con `tools:node="remove"` en el manifiesto de la librería, y en la APK siguiente ya no estaban.
 
+**Probada en el teléfono de Ivan el 6/10: "funciona joya".** Los videos de prueba de Google salen en los tres lugares,
+llega el premio y el juego sigue bien al cerrarlos. La primera APK no mostraba ofertas por la regla de los 180 s
+jugados (el progreso de la `.prueba` era nuevo), no por un error: lo dijo la caja de diagnóstico del menú. Ese día
+Ivan también sacó los topes de videos por día, por partida y la espera, y bajó el x2 de la derrota a 30 s y 10
+monedas (ver CLAUDE.md, Anuncios).
+
 **Para que salgan anuncios de verdad**, en este orden (todo esto es de afuera: se hace con Ivan, de a un paso):
 1. La 1.3.0 publicada en producción.
 2. En AdMob, **Configuración de la app → Añadir tienda** (`com.ivanruiz.showbies`).
