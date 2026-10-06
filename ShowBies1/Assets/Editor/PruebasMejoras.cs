@@ -3688,10 +3688,13 @@ public static class PruebasMejoras
             config.proveedor = ConfigAnuncios.Proveedor.Nulo;
             config.bloqueRevivir = "";
             inf.Verdadero("aab: sin AdMob los bloques no importan", ConstructorAndroid.ProblemaDeAnuncios(config) == null);
-            // Hasta que Ivan cree el bloque intersticial en AdMob, al asset le falta solo ese.
-            string problemaDelAsset = ConstructorAndroid.ProblemaDeAnuncios(ConfigAnuncios.Instancia);
-            inf.Verdadero("aab: al asset de verdad le falta como mucho el bloque de los automaticos",
-                          problemaDelAsset == null || problemaDelAsset.Contains("automaticos"));
+            inf.Verdadero("aab: el asset de verdad deja salir", ConstructorAndroid.ProblemaDeAnuncios(ConfigAnuncios.Instancia) == null);
+            ConfigAnuncios delAsset = ConfigAnuncios.Instancia;
+            string automatico = delAsset != null ? delAsset.bloqueAutomatico : null;
+            inf.Verdadero("asset: el automatico tiene su bloque intersticial de verdad, distinto de los de video",
+                          !string.IsNullOrEmpty(automatico) && !ConfigAnuncios.EsBloqueDePrueba(automatico)
+                          && automatico != delAsset.bloqueRevivir && automatico != delAsset.bloqueDuplicarDerrota
+                          && automatico != delAsset.bloqueRegaloX2);
             inf.Igual("asset: la clasificacion que eligio Ivan", "T",
                       ConfigAnuncios.Instancia != null ? ConfigAnuncios.Instancia.clasificacionMaxima : "sin asset");
         }

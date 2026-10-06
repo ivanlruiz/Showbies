@@ -74,9 +74,9 @@ public class ConfigAnuncios : ScriptableObject
     public string bloqueRevivir = "ca-app-pub-5295383586829735/1512416812";
     public string bloqueDuplicarDerrota = "ca-app-pub-5295383586829735/8640931940";
     public string bloqueRegaloX2 = "ca-app-pub-5295383586829735/6299120897";
-    [Tooltip("El bloque intersticial de los automáticos. Hay que crearlo en AdMob (Bloques de anuncios → Intersticial): "
-        + "sin él, el AAB no sale.")]
-    public string bloqueAutomatico = "";
+    [Tooltip("El bloque intersticial de los automáticos (\"automatico\" en AdMob, creado el 6/10/2026). Sin él, con los "
+        + "automáticos prendidos, el AAB no sale.")]
+    public string bloqueAutomatico = "ca-app-pub-5295383586829735/6659600004";
 
     [Tooltip("La clasificación máxima de los anuncios: G, PG, T o MA. Ivan eligió T el 6/10/2026 (PG es para "
         + "todo público; T suma imágenes de miedo, deportes de lucha, redes sociales y salud). Apuestas, "

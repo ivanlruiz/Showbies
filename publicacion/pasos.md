@@ -177,6 +177,7 @@ Cuando se use para afuera (la ficha de Play, un botón en el juego, redes), el l
 | Bonificado `revivir` (recompensa 1 "revivir") | `ca-app-pub-5295383586829735/1512416812` |
 | Bonificado `duplicar_derrota` (recompensa 1 "monedas_x2") | `ca-app-pub-5295383586829735/8640931940` |
 | Bonificado `regalo_x2` (recompensa 1 "monedas_x2", el video de la recompensa diaria) | `ca-app-pub-5295383586829735/6299120897` |
+| Intersticial `automatico` (los automáticos de la derrota; creado el 6/10) | `ca-app-pub-5295383586829735/6659600004` |
 
 Los nombres de los bloques son los de `LugarAnuncio`. Mientras la app no esté vinculada a su ficha publicada, AdMob
 limita los anuncios: para probar se usan los bloques de prueba de Google. Al publicar en producción, vincular la
@@ -215,8 +216,8 @@ monedas (ver CLAUDE.md, Anuncios).
 4. En Play Console, el **sitio web** de los datos de contacto de la ficha en `https://ivanlruiz.github.io/...` (la URL
    de la política sirve): AdMob lee ese campo, no el de la política. Después, en AdMob, "Verificar la app"; tarda
    hasta 24 h, y la revisión de la app 2 o 3 días, con anuncios limitados mientras tanto.
-5. En AdMob, **Bloques de anuncios → Añadir → Intersticial** para la app ShowBies, y su id en
-   `ConfigAnuncios` (`bloqueAutomatico`). Es el de los automáticos.
+5. [x] En AdMob, el bloque **intersticial** `automatico` (6/10), con su id en `ConfigAnuncios` (`bloqueAutomatico`).
+   Es el de los automáticos.
 6. **Antes de subir el AAB**: la política nueva publicada, con fecha → rehacer **Seguridad de los datos** (AdMob
    recopila y comparte identificadores del dispositivo, ubicación aproximada, interacciones y diagnósticos, para
    publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí** → sacar de la ficha
@@ -230,7 +231,7 @@ monedas (ver CLAUDE.md, Anuncios).
 Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
 partida terminada, como mucho uno cada 3 partidas y nunca si en esa partida se miró un video con premio. Google
 castiga mostrarlos al abrir la app, al salir o en medio de la partida. La APK de prueba usa el intersticial de prueba
-de Google; **el de verdad hay que crearlo en AdMob** (paso 5 de la lista de arriba), y sin él el AAB no sale.
+de Google, y el de verdad (`automatico`, en la tabla de arriba) se creó el 6/10.
 
 **Antes del 30/6/2027, pasar al SDK Next-Gen** (`com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk`): ese día
 Google deja de dar soporte al clásico, y el 30/6/2028 lo apaga. Con el puente es un archivo Java y una línea de Gradle.
