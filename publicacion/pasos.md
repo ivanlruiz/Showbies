@@ -34,10 +34,10 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
 - [x] **Los 12 testers y los 14 días**: el 2/10 el panel tiene las tres tareas tildadas (versión de prueba cerrada
       publicada, 12 testers que aceptaron y 14 días con ellos) y habilita **Solicitar acceso a producción**. Sin
       fallos ni ANR en los últimos 28 días, sin problemas de políticas y sin comentarios de los testers.
-- [x] **Solicitar acceso a producción**: enviada el 2/10/2026 a las 22:20. Google avisa por mail al dueño de la
-      cuenta, y suele tardar 7 días o menos. Que lo apruebe no publica nada: habilita el canal de producción, y ahí se
-      sube la versión que se elija (hoy en Play está la 1.2.0). Las respuestas, de Ivan, por si hay que mandarla de
-      nuevo (si la rechazan, suele ser por pocos testers o poco uso, y piden seguir la prueba cerrada):
+- [x] **Solicitar acceso a producción**: enviada el 2/10/2026 a las 22:20 y **aprobada el 5/10/2026** (mail de
+      Google: "Your app has been granted Google Play production access"). Que la aprueben no publica nada: habilita el
+      canal de producción, y ahí se sube la versión que se elija (hoy en Play está la 1.2.0). Las respuestas, de Ivan,
+      por si alguna vez hay que mandarla de nuevo:
       - Cómo se reclutó: una mezcla, amigos y familia con el enlace de la prueba y una comunidad de desarrolladores
         donde se prueban las apps entre ellos. Qué tan fácil: ni difícil ni fácil.
       - Qué hicieron: partidas de oleadas en sus teléfonos; con varios Ivan jugó al lado (se movían, compraban mejoras
