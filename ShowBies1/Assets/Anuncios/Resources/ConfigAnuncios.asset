@@ -19,9 +19,9 @@ MonoBehaviour:
   segundosDeGracia: 2.5
   segundosDeLaPartidaParaRevivir: 30
   partidasTerminadasMinimas: 2
-  segundosDeLaPartidaMinimos: 90
+  segundosDeLaPartidaMinimos: 30
   segundosJugadosMinimos: 180
-  monedasMinimasParaDuplicar: 20
+  monedasMinimasParaDuplicar: 10
   vecesPorDia: 0
   vecesPorPartida: 0
   segundosEntreAnuncios: 0

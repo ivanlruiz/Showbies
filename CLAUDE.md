@@ -1079,8 +1079,8 @@ demás (topes, proveedor, hilos) vive en `Assets/Scripts/Anuncios/` y el juego n
 | `OfertaDeRevivir` | la ventanita de "¡HAS MUERTO!" (prefab `Prefabs/UI/OfertaRevivir` en ShowBies1 y WaveMode). |
 
 **Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada y con 180 s jugados en total (solo
-partidas terminadas: el revivir se decide antes de sumar la que está en curso). El x2 pide además una partida de 90 s
-y 20 monedas; revivir, una partida de 30 s. **Los topes (`vecesPorDia`, `vecesPorPartida`, `segundosEntreAnuncios`)
+partidas terminadas: el revivir se decide antes de sumar la que está en curso). El x2 pide además una partida de 30 s
+y 10 monedas (eran 90 s y 20 hasta el 6/10: Ivan lo bajó para que salga en más partidas); revivir, una partida de 30 s. **Los topes (`vecesPorDia`, `vecesPorPartida`, `segundosEntreAnuncios`)
 están en 0, que es "sin tope"**; hasta el 6/10 eran 3 por día, 1 por partida y 60 s entre videos. Si se vuelve a
 poner uno, **el del día es global y se cuenta con `Progreso.UsosDeHoyEnTotal()`, sumando los lugares**: contándolo por
 lugar (`UsosDeHoy(lugar)`), "3 por día" eran 3 de revivir más 3 del x2 de la derrota más 3 del x2 de la diaria, o sea

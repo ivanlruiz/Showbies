@@ -3072,6 +3072,8 @@ public static class PruebasMejoras
             ConfigAnuncios real = ConfigAnuncios.Instancia;
             inf.Verdadero("asset: sin tope de videos por dia, por partida ni espera entre videos",
                           real != null && real.vecesPorDia == 0 && real.vecesPorPartida == 0 && real.segundosEntreAnuncios == 0f);
+            inf.Verdadero("asset: el x2 de la derrota pide una partida de 30 s y 10 monedas (Ivan, 6/10)",
+                          real != null && real.segundosDeLaPartidaMinimos == 30f && real.monedasMinimasParaDuplicar == 10);
         }
         finally
         {
