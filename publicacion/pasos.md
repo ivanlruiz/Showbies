@@ -21,11 +21,14 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       Salió ESRB E10+, ClassInd 10 y GRAC 12+.
 - [x] **Política de privacidad**: `https://ivanlruiz.github.io/showbies-privacidad/`, desde el repo público
       `ivanlruiz/showbies-privacidad` (`index.html` y `privacidad.html`, copias de `privacidad.html` de acá: al
-      cambiar uno hay que actualizar los otros). Se mudó ahí el 19/9 para poder pasar este repo a privado. El link
-      nuevo se cargó el 19/9 y salió con la publicación del 21/9 (no queda nada pendiente en Resumen de
-      publicación). El viejo (`ivanlruiz.github.io/Showbies/privacidad.html`, rama `gh-pages`) sigue vivo.
-- [x] **Seguridad de los datos**: no recopila ni comparte; completada el 16/9. La próxima subida (versionCode 6) es
-      la primera con la librería de reseñas: revisarla antes de subirla (H08 en `pendientes.md`).
+      cambiar uno hay que actualizar los otros). Se mudó ahí el 19/9 para poder pasar este repo a privado, pero **el
+      repo `ivanlruiz/Showbies` sigue siendo público** (lo vio la revisión del 6/10; lo cambia Ivan en GitHub). El
+      link nuevo se cargó el 19/9 y salió con la publicación del 21/9. El viejo
+      (`ivanlruiz.github.io/Showbies/privacidad.html`, rama `gh-pages`) redirige al nuevo desde el 6/10. La versión
+      con la sección de reseñas (para la 1.3.0) está en `privacidad.html` de acá y sin subir a `showbies-privacidad`.
+- [x] **Seguridad de los datos**: no recopila ni comparte; completada el 16/9. La 1.3.0 (6) es la primera con la
+      librería de reseñas: hay que declarar "Otro contenido generado por el usuario" en el mismo envío que el AAB
+      (H08 en `pendientes.md`).
 - [x] **Ficha de Play Store** (borrador): textos en inglés (principal), español de España y de Latinoamérica
       (`ficha.md`); icono 512, banner 1024x500 y 4 capturas 1920x1080 en inglés, en `Builds/ficha/` (fuera de git).
 
@@ -73,10 +76,15 @@ en el menú ⋮ de abajo a la derecha.
 - [x] **Target API 36**, obligatorio para apps nuevas desde el 31/8/2026. Estaba en "automático", que depende de
       qué SDK tenga instalado la máquina.
 - [x] **64 bits** (ARM64 + IL2CPP), que Play exige.
-- [ ] **versionCode 6** para la próxima subida (la última, la 1.2.0, salió con el 5). Cada subida a Play necesita
-      un versionCode mayor que el anterior: si rechazan un AAB y subís otro, hay que volver a subirlo. El
+- [x] **versionCode 6, versión 1.3.0**: subida el 6/10 (`eb25e5b`) para la primera de producción. Cada subida a Play
+      necesita un versionCode mayor que el anterior: si rechazan un AAB y subís otro, hay que volver a subirlo. El
       versionCode del último AAB armado queda en `publicacion/ultimo_aab.txt`, que lo escribe la build, y la build
       del AAB se niega a salir con ese número o uno menor.
+- [ ] **1.3.0 a producción**: la APK de prueba se armó el 6/10 desde `eb25e5b` (sin la R de reiniciar, `96d07b3`) y
+      la está probando Ivan en el teléfono. Con su OK (ya aprobado el orden): la política nueva a
+      `showbies-privacidad`, después el AAB y un solo envío a Play con la seguridad de los datos, la ficha sin "no
+      recopila tus datos" en los tres idiomas, las notas de la versión y producción al 100 %, mostrándoselo antes de
+      enviar.
 - [x] **Sin anuncios en esta versión** (`ConfigAnuncios.proveedor = Nulo`). Ver "Anuncios" abajo.
 - [x] Orientación horizontal en las dos rotaciones, botón atrás de Android, icono de app.
 

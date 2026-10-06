@@ -384,9 +384,9 @@ privacidad publicada.
   recopila". La página de Google (In-App Review, "Data safety") dice que se recopila lo que el usuario escribe (la
   valoración y el texto) para dejar la reseña, cifrado, y que se comparte con el desarrollador en una pista cerrada; y
   que la respuesta al formulario es responsabilidad del desarrollador. Play Console tiene enlazada
-  `ivanlruiz.github.io/showbies-privacidad/`, no `gh-pages`. Falta publicarlo afuera: la política en
-  `showbies-privacidad` (y `gh-pages`, que sigue en línea con "never leaves your phone"), el formulario y la ficha en
-  Play Console, en el mismo envío que el AAB.
+  `ivanlruiz.github.io/showbies-privacidad/`, no `gh-pages`, que desde el 6/10 redirige ahí (decía "never leaves
+  your phone"). Falta publicar la política nueva en `showbies-privacidad`, y el formulario y la ficha en Play Console
+  en el mismo envío que el AAB (`publicacion/notas_1.3.0.md`).
 
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
