@@ -165,7 +165,8 @@ rol Player). Es un servidor de Comunidad, todo en inglés (pedido de Ivan, que p
   entradas y salidas, los baneos y los cambios de roles. Su rol tiene que quedar justo encima de Player: más arriba
   podría repartir Tester o Dev, más abajo no puede dar Player.
 
-Cuando se use para afuera (la ficha de Play, un botón en el juego, redes), el link es el de arriba.
+Cuando se use para afuera (la ficha de Play, un botón en el juego, redes), el link es el de arriba. Desde la 1.4.0
+lo abre el botón de Discord del menú (`BotonDiscord.Invitacion`): si se cambia la invitación, cambiarla ahí también.
 
 ## Anuncios
 
@@ -224,8 +225,9 @@ monedas (ver CLAUDE.md, Anuncios).
    Es el de los automáticos.
 6. **Antes de subir el AAB**: la política nueva publicada, con fecha → rehacer **Seguridad de los datos** (AdMob
    recopila y comparte identificadores del dispositivo, ubicación aproximada, interacciones y diagnósticos, para
-   publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí** → sacar de la ficha
-   (`ficha.md`) el "no recopila tus datos".
+   publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí**. La ficha ya no dice
+   "no recopila tus datos": desde la 1.3.0 termina en "Free to play" / "Gratis". La política nueva, con su párrafo
+   del botón de Discord, está en `privacidad.html`, y las notas y el envío entero, en `notas_1.4.0.md`.
 7. [x] En AdMob (6/10, con permiso de Ivan en cada paso): **categorías sensibles bloqueadas** (citas, ganar dinero
    rápidamente, juegos de casino sociales, referencias al sexo y salud reproductiva y sexual; alcohol y apuestas ya
    venían bloqueadas) y **mensaje de consentimiento europeo publicado** en Privacidad y mensajes, para ShowBies, en
