@@ -182,7 +182,6 @@ combo_10	RAMPAGE!	¡ARRASANDO!
 combo_25	MASSACRE!	¡MASACRE!
 combo_50	UNSTOPPABLE!	¡IMPARABLE!
 combo_100	LEGENDARY!	¡LEGENDARIO!
-hud_reiniciar_pc	R  RESTART	R  REINICIAR
 cartel_oleada	Wave {0}	Oleada {0}
 cartel_bono	\n<size=45%>+{0} coins for wave {1}</size>	\n<size=45%>+{0} monedas por la oleada {1}</size>
 furia_boton	RAGE	FURIA

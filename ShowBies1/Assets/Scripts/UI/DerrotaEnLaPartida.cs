@@ -125,8 +125,8 @@ public class DerrotaEnLaPartida : MonoBehaviour
     // ellos. No se vuelven a prender: de la derrota se sale siempre cambiando de escena.
     private static void EsconderElHud(Scene juego)
     {
-        // Por si se salio de la partida antes de que la derrota terminara de cargar (la R la
-        // recarga): esa escena ya no esta, y la nueva tiene su HUD.
+        // Por si se salio de la partida antes de que la derrota terminara de cargar: esa
+        // escena ya no esta, y la nueva tiene su HUD.
         if (!juego.IsValid() || !juego.isLoaded) return;
         foreach (GameObject raiz in juego.GetRootGameObjects())
             foreach (Canvas canvas in raiz.GetComponentsInChildren<Canvas>(true))

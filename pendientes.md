@@ -144,7 +144,7 @@ privacidad publicada.
 
 - **Los jefes de las misiones y del semanal se farmean** (media). `EnemyController.cs:874` suma a `jefesMatados` todo
   zombi con `EsJefe`, sin mirar el modo, y lo leen `MisionesDiarias.cs:208` y `DesafioSemanal.cs:124`. En el libre
-  sale un jefe cada 30 s (`ShowBies1.unity:1330-1337`) con 500 de vida en el nivel 1, y REINICIAR o la R lo vuelven al
+  sale un jefe cada 30 s (`ShowBies1.unity:1330-1337`) con 500 de vida en el nivel 1, y REINICIAR lo vuelve al
   nivel 1: con mejor oleada 40, los 10 jefes de la misión (cotizada en 59 min, paga 51.450) salen en ~5 min, y los 60
   del semanal (cotizado en 5,9 h, paga 257.300) en ~30 min (en móvil, con el techo de 35 zombis, quizá uno cada ~67
   s). Retomar la oleada 10 (pausa → MENÚ → OLEADAS) vuelve a sacar su jefe, en un ciclo de ~20 s. Pega solo cuando
@@ -242,13 +242,12 @@ privacidad publicada.
   tipo (el tanque y el jefe, más pesados). Antes, medir el de ahora en play (el avance de un tanque y del jefe bajo
   fuego, a 60 y a 30 FPS) para que se sienta igual. Va con el barrido de las balas, que quita el empuje de PhysX; si
   en cambio la bala pasa a trigger, su `OnCollisionEnter` pasa a `OnTriggerEnter`.
-- **El récord de una partida abandonada** (baja). En el libre la partida se pierde sin compararla con MENÚ, REINICIAR,
-  la R y cerrando la app; en oleadas, solo con REINICIAR y la R (MENÚ la guarda para retomarla, y se compara al
-  morir). **Decidido el 26/9: en el libre cuenta**: `GuardarRecord` en `MenuPausa.Pausar` y en la R (sus puntos solo
-  suben, y perder el foco pausa, así que cubre cerrar la app). En oleadas, solo dentro de `OlvidarPartidaSiEsOleadas`
-  (REINICIAR y la R). No en `IrAlMenu`, como decía la auditoría: al retomar no saldría NEW BEST. El tutorial no
-  escribe récord. Desde el 29/9 REINICIAR y la R pasan por `MenuPausa.ReiniciarYa` (después de la confirmación, H05):
-  el `GuardarRecord` del libre en la R va ahí, o en `PedirReiniciar`, que es por donde entra la R.
+- **El récord de una partida abandonada** (baja). En el libre la partida se pierde sin compararla con MENÚ, REINICIAR
+  y cerrando la app; en oleadas, solo con REINICIAR (MENÚ la guarda para retomarla, y se compara al morir). **Decidido
+  el 26/9: en el libre cuenta**: `GuardarRecord` en `MenuPausa.Pausar` (sus puntos solo suben, y perder el foco pausa,
+  así que cubre cerrar la app; REINICIAR pasa por la pausa). En oleadas, solo dentro de `OlvidarPartidaSiEsOleadas`
+  (REINICIAR). No en `IrAlMenu`, como decía la auditoría: al retomar no saldría NEW BEST. El tutorial no escribe
+  récord. La R de PC, que era el otro camino, se sacó el 6/10.
 
 ### De la superauditoría del 29/9
 
@@ -322,8 +321,7 @@ privacidad publicada.
 - **La furia arranca lista en cada partida y cuenta para la misión y FURIOSO reiniciando** (baja, era media; H02,
   parcial). `activadaEn` arranca en `float.NegativeInfinity` (`Furia.cs:43`; que arranque lista es a propósito,
   `BotonFuria.cs:34-36`) y `Activar` suma `Progreso.ContarFuria` (`Furia.cs:99-109`), que es de por vida. Con
-  REINICIAR, la R o pausa → MENÚ → OLEADAS (en el libre o entre carreras: en WaveMode REINICIAR y la R borran la
-  oleada), cada vuelta da una furia: la difícil de la oleada 40 (29 furias, cotizada en 58 min, paga 51.450) sale en 1
+  REINICIAR o pausa → MENÚ → OLEADAS (en el libre o entre carreras: en WaveMode REINICIAR borra la oleada), cada vuelta da una furia: la difícil de la oleada 40 (29 furias, cotizada en 58 min, paga 51.450) sale en 1
   a 7 min según lo que tarde la vuelta (sin medir). La misión de furia sale el 47-67 % de los días. Adelanta, no
   multiplica: el cofre pide las tres misiones, FURIOSO llega igual jugando (~3,3 h) y el semanal no tiene furia. Con
   la granada, la vuelta rinde ×2,5 solo si dura 2 s. Amplía «Las dos pruebas son circulares»: `PruebasMejoras.cs:3434`
@@ -355,7 +353,7 @@ privacidad publicada.
   devolver los colores leídos en `Awake`. En el banco, el color de la `Sombra`, el del texto y un contraste de 4,5 o
   más. En `SelectorIdioma.Pintar`, `PintarHalo` con el color de cada botón. Corregir "lo pinta gris" en CLAUDE.md.
 - **Retomar vuelve opcional la muerte en oleadas** (baja, era media; H04, parcial). MENÚ no olvida la oleada
-  (`MenuPausa.cs:96-100`) y perder el foco pausa y guarda (`:54-79`): solo morir, REINICIAR y la R la olvidan. Retomar
+  (`MenuPausa.cs:96-100`) y perder el foco pausa y guarda (`:54-79`): solo morir y REINICIAR la olvidan. Retomar
   (`WaveManager.cs:104-125`) crea un jugador nuevo: vida llena, `GolpesRecibidos` en 0, 500 balas, el revivir por
   vídeo disponible otra vez y las mejoras compradas entretanto (`AplicarMejoras.Awake`). En monedas no es granja
   (×1,2-1,6 por minuto con ~10 s por ciclo, modelo sin medir). INTOCABLE y el bronce y la plata de SUPERVIVIENTE solo
@@ -564,10 +562,6 @@ festejo cortado por el borde, la línea del aviso y el zarpazo que seguía en el
   borde del lado de la cámara y, con el arreglo, que llegue al borde real.
 - **El reloj** (H03, con la hora de internet): en el teléfono, sin conexión (modo avión), que el día no avance aunque
   se adelante la fecha, y que al volver la conexión salgan la diaria y las misiones del día.
-- **La R en el banco del tutorial** (visto el 29/9): una R apretada sin querer durante `PruebaTutorial` llegó a
-  `MenuPausa.ReiniciarYa` con `buildIndex` −1 y no recargó nada (ya pasaba antes del arreglo de H05). Mirar si es solo
-  del banco, que abre la escena con `OpenScene`, o si la R del tutorial tampoco recarga en play normal. El banco, con
-  la PC libre, dio TODO OK.
 - **Los edificios de la ciudad** (H18): con la cámara del juego, que el techo se transparente a tiempo con un zombi, el
   jefe o el jugador en la huella o detrás, y los FPS de la ciudad en el teléfono con los edificios fuera del batching.
 - **De los bajos sin refutar, piden play o teléfono**: H41 (el orden de `OnApplicationFocus` con la granada apuntada),

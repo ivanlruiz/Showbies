@@ -144,19 +144,6 @@ public class MenuPausa : MonoBehaviour
         ReiniciarYa();
     }
 
-    // La R de RestartScene: lo mismo, con la pausa abierta para preguntar.
-    public void PedirReiniciar()
-    {
-        if (ConfirmandoReiniciar) return;
-        int oleada = WaveManager.OleadaQueSePierdeAlReiniciar;
-        if (oleada > 0)
-        {
-            Pausar();
-            if (Pausado && AbrirConfirmacion(oleada)) return;
-        }
-        ReiniciarYa();
-    }
-
     public void ReiniciarYa()
     {
         Restaurar();
@@ -281,7 +268,7 @@ public class MenuPausa : MonoBehaviour
     }
 
     // timeScale y AudioListener.pause son globales: si la escena se descarga en
-    // pausa por otro camino (la R de RestartScene), la siguiente arrancaria
+    // pausa por un camino que no pasa por estos botones, la siguiente arrancaria
     // congelada y muda.
     private void OnDestroy()
     {

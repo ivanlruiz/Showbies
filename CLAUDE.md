@@ -58,7 +58,7 @@ Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música),
 Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
-Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje, RestartScene
+Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial
 Assets/Prefabs/             ← Bullet, Gun, Pistola (la de la mano), Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
@@ -410,8 +410,8 @@ consultando `EnemyController.ZombisVivos`:
   oleada y los puntos (`Progreso.GuardarOleadaEnCurso`) y escribe el archivo. Si se sale al menú o se cierra la app,
   la próxima vez arranca esa oleada desde cero (todos sus zombis, vida llena) con esos puntos, y el botón OLEADAS
   del menú avisa "CONTINUE WAVE N" (`BotonOleadas`). **Se olvida al morir** (`PlayerHealth.Terminar`) **y al
-  reiniciar** (REINICIAR de la pausa y la R, con `WaveManager.OlvidarPartidaSiEsOleadas`, que pasada la 1 preguntan
-  antes: ver Pausa y botón atrás): las dos cosas empiezan una partida nueva. Salir en mitad de una oleada que se
+  reiniciar** (REINICIAR de la pausa, con `WaveManager.OlvidarPartidaSiEsOleadas`, que pasada la 1 pregunta antes: ver
+  Pausa y botón atrás): las dos cosas empiezan una partida nueva. Salir en mitad de una oleada que se
   estaba perdiendo la reinicia sin morir: es a propósito.
 
   La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
@@ -1514,8 +1514,8 @@ como el récord, va en `GuardarRecord`, que corre al morir, antes de la oferta.
 incluidos el menú y la derrota, donde no hay menú de pausa que lo haga.
 
 `"UltimoModo"` es lo que hace que "Retry" vuelva al modo que estabas jugando y no siempre al primero.
-La tecla R hace lo mismo por otro camino: recarga la escena activa (no con un video en pantalla ni con el ¡HAS
-MUERTO! abierto: ahí se perdía el premio o la partida terminaba sin pasar por `Terminar`).
+**No hay tecla para reiniciar**: la R de PC (`RestartScene`, con su cartel "R REINICIAR" en el HUD) se sacó el 6/10,
+pedido de Ivan. Reiniciar es solo REINICIAR de la pausa.
 
 ## La derrota encima de la partida
 
@@ -1604,13 +1604,12 @@ click en otra ventana.
   `MenuPausa.Pausado` antes de leerlo. Lo que agregues que lea input tiene que hacer lo mismo.
 - `timeScale` y `AudioListener.pause` son globales y cruzan escenas. Los botones del panel los
   restauran antes de cargar otra escena, y `OnDestroy` también, por si la escena se descarga en pausa
-  por otro camino (la R de `RestartScene`).
+  por un camino que no pase por esos botones.
 - **REINICIAR pregunta antes en las oleadas pasada la 1** (`WaveManager.OleadaQueSePierdeAlReiniciar`): borra la
   partida guardada, y rehacerla son 13 minutos hasta la 30. `MenuPausa.Reiniciar` cambia el panel por una copia suya
   armada la primera vez que hace falta (`PanelReiniciar`): "¿EMPEZAR DE CERO?", "PERDERÁS TU PARTIDA EN LA OLEADA N",
   SEGUIR JUGANDO (el CONTINUAR verde, latiendo: reanuda) y REINICIAR más abajo (`ReiniciarYa`). El atrás con la
-  confirmación abierta vuelve a la pausa, sin reanudar. **La R de PC pasa por lo mismo** (`MenuPausa.PedirReiniciar`:
-  pausa y pregunta), que está al lado de la F de la furia. En el libre, el tutorial y la oleada 1 reinicia como antes.
+  confirmación abierta vuelve a la pausa, sin reanudar. En el libre, el tutorial y la oleada 1 reinicia como antes.
   Lo prueba **ShowBies > Pruebas > Reiniciar y la noche (play)** (ver Pruebas y medición).
 - **El botón de pausa del teléfono se desvanece mientras está el cartel del capítulo** (a `alfaConElCartel`, 0,25, y
   se puede tocar igual): va arriba al centro y tapaba la primera línea, "CAPÍTULO 2", en todas las proporciones, y el
@@ -1624,8 +1623,8 @@ click en otra ventana.
   (`OfertaDeRevivir`, salvo en el instante de volver de un video), en la derrota vuelve al
   menú (`MenuPerdiste`; como va encima de la partida, `MenuPausa` la deja pasar), y en el menú principal cierra primero la ventana de idioma, después la tienda, después el panel de modos o,
   en el principal, pregunta si salir del juego sólo en móvil (`ConfirmarSalir`, la misma ventana del botón SALIR; lo
-  maneja `BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del menú). `RestartScene` ya no cierra el
-  juego con Escape: en PC, para salir está Quit.
+  maneja `BotonAtrasMenu`, en el canvas "Main Menu", único lector de Escape del menú). En la partida, Escape no
+  cierra el juego: en PC, para salir está Quit.
 
 ## Móvil
 
@@ -2020,7 +2019,7 @@ enterrado.
 - **ShowBies > Pruebas > Reiniciar y la noche (play)** (`PruebaReiniciar`, del 29/9): en WaveMode con una partida
   guardada en la 11, que los toques de verdad en los bordes de CONTINUAR y REINICIAR caigan en su botón y no en el halo
   del vecino, y todo el circuito de la confirmación de REINICIAR (pregunta sin olvidar la oleada, el atrás vuelve a la
-  pausa, SEGUIR JUGANDO reanuda, la R pausa y pregunta, REINICIAR recarga en la 1, y en la 1 ya no pregunta), con el
+  pausa, SEGUIR JUGANDO reanuda, REINICIAR recarga en la 1, y en la 1 ya no pregunta), con el
   título en un renglón; y que el botón de pausa se desvanezca con el cartel del capítulo 2 y vuelva cuando se va. Saca además una foto de noche de las tres cajas y el chorro de balas
   (`Builds/noche_cajas_balas.png`) y otra de la confirmación. Escribe `Builds/prueba_reiniciar.txt`.
 - **Los bancos en play devuelven el progreso** (`RespaldoDelBanco`): cada uno guarda al arrancar el progreso real del

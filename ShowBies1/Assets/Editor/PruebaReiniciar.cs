@@ -18,8 +18,8 @@ using UnityEngine.UI;
 //     quedaba con el hueco y con el borde de CONTINUAR).
 //  2. REINICIAR pregunta antes de borrar la partida (MenuPausa.Reiniciar): no olvida la oleada,
 //     el atras (CerrarConfirmacion, que es lo que hace Escape) vuelve a la pausa sin reanudar,
-//     SEGUIR JUGANDO reanuda, la R (PedirReiniciar) pausa y pregunta, y REINICIAR de la
-//     confirmacion recarga la escena y empieza de la 1. En la 1 ya no pregunta.
+//     SEGUIR JUGANDO reanuda, y REINICIAR de la confirmacion recarga la escena y empieza de la
+//     1. En la 1 ya no pregunta. (La R de PC, que tambien pasaba por aca, se saco el 6/10.)
 //  3. Una foto de noche, con la calidad del editor, de las tres cajas y el chorro de balas al
 //     lado del jugador (la bala sin luz y las cajas en la capa de la luz de relleno), y otra de
 //     la confirmacion.
@@ -50,7 +50,7 @@ public static class PruebaReiniciar
         FotoConfirmacion,
         Atras,              // lo que hace Escape con la confirmacion abierta
         Seguir,             // REINICIAR otra vez y SEGUIR JUGANDO
-        TeclaR,             // la R: pausa y pregunta
+        Reabrir,            // pausa y REINICIAR, para volver a la confirmacion
         ReiniciarSi,        // REINICIAR de la confirmacion
         DespuesDeReiniciar, // la escena recargada, en la 1
         Listo,
@@ -81,7 +81,6 @@ public static class PruebaReiniciar
     static float alfaConCartel = float.NaN, alfaSinCartel = float.NaN;
     static bool atrasVolvioALaPausa, atrasSeguiaPausado;
     static bool seguirReanudo, seguirSinConfirmacion, oleadaIgualAlSeguir;
-    static bool rPauso, rPregunto;
     static int escenaAntes, oleadaDespues = -1;
     static bool recargo, sinPausaDespues, noPreguntaEnLaUno;
 
@@ -252,15 +251,14 @@ public static class PruebaReiniciar
                 seguirReanudo = !MenuPausa.Pausado && Time.timeScale == 1f && !menu.panel.activeSelf;
                 seguirSinConfirmacion = !menu.ConfirmandoReiniciar;
                 oleadaIgualAlSeguir = Progreso.OleadaEnCurso == oleadaAlEmpezar;
-                Pasar(Paso.TeclaR, ahora);
+                Pasar(Paso.Reabrir, ahora);
                 return;
             }
 
-            case Paso.TeclaR:
+            case Paso.Reabrir:
                 if (Espero(ahora, 0.3)) return;
-                menu.PedirReiniciar();
-                rPauso = MenuPausa.Pausado && Time.timeScale == 0f;
-                rPregunto = menu.ConfirmandoReiniciar && Progreso.OleadaEnCurso == oleadaAlEmpezar;
+                menu.Pausar();
+                ((RectTransform)menu.panel.transform.Find("BotonReiniciar")).GetComponent<Button>().onClick.Invoke();
                 Pasar(Paso.ReiniciarSi, ahora);
                 return;
 
@@ -417,7 +415,6 @@ public static class PruebaReiniciar
         inf.AppendLine("  titulo en " + lineasDelTitulo + " renglones, " + huecoTituloAviso.ToString("0") + " u por encima del aviso");
         inf.AppendLine("Atras: volvio a la pausa " + atrasVolvioALaPausa + ", pausado " + atrasSeguiaPausado);
         inf.AppendLine("SEGUIR JUGANDO: reanudo " + seguirReanudo + ", sin confirmacion " + seguirSinConfirmacion + ", oleada igual " + oleadaIgualAlSeguir);
-        inf.AppendLine("La R: pauso " + rPauso + ", pregunto " + rPregunto);
         inf.AppendLine("REINICIAR de la confirmacion: recargo " + recargo + ", oleada despues " + oleadaDespues + ", sin pausa " + sinPausaDespues
                        + ", en la 1 no pregunta " + noPreguntaEnLaUno);
         inf.AppendLine("Capturas en Builds/: " + (capturas.Count > 0 ? string.Join(", ", capturas) : "ninguna"));
@@ -437,7 +434,6 @@ public static class PruebaReiniciar
             lineasDelTitulo == 1 && huecoTituloAviso > 0f,
             atrasVolvioALaPausa && atrasSeguiaPausado,
             seguirReanudo && seguirSinConfirmacion && oleadaIgualAlSeguir,
-            rPauso && rPregunto,
             recargo && oleadaDespues == 1 && sinPausaDespues,
             noPreguntaEnLaUno,
             cajasPuestas == 3 && disparaba,
@@ -455,7 +451,6 @@ public static class PruebaReiniciar
             "el titulo entra en un renglon y no pisa el aviso",
             "el atras con la confirmacion abierta vuelve a la pausa sin reanudar",
             "SEGUIR JUGANDO reanuda y no olvida la oleada",
-            "la R pausa y pregunta",
             "REINICIAR de la confirmacion recarga la escena y empieza de la 1, sin pausa",
             "en la oleada 1 REINICIAR ya no pregunta",
             "la foto de noche tiene las tres cajas y balas en el aire",
