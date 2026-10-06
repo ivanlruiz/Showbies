@@ -236,6 +236,15 @@ public static class ConstructorAndroid
                 return "el lugar de anuncios '" + lugar + "' tiene un bloque de prueba de Google (" + bloque
                     + "): en Play no paga. Poné el de verdad en Assets/Anuncios/Resources/ConfigAnuncios.";
         }
+        if (config.automaticos)
+        {
+            if (string.IsNullOrEmpty(config.bloqueAutomatico))
+                return "los anuncios automaticos estan prendidos y no tienen bloque: crea uno intersticial en AdMob y "
+                    + "cargalo en Assets/Anuncios/Resources/ConfigAnuncios (bloqueAutomatico), o apagalos (automaticos).";
+            if (ConfigAnuncios.EsBloqueDePrueba(config.bloqueAutomatico))
+                return "el bloque de los anuncios automaticos es uno de prueba de Google (" + config.bloqueAutomatico
+                    + "): en Play no paga. Poné el de verdad en Assets/Anuncios/Resources/ConfigAnuncios.";
+        }
         if (System.Array.IndexOf(ConfigAnuncios.ClasificacionesValidas, config.clasificacionMaxima) < 0)
             return "la clasificacion maxima de los anuncios es '" + config.clasificacionMaxima
                 + "' y tiene que ser G, PG, T o MA (Assets/Anuncios/Resources/ConfigAnuncios).";

@@ -58,20 +58,25 @@ public class MenuPerdiste : MonoBehaviour
         SobreLaPartida = false;
     }
 
+    // Ya se toco una salida: si sale el anuncio automatico, la escena se carga al cerrarlo,
+    // y mientras tanto otro toque no tiene que cargar nada.
+    private bool saliendo;
+
     public void Retry ()
     {
-        Salir();
-        // Vuelve al modo que se estaba jugando, no siempre al primero.
-        // PlayerHealth lo guarda al morir; si no hay nada, a las oleadas. El libre
-        // pasa por ModoLibre por si todavia no esta desbloqueado.
-        int modo = PlayerPrefs.GetInt("UltimoModo", TiendaMejoras.EscenaOleadas);
-        SceneManager.LoadScene(ModoLibre.EscenaPara(modo));
+        SalirA(() =>
+        {
+            // Vuelve al modo que se estaba jugando, no siempre al primero.
+            // PlayerHealth lo guarda al morir; si no hay nada, a las oleadas. El libre
+            // pasa por ModoLibre por si todavia no esta desbloqueado.
+            int modo = PlayerPrefs.GetInt("UltimoModo", TiendaMejoras.EscenaOleadas);
+            SceneManager.LoadScene(ModoLibre.EscenaPara(modo));
+        });
     }
 
     public void Menu()
     {
-        Salir();
-        SceneManager.LoadScene(0);
+        SalirA(() => SceneManager.LoadScene(0));
     }
 
     // El boton MEJORAS de la derrota: la tienda vive en el menu, asi que carga
@@ -79,8 +84,22 @@ public class MenuPerdiste : MonoBehaviour
     // cobrar y tiene mas ganas de gastar.
     public void AbrirMejoras()
     {
-        Salir();
-        TiendaMejoras.AbrirEnMenu();
+        SalirA(TiendaMejoras.AbrirEnMenu);
+    }
+
+    // Toda salida de la derrota pasa por aca: si toca el anuncio automatico (ver
+    // ServicioAnuncios.MostrarAutomatico), sale primero y lo que se toco se carga al
+    // cerrarlo. Es la pausa natural del juego: la partida termino y la pantalla ya se vio.
+    private void SalirA(System.Action cargar)
+    {
+        if (saliendo) return;
+        saliendo = true;
+        System.Action seguir = () =>
+        {
+            Salir();
+            cargar();
+        };
+        if (!ServicioAnuncios.MostrarAutomatico(seguir)) seguir();
     }
 
     // El boton atras de Android llega como Escape.

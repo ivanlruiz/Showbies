@@ -93,6 +93,10 @@ public static class Progreso
         public double segundosJugados;
         public bool ofrecerVideos = true;
         public EstadoAnuncios anuncios = new EstadoAnuncios();
+        // La partida (partidasTerminadas) en que salio el ultimo anuncio automatico, para
+        // espaciarlos (ServicioAnuncios.PuedeMostrarAutomatico). Un JSON sin el campo lo
+        // lee como 0, asi que no cambia la version.
+        public int partidaDelUltimoAutomatico;
 
         // La partida de oleadas a medias: la oleada que se estaba jugando y los puntos
         // con que empezo. 0 = ninguna. Un JSON sin estos campos los lee como 0, asi que
@@ -649,6 +653,20 @@ public static class Progreso
         get { Cargar(); PonerAlDiaLosAnuncios(); return datos.anuncios.fallasPremiadas; }
     }
 
+    // El ultimo anuncio automatico: en que partida salio (ver ServicioAnuncios).
+    public static int PartidaDelUltimoAutomatico
+    {
+        get { Cargar(); return datos.partidaDelUltimoAutomatico; }
+    }
+
+    // Lo anota ServicioAnuncios cuando uno se vio: el siguiente espera sus partidas desde aca.
+    public static void RegistrarAutomatico()
+    {
+        Cargar();
+        datos.partidaDelUltimoAutomatico = datos.partidasTerminadas;
+        Guardar();
+    }
+
     public static void RegistrarFallaPremiada()
     {
         Cargar();
@@ -977,6 +995,9 @@ public static class Progreso
         if (d.anuncios.usos == null) d.anuncios.usos = new List<UsoDeLugar>();
         if (d.anuncios.dia < 0) d.anuncios.dia = 0;
         if (d.anuncios.fallasPremiadas < 0) d.anuncios.fallasPremiadas = 0;
+        // Una marca mas adelante que las partidas (un progreso tocado a mano) dejaria sin
+        // automaticos hasta alcanzarla.
+        d.partidaDelUltimoAutomatico = Math.Max(0, Math.Min(d.partidaDelUltimoAutomatico, d.partidasTerminadas));
 
         if (d.estrellasCobradas == null) d.estrellasCobradas = new List<Conteo>();
         d.estrellasCobradas.RemoveAll(c => c == null || string.IsNullOrEmpty(c.id));

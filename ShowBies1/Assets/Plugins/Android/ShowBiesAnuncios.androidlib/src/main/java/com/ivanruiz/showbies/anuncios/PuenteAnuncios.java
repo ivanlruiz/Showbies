@@ -12,6 +12,8 @@ import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.RequestConfiguration;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.ump.ConsentDebugSettings;
@@ -25,8 +27,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-// El puente entre el juego y AdMob (los videos con recompensa) y UMP (el consentimiento de
-// Europa), sin el plugin de Unity: del lado de C# lo usa ProveedorAdMob, por JNI, como la
+// El puente entre el juego y AdMob (los videos con recompensa y el automatico, que es un
+// intersticial) y UMP (el consentimiento de Europa), sin el plugin de Unity: del lado de C# lo usa ProveedorAdMob, por JNI, como la
 // reseña de Play (PedidoDeResena).
 //
 // Todo el estado vive en el hilo principal de Android: lo que llega de Unity se pasa ahi con
@@ -50,6 +52,9 @@ import java.util.Map;
 //   sdk_listo, error (dato: el mensaje)
 public final class PuenteAnuncios {
     private static final String ETIQUETA = "ShowBiesAnuncios";
+    // El lugar del anuncio automatico (LugarAnuncio.Automatico): es un intersticial, sin
+    // premio. Los demas son videos con premio.
+    private static final String AUTOMATICO = "automatico";
 
     // Un anuncio cargado vence a la hora (lo dice Google): se tira un poco antes y se pide otro.
     private static final long VIDA_DE_UN_ANUNCIO_MS = 55L * 60L * 1000L;
@@ -65,6 +70,7 @@ public final class PuenteAnuncios {
 
     private static final Map<String, String> bloques = new HashMap<>();
     private static final Map<String, RewardedAd> cargados = new HashMap<>();
+    private static final Map<String, InterstitialAd> intersticiales = new HashMap<>();
     private static final Map<String, Boolean> cargando = new HashMap<>();
     private static final Map<String, Integer> fallos = new HashMap<>();
     private static final Map<String, Runnable> vencimientos = new HashMap<>();
@@ -281,14 +287,22 @@ public final class PuenteAnuncios {
         }, ETIQUETA).start();
     }
 
+    private static boolean tieneCargado(String lugar) {
+        return cargados.get(lugar) != null || intersticiales.get(lugar) != null;
+    }
+
     private static void cargar(final String lugar) {
         if (!sdkListo || actividad == null || lugar == null) return;
-        if (cargados.get(lugar) != null || Boolean.TRUE.equals(cargando.get(lugar))) return;
+        if (tieneCargado(lugar) || Boolean.TRUE.equals(cargando.get(lugar))) return;
         if (lugar.equals(enPantalla)) return;
         String bloque = bloques.get(lugar);
         if (bloque == null) return;
 
         cargando.put(lugar, true);
+        if (AUTOMATICO.equals(lugar)) {
+            cargarIntersticial(lugar, bloque);
+            return;
+        }
         try {
             RewardedAd.load(actividad, bloque, new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
                 @Override
@@ -297,6 +311,36 @@ public final class PuenteAnuncios {
                         cargando.put(lugar, false);
                         fallos.put(lugar, 0);
                         cargados.put(lugar, anuncio);
+                        programarVencimiento(lugar);
+                        avisar(lugar, "cargado", "");
+                    });
+                }
+
+                @Override
+                public void onAdFailedToLoad(LoadAdError error) {
+                    enPrincipal(() -> {
+                        cargando.put(lugar, false);
+                        avisar(lugar, "no_cargado", error != null ? String.valueOf(error.getCode()) : "");
+                        reintentar(lugar);
+                    });
+                }
+            });
+        } catch (Throwable t) {
+            cargando.put(lugar, false);
+            avisar(lugar, "no_cargado", t.toString());
+            reintentar(lugar);
+        }
+    }
+
+    private static void cargarIntersticial(final String lugar, String bloque) {
+        try {
+            InterstitialAd.load(actividad, bloque, new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
+                @Override
+                public void onAdLoaded(InterstitialAd anuncio) {
+                    enPrincipal(() -> {
+                        cargando.put(lugar, false);
+                        fallos.put(lugar, 0);
+                        intersticiales.put(lugar, anuncio);
                         programarVencimiento(lugar);
                         avisar(lugar, "cargado", "");
                     });
@@ -330,7 +374,9 @@ public final class PuenteAnuncios {
         cancelarVencimiento(lugar);
         Runnable vencer = () -> correr(() -> {
             vencimientos.remove(lugar);
-            if (cargados.remove(lugar) != null) {
+            boolean habia = cargados.remove(lugar) != null;
+            habia |= intersticiales.remove(lugar) != null;
+            if (habia) {
                 avisar(lugar, "vencido", "");
                 cargar(lugar);
             }
@@ -348,6 +394,10 @@ public final class PuenteAnuncios {
         if (act != null) actividad = act;
         if (lugar == null || actividad == null || enPantalla != null) {
             avisar(lugar, "terminado", "no_disponible");
+            return;
+        }
+        if (AUTOMATICO.equals(lugar)) {
+            mostrarIntersticial(lugar);
             return;
         }
         RewardedAd anuncio = cargados.remove(lugar);
@@ -386,6 +436,40 @@ public final class PuenteAnuncios {
                 avisar(lugar, "ganado", "");
             }
         }));
+    }
+
+    // El automatico: el mismo circuito que un video, sin premio. Termina "cerrado" o "falla".
+    private static void mostrarIntersticial(final String lugar) {
+        InterstitialAd anuncio = intersticiales.remove(lugar);
+        if (anuncio == null) {
+            avisar(lugar, "terminado", "no_disponible");
+            cargar(lugar);
+            return;
+        }
+        cancelarVencimiento(lugar);
+        enPantalla = lugar;
+        ganado = false;
+
+        anuncio.setFullScreenContentCallback(new FullScreenContentCallback() {
+            @Override
+            public void onAdShowedFullScreenContent() {
+                enPrincipal(() -> avisar(lugar, "abierto", ""));
+            }
+
+            @Override
+            public void onAdDismissedFullScreenContent() {
+                enPrincipal(() -> terminar(lugar, "cerrado"));
+            }
+
+            @Override
+            public void onAdFailedToShowFullScreenContent(AdError error) {
+                enPrincipal(() -> {
+                    avisar(lugar, "error", "mostrar: " + (error != null ? error.getMessage() : ""));
+                    terminar(lugar, "falla");
+                });
+            }
+        });
+        anuncio.show(actividad);
     }
 
     // Un solo aviso por pedido: el segundo (un cierre que llega despues de una falla, o

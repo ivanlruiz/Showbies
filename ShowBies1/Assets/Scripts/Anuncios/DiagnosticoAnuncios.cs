@@ -55,6 +55,12 @@ public class DiagnosticoAnuncios : MonoBehaviour
               .Append(" | puede pedir: ").Append(admob.PuedePedir).Append('\n');
             foreach (string lugar in ConfigAnuncios.LugaresConVideo)
                 sb.Append(lugar).Append(": ").Append(admob.EstadoDe(lugar)).Append('\n');
+            ConfigAnuncios cfg = ServicioAnuncios.ConfigEnUso;
+            if (cfg != null && cfg.automaticos)
+                sb.Append(LugarAnuncio.Automatico).Append(": ").Append(admob.EstadoDe(LugarAnuncio.Automatico))
+                  .Append(" | partidas desde el ultimo ").Append(Progreso.PartidasTerminadas - Progreso.PartidaDelUltimoAutomatico)
+                  .Append('/').Append(cfg.partidasEntreAutomaticos)
+                  .Append(" (el primero desde la ").Append(cfg.partidasAntesDelPrimerAutomatico).Append(")\n");
             sb.Append("avisos de Java: ").Append(admob.AvisosRecibidos)
               .Append(" | ultimo: ").Append(admob.UltimoAviso).Append('\n');
             if (!string.IsNullOrEmpty(admob.UltimoError)) sb.Append("error: ").Append(admob.UltimoError).Append('\n');

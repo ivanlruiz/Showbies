@@ -24,6 +24,7 @@ public static class ServicioAnuncios
     private static Action premioPendiente;
     private static Action sinPremioPendiente;
     private static string lugarPendiente;
+    private static bool pendienteEsAutomatico;   // el pedido en curso es un automatico, no un video con premio
     private static float ultimoAnuncioEn = float.NegativeInfinity;   // en tiempo real
     private static bool audioPausadoAntes;
 
@@ -45,6 +46,7 @@ public static class ServicioAnuncios
         premioPendiente = null;
         sinPremioPendiente = null;
         lugarPendiente = null;
+        pendienteEsAutomatico = false;
         ultimoAnuncioEn = float.NegativeInfinity;
         audioPausadoAntes = false;
         MostrandoAnuncio = false;
@@ -102,7 +104,7 @@ public static class ServicioAnuncios
             case ConfigAnuncios.Proveedor.Real:
                 if (!enAndroid || config == null) return new ProveedorNulo();
                 bool deprueba = ConfigAnuncios.EsPaqueteDePrueba(paquete);
-                string[] lugares = ConfigAnuncios.LugaresConVideo;
+                string[] lugares = config.LugaresDeAdMob();
                 var bloques = new string[lugares.Length];
                 for (int i = 0; i < lugares.Length; i++) bloques[i] = config.BloquePara(lugares[i], deprueba);
                 return new ProveedorAdMob(new PuenteAdMobAndroid(), lugares, bloques, config.clasificacionMaxima,
@@ -187,6 +189,7 @@ public static class ServicioAnuncios
         premioPendiente = null;
         sinPremioPendiente = null;
         lugarPendiente = null;
+        pendienteEsAutomatico = false;
         ultimoAnuncioEn = float.NegativeInfinity;
         MostrandoAnuncio = false;
         lock (candado) avisos.Clear();
@@ -245,12 +248,50 @@ public static class ServicioAnuncios
     public static bool Mostrar(string lugar, Action alRecompensar, Action alNoRecompensar)
     {
         if (!PuedeOfrecer(lugar)) return false;
+        Lanzar(lugar, alRecompensar, alNoRecompensar, false);
+        return true;
+    }
 
+    // --- los automaticos (intersticiales) ----------------------------------------------
+    // Desde el 6/10, decision de Ivan. No son opt-in ni premian: salen solo al salir de la
+    // derrota (MenuPerdiste), y la escena siguiente se carga recien al cerrarlos. Nunca en
+    // las primeras partidas, como mucho uno cada tantas partidas y nunca si en esa partida
+    // se miro un video con premio: el que ya miro uno no tiene que comerse otro. No gastan
+    // los topes de los videos, y uno que falla no se "premia": se sigue de largo.
+    public static bool PuedeMostrarAutomaticoConDatos(ConfigAnuncios config, bool mostrandoAnuncio, bool proveedorListo,
+                                                      int partidasTerminadas, int partidaDelUltimo, int videosDeLaPartida)
+    {
+        if (config == null || !config.automaticos || mostrandoAnuncio || !proveedorListo) return false;
+        if (partidasTerminadas < config.partidasAntesDelPrimerAutomatico) return false;
+        if (videosDeLaPartida > 0) return false;
+        return partidasTerminadas - partidaDelUltimo >= Mathf.Max(1, config.partidasEntreAutomaticos);
+    }
+
+    public static bool PuedeMostrarAutomatico()
+    {
+        return PuedeMostrarAutomaticoConDatos(ConfigEnUso, MostrandoAnuncio, Proveedor.Listo(LugarAnuncio.Automatico),
+                                              Progreso.PartidasTerminadas, Progreso.PartidaDelUltimoAutomatico,
+                                              Progreso.VideosDeLaPartida);
+    }
+
+    // Muestra el automatico si toca. Devuelve si lo lanzo: entonces 'alTerminar' llega al
+    // cerrarse (o si fallo), y quien lo pidio tiene que esperarlo. Si devuelve falso, sigue
+    // en el acto.
+    public static bool MostrarAutomatico(Action alTerminar)
+    {
+        if (!PuedeMostrarAutomatico()) return false;
+        Lanzar(LugarAnuncio.Automatico, alTerminar, alTerminar, true);
+        return true;
+    }
+
+    private static void Lanzar(string lugar, Action alRecompensar, Action alNoRecompensar, bool automatico)
+    {
         solicitud++;
         MostrandoAnuncio = true;
         lugarPendiente = lugar;
         premioPendiente = alRecompensar;
         sinPremioPendiente = alNoRecompensar;
+        pendienteEsAutomatico = automatico;
 
         // Antes de irse a pantalla completa: si Android mata la app mientras se ve el
         // video, lo jugado hasta acá tiene que estar en disco.
@@ -278,7 +319,6 @@ public static class ServicioAnuncios
             Debug.LogError("ServicioAnuncios: el proveedor fallo al pedir el video de " + lugar + "; se sigue sin video. " + e);
             Encolar(token, ResultadoAnuncio.NoDisponible);
         }
-        return true;
     }
 
     // La llama el proveedor, quiza desde otro hilo: solo encola.
@@ -319,12 +359,24 @@ public static class ServicioAnuncios
         string lugar = lugarPendiente;
         Action premio = premioPendiente;
         Action sinPremio = sinPremioPendiente;
+        bool automatico = pendienteEsAutomatico;
         premioPendiente = null;
         sinPremioPendiente = null;
         lugarPendiente = null;
+        pendienteEsAutomatico = false;
 
         AudioListener.pause = audioPausadoAntes;
         MostrandoAnuncio = false;
+
+        // El automatico no premia ni gasta los topes de los videos: si se vio, cuenta para
+        // espaciar el siguiente, y en cualquier caso se sigue a donde se iba.
+        if (automatico)
+        {
+            if (resultado == ResultadoAnuncio.Cerrado || resultado == ResultadoAnuncio.Recompensado)
+                Progreso.RegistrarAutomatico();
+            if (premio != null) premio();
+            return;
+        }
 
         bool premiar = resultado == ResultadoAnuncio.Recompensado;
 

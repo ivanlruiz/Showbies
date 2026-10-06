@@ -1039,17 +1039,19 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 
 ## Anuncios
 
-Los videos con recompensa son la única monetización del juego y entran por **tres lugares**: **revivir** al morir,
-el **x2 de las monedas en la pantalla de derrota**, y en el menú el **x2 de la recompensa diaria** (ver
-Recompensa diaria). **Desde el 6/10 no hay topes de videos** (pedido de Ivan: "quiero que vean anuncios"): en una
-misma partida se puede revivir con un video y después duplicar con otro, sin tope por día ni espera entre videos. Lo
-que queda son las reglas del juego (revivir una vez por partida, duplicar una vez) y que AdMob tenga video. Todo lo
-demás (topes, proveedor, hilos) vive en `Assets/Scripts/Anuncios/` y el juego no habla nunca con una red de anuncios.
+La monetización son anuncios: los **videos con recompensa**, que entran por **tres lugares** (**revivir** al morir,
+el **x2 de las monedas en la pantalla de derrota**, y en el menú el **x2 de la recompensa diaria**, ver Recompensa
+diaria), y desde el 6/10 **los automáticos** al salir de la derrota (ver Los automáticos, abajo). **Desde el 6/10 no
+hay topes de videos** (pedido de Ivan: "quiero que vean anuncios"): en una misma partida se puede revivir con un video
+y después duplicar con otro, sin tope por día ni espera entre videos. Lo que queda son las reglas del juego (revivir
+una vez por partida, duplicar una vez) y que AdMob tenga video. Todo lo demás (topes, proveedor, hilos) vive en
+`Assets/Scripts/Anuncios/` y el juego no habla nunca con una red de anuncios.
 
 **Las reglas que no se negocian**, porque son la diferencia entre un premio y una trampa:
 
-- **Siempre opt-in y en una pausa natural.** Nunca durante la partida: la derrota es el único momento, y el
-  jugador ya terminó de jugar.
+- **Los videos con premio son siempre opt-in y en una pausa natural.** Nunca durante la partida: la derrota es el
+  único momento, y el jugador ya terminó de jugar. Los automáticos, que no son opt-in, tampoco salen en la partida:
+  solo al salir de la derrota.
 - **El premio se dice exacto antes de mirar** ("VER VIDEO: +137 MONEDAS"), no como sorpresa.
 - **Cerrar el video antes no castiga**: no hay premio, pero tampoco se gasta el tope del día ni la separación de
   60 s entre videos, así que la oferta sigue en pie. El tope por partida no se aplica al x2 de la diaria, que se cobra
@@ -1065,7 +1067,7 @@ demás (topes, proveedor, hilos) vive en `Assets/Scripts/Anuncios/` y el juego n
 
 | pieza | qué hace |
 |---|---|
-| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir`, `duplicar_derrota` y `regalo_x2` (la recompensa diaria). |
+| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir`, `duplicar_derrota` y `regalo_x2` (la recompensa diaria), que son videos con premio, y `automatico`, el intersticial de la derrota (el puente de Java lo reconoce por ese nombre). |
 | `IProveedorAnuncios` | quién muestra el video: `Listo(lugar)` y `Mostrar(lugar, aviso)`. Cambiar de red es escribir otra clase. |
 | `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows (fuera del editor, en PC se fuerza aunque el asset diga otra cosa), el del editor con el asset en `Real` y el de "no hay red". |
 | `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet; se usa poniendo el asset en `Falso`. |
@@ -1108,6 +1110,23 @@ tras 20 minutos en segundo plano (antes era `Time.realtimeSinceStartup`, que en 
 
 **Cerrar el video del x2 de la derrota antes de tiempo no esconde la oferta**: `OfertaDeDuplicar.NoSeCobro` la vuelve a
 mostrar si todavía se puede ofrecer (hasta la auditoría del 24/9 desaparecía para esa partida).
+
+### Los automáticos
+
+Desde el 6/10 (decisión de Ivan, después de que anduvieran los videos): un **intersticial** de AdMob, sin premio y sin
+opt-in, **al salir de la pantalla de derrota**. Toda salida pasa por `MenuPerdiste.SalirA` (OTRA VEZ, MENÚ, MEJORAS y el
+atrás): si toca, sale el anuncio y la escena siguiente se carga recién al cerrarlo (`ServicioAnuncios.MostrarAutomatico`,
+que comparte el mecanismo de los videos: el pedido numerado, la cola y los vigías). Las reglas
+(`PuedeMostrarAutomaticoConDatos`, números en `ConfigAnuncios`):
+
+- **Nunca en las primeras partidas**: desde la 3.ª terminada (`partidasAntesDelPrimerAutomatico`).
+- **Como mucho uno cada 3 partidas** (`partidasEntreAutomaticos`), contando desde la partida en que salió el último
+  (`Progreso.PartidaDelUltimoAutomatico`, en el JSON sin cambiar la versión).
+- **Nunca si en esa partida se miró un video con premio**: el que ya miró uno no se come otro.
+- Solo cuenta si se vio (cerrado). Si no había anuncio o falló, se sigue de largo y el siguiente espera menos. **No
+  gasta los topes de los videos ni se "premia" si falla.**
+- `automaticos` en el asset los apaga. El bloque de verdad (`bloqueAutomatico`) hay que crearlo en AdMob, porque es
+  intersticial y no bonificado: **sin él, el AAB no sale**. La APK de prueba usa el intersticial de prueba de Google.
 
 ### Revivir
 

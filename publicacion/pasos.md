@@ -186,14 +186,14 @@ Decisiones de Ivan del 6/10: **el cartel de consentimiento sale desde la segunda
 **los anuncios llegan hasta la clasificación T** (PG era la recomendada). La APK de prueba usa siempre el bloque de
 prueba de Google y muestra en el menú una caja con el estado de los anuncios. Puede hacer como si el teléfono
 estuviera en Europa, para ver el cartel y el botón PRIVACIDAD (`simularEuropaEnLaPrueba`), pero eso se prende recién
-con el mensaje europeo creado en AdMob (paso 6): sin él, los anuncios de la prueba se quedan esperando.
+con el mensaje europeo creado en AdMob (paso 7): sin él, los anuncios de la prueba se quedan esperando.
 
 La rama `admob` **no va a `main` hasta la 1.4.0**: el SDK suma solo el permiso `AD_ID`, y un arreglo urgente de la
 1.3.x armado con eso no pasaría la declaración de "sin anuncios" de Play.
 
 **Para probarla:** compilar y correr la prueba de lógica, armar la APK y jugarla en el teléfono: los videos tienen que
 decir "Test Ad", y el cartel de consentimiento salir en el menú desde la segunda partida, con PRIVACIDAD en
-OPCIONES. El cartel y PRIVACIDAD aparecen recién cuando esté creado el mensaje europeo en AdMob (paso 6). La primera
+OPCIONES. El cartel y PRIVACIDAD aparecen recién cuando esté creado el mensaje europeo en AdMob (paso 7). La primera
 APK (6/10) trajo el `SystemForegroundService` de WorkManager y el permiso `FOREGROUND_SERVICE` (los mete el SDK, issue
 4092 del plugin): Play pide una declaración aparte por los servicios en primer plano, y los anuncios no los usan. Se
 sacan con `tools:node="remove"` en el manifiesto de la librería, y en la APK siguiente ya no estaban.
@@ -212,19 +212,22 @@ monedas (ver CLAUDE.md, Anuncios).
 4. En Play Console, el **sitio web** de los datos de contacto de la ficha en `https://ivanlruiz.github.io/...` (la URL
    de la política sirve): AdMob lee ese campo, no el de la política. Después, en AdMob, "Verificar la app"; tarda
    hasta 24 h, y la revisión de la app 2 o 3 días, con anuncios limitados mientras tanto.
-5. **Antes de subir el AAB**: la política nueva publicada, con fecha → rehacer **Seguridad de los datos** (AdMob
+5. En AdMob, **Bloques de anuncios → Añadir → Intersticial** para la app ShowBies, y su id en
+   `ConfigAnuncios` (`bloqueAutomatico`). Es el de los automáticos.
+6. **Antes de subir el AAB**: la política nueva publicada, con fecha → rehacer **Seguridad de los datos** (AdMob
    recopila y comparte identificadores del dispositivo, ubicación aproximada, interacciones y diagnósticos, para
    publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí** → sacar de la ficha
    (`ficha.md`) el "no recopila tus datos".
-6. En AdMob, **bloquear las categorías sensibles** (juegos de azar, citas, alcohol, sexualidad, dinero fácil) y
+7. En AdMob, **bloquear las categorías sensibles** (juegos de azar, citas, alcohol, sexualidad, dinero fácil) y
    crear el **mensaje de consentimiento europeo** en Privacidad y mensajes (sin él, UMP no muestra nada), más el de
    los estados de EE. UU.
-7. La 1.4.0: `admob` a `main`, AAB y subida.
+8. La 1.4.0: `admob` a `main`, AAB y subida.
 
-**Anuncios automáticos (intersticiales): después, cuando anden los videos con premio** (lo decidió Ivan el 6/10).
-Van con el mismo puente y un bloque intersticial nuevo en AdMob, y con estas reglas: solo al salir de la derrota
-(al tocar OTRA VEZ o MENÚ), nunca en las primeras partidas, como mucho uno cada 3 partidas y nunca si en esa partida
-se miró un video con premio. Google castiga mostrarlos al abrir la app, al salir o en medio de la partida.
+**Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
+Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
+partida terminada, como mucho uno cada 3 partidas y nunca si en esa partida se miró un video con premio. Google
+castiga mostrarlos al abrir la app, al salir o en medio de la partida. La APK de prueba usa el intersticial de prueba
+de Google; **el de verdad hay que crearlo en AdMob** (paso 5 de la lista de arriba), y sin él el AAB no sale.
 
 **Antes del 30/6/2027, pasar al SDK Next-Gen** (`com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk`): ese día
 Google deja de dar soporte al clásico, y el 30/6/2028 lo apaga. Con el puente es un archivo Java y una línea de Gradle.

@@ -60,12 +60,23 @@ public class ConfigAnuncios : ScriptableObject
     [Tooltip("Minutos de sesión a partir de los cuales la derrota sugiere descansar. 0 lo apaga.")]
     public float minutosParaAvisoDeDescanso = 60f;
 
+    [Header("Automáticos")]
+    [Tooltip("Los anuncios automáticos (intersticiales) al salir de la derrota. Desde el 6/10, decisión de Ivan.")]
+    public bool automaticos = true;
+    [Tooltip("Partidas terminadas antes del primero: el que recién empieza no los ve.")]
+    public int partidasAntesDelPrimerAutomatico = 3;
+    [Tooltip("Partidas entre uno y otro: 3 = como mucho uno cada 3 partidas.")]
+    public int partidasEntreAutomaticos = 3;
+
     [Header("AdMob")]
     [Tooltip("El bloque bonificado de AdMob de cada lugar (ver publicacion/pasos.md). La APK de prueba usa "
         + "siempre el de prueba de Google: mirar anuncios reales propios es tráfico no válido.")]
     public string bloqueRevivir = "ca-app-pub-5295383586829735/1512416812";
     public string bloqueDuplicarDerrota = "ca-app-pub-5295383586829735/8640931940";
     public string bloqueRegaloX2 = "ca-app-pub-5295383586829735/6299120897";
+    [Tooltip("El bloque intersticial de los automáticos. Hay que crearlo en AdMob (Bloques de anuncios → Intersticial): "
+        + "sin él, el AAB no sale.")]
+    public string bloqueAutomatico = "";
 
     [Tooltip("La clasificación máxima de los anuncios: G, PG, T o MA. Ivan eligió T el 6/10/2026 (PG es para "
         + "todo público; T suma imágenes de miedo, deportes de lucha, redes sociales y salud). Apuestas, "
@@ -81,8 +92,10 @@ public class ConfigAnuncios : ScriptableObject
     // El id de la app en AdMob. Va en el manifiesto de Plugins/Android/ShowBiesAnuncios.androidlib;
     // aca esta para que la prueba de logica compare los dos.
     public const string IdAppAdMob = "ca-app-pub-5295383586829735~6982656335";
-    // El bloque bonificado de prueba de Google para Android, y la cuenta de prueba de Google.
+    // Los bloques de prueba de Google para Android (el bonificado y el intersticial), y la
+    // cuenta de prueba de Google.
     public const string BloqueDePruebaDeGoogle = "ca-app-pub-3940256099942544/5224354917";
+    public const string BloqueAutomaticoDePruebaDeGoogle = "ca-app-pub-3940256099942544/1033173712";
     private const string CuentaDePruebaDeGoogle = "ca-app-pub-3940256099942544";
     // El sufijo del paquete de la APK de prueba (ver ConstructorAndroid).
     public const string SufijoPaqueteDePrueba = ".prueba";
@@ -105,7 +118,7 @@ public class ConfigAnuncios : ScriptableObject
         return !string.IsNullOrEmpty(bloque) && bloque.StartsWith(CuentaDePruebaDeGoogle);
     }
 
-    // El bloque de verdad de un lugar, o null si el lugar no tiene video.
+    // El bloque de verdad de un lugar, o null si el lugar no tiene anuncio.
     public string BloqueReal(string lugar)
     {
         switch (lugar)
@@ -113,14 +126,28 @@ public class ConfigAnuncios : ScriptableObject
             case LugarAnuncio.Revivir: return bloqueRevivir;
             case LugarAnuncio.DuplicarDerrota: return bloqueDuplicarDerrota;
             case LugarAnuncio.DuplicarRegalo: return bloqueRegaloX2;
+            case LugarAnuncio.Automatico: return bloqueAutomatico;
             default: return null;
         }
     }
 
-    // El que se le pide a AdMob: el de prueba de Google en la APK de prueba, el de verdad si no.
+    // El que se le pide a AdMob: el de prueba de Google en la APK de prueba (el intersticial
+    // para los automaticos), el de verdad si no.
     public string BloquePara(string lugar, bool deprueba)
     {
-        return deprueba ? BloqueDePruebaDeGoogle : BloqueReal(lugar);
+        if (!deprueba) return BloqueReal(lugar);
+        return lugar == LugarAnuncio.Automatico ? BloqueAutomaticoDePruebaDeGoogle : BloqueDePruebaDeGoogle;
+    }
+
+    // Los lugares que se le pasan al puente de AdMob: los videos con premio y, si estan
+    // prendidos, el automatico.
+    public string[] LugaresDeAdMob()
+    {
+        if (!automaticos) return (string[])LugaresConVideo.Clone();
+        var lugares = new string[LugaresConVideo.Length + 1];
+        LugaresConVideo.CopyTo(lugares, 0);
+        lugares[LugaresConVideo.Length] = LugarAnuncio.Automatico;
+        return lugares;
     }
 
     private static ConfigAnuncios instancia;
@@ -166,5 +193,7 @@ public class ConfigAnuncios : ScriptableObject
         segundosEntreAnuncios = Mathf.Max(0f, segundosEntreAnuncios);
         fallasPremiadasPorDia = Mathf.Max(0, fallasPremiadasPorDia);
         minutosParaAvisoDeDescanso = Mathf.Max(0f, minutosParaAvisoDeDescanso);
+        partidasAntesDelPrimerAutomatico = Mathf.Max(0, partidasAntesDelPrimerAutomatico);
+        partidasEntreAutomaticos = Mathf.Max(1, partidasEntreAutomaticos);
     }
 }

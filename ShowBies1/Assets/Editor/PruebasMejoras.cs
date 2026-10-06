@@ -3568,6 +3568,71 @@ public static class PruebasMejoras
             inf.Verdadero("servicio admob: ya no esta mostrando", !ServicioAnuncios.MostrandoAnuncio);
             inf.Igual("servicio admob: gasta un uso del dia", 1, Progreso.UsosDeHoy(otro));
 
+            // --- los automaticos: la regla ---------------------------------------------------
+            config.automaticos = true;
+            config.partidasAntesDelPrimerAutomatico = 3;
+            config.partidasEntreAutomaticos = 3;
+            inf.Verdadero("automatico: no en las primeras partidas",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 2, 0, 0));
+            inf.Verdadero("automatico: desde la tercera, si",
+                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 3, 0, 0));
+            inf.Verdadero("automatico: no si en esa partida se miro un video con premio",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 3, 0, 1));
+            inf.Verdadero("automatico: despues de uno, no hasta las 3 partidas siguientes",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 5, 3, 0));
+            inf.Verdadero("automatico: a las 3 partidas, otro",
+                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 6, 3, 0));
+            inf.Verdadero("automatico: no sin anuncio cargado",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, false, 9, 0, 0));
+            inf.Verdadero("automatico: no con otro anuncio en pantalla",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, true, true, 9, 0, 0));
+            config.automaticos = false;
+            inf.Verdadero("automatico: apagados, nunca",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 9, 0, 0));
+            inf.Igual("automatico: apagados, el puente no lo carga", ConfigAnuncios.LugaresConVideo.Length, config.LugaresDeAdMob().Length);
+            config.automaticos = true;
+            inf.Verdadero("automatico: prendidos, el puente lo carga",
+                          Array.IndexOf(config.LugaresDeAdMob(), LugarAnuncio.Automatico) >= 0);
+
+            // --- los automaticos: el circuito, al salir de la derrota --------------------------
+            EmpezarConMonedas(0);
+            ServicioAnuncios.UsarParaPruebas(admob2, config);
+            for (int i = 0; i < 3; i++) Progreso.TerminarPartida(60f);
+            Progreso.EmpezarPartida();
+            int siguio = 0;
+            inf.Verdadero("automatico: sin anuncio cargado no se lanza y se sigue en el acto",
+                          !ServicioAnuncios.MostrarAutomatico(() => siguio++));
+            puente2.avisar(LugarAnuncio.Automatico, "cargado", "");
+            ServicioAnuncios.AtenderAvisos();
+            inf.Verdadero("automatico: con el anuncio cargado se lanza", ServicioAnuncios.MostrarAutomatico(() => siguio++));
+            inf.Igual("automatico: le pide al puente el automatico", LugarAnuncio.Automatico,
+                      puente2.mostrados.Count > 0 ? puente2.mostrados[puente2.mostrados.Count - 1] : "");
+            inf.Igual("automatico: mientras se ve, no se sigue", 0, siguio);
+            inf.Verdadero("automatico: no se lanza otro encima", !ServicioAnuncios.MostrarAutomatico(() => siguio++));
+            ServicioAnuncios.CambioElFoco(false);
+            puente2.avisar(LugarAnuncio.Automatico, "abierto", "");
+            puente2.avisar(LugarAnuncio.Automatico, "terminado", "cerrado");
+            ServicioAnuncios.CambioElFoco(true);
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("automatico: al cerrarse se sigue, una vez", 1, siguio);
+            inf.Igual("automatico: cuenta para espaciar el siguiente", Progreso.PartidasTerminadas, Progreso.PartidaDelUltimoAutomatico);
+            inf.Igual("automatico: no gasta los topes de los videos", 0, Progreso.UsosDeHoyEnTotal());
+            inf.Verdadero("automatico: queda guardado en el progreso",
+                          (LeerSiExiste(Path.Combine(CarpetaProgreso, "progreso.json")) ?? "")
+                          .Contains("\"partidaDelUltimoAutomatico\": " + Progreso.PartidasTerminadas));
+            puente2.avisar(LugarAnuncio.Automatico, "cargado", "");
+            ServicioAnuncios.AtenderAvisos();
+            inf.Verdadero("automatico: el siguiente espera sus partidas", !ServicioAnuncios.PuedeMostrarAutomatico());
+            for (int i = 0; i < 3; i++) Progreso.TerminarPartida(60f);
+            inf.Verdadero("automatico: a las 3 partidas vuelve a tocar", ServicioAnuncios.PuedeMostrarAutomatico());
+            ServicioAnuncios.MostrarAutomatico(() => siguio++);
+            int marcaAntes = Progreso.PartidaDelUltimoAutomatico;
+            puente2.avisar(LugarAnuncio.Automatico, "terminado", "falla");
+            ServicioAnuncios.AtenderAvisos();
+            inf.Igual("automatico: si falla, igual se sigue", 2, siguio);
+            inf.Igual("automatico: y no cuenta", marcaAntes, Progreso.PartidaDelUltimoAutomatico);
+            inf.Igual("automatico: ni se premia como un video", 0, Progreso.FallasPremiadasHoy);
+
             // --- que proveedor sale -----------------------------------------------------------
             inf.Verdadero("crear: Real fuera de Android no hay videos",
                           ServicioAnuncios.CrearProveedor(ConfigAnuncios.Proveedor.Real, config, false, ConstructorAndroid.PaqueteDePlay) is ProveedorNulo);
@@ -3591,12 +3656,25 @@ public static class PruebasMejoras
                 if (real != null) vistos.Add(real);
             }
             inf.Igual("bloques: uno distinto por lugar", ConfigAnuncios.LugaresConVideo.Length, vistos.Count);
+            inf.Igual("bloques: la APK de prueba pide el intersticial de Google para el automatico",
+                      ConfigAnuncios.BloqueAutomaticoDePruebaDeGoogle, config.BloquePara(LugarAnuncio.Automatico, true));
+            inf.Verdadero("bloques: el intersticial de Google es de prueba",
+                          ConfigAnuncios.EsBloqueDePrueba(ConfigAnuncios.BloqueAutomaticoDePruebaDeGoogle));
             inf.Verdadero("bloques: el de Google es de prueba", ConfigAnuncios.EsBloqueDePrueba(ConfigAnuncios.BloqueDePruebaDeGoogle));
             inf.Verdadero("paquete: el de la APK es de prueba", ConfigAnuncios.EsPaqueteDePrueba(ConstructorAndroid.PaqueteDePlay + ConfigAnuncios.SufijoPaqueteDePrueba));
             inf.Verdadero("paquete: el de Play no", !ConfigAnuncios.EsPaqueteDePrueba(ConstructorAndroid.PaqueteDePlay));
 
             // --- lo que no deja salir al AAB ------------------------------------------------
             config.proveedor = ConfigAnuncios.Proveedor.Real;
+            config.automaticos = true;
+            config.bloqueAutomatico = "";
+            inf.Verdadero("aab: con los automaticos prendidos y sin su bloque no sale", ConstructorAndroid.ProblemaDeAnuncios(config) != null);
+            config.bloqueAutomatico = ConfigAnuncios.BloqueAutomaticoDePruebaDeGoogle;
+            inf.Verdadero("aab: con el bloque automatico de prueba no sale", ConstructorAndroid.ProblemaDeAnuncios(config) != null);
+            config.automaticos = false;
+            inf.Verdadero("aab: con los automaticos apagados, su bloque no importa", ConstructorAndroid.ProblemaDeAnuncios(config) == null);
+            config.automaticos = true;
+            config.bloqueAutomatico = "ca-app-pub-5295383586829735/1234567890";
             inf.Verdadero("aab: con los bloques de verdad sale", ConstructorAndroid.ProblemaDeAnuncios(config) == null);
             string regalo = config.bloqueRegaloX2;
             config.bloqueRegaloX2 = ConfigAnuncios.BloqueDePruebaDeGoogle;
@@ -3610,7 +3688,10 @@ public static class PruebasMejoras
             config.proveedor = ConfigAnuncios.Proveedor.Nulo;
             config.bloqueRevivir = "";
             inf.Verdadero("aab: sin AdMob los bloques no importan", ConstructorAndroid.ProblemaDeAnuncios(config) == null);
-            inf.Verdadero("aab: el asset de verdad deja salir", ConstructorAndroid.ProblemaDeAnuncios(ConfigAnuncios.Instancia) == null);
+            // Hasta que Ivan cree el bloque intersticial en AdMob, al asset le falta solo ese.
+            string problemaDelAsset = ConstructorAndroid.ProblemaDeAnuncios(ConfigAnuncios.Instancia);
+            inf.Verdadero("aab: al asset de verdad le falta como mucho el bloque de los automaticos",
+                          problemaDelAsset == null || problemaDelAsset.Contains("automaticos"));
             inf.Igual("asset: la clasificacion que eligio Ivan", "T",
                       ConfigAnuncios.Instancia != null ? ConfigAnuncios.Instancia.clasificacionMaxima : "sin asset");
         }
@@ -3649,6 +3730,8 @@ public static class PruebasMejoras
                                           "privacidad", "consentimiento_cerrado", "recompensado", "cerrado", "falla", "no_disponible",
                                           "requerido", "requerida" })
             inf.Verdadero("android: el puente avisa \"" + evento + "\"", java != null && java.Contains("\"" + evento + "\""));
+        inf.Verdadero("android: el puente reconoce el automatico por el mismo nombre que C#",
+                      java != null && java.Contains("AUTOMATICO = \"" + LugarAnuncio.Automatico + "\"") && java.Contains("InterstitialAd.load("));
         inf.Verdadero("android: el oyente tiene la firma que implementa C#",
                       oyente != null && oyente.Contains("void alEvento(String lugar, String evento, String dato)")
                       && PuenteAdMobAndroid.InterfazOyente == "com.ivanruiz.showbies.anuncios.OyenteAnuncios");
