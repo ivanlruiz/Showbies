@@ -190,7 +190,8 @@ Decisiones de Ivan del 6/10: **el cartel de consentimiento sale desde la segunda
 **los anuncios llegan hasta la clasificación T** (PG era la recomendada). La APK de prueba usa siempre el bloque de
 prueba de Google y muestra en el menú una caja con el estado de los anuncios. Puede hacer como si el teléfono
 estuviera en Europa, para ver el cartel y el botón PRIVACIDAD (`simularEuropaEnLaPrueba`), pero eso se prende recién
-con el mensaje europeo creado en AdMob (paso 7): sin él, los anuncios de la prueba se quedan esperando.
+con el mensaje europeo creado en AdMob (paso 7): sin él, los anuncios de la prueba se quedan esperando. Desde el
+6/10 el mensaje está publicado y la opción, prendida en el asset.
 
 La rama `admob` **no va a `main` hasta la 1.4.0**: el SDK suma solo el permiso `AD_ID`, y un arreglo urgente de la
 1.3.x armado con eso no pasaría la declaración de "sin anuncios" de Play.

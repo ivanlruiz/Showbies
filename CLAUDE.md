@@ -1215,8 +1215,8 @@ librería de Google y JNI.
   y en AdMob se bloquean aparte apuestas, citas, alcohol y lo de adultos.
 - **La APK de prueba usa siempre el bloque de prueba de Google** (`BloqueDePruebaDeGoogle`, el paquete `.prueba` lo
   decide en runtime): mirar anuncios reales propios es tráfico no válido. Puede hacer que UMP crea que el teléfono
-  está en Europa (`simularEuropaEnLaPrueba`), pero va apagado hasta que esté creado el mensaje europeo en AdMob: sin
-  él, los anuncios de la prueba se quedan esperando un consentimiento que no llega. Y muestra en el menú una caja con
+  está en Europa (`simularEuropaEnLaPrueba`), prendido en el asset desde que el mensaje europeo está publicado en
+  AdMob (6/10): sin el mensaje, los anuncios de la prueba se quedarían esperando un consentimiento que no llega. Y muestra en el menú una caja con
   el estado de los anuncios (`DiagnosticoAnuncios`: si arrancó el SDK, el consentimiento, cada video con su error,
   los avisos que llegaron de Java y los topes). Fuera de Android, con el asset en `Real`, no hay videos (`Nulo`).
 - **Las ofertas vuelven a mirar si hay video mientras están abiertas**: con la red de verdad, el video puede cargar
