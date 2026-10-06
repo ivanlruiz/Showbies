@@ -217,7 +217,9 @@ monedas (ver CLAUDE.md, Anuncios).
 3. [x] **app-ads.txt sin dominio pago**: el repo público `ivanlruiz/ivanlruiz.github.io` (6/10, carpeta local
    `A:\GitHub\ivanlruiz.github.io`) con GitHub Pages, el `app-ads.txt` en la raíz con la línea
    `google.com, pub-5295383586829735, DIRECT, f08c47fec0942fa0` y una portada (`index.html`). El primer deploy de
-   Pages quedó trabado por un incidente de GitHub; cuando `/app-ads.txt` dé 200, en AdMob "Buscar actualizaciones".
+   Pages quedó trabado por un incidente de GitHub (el `deploy` esperando el entorno `github-pages`, sin revisores):
+   se destrabó con un commit vacío, y desde el 6/10 `/app-ads.txt` da 200. Falta, en AdMob, "Buscar actualizaciones"
+   en el app-ads.txt de la app.
 4. [x] (6/10: `https://ivanlruiz.github.io/`, publicado) En Play Console, el **sitio web** de los datos de contacto de la ficha en `https://ivanlruiz.github.io/...` (la URL
    de la política sirve): AdMob lee ese campo, no el de la política. Después, en AdMob, "Verificar la app"; tarda
    hasta 24 h, y la revisión de la app 2 o 3 días, con anuncios limitados mientras tanto.
