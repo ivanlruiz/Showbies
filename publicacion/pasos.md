@@ -210,7 +210,7 @@ Ivan también sacó los topes de videos por día, por partida y la espera, y baj
 monedas (ver CLAUDE.md, Anuncios).
 
 **Para que salgan anuncios de verdad**, en este orden (todo esto es de afuera: se hace con Ivan, de a un paso):
-1. La 1.3.0 publicada en producción.
+1. [x] La 1.3.0 publicada en producción: Google la aprobó el 6/10 (activa en 178 países; ese día, 9 descargas).
 2. En AdMob, **Configuración de la app → Añadir tienda** (`com.ivanruiz.showbies`).
 3. **app-ads.txt sin dominio pago**: un repo público `ivanlruiz/ivanlruiz.github.io` con GitHub Pages y `app-ads.txt`
    en la raíz, con la línea `google.com, pub-5295383586829735, DIRECT, f08c47fec0942fa0`.
@@ -235,6 +235,11 @@ Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, M
 partida terminada, como mucho uno cada 3 partidas y nunca si en esa partida se miró un video con premio. Google
 castiga mostrarlos al abrir la app, al salir o en medio de la partida. La APK de prueba usa el intersticial de prueba
 de Google, y el de verdad (`automatico`, en la tabla de arriba) se creó el 6/10.
+
+**Recomendaciones de Play Console con la 1.3.0** (no traban nada, para más adelante): con targetSdk 36, en pantallas
+grandes Android 16 ignora que el juego vaya solo horizontal (probarlo en una tablet); `androidx.fragment` viejo;
+y prender R8 (minify) para bajar la memoria, con cuidado de no romper lo que se llama por JNI (el puente de
+anuncios y la reseña necesitarían reglas para que R8 no los borre).
 
 **Antes del 30/6/2027, pasar al SDK Next-Gen** (`com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk`): ese día
 Google deja de dar soporte al clásico, y el 30/6/2028 lo apaga. Con el puente es un archivo Java y una línea de Gradle.
