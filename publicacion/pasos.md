@@ -231,6 +231,13 @@ monedas (ver CLAUDE.md, Anuncios).
    publicidad, analíticas y prevención de fraude) → **Anuncios: sí** e **ID de publicidad: sí**. La ficha ya no dice
    "no recopila tus datos": desde la 1.3.0 termina en "Free to play" / "Gratis". La política nueva, con su párrafo
    del botón de Discord, está en `privacidad.html`, y las notas y el envío entero, en `notas_1.4.0.md`.
+   **Las tres declaraciones quedaron guardadas el 6/10 a la noche** (con el OK de Ivan antes de cada Guardar, pendientes
+   de enviar a revisión): **Anuncios: sí**; **ID de publicidad: sí**, para análisis, publicidad o marketing y
+   prevención de fraudes; y **Seguridad de los datos** con la lista de Google para el SDK 25.5.0 (página del 2/10/2026):
+   ubicación aproximada, diagnósticos, interacciones con la app e IDs de dispositivo, recogidos y compartidos, no
+   temporales, para esos mismos tres fines; obligatorios salvo los IDs, que Google marca opcionales (el ID se borra desde
+   Android). La reseña sigue igual. Ojo en ese formulario: el "Empezar" de cada tipo a veces abre su ventana con unos
+   segundos de demora, y con clics repetidos se abren dos copias.
 7. [x] En AdMob (6/10, con permiso de Ivan en cada paso): **categorías sensibles bloqueadas** (citas, ganar dinero
    rápidamente, juegos de casino sociales, referencias al sexo y salud reproductiva y sexual; alcohol y apuestas ya
    venían bloqueadas) y **mensaje de consentimiento europeo publicado** en Privacidad y mensajes, para ShowBies, en
