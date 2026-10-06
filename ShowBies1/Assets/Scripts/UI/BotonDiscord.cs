@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 // El boton de Discord del menu (pedido de Ivan para la 1.4.0): una copia redonda del globo
 // del idioma con el logo de Discord, arriba a la derecha, despues de las misiones, el
@@ -7,8 +8,8 @@ using UnityEngine;
 // no le manda nada a Discord.
 //
 // El logo es el oficial (el "Clyde" de discord-mark-white.svg, en Sprites/UI/IconoDiscord),
-// en blanco como los otros iconos: las reglas de la marca dejan usarlo para llevar a un
-// servidor, sin cambiarle la forma ni el color.
+// en blanco: las reglas de la marca dejan usarlo para llevar a un servidor, sin cambiarle la
+// forma ni el color.
 //
 // Nada de esto esta en la escena: se arma en codigo con ConstructorUI, como la medalla.
 // Vive en la raiz del canvas "Main Menu".
@@ -32,8 +33,15 @@ public class BotonDiscord : MonoBehaviour
     {
         if (selectorIdioma == null || selectorIdioma.botonGlobo == null) return;
         var globo = (RectTransform)selectorIdioma.botonGlobo.transform;
-        ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonDiscord",
-                                     DesdeLaDerecha(globo.anchoredPosition.x, globo.rect.width, separacion), icono, Abrir);
+        var boton = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonDiscord",
+                                                 DesdeLaDerecha(globo.anchoredPosition.x, globo.rect.width, separacion), icono, Abrir);
+
+        // Blanco puro: los iconos de las esquinas salen color crema, el del icono del globo, y
+        // el logo de Discord no se tine.
+        if (boton == null || selectorIdioma.iconoGlobo == null) return;
+        var dibujo = boton.transform.Find(ConstructorUI.Ruta(selectorIdioma.iconoGlobo.transform, globo));
+        var imagen = dibujo != null ? dibujo.GetComponent<Image>() : null;
+        if (imagen != null) imagen.color = Color.white;
     }
 
     // A la derecha ya estan las misiones, el bestiario y la medalla: este es el cuarto.
