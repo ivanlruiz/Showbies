@@ -256,7 +256,8 @@ monedas (ver CLAUDE.md, Anuncios).
    con la 5 (1.2.0) de Alpha, y la de Alpha con la 6 de producción. La de Alpha se guardó con **"Publicar sin permiso"**,
    que ignora el error solo para esa versión (no toca la declaración); la de producción ya no tuvo error. La única
    advertencia fue que no hay archivo de desofuscación (no se usa R8). Con la publicación gestionada apagada, al
-   aprobarse sale sola. Falta, en AdMob, "Buscar actualizaciones" del app-ads.txt.
+   aprobarse sale sola. **[x] Publicada el mismo 6/10 a las 20:49** (el envío 7 se aprobó en 13 minutos): la ficha
+   pública ya dice "Contiene anuncios" y la versión 1.4.0. Falta, en AdMob, "Buscar actualizaciones" del app-ads.txt.
 
 **Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
 Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
