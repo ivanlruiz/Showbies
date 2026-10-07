@@ -257,7 +257,14 @@ monedas (ver CLAUDE.md, Anuncios).
    que ignora el error solo para esa versión (no toca la declaración); la de producción ya no tuvo error. La única
    advertencia fue que no hay archivo de desofuscación (no se usa R8). Con la publicación gestionada apagada, al
    aprobarse sale sola. **[x] Publicada el mismo 6/10 a las 20:49** (el envío 7 se aprobó en 13 minutos): la ficha
-   pública ya dice "Contiene anuncios" y la versión 1.4.0. Falta, en AdMob, "Buscar actualizaciones" del app-ads.txt.
+   pública ya dice "Contiene anuncios" y la versión 1.4.0. **Falta que AdMob verifique la app**: el 6/10 a las 21:00
+   se tocó "Buscar actualizaciones" (AdMob → la app → Configuración de la aplicación → Verificación: "Sin verificar" →
+   Verify app) y siguió en "No hemos podido verificar", aunque `https://ivanlruiz.github.io/app-ads.txt` da 200 con la
+   línea exacta, sin BOM, y la ficha pública muestra ese sitio. Es el rastreo: Google avisa que tarda hasta 7 días, y su
+   última lectura era del deploy trabado (404). Reintentar en uno o dos días con el mismo botón; cuando pase, AdMob
+   revisa la app (2 o 3 días) y recién ahí deja de limitar los anuncios. **Ojo con la cuenta**: AdMob abre con la
+   cuenta predeterminada de Chrome (otra de Ivan, la de AdSense para YouTube) y ofrece crear AdMob ahí; la de ShowBies
+   se abre con `?authuser=2`, como Play Console en `/u/2`.
 
 **Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
 Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
