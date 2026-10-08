@@ -1008,7 +1008,8 @@ para siempre.
   más de cien calabazas). No se editan a mano. Si algo falla al instalar, se anota y la escena sigue sin Halloween.
 - **Activo** es la fecha confiable (`Progreso.DiaDeHoy`) dentro de las fechas, mirada cada 20 s (en Android es JNI), o
   **forzado**: en la APK de prueba (el paquete `.prueba`) siempre, y en el editor con **ShowBies > Halloween > Forzar en
-  el editor** (`EditorPrefs`, de la máquina).
+  el editor** (`EditorPrefs`, de la máquina). Forzado, **tocar el número de caramelos de la ventana suma los que faltan
+  para el próximo hito** (`VentanaHalloween.AtajoDePrueba`): sin eso, probar la fila entera eran ocho partidas.
 - **Los caramelos.** Cada zombi que suelta monedas suelta además uno con probabilidad 0,3 (`EnemyController.SoltarCaramelos`,
   aparte del botín: no toca las cuentas de `MedirPartida`), y el jefe una lluvia de 10. Son `Moneda`s
   (`Resources/Halloween/Caramelo`, una copia de la moneda con otro modelo): vuelan, caen y se juntan igual, con el imán,

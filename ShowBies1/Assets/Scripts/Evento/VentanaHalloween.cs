@@ -297,6 +297,14 @@ public class VentanaHalloween : MonoBehaviour
         textoSombrero.text = EventoHalloween.TieneSombrero ? Textos.De("halloween_sombrero_puesto") : Textos.De("halloween_como");
     }
 
+    private void AtajoDePrueba()
+    {
+        int siguiente = EventoHalloween.Alcanzados;
+        double faltan = siguiente < EventoHalloween.Hitos ? EventoHalloween.Umbral(siguiente) - EventoHalloween.Caramelos : 100;
+        EventoHalloween.Sumar(System.Math.Max(1, System.Math.Ceiling(faltan)));
+        golpeCaramelos = 0f;
+    }
+
     private static string TextoQuedan()
     {
         int dias = EventoHalloween.DiasQueFaltan(EventoHalloween.Hoy());
@@ -353,6 +361,15 @@ public class VentanaHalloween : MonoBehaviour
         var etiqueta = Texto(fila, "Etiqueta", Textos.De("halloween_caramelos"), 40f, texto, new Vector2(190f, -6f), new Vector2(260f, 60f));
         etiqueta.alignment = TextAlignmentOptions.Left;
         if (icono.sprite == null) icono.enabled = false;
+        // Solo en la APK de prueba y en el editor forzado (EventoHalloween.Forzado): tocar los
+        // caramelos suma los que faltan para el proximo hito, para probar la fila entera sin
+        // jugar ocho partidas. En la version de Play no existe.
+        if (EventoHalloween.Forzado)
+        {
+            var toque = fila.gameObject.AddComponent<Image>();
+            toque.color = new Color(1f, 1f, 1f, 0f);
+            fila.gameObject.AddComponent<Button>().onClick.AddListener(AtajoDePrueba);
+        }
 
         var como = Texto(ventana, "Como", Textos.De("halloween_como"), 32f, suave, new Vector2(0f, 126f), new Vector2(1100f, 50f));
         textoSombrero = como;
