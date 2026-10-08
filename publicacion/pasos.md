@@ -272,6 +272,9 @@ monedas (ver CLAUDE.md, Anuncios).
    verdad cargan bien. Ivan no tiene que mirar ni tocar anuncios en la versión de Play de su teléfono (es tráfico no
    válido y AdMob puede suspender la cuenta): para probar está la APK `.prueba`, o sumar su teléfono como dispositivo de
    prueba en AdMob (Configuración → Dispositivos de prueba, con su ID de publicidad).
+   **8/10 a la noche: VERIFICADA.** La pestaña app-ads.txt muestra `https://ivanlruiz.github.io/app-ads.txt` con "Se ha
+   encontrado y verificado el archivo app-ads.txt" (100 % de las consultas autorizadas), y la configuración de la app,
+   **Verificación: Acreditado** y **Estado de aprobación: Lista**. Desde acá AdMob ya no limita los anuncios.
 
 **Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
 Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
