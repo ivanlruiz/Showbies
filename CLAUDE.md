@@ -1046,7 +1046,11 @@ para siempre.
   porque mostrarlo es del teléfono y tenerlo es progreso).
 - **ShowBies > Halloween > Fotos** (`FotosDeHalloween`) saca sin play los zombis disfrazados, el sombrero, el menú, una
   calabaza y un caramelo de cerca y WaveMode con las calabazas, y **Fotos de las ventanas** (`FotosDeHalloweenVentanas`)
-  el botón y la ventana en 16:9 y 20:9; todo en `Builds/halloween/`.
+  el botón y la ventana en 16:9 y 20:9; todo en `Builds/halloween/`. **Arte para Play y Google Ads**
+  (`ArteDeHalloween`) arma una escena sobre la noche de WaveMode —el jugador con el sombrero disparando contra la horda
+  disfrazada, entre calabazas, con caramelos en el piso— y saca la imagen de la tarjeta de Play (1920 × 1080, sin
+  texto) y las de los anuncios (1200 × 628 y 1200 × 1200). Los modelos se posan con `AnimationMode.SampleAnimationClip`:
+  sin play, el Animator de los zombis (en Cull Update Transforms) no mueve los huesos aunque se le haga `Update`.
 
 ## Mejoras y tienda
 
