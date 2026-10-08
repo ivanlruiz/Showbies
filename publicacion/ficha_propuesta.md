@@ -5,6 +5,11 @@ descripción larga no cuenta nada de lo que se sumó desde septiembre (misiones,
 noche, el jefe con patrones). Los textos están contados para los límites de Play y siguen su política de metadatos (sin
 emojis, sin "#1", sin "el mejor", sin precios en el título, sin palabras repetidas de relleno).
 
+> **8/10: la primera tanda está enviada a revisión** (con el OK de Ivan): los títulos de es-ES y es-419, las
+> descripciones cortas normales y las largas sin el bloque de Halloween, en los tres idiomas (8 cambios en Play
+> Console). La declaración de recursos de IA de la ficha ya venía marcada y no se tocó. Falta la segunda tanda (el
+> 24/10), las capturas, el video y la tarjeta del evento.
+
 Hay dos tandas:
 
 - **Ya:** títulos, descripción corta normal, descripción larga sin el bloque de Halloween, capturas y video.
