@@ -552,7 +552,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919473, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: moveSpeed
-      value: 15
+      value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919473, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: granadaPrefab
@@ -3526,6 +3526,7 @@ MonoBehaviour:
   colorMision: {r: 0.72, g: 0.56, b: 1, a: 1}
   colorEstrella: {r: 1, g: 0.8, b: 0.2, a: 1}
   colorNivel: {r: 0.4, g: 0.85, b: 1, a: 1}
+  colorHalloween: {r: 1, g: 0.55, b: 0.1, a: 1}
 --- !u!4 &1585359846
 Transform:
   m_ObjectHideFlags: 0

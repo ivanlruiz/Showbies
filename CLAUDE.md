@@ -1796,7 +1796,9 @@ Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`
 `Plataforma.EsMovil` dé falso en el editor aunque el target sea Android. Se aplica al entrar en play. Ojo que
 también cambia los techos que dependen de la plataforma: 60 zombis vivos y 150 monedas en vez de 35 y 80.
 **El teclado va topado a 1 en diagonal** (`PlayerController.DireccionDelTeclado`), como el joystick: hasta el 30/9
-W+D daba 1,41 y en PC se corría un 41 % más rápido que en el teléfono.
+W+D daba 1,41 y en PC se corría un 41 % más rápido que en el teléfono. **El jugador corre a 13** (`moveSpeed`, override
+en las tres escenas de juego; el prefab dice 10 y el código 8): era 15 y Ivan lo pidió un poco más lento el 8/10. No
+conviene bajarlo de 12, que es el zombi FASTER: más lento que él, no hay forma de escaparle.
 
 **En PC el puntero es una mira** mientras se juega (pedido de Ivan): `CursorMira`, en la raíz de `MenuPausa.prefab`, así
 está en las tres escenas de juego. La textura es `Sprites/UI/Mira.png`, importada como **Cursor** (legible, RGBA32 y sin
