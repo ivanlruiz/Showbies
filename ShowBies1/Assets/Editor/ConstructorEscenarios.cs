@@ -760,7 +760,7 @@ public static class ConstructorEscenarios
 
     // Un material con el shader del charco. 'altura' y 'caida' van en radios del cuadrado:
     // con la altura baja el centro brilla mas, y con la caida alta se apaga antes.
-    static Material MaterialDeBrillo(string carpeta, string nombre, Color color, float intensidad, float altura, float caida)
+    internal static Material MaterialDeBrillo(string carpeta, string nombre, Color color, float intensidad, float altura, float caida)
     {
         var shader = Shader.Find("ShowBies/CharcoDeLuz");
         string ruta = carpeta + "/" + nombre + ".mat";
@@ -781,7 +781,7 @@ public static class ConstructorEscenarios
     }
 
     // Un tubo de neon: color plano, sin luz, con la niebla (Unlit/Color la trae).
-    static Material MaterialPlano(string carpeta, string nombre, Color color)
+    internal static Material MaterialPlano(string carpeta, string nombre, Color color)
     {
         var shader = Shader.Find("Unlit/Color");
         string ruta = carpeta + "/" + nombre + ".mat";
@@ -798,7 +798,7 @@ public static class ConstructorEscenarios
         return mat;
     }
 
-    static void Emitir(Material mat, Color color)
+    internal static void Emitir(Material mat, Color color)
     {
         mat.EnableKeyword("_EMISSION");
         mat.SetColor("_EmissionColor", color);
@@ -806,7 +806,7 @@ public static class ConstructorEscenarios
         EditorUtility.SetDirty(mat);
     }
 
-    static Material MaterialEn(string carpeta, string nombre, Color color, float brillo)
+    internal static Material MaterialEn(string carpeta, string nombre, Color color, float brillo)
     {
         string ruta = carpeta + "/" + nombre + ".mat";
         var mat = AssetDatabase.LoadAssetAtPath<Material>(ruta);

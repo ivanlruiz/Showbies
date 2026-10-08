@@ -11,8 +11,8 @@ using UnityEngine;
 // Tambien avisa las estrellas del bestiario que se ganan jugando ("¡ESTRELLA!", en
 // dorado, con el tipo y el escalon), los logros ("¡LOGRO DE PLATA!", del color de su
 // moneda), cada nivel del jugador que se sube ("¡NIVEL 13!", con el premio que espera
-// en el menu) y el desbloqueo del modo libre. Si llegan dos a la vez, salen una despues
-// de otra.
+// en el menu), el desbloqueo del modo libre y, en Halloween, cada hito de caramelos que se
+// alcanza (EventoHalloween). Si llegan dos a la vez, salen una despues de otra.
 // Va en ShowBies1 y WaveMode (objeto AvisoDeMisiones), con el texto armado en codigo
 // sobre el canvas del HUD.
 public class AvisoDeMisiones : MonoBehaviour
@@ -27,6 +27,7 @@ public class AvisoDeMisiones : MonoBehaviour
     public Color colorMision = new Color(0.72f, 0.56f, 1f);
     public Color colorEstrella = new Color(1f, 0.8f, 0.2f);
     public Color colorNivel = new Color(0.4f, 0.85f, 1f);
+    public Color colorHalloween = new Color(1f, 0.55f, 0.1f);
 
     // Donde sale, desde el centro de la pantalla, y su letra. Debajo del jugador: arriba
     // estan el cartel de la oleada (170), la barra del jefe (arriba de 320) y el cartel del
@@ -55,6 +56,7 @@ public class AvisoDeMisiones : MonoBehaviour
 
     private int nivelVisto;
     private bool libreVisto;
+    private int hitosVistos;
 
     private void Start()
     {
@@ -66,6 +68,28 @@ public class AvisoDeMisiones : MonoBehaviour
         Logros.Revisar();
         nivelVisto = NivelJugador.Nivel;
         libreVisto = ModoLibre.Desbloqueado;
+        hitosVistos = EventoHalloween.Activo ? EventoHalloween.Alcanzados : 0;
+    }
+
+    // Los hitos de Halloween que se alcanzan en esta partida, con lo que espera en el menu.
+    private void AnotarHalloween()
+    {
+        if (!EventoHalloween.Activo) return;
+        int alcanzados = EventoHalloween.Alcanzados;
+        // Si la edicion empezo en plena partida (la medianoche del 23/10), arranca de cero.
+        if (hitosVistos > alcanzados) hitosVistos = alcanzados;
+        while (hitosVistos < alcanzados)
+        {
+            int hito = hitosVistos++;
+            pendientes.Enqueue(new Aviso
+            {
+                titulo = Textos.De("halloween_aviso"),
+                detalle = EventoHalloween.EsElSombrero(hito)
+                    ? Textos.De("halloween_aviso_sombrero")
+                    : Textos.Formato("halloween_aviso_monedas", FormatoNumeros.Compacto(EventoHalloween.Premio(hito))),
+                color = colorHalloween,
+            });
+        }
     }
 
     // El modo libre se gana llegando a la oleada 12 (ModoLibre), y hasta el 25/9 llegaba en
@@ -178,6 +202,7 @@ public class AvisoDeMisiones : MonoBehaviour
             AnotarEstrellas();
             AnotarLogros();
             AnotarNivel();
+            AnotarHalloween();
         }
 
         if (cartel == null && pendientes.Count > 0 && canvas != null) Mostrar(pendientes.Dequeue(), t);

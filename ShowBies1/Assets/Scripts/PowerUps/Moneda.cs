@@ -13,6 +13,11 @@ using UnityEngine;
 // Gira la raiz, siempre de frente a la camara, y el hijo "Modelo" es solo lo que
 // se ve: para cambiar el modelo provisorio por otro asset se reemplaza ese hijo,
 // con la cara de la moneda mirando hacia +Z.
+//
+// Los caramelos del evento de Halloween (EventoHalloween) son monedas con otro modelo
+// y 'caramelo' prendido: vuelan, caen y se juntan igual, pero al agarrarlos suman
+// caramelos y no monedas, con su propia nota. Por eso el pool es uno por prefab, como
+// el de los zombis: con uno solo, un caramelo guardado volvia a salir como moneda.
 public class Moneda : MonoBehaviour
 {
     [Header("Vuelo")]
@@ -56,6 +61,10 @@ public class Moneda : MonoBehaviour
     public ParticleSystem brilloPrefab;
     public int particulasPorCobro = 8;
 
+    [Header("Caramelo")]
+    [Tooltip("Un caramelo del evento de Halloween: al agarrarlo suma caramelos (EventoHalloween), no monedas, y no sube la escalera.")]
+    public bool caramelo;
+
     [Header("Techo")]
     public int maxMonedasEnEscena = 150;
     public int maxMonedasEnEscenaMovil = 80;
@@ -70,7 +79,8 @@ public class Moneda : MonoBehaviour
     private static int escalon = -1;
     private static float ultimaNotaEn = float.NegativeInfinity;
 
-    private static readonly Stack<Moneda> pool = new Stack<Moneda>();
+    // Las guardadas, una pila por prefab (las monedas y los caramelos).
+    private static readonly Dictionary<Moneda, Stack<Moneda>> pools = new Dictionary<Moneda, Stack<Moneda>>();
     // Las que estan en uso, sin orden: el techo las cuenta y, lleno, busca aca la mas
     // vieja (ver Soltar). Cada una sabe su lugar, asi sacarla no recorre la lista.
     private static readonly List<Moneda> enEscena = new List<Moneda>();
@@ -91,7 +101,7 @@ public class Moneda : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
-        pool.Clear();
+        pools.Clear();
         enEscena.Clear();
         radioImanDeLaPartida = -1f;
         jugador = null;
@@ -115,6 +125,7 @@ public class Moneda : MonoBehaviour
     private bool atraida;
     private int lugarEnEscena = -1;
     private Renderer[] renderers;
+    private Moneda origen;          // el prefab del que salio: a su pila vuelve
 
     // Suelta 'cantidad' monedas de 'valor' cada una sin pasarse del techo de monedas en
     // escena, que esta por rendimiento. Si el techo no deja soltarlas todas, las que salen
@@ -189,14 +200,25 @@ public class Moneda : MonoBehaviour
         get { return radioImanDeLaPartida; }
     }
 
-    private static Moneda Obtener(Moneda prefab)
+    // Publico para la prueba de logica, que mira que una moneda y un caramelo no se
+    // crucen de pila.
+    public static Moneda Obtener(Moneda prefab)
     {
         // Al cambiar de escena las monedas guardadas se destruyen y en la pila
         // quedan referencias muertas. Se descartan antes de usarlas.
         Moneda moneda = null;
-        while (moneda == null && pool.Count > 0) moneda = pool.Pop();
+        Stack<Moneda> pila;
+        if (pools.TryGetValue(prefab, out pila))
+        {
+            while (moneda == null && pila.Count > 0) moneda = pila.Pop();
+        }
 
-        if (moneda == null) return Instantiate(prefab);
+        if (moneda == null)
+        {
+            moneda = Instantiate(prefab);
+            moneda.origen = prefab;
+            return moneda;
+        }
 
         moneda.gameObject.SetActive(true);
         return moneda;
@@ -427,6 +449,15 @@ public class Moneda : MonoBehaviour
 
     private void Cobrar(Vector3 posicion)
     {
+        if (caramelo)
+        {
+            // Su nota, fija (la quinta de la bemol, mas arriba): la escalera es de las monedas.
+            EventoHalloween.Sumar(valor);
+            Sonidos.Tocar(sonido, volumen, Mathf.Pow(2f, afinacion / 12f), 0.03f, SeparacionEntreSonidos);
+            Brillar(posicion, particulasPorCobro);
+            Devolver();
+            return;
+        }
         Progreso.Sumar(valor);
         bool octava = Sonar();
         Brillar(posicion, octava ? particulasPorCobro * Mathf.Max(1, brilloDeOctava) : particulasPorCobro);
@@ -494,14 +525,30 @@ public class Moneda : MonoBehaviour
         return camara;
     }
 
-    private void Devolver()
+    // Publico para la prueba de logica (ver Obtener).
+    public void Devolver()
     {
-        if (!enUso) return;
+        // Ya devuelta: apagada y sin usar. Una recien creada que nunca salio (la prueba)
+        // esta prendida, y vuelve igual.
+        if (!enUso && !gameObject.activeSelf) return;
 
         enUso = false;
         DejarDeContar();
         gameObject.SetActive(false);
-        pool.Push(this);
+        Moneda clave = origen != null ? origen : this;
+        Stack<Moneda> pila;
+        if (!pools.TryGetValue(clave, out pila))
+        {
+            pila = new Stack<Moneda>();
+            pools.Add(clave, pila);
+        }
+        pila.Push(this);
+    }
+
+    // De que prefab salio (para la prueba).
+    public Moneda Origen
+    {
+        get { return origen; }
     }
 
     // Sale de la cuenta del techo: la ultima de la lista pasa a su lugar.

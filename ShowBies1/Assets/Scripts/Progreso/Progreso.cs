@@ -136,6 +136,10 @@ public static class Progreso
 
         // v6: la experiencia, los premios de nivel y los logros (NivelJugador, Logros).
         public EstadoJugador jugador = new EstadoJugador();
+
+        // v7: el evento de Halloween (EventoHalloween): los caramelos de la edicion y el
+        // sombrero de calabaza, que es para siempre.
+        public EstadoHalloween halloween = new EstadoHalloween();
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
@@ -143,8 +147,9 @@ public static class Progreso
     // 4: suma los contadores de por vida. Sube aunque migrar no pida nada, para que
     // un build viejo abra el archivo en solo lectura y no borre los contadores.
     // 5: el desafio semanal. 6: el nivel del jugador y los logros; al migrar, la
-    // experiencia sale de los zombis ya matados (ver MigrarAlNivel).
-    public const int VersionActual = 6;
+    // experiencia sale de los zombis ya matados (ver MigrarAlNivel). 7: el evento de
+    // Halloween; no migra nada, sube para que un build viejo no borre el sombrero.
+    public const int VersionActual = 7;
 
     private const string NombreArchivo = "progreso.json";
 
@@ -233,6 +238,7 @@ public static class Progreso
         MonedasDeLaPartida = 0;
         VideosDeLaPartida = 0;
         NumeroDePartida++;
+        EventoHalloween.EmpezarPartida();
     }
 
     // Al morir, desde el mismo bloque de PlayerHealth que ya guarda. Cuenta la
@@ -293,6 +299,12 @@ public static class Progreso
     public static EstadoJugador Jugador
     {
         get { Cargar(); return datos.jugador; }
+    }
+
+    // Los caramelos y el sombrero del evento de Halloween: los maneja EventoHalloween.
+    public static EstadoHalloween Halloween
+    {
+        get { Cargar(); return datos.halloween; }
     }
 
     public static int EstrellasCobradas(string tipo)
@@ -1030,6 +1042,13 @@ public static class Progreso
         if (e.mejorNivelLibre < 0) e.mejorNivelLibre = 0;
         if (e.mejorRacha < 0) e.mejorRacha = 0;
         if (e.misionesCobradas < 0) e.misionesCobradas = 0;
+
+        if (d.halloween == null) d.halloween = new EstadoHalloween();
+        EstadoHalloween h = d.halloween;
+        if (h.edicion < 0) h.edicion = 0;
+        if (double.IsNaN(h.caramelos) || double.IsInfinity(h.caramelos) || h.caramelos < 0) h.caramelos = 0;
+        if (h.oleada < -1) h.oleada = -1;
+        h.cobrados = Math.Max(0, Math.Min(h.cobrados, EventoHalloween.Hitos));
 
         if (d.jugador == null) d.jugador = new EstadoJugador();
         EstadoJugador j = d.jugador;

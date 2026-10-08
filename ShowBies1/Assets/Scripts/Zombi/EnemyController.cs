@@ -457,6 +457,10 @@ public class EnemyController : MonoBehaviour
         colliders = GetComponentsInChildren<Collider>(true);
         capsula = GetComponent<CapsuleCollider>();
         BuscarElModelo();
+        // En Halloween salen disfrazados. Despues de medir el modelo (un sombrero de bruja
+        // agrandaria altoDelModelo, y con el las poses del jefe y la barra) y antes de la
+        // capa y del destello, que tambien lo pintan. Del pool vuelve con el mismo disfraz.
+        if (EventoHalloween.Activo) Disfraces.Vestir(gameObject, enemyType != null && enemyType.puntos >= Disfraces.PuntosDelJefe);
         // De noche, la luz de relleno de la escena solo alumbra la capa de los personajes.
         Personajes.PonerEnLaCapa(gameObject);
         movimientoPropio = GetComponent<IMovimientoPropio>();
@@ -885,6 +889,7 @@ public class EnemyController : MonoBehaviour
             NivelJugador.Sumar(enemyType.puntos);
 
             SoltarMonedas();
+            SoltarCaramelos();
             Progreso.ContarMuerte(nombreTipo, EsJefe);
             Efectos.Muerte(transform.position, enemyType.hp);
 
@@ -925,6 +930,16 @@ public class EnemyController : MonoBehaviour
         MonedasSoltadas += cantidad * valor;
 
         Moneda.Soltar(monedaPrefab, transform.position, cantidad, valor);
+    }
+
+    // Los caramelos del evento de Halloween, aparte de las monedas: no entran en las
+    // cuentas del botin (MonedasEsperadas y MonedasSoltadas), que compara MedirPartida.
+    // Solo los zombis que sueltan monedas: los del tutorial no.
+    private void SoltarCaramelos()
+    {
+        if (monedaPrefab == null || !EventoHalloween.Activo) return;
+        int cantidad = EventoHalloween.CaramelosAlMorir(EsJefe, Random.value);
+        if (cantidad > 0) Moneda.Soltar(EventoHalloween.CarameloPrefab, transform.position, cantidad, 1);
     }
 
     private void PrepararDestello()

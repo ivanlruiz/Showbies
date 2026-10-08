@@ -24,6 +24,9 @@ Es un **incremental**: las monedas que se juntan en las partidas se gastan en la
 los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos. Además, jugar y ganar logros da
 experiencia para el **nivel del jugador**, y cada nivel da monedas (ver Nivel del jugador y logros).
 
+Del **24/10 al 9/11** hay **evento de Halloween**: calabazas por el mapa, zombis disfrazados y caramelos que llenan una
+fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
+
 ## Entorno
 
 - **Unity 6000.3.14f1**, render built-in, 3D. `ProjectSettings/ProjectVersion.txt` es la fuente de verdad.
@@ -58,6 +61,7 @@ Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña) y ShowBiesA
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
 Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
+Assets/Scripts/Evento/      ← EventoHalloween (fechas, caramelos, hitos), InstaladorHalloween, DecoradoHalloween, Disfraces, ContadorCaramelos, SombreroDelJugador, VentanaHalloween
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial
@@ -68,9 +72,10 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas
+Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
-Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón
+Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón y los iconos del evento (IconoCalabaza, IconoCaramelo)
 ```
 
 Y **fuera del proyecto de Unity**, en la raíz del repo:
@@ -701,7 +706,8 @@ Lo que el jugador conserva entre partidas vive en `Progreso` (`Assets/Scripts/Pr
 mejora y lo que necesitan los anuncios (versión 6: `mejoras` es una lista `{id, nivel}` porque `JsonUtility` no
 guarda diccionarios, desde la 3 se suman `partidasTerminadas`, `segundosJugados`, `ofrecerVideos` y los topes
 del día, desde la 4 los contadores de por vida, desde la 5 el desafío de la semana y desde la 6 la experiencia, los
-premios de nivel, los logros y seis récords nuevos). No usa PlayerPrefs a propósito: es estado estructurado.
+premios de nivel, los logros y seis récords nuevos, y desde la 7 el evento de Halloween). No usa PlayerPrefs a
+propósito: es estado estructurado.
 
 - **Los zombis sueltan monedas y se cobran al agarrarlas.** Al morir, `DanoZombi` (en el mismo bloque que
   suma los puntos) suelta entre `monedasMin` y `monedasMax` monedas (`Moneda`, en `Assets/Prefabs/Moneda.prefab`)
@@ -713,6 +719,9 @@ premios de nivel, los logros y seis récords nuevos). No usa PlayerPrefs a prop�
   siguen dando vueltas por la de arriba; cada octava completa brilla el triple. Si se corta, vuelve a la bemol. Una
   moneda cuyo sonido no pasa el techo de 50 ms no sube la escalera. (Antes cada una sorteaba una nota.) Las que nadie
   agarra desaparecen a los 20 s, parpadeando los últimos 3.
+- **El pool es uno por prefab** (`Moneda.Obtener` y `Devolver`, como el de los zombis), y el techo de 150/80 es de
+  todas juntas: los caramelos de Halloween son monedas con otro modelo y `caramelo` prendido (ver Evento de
+  Halloween). Con la pila única de antes, un caramelo guardado volvía a salir como moneda.
 - **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se anuncia
   en el cartel de la oleada siguiente). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
   que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. **Al terminar la oleada las monedas
@@ -982,6 +991,61 @@ pinta a la horda, elegido por Ivan), las gemas y las armas (ver TAREAS).
   distintas dentro de cada idioma, porque con la inicial del nombre salían tres C en español y tres E en inglés),
   `logro_<id>` (con `{0}`) y `logro_<id>_uno` para una meta de 1 ("Usa la furia por primera vez", no "1 veces"). Los
   revisa su prueba: la de idiomas no ve los ids que se arman en código.
+
+## Evento de Halloween
+
+Pedido de Ivan (8/10, para atraer jugadores, con la tarjeta de contenido promocional de Play). **Del 24/10 al 9/11,
+ambos incluidos** (`EventoHalloween.Inicio` y `Fin`, en mmdd: si el juego sigue instalado, vuelve solo cada año). Eligió:
+calabazas por todos lados, zombis disfrazados, caramelos con premios y, al final, un **sombrero de calabaza** que se lleva
+para siempre.
+
+- **Nada está en las escenas.** `InstaladorHalloween` se engancha a `SceneManager.sceneLoaded` (desde `BeforeSceneLoad`) y
+  pone lo del evento en cada escena: en el menú las calabazas del fondo y el botón HALLOWEEN con su ventana; en las
+  partidas las calabazas por el mapa y los caramelos en el HUD (en el tutorial, solo las calabazas). Los zombis se
+  disfrazan en `EnemyController.Awake` y los del fondo del menú en `FondoMenu.Soltar`. Lo que pone sale de
+  `Assets/Halloween/Resources/Halloween`, que arma **ShowBies > Halloween > Armar calabazas, disfraces y caramelo**
+  (`ConstructorHalloween`, con formas simples y una esfera baja de 150 vértices: la de Unity tiene 515 y en el mapa hay
+  más de cien calabazas). No se editan a mano. Si algo falla al instalar, se anota y la escena sigue sin Halloween.
+- **Activo** es la fecha confiable (`Progreso.DiaDeHoy`) dentro de las fechas, mirada cada 20 s (en Android es JNI), o
+  **forzado**: en la APK de prueba (el paquete `.prueba`) siempre, y en el editor con **ShowBies > Halloween > Forzar en
+  el editor** (`EditorPrefs`, de la máquina).
+- **Los caramelos.** Cada zombi que suelta monedas suelta además uno con probabilidad 0,3 (`EnemyController.SoltarCaramelos`,
+  aparte del botín: no toca las cuentas de `MedirPartida`), y el jefe una lluvia de 10. Son `Moneda`s
+  (`Resources/Halloween/Caramelo`, una copia de la moneda con otro modelo): vuelan, caen y se juntan igual, con el imán,
+  pero al agarrarlos suman caramelos (`EventoHalloween.Sumar`) con su nota fija, la quinta de la bemol, sin subir la
+  escalera. Fuera de las fechas no cuentan. El HUD los muestra en naranja en el renglón de los FPS, que baja uno
+  (`ContadorCaramelos`, una copia del texto de las monedas).
+- **La fila: cinco hitos.** Cuestan 0,5, 1,5, 3, 5 y 8 partidas (acumulado) y pagan 0,25, 0,5, 0,75 y 1 partida de monedas
+  y el sombrero, con la vara de `Economia` y la **mejor oleada del primer día que se vio el evento, congelada**
+  (`EstadoHalloween.oleada`, con piso en la 5): con caramelos fijos, uno de la oleada 40 llenaba la fila en una
+  partida y uno nuevo no llegaba nunca; congelada, mejorar la marca no corre la meta. El premio entra por
+  `CobrarPremio` (no son monedas jugadas). Se cobran de a uno, en orden, en la ventana; en la partida,
+  `AvisoDeMisiones` avisa cada hito alcanzado ("¡PREMIO DE HALLOWEEN!") en naranja.
+- **Al terminar, lo que quedó sin cobrar se cobra solo** (`CerrarSiTermino`, al entrar al menú, sombrero incluido), una
+  vez. La edición siguiente (`edicion`, el año) arranca de cero, y para quien ya tiene el sombrero el último hito paga
+  1,5 partidas de monedas.
+- **El botón HALLOWEEN** va abajo a la izquierda del panel principal, en espejo con PLAY (110 del borde y 90 del piso),
+  naranja, con la insignia de MEJORAS: los hitos por cobrar, o "!" mientras no se abrió la ventana en esta edición. La
+  ventana (`VentanaHalloween`) toma de `VentanaMisiones` la fuente, la píldora, los iconos y los sonidos; el atrás de
+  Android la cierra (`BotonAtrasMenu`).
+- **Los disfraces** (`Disfraces`) cuelgan del hueso de la cabeza (`Bip001 Head`, buscado por nombre: el menú los viste
+  antes de prenderlos, con el Animator sin arrancar): de cada diez zombis, tres con **cabeza de calabaza** (la cabeza del
+  zombi se esconde, que es una malla rígida colgada del hueso) y tres con **sombrero de bruja**; el jefe, siempre con
+  sombrero. Cada prefab trae en su raíz la posición, el giro y la escala respecto del hueso, que el constructor mide
+  sobre el modelo (los vértices que mueve la cabeza): los cinco zombis usan el mismo modelo con otra escala. Se visten
+  después de `BuscarElModelo` (un sombrero agrandaría `altoDelModelo`, y con él las poses del jefe) y antes del destello.
+- **Las calabazas** (`DecoradoHalloween`): la grande es un farol, con la cara tallada que brilla hacia la cámara, su halo
+  y su charco naranja (como los faroles de noche, ninguna luz de verdad); la chica, sola. En la partida, una grilla de
+  9 m con azar y semilla fija (unas 85 grandes), ninguna a menos de 6 m de donde arranca el jugador; en el menú, a los
+  costados del camino de los zombis, mirando a su cámara. Sin colliders, en la capa de los personajes y juntadas con
+  `CapitulosDeEscenario.Juntar`. Sus materiales usan solo Standard, `Unlit/Color` y `ShowBies/CharcoDeLuz`, que ya usan
+  las escenas (la prueba lo mira).
+- **El sombrero de calabaza** se pone en las tres escenas de juego, con evento o sin él (`SombreroDelJugador`, en Start,
+  como la pistola), y se apaga en OPCIONES (SOMBRERO DE CALABAZA, solo si se ganó; `PlayerPrefs["SombreroCalabaza"]`,
+  porque mostrarlo es del teléfono y tenerlo es progreso).
+- **ShowBies > Halloween > Fotos** (`FotosDeHalloween`) saca sin play los zombis disfrazados, el sombrero, el menú, una
+  calabaza y un caramelo de cerca y WaveMode con las calabazas, y **Fotos de las ventanas** (`FotosDeHalloweenVentanas`)
+  el botón y la ventana en 16:9 y 20:9; todo en `Builds/halloween/`.
 
 ## Mejoras y tienda
 
@@ -1552,8 +1616,9 @@ uno cada 0,2 s como mucho, por `Sonidos.TocarUI`: en la pausa también suena), a
   responden sin componente.
 - **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
   (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes y el interruptor MOSTRAR FPS (`ContadorFps`,
-  pedido de Ivan el 6/10), más PRIVACIDAD cuando UMP lo pide (ver AdMob): la ventana crece al abrirse y todo sube
-  (`OpcionesSonido.Acomodar`). Se llama OPCIONES y no SONIDO porque tuvo el modo oscuro, que se fue con el neón (ver Tema:
+  pedido de Ivan el 6/10), más el SOMBRERO DE CALABAZA si se ganó (ver Evento de Halloween) y PRIVACIDAD cuando UMP lo
+  pide (ver AdMob): la ventana crece al abrirse, todo sube (`OpcionesSonido.Acomodar`) y, si no entra en la pantalla,
+  se achica (`EscalaQueEntra`, como las ventanas de las misiones). Se llama OPCIONES y no SONIDO porque tuvo el modo oscuro, que se fue con el neón (ver Tema:
   carbón neón); la clase conserva el nombre de antes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
   los arma debajo de los botones de la pausa. El atrás de Android cierra la ventana de sonido primero.
 - Se escribe a disco medio segundo después de soltar el control o al cerrarse la ventana, no en cada movimiento.
@@ -1574,6 +1639,7 @@ progreso):
 | `"TemaOscuro"` | nadie desde el 24/9 (era el interruptor del modo oscuro) | nadie: el neón es el único tema |
 | `"ResenaPedidaEn"` | `PedidoDeResena`, la fecha `yyyy-MM-dd` del último pedido | `PedidoDeResena` |
 | `"MostrarFps"` | el interruptor MOSTRAR FPS de OPCIONES (`OpcionesSonido`), 1 o 0 | `ContadorFps`; sin nada guardado, apagado |
+| `"SombreroCalabaza"` | el interruptor SOMBRERO DE CALABAZA de OPCIONES, 1 o 0 | `EventoHalloween.SombreroPuesto`; sin nada guardado, puesto |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
@@ -2115,6 +2181,11 @@ enterrado.
   (superauditoría del 29/9). Ahora se desarma y lo avisa. `MedirPartida` no: se corre ya en play.
 - **ShowBies > Escenarios > Fotos de los faroles** (`FotosDeLosFaroles`), sin play: los capítulos de noche con la
   calidad del teléfono y con la del editor (ver Capítulos).
+- **La prueba de lógica cubre el evento de Halloween**: las fechas y la edición, lo que cuesta y paga la fila en
+  partidas (de la oleada 0 a la 40), la oleada congelada, el cobro y el sombrero, el cierre al terminar (una vez) y la
+  edición siguiente; que las prefabs estén en Resources, sin colliders y con los shaders de los decorados; el hueso de
+  la cabeza de los modelos; que el pool de monedas no cruce un caramelo con una moneda, y que el renglón de los
+  caramelos en el HUD esté libre. Las fotos, aparte (ver Evento de Halloween).
 - **ShowBies > Pruebas > Medir partida (10 s)** (`PruebasMejoras.MedirPartida`), en play: dispara sin parar, mata
   a cada zombi después de registrar sus multiplicadores (así las oleadas avanzan) y compara con la tabla lo
   aplicado, los tiros por segundo por régimen (con y sin caja), la vida, el daño y las monedas de cada zombi. Escribe

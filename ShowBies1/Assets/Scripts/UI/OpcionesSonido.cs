@@ -6,7 +6,8 @@ using UnityEngine.UI;
 // de musica y MOSTRAR FPS (el contador del HUD, ContadorFps; desde el 6/10). Hasta el
 // 24/9 tenia tambien el modo oscuro, que se fue cuando el neon paso a ser el unico tema
 // (ver Tema), y el interruptor de los FPS ocupa su lugar. Con anuncios de AdMob suma
-// PRIVACIDAD, para cambiar el consentimiento de Europa, solo cuando UMP lo pide. No tiene
+// PRIVACIDAD, para cambiar el consentimiento de Europa, solo cuando UMP lo pide, y el
+// interruptor del SOMBRERO DE CALABAZA, solo si ya se gano (EventoHalloween). No tiene
 // objetos propios en la escena: al arrancar copia el globo y la ventana del idioma
 // (SelectorIdioma) y los adapta, asi se ven igual sin mantener dos copias a mano. El
 // engranaje queda a la derecha del globo.
@@ -25,8 +26,9 @@ public class OpcionesSonido : MonoBehaviour
     [Tooltip("El texto de los controles sobre la ventana crema; con el tema oscuro lo cambia Tema.")]
     public Color colorTexto = new Color(0.16f, 0.14f, 0.2f, 1f);
 
-    // La del idioma mide 620 x 480 y tiene dos botones; esta tiene tres controles, y un
-    // cuarto, PRIVACIDAD, solo si UMP lo pide: la ventana crece y todo sube (Acomodar).
+    // La del idioma mide 620 x 480 y tiene dos botones; esta tiene tres controles, y dos
+    // que pueden estar o no: el SOMBRERO, si se gano, y PRIVACIDAD, si UMP lo pide. Con
+    // cada uno la ventana crece y todo sube (Acomodar); si no entra, se achica (EscalaQueEntra).
     private const float AltoVentana = 640f;
     private const float AnchoControl = 500f;
     private const float YTitulo = 255f;
@@ -36,6 +38,7 @@ public class OpcionesSonido : MonoBehaviour
     private const float YVolver = -255f;
     private const float DePrivacidadAlFps = 135f;
     private const float CrecidaConPrivacidad = 130f;
+    private const float DelSombreroAlFps = 120f;
 
     private GameObject panel;
     private RectTransform ventana;
@@ -45,7 +48,8 @@ public class OpcionesSonido : MonoBehaviour
     private RectTransform controlFps;
     private RectTransform botonVolver;
     private RectTransform botonPrivacidad;
-    private int privacidadAcomodada = -1;   // -1 sin acomodar, 0 sin PRIVACIDAD, 1 con
+    private RectTransform controlSombrero;
+    private int acomodada = -1;   // -1 sin acomodar; si no, 1 con PRIVACIDAD + 2 con el SOMBRERO
     private Texture2D texturaEngranaje;
     private Texture2D texturaPerilla;
     private Sprite spriteEngranaje;
@@ -169,8 +173,13 @@ public class OpcionesSonido : MonoBehaviour
         controlFps = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_fps", Vector2.zero, AnchoControl, fuente,
                                        () => ContadorFps.Mostrar, ContadorFps.FijarMostrar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
 
+        // El sombrero de calabaza, el premio de Halloween: se arma siempre y se muestra si se
+        // gano. Se guarda con los volumenes, como MOSTRAR FPS (es un PlayerPrefs).
+        controlSombrero = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_sombrero", Vector2.zero, AnchoControl, fuente,
+                                            () => EventoHalloween.SombreroPuesto, EventoHalloween.PonerSombrero, pildora, spritePerilla, sonidoClick, colorDelTexto)));
+
         CrearPrivacidad(fuente, pildora, sonidoClick);
-        Acomodar(false);
+        Acomodar(false, false);
     }
 
     // PRIVACIDAD: el cartel de consentimiento de Europa para cambiar lo que se eligio (lo
@@ -204,26 +213,46 @@ public class OpcionesSonido : MonoBehaviour
         botonPrivacidad = (RectTransform)boton.transform;
     }
 
-    // Sin PRIVACIDAD, los tres controles de siempre; con, la ventana crece y todo sube para
-    // hacerle lugar entre MOSTRAR FPS y VOLVER.
-    private void Acomodar(bool conPrivacidad)
+    // Sin los dos que pueden faltar, los tres controles de siempre; con cada uno, la ventana
+    // crece y todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: primero el SOMBRERO y
+    // abajo PRIVACIDAD.
+    private void Acomodar(bool conPrivacidad, bool conSombrero)
     {
-        int cual = conPrivacidad ? 1 : 0;
-        if (cual == privacidadAcomodada || ventana == null) return;
-        privacidadAcomodada = cual;
+        int cual = (conPrivacidad ? 1 : 0) + (conSombrero ? 2 : 0);
+        if (cual == acomodada || ventana == null) return;
+        acomodada = cual;
 
-        float subir = conPrivacidad ? CrecidaConPrivacidad * 0.5f : 0f;
-        ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana + 2f * subir);
+        float crecida = (conPrivacidad ? CrecidaConPrivacidad : 0f) + (conSombrero ? DelSombreroAlFps : 0f);
+        float subir = crecida * 0.5f;
+        ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana + crecida);
         Poner(titulo, YTitulo + subir);
         Poner(controlEfectos, YEfectos + subir);
         Poner(controlMusica, YMusica + subir);
         Poner(controlFps, YFps + subir);
         Poner(botonVolver, YVolver - subir);
+        float y = YFps + subir;
+        if (controlSombrero != null)
+        {
+            if (conSombrero) y -= DelSombreroAlFps;
+            Poner(controlSombrero, y);
+            controlSombrero.gameObject.SetActive(conSombrero);
+        }
         if (botonPrivacidad != null)
         {
-            Poner(botonPrivacidad, YFps + subir - DePrivacidadAlFps);
+            Poner(botonPrivacidad, y - DePrivacidadAlFps);
             botonPrivacidad.gameObject.SetActive(conPrivacidad);
         }
+    }
+
+    // Con los dos controles de mas mide 890 de alto, mas el halo: en 20:9 el canvas del menu
+    // mide 864 y en 21:9, 823. Como las ventanas de las misiones, se achica lo justo.
+    private float EscalaQueEntra()
+    {
+        float alto = ((RectTransform)panel.transform).rect.height;
+        if (alto <= 0f || ventana == null) return 1f;
+        float lugar = alto * 0.5f - Mathf.Abs(ventana.anchoredPosition.y) - 10f;
+        float mitad = ventana.rect.height * 0.5f + 40f;
+        return Mathf.Clamp(lugar / mitad, 0.5f, 1f);
     }
 
     private static void Poner(RectTransform rt, float y)
@@ -252,7 +281,7 @@ public class OpcionesSonido : MonoBehaviour
     {
         if (panel == null) return;
         if (selectorIdioma != null) selectorIdioma.Cerrar();
-        Acomodar(ServicioAnuncios.PrivacidadRequerida);
+        Acomodar(ServicioAnuncios.PrivacidadRequerida, EventoHalloween.TieneSombrero);
         panel.SetActive(true);
         abiertaDesde = Time.unscaledTime;
         if (ventana != null) ventana.localScale = Vector3.zero;
@@ -269,7 +298,7 @@ public class OpcionesSonido : MonoBehaviour
     {
         if (abiertaDesde < 0f || ventana == null) return;
         float t = duracionRebote > 0f ? Mathf.Clamp01((Time.unscaledTime - abiertaDesde) / duracionRebote) : 1f;
-        ventana.localScale = Vector3.one * CurvasUI.SalidaAtras(t);
+        ventana.localScale = Vector3.one * (EscalaQueEntra() * CurvasUI.SalidaAtras(t));
         if (t >= 1f) abiertaDesde = -1f;
     }
 

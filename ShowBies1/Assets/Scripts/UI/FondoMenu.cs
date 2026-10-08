@@ -272,6 +272,10 @@ public class FondoMenu : MonoBehaviour
         foreach (var co in zombi.GetComponentsInChildren<Collider>(true)) DestroyImmediate(co);
         foreach (var rb in zombi.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(rb);
 
+        // En Halloween, disfrazados como en la partida (EnemyController.Awake, que aca no corre).
+        if (EventoHalloween.Activo)
+            Disfraces.Vestir(zombi, enemigo != null && enemigo.enemyType != null && enemigo.enemyType.puntos >= Disfraces.PuntosDelJefe);
+
         zombi.transform.SetParent(transform, true);
         Destroy(caja);
         zombi.SetActive(true);

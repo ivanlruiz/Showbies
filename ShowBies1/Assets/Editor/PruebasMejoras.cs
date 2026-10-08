@@ -214,6 +214,9 @@ public static class PruebasMejoras
             ProbarTiendaTapaLaEscena(informe);
             ProbarVidriosDelMenu(informe);
             ProbarBotonDiscord(informe);
+            ProbarPrefabsDeHalloween(informe);
+            ProbarPoolDeCaramelos(informe);
+            ProbarHudDeCaramelos(informe);
             ProbarPartidaNeon(informe);
             ProbarMundoDeNoche(informe);
             ProbarPildorasRedondas(informe);
@@ -248,6 +251,7 @@ public static class PruebasMejoras
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
                     ProbarLogros(informe);
+                    ProbarHalloween(informe);
                     if (completo)
                     {
                         ProbarLogroDelCritico(informe);
@@ -278,6 +282,283 @@ public static class PruebasMejoras
         }
 
         return informe.Escribir(RutaPruebas, informe.Resultado("TODO OK"));
+    }
+
+    // ========================================================================
+    // Halloween (EventoHalloween, del 8/10)
+    // ========================================================================
+
+    // Las fechas, la edicion, los caramelos, los hitos medidos con la vara de Economia y la
+    // oleada congelada, el cobro (monedas y el sombrero), el cierre que cobra lo que quedo y la
+    // edicion siguiente. Contra la carpeta de pruebas, con el dia puesto a mano.
+    static void ProbarHalloween(Informe inf)
+    {
+        try
+        {
+            inf.Verdadero("halloween: el 23/10 todavia no", !EventoHalloween.EnFechas(20261023));
+            inf.Verdadero("halloween: el 24/10 empieza", EventoHalloween.EnFechas(20261024));
+            inf.Verdadero("halloween: el 9/11 sigue", EventoHalloween.EnFechas(20261109));
+            inf.Verdadero("halloween: el 10/11 ya no", !EventoHalloween.EnFechas(20261110));
+            inf.Verdadero("halloween: vuelve en 2027", EventoHalloween.EnFechas(20271031));
+            inf.Igual("halloween: el primer dia quedan 17", 17, EventoHalloween.DiasQueFaltan(20261024));
+            inf.Igual("halloween: el 9/11 es el ultimo", 1, EventoHalloween.DiasQueFaltan(20261109));
+            inf.Igual("halloween: el 8/11 quedan 2", 2, EventoHalloween.DiasQueFaltan(20261108));
+            inf.Igual("halloween: el jefe suelta una lluvia", EventoHalloween.CaramelosDelJefe, EventoHalloween.CaramelosAlMorir(true, 0.9f));
+            inf.Igual("halloween: un zombi suelta uno con la probabilidad", 1, EventoHalloween.CaramelosAlMorir(false, EventoHalloween.ProbabilidadDeCaramelo - 0.01f));
+            inf.Igual("halloween: o ninguno", 0, EventoHalloween.CaramelosAlMorir(false, EventoHalloween.ProbabilidadDeCaramelo + 0.01f));
+            inf.Verdadero("halloween: los caramelos del jefe salen enteros con el piso lleno (lluvia de Moneda)",
+                          AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Moneda.prefab") is GameObject moneda &&
+                          moneda.GetComponent<Moneda>().lluviaDesde <= EventoHalloween.CaramelosDelJefe);
+
+            // Lo que cuesta cada hito, en partidas que llegan a la oleada de la vara: tiene que
+            // crecer, y la fila entera, ser un objetivo de unos dias y no de una partida.
+            foreach (int oleada in new[] { 0, 5, 10, 20, 40 })
+            {
+                double porPartida = Economia.ZombisPorPartida(Math.Max(EventoHalloween.OleadaMinima, oleada)) * EventoHalloween.ProbabilidadDeCaramelo;
+                double anterior = 0;
+                bool crece = true;
+                for (int i = 0; i < EventoHalloween.Hitos; i++)
+                {
+                    double umbral = EventoHalloween.UmbralCon(i, oleada);
+                    crece &= umbral > anterior;
+                    anterior = umbral;
+                }
+                double partidas = EventoHalloween.UmbralCon(EventoHalloween.Hitos - 1, oleada) / porPartida;
+                inf.Verdadero("halloween: en la oleada " + oleada + " los hitos crecen", crece);
+                inf.Verdadero("halloween: en la oleada " + oleada + " el sombrero cuesta " + partidas.ToString("0.0") + " partidas (de 6 a 10)",
+                              partidas >= 6 && partidas <= 10);
+                double monedas = Economia.MonedasPorPartida(Math.Max(EventoHalloween.OleadaMinima, oleada));
+                double total = 0;
+                for (int i = 0; i < EventoHalloween.Hitos; i++) total += EventoHalloween.PremioCon(i, oleada, true);
+                inf.Verdadero("halloween: en la oleada " + oleada + " las monedas de la fila pagan " + (total / monedas).ToString("0.00") +
+                              " partidas, menos de las " + partidas.ToString("0.0") + " que cuesta", total > 0 && total < monedas * partidas * 0.5);
+                inf.Cerca("halloween: en la oleada " + oleada + " el ultimo es el sombrero, sin monedas", 0, EventoHalloween.PremioCon(EventoHalloween.Hitos - 1, oleada, true), 0);
+                inf.Verdadero("halloween: en la oleada " + oleada + " sin sombrero el ultimo paga monedas", EventoHalloween.PremioCon(EventoHalloween.Hitos - 1, oleada, false) > 0);
+            }
+
+            // Antes de las fechas no pasa nada.
+            EmpezarCaso("{\"version\":6,\"monedas\":100,\"mejorOleada\":10}", null);
+            EventoHalloween.UsarParaPruebas(20261023, 0);
+            inf.Verdadero("halloween: el 23/10 no esta activo", !EventoHalloween.Activo);
+            EventoHalloween.Asegurar();
+            inf.Igual("halloween: un progreso de la 6 arranca sin edicion", 0, Progreso.Halloween.edicion);
+            inf.Igual("halloween: y sin oleada anotada", -1, Progreso.Halloween.oleada);
+            EventoHalloween.Sumar(50);
+            inf.Cerca("halloween: fuera de las fechas los caramelos no cuentan", 0, Progreso.Halloween.caramelos, 0);
+            EventoHalloween.UsarParaPruebas(20260601, 1);
+            inf.Verdadero("halloween: forzado (la APK de prueba) esta activo fuera de las fechas", EventoHalloween.Activo);
+
+            // El primer dia: la edicion arranca con la mejor oleada de ese momento, congelada.
+            EventoHalloween.UsarParaPruebas(20261024, 0);
+            EventoHalloween.Asegurar();
+            inf.Igual("halloween: la edicion es 2026", 2026, Progreso.Halloween.edicion);
+            inf.Igual("halloween: congela la oleada 10", 10, Progreso.Halloween.oleada);
+            inf.Verdadero("halloween: el ultimo hito es el sombrero", EventoHalloween.EsElSombrero(EventoHalloween.Hitos - 1));
+            Progreso.RegistrarOleadaCompletada(30);
+            inf.Igual("halloween: mejorar la marca no cambia la vara", 10, EventoHalloween.OleadaDeLaVara);
+            inf.Cerca("halloween: el primer hito con la vara de la 10", EventoHalloween.UmbralCon(0, 10), EventoHalloween.Umbral(0), 0);
+
+            double umbral0 = EventoHalloween.Umbral(0);
+            EventoHalloween.Sumar(umbral0 - 1);
+            inf.Igual("halloween: a un caramelo no se alcanza", 0, EventoHalloween.Alcanzados);
+            EventoHalloween.Sumar(1);
+            inf.Igual("halloween: con el que falta, el primero", 1, EventoHalloween.Alcanzados);
+            inf.Igual("halloween: uno para cobrar", 1, EventoHalloween.PorCobrar);
+            double antes = Progreso.Monedas;
+            double premio0 = EventoHalloween.Premio(0);
+            inf.Cerca("halloween: cobrar paga el premio del primero", premio0, EventoHalloween.CobrarSiguiente(), 1e-9);
+            inf.Cerca("halloween: las monedas llegaron", antes + premio0, Progreso.Monedas, 1e-6);
+            inf.Cerca("halloween: no cuentan como jugadas", 0, Progreso.MonedasGanadasJugando, 1e-9);
+            inf.Cerca("halloween: cobrar de nuevo no paga", 0, EventoHalloween.CobrarSiguiente(), 0);
+
+            // Se guarda.
+            double caramelos = EventoHalloween.Caramelos;
+            Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+            inf.Cerca("halloween: se releen los caramelos", caramelos, Progreso.Halloween.caramelos, 1e-9);
+            inf.Igual("halloween: se relee lo cobrado", 1, EventoHalloween.Cobrados);
+            inf.Igual("halloween: se relee la oleada congelada", 10, Progreso.Halloween.oleada);
+
+            // Todos los hitos: el ultimo da el sombrero y ninguna moneda.
+            EventoHalloween.Sumar(EventoHalloween.Umbral(EventoHalloween.Hitos - 1));
+            inf.Igual("halloween: alcanzados todos", EventoHalloween.Hitos, EventoHalloween.Alcanzados);
+            for (int i = 1; i < EventoHalloween.Hitos - 1; i++) EventoHalloween.CobrarSiguiente();
+            inf.Verdadero("halloween: sin el ultimo, sin sombrero", !EventoHalloween.TieneSombrero);
+            inf.Cerca("halloween: el sombrero no paga monedas", 0, EventoHalloween.CobrarSiguiente(), 0);
+            inf.Verdadero("halloween: el sombrero es suyo", EventoHalloween.TieneSombrero);
+            inf.Igual("halloween: nada mas para cobrar", 0, EventoHalloween.PorCobrar);
+
+            // Termina: lo que queda se cierra una vez, y el sombrero sigue.
+            EventoHalloween.UsarParaPruebas(20261110, 0);
+            EventoHalloween.CerrarSiTermino();
+            inf.Verdadero("halloween: el 10/11 la edicion queda cerrada", Progreso.Halloween.cerrado);
+            inf.Verdadero("halloween: el sombrero queda despues del evento", EventoHalloween.TieneSombrero);
+            Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+            inf.Verdadero("halloween: y se relee", EventoHalloween.TieneSombrero);
+
+            // La edicion de 2027: de cero, y el ultimo hito paga monedas porque ya lo tiene.
+            EventoHalloween.UsarParaPruebas(20271024, 0);
+            EventoHalloween.Asegurar();
+            inf.Igual("halloween: 2027 es otra edicion", 2027, Progreso.Halloween.edicion);
+            inf.Cerca("halloween: 2027 arranca sin caramelos", 0, Progreso.Halloween.caramelos, 0);
+            inf.Igual("halloween: con la oleada de ese dia", 30, Progreso.Halloween.oleada);
+            inf.Verdadero("halloween: con el sombrero, el ultimo hito no es el sombrero", !EventoHalloween.EsElSombrero(EventoHalloween.Hitos - 1));
+            inf.Verdadero("halloween: y paga monedas", EventoHalloween.Premio(EventoHalloween.Hitos - 1) > 0);
+
+            // Lo que no se cobra en las fechas se cobra solo al terminar, sombrero incluido, una vez.
+            EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":0,\"mejorOleada\":8}", null);
+            EventoHalloween.UsarParaPruebas(20261101, 0);
+            EventoHalloween.Asegurar();
+            EventoHalloween.Sumar(EventoHalloween.Umbral(EventoHalloween.Hitos - 1));
+            double debe = 0;
+            for (int i = 0; i < EventoHalloween.Hitos; i++) debe += EventoHalloween.Premio(i);
+            EventoHalloween.UsarParaPruebas(20261115, 0);
+            inf.Cerca("halloween: al terminar cobra todo lo que quedo", debe, EventoHalloween.CerrarSiTermino(), 1e-6);
+            inf.Cerca("halloween: con esas monedas", debe, Progreso.Monedas, 1e-6);
+            inf.Verdadero("halloween: y el sombrero", EventoHalloween.TieneSombrero);
+            inf.Cerca("halloween: cerrar de nuevo no paga", 0, EventoHalloween.CerrarSiTermino(), 0);
+            inf.Cerca("halloween: ni Asegurar fuera de las fechas", debe, AseguradoYMonedas(), 1e-6);
+        }
+        finally
+        {
+            EventoHalloween.UsarParaPruebas(-1, -1);
+        }
+    }
+
+    static double AseguradoYMonedas()
+    {
+        EventoHalloween.Asegurar();
+        return Progreso.Monedas;
+    }
+
+    // Lo que arma ConstructorHalloween y lo que el juego pone por codigo: que este en
+    // Resources, sin colliders, con los shaders que ya usan las escenas (uno que solo esta en
+    // Resources no entra en el telefono si nadie lo usa, pero estos tres los usan los
+    // decorados), el caramelo como moneda con su marca, los iconos, los lugares de las
+    // calabazas y el hueso de la cabeza de los modelos.
+    static void ProbarPrefabsDeHalloween(Informe inf)
+    {
+        string[] prefabs =
+        {
+            DecoradoHalloween.RutaCalabaza, DecoradoHalloween.RutaCalabazaChica, Disfraces.RutaCabezaDeCalabaza,
+            Disfraces.RutaSombreroDeBruja, Disfraces.RutaSombreroDeCalabaza, "Halloween/Caramelo",
+        };
+        var shadersDelJuego = new HashSet<string> { "Standard", "Unlit/Color", "ShowBies/CharcoDeLuz" };
+        foreach (var ruta in prefabs)
+        {
+            var prefab = Resources.Load<GameObject>(ruta);
+            if (!inf.Verdadero("halloween: esta Resources/" + ruta, prefab != null)) continue;
+            inf.Igual("halloween: " + ruta + " sin colliders", 0, prefab.GetComponentsInChildren<Collider>(true).Length);
+            var raros = new List<string>();
+            foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
+                foreach (var m in r.sharedMaterials)
+                    if (m == null || m.shader == null || !shadersDelJuego.Contains(m.shader.name)) raros.Add(r.name + ":" + (m != null && m.shader != null ? m.shader.name : "null"));
+            inf.Igual("halloween: " + ruta + " con los shaders de los decorados", "", string.Join(", ", raros));
+            var escala = prefab.transform.localScale;
+            inf.Verdadero("halloween: " + ruta + " con escala pareja y positiva",
+                          escala.x > 0f && Mathf.Approximately(escala.x, escala.y) && Mathf.Approximately(escala.x, escala.z));
+        }
+
+        var caramelo = Resources.Load<Moneda>("Halloween/Caramelo");
+        var moneda = AssetDatabase.LoadAssetAtPath<Moneda>("Assets/Prefabs/Moneda.prefab");
+        inf.Verdadero("halloween: el caramelo es un caramelo y la moneda no",
+                      caramelo != null && caramelo.caramelo && moneda != null && !moneda.caramelo);
+        inf.Verdadero("halloween: EventoHalloween encuentra el caramelo", EventoHalloween.CarameloPrefab == caramelo && caramelo != null);
+        var grande = Resources.Load<GameObject>(DecoradoHalloween.RutaCalabaza);
+        inf.Verdadero("halloween: la calabaza grande tiene su halo y su charco",
+                      grande != null && grande.transform.Find("Halo") != null && grande.transform.Find("Charco") != null);
+        inf.Verdadero("halloween: los iconos estan en Resources",
+                      Resources.Load<Sprite>("IconoCalabaza") != null && Resources.Load<Sprite>("IconoCaramelo") != null);
+
+        foreach (var modelo in new[] { "Assets/ToonyTinyPeople/TT_demo/models/TT_demo_zombie.FBX", "Assets/ToonyTinyPeople/TT_demo/models/TT_demo_male_A.FBX",
+                                       "Assets/Prefabs/Personajes/ZombiRapido.prefab" })
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<GameObject>(modelo);
+            var cabeza = asset != null ? Disfraces.Cabeza(asset.transform) : null;
+            inf.Igual("halloween: el hueso de la cabeza de " + Path.GetFileName(modelo), "Bip001 Head", cabeza != null ? cabeza.name : "(no esta)");
+        }
+
+        var lugares = DecoradoHalloween.LugaresDeLaPartida();
+        int grandes = 0;
+        bool adentro = true, libre = true;
+        foreach (var l in lugares)
+        {
+            if (!l.chica) grandes++;
+            adentro &= Mathf.Abs(l.posicion.x) <= DecoradoHalloween.Borde + 2f && Mathf.Abs(l.posicion.z) <= DecoradoHalloween.Borde + 2f;
+            if (!l.chica) libre &= new Vector2(l.posicion.x, l.posicion.z).magnitude >= DecoradoHalloween.LibreAlCentro;
+        }
+        inf.Verdadero("halloween: en la partida hay " + grandes + " calabazas farol (de 60 a 130)", grandes >= 60 && grandes <= 130);
+        inf.Verdadero("halloween: todas adentro de las paredes invisibles", adentro);
+        inf.Verdadero("halloween: ninguna donde arranca el jugador", libre);
+        bool deFrente = true;
+        foreach (var l in DecoradoHalloween.LugaresDelMenu())
+            if (!l.chica) deFrente &= Mathf.Abs(Mathf.DeltaAngle(l.giro, DecoradoHalloween.HaciaLaCamara(l.posicion, DecoradoHalloween.CamaraDelMenu))) <= 15f;
+        inf.Verdadero("halloween: las del menu miran a su camara", deFrente);
+    }
+
+    // El pool de monedas es uno por prefab: un caramelo guardado no vuelve a salir como moneda
+    // ni al reves (con la pila unica de antes, pasaba).
+    static void ProbarPoolDeCaramelos(Informe inf)
+    {
+        var moneda = AssetDatabase.LoadAssetAtPath<Moneda>("Assets/Prefabs/Moneda.prefab");
+        var caramelo = Resources.Load<Moneda>("Halloween/Caramelo");
+        if (!inf.Verdadero("pool: estan la moneda y el caramelo", moneda != null && caramelo != null)) return;
+        var creados = new List<Moneda>();
+        try
+        {
+            var m1 = Moneda.Obtener(moneda);
+            var c1 = Moneda.Obtener(caramelo);
+            creados.Add(m1);
+            creados.Add(c1);
+            m1.Devolver();
+            c1.Devolver();
+            var c2 = Moneda.Obtener(caramelo);
+            var m2 = Moneda.Obtener(moneda);
+            creados.Add(c2);
+            creados.Add(m2);
+            inf.Verdadero("pool: el caramelo vuelve como caramelo", c2 == c1 && c2.caramelo);
+            inf.Verdadero("pool: la moneda vuelve como moneda", m2 == m1 && !m2.caramelo);
+            inf.Verdadero("pool: cada una sabe de que prefab salio", m2.Origen == moneda && c2.Origen == caramelo);
+            c2.Devolver();
+            var m3 = Moneda.Obtener(moneda);
+            creados.Add(m3);
+            inf.Verdadero("pool: con solo un caramelo guardado, pedir una moneda crea una moneda", m3 != c2 && !m3.caramelo);
+        }
+        finally
+        {
+            foreach (var m in creados) if (m != null) Object.DestroyImmediate(m.gameObject);
+        }
+    }
+
+    // Los caramelos del HUD van en el renglon de los FPS (ContadorCaramelos), que baja uno: el
+    // renglon tiene que estar libre, debajo de la oleada o del nivel, y bajar al menos lo que
+    // mide el texto de las monedas que se copia.
+    static void ProbarHudDeCaramelos(Informe inf)
+    {
+        foreach (var ruta in new[] { "Assets/Escenas/WaveMode.unity", "Assets/Escenas/ShowBies1.unity" })
+        {
+            string nombre = Path.GetFileNameWithoutExtension(ruta);
+            LeerEscena(ruta, escena =>
+            {
+                var fps = Buscar<ContadorFps>(escena);
+                var monedas = Buscar<ContadorMonedas>(escena);
+                if (!inf.Verdadero("hud caramelos " + nombre + ": estan los FPS y las monedas", fps != null && monedas != null && monedas.texto != null)) return;
+                var rtFps = (RectTransform)fps.transform;
+                var rtMonedas = monedas.texto.rectTransform;
+                inf.Verdadero("hud caramelos " + nombre + ": el texto copiado y los FPS cuelgan del mismo lado", rtFps.parent == rtMonedas.parent);
+                float arriba = rtFps.anchoredPosition.y, abajo = arriba - rtMonedas.sizeDelta.y;
+                inf.Verdadero("hud caramelos " + nombre + ": bajar los FPS un renglon les deja lugar", ContadorCaramelos.Renglon >= rtMonedas.sizeDelta.y);
+                var pisados = new List<string>();
+                foreach (RectTransform hermano in rtFps.parent)
+                {
+                    if (hermano == rtFps || !hermano.gameObject.activeSelf) continue;
+                    if (hermano.anchorMin != rtFps.anchorMin) continue;
+                    float suArriba = hermano.anchoredPosition.y + (1f - hermano.pivot.y) * hermano.sizeDelta.y;
+                    float suAbajo = suArriba - hermano.sizeDelta.y;
+                    if (suAbajo < arriba && suArriba > abajo) pisados.Add(hermano.name);
+                }
+                inf.Igual("hud caramelos " + nombre + ": el renglon esta libre", "", string.Join(", ", pisados));
+            });
+        }
     }
 
     // 1. El catalogo existe, valida y tiene las ocho mejoras en orden.

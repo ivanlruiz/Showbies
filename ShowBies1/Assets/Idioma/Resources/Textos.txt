@@ -31,6 +31,7 @@ sonido_efectos	EFFECTS	EFECTOS
 sonido_musica	MUSIC	MÚSICA
 opciones_fps	SHOW FPS	MOSTRAR FPS
 opciones_privacidad	PRIVACY	PRIVACIDAD
+opciones_sombrero	PUMPKIN HAT	SOMBRERO DE CALABAZA
 idioma_titulo	LANGUAGE	IDIOMA
 
 # --- Primera vez (GuiaPrimeraPartida y GuiaPrimeraCompra)
@@ -180,6 +181,7 @@ hud_puntos	<size=55%>SCORE</size>  {0}	<size=55%>PUNTOS</size>  {0}
 hud_nivel	Level {0}	Nivel {0}
 hud_oleada	Wave {0}\n<size=75%>Zombies {1}/{2}</size>	Oleada {0}\n<size=75%>Zombis {1}/{2}</size>
 hud_combo	COMBO x{0}	COMBO x{0}
+hud_caramelos	<size=55%>CANDY</size>  {0}	<size=55%>CARAMELOS</size>  {0}
 combo_10	RAMPAGE!	¡ARRASANDO!
 combo_25	MASSACRE!	¡MASACRE!
 combo_50	UNSTOPPABLE!	¡IMPARABLE!
@@ -239,3 +241,14 @@ diaria_dia	DAY {0}	DÍA {0}
 diaria_cobrar	CLAIM +{0}	COBRAR +{0}
 diaria_cobrado	+{0} COINS!	¡+{0} MONEDAS!
 diaria_video	VIDEO: +{0} MORE	VÍDEO: +{0} MÁS
+halloween_boton	HALLOWEEN	HALLOWEEN
+halloween_titulo	HALLOWEEN	HALLOWEEN
+halloween_quedan	{0} DAYS LEFT	QUEDAN {0} DÍAS
+halloween_ultimo_dia	LAST DAY!	¡ÚLTIMO DÍA!
+halloween_caramelos	CANDY	CARAMELOS
+halloween_como	KILL ZOMBIES AND GRAB THEIR CANDY	MATA ZOMBIS Y RECOGE SUS CARAMELOS
+halloween_sombrero	HAT!	¡SOMBRERO!
+halloween_sombrero_puesto	YOU WEAR THE PUMPKIN HAT! (TURN IT OFF IN OPTIONS)	¡LLEVAS EL SOMBRERO DE CALABAZA! (SE QUITA EN OPCIONES)
+halloween_aviso	HALLOWEEN PRIZE!	¡PREMIO DE HALLOWEEN!
+halloween_aviso_monedas	+{0} COINS WAITING IN THE MENU	+{0} MONEDAS TE ESPERAN EN EL MENÚ
+halloween_aviso_sombrero	PUMPKIN HAT! CLAIM IT IN THE MENU	¡SOMBRERO DE CALABAZA! RECÓGELO EN EL MENÚ

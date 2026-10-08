@@ -51,6 +51,13 @@ public class BotonAtrasMenu : MonoBehaviour
             return;
         }
 
+        // La de Halloween la instala el evento en el menu (InstaladorHalloween): no esta cableada.
+        if (VentanaHalloween.Abierta)
+        {
+            VentanaHalloween.CerrarLaAbierta();
+            return;
+        }
+
         if (bestiario != null && VentanaBestiario.Abierta)
         {
             bestiario.Cerrar();
