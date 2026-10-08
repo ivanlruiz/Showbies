@@ -265,6 +265,13 @@ monedas (ver CLAUDE.md, Anuncios).
    revisa la app (2 o 3 días) y recién ahí deja de limitar los anuncios. **Ojo con la cuenta**: AdMob abre con la
    cuenta predeterminada de Chrome (otra de Ivan, la de AdSense para YouTube) y ofrece crear AdMob ahí; la de ShowBies
    se abre con `?authuser=2`, como Play Console en `/u/2`.
+   **8/10:** sigue "Sin verificar" después de otro "Buscar actualizaciones", y la pestaña app-ads.txt dice que todavía no
+   vio solicitudes con el archivo (con muy pocas solicitudes no muestra el estado). En los últimos 7 días hubo **4
+   solicitudes, respondidas al 100 %, y 0 impresiones**: cada vez que se abre el juego pide un anuncio por lugar (los
+   tres videos y el automático), así que es **una sola apertura de la 1.4.0**, seguramente la de Ivan. Los anuncios de
+   verdad cargan bien. Ivan no tiene que mirar ni tocar anuncios en la versión de Play de su teléfono (es tráfico no
+   válido y AdMob puede suspender la cuenta): para probar está la APK `.prueba`, o sumar su teléfono como dispositivo de
+   prueba en AdMob (Configuración → Dispositivos de prueba, con su ID de publicidad).
 
 **Anuncios automáticos (intersticiales): hechos el 6/10**, cuando ya andaban los videos (lo había decidido Ivan).
 Van con el mismo puente y estas reglas: solo al salir de la derrota (OTRA VEZ, MENÚ, MEJORAS o el atrás), desde la 3.ª
