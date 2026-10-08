@@ -2,6 +2,9 @@
 
 Play pide estos tres textos por idioma. Los límites son de Google y están contados.
 
+> **8/10/2026:** hay una propuesta nueva para cargar, con los títulos, las descripciones puestas al día, las
+> capturas y la tarjeta del evento de Halloween, en `ficha_propuesta.md`. Lo de abajo es lo que se cargó antes.
+
 > **Actualizado el 16/9/2026:** la descripción larga que está cargada en Play ya no es la de abajo. Cambió para
 > contar que la granada y el modo libre se desbloquean (el libre al llegar a la oleada 12), que la partida de
 > oleadas se retoma donde se dejó, y para sumar los golpes críticos. La consola es la fuente de verdad.
