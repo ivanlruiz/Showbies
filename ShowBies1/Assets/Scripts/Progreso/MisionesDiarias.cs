@@ -104,11 +104,12 @@ public static class MisionesDiarias
 
     // Cobra lo que quedo cumplido y sin cobrar del dia que termina, cofre incluido: el
     // jugador ya hizo el trabajo, y perderlo por dormirse es de las cosas que hacen
-    // desinstalar. No avisa en pantalla: las monedas aparecen en el contador.
+    // desinstalar. Lo avisa el cartel del menu (CobrosSolos).
     private static void CerrarElDia(EstadoMisiones estado)
     {
         int marca = Math.Max(0, estado.mejorOleadaAlArmar);
         int cobradas = 0;
+        double pagado = 0;
         foreach (var mision in estado.lista)
         {
             if (mision.cobrada) { cobradas++; continue; }
@@ -116,13 +117,18 @@ public static class MisionesDiarias
             mision.cobrada = true;
             cobradas++;
             Progreso.ContarMisionCobrada();
-            Progreso.CobrarPremio("mision_" + mision.tipo, Monto(mision.dificultad, marca), false);
+            double monto = Monto(mision.dificultad, marca);
+            Progreso.CobrarPremio("mision_" + mision.tipo, monto, false);
+            pagado += monto;
         }
         if (cobradas >= Cantidad && !estado.cofreCobrado && estado.lista.Count == Cantidad)
         {
             estado.cofreCobrado = true;
-            Progreso.CobrarPremio("mision_cofre", MontoCofre(marca), false);
+            double cofre = MontoCofre(marca);
+            Progreso.CobrarPremio("mision_cofre", cofre, false);
+            pagado += cofre;
         }
+        CobrosSolos.Anotar(CobrosSolos.Origen.Misiones, pagado);
     }
 
     // Las tres del dia, sin contadores: un tipo distinto por dificultad, sorteados con

@@ -64,6 +64,14 @@ semanal_monedas	Earn {0} coins	Gana {0} monedas
 semanal_jefes	Defeat {0} bosses	Derrota {0} jefes
 semanal_termina	ENDS IN {0} DAYS	TERMINA EN {0} DÍAS
 semanal_termina_hoy	LAST DAY!	¡ÚLTIMO DÍA!
+aviso_semanal	WEEKLY CHALLENGE DONE!	¡DESAFÍO SEMANAL CUMPLIDO!
+cobro_solo_titulo	PRIZES COLLECTED!	¡PREMIOS COBRADOS!
+cobro_solo_detalle	You had left them unclaimed	Los habías dejado sin cobrar
+cobro_solo_misiones	DAILY MISSIONS: +{0} COINS	MISIONES DEL DÍA: +{0} MONEDAS
+cobro_solo_semanal	WEEKLY CHALLENGE: +{0} COINS	DESAFÍO SEMANAL: +{0} MONEDAS
+cobro_solo_halloween	HALLOWEEN: +{0} COINS	HALLOWEEN: +{0} MONEDAS
+cobro_solo_halloween_sombrero	HALLOWEEN: +{0} COINS AND THE PUMPKIN HAT	HALLOWEEN: +{0} MONEDAS Y EL SOMBRERO DE CALABAZA
+cobro_solo_sombrero	HALLOWEEN: THE PUMPKIN HAT	HALLOWEEN: EL SOMBRERO DE CALABAZA
 misiones_cofre_abierto	OPENED! +{0}	¡ABIERTO! +{0}
 objetivo_mision	NEXT: {0}  {1}/{2}	PRÓXIMO: {0}  {1}/{2}
 objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} MONEDAS PARA {1} NIVEL {2}

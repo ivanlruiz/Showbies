@@ -74,12 +74,14 @@ public static class DesafioSemanal
     }
 
     // Cobra lo que quedo cumplido y sin cobrar de la semana que termina: el jugador ya
-    // hizo el trabajo.
+    // hizo el trabajo. Lo avisa el cartel del menu (CobrosSolos).
     private static void CerrarLaSemana(EstadoSemanal estado)
     {
         if (estado.cobrado || !CumplidoCon(estado)) return;
         estado.cobrado = true;
-        Progreso.CobrarPremio("semanal_" + estado.tipo, Monto(Math.Max(0, estado.mejorOleadaAlArmar)), false);
+        double monto = Monto(Math.Max(0, estado.mejorOleadaAlArmar));
+        Progreso.CobrarPremio("semanal_" + estado.tipo, monto, false);
+        CobrosSolos.Anotar(CobrosSolos.Origen.Semanal, monto);
     }
 
     // El tipo de la semana, sorteado con el lunes de semilla: el mismo lunes siempre sale

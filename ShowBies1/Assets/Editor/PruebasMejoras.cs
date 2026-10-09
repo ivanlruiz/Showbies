@@ -445,7 +445,15 @@ public static class PruebasMejoras
             double debe = 0;
             for (int i = 0; i < EventoHalloween.Hitos; i++) debe += EventoHalloween.Premio(i);
             EventoHalloween.UsarParaPruebas(20261115, 0);
+            CobrosSolos.Tomar();
             inf.Cerca("halloween: al terminar cobra todo lo que quedo", debe, EventoHalloween.CerrarSiTermino(), 1e-6);
+            var cobrosDelCierre = CobrosSolos.Tomar();
+            inf.Verdadero("halloween: y queda anotado para el cartel del menu, con el sombrero",
+                          cobrosDelCierre.Count == 1 && cobrosDelCierre[0].origen == CobrosSolos.Origen.Halloween &&
+                          cobrosDelCierre[0].sombrero && System.Math.Abs(cobrosDelCierre[0].monedas - debe) < 1e-6);
+            inf.Verdadero("halloween: el renglon nombra el sombrero",
+                          cobrosDelCierre.Count == 1 && CobrosSolos.Renglon(cobrosDelCierre[0]) ==
+                          Textos.Formato("cobro_solo_halloween_sombrero", FormatoNumeros.Compacto(System.Math.Floor(debe + 1e-6))));
             inf.Cerca("halloween: con esas monedas", debe, Progreso.Monedas, 1e-6);
             inf.Verdadero("halloween: y el sombrero", EventoHalloween.TieneSombrero);
             inf.Cerca("halloween: cerrar de nuevo no paga", 0, EventoHalloween.CerrarSiTermino(), 0);
@@ -5073,9 +5081,19 @@ public static class PruebasMejoras
         double esperadoDeAyer = MisionesDiarias.MontoCofre(Progreso.MejorOleada);
         for (int d = 0; d < MisionesDiarias.Cantidad; d++) esperadoDeAyer += MisionesDiarias.Monto(d, Progreso.MejorOleada);
         double antesDeMedianoche = Progreso.Monedas;
+        CobrosSolos.Tomar();
         MisionesDiarias.Asegurar();
         inf.Cerca("misiones: a medianoche se cobra lo cumplido y el cofre",
                   esperadoDeAyer, Progreso.Monedas - antesDeMedianoche, 1e-9);
+        var cobrosDeMedianoche = CobrosSolos.Tomar();
+        inf.Verdadero("misiones: y queda anotado para el cartel del menu, con lo que pago",
+                      cobrosDeMedianoche.Count == 1 && cobrosDeMedianoche[0].origen == CobrosSolos.Origen.Misiones &&
+                      System.Math.Abs(cobrosDeMedianoche[0].monedas - esperadoDeAyer) < 1e-6);
+        inf.Igual("misiones: el renglon del cartel",
+                  Textos.Formato("cobro_solo_misiones", FormatoNumeros.Compacto(System.Math.Floor(esperadoDeAyer + 1e-6))),
+                  cobrosDeMedianoche.Count == 1 ? CobrosSolos.Renglon(cobrosDeMedianoche[0]) : "");
+        MisionesDiarias.Asegurar();
+        inf.Verdadero("misiones: el mismo dia no anota nada mas", !CobrosSolos.Hay);
         inf.Verdadero("misiones: y despues hay tres nuevas sin cobrar",
                       MisionesDiarias.DeHoy.Count == 3 && MisionesDiarias.Cobradas == 0 && !MisionesDiarias.CofreCobrado);
 
@@ -5305,9 +5323,14 @@ public static class PruebasMejoras
         estado.mejorOleadaAlArmar = 0;
         double antes = Progreso.Monedas;
         double esperadoDeLaSemanaVieja = DesafioSemanal.Monto(0);
+        CobrosSolos.Tomar();
         DesafioSemanal.Asegurar();
         inf.Cerca("semanal: al cambiar de semana se cobra lo cumplido",
                   esperadoDeLaSemanaVieja, Progreso.Monedas - antes, 1e-9);
+        var cobrosDeLaSemana = CobrosSolos.Tomar();
+        inf.Verdadero("semanal: y queda anotado para el cartel del menu",
+                      cobrosDeLaSemana.Count == 1 && cobrosDeLaSemana[0].origen == CobrosSolos.Origen.Semanal &&
+                      System.Math.Abs(cobrosDeLaSemana[0].monedas - esperadoDeLaSemanaVieja) < 1e-6);
         inf.Verdadero("semanal: y queda uno nuevo sin cobrar",
                       Progreso.Semanal.lunes == lunesGuardado && !Progreso.Semanal.cobrado);
     }

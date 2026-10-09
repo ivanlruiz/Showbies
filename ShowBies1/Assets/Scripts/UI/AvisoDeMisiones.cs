@@ -14,6 +14,11 @@ using UnityEngine;
 // en el menu), el desbloqueo del modo libre y, en Halloween, cada hito de caramelos que se
 // alcanza (EventoHalloween). Si llegan dos a la vez, salen una despues de otra.
 //
+// Y lo que antes pasaba en silencio (revision del 9/10, mejora 5): "¡DESAFIO SEMANAL
+// CUMPLIDO!", el premio mas grande del juego, al cumplirse en la partida, y lo que se cobro
+// solo al empezarla (el cierre del dia o de la semana: CobrosSolos), si el menu no llego a
+// mostrarlo.
+//
 // Y el progreso de la partida (revision del 9/10): en las oleadas, "¡TE LLEGA PARA UNA
 // MEJORA!" cuando las monedas juntadas alcanzan para comprar algo, solo en el descanso entre
 // oleadas (ir a la tienda desde la pausa ahi no hace perder nada; en plena horda distrae), y
@@ -68,6 +73,7 @@ public class AvisoDeMisiones : MonoBehaviour
 
     private int nivelVisto;
     private bool libreVisto;
+    private bool semanalVisto;
     private int hitosVistos;
 
     private WaveManager oleadas;
@@ -81,7 +87,9 @@ public class AvisoDeMisiones : MonoBehaviour
     private void Start()
     {
         MisionesDiarias.Asegurar();
+        DesafioSemanal.Asegurar();
         Anotar(true);
+        semanalVisto = DesafioSemanal.Cumplido;
         for (int i = 0; i < estrellasVistas.Length; i++) estrellasVistas[i] = Bestiario.Alcanzadas(Bestiario.Tipos[i]);
         // Los logros que se ganaron fuera de una partida (en el menu, comprando el
         // critico) se anotan sin aviso: no se ganaron aca.
@@ -141,6 +149,35 @@ public class AvisoDeMisiones : MonoBehaviour
             color = colorRecord,
             festejo = true,
         });
+    }
+
+    // El desafio de la semana, una vez, al cumplirse en esta partida.
+    private void AnotarSemanal()
+    {
+        if (semanalVisto || !DesafioSemanal.Cumplido) return;
+        semanalVisto = true;
+        pendientes.Enqueue(new Aviso
+        {
+            titulo = Textos.De("aviso_semanal"),
+            detalle = Textos.Formato("aviso_nivel_premio", FormatoNumeros.Compacto(DesafioSemanal.MontoDeEstaSemana)),
+            color = colorEstrella,
+            festejo = true,
+        });
+    }
+
+    // Lo que se cobro solo (CobrosSolos) y el menu no llego a mostrar: un aviso por cierre.
+    private void AnotarCobrosSolos()
+    {
+        if (!CobrosSolos.Hay) return;
+        foreach (var cobro in CobrosSolos.Tomar())
+        {
+            pendientes.Enqueue(new Aviso
+            {
+                titulo = Textos.De("cobro_solo_titulo"),
+                detalle = CobrosSolos.Renglon(cobro),
+                color = colorEstrella,
+            });
+        }
     }
 
     // Los hitos de Halloween que se alcanzan en esta partida, con lo que espera en el menu.
@@ -269,8 +306,10 @@ public class AvisoDeMisiones : MonoBehaviour
         if (t >= proximaRevision && !MenuPausa.JuegoCongelado)
         {
             proximaRevision = t + cadaCuanto;
+            AnotarCobrosSolos();
             AnotarModoLibre();
             Anotar(false);
+            AnotarSemanal();
             AnotarEstrellas();
             AnotarLogros();
             AnotarNivel();

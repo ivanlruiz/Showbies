@@ -51,9 +51,9 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia, NivelJugador, Logros
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, DiagnosticoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
@@ -72,7 +72,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
@@ -1008,8 +1008,8 @@ completada en el día y la lista).
   `RegistrarOleada`), no a cuál se llegó: contando el número de la oleada, retomar una partida guardada en la 25
   cumplía de una las de "llega a la 15" y "llega a la 24".
 - **Lo cumplido y sin cobrar no se pierde a medianoche**: al cambiar el día se cobra solo (`CerrarElDia`) antes de
-  armar las nuevas, cofre incluido, con la marca del día en que se armaron. No avisa en pantalla; las monedas aparecen
-  en el contador. Un progreso de antes de la marca la completa **antes** del cierre: hasta el 23/9 se completaba solo
+  armar las nuevas, cofre incluido, con la marca del día en que se armaron, y lo avisa el cartel de los premios
+  cobrados solos (ver Lo que se cobra solo, abajo). Un progreso de antes de la marca la completa **antes** del cierre: hasta el 23/9 se completaba solo
   si seguía siendo el mismo día, y lo cumplido se pagaba al precio de la oleada 0 (160 monedas en vez de 76.250 en la
   45).
 - **Premio: una fracción de lo que dan las partidas que cuesta el objetivo** (0,4, 0,5 y 0,6 de 0,4, 1 y 2,5
@@ -1070,10 +1070,33 @@ dorada de arriba de la ventana de misiones.
   igual que las misiones y por la misma razón: si no, guardarlo sin cobrar hasta mejorar la marca sería la jugada
   óptima.
 - **Al cambiar de semana, lo cumplido sin cobrar se cobra solo** (`CerrarLaSemana`), como el cierre de medianoche
-  de las misiones. Entra por `CobrarPremio`: no cuenta como monedas ganadas jugando.
+  de las misiones, y lo avisa el mismo cartel. Entra por `CobrarPremio`: no cuenta como monedas ganadas jugando.
+- **Cumplirlo se avisa en la partida**: "¡DESAFÍO SEMANAL CUMPLIDO!" en dorado, con el festejo y el premio que espera en
+  el menú (`AvisoDeMisiones`, que arma la semana al empezar, como las misiones). Hasta la revisión del 9/10 el premio
+  más grande del juego se cumplía en silencio.
 - **En la ventana de misiones**: una fila dorada arriba de las tres del día, con la etiqueta DESAFÍO SEMANAL, su
   barra, el premio y los días que faltan ("TERMINA EN N DÍAS", y "¡ÚLTIMO DÍA!" el domingo). Cobrarlo salta y suena
   como una misión. Cuenta en la insignia del botón.
+
+### Lo que se cobra solo
+
+El cierre de medianoche de las misiones, el de la semana y el final de Halloween cobran solos lo que quedó cumplido
+(1.5.0, mejora 5 de la revisión del 9/10: hasta ahí el contador subía y nadie sabía por qué). Cada cierre lo anota en
+`CobrosSolos` (en memoria: si la app se cierra antes, se pierde el aviso y no las monedas) y lo muestra el primero que
+puede:
+
+- **En el menú, `CartelDeCobros`**: "¡PREMIOS COBRADOS!", "Los habías dejado sin cobrar" y un renglón por cierre
+  ("MISIONES DEL DÍA: +1.250 MONEDAS"), con el arpegio de cobrar una misión. Entra con un rebote, se queda 5 s y se va
+  solo, o al tocarlo. No está en la escena: se instala al cargar el menú (`sceneLoaded`) y toma la fuente, la píldora y
+  los sonidos de `VentanaMisiones`. Espera a la recompensa diaria y al consentimiento, y mientras está la reseña no se
+  pide. Va en un canvas propio por encima de la tienda, **que escala por el alto** (el del menú escala por el ancho):
+  así entra, a 180 del borde, debajo de la fila de botones redondos de las esquinas y encima de MEJORAS en 16:9, 20:9
+  y 21:9 (los dos crecen con el ancho y el cartel no).
+- **En la partida, `AvisoDeMisiones`**, si el cierre fue al empezarla: un aviso por cierre.
+
+**ShowBies > Pruebas > Premios cobrados solos (play)** (`PruebaCobrosSolos`) abre el menú con dos cobros anotados y
+mide el cartel contra los botones de las esquinas y MEJORAS, que se vaya solo y que no quede nada por mostrar
+(`Builds/prueba_cobros_solos.txt`, con la foto). La prueba de lógica mira que los tres cierres anoten lo que pagaron.
 
 ## Bestiario
 
@@ -1176,7 +1199,7 @@ para siempre.
   el hito anterior (`ProximoObjetivo.ElegirHalloween`); sin caramelos en la partida, solo lo que falta. Con la fila
   completa, vuelve lo de siempre.
 - **Al terminar, lo que quedó sin cobrar se cobra solo** (`CerrarSiTermino`, al entrar al menú, sombrero incluido), una
-  vez. La edición siguiente (`edicion`, el año) arranca de cero, y para quien ya tiene el sombrero el último hito paga
+  vez, y lo avisa el cartel de los premios cobrados solos (ver Lo que se cobra solo). La edición siguiente (`edicion`, el año) arranca de cero, y para quien ya tiene el sombrero el último hito paga
   1,5 partidas de monedas. **Atrasar el reloj no reabre nada** (`EventoHalloween.DiaQueCuenta`: el día nunca vuelve
   atrás del último visto, `EstadoHalloween.ultimoDia`): hasta la revisión del 9/10, poner el teléfono en el 5/11 reabría
   un evento terminado, y llevarlo a octubre del año anterior y de vuelta rearrancaba la fila y se cobraba otra vez.

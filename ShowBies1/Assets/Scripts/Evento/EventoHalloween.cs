@@ -234,7 +234,8 @@ public static class EventoHalloween
     }
 
     // Terminado el evento, lo que quedo sin cobrar se cobra solo (como el cierre de
-    // medianoche de las misiones), sombrero incluido. Devuelve las monedas que pago.
+    // medianoche de las misiones), sombrero incluido, y lo avisa el cartel del menu
+    // (CobrosSolos). Devuelve las monedas que pago.
     public static double CerrarSiTermino()
     {
         var estado = Progreso.Halloween;
@@ -242,7 +243,9 @@ public static class EventoHalloween
         if (Activo && estado.edicion == EdicionActual) return 0;
 
         double pagado = 0;
+        bool teniaSombrero = estado.sombrero;
         while (estado.cobrados < Alcanzados) pagado += CobrarSiguiente();
+        CobrosSolos.Anotar(CobrosSolos.Origen.Halloween, pagado, estado.sombrero && !teniaSombrero);
         estado.cerrado = true;
         Progreso.AvisarCambio();
         Progreso.Guardar();
