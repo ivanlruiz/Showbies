@@ -12,6 +12,11 @@ using UnityEngine.UI;
 // alcanzan no van aca: las dice el aviso de compras.
 //
 // Se arma en codigo sobre el fondo de Perdiste, con el estilo del aviso de compras.
+//
+// Durante Halloween manda el evento (revision del 9/10: los caramelos de la partida se
+// contaban y nadie los mostraba): "¡+7 CARAMELOS! TE FALTAN 12 PARA EL PROXIMO PREMIO", en
+// naranja, con la barra hasta el hito siguiente (ElegirHalloween). Con la fila completa,
+// vuelve lo de siempre.
 public class ProximoObjetivo : MonoBehaviour
 {
     public RectTransform padre;              // el fondo de la pantalla
@@ -22,6 +27,7 @@ public class ProximoObjetivo : MonoBehaviour
     public float duracionLlenado = 0.8f;
     public Color colorBarra = new Color(0.3f, 0.75f, 0.2f, 1f);
     public Color colorFondoBarra = new Color(0f, 0f, 0f, 0.2f);
+    public Color colorHalloween = new Color(1f, 0.55f, 0.1f, 1f);
 
     private CanvasGroup grupo;
     private RectTransform relleno;
@@ -31,12 +37,57 @@ public class ProximoObjetivo : MonoBehaviour
     private void Start()
     {
         string texto;
-        if (padre == null || !Elegir(out texto, out fraccion))
+        if (padre == null)
+        {
+            enabled = false;
+            return;
+        }
+        if (ElegirHalloween(out texto, out fraccion))
+        {
+            Armar(texto);
+            Pintar(colorHalloween);
+            return;
+        }
+        if (!Elegir(out texto, out fraccion))
         {
             enabled = false;
             return;
         }
         Armar(texto);
+    }
+
+    // El hito siguiente de Halloween, con los caramelos de esta partida si junto alguno. Falso
+    // fuera del evento o con la fila completa.
+    public static bool ElegirHalloween(out string texto, out float fraccion)
+    {
+        texto = null;
+        fraccion = 0f;
+        if (!EventoHalloween.Activo) return false;
+        int alcanzados = EventoHalloween.Alcanzados;
+        if (alcanzados >= EventoHalloween.Hitos) return false;
+
+        double caramelos = EventoHalloween.Caramelos;
+        double desde = alcanzados > 0 ? EventoHalloween.Umbral(alcanzados - 1) : 0;
+        double hasta = EventoHalloween.Umbral(alcanzados);
+        fraccion = hasta > desde ? Mathf.Clamp01((float)((caramelos - desde) / (hasta - desde))) : 0f;
+        double faltan = System.Math.Max(1, System.Math.Ceiling(hasta - caramelos - 1e-6));
+        string premio = Textos.De(EventoHalloween.EsElSombrero(alcanzados) ? "objetivo_halloween_sombrero" : "objetivo_halloween_premio");
+        double juntados = System.Math.Floor(EventoHalloween.CaramelosDeLaPartida + 1e-6);
+        string cuantos = FormatoNumeros.Compacto(faltan);
+        if (juntados >= 1)
+            texto = Textos.Formato(faltan == 1 ? "objetivo_halloween_partida_uno" : "objetivo_halloween_partida",
+                                   FormatoNumeros.Compacto(juntados), cuantos, premio);
+        else
+            texto = Textos.Formato(faltan == 1 ? "objetivo_halloween_uno" : "objetivo_halloween", cuantos, premio);
+        return true;
+    }
+
+    private TMP_Text textoArmado;
+
+    private void Pintar(Color color)
+    {
+        if (textoArmado != null) textoArmado.color = color;
+        if (relleno != null) relleno.GetComponent<Image>().color = color;
     }
 
     // El objetivo con mas avance entre las misiones sin cumplir y las mejoras que no
@@ -138,6 +189,7 @@ public class ProximoObjetivo : MonoBehaviour
             else tmp.color = estilo.color;
         }
         tmp.text = texto;
+        textoArmado = tmp;
         tmp.fontSize = 32f;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.textWrappingMode = TextWrappingModes.NoWrap;

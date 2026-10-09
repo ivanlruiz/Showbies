@@ -344,6 +344,9 @@ public static class PruebasMejoras
             EmpezarCaso("{\"version\":6,\"monedas\":100,\"mejorOleada\":10}", null);
             EventoHalloween.UsarParaPruebas(20261023, 0);
             inf.Verdadero("halloween: el 23/10 no esta activo", !EventoHalloween.Activo);
+            string objetivo;
+            float fraccionObjetivo;
+            inf.Verdadero("halloween: fuera del evento la derrota muestra lo de siempre", !ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo));
             EventoHalloween.Asegurar();
             inf.Igual("halloween: un progreso de la 6 arranca sin edicion", 0, Progreso.Halloween.edicion);
             inf.Igual("halloween: y sin oleada anotada", -1, Progreso.Halloween.oleada);
@@ -363,8 +366,20 @@ public static class PruebasMejoras
             inf.Cerca("halloween: el primer hito con la vara de la 10", EventoHalloween.UmbralCon(0, 10), EventoHalloween.Umbral(0), 0);
 
             double umbral0 = EventoHalloween.Umbral(0);
+            EventoHalloween.EmpezarPartida();
             EventoHalloween.Sumar(umbral0 - 1);
             inf.Igual("halloween: a un caramelo no se alcanza", 0, EventoHalloween.Alcanzados);
+
+            // La derrota (ProximoObjetivo): los caramelos de la partida y lo que falta para el hito.
+            inf.Verdadero("halloween: la derrota muestra el hito siguiente", ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo));
+            string premioSiguiente = Textos.De("objetivo_halloween_premio");
+            inf.Igual("halloween: con los de la partida y el que falta",
+                      Textos.Formato("objetivo_halloween_partida_uno", FormatoNumeros.Compacto(umbral0 - 1), FormatoNumeros.Compacto(1), premioSiguiente), objetivo);
+            inf.Cerca("halloween: con la barra casi llena", (umbral0 - 1) / umbral0, fraccionObjetivo, 1e-4);
+            EventoHalloween.EmpezarPartida();
+            ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo);
+            inf.Igual("halloween: sin caramelos en la partida, solo lo que falta",
+                      Textos.Formato("objetivo_halloween_uno", FormatoNumeros.Compacto(1), premioSiguiente), objetivo);
             EventoHalloween.Sumar(1);
             inf.Igual("halloween: con el que falta, el primero", 1, EventoHalloween.Alcanzados);
             inf.Igual("halloween: uno para cobrar", 1, EventoHalloween.PorCobrar);
@@ -382,9 +397,17 @@ public static class PruebasMejoras
             inf.Igual("halloween: se relee lo cobrado", 1, EventoHalloween.Cobrados);
             inf.Igual("halloween: se relee la oleada congelada", 10, Progreso.Halloween.oleada);
 
+            // A las puertas del ultimo, la derrota nombra el sombrero, con la barra desde el anterior.
+            EventoHalloween.Sumar(EventoHalloween.Umbral(EventoHalloween.Hitos - 2) - EventoHalloween.Caramelos);
+            ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo);
+            inf.Verdadero("halloween: antes del ultimo hito, la derrota nombra el sombrero (" + objetivo + ")",
+                          objetivo != null && objetivo.Contains(Textos.De("objetivo_halloween_sombrero")));
+            inf.Cerca("halloween: con la barra desde el hito anterior", 0, fraccionObjetivo, 1e-4);
+
             // Todos los hitos: el ultimo da el sombrero y ninguna moneda.
             EventoHalloween.Sumar(EventoHalloween.Umbral(EventoHalloween.Hitos - 1));
             inf.Igual("halloween: alcanzados todos", EventoHalloween.Hitos, EventoHalloween.Alcanzados);
+            inf.Verdadero("halloween: con la fila completa, la derrota vuelve a lo de siempre", !ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo));
             for (int i = 1; i < EventoHalloween.Hitos - 1; i++) EventoHalloween.CobrarSiguiente();
             inf.Verdadero("halloween: sin el ultimo, sin sombrero", !EventoHalloween.TieneSombrero);
             inf.Cerca("halloween: el sombrero no paga monedas", 0, EventoHalloween.CobrarSiguiente(), 0);
@@ -1801,8 +1824,22 @@ public static class PruebasMejoras
                 }
                 inf.Verdadero("obstaculos: en " + decorado + " una moneda que vuela hacia uno se frena en su borde", frenan);
 
+                // Las calabazas de Halloween que caen adentro de un obstaculo, o debajo de un
+                // techo, se esconden (DecoradoHalloween.QuedaTapada); las demas quedan.
+                var calabazas = DecoradoHalloween.LugaresDeLaPartida();
+                int tapadas = 0;
+                foreach (var lugar in calabazas)
+                    if (DecoradoHalloween.QuedaTapada(lugar)) tapadas++;
+                inf.Verdadero("halloween: en " + decorado + " se esconden las calabazas que tapa (" + tapadas + " de " + calabazas.Count + ") y quedan casi todas",
+                              (decorado != "Ciudad" || tapadas > 0) && tapadas < calabazas.Count / 3);
+
                 ProbarPersecucionEntreObstaculos(inf, decorado, huellas, redondos, nombres, radios, velocidades, salidas);
             }
+            CapitulosDeEscenario.UsarParaPruebas(null);
+            int sinDecorado = 0;
+            foreach (var lugar in DecoradoHalloween.LugaresDeLaPartida())
+                if (DecoradoHalloween.QuedaTapada(lugar)) sinDecorado++;
+            inf.Igual("halloween: sin obstaculos (la pradera) no se esconde ninguna calabaza", 0, sinDecorado);
         }
         finally
         {

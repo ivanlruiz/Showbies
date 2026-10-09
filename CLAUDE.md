@@ -1162,7 +1162,11 @@ para siempre.
   (`EstadoHalloween.oleada`, con piso en la 5): con caramelos fijos, uno de la oleada 40 llenaba la fila en una
   partida y uno nuevo no llegaba nunca; congelada, mejorar la marca no corre la meta. El premio entra por
   `CobrarPremio` (no son monedas jugadas). Se cobran de a uno, en orden, en la ventana; en la partida,
-  `AvisoDeMisiones` avisa cada hito alcanzado ("¡PREMIO DE HALLOWEEN!") en naranja.
+  `AvisoDeMisiones` avisa cada hito alcanzado ("¡PREMIO DE HALLOWEEN!") en naranja. **En la derrota, el próximo objetivo
+  es el evento** (1.5.0, mejora 3 de la revisión del 9/10: los caramelos de la partida se contaban y nadie los mostraba):
+  "¡+7 CARAMELOS! TE FALTAN 12 PARA EL PRÓXIMO PREMIO" (o PARA EL SOMBRERO DE CALABAZA), en naranja, con la barra desde
+  el hito anterior (`ProximoObjetivo.ElegirHalloween`); sin caramelos en la partida, solo lo que falta. Con la fila
+  completa, vuelve lo de siempre.
 - **Al terminar, lo que quedó sin cobrar se cobra solo** (`CerrarSiTermino`, al entrar al menú, sombrero incluido), una
   vez. La edición siguiente (`edicion`, el año) arranca de cero, y para quien ya tiene el sombrero el último hito paga
   1,5 partidas de monedas. **Atrasar el reloj no reabre nada** (`EventoHalloween.DiaQueCuenta`: el día nunca vuelve
@@ -1183,7 +1187,11 @@ para siempre.
   9 m con azar y semilla fija (unas 85 grandes), ninguna a menos de 6 m de donde arranca el jugador; en el menú, a los
   costados del camino de los zombis, mirando a su cámara. Sin colliders, en la capa de los personajes y juntadas con
   `CapitulosDeEscenario.Juntar`. Sus materiales usan solo Standard, `Unlit/Color` y `ShowBies/CharcoDeLuz`, que ya usan
-  las escenas (la prueba lo mira).
+  las escenas (la prueba lo mira). **La grilla es la misma en los tres capítulos**, y en la ciudad y el cementerio
+  algunas caían adentro de un edificio, un auto o una tumba: al poner y al sacar cada decorado, `CapitulosDeEscenario`
+  llama a `DecoradoHalloween.EsconderLasTapadas`, que apaga los renderers de las que quedan adentro de un obstáculo
+  (`Ocupado`, con el radio de la calabaza) o en el piso que esconde un techo (`Tapado`). En la ciudad son unas 25 de
+  119, en el cementerio una, y en la pradera ninguna (la prueba de lógica lo cuenta).
 - **El sombrero de calabaza** se pone en las tres escenas de juego, con evento o sin él (`SombreroDelJugador`, en Start,
   como la pistola), y se apaga en OPCIONES (SOMBRERO DE CALABAZA, solo si se ganó; `PlayerPrefs["SombreroCalabaza"]`,
   porque mostrarlo es del teléfono y tenerlo es progreso).
@@ -1515,7 +1523,8 @@ trampa).
 - **Derrota**: GAME OVER, despues **las monedas de la partida** (grandes: es lo que te llevas), despues puntaje y
   record chicos, el renglon de la oferta de video o el aviso de compras, **el proximo objetivo** (`ProximoObjetivo`, armado
   en codigo en y = -155: la mision a medias o la mejora que todavia no alcanza con mas avance, con una barra que se llena;
-  el color sale del papel del aviso de compras, `Acento`, y no de su color, que en Perdiste arranca apagado y sin pintar)
+  el color sale del papel del aviso de compras, `Acento`, y no de su color, que en Perdiste arranca apagado y sin pintar;
+  durante Halloween, los caramelos y el hito siguiente, en naranja: ver Evento de Halloween)
   y abajo los tres botones, en y = -290 (se bajaron para hacerle lugar; en 21:9 terminan a 50 del borde). Si la partida
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`, que mira
   `PlayerHealth.RecordNuevo`: solo superarlo cuenta, un empate no).

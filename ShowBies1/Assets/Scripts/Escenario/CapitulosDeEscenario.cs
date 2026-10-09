@@ -277,6 +277,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         chicosPuestos.Clear();
         chicosPuestos.AddRange(puesta.chicos);
         SacarAlJugador();
+        DecoradoHalloween.EsconderLasTapadas();
         // Prendido el decorado, el jefe que haya pisa lo chico: Unity olvida que no chocan
         // cuando se apaga uno de los dos colliders.
         foreach (var jefe in EnemyController.Jefes) jefe.PisarLoChico(chicosPuestos);
@@ -369,6 +370,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         huellasPuestas.Clear();
         redondosPuestos.Clear();
         chicosPuestos.Clear();
+        DecoradoHalloween.EsconderLasTapadas();
     }
 
     private void AnimarDecorado()

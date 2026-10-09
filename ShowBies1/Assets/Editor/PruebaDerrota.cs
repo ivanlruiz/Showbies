@@ -72,6 +72,7 @@ public static class PruebaDerrota
     static readonly HashSet<int> cajasAlMorir = new HashSet<int>();
     static int cajasDespues = -1;
     static Color? colorDelObjetivo;
+    static Color colorEsperadoDelObjetivo;
     static bool derrotaAMitadDelGris;
     static double monedasAlMorir;
     static int oleadaAlMorir, partidasAntes;
@@ -463,8 +464,15 @@ public static class PruebaDerrota
         cajasDespues = 0;
         foreach (var caja in Object.FindObjectsByType<PickupCaducidad>(FindObjectsSortMode.None))
             if (!cajasAlMorir.Contains(caja.GetInstanceID())) cajasDespues++;
-        // El proximo objetivo, en el verde de acento del neon (copiaba el del tema claro).
+        // El proximo objetivo, en el verde de acento del neon (copiaba el del tema claro), o
+        // en el naranja de Halloween si el evento esta y le falta algun hito.
         colorDelObjetivo = null;
+        colorEsperadoDelObjetivo = Tema.Elegir(Color.white, RolDeTema.Acento);
+        string halloween;
+        float fraccionHalloween;
+        var proximo = Object.FindAnyObjectByType<ProximoObjetivo>();
+        if (proximo != null && ProximoObjetivo.ElegirHalloween(out halloween, out fraccionHalloween))
+            colorEsperadoDelObjetivo = proximo.colorHalloween;
         foreach (var t in Object.FindObjectsByType<TMPro.TMP_Text>(FindObjectsSortMode.None))
         {
             if (t.name != "Texto" || t.transform.parent == null || t.transform.parent.name != "ProximoObjetivo") continue;
@@ -528,11 +536,11 @@ public static class PruebaDerrota
                        + " m entre 1,5 y 4 s (caminando o saltando)");
         inf.AppendLine("Festejando a los 5,5 s: " + festejandoA4 + " de " + vivosA4 + " zombis vivos; de los que estaban a menos de "
                        + CercaAlMorir + " m al morir, " + cercaFestejando + " de " + cercaVivos);
-        Color acento = Tema.Elegir(Color.white, RolDeTema.Acento);
+        Color acento = colorEsperadoDelObjetivo;
         bool objetivoNeon = colorDelObjetivo.HasValue && Mathf.Abs(colorDelObjetivo.Value.r - acento.r) < 0.01f &&
                             Mathf.Abs(colorDelObjetivo.Value.g - acento.g) < 0.01f && Mathf.Abs(colorDelObjetivo.Value.b - acento.b) < 0.01f;
         inf.AppendLine("Cajas que nacieron despues de morir: " + cajasDespues + "; color del proximo objetivo: "
-                       + (colorDelObjetivo.HasValue ? colorDelObjetivo.Value.ToString() : "no salio") + " (el acento: " + acento + ")");
+                       + (colorDelObjetivo.HasValue ? colorDelObjetivo.Value.ToString() : "no salio") + " (el esperado: " + acento + ")");
         inf.AppendLine("Al salir con OTRA VEZ: timeScale " + timeScaleAlSalir + ", escenas cargadas " + escenasAlSalir);
         inf.AppendLine("Errores y excepciones durante la prueba: " + cuantasExcepciones);
         if (cuantasExcepciones > 0) inf.Append(excepciones);
@@ -599,7 +607,7 @@ public static class PruebaDerrota
             "el fondo de la derrota no tapa el mundo gris",
             "el progreso no se toca despues de morir (la oleada no se cierra sola)",
             "despues de morir no nacen cajas",
-            "el proximo objetivo sale en el verde de acento del neon",
+            "el proximo objetivo sale en el verde de acento del neon (o en el naranja de Halloween)",
             "la partida se cuenta una sola vez",
             "con la derrota encima el input esta cortado y la pausa no se mete",
             "OTRA VEZ vuelve el timeScale a 1 y deja una sola escena",

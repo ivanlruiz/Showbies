@@ -10,6 +10,12 @@ using UnityEngine.SceneManagement;
 // Sin colliders (los zombis van derecho al jugador y se trabarian) y juntadas en pocos draw
 // calls al ponerlas, como los decorados de los capitulos. Las pone InstaladorHalloween al
 // cargar la escena, con una semilla fija: siempre en el mismo lugar.
+//
+// La grilla es la misma en los tres capitulos, y en la ciudad y el cementerio algunas caian
+// adentro de un edificio, un auto o una tumba (revision del 9/10). Al poner cada decorado,
+// CapitulosDeEscenario llama a EsconderLasTapadas: las que quedan adentro de un obstaculo, o
+// debajo del techo de un edificio, se apagan (sus renderers: el grupo esta juntado y las piezas
+// no se mueven), y vuelven con el decorado siguiente.
 public static class DecoradoHalloween
 {
     public const string RutaCalabaza = "Halloween/Calabaza";
@@ -97,16 +103,55 @@ public static class DecoradoHalloween
 
     public static GameObject EnLaPartida(Scene escena)
     {
-        return Poner(escena, LugaresDeLaPartida(), Quaternion.Euler(70f, 0f, 0f));
+        enLaPartida.Clear();
+        return Poner(escena, LugaresDeLaPartida(), Quaternion.Euler(70f, 0f, 0f), enLaPartida);
+    }
+
+    // Las de la partida, para esconder las que tapa el decorado puesto.
+    private struct Puesta
+    {
+        public Lugar lugar;
+        public Renderer[] renderers;
+    }
+
+    private static readonly List<Puesta> enLaPartida = new List<Puesta>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        enLaPartida.Clear();
+    }
+
+    // Lo que ocupa una calabaza en el piso: la grande mide unos 0,9 m y la chica la mitad.
+    public static float Radio(Lugar lugar)
+    {
+        return (lugar.chica ? 0.3f : 0.5f) * lugar.escala;
+    }
+
+    // Si el decorado puesto la tapa: adentro (o pegada a) un edificio, un auto, un cantero, un
+    // contenedor, una tumba o un arbol, o en el piso que esconde el techo de un edificio.
+    public static bool QuedaTapada(Lugar lugar)
+    {
+        return CapitulosDeEscenario.Ocupado(lugar.posicion, Radio(lugar)) || CapitulosDeEscenario.Tapado(lugar.posicion);
+    }
+
+    public static void EsconderLasTapadas()
+    {
+        for (int i = 0; i < enLaPartida.Count; i++)
+        {
+            bool ver = !QuedaTapada(enLaPartida[i].lugar);
+            foreach (var r in enLaPartida[i].renderers)
+                if (r != null && r.enabled != ver) r.enabled = ver;
+        }
     }
 
     // El halo de cada farol mira a la camara del menu, que FondoMenu acomoda en su Start.
     public static GameObject EnElMenu(Scene escena, Quaternion giroDeLaCamara)
     {
-        return Poner(escena, LugaresDelMenu(), giroDeLaCamara);
+        return Poner(escena, LugaresDelMenu(), giroDeLaCamara, null);
     }
 
-    private static GameObject Poner(Scene escena, List<Lugar> lugares, Quaternion giroDeLaCamara)
+    private static GameObject Poner(Scene escena, List<Lugar> lugares, Quaternion giroDeLaCamara, List<Puesta> puestas)
     {
         var grande = Resources.Load<GameObject>(RutaCalabaza);
         var chica = Resources.Load<GameObject>(RutaCalabazaChica);
@@ -127,6 +172,7 @@ public static class DecoradoHalloween
             // Los halos, de frente a la camara aunque la calabaza este girada.
             foreach (var t in calabaza.GetComponentsInChildren<Transform>(true))
                 if (t.name == "Halo") t.rotation = giroDeLaCamara;
+            if (puestas != null) puestas.Add(new Puesta { lugar = lugar, renderers = calabaza.GetComponentsInChildren<Renderer>(true) });
         }
         // De noche, la luz de relleno solo alumbra la capa de los personajes: asi la calabaza
         // se lee naranja y no como una mancha oscura.
