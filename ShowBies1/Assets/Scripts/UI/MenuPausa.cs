@@ -75,6 +75,67 @@ public class MenuPausa : MonoBehaviour
         }
         // Solo las oleadas tienen capitulos.
         capitulos = FindAnyObjectByType<CapitulosDeEscenario>();
+        // Y MEJORAS: solo ahi se puede volver a la partida (el libre no se retoma).
+        if (FindAnyObjectByType<WaveManager>() != null) ArmarMejoras();
+    }
+
+    // Con MEJORAS el panel lleva un boton mas y todo se aprieta: el titulo sube y los botones
+    // van cada 130 (eran 150), asi el ultimo sigue encima de los volumenes (VolumenEnPausa,
+    // en -390 con 110 de alto).
+    private const float AlturaTituloConMejoras = 280f;
+    private const float PrimerBotonConMejoras = 130f;
+    private const float SeparacionConMejoras = 130f;
+
+    // MEJORAS en la pausa de las oleadas (pedido en Discord el 8/10: para comprar, los jugadores
+    // salian al menu y volvian a entrar). Abre la tienda del menu, y su ¡A JUGAR! vuelve a esta
+    // oleada, que WaveManager guardo al empezarla: es la misma vuelta que por MENU PRINCIPAL,
+    // sin tener que encontrarla. Es una copia de CONTINUAR, en el amarillo de la tienda.
+    private void ArmarMejoras()
+    {
+        if (panel == null) return;
+        var titulo = (RectTransform)panel.transform.Find("Titulo");
+        var continuar = (RectTransform)panel.transform.Find("BotonContinuar");
+        var reiniciar = (RectTransform)panel.transform.Find("BotonReiniciar");
+        var menu = (RectTransform)panel.transform.Find("BotonMenu");
+        if (titulo == null || continuar == null || reiniciar == null || menu == null) return;
+
+        var mejoras = (RectTransform)Instantiate(continuar.gameObject, panel.transform).transform;
+        mejoras.name = "BotonMejoras";
+        mejoras.SetSiblingIndex(continuar.GetSiblingIndex() + 1);
+        Accion(mejoras, IrALaTienda);
+        // El panel esta apagado: el texto lo escribe el TextoTraducido al prenderse.
+        var traducido = mejoras.GetComponentInChildren<TextoTraducido>(true);
+        if (traducido != null) traducido.id = "menu_mejoras";
+
+        foreach (var img in mejoras.GetComponentsInChildren<Image>(true))
+        {
+            if (img.name == "Fondo") img.color = ConstructorUI.Amarillo;
+            else if (img.name == "Icono")
+            {
+                var dibujo = Resources.Load<Sprite>("IconoMejoras");
+                if (dibujo != null) img.sprite = dibujo;
+                else img.gameObject.SetActive(false);
+                img.color = ConstructorUI.AmarilloTexto;
+            }
+        }
+        foreach (var texto in mejoras.GetComponentsInChildren<TMP_Text>(true)) texto.color = ConstructorUI.AmarilloTexto;
+        ConstructorUI.PintarHalo(mejoras.GetComponent<Button>(), ConstructorUI.Amarillo);
+
+        titulo.anchoredPosition = new Vector2(titulo.anchoredPosition.x, AlturaTituloConMejoras);
+        var botones = new[] { continuar, mejoras, reiniciar, menu };
+        for (int i = 0; i < botones.Length; i++)
+            botones[i].anchoredPosition = new Vector2(botones[i].anchoredPosition.x, PrimerBotonConMejoras - SeparacionConMejoras * i);
+    }
+
+    private void IrALaTienda()
+    {
+        // ¡A JUGAR! carga el ultimo modo, que se anota al morir: sin esto, un jugador que todavia
+        // no murio en las oleadas volveria al modo de su ultima muerte.
+        PlayerPrefs.SetInt("UltimoModo", SceneManager.GetActiveScene().buildIndex);
+        PlayerPrefs.Save();
+        Progreso.Guardar();
+        Restaurar();
+        TiendaMejoras.AbrirEnMenu();
     }
 
     private void Update()
