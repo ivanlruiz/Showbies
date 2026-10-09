@@ -313,8 +313,12 @@ public class PlayerHealth : MonoBehaviour
             // El tope es maxHealth, que fija AplicarMejoras con la mejora de vida.
             // La cura escala con la misma mejora y cura siempre la mitad: 40 sin
             // mejora, 80 con 160 de vida.
+            int antes = health;
             health = Mathf.Min(health + CuraPorCaja, maxHealth);
-            Efectos.Caja(other.transform.position);
+            // Lo que curo de verdad: con la vida llena, "+0 VIDA" parecia una caja rota.
+            int curo = health - antes;
+            Efectos.Caja(other.transform.position, curo > 0 ? Textos.Formato("powerup_vida", curo) : Textos.De("powerup_vida_llena"),
+                         AspectoDeCaja.ColorDe(other, Color.white));
         }
     }
 }

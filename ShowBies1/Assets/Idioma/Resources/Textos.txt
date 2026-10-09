@@ -182,6 +182,11 @@ hud_nivel	Level {0}	Nivel {0}
 hud_oleada	Wave {0}\n<size=75%>Zombies {1}/{2}</size>	Oleada {0}\n<size=75%>Zombis {1}/{2}</size>
 hud_combo	COMBO x{0}	COMBO x{0}
 hud_caramelos	<size=55%>CANDY</size>  {0}	<size=55%>CARAMELOS</size>  {0}
+powerup_vida	+{0} HEALTH	+{0} VIDA
+powerup_vida_llena	FULL HEALTH	VIDA AL MÁXIMO
+powerup_balas	AMMO!\n<size=70%>FIRE RATE x{0}</size>	¡MUNICIÓN!\n<size=70%>CADENCIA x{0}</size>
+powerup_arma	MAG {0}!\n<size=70%>FIRE RATE x{1}</size>	¡CARGADOR DE {0}!\n<size=70%>CADENCIA x{1}</size>
+hud_multiplicador	x{0}	x{0}
 combo_10	RAMPAGE!	¡ARRASANDO!
 combo_25	MASSACRE!	¡MASACRE!
 combo_50	UNSTOPPABLE!	¡IMPARABLE!

@@ -105,7 +105,7 @@ public static class FotosDeLaHorda
     }
 
     // Lo mismo que FotosDeLosFaroles.LoQueTraeLaEscena: la pradera se lee de WaveMode.
-    static EscenarioDeCapitulo LoQueTraeLaEscena(EscenarioDeCapitulo primero, CapitulosDeEscenario capitulos, Camera camara, Scene escena)
+    internal static EscenarioDeCapitulo LoQueTraeLaEscena(EscenarioDeCapitulo primero, CapitulosDeEscenario capitulos, Camera camara, Scene escena)
     {
         var e = new EscenarioDeCapitulo { idTexto = primero.idTexto, decorado = primero.decorado };
         e.piso = capitulos.piso != null ? capitulos.piso.sharedMaterial : primero.piso;
@@ -126,37 +126,79 @@ public static class FotosDeLaHorda
         return e;
     }
 
+    // Arma en 'escena' (una de vista previa) la noche de ese escenario: el piso, la luna, la luz
+    // de relleno de WaveMode, el decorado y la camara del juego, que dibuja en 'rt'. La luz
+    // ambiente y la niebla van aparte, con PonerLaLuz, mientras se fotografia. Tambien lo usa
+    // FotosDeLasCajas.
+    internal static Camera ArmarNoche(Scene escena, EscenarioDeCapitulo escenario, Camera camaraDelJuego, Light rellenoDeLaEscena,
+                                      RenderTexture rt, out Light relleno)
+    {
+        var piso = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        piso.transform.localScale = new Vector3(10f, 1f, 10f);
+        piso.GetComponent<Renderer>().sharedMaterial = escenario.piso;
+        SceneManager.MoveGameObjectToScene(piso, escena);
+
+        var luna = new GameObject("Luna").AddComponent<Light>();
+        luna.type = LightType.Directional;
+        luna.color = escenario.luz;
+        luna.intensity = escenario.intensidadLuz;
+        luna.transform.rotation = Quaternion.Euler(escenario.rotacionLuz);
+        luna.shadows = LightShadows.Hard;
+        SceneManager.MoveGameObjectToScene(luna.gameObject, escena);
+
+        relleno = new GameObject("Relleno").AddComponent<Light>();
+        relleno.type = LightType.Directional;
+        relleno.color = rellenoDeLaEscena.color;
+        relleno.intensity = rellenoDeLaEscena.intensity;
+        relleno.transform.rotation = rellenoDeLaEscena.transform.rotation;
+        relleno.cullingMask = rellenoDeLaEscena.cullingMask;
+        relleno.renderMode = rellenoDeLaEscena.renderMode;
+        relleno.shadows = LightShadows.None;
+        SceneManager.MoveGameObjectToScene(relleno.gameObject, escena);
+
+        var decorado = Object.Instantiate(escenario.decorado);
+        SceneManager.MoveGameObjectToScene(decorado, escena);
+
+        var camara = new GameObject("Camara").AddComponent<Camera>();
+        SceneManager.MoveGameObjectToScene(camara.gameObject, escena);
+        camara.scene = escena;
+        camara.transform.SetPositionAndRotation(camaraDelJuego.transform.position, camaraDelJuego.transform.rotation);
+        camara.fieldOfView = camaraDelJuego.fieldOfView;
+        camara.nearClipPlane = camaraDelJuego.nearClipPlane;
+        camara.farClipPlane = camaraDelJuego.farClipPlane;
+        camara.clearFlags = CameraClearFlags.SolidColor;
+        camara.backgroundColor = escenario.cielo;
+        camara.allowHDR = false;
+        camara.allowMSAA = false;
+        camara.renderingPath = RenderingPath.Forward;
+        camara.targetTexture = rt;
+        camara.aspect = (float)rt.width / rt.height;
+        camara.enabled = false;
+        return camara;
+    }
+
+    // La luz ambiente y la niebla del escenario, para la escena de vista previa. Quien la llama
+    // devuelve las de la escena abierta con Unsupported.RestoreOverrideLightingSettings.
+    internal static void PonerLaLuz(Scene escena, EscenarioDeCapitulo escenario)
+    {
+        Unsupported.SetOverrideLightingSettings(escena);
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = escenario.ambiente;
+        RenderSettings.fog = escenario.conNiebla;
+        RenderSettings.fogMode = FogMode.Linear;
+        RenderSettings.fogColor = escenario.cielo;
+        RenderSettings.fogStartDistance = escenario.nieblaInicio;
+        RenderSettings.fogEndDistance = escenario.nieblaFin;
+    }
+
     static void Fotografiar(EscenarioDeCapitulo escenario, Camera camaraDelJuego, Light rellenoDeLaEscena,
                             RenderTexture rt, StringBuilder inf)
     {
         var escena = EditorSceneManager.NewPreviewScene();
         try
         {
-            var piso = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            piso.transform.localScale = new Vector3(10f, 1f, 10f);
-            piso.GetComponent<Renderer>().sharedMaterial = escenario.piso;
-            SceneManager.MoveGameObjectToScene(piso, escena);
-
-            var luna = new GameObject("Luna").AddComponent<Light>();
-            luna.type = LightType.Directional;
-            luna.color = escenario.luz;
-            luna.intensity = escenario.intensidadLuz;
-            luna.transform.rotation = Quaternion.Euler(escenario.rotacionLuz);
-            luna.shadows = LightShadows.Hard;
-            SceneManager.MoveGameObjectToScene(luna.gameObject, escena);
-
-            var relleno = new GameObject("Relleno").AddComponent<Light>();
-            relleno.type = LightType.Directional;
-            relleno.color = rellenoDeLaEscena.color;
-            relleno.intensity = rellenoDeLaEscena.intensity;
-            relleno.transform.rotation = rellenoDeLaEscena.transform.rotation;
-            relleno.cullingMask = rellenoDeLaEscena.cullingMask;
-            relleno.renderMode = rellenoDeLaEscena.renderMode;
-            relleno.shadows = LightShadows.None;
-            SceneManager.MoveGameObjectToScene(relleno.gameObject, escena);
-
-            var decorado = Object.Instantiate(escenario.decorado);
-            SceneManager.MoveGameObjectToScene(decorado, escena);
+            Light relleno;
+            var camara = ArmarNoche(escena, escenario, camaraDelJuego, rellenoDeLaEscena, rt, out relleno);
 
             // Los cinco, corriendo hacia la camara, parados en el piso y en la capa que alumbra
             // el relleno (en el juego los pone ahi su Awake). Sin sombra: la suya cambiaria
@@ -193,32 +235,9 @@ public static class FotosDeLaHorda
                 if (p.Value != null) AnimationMode.SampleAnimationClip(p.Key, p.Value, 0.3f * p.Value.length);
             AnimationMode.EndSampling();
 
-            var camara = new GameObject("Camara").AddComponent<Camera>();
-            SceneManager.MoveGameObjectToScene(camara.gameObject, escena);
-            camara.scene = escena;
-            camara.transform.SetPositionAndRotation(camaraDelJuego.transform.position, camaraDelJuego.transform.rotation);
-            camara.fieldOfView = camaraDelJuego.fieldOfView;
-            camara.nearClipPlane = camaraDelJuego.nearClipPlane;
-            camara.farClipPlane = camaraDelJuego.farClipPlane;
-            camara.clearFlags = CameraClearFlags.SolidColor;
-            camara.backgroundColor = escenario.cielo;
-            camara.allowHDR = false;
-            camara.allowMSAA = false;
-            camara.renderingPath = RenderingPath.Forward;
-            camara.targetTexture = rt;
-            camara.aspect = (float)Ancho / Alto;
-            camara.enabled = false;
-
-            Unsupported.SetOverrideLightingSettings(escena);
+            PonerLaLuz(escena, escenario);
             try
             {
-                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-                RenderSettings.ambientLight = escenario.ambiente;
-                RenderSettings.fog = escenario.conNiebla;
-                RenderSettings.fogMode = FogMode.Linear;
-                RenderSettings.fogColor = escenario.cielo;
-                RenderSettings.fogStartDistance = escenario.nieblaInicio;
-                RenderSettings.fogEndDistance = escenario.nieblaFin;
 
                 inf.AppendLine();
                 inf.AppendLine(escenario.idTexto + ":");
@@ -325,13 +344,13 @@ public static class FotosDeLaHorda
         return v <= 0.04045f ? v / 12.92f : Mathf.Pow((v + 0.055f) / 1.055f, 2.4f);
     }
 
-    static Texture2D Foto(Camera camara, RenderTexture rt)
+    internal static Texture2D Foto(Camera camara, RenderTexture rt)
     {
         camara.Render();
         var antes = RenderTexture.active;
         RenderTexture.active = rt;
-        var foto = new Texture2D(Ancho, Alto, TextureFormat.RGB24, false);
-        foto.ReadPixels(new Rect(0, 0, Ancho, Alto), 0, 0);
+        var foto = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+        foto.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
         foto.Apply();
         RenderTexture.active = antes;
         return foto;

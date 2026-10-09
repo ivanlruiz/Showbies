@@ -52,7 +52,7 @@ Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida
-Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, Moneda (las que sueltan los zombis)
+Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
@@ -72,8 +72,9 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
+Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón y los iconos del evento (IconoCalabaza, IconoCaramelo)
 ```
@@ -390,6 +391,38 @@ en la partida. `Furia` (`Assets/Scripts/Jugador/`, en la raíz de `Jugador.prefa
 - `GunController.DanoPorBala` sigue siendo el de la mejora (lo miran el medidor y las pruebas); lo que lleva cada bala
   es `DanoPorTiro`.
 - **Es un desbloqueo permanente:** cuando entre el renacer de la fase 5, no tiene que reiniciarla.
+
+## Las cajas (power-ups)
+
+Tres cajas que nacen solas por el mapa (`PowerUp`, cada 8 s las de balas y vida y cada 20 la del arma) y vencen a los 30 s
+(`PickupCaducidad`): **vida** (cura `CuraPorCaja`), **balas** (llena el cargador y cadencia ×1,5 por 10 s) y **arma**
+(el cargador sube a 1.000 para siempre, lo llena, y cadencia ×3 por 10 s). Se agarran con su etiqueta (`PUVida`, `PUBalas`,
+`PUArma`) en `PlayerController` y `PlayerHealth`.
+
+- **Cada una es un dibujo que se entiende** (pedido de Ivan, 9/10; las eligió entre maquetas): un **corazón** rojo, **tres
+  balas** doradas y un **rayo** celeste (el corazón antes que un botiquín y el rayo antes que una pistola). Hasta ahí eran
+  un cubo o un cuadrado chato de 0,4 m con partículas: de noche, puntitos sueltos. El dibujo (hijo `Modelo`) está **de
+  frente a la cámara** (con `ConstructorEscenarios.GiroDeLaCamara`: la cámara mira desde arriba a 70°, y un dibujo parado se
+  vería aplastado a un tercio de su alto), con un **halo** y un **charco** de su color, como los faroles. Todo `Unlit/Color`
+  y `ShowBies/CharcoDeLuz`, que ya están en la build. **No se editan a mano**: los arma **ShowBies > Power-ups > Armar las
+  cajas** (`ConstructorPowerUps`) sobre los tres prefabs, que les saca lo de antes y les deja la raíz sin giro (la de vida
+  venía girada −90° y la del arma 70°: el juego las crea sin giro, pero el prefab tiene que ser lo que se ve), el trigger de
+  1,2 m, la etiqueta, la capa 8 y la caducidad.
+- **`AspectoDeCaja`** (en la raíz) las anima: salen con un salto, el dibujo flota, se mece y late, y **un anillo en el piso
+  se va vaciando** con lo que le queda (`PickupCaducidad.Restante01`; antes solo parpadeaba los últimos 3 s). El anillo es un
+  `LineRenderer` acostado que arma en `Awake` (así `PickupCaducidad`, que junta los renderers en `Start`, lo hace parpadear
+  también) con **el material de la línea del jefe** (`Sprites-Default`): con `Unlit/Color` la cinta acostada miraba para
+  abajo y no se veía.
+- **Agarrarlas se siente** (`Efectos.Caja(punto, cartel, color)`): chispas de su color, el pop, un temblor chico y **un cartel
+  arriba del jugador**, del mismo color, que dice lo que dio ("+40 VIDA" —lo que curó de verdad, o VIDA AL MÁXIMO—,
+  "¡MUNICIÓN! CADENCIA x1,5", "¡CARGADOR DE 1.000! CADENCIA x3"). El cartel es un `NumeroFlotante` del pool de los números de
+  daño (`MostrarCartel`: más grande, más lento y más largo) y no tiene el techo de los números. **El indicador del HUD**
+  (`IndicadorMejoraCadencia`, arriba a la derecha) toma el color de la caja (dorado las balas, celeste el rayo), dice el
+  multiplicador abajo y salta con cada caja.
+- **ShowBies > Power-ups > Fotos de las cajas** (`FotosDeLasCajas`) las saca de noche en cada capítulo con la cámara y la
+  calidad del teléfono, y **ShowBies > Pruebas > Cajas (play)** (`PruebaCajas`) mira en play el salto, el anillo que se vacía,
+  lo que da cada una con su cartel y el indicador (`Builds/prueba_cajas.txt`, con fotos). La prueba de lógica mira los
+  prefabs: el dibujo, el halo, el charco, el anillo, que no quede nada de antes, el trigger y los shaders.
 
 ## Generación de enemigos
 

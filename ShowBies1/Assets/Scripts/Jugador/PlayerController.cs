@@ -264,7 +264,8 @@ public class PlayerController : MonoBehaviour
             // Multiplica la cadencia de la mejora en vez de fijar un tiempo entre
             // tiros: con la cadencia comprada, una caja nunca te deja más lento.
             theGun.PotenciarCadencia(multiplicadorCadenciaPUBalas);
-            Efectos.Caja(other.transform.position);
+            Efectos.Caja(other.transform.position, Textos.Formato("powerup_balas", FormatoNumeros.ConDecimales(multiplicadorCadenciaPUBalas, 1)),
+                         AspectoDeCaja.ColorDe(other, Color.white));
         }
         else if (other.gameObject.CompareTag("PUArma"))
         {
@@ -277,7 +278,9 @@ public class PlayerController : MonoBehaviour
             maxBalas = Mathf.Max(maxBalas, cargadorMejorado);
             cantBalas = maxBalas;
             theGun.PotenciarCadencia(multiplicadorCadenciaPUArma);
-            Efectos.Caja(other.transform.position);
+            Efectos.Caja(other.transform.position, Textos.Formato("powerup_arma", FormatoNumeros.Compacto(maxBalas),
+                                                                  FormatoNumeros.ConDecimales(multiplicadorCadenciaPUArma, 1)),
+                         AspectoDeCaja.ColorDe(other, Color.white));
         }
     }
 

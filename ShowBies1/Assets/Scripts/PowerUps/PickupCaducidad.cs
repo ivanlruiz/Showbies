@@ -10,8 +10,20 @@ public class PickupCaducidad : MonoBehaviour
     public float parpadeoFinal = 3f;   // cuantos segundos antes empieza a parpadear
     public float frecuenciaParpadeo = 8f;
 
-    private float venceEn;
+    private float venceEn = -1f;
     private Renderer[] renderers;
+
+    // Lo que le queda, de 1 (recien puesta) a 0 (se va). Sin vencer (el tutorial apaga el
+    // componente para que las cajas esperen al jugador) o antes de empezar, 1. Lo dibuja el
+    // anillo de AspectoDeCaja.
+    public float Restante01
+    {
+        get
+        {
+            if (!enabled || vida <= 0f || venceEn < 0f) return 1f;
+            return Mathf.Clamp01((venceEn - Time.time) / vida);
+        }
+    }
 
     private void Start()
     {

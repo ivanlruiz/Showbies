@@ -221,6 +221,7 @@ public static class PruebasMejoras
             ProbarMundoDeNoche(informe);
             ProbarPielDeLosZombis(informe);
             ProbarPesoDeLosZombis(informe);
+            ProbarDibujosDeLasCajas(informe);
             ProbarPildorasRedondas(informe);
             ProbarFuenteDelJuego(informe);
             ProbarOrdenDeEscenas(informe);
@@ -2669,6 +2670,49 @@ public static class PruebasMejoras
             inf.Verdadero("peso: " + par.Key + (par.Value ? " se aparta (cede " : " se planta (cede ") + cede.ToString("0.00", Invariante) + ")",
                           par.Value ? cede >= 0.5f : cede < 0.5f);
         }
+    }
+
+    // Las tres cajas con su dibujo (ConstructorPowerUps, 9/10): cada una con el dibujo que flota,
+    // el halo, el charco, el anillo y su color; sin nada de lo de antes (el cubo o el cuadrado chato
+    // y las particulas); con el trigger del mismo tamanio en el mundo, su etiqueta y su caducidad;
+    // y con materiales de shaders que ya estan en la build (los de los faroles y el neon).
+    static void ProbarDibujosDeLasCajas(Informe inf)
+    {
+        var colores = new HashSet<Color>();
+        foreach (string n in new[] { "PUVida", "PUBalas", "PUArma" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/" + n + ".prefab");
+            if (!inf.Verdadero("cajas: esta " + n, prefab != null)) continue;
+            var aspecto = prefab.GetComponent<AspectoDeCaja>();
+            inf.Verdadero("cajas: " + n + " tiene su aspecto, con el dibujo y el material del anillo",
+                          aspecto != null && aspecto.modelo != null && aspecto.modelo.name == "Modelo" && aspecto.materialAnillo != null);
+            if (aspecto != null) colores.Add(aspecto.color);
+            int piezas = aspecto != null && aspecto.modelo != null ? aspecto.modelo.GetComponentsInChildren<MeshRenderer>(true).Length : 0;
+            inf.Verdadero("cajas: el dibujo de " + n + " tiene piezas (" + piezas + ")", piezas >= 3);
+            bool brillos = true;
+            foreach (string b in new[] { "Halo", "Charco" })
+            {
+                var hijo = prefab.transform.Find(b);
+                var r = hijo != null ? hijo.GetComponent<MeshRenderer>() : null;
+                brillos &= r != null && r.sharedMaterial != null && r.sharedMaterial.shader.name == "ShowBies/CharcoDeLuz";
+            }
+            inf.Verdadero("cajas: " + n + " tiene halo y charco de luz", brillos);
+            inf.Verdadero("cajas: a " + n + " no le queda el cubo ni las particulas de antes",
+                          prefab.GetComponent<MeshRenderer>() == null && prefab.GetComponent<ParticleSystem>() == null);
+            var trigger = prefab.GetComponent<BoxCollider>();
+            Vector3 enElMundo = trigger != null ? Vector3.Scale(trigger.size, prefab.transform.lossyScale) : Vector3.zero;
+            inf.Verdadero("cajas: " + n + " se agarra con su trigger de siempre (1,2 m)",
+                          trigger != null && trigger.isTrigger && Mathf.Abs(enElMundo.x - 1.2f) < 0.05f && Mathf.Abs(enElMundo.z - 1.2f) < 0.05f);
+            inf.Verdadero("cajas: " + n + " conserva su etiqueta y su caducidad", prefab.CompareTag(n) && prefab.GetComponent<PickupCaducidad>() != null);
+            bool shaders = true;
+            foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
+                foreach (var m in r.sharedMaterials)
+                    shaders &= m != null && (m.shader.name == "Unlit/Color" || m.shader.name == "ShowBies/CharcoDeLuz");
+            // El anillo, con el material de la linea del jefe: pinta las dos caras (ver AspectoDeCaja).
+            if (aspecto != null && aspecto.materialAnillo != null) shaders &= aspecto.materialAnillo.shader.name == "Sprites/Default";
+            inf.Verdadero("cajas: " + n + " usa solo Unlit/Color y el charco de luz, y el anillo el material de la linea del jefe", shaders);
+        }
+        inf.Igual("cajas: cada una de su color", 3, colores.Count);
     }
 
     static void ProbarMundoDeNoche(Informe inf)

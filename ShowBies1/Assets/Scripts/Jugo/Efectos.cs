@@ -236,6 +236,23 @@ public class Efectos : MonoBehaviour
         Sonidos.Tocar(e.caja, 0.9f, 1f, 0.1f, 0.05f);
     }
 
+    // Una caja que se agarra, con lo que dio (pedido de Ivan, 9/10: que se sienta agarrarla): las
+    // chispas del color de la caja, el pop, un temblor chico y el cartel arriba del jugador
+    // ("+40 VIDA", "¡CADENCIA x3!"), del mismo color.
+    public static void Caja(Vector3 punto, string cartel, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+
+        e.Emitir(punto, e.chispasPorCaja * 2, color);
+        Sonidos.Tocar(e.caja, 0.9f, 1f, 0.1f, 0.05f);
+        CamaraJugador.Temblar(0.12f);
+        if (!string.IsNullOrEmpty(cartel)) e.MostrarCartel(punto + Vector3.up * alturaDelCartelDeCaja, cartel, color);
+    }
+
+    // A que altura del punto de la caja sale su cartel: arriba de la cabeza del jugador.
+    private const float alturaDelCartelDeCaja = 2.2f;
+
     // Un zombi que invoca el jefe: las chispas de la caja, sin su pop, que es el sonido de
     // agarrar algo bueno y anunciaba enemigos nuevos. El aviso ya lo dio su rugido.
     public static void Invocado(Vector3 punto)
@@ -351,6 +368,14 @@ public class Efectos : MonoBehaviour
         if (chispas == null || cantidad <= 0) return;
 
         var parametros = new ParticleSystem.EmitParams { position = punto, applyShapeToPosition = true };
+        chispas.Emit(parametros, cantidad);
+    }
+
+    private void Emitir(Vector3 punto, int cantidad, Color color)
+    {
+        if (chispas == null || cantidad <= 0) return;
+
+        var parametros = new ParticleSystem.EmitParams { position = punto, applyShapeToPosition = true, startColor = color };
         chispas.Emit(parametros, cantidad);
     }
 
@@ -475,5 +500,21 @@ public class Efectos : MonoBehaviour
             numero.alTerminar = numerosLibres.Push;
         }
         numero.Mostrar(punto, valor, critico);
+    }
+
+    // Del mismo pool que los numeros de daño, sin el techo: el cartel de una caja no se pierde
+    // porque haya muchos numeros en pantalla.
+    private void MostrarCartel(Vector3 punto, string cartel, Color color)
+    {
+        if (numeroPrefab == null) return;
+
+        NumeroFlotante numero = numerosLibres.Count > 0 ? numerosLibres.Pop() : null;
+        if (numero == null)
+        {
+            numerosCreados++;
+            numero = Instantiate(numeroPrefab, transform);
+            numero.alTerminar = numerosLibres.Push;
+        }
+        numero.MostrarCartel(punto, cartel, color);
     }
 }

@@ -19,6 +19,13 @@ public class NumeroFlotante : MonoBehaviour
     public float crecimientoPorDanio = 0.6f;
     public float escalaCritico = 1.1f;              // sobre la escala que le toca por el daño
 
+    // Un cartel en vez de un numero (lo que dio una caja: "+40 VIDA"): mas grande, mas lento y
+    // mas largo que el numero de un golpe, para que se alcance a leer corriendo.
+    public float escalaCartel = 1.7f;
+    public float velocidadCartel = 2.2f;
+    public float gravedadCartel = 1.5f;
+    public float duracionCartel = 1.4f;
+
     [System.NonSerialized] public System.Action<NumeroFlotante> alTerminar;
 
     private TextMeshPro texto;
@@ -26,6 +33,9 @@ public class NumeroFlotante : MonoBehaviour
     private Vector3 velocidad;
     private float escala;
     private Color color;
+    // Los de este vuelo: los de un numero o los de un cartel.
+    private float duracionActual = 0.7f;
+    private float gravedadActual = 10f;
     // El alfa que tienen hoy los vertices de la malla (ver PonerAlfa).
     private byte alfaDeLosVertices = 255;
 
@@ -46,6 +56,8 @@ public class NumeroFlotante : MonoBehaviour
         transform.position = punto + new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f));
         velocidad = new Vector3(Random.Range(-1.2f, 1.2f), velocidadInicial, 0f);
         nacio = Time.time;
+        duracionActual = duracion;
+        gravedadActual = gravedad;
 
         // Opaco: con el SetText la malla se rehace igual, con este color en los vertices. El
         // fundido del final va por el alfa de los vertices (ver Animar).
@@ -59,9 +71,30 @@ public class NumeroFlotante : MonoBehaviour
         Animar(0f);
     }
 
+    public void MostrarCartel(Vector3 punto, string cartel, Color colorDelCartel)
+    {
+        color = colorDelCartel;
+        escala = escalaBase * escalaCartel;
+        transform.position = punto;
+        velocidad = new Vector3(0f, velocidadCartel, 0f);
+        nacio = Time.time;
+        duracionActual = duracionCartel;
+        gravedadActual = gravedadCartel;
+
+        Color opaco = color;
+        opaco.a = 1f;
+        texto.color = opaco;
+        alfaDeLosVertices = 255;
+        // En un renglon por cada \n de la tabla, sin que el ancho de la caja del texto lo parta.
+        texto.textWrappingMode = TextWrappingModes.NoWrap;
+        texto.SetText(cartel);
+        gameObject.SetActive(true);
+        Animar(0f);
+    }
+
     private void Update()
     {
-        float t = (Time.time - nacio) / duracion;
+        float t = (Time.time - nacio) / duracionActual;
         if (t >= 1f)
         {
             gameObject.SetActive(false);
@@ -69,7 +102,7 @@ public class NumeroFlotante : MonoBehaviour
             return;
         }
 
-        velocidad.y -= gravedad * Time.deltaTime;
+        velocidad.y -= gravedadActual * Time.deltaTime;
         transform.position += velocidad * Time.deltaTime;
         Animar(t);
     }
