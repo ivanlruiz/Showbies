@@ -72,7 +72,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón y los iconos del evento (IconoCalabaza, IconoCaramelo)
@@ -84,6 +84,7 @@ Y **fuera del proyecto de Unity**, en la raíz del repo:
 Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
+CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -631,8 +632,8 @@ mitad del fundido —que es lo más oscuro— cambia el piso, se va el decorado 
 la manda lejísimos, así entrar o salir de la noche se ve como que se cierra o se abre, y no como un corte. Una partida
 retomada en la 25 arranca directamente en la ciudad, sin fundido. Al descargarse la escena la niebla se apaga.
 
-**Los decorados son prefabs hechos con formas simples**, sin colliders (los zombis van derecho al jugador y se
-trabarían), y **cada uno se arma una sola vez por partida**: después se prende y se apaga. Cuando termina de salir se
+**Los decorados son prefabs hechos con formas simples**, sin colliders salvo las paredes de los edificios de la ciudad
+(ver abajo), y **cada uno se arma una sola vez por partida**: después se prende y se apaga. Cuando termina de salir se
 junta con `StaticBatchingUtility` en pocos draw calls, y desde ahí las piezas ya no se mueven por separado, así que **la
 primera vez sale cada pieza sola del piso y las siguientes sale el decorado entero**.
 
@@ -655,9 +656,25 @@ primera vez sale cada pieza sola del piso y las siguientes sale el decorado ente
   el resto** (`CapitulosDeEscenario.Juntar`): su malla la arma TextMeshPro, y juntada la pisaría al volver a escribirla.
 
 **Lo que tapa un edificio** (su huella y, del lado contrario a la cámara, la franja de piso que esconde el techo) lo mide
-`CapitulosDeEscenario` al armar el decorado y lo expone mientras está puesto (`Tapado`, `LoTapado`): sin colliders nada
-choca con ellos, y hasta la auditoría del 24/9 una de cada seis cajas de la ciudad nacía adentro de uno y vencía sin que
-nadie la viera. Las cajas vuelven a sortear el punto si cae tapado (`PowerUp.PuntoDeAparicion`) y las monedas no caen ahí.
+`CapitulosDeEscenario` al armar el decorado y lo expone mientras está puesto (`Tapado`, `LoTapado`): hasta la auditoría
+del 24/9 una de cada seis cajas de la ciudad nacía adentro de uno y vencía sin que nadie la viera. Las cajas vuelven a
+sortear el punto si cae tapado (`PowerUp.PuntoDeAparicion`) y las monedas no caen ahí.
+
+**Los edificios tienen paredes y los zombis los rodean** (1.5.0; en Discord, el 8/10, dijeron que los zombis los
+atravesaban, y el jugador también lo hacía). Al armar el decorado, `CapitulosDeEscenario.PonerParedes` le pone a cada
+edificio un hijo `Pared` con un `BoxCollider` del tamaño de su cuerpo (sube del piso con él; `StaticBatchingUtility` solo
+junta mallas), y guarda su huella sin la franja del techo (`Huellas`). El jugador choca; las balas los siguen cruzando
+(no tienen Rigidbody); los invocados del jefe salen del lado de la calle solos (`JefePatrones.RadioLibre` mira los
+colliders fijos), y las monedas frenan antes, como siempre. **Los zombis no chocan para rodear: lo calculan**
+(`EnemyController.Rodeo`, en la persecución y en el festejo): si la recta al jugador cruza una huella agrandada en su
+radio, van a la esquina por la que es más corto rodearla (agrandada un poco más, `HolguraDelRodeo`), y al llegar siguen a
+la próxima o derecho. El que está pegado a la pared se cuenta desde el borde de afuera (si no, la recta no cruzaba nada y
+quedaba empujando la pared), y al jugador pegado a una pared se llega por el borde de afuera frente a él. Sin edificios
+(todo lo que no es la ciudad) es el camino de siempre. **El jugador parado donde sale un edificio** (en la pradera y el
+cementerio ahí es campo abierto) pasa a la calle más cercana en lo oscuro del fundido (`FueraDeLasHuellas`), antes de que
+la pared suba con él adentro. La prueba de lógica simula la persecución de los cinco zombis, paso de física a paso de
+física, desde detrás de cada edificio, las esquinas, los puntos de aparición y pegados a las paredes, hasta el jugador en
+las calles y pegado a las paredes: que ninguno entre, que todos lleguen y que ninguno dé una vuelta de más.
 
 **Los faroles alumbran el piso con un charco de luz, no con su luz.** Cada farol lleva en el piso un cuadrado aditivo
 (`Charco`, con el shader `ShowBies/CharcoDeLuz`, que se apaga como la luz puntual que cuelga encima, calculado en el
@@ -1637,7 +1654,7 @@ progreso):
 |---|---|---|
 | `"Score"` | `PlayerHealth` al morir | `Score` (pantalla de derrota) |
 | `"HighScore_<buildIndex>"` | `PlayerHealth`, si superás el récord de ese modo | `highscoretext`, el del modo en `"UltimoModo"`; `BotonModoLibre`, si hay del libre (el ¡NUEVO!) |
-| `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena | `MenuPerdiste.Retry`, `highscoretext`, `TiendaMejoras.Jugar` |
+| `"UltimoModo"` | `PlayerHealth`, el buildIndex de la escena; MEJORAS de la pausa (`MenuPausa`), antes de ir a la tienda | `MenuPerdiste.Retry`, `highscoretext`, `TiendaMejoras.Jugar` |
 | `"TutorialCompletado"` | `TutorialManager`, al terminar el tutorial | nadie todavía |
 | `"VolumenEfectos"`, `"VolumenMusica"` | `SliderVolumen` (menú y pausa) | `Volumen`; sin nada guardado, 1 |
 | `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
@@ -1742,6 +1759,13 @@ pausa (sólo móvil, arriba al centro y dentro del safe area) y el panel Continu
 principal. Se abre con ese botón, con Escape y **sola cuando la app pierde el foco** (una llamada, la
 cortina de notificaciones, alt-tab). Esto último no corre en el editor, que pierde el foco con cada
 click en otra ventana.
+
+**En las oleadas, la pausa tiene MEJORAS** (1.5.0, pedido en Discord el 8/10: para comprar, los jugadores salían al menú
+y volvían a entrar). `MenuPausa.ArmarMejoras` lo arma en `Start` si hay `WaveManager`, como copia de CONTINUAR en el
+amarillo de la tienda con `IconoMejoras` (de `Sprites/UI/Resources`), y aprieta el panel: el título sube a 280 y los
+cuatro botones van cada 130 desde 130, así el último queda encima de los volúmenes. Toca: anota `UltimoModo`, guarda y
+abre la tienda en el menú (`TiendaMejoras.AbrirEnMenu`); su ¡A JUGAR! vuelve a la oleada en curso, desde su principio,
+que es la misma vuelta que por MENÚ PRINCIPAL. En el libre no está: esa partida no se retoma.
 
 - Pausar es `Time.timeScale = 0` más `AudioListener.pause`. Todo el juego usa tiempo escalado (física,
   `WaitForSeconds`, los `Time.time` de la mejora de cadencia y de los pickups), así que se congela sin
