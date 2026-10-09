@@ -410,6 +410,18 @@ public class WaveManager : MonoBehaviour
         zombisEnLaOleada++;
     }
 
+    // Cuantos zombis le faltan matar a la oleada (los que no salieron todavia tambien), y en
+    // 'vivos' los que estan en el mapa. Para las flechas del borde (FlechasDelBorde), que
+    // señalan a los ultimos.
+    public int FaltanDeLaOleada(List<EnemyController> vivos)
+    {
+        vivos.Clear();
+        for (int i = 0; i < zombisDeLaOleada.Count; i++)
+            if (EnemyController.SigueVivo(zombisDeLaOleada[i].zombi, zombisDeLaOleada[i].aparicion))
+                vivos.Add(zombisDeLaOleada[i].zombi);
+        return Mathf.Max(0, zombisEnLaOleada - zombisDeLaOleada.Count) + vivos.Count;
+    }
+
     // De paso anota donde esta el que queda: al terminar la oleada, las chispas salen ahi.
     private bool QuedanZombisDeLaOleada()
     {

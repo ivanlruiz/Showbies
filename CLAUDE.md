@@ -51,7 +51,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas 
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
@@ -72,7 +72,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
@@ -438,6 +438,33 @@ Tres cajas que nacen solas por el mapa (`PowerUp`, cada 8 s las de balas y vida 
   calidad del teléfono, y **ShowBies > Pruebas > Cajas (play)** (`PruebaCajas`) mira en play el salto, el anillo que se vacía,
   lo que da cada una con su cartel y el indicador (`Builds/prueba_cajas.txt`, con fotos). La prueba de lógica mira los
   prefabs: el dibujo, el halo, el charco, el anillo, que no quede nada de antes, el trigger y los shaders.
+
+### Las flechas del borde
+
+Lo que importa y no se ve lleva una flecha en el borde de la pantalla (1.5.0, mejora 7 de la revisión del 9/10:
+`FlechasDelBorde`), un solo sistema para tres cosas: **las cajas**, de su color y con un punto detrás, latiendo más rápido
+cuando les queda menos del 30 % (hasta ahí casi todas nacían y vencían sin que nadie las viera); **los últimos zombis de la
+oleada**, cuando faltan 3 o menos (`WaveManager.FaltanDeLaOleada`, que cuenta también los que no salieron: buscar al último
+corredor en la ciudad era tiempo muerto), en verde; y **el jefe**, en los dos modos, más grande y violeta como su piel.
+
+- **Dónde va** (`EnElBorde`): en el borde del área segura, a 64 del borde, sobre la recta del centro a lo que señala, y
+  apuntando hacia eso. Lo que se ve no lleva; lo pegado al borde (a menos de 24 px) sí. Lo que queda detrás del plano de la
+  cámara (bien al sur del jugador) sale espejado de `WorldToScreenPoint`, y se da vuelta.
+- **No pisa el HUD** (`FueraDelHud`): cada medio segundo mide los gráficos que se ven cerca de los bordes en los canvas
+  overlay (de un texto, lo que ocupan sus letras, `textBounds`: la caja es mucho más ancha), y la flecha que cae encima de
+  uno se corre por el borde hasta salir y vuelve a apuntar desde ahí. Así vale con el HUD de la PC y el del teléfono (los
+  joysticks, la pausa arriba al centro), en cualquier proporción. Cada flecha esquiva también las que ya se pusieron.
+- **La flecha es el triángulo de "play" alargado** (1,25 × 0,75): el original es casi equilátero, y girado a 151 grados le
+  queda un lado acostado arriba y se lee como que apunta para abajo. Costó verlo: el giro estaba bien.
+- No está en las escenas: se instala sola al cargar el libre o las oleadas (`sceneLoaded`, **sin mirar el modo**: la escena
+  abierta en el editor al darle play no llega como `Single`), con un canvas raíz propio por debajo de la pausa (8), que la
+  derrota apaga con el resto del HUD. Con el juego congelado o el jugador muerto no hay flechas. Las cajas se registran solas
+  (`PickupCaducidad.Puestas`); las del tutorial no, porque ahí el componente está apagado.
+- **ShowBies > Pruebas > Flechas del borde (play)** (`PruebaFlechas`): WaveMode en la oleada 3 con una caja, dos zombis
+  quietos sumados a la oleada y un jefe lejos, matando a los demás a medida que salen; mira que con más de 3 por matar no haya
+  flechas de zombis, que después cada cosa tenga la suya apuntándole (desde donde quedó), la del jefe más grande, que la caja
+  a la vista pierda la suya y que en la pausa no haya ninguna (`Builds/prueba_flechas.txt`, con la foto). La prueba de
+  lógica mira la cuenta del borde y la del HUD.
 
 ## Generación de enemigos
 

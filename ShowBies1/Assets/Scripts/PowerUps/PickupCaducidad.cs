@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Le pone fecha de vencimiento a un pickup. Antes un power-up que nadie
@@ -12,6 +13,27 @@ public class PickupCaducidad : MonoBehaviour
 
     private float venceEn = -1f;
     private Renderer[] renderers;
+
+    // Las que estan en el piso, para las flechas del borde (FlechasDelBorde). El tutorial
+    // apaga el componente, y esas no cuentan: ahi las cajas salen al lado del jugador.
+    private static readonly List<PickupCaducidad> puestas = new List<PickupCaducidad>();
+    public static IReadOnlyList<PickupCaducidad> Puestas { get { return puestas; } }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        puestas.Clear();
+    }
+
+    private void OnEnable()
+    {
+        if (!puestas.Contains(this)) puestas.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        puestas.Remove(this);
+    }
 
     // Lo que le queda, de 1 (recien puesta) a 0 (se va). Sin vencer (el tutorial apaga el
     // componente para que las cajas esperen al jugador) o antes de empezar, 1. Lo dibuja el

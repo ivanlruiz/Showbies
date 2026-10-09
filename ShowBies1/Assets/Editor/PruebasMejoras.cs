@@ -254,6 +254,7 @@ public static class PruebasMejoras
                     ProbarProximoObjetivo(informe);
                     ProbarOleadaPerfecta(informe);
                     ProbarBalasPorTramo(informe);
+                    ProbarFlechasDelBorde(informe);
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
                     ProbarLogros(informe);
@@ -5424,6 +5425,49 @@ public static class PruebasMejoras
         }
         inf.Verdadero("balas: Bullet.mat no cambia (pinta tambien la caja de balas)",
                       prefab.GetComponent<Renderer>().sharedMaterial == materialDelPrefab && materialDelPrefab.color == colorDelPrefab);
+    }
+
+    // Donde va la flecha del borde (FlechasDelBorde.EnElBorde, mejora 7 de la revision del
+    // 9/10): en el borde del area achicada en el margen, sobre la recta del centro a lo que
+    // señala, apuntando hacia eso; lo que se ve no lleva.
+    static void ProbarFlechasDelBorde(Informe inf)
+    {
+        var pantalla = new Rect(0f, 0f, 1920f, 1080f);
+        Vector2 punto;
+        float angulo;
+        inf.Verdadero("flechas: lo que se ve no lleva flecha", !FlechasDelBorde.EnElBorde(new Vector2(900f, 500f), pantalla, pantalla, 64f, out punto, out angulo));
+        bool derecha = FlechasDelBorde.EnElBorde(new Vector2(4000f, 540f), pantalla, pantalla, 64f, out punto, out angulo);
+        inf.Verdadero("flechas: algo a la derecha, en el borde derecho apuntando a la derecha (" + punto + ", " + angulo.ToString("0") + ")",
+                      derecha && Mathf.Abs(punto.x - (1920f - 64f)) < 0.5f && Mathf.Abs(punto.y - 540f) < 0.5f && Mathf.Abs(angulo) < 0.5f);
+        bool arriba = FlechasDelBorde.EnElBorde(new Vector2(960f, 3000f), pantalla, pantalla, 64f, out punto, out angulo);
+        inf.Verdadero("flechas: algo arriba, en el borde de arriba apuntando arriba",
+                      arriba && Mathf.Abs(punto.y - (1080f - 64f)) < 0.5f && Mathf.Abs(punto.x - 960f) < 0.5f && Mathf.Abs(angulo - 90f) < 0.5f);
+        bool abajoIzquierda = FlechasDelBorde.EnElBorde(new Vector2(-2000f, -2000f), pantalla, pantalla, 64f, out punto, out angulo);
+        inf.Verdadero("flechas: en diagonal, sobre la recta y dentro del area (" + punto + ", " + angulo.ToString("0") + ")",
+                      abajoIzquierda && punto.x >= 63.5f && punto.y >= 63.5f && Mathf.Min(punto.x, punto.y) < 64.5f &&
+                      Mathf.Abs(Mathf.Atan2(punto.y - 540f, punto.x - 960f) * Mathf.Rad2Deg - angulo) < 0.5f);
+        // Pegado al borde no se ve bien: lleva flecha aunque este adentro de la pantalla.
+        var visible = new Rect(24f, 24f, 1920f - 48f, 1080f - 48f);
+        inf.Verdadero("flechas: pegado al borde de la pantalla, lleva flecha",
+                      FlechasDelBorde.EnElBorde(new Vector2(1910f, 540f), visible, pantalla, 64f, out punto, out angulo));
+        // Con un area segura mas chica (la camara de un telefono), la flecha queda adentro de ella.
+        var segura = new Rect(90f, 0f, 1920f - 180f, 1080f);
+        FlechasDelBorde.EnElBorde(new Vector2(-500f, 540f), pantalla, segura, 64f, out punto, out angulo);
+        inf.Verdadero("flechas: dentro del area segura", Mathf.Abs(punto.x - (90f + 64f)) < 0.5f && Mathf.Abs(angulo - 180f) < 0.5f);
+
+        // Encima del HUD (los textos de arriba a la izquierda, la vida abajo al centro) se corre
+        // por el borde hasta salir.
+        var hud = new List<Rect> { Rect.MinMaxRect(20f, 850f, 300f, 1060f), Rect.MinMaxRect(860f, 0f, 1060f, 110f) };
+        Vector2 arribaIzquierda = FlechasDelBorde.FueraDelHud(new Vector2(150f, 1016f), pantalla, 64f, hud, 40f);
+        inf.Verdadero("flechas: en el borde de arriba, sobre los textos, pasa a su derecha (" + arribaIzquierda + ")",
+                      Mathf.Abs(arribaIzquierda.x - 340f) < 0.5f && Mathf.Abs(arribaIzquierda.y - 1016f) < 0.5f);
+        Vector2 costado = FlechasDelBorde.FueraDelHud(new Vector2(64f, 900f), pantalla, 64f, hud, 40f);
+        inf.Verdadero("flechas: en el borde izquierdo, a la altura de los textos, pasa abajo (" + costado + ")",
+                      Mathf.Abs(costado.y - 810f) < 0.5f && Mathf.Abs(costado.x - 64f) < 0.5f);
+        Vector2 vida = FlechasDelBorde.FueraDelHud(new Vector2(990f, 64f), pantalla, 64f, hud, 40f);
+        inf.Verdadero("flechas: abajo, sobre la vida, pasa al costado mas cercano (" + vida + ")", Mathf.Abs(vida.x - 1100f) < 0.5f);
+        Vector2 libre = FlechasDelBorde.FueraDelHud(new Vector2(1856f, 540f), pantalla, 64f, hud, 40f);
+        inf.Verdadero("flechas: lejos del HUD no se mueve", (libre - new Vector2(1856f, 540f)).sqrMagnitude < 0.01f);
     }
 
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.
