@@ -79,6 +79,19 @@ public class WaveManager : MonoBehaviour
 
     public int OleadaActual { get; private set; }
 
+    // Si esta en el descanso entre dos oleadas, con el cartel: el momento en que ir a la
+    // tienda desde la pausa no hace perder nada (lo mira AvisoDeMisiones).
+    public bool EnDescanso { get; private set; }
+
+    // Terminar una oleada es un momento (revision del 9/10: pasaba en silencio y el bono se
+    // cobraba sin que nadie lo viera): una pausa de impacto con el arpegio
+    // (Efectos.OleadaSuperada), "¡OLEADA N SUPERADA!" con su bono durante la primera parte
+    // del descanso y las monedas del bono volando al contador. Despues, el cartel de la
+    // oleada que viene. El descanso dura lo mismo que antes: lo que se ve cambia, no el ritmo.
+    public const float DuracionSuperada = 1.4f;
+    private Vector3 dondeQuedabaElUltimo;
+    private EfectosUI monedasDelBono;
+
     public float MultiplicadorVidaActual => Escalado.PorOleada(crecimientoVida, OleadaActual);
     public float MultiplicadorDanoActual => Escalado.PorOleada(crecimientoDano, OleadaActual);
 
@@ -182,6 +195,7 @@ public class WaveManager : MonoBehaviour
             }
 
             bonoDeLaOleadaAnterior = bonoPorOleada * OleadaActual;
+            Efectos.OleadaSuperada(dondeQuedabaElUltimo);
             Progreso.Sumar(bonoDeLaOleadaAnterior);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
             // Sin un solo golpe en toda la oleada: el logro INTOCABLE.
@@ -225,20 +239,69 @@ public class WaveManager : MonoBehaviour
 
     private IEnumerator Descanso()
     {
+        EnDescanso = true;
+        float resto = descansoEntreOleadas;
+
+        // La que se acaba de terminar, con su bono (en la primera de la partida, o en una
+        // retomada, no hay).
+        if (cartelOleada != null && bonoDeLaOleadaAnterior > 0)
+        {
+            cartelOleada.text = Textos.Formato("cartel_oleada_superada", OleadaActual - 1) + Textos.Formato("cartel_bono", bonoDeLaOleadaAnterior);
+            PrenderElCartel();
+            VolarMonedasDelBono(OleadaActual - 1);
+            float primero = Mathf.Min(DuracionSuperada, resto * 0.6f);
+            yield return new WaitForSeconds(primero);
+            resto -= primero;
+        }
+
         if (cartelOleada != null)
         {
             cartelOleada.text = Textos.Formato("cartel_oleada", OleadaActual);
-            if (bonoDeLaOleadaAnterior > 0)
-            {
-                cartelOleada.text += Textos.Formato("cartel_bono", bonoDeLaOleadaAnterior, OleadaActual - 1);
-            }
-            cartelOleada.gameObject.SetActive(true);
+            PrenderElCartel();
             Efectos.CartelOleada();
         }
 
-        yield return new WaitForSeconds(descansoEntreOleadas);
+        yield return new WaitForSeconds(resto);
 
         if (cartelOleada != null) cartelOleada.gameObject.SetActive(false);
+        EnDescanso = false;
+    }
+
+    // Apagar y prender: el rebote (AparecerConRebote) arranca al prenderse.
+    private void PrenderElCartel()
+    {
+        cartelOleada.gameObject.SetActive(false);
+        cartelOleada.gameObject.SetActive(true);
+    }
+
+    // Las monedas del bono vuelan del cartel al contador del HUD, con una nota cada una. Los
+    // efectos de UI son los de la tienda (EfectosUI), en un canvas propio arriba del HUD, que
+    // se arma la primera vez. El bono ya se sumo: esto es lo que se ve.
+    private void VolarMonedasDelBono(int oleada)
+    {
+        var contador = FindAnyObjectByType<ContadorMonedas>();
+        if (contador == null || contador.texto == null || cartelOleada.canvas == null) return;
+        if (monedasDelBono == null)
+        {
+            var go = new GameObject("MonedasDelBono", typeof(RectTransform));
+            go.SetActive(false);   // EfectosUI arma sus pools en Awake: primero los sprites
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(cartelOleada.canvas.rootCanvas.transform, false);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            var canvas = go.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = cartelOleada.canvas.rootCanvas.sortingOrder + 1;
+            monedasDelBono = go.AddComponent<EfectosUI>();
+            var circulo = TexturasUI.Circulo(64);
+            monedasDelBono.spriteMoneda = Sprite.Create(circulo, new Rect(0f, 0f, circulo.width, circulo.height), new Vector2(0.5f, 0.5f));
+            monedasDelBono.spriteParticula = monedasDelBono.spriteMoneda;
+            monedasDelBono.fuente = cartelOleada.font;
+            go.SetActive(true);
+        }
+        int cantidad = Mathf.Clamp(3 + oleada / 2, 4, 14);
+        monedasDelBono.MonedasVolando(cartelOleada.rectTransform, contador.Rect, cantidad, Efectos.MonedaDelBono);
     }
 
     private GameObject ElegirTipo()
@@ -327,11 +390,14 @@ public class WaveManager : MonoBehaviour
         zombisEnLaOleada++;
     }
 
+    // De paso anota donde esta el que queda: al terminar la oleada, las chispas salen ahi.
     private bool QuedanZombisDeLaOleada()
     {
         for (int i = 0; i < zombisDeLaOleada.Count; i++)
         {
-            if (EnemyController.SigueVivo(zombisDeLaOleada[i].zombi, zombisDeLaOleada[i].aparicion)) return true;
+            if (!EnemyController.SigueVivo(zombisDeLaOleada[i].zombi, zombisDeLaOleada[i].aparicion)) continue;
+            dondeQuedabaElUltimo = zombisDeLaOleada[i].zombi.transform.position;
+            return true;
         }
         return false;
     }

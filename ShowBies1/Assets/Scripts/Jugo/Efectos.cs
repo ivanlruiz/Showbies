@@ -42,6 +42,12 @@ public class Efectos : MonoBehaviour
     public float volumenFuriaLista = 0.5f;      // las dos notas que avisan que se puede otra vez
     public float volumenFinDeFuria = 0.4f;      // las mismas hacia abajo, al terminar
 
+    [Header("Oleada superada")]
+    public float temblorOleadaSuperada = 0.4f;
+    public float pausaOleadaSuperada = 0.35f;
+    public float volumenOleadaSuperada = 0.55f;
+    public float volumenMonedaDelBono = 0.3f;
+
     [Header("Destello de golpe")]
     public Material materialDestello;
     public float duracionDestello = 0.07f;
@@ -269,6 +275,50 @@ public class Efectos : MonoBehaviour
         if (e == null) return;
 
         e.Emitir(punto, e.chispasPorDisparo);
+    }
+
+    // Termino la oleada: el ultimo zombi revienta en chispas, la camara tiembla, el tiempo
+    // casi se para un instante y suena un arpegio que sube. Con el juego congelado (la
+    // derrota) no.
+    public static void OleadaSuperada(Vector3 punto)
+    {
+        var e = instance;
+        if (e == null || MenuPausa.JuegoCongelado) return;
+
+        e.Emitir(punto + Vector3.up * 0.5f, e.chispasPorMuerteGrande * 2);
+        CamaraJugador.Temblar(e.temblorOleadaSuperada);
+        e.PausaDeImpacto(e.pausaOleadaSuperada);
+        AudioClip nota = e.NotaDeAviso();
+        for (int i = 0; i < ArpegioSuperada.Length; i++)
+            Sonidos.Programar(nota, 0.07 * i, e.volumenOleadaSuperada, Sonidos.PitchDe(ArpegioSuperada[i]));
+    }
+
+    // La bemol mayor de una octava a la otra, y el acorde de arriba.
+    private static readonly float[] ArpegioSuperada = { 0f, 4f, 7f, 12f, 16f, 19f, 24f };
+    // La pentatonica, para las monedas del bono que llegan al contador.
+    private static readonly float[] Pentatonica = { 0f, 2f, 4f, 7f, 9f };
+
+    // Una moneda del bono llego al contador (WaveManager): una nota mas arriba cada una.
+    public static void MonedaDelBono(int indice)
+    {
+        var e = instance;
+        if (e == null) return;
+        float semitonos = 12f + Pentatonica[indice % Pentatonica.Length] + 12f * (indice / Pentatonica.Length);
+        Sonidos.Tocar(e.NotaDeAviso(), e.volumenMonedaDelBono, Sonidos.PitchDe(Mathf.Min(semitonos, 31f)));
+    }
+
+    // Un festejo: el arpegio doble, como al abrir el cofre del dia. Lo usa el aviso de
+    // NUEVO RECORD (AvisoDeMisiones).
+    public static void Festejo()
+    {
+        var e = instance;
+        if (e == null) return;
+        AudioClip nota = e.NotaDeAviso();
+        for (int i = 0; i < 4; i++)
+        {
+            Sonidos.Programar(nota, 0.06 * i, e.volumenOleadaSuperada, Sonidos.PitchDe(ArpegioSuperada[i]));
+            Sonidos.Programar(nota, 0.36 + 0.06 * i, e.volumenOleadaSuperada, Sonidos.PitchDe(ArpegioSuperada[i] + 12f));
+        }
     }
 
     public static void CartelOleada()

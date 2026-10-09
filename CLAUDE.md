@@ -72,7 +72,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
@@ -439,7 +439,8 @@ consultando `EnemyController.ZombisVivos`:
   `crecimientoMonedas`^(nivel−1) (1,15, 1,07 y 1,05: los que tenían las oleadas antes del parche del 19/9). `textoNivel` muestra "Nivel N" en el
   HUD y, al subir, rebota y suena el jingle del cartel. Sin esto el modo libre era una granja de monedas.
 - **`WaveManager`** (wave mode) — **una sola** corrutina que corre toda la partida. Cada oleada:
-  1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s). El HUD
+  1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s); si se viene de terminar una,
+     primero va "¡OLEADA N SUPERADA!" con su bono (ver Terminar una oleada, abajo), en los mismos 3 s. El HUD
      (`textoOleada`) muestra "Oleada N" y abajo "Zombis muertos/total" de esa oleada, jefe incluido; se
      actualiza en `Update` sólo cuando cambia, y los caídos por el kill-Z cuentan como muertos para que
      llegue al total justo cuando la oleada termina.
@@ -529,6 +530,16 @@ sobre el piso** (`LineAlignment.TransformZ` con el objeto rotado −90° en X): 
 la cámara, la cinta quedaba parada y medio enterrada. **Van a 0,2 m** (`JefePatrones.AlturaDelAviso`, la altura de la
 mancha de sangre), por encima de la vereda y el cordón de la ciudad: a 0,06 m las veredas tapaban la mitad de la línea
 en la mayoría de las cargas (superauditoría del 29/9). Los anillos de la granada, lo mismo (`Granade.AlturaDelAnillo`).
+
+**Terminar una oleada es un momento** (1.5.0, mejora 1 de la revisión del 9/10: pasaba en silencio y el bono se cobraba
+sin que nadie lo viera). Al morir el último zombi, `Efectos.OleadaSuperada`: chispas dobles donde estaba (el `WaveManager`
+lo anota mientras espera que no quede ninguno), temblor, una pausa de impacto de 0,35 s y un arpegio que sube dos octavas
+con la marimba del combo. En el descanso, **"¡OLEADA N SUPERADA!" con "+N MONEDAS"** durante `DuracionSuperada` (1,4 s),
+con rebote, mientras **las monedas del bono vuelan al contador del HUD** (un `EfectosUI`, el de la tienda, en un canvas
+propio que se arma la primera vez) y suena una nota de la pentatónica por cada una que llega (`Efectos.MonedaDelBono`).
+Después, el cartel de la oleada que viene. **El descanso dura lo mismo** (3 s): lo que cambia es lo que se ve, no el ritmo
+(`Economia.SegundosPorPartida` lo cuenta). En la primera oleada de la partida, o en una retomada, no hay superada. Las
+cartas de la 1.6.0 van en este mismo descanso: tienen que convivir con esto.
 
 **Las invocaciones respetan el techo de población.** El generador de cada escena lo fija al empezar
 (`EnemyController.FijarTecho`, 60 o 35 en móvil) y el jefe saca `min(los suyos, maxInvocadosVivos,
@@ -843,8 +854,8 @@ propósito: es estado estructurado.
 - **El pool es uno por prefab** (`Moneda.Obtener` y `Devolver`, como el de los zombis), y el techo de 150/80 es de
   todas juntas: los caramelos de Halloween son monedas con otro modelo y `caramelo` prendido (ver Evento de
   Halloween). Con la pila única de antes, un caramelo guardado volvía a salir como moneda.
-- **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se anuncia
-  en el cartel de la oleada siguiente). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
+- **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se festeja
+  en el cartel de la oleada superada, con sus monedas volando al contador). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
   que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. **Al terminar la oleada las monedas
   se quedan donde cayeron**: no hay imán global (antes `Moneda.AtraerTodas` las traía todas), juntarlas es parte del
   juego y la mejora de imán es la que ayuda. Siguen desapareciendo a los 20 s.
@@ -1020,6 +1031,15 @@ completada en el día y la lista).
   arriba van el cartel de la oleada, la barra del jefe y el del capítulo, y los tres pueden salir a la vez que este
   ("completa N oleadas" se cumple al terminar una, cuando sale el de la siguiente). Hasta el 23/9 iba en 300 y se
   pisaba con los dos últimos. La prueba de lógica mide las franjas de los cuatro, y la de la vida, en 16:9 y en 20:9.
+- **Y el progreso de la partida** (1.5.0, mejora 2 de la revisión del 9/10): en las oleadas, "¡TE LLEGA PARA UNA
+  MEJORA!" (o "PARA N MEJORAS") en amarillo, con cómo ir ("TOCA LA PAUSA Y ENTRA EN MEJORAS", o ESC en PC), cuando lo
+  juntado alcanza para más compras que lo ya avisado (`CatalogoMejoras.ComprasPosibles`; lo que alcanzaba al empezar no
+  se avisa). **Sale solo en el descanso entre oleadas** (`WaveManager.EnDescanso`: ahí ir a la tienda no hace perder
+  nada) y como mucho cada `OleadasEntreAvisosDeMejora` (3). Y **"¡NUEVO RÉCORD!"** una vez por partida, al pasar la
+  mejor oleada (o los puntos del récord en el libre) que había al empezar, con el arpegio doble (`Efectos.Festejo`);
+  sin marca previa, nada. Sin esto el MEJORAS de la pausa casi no se iba a usar, y el récord se sabía recién en la
+  derrota. **ShowBies > Pruebas > Fin de oleada y avisos (play)** (`PruebaFinDeOleada`) lo mira junto con el final de
+  oleada.
 
 ## Desafío semanal
 
@@ -1876,7 +1896,9 @@ y volvían a entrar). `MenuPausa.ArmarMejoras` lo arma en `Start` si hay `WaveMa
 amarillo de la tienda con `IconoMejoras` (de `Sprites/UI/Resources`), y aprieta el panel: el título sube a 280 y los
 cuatro botones van cada 130 desde 130, así el último queda encima de los volúmenes. Toca: anota `UltimoModo`, guarda y
 abre la tienda en el menú (`TiendaMejoras.AbrirEnMenu`); su ¡A JUGAR! vuelve a la oleada en curso, desde su principio,
-que es la misma vuelta que por MENÚ PRINCIPAL. En el libre no está: esa partida no se retoma.
+que es la misma vuelta que por MENÚ PRINCIPAL. En el libre no está: esa partida no se retoma. **Lleva la insignia
+roja de la tienda** (`MenuPausa.ArmarInsignia`, armada en código: en las escenas de juego no hay un MEJORAS de donde
+copiarla) con cuántas compras alcanzan, latiendo; se recalcula cuando cambia `Progreso.Revision`.
 
 - Pausar es `Time.timeScale = 0` más `AudioListener.pause`. Todo el juego usa tiempo escalado (física,
   `WaitForSeconds`, los `Time.time` de la mejora de cadencia y de los pickups), así que se congela sin

@@ -13,6 +13,12 @@ using UnityEngine;
 // moneda), cada nivel del jugador que se sube ("¡NIVEL 13!", con el premio que espera
 // en el menu), el desbloqueo del modo libre y, en Halloween, cada hito de caramelos que se
 // alcanza (EventoHalloween). Si llegan dos a la vez, salen una despues de otra.
+//
+// Y el progreso de la partida (revision del 9/10): en las oleadas, "¡TE LLEGA PARA UNA
+// MEJORA!" cuando las monedas juntadas alcanzan para comprar algo, solo en el descanso entre
+// oleadas (ir a la tienda desde la pausa ahi no hace perder nada; en plena horda distrae), y
+// "¡NUEVO RECORD!" en el momento de pasar la mejor marca, con el festejo del cofre. Sin esto,
+// el MEJORAS de la pausa casi no se usaba, y el record se enteraba recien en la derrota.
 // Va en ShowBies1 y WaveMode (objeto AvisoDeMisiones), con el texto armado en codigo
 // sobre el canvas del HUD.
 public class AvisoDeMisiones : MonoBehaviour
@@ -28,6 +34,11 @@ public class AvisoDeMisiones : MonoBehaviour
     public Color colorEstrella = new Color(1f, 0.8f, 0.2f);
     public Color colorNivel = new Color(0.4f, 0.85f, 1f);
     public Color colorHalloween = new Color(1f, 0.55f, 0.1f);
+    public Color colorMejora = new Color(1f, 0.882f, 0.302f);   // el amarillo de la tienda
+    public Color colorRecord = new Color(1f, 0.43f, 0.85f);
+
+    // Cada cuantas oleadas, como mucho, vuelve a avisar que alcanza para mas mejoras.
+    public const int OleadasEntreAvisosDeMejora = 3;
 
     // Donde sale, desde el centro de la pantalla, y su letra. Debajo del jugador: arriba
     // estan el cartel de la oleada (170), la barra del jefe (arriba de 320) y el cartel del
@@ -44,6 +55,7 @@ public class AvisoDeMisiones : MonoBehaviour
         public string titulo;
         public string detalle;
         public Color color;
+        public bool festejo;
     }
 
     private readonly HashSet<int> yaCumplidas = new HashSet<int>();
@@ -58,6 +70,14 @@ public class AvisoDeMisiones : MonoBehaviour
     private bool libreVisto;
     private int hitosVistos;
 
+    private WaveManager oleadas;
+    private int revisionDeLasCompras = -1;
+    private int comprasAvisadas;
+    private bool mejoraPorAvisar;
+    private int oleadaDelAvisoDeMejora = -1000;   // ninguno todavia
+    private int recordAlEmpezar;
+    private bool recordAvisado;
+
     private void Start()
     {
         MisionesDiarias.Asegurar();
@@ -69,6 +89,58 @@ public class AvisoDeMisiones : MonoBehaviour
         nivelVisto = NivelJugador.Nivel;
         libreVisto = ModoLibre.Desbloqueado;
         hitosVistos = EventoHalloween.Activo ? EventoHalloween.Alcanzados : 0;
+
+        // Lo que ya alcanzaba al empezar no se avisa: venia de la tienda y no compro.
+        oleadas = FindAnyObjectByType<WaveManager>();
+        revisionDeLasCompras = Progreso.Revision;
+        comprasAvisadas = CatalogoMejoras.ComprasPosibles();
+        // La marca a pasar: la mejor oleada en las oleadas, los puntos en el libre.
+        recordAlEmpezar = oleadas != null ? Progreso.MejorOleada
+                                          : PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(gameObject.scene.buildIndex), 0);
+    }
+
+    // Cuando lo juntado alcanza para mas compras que lo ya avisado. Se anota ahora y sale en
+    // el descanso de la oleada, como mucho cada OleadasEntreAvisosDeMejora.
+    private void AnotarMejoras()
+    {
+        if (oleadas == null) return;
+        if (Progreso.Revision != revisionDeLasCompras)
+        {
+            revisionDeLasCompras = Progreso.Revision;
+            int compras = CatalogoMejoras.ComprasPosibles();
+            if (compras > comprasAvisadas) mejoraPorAvisar = true;
+            comprasAvisadas = Mathf.Max(comprasAvisadas, compras);
+        }
+        if (!mejoraPorAvisar || !oleadas.EnDescanso) return;
+        if (oleadas.OleadaActual - oleadaDelAvisoDeMejora < OleadasEntreAvisosDeMejora) return;
+        mejoraPorAvisar = false;
+        oleadaDelAvisoDeMejora = oleadas.OleadaActual;
+        int ahora = CatalogoMejoras.ComprasPosibles();
+        pendientes.Enqueue(new Aviso
+        {
+            titulo = ahora == 1 ? Textos.De("aviso_compras_una") : Textos.Formato("aviso_compras_varias", ahora),
+            detalle = Textos.De(Plataforma.EsMovil ? "aviso_compras_pausa" : "aviso_compras_pausa_pc"),
+            color = colorMejora,
+        });
+    }
+
+    // Una sola vez por partida, al pasar la mejor marca (la de antes de empezar: sin marca,
+    // la primera partida, no hay nada que festejar).
+    private void AnotarRecord()
+    {
+        if (recordAvisado || recordAlEmpezar <= 0) return;
+        bool paso = oleadas != null ? Progreso.MejorOleada > recordAlEmpezar
+                                    : Puntaje.instance != null && Puntaje.instance.contadorKill > recordAlEmpezar;
+        if (!paso) return;
+        recordAvisado = true;
+        pendientes.Enqueue(new Aviso
+        {
+            titulo = Textos.De("aviso_record"),
+            detalle = oleadas != null ? Textos.Formato("aviso_record_oleada", recordAlEmpezar)
+                                      : Textos.Formato("aviso_record_puntos", FormatoNumeros.Compacto(recordAlEmpezar)),
+            color = colorRecord,
+            festejo = true,
+        });
     }
 
     // Los hitos de Halloween que se alcanzan en esta partida, con lo que espera en el menu.
@@ -203,6 +275,8 @@ public class AvisoDeMisiones : MonoBehaviour
             AnotarLogros();
             AnotarNivel();
             AnotarHalloween();
+            AnotarRecord();
+            AnotarMejoras();
         }
 
         if (cartel == null && pendientes.Count > 0 && canvas != null) Mostrar(pendientes.Dequeue(), t);
@@ -238,6 +312,7 @@ public class AvisoDeMisiones : MonoBehaviour
         cartel.raycastTarget = false;
         mostrandoDesde = t;
         if (sonido != null) Sonidos.Tocar(sonido, 0.7f);
-        CamaraJugador.Temblar(0.15f);
+        if (aviso.festejo) Efectos.Festejo();
+        CamaraJugador.Temblar(aviso.festejo ? 0.3f : 0.15f);
     }
 }

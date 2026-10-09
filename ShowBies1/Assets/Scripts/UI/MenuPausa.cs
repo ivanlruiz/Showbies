@@ -121,10 +121,45 @@ public class MenuPausa : MonoBehaviour
         foreach (var texto in mejoras.GetComponentsInChildren<TMP_Text>(true)) texto.color = ConstructorUI.AmarilloTexto;
         ConstructorUI.PintarHalo(mejoras.GetComponent<Button>(), ConstructorUI.Amarillo);
 
+        ArmarInsignia(mejoras);
+
         titulo.anchoredPosition = new Vector2(titulo.anchoredPosition.x, AlturaTituloConMejoras);
         var botones = new[] { continuar, mejoras, reiniciar, menu };
         for (int i = 0; i < botones.Length; i++)
             botones[i].anchoredPosition = new Vector2(botones[i].anchoredPosition.x, PrimerBotonConMejoras - SeparacionConMejoras * i);
+    }
+
+    // La insignia de MEJORAS, como la del menu: cuantas compras alcanzan con lo juntado
+    // (CatalogoMejoras.ComprasPosibles), latiendo. Se arma aca porque en las escenas de juego
+    // no hay un boton MEJORAS de donde copiarla.
+    private RectTransform insigniaMejoras;
+    private TMP_Text numeroMejoras;
+    private int revisionDeLaInsignia = -1;
+    private int comprasDeLaInsignia;
+
+    private void ArmarInsignia(RectTransform boton)
+    {
+        var circulo = TexturasUI.Circulo(64);
+        var redondo = Sprite.Create(circulo, new Rect(0f, 0f, circulo.width, circulo.height), new Vector2(0.5f, 0.5f));
+        var fondo = ConstructorUI.Imagen(boton, "Insignia", Vector2.zero, new Vector2(56f, 56f), redondo, ConstructorUI.Rojo);
+        insigniaMejoras = fondo.rectTransform;
+        insigniaMejoras.anchorMin = insigniaMejoras.anchorMax = new Vector2(1f, 1f);
+        insigniaMejoras.anchoredPosition = new Vector2(-14f, -10f);
+        var textoDelBoton = boton.GetComponentInChildren<TMP_Text>(true);
+        numeroMejoras = ConstructorUI.Texto(insigniaMejoras, "Numero", "", 34f, Color.white, Vector2.zero, new Vector2(56f, 56f),
+                                            textoDelBoton != null ? textoDelBoton.font : null);
+        insigniaMejoras.gameObject.SetActive(false);
+    }
+
+    private void ActualizarInsignia()
+    {
+        if (insigniaMejoras == null || panel == null || !panel.activeSelf) return;
+        if (Progreso.Revision != revisionDeLaInsignia)
+        {
+            revisionDeLaInsignia = Progreso.Revision;
+            comprasDeLaInsignia = CatalogoMejoras.ComprasPosibles();
+        }
+        ConstructorUI.Latir(insigniaMejoras, numeroMejoras, comprasDeLaInsignia, Time.unscaledTime);
     }
 
     private void IrALaTienda()
@@ -140,6 +175,7 @@ public class MenuPausa : MonoBehaviour
 
     private void Update()
     {
+        ActualizarInsignia();
         if (grupoDelBoton != null)
         {
             float alfa = capitulos != null && capitulos.CartelEnPantalla ? alfaConElCartel : 1f;

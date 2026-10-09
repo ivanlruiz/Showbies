@@ -192,7 +192,8 @@ combo_25	MASSACRE!	¡MASACRE!
 combo_50	UNSTOPPABLE!	¡IMPARABLE!
 combo_100	LEGENDARY!	¡LEGENDARIO!
 cartel_oleada	Wave {0}	Oleada {0}
-cartel_bono	\n<size=45%>+{0} coins for wave {1}</size>	\n<size=45%>+{0} monedas por la oleada {1}</size>
+cartel_oleada_superada	Wave {0} cleared!	¡Oleada {0} superada!
+cartel_bono	\n<size=45%>+{0} coins</size>	\n<size=45%>+{0} monedas</size>
 furia_boton	RAGE	FURIA
 furia_boton_pc	RAGE\n<size=55%>(F)</size>	FURIA\n<size=55%>(F)</size>
 furia_cartel	RAGE!	¡FURIA!
@@ -216,6 +217,11 @@ derrota_otra_vez	PLAY AGAIN	OTRA VEZ
 derrota_menu	MENU	MENÚ
 aviso_compras_una	You can afford an upgrade!	¡Te llega para una mejora!
 aviso_compras_varias	You can afford {0} upgrades!	¡Te llega para {0} mejoras!
+aviso_compras_pausa	Tap pause and open UPGRADES	Toca la pausa y entra en MEJORAS
+aviso_compras_pausa_pc	Press ESC and open UPGRADES	Pulsa ESC y entra en MEJORAS
+aviso_record	NEW RECORD!	¡NUEVO RÉCORD!
+aviso_record_oleada	Your best was wave {0}	Tu mejor marca era la oleada {0}
+aviso_record_puntos	Your best was {0} points	Tu récord era de {0} puntos
 aviso_descanso	You've been playing for over an hour. Maybe take a break?	Llevas más de una hora jugando. Un descanso te vendrá bien.
 oferta_duplicar	WATCH VIDEO: +{0} COINS	VER VÍDEO: +{0} MONEDAS
 
