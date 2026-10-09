@@ -38,7 +38,8 @@ public class BarraDeVida : MonoBehaviour
 
         var barra = new GameObject("BarraDeVida").AddComponent<BarraDeVida>();
         barra.zombi = zombi;
-        barra.altura = AlturaDeLaCabeza(zombi) + barra.margenSobreLaCabeza;
+        float cabeza = zombi.AlturaDeLaCabeza > 0f ? zombi.AlturaDeLaCabeza : AlturaDeLaCabeza(zombi);
+        barra.altura = cabeza + barra.margenSobreLaCabeza;
 
         // Cada barra se ordena entera contra las otras, por distancia a la camara, y adentro
         // el fondo antes que el relleno. Sin el grupo, el orden de los sprites manda sobre la
@@ -117,7 +118,7 @@ public class BarraDeVida : MonoBehaviour
     // Cuanto sobresale el zombi por encima de su pivote, mirando sus renderers
     // prendidos: los modelos de ToonyTiny y los zombis de primitivas miden
     // distinto, y el jefe esta escalado.
-    private static float AlturaDeLaCabeza(EnemyController zombi)
+    public static float AlturaDeLaCabeza(EnemyController zombi)
     {
         bool hay = false;
         var limites = new Bounds();

@@ -34,6 +34,13 @@ public class PlayerJS : MonoBehaviour
     void Update()
     {
         if (!Plataforma.EsMovil || MenuPausa.JuegoCongelado) return;
+        // Volando por el golpe del jefe no hay control (PlayerController.Lanzar): sin esto, con el
+        // pulgar en el joystick de disparo, seguia girando y disparando en el aire.
+        if (player != null && player.EnElAire)
+        {
+            player.FijarDisparo(false);
+            return;
+        }
 
         UpdateMoveJoystick();
         UpdateShootJoystick();

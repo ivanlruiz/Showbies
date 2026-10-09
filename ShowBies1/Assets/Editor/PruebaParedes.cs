@@ -86,6 +86,12 @@ public static class PruebaParedes
     static bool jefeIgnora;
     static int parejasDelJefe;
     static float jefeMasCercaDeUnaTumba;
+    // La invocacion entre las tumbas (revision del 9/10): con el jefe parado en una manzana,
+    // donde saldria cada invocado alrededor. El rayo chocaba las tumbas que el jefe pisa y
+    // los dejaba adentro de su cuerpo.
+    static bool anilloMedido;
+    static float anilloMasCerca;
+    static int anilloPuntos;
 
     static PruebaParedes()
     {
@@ -137,6 +143,9 @@ public static class PruebaParedes
             jefeIgnora = false;
             parejasDelJefe = 0;
             jefeMasCercaDeUnaTumba = float.MaxValue;
+            anilloMedido = false;
+            anilloMasCerca = float.MaxValue;
+            anilloPuntos = 0;
             seguidos.Clear();
             detalle.Clear();
             inicio = EditorApplication.timeSinceStartup;
@@ -284,12 +293,32 @@ public static class PruebaParedes
         Vector2 p = new Vector2(z.transform.position.x, z.transform.position.z);
         foreach (var r in CapitulosDeEscenario.Redondos)
             if (r.chico) jefeMasCercaDeUnaTumba = Mathf.Min(jefeMasCercaDeUnaTumba, Vector2.Distance(p, r.centro));
+        if (!anilloMedido && jefeMasCercaDeUnaTumba < 1f) MedirElAnillo(z);
         // Y nunca adentro de un arbol, que lo frena.
         float alArbol = AlObstaculo(z.transform.position, true);
         if (alArbol < -0.2f)
         {
             adentro++;
             if (adentro <= 5) detalle.AppendLine("  el jefe adentro de un arbol en " + Plano(z.transform.position));
+        }
+    }
+
+    static void MedirElAnillo(EnemyController z)
+    {
+        anilloMedido = true;
+        var patrones = z.GetComponent<JefePatrones>();
+        if (patrones == null) return;
+        const System.Reflection.BindingFlags Privado = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        var punto = typeof(JefePatrones).GetMethod("PuntoDelAnillo", Privado);
+        if (punto == null) return;
+        Vector3 centro = z.transform.position;
+        centro.y = 0f;
+        for (int i = 0; i < 24; i++)
+        {
+            float a = i * Mathf.PI * 2f / 24f;
+            var p = (Vector3)punto.Invoke(patrones, new object[] { centro, new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) });
+            anilloMasCerca = Mathf.Min(anilloMasCerca, Vector2.Distance(new Vector2(p.x, p.z), new Vector2(centro.x, centro.z)));
+            anilloPuntos++;
         }
     }
 
@@ -346,6 +375,10 @@ public static class PruebaParedes
             que.Add("el jefe no choca con las lapidas ni con las cruces (IgnoreCollision con todas)");
             ok.Add(jefeMasCercaDeUnaTumba < CapitulosDeEscenario.RadioDeTumba + 0.3f);
             que.Add("el jefe camino por encima de una tumba (su centro paso a menos de " + (CapitulosDeEscenario.RadioDeTumba + 0.3f).ToString("0.0") + " m de una)");
+            float cuerpoDelJefe = jefe != null ? EnemyController.RadioDelCuerpo(jefe.gameObject) : 0f;
+            ok.Add(anilloPuntos > 0 && anilloMasCerca >= cuerpoDelJefe + 0.45f);
+            que.Add("entre las tumbas, ningun invocado sale adentro del jefe (" + anilloPuntos + " puntos del anillo; el mas cerca a "
+                    + (anilloPuntos > 0 ? anilloMasCerca.ToString("0.00") : "?") + " m de su centro, el cuerpo mide " + cuerpoDelJefe.ToString("0.00") + ")");
         }
         bool todo = true;
         for (int i = 0; i < ok.Count; i++)

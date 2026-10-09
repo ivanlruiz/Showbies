@@ -284,6 +284,10 @@ public class Moneda : MonoBehaviour
         // Lo que tapa un edificio de la ciudad va mas alla de su pared (del otro lado de la
         // camara, el techo esconde una franja de piso): se frena antes, como contra una pared.
         libre = LibreHastaLoTapado(origen, direccion, libre);
+        // Y los obstaculos, contados aparte del rayo: con la horda alrededor, los colliders de
+        // los zombis llenaban los golpes del rayo antes de llegar al auto, y la moneda caia
+        // adentro (revision del 9/10).
+        libre = LibreHastaLosObstaculos(origen, direccion, libre);
         if (libre >= alcance) return v;
 
         float nuevaRapidez = Mathf.Max(0f, libre - margenContraParedes) * frenadoHorizontal;
@@ -336,6 +340,41 @@ public class Moneda : MonoBehaviour
             {
                 libre = entra;
             }
+        }
+        return libre;
+    }
+
+    // Lo mismo contra los obstaculos del decorado puesto: las cajas (CapitulosDeEscenario.Huellas,
+    // que incluyen los edificios) y lo redondo. Desde adentro de uno no frena: no deberia
+    // pasar, y frenar ahi la dejaria adentro. Publico para la prueba de logica.
+    public static float LibreHastaLosObstaculos(Vector3 origen, Vector3 direccion, float libre)
+    {
+        var huellas = CapitulosDeEscenario.Huellas;
+        for (int i = 0; i < huellas.Count; i++)
+        {
+            Rect zona = huellas[i];
+            if (zona.Contains(new Vector2(origen.x, origen.z))) continue;
+            float entra = 0f, sale = libre;
+            if (Tramo(origen.x, direccion.x, zona.xMin, zona.xMax, ref entra, ref sale) &&
+                Tramo(origen.z, direccion.z, zona.yMin, zona.yMax, ref entra, ref sale))
+            {
+                libre = entra;
+            }
+        }
+        var redondos = CapitulosDeEscenario.Redondos;
+        var o = new Vector2(origen.x, origen.z);
+        var d = new Vector2(direccion.x, direccion.z);
+        for (int i = 0; i < redondos.Count; i++)
+        {
+            Vector2 alCentro = redondos[i].centro - o;
+            float radio = redondos[i].radio;
+            if (alCentro.sqrMagnitude <= radio * radio) continue;
+            float adelante = Vector2.Dot(alCentro, d);
+            if (adelante <= 0f) continue;
+            float costado = alCentro.sqrMagnitude - adelante * adelante;
+            if (costado >= radio * radio) continue;
+            float entra = adelante - Mathf.Sqrt(radio * radio - costado);
+            if (entra < libre) libre = Mathf.Max(0f, entra);
         }
         return libre;
     }

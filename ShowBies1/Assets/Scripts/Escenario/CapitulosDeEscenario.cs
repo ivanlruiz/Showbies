@@ -445,6 +445,13 @@ public class CapitulosDeEscenario : MonoBehaviour
     // EnemyController.PisarLoChico).
     public static IReadOnlyList<Collider> Chicos => chicosPuestos;
 
+    public static bool EsChico(Collider collider)
+    {
+        for (int i = 0; i < chicosPuestos.Count; i++)
+            if (chicosPuestos[i] == collider) return true;
+        return false;
+    }
+
     [System.Serializable]
     public struct Redondo
     {

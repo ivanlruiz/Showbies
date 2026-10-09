@@ -781,8 +781,15 @@ public class EnemyController : MonoBehaviour
         // De noche, la luz de relleno de la escena solo alumbra la capa de los personajes.
         Personajes.PonerEnLaCapa(gameObject);
         movimientoPropio = GetComponent<IMovimientoPropio>();
+        // La altura de la barra de vida, una vez y en la pose de reposo: medida en el golpe,
+        // si el primero que no mataba le entraba al jefe agazapado para el salto o la carga,
+        // la barra quedaba hundida en su cabeza, y del pool la heredaban los jefes siguientes
+        // (revision del 9/10). Con el disfraz puesto, que lo agranda.
+        AlturaDeLaCabeza = BarraDeVida.AlturaDeLaCabeza(this);
         PrepararDestello();
     }
+
+    public float AlturaDeLaCabeza { get; private set; }
 
     // Cada aparicion, nueva o salida del pool, arranca de cero. Corre antes de que
     // quien lo hizo aparecer le ponga los multiplicadores.
@@ -1540,7 +1547,12 @@ public class EnemyController : MonoBehaviour
         Vector3 falta = lugarDelFestejo - transform.position;
         falta.y = 0f;
         bool yendo = !festejando && falta.sqrMagnitude > 0.6f * 0.6f;
-        if (yendo && SinAcercarse(falta.magnitude, Time.time, ref masCercaDelLugar, ref seAcercoEn))
+        // Lo que falta es por el camino que hace el Rodeo, no en linea recta: rodeando un
+        // edificio camina de costado y la recta no baja, y a los 0,5 s cambiaba de lugar y al
+        // rato festejaba detras del edificio, fuera de cuadro (revision del 9/10).
+        Vector3 hacia = yendo ? Rodeo(transform.position, lugarDelFestejo, CapitulosDeEscenario.Huellas, radioDelCuerpo) : lugarDelFestejo;
+        float porElCamino = EnElPiso(hacia - transform.position).magnitude + EnElPiso(lugarDelFestejo - hacia).magnitude;
+        if (yendo && SinAcercarse(porElCamino, Time.time, ref masCercaDelLugar, ref seAcercoEn))
         {
             if (cambioDeLugar)
             {
@@ -1557,7 +1569,6 @@ public class EnemyController : MonoBehaviour
         Vector3 velocidad = Vector3.zero;
         if (yendo)
         {
-            Vector3 hacia = Rodeo(transform.position, lugarDelFestejo, CapitulosDeEscenario.Huellas, radioDelCuerpo);
             Vector3 rumbo = Esquive(transform.position, hacia, CapitulosDeEscenario.Redondos, radioDelCuerpo, EsJefe) - transform.position;
             rumbo.y = 0f;
             transform.rotation = Quaternion.LookRotation(rumbo.sqrMagnitude > 0.0001f ? rumbo : falta);
@@ -1637,6 +1648,12 @@ public class EnemyController : MonoBehaviour
             }
         }
         return lugar;
+    }
+
+    private static Vector3 EnElPiso(Vector3 v)
+    {
+        v.y = 0f;
+        return v;
     }
 
     // Si hace EsperaSinAcercarse que no se acerca AcercamientoMinimo al lugar al que va, a

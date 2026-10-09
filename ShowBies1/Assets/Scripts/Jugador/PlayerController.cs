@@ -81,6 +81,9 @@ public class PlayerController : MonoBehaviour
         modeloEnVuelo = trans != null ? trans.transform : null;
         if (modeloEnVuelo != null) posicionBaseDelModelo = modeloEnVuelo.localPosition;
         FijarDisparo(false);
+        // Y la granada que se venia apuntando: si no, soltar Espacio en el aire no la tiraba y el
+        // anillo quedaba dibujado en el piso. Con Espacio apretado al caer, vuelve solo.
+        OcultarPunteroGranada();
         if (trans != null && trans.anim != null) trans.anim.SetBool("run", false);
     }
 

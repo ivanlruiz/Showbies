@@ -181,6 +181,16 @@ public static class Progreso
     // por partida es para no encadenar ofertas en la misma corrida.
     public static int VideosDeLaPartida { get; private set; }
 
+    // Videos con premio que se vieron en la partida en curso, premiados o cerrados antes de
+    // terminar: el que miro uno no se come el automatico (ServicioAnuncios). Contando solo los
+    // premiados, el que cerraba el x2 a los 20 s se llevaba el intersticial al salir.
+    public static int VideosVistosDeLaPartida { get; private set; }
+
+    public static void RegistrarVideoVisto()
+    {
+        VideosVistosDeLaPartida++;
+    }
+
     // Sube con cada cambio de monedas o niveles.
     public static int Revision { get; private set; }
 
@@ -194,6 +204,7 @@ public static class Progreso
         NumeroDePartida = 0;
         SegundosDeLaUltimaPartida = 0;
         VideosDeLaPartida = 0;
+        VideosVistosDeLaPartida = 0;
         partidaDuplicada = -1;
         Revision = 0;
         carpetaPruebas = null;
@@ -237,6 +248,7 @@ public static class Progreso
         Cargar();
         MonedasDeLaPartida = 0;
         VideosDeLaPartida = 0;
+        VideosVistosDeLaPartida = 0;
         NumeroDePartida++;
         EventoHalloween.EmpezarPartida();
     }

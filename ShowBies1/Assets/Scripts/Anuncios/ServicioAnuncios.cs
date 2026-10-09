@@ -271,7 +271,7 @@ public static class ServicioAnuncios
     {
         return PuedeMostrarAutomaticoConDatos(ConfigEnUso, MostrandoAnuncio, Proveedor.Listo(LugarAnuncio.Automatico),
                                               Progreso.PartidasTerminadas, Progreso.PartidaDelUltimoAutomatico,
-                                              Progreso.VideosDeLaPartida);
+                                              Progreso.VideosVistosDeLaPartida);
     }
 
     // Muestra el automatico si toca. Devuelve si lo lanzo: entonces 'alTerminar' llega al
@@ -379,6 +379,7 @@ public static class ServicioAnuncios
         }
 
         bool premiar = resultado == ResultadoAnuncio.Recompensado;
+        if (resultado == ResultadoAnuncio.Recompensado || resultado == ResultadoAnuncio.Cerrado) Progreso.RegistrarVideoVisto();
 
         // Un video que se rompio al mostrarse no es culpa del jugador: se premia
         // igual, pero pocas veces por dia, porque cortar la red seria la forma facil

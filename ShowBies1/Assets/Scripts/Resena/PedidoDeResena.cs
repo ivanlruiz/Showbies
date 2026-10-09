@@ -108,6 +108,7 @@ public class PedidoDeResena : MonoBehaviour
                          && (selectorIdioma == null || !selectorIdioma.Abierto)
                          && (opcionesSonido == null || !opcionesSonido.Abierto)
                          && (menuModos == null || !menuModos.activeSelf)
+                         && !VentanaHalloween.Abierta
                          && !ServicioAnuncios.ConsentimientoEnPantalla;
         if (!tranquilo)
         {

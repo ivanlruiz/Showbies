@@ -499,7 +499,9 @@ zarpazos: `EnemyController.puedeZarpar` los corta desde el aviso hasta volver a 
 que venía tirando, que hasta el 27/9 pegaba en pleno aviso y tapaba la pose): esa es la
 ventana para castigarlo, y es lo que hace que esquivar valga la pena). La **invocación**, solo en furia (se frena, un
 anillo rojo que se achica y aparecen 6 zombis normales con sus multiplicadores, parados en el piso del anillo y dentro
-del mapa: el que no entra contra una pared sale del lado de enfrente). A la mitad de su vida entra en furia: ataca más
+del mapa: el que no entra contra una pared sale del lado de enfrente, y nunca a menos de su cuerpo más medio metro; el
+rayo que busca las paredes no cuenta lo que el jefe pisa, `CapitulosDeEscenario.EsChico`, porque en el cementerio cada
+tumba lo achicaba y los invocados nacían adentro del jefe). A la mitad de su vida entra en furia: ataca más
 seguido y empieza a invocar. **ShowBies > Pruebas > Grabar el salto del jefe** lo saca a 13 m con el jugador suelto,
 para ver el salto y el vuelo (en `Builds/jefe_golpe/`). Los invocados cuentan en la oleada y en el total del HUD
 (`WaveManager.SumarALaOleada`). Para moverse por su cuenta usa `IMovimientoPropio`: `EnemyController` lo busca en su
@@ -640,7 +642,9 @@ cosas. Son dos `SpriteRenderer` sobre un sprite blanco hecho en código (estáti
 por zombi, **en un `SortingGroup`**: sin él el orden de los sprites mandaba sobre la distancia, todos los fondos se
 dibujaban antes que todos los rellenos, y con dos barras pisándose el relleno de la de atrás se veía a través de la
 parte vacía de la de adelante. La fracción sale de la vida con la que apareció el zombi (`vidaMaxima`), así que un escalado de vida
-por oleada no la rompe mientras se aplique antes del primer golpe. Cuando el zombi muere la barra se apaga y queda
+por oleada no la rompe mientras se aplique antes del primer golpe. **La altura se mide una vez, en el `Awake` del
+zombi** (`AlturaDeLaCabeza`, en su pose de reposo y con el disfraz): medida en el primer golpe, el jefe agazapado para
+el salto la dejaba hundida en su cabeza, para él y los jefes que salían después del pool. Cuando el zombi muere la barra se apaga y queda
 guardada con él: la aparición siguiente la prende con su primer golpe que no mata, sin crear otra (el pool es por
 prefab, así que la altura sirve). Se destruye con el zombi.
 
@@ -763,7 +767,8 @@ los puntos de aparición libres, y simula unas dos mil persecuciones por decorad
 la física sacando a cada zombi de lo que pisa: que ninguno se trabe ni dé vueltas de más. **ShowBies > Pruebas > Tumbas
 del cementerio (play)** (`PruebaParedes`, como el de la ciudad: la oleada 15 retomada, `Builds/prueba_tumbas.txt`) lo mira
 con la física de verdad en el cementerio, y además saca un jefe sin sus patrones del otro lado de una manzana de tumbas:
-que ignore el choque con todas las lápidas y cruces y que pase por encima de una.
+que ignore el choque con todas las lápidas y cruces, que pase por encima de una y que, parado entre las tumbas, el anillo
+de la invocación quede afuera de su cuerpo.
 
 **Los faroles alumbran el piso con un charco de luz, no con su luz.** Cada farol lleva en el piso un cuadrado aditivo
 (`Charco`, con el shader `ShowBies/CharcoDeLuz`, que se apaga como la luz puntual que cuelga encima, calculado en el
@@ -1140,7 +1145,9 @@ para siempre.
   `AvisoDeMisiones` avisa cada hito alcanzado ("¡PREMIO DE HALLOWEEN!") en naranja.
 - **Al terminar, lo que quedó sin cobrar se cobra solo** (`CerrarSiTermino`, al entrar al menú, sombrero incluido), una
   vez. La edición siguiente (`edicion`, el año) arranca de cero, y para quien ya tiene el sombrero el último hito paga
-  1,5 partidas de monedas.
+  1,5 partidas de monedas. **Atrasar el reloj no reabre nada** (`EventoHalloween.DiaQueCuenta`: el día nunca vuelve
+  atrás del último visto, `EstadoHalloween.ultimoDia`): hasta la revisión del 9/10, poner el teléfono en el 5/11 reabría
+  un evento terminado, y llevarlo a octubre del año anterior y de vuelta rearrancaba la fila y se cobraba otra vez.
 - **El botón HALLOWEEN** va abajo a la izquierda del panel principal, en espejo con PLAY (110 del borde y 90 del piso),
   naranja, con la insignia de MEJORAS: los hitos por cobrar, o "!" mientras no se abrió la ventana en esta edición. La
   ventana (`VentanaHalloween`) toma de `VentanaMisiones` la fuente, la píldora, los iconos y los sonidos; el atrás de
@@ -1316,7 +1323,9 @@ que comparte el mecanismo de los videos: el pedido numerado, la cola y los vigí
 - **Nunca en las primeras partidas**: desde la 3.ª terminada (`partidasAntesDelPrimerAutomatico`).
 - **Como mucho uno cada 3 partidas** (`partidasEntreAutomaticos`), contando desde la partida en que salió el último
   (`Progreso.PartidaDelUltimoAutomatico`, en el JSON sin cambiar la versión).
-- **Nunca si en esa partida se miró un video con premio**: el que ya miró uno no se come otro.
+- **Nunca si en esa partida se miró un video con premio**: el que ya miró uno no se come otro, aunque lo haya cerrado
+  antes de terminar (`Progreso.VideosVistosDeLaPartida`, que cuenta los premiados y los cerrados; hasta el 9/10 solo
+  contaban los premiados).
 - Solo cuenta si se vio (cerrado). Si no había anuncio o falló, se sigue de largo y el siguiente espera menos. **No
   gasta los topes de los videos ni se "premia" si falla.**
 - `automaticos` en el asset los apaga. El bloque de verdad (`bloqueAutomatico`) hay que crearlo en AdMob, porque es
@@ -1391,7 +1400,9 @@ librería de Google y JNI.
   el servicio en primer plano de WorkManager y su permiso** (`tools:node="remove"`), que trae el SDK sin usarlos y por
   los que Play pide una declaración aparte, y
   `PuenteAnuncios.java` maneja el SDK, carga un video por lugar, lo vuelve a pedir al usarlo, al fallar (cada vez
-  más espaciado) y al vencer (a la hora), y avisa todo con texto por `OyenteAnuncios`, una interfaz que del lado de C#
+  más espaciado) y al vencer (a la hora, **contada con `SystemClock.elapsedRealtime`**: el `postDelayed` no corre con el
+  teléfono dormido, y a la mañana se ofrecía un anuncio de la noche anterior, que Google no paga; se revisa al volver
+  la app al frente y antes de mostrar), y avisa todo con texto por `OyenteAnuncios`, una interfaz que del lado de C#
   implementa un `AndroidJavaProxy` (las devoluciones del SDK son clases abstractas, y el proxy solo implementa
   interfaces). **Cada pedido de mostrar termina en un solo aviso `terminado`**, pase lo que pase.
 - **`ProveedorAdMob`** encola los avisos y los atiende en el hilo de Unity (`ServicioAnuncios.AtenderAvisos`). **`Listo`
@@ -1832,7 +1843,8 @@ después de guardar todo, en vez del `LoadScene(2)` de antes.
   cámara recién empieza a correrse; hasta el 27/9 dos o tres festejaban cortados por el borde izquierdo), se da vuelta a
   mirarlo y festeja. Antes, con el cuerpo tapado en el centro, se abrían a los
   costados de la pantalla, a 9-12,5 m, lejos de él. **El que no se acerca a su lugar en medio segundo prueba otro, y
-  si tampoco, festeja donde está** (`EnemyController.SinAcercarse`): el lugar se sortea sin mirar si se puede pisar, y
+  si tampoco, festeja donde está** (`EnemyController.SinAcercarse`, con lo que falta medido por el camino del `Rodeo` y
+  no en línea recta: rodeando un edificio la recta no baja, y hasta el 9/10 terminaba festejando detrás de él): el lugar se sortea sin mirar si se puede pisar, y
   hasta el 25/9 los que caían detrás de una pared invisible, o adentro de un tanque o del jefe, quedaban corriendo
   contra eso, de espaldas al cuerpo. El festejo va **en oleadas cada 2,4 s**: tres saltos con el puño en alto (el estado `Festejar`,
   que es el zarpazo con el Motion Time entre la mano al hombro, 0,15 s, y sobre la cabeza, 0,29 s), el cuerpo

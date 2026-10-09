@@ -833,13 +833,25 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
                 radio = delOtroLado;
             }
         }
-        return centro + hacia * radio;
+        // Nunca adentro de su cuerpo: la fisica lo escupia, a veces bajo el piso. Si queda
+        // contra un obstaculo, EnemyController.Aparecer lo saca; adentro del mapa siempre.
+        radio = Mathf.Max(radio, radioDelCuerpo + MargenDelCuerpo);
+        Vector3 punto = centro + hacia * radio;
+        punto.x = Mathf.Clamp(punto.x, -AdentroDelMapa, AdentroDelMapa);
+        punto.z = Mathf.Clamp(punto.z, -AdentroDelMapa, AdentroDelMapa);
+        return punto;
     }
+
+    private const float MargenDelCuerpo = 0.5f;
+    // Las paredes invisibles del borde estan en 49.
+    private const float AdentroDelMapa = 47f;
 
     // Hasta donde entra un invocado en esa direccion: el anillo, o MargenContraLasParedes
     // antes de lo primero fijo que haya (las paredes invisibles del borde). Solo cuentan
     // los colliders fijos, como en Moneda: ni un zombi ni el jugador achican el anillo, y
-    // las cajas son triggers.
+    // las cajas son triggers. Tampoco lo que pisa el jefe (las tumbas): IgnoreCollision no
+    // corre para los rayos, y en el cementerio cada tumba lo achicaba a menos de un metro,
+    // con el invocado adentro del jefe. Si uno cae sobre una tumba, Aparecer lo corre.
     private float RadioLibre(Vector3 hacia)
     {
         float alcance = radioInvocacion + MargenContraLasParedes;
@@ -849,6 +861,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
         {
             Collider golpeado = golpesContraLasParedes[i].collider;
             if (golpeado.attachedRigidbody != null || golpeado.GetComponentInParent<BulletController>() != null) continue;
+            if (CapitulosDeEscenario.EsChico(golpeado)) continue;
             libre = Mathf.Min(libre, golpesContraLasParedes[i].distance);
         }
         return Mathf.Clamp(libre - MargenContraLasParedes, 0f, radioInvocacion);

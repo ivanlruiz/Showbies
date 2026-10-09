@@ -135,9 +135,20 @@ public static class EventoHalloween
         float ahora = Time.unscaledTime;
         if (!deprueba && ahora - revisadoEn < SegundosEntreRevisiones && ahora >= revisadoEn) return;
         revisadoEn = ahora;
-        int hoy = Hoy();
+        int hoy = DiaQueCuenta(Hoy(), Progreso.Halloween);
         activo = Forzado || EnFechas(hoy);
         edicion = EdicionDe(hoy);
+    }
+
+    // El dia de hoy, sin volver atras del ultimo que se vio: atrasando el reloj del telefono
+    // despues del 9/11 el evento se reabria entero, y llevandolo a octubre del anio anterior y
+    // de vuelta, la fila de este anio arrancaba de cero y se cobraba otra vez (lo encontro la
+    // revision del 9/10). En la diaria, las misiones y el semanal eso ya estaba cerrado.
+    public static int DiaQueCuenta(int hoy, EstadoHalloween estado)
+    {
+        if (estado == null) return hoy;
+        if (hoy > estado.ultimoDia) estado.ultimoDia = hoy;
+        return estado.ultimoDia;
     }
 
     // Los dias que quedan contando hoy: 1 el 9/11 ("¡ULTIMO DIA!"). Forzado fuera de las
@@ -190,6 +201,7 @@ public static class EventoHalloween
     {
         if (!(cantidad > 0) || double.IsInfinity(cantidad) || !Activo) return;
         Asegurar();
+        if (Progreso.Halloween.cerrado) return;
         Progreso.Halloween.caramelos += cantidad;
         CaramelosDeLaPartida += cantidad;
         Progreso.AvisarCambio();
@@ -208,7 +220,8 @@ public static class EventoHalloween
     {
         var estado = Progreso.Halloween;
         CerrarSiTermino();
-        if (!Activo || estado.edicion == EdicionActual) return;
+        // Nunca una edicion anterior a la guardada.
+        if (!Activo || estado.edicion >= EdicionActual) return;
 
         estado.edicion = EdicionActual;
         estado.caramelos = 0;
@@ -305,7 +318,7 @@ public static class EventoHalloween
     {
         var estado = Progreso.Halloween;
         int hito = estado.cobrados;
-        if (hito >= Alcanzados) return 0;
+        if (estado.cerrado || hito >= Alcanzados) return 0;
 
         double monto = Premio(hito);
         estado.cobrados++;
@@ -370,4 +383,5 @@ public class EstadoHalloween
     public bool conSombrero;         // el ultimo hito de esta edicion es el sombrero (no lo tenia al empezar)
     public bool visto;               // ya se abrio la ventana en esta edicion
     public bool sombrero;            // el sombrero de calabaza: ganado una vez, es para siempre
+    public int ultimoDia;            // aaaammdd, el ultimo dia visto: atrasar el reloj no vuelve antes (ver DiaQueCuenta)
 }

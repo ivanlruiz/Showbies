@@ -1,8 +1,11 @@
 package com.ivanruiz.showbies.anuncios;
 
 import android.app.Activity;
+import android.app.Application;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -74,6 +77,11 @@ public final class PuenteAnuncios {
     private static final Map<String, Boolean> cargando = new HashMap<>();
     private static final Map<String, Integer> fallos = new HashMap<>();
     private static final Map<String, Runnable> vencimientos = new HashMap<>();
+    // Cuando cargo cada uno, en tiempo real con el telefono dormido incluido: el postDelayed del
+    // vencimiento no corre mientras el telefono duerme, y a la manana se ofrecia (y se mostraba)
+    // un anuncio de la noche anterior, que Google no paga o que falla al mostrarse.
+    private static final Map<String, Long> cargadoEn = new HashMap<>();
+    private static boolean mirandoElFrente;   // ya se registro el aviso de volver al frente
 
     private static boolean sdkPedido;   // ya se llamo a MobileAds.initialize
     private static boolean sdkListo;    // y termino
@@ -102,8 +110,42 @@ public final class PuenteAnuncios {
             }
             clasificacion = clasificacionValida(clasif);
             simularEuropa = europa;
+            mirarElFrente(act);
             actualizarConsentimiento();
         });
+    }
+
+    // Al volver la app al frente, se tiran los que vencieron mientras estaba atras, asi el juego
+    // (que mira los avisos "vencido") ni siquiera ofrece un video viejo.
+    private static void mirarElFrente(Activity act) {
+        if (mirandoElFrente || act == null) return;
+        mirandoElFrente = true;
+        act.getApplication().registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
+            @Override public void onActivityResumed(Activity a) { enPrincipal(PuenteAnuncios::revisarVencidos); }
+            @Override public void onActivityCreated(Activity a, Bundle b) { }
+            @Override public void onActivityStarted(Activity a) { }
+            @Override public void onActivityPaused(Activity a) { }
+            @Override public void onActivityStopped(Activity a) { }
+            @Override public void onActivitySaveInstanceState(Activity a, Bundle b) { }
+            @Override public void onActivityDestroyed(Activity a) { }
+        });
+    }
+
+    private static void revisarVencidos() {
+        for (String lugar : new java.util.ArrayList<>(cargadoEn.keySet())) vencioYa(lugar);
+    }
+
+    // Si el de ese lugar ya paso su vida: lo tira, avisa "vencido" y pide otro.
+    private static boolean vencioYa(String lugar) {
+        Long desde = cargadoEn.get(lugar);
+        if (desde == null || SystemClock.elapsedRealtime() - desde < VIDA_DE_UN_ANUNCIO_MS) return false;
+        cancelarVencimiento(lugar);
+        cargadoEn.remove(lugar);
+        boolean habia = cargados.remove(lugar) != null;
+        habia |= intersticiales.remove(lugar) != null;
+        if (habia) avisar(lugar, "vencido", "");
+        cargar(lugar);
+        return true;
     }
 
     public static void mostrar(final Activity act, final String lugar) {
@@ -311,6 +353,7 @@ public final class PuenteAnuncios {
                         cargando.put(lugar, false);
                         fallos.put(lugar, 0);
                         cargados.put(lugar, anuncio);
+                        cargadoEn.put(lugar, SystemClock.elapsedRealtime());
                         programarVencimiento(lugar);
                         avisar(lugar, "cargado", "");
                     });
@@ -341,6 +384,7 @@ public final class PuenteAnuncios {
                         cargando.put(lugar, false);
                         fallos.put(lugar, 0);
                         intersticiales.put(lugar, anuncio);
+                        cargadoEn.put(lugar, SystemClock.elapsedRealtime());
                         programarVencimiento(lugar);
                         avisar(lugar, "cargado", "");
                     });
@@ -374,6 +418,7 @@ public final class PuenteAnuncios {
         cancelarVencimiento(lugar);
         Runnable vencer = () -> correr(() -> {
             vencimientos.remove(lugar);
+            cargadoEn.remove(lugar);
             boolean habia = cargados.remove(lugar) != null;
             habia |= intersticiales.remove(lugar) != null;
             if (habia) {
@@ -396,10 +441,16 @@ public final class PuenteAnuncios {
             avisar(lugar, "terminado", "no_disponible");
             return;
         }
+        // Uno viejo no se muestra: se pide otro y este pedido termina sin anuncio.
+        if (vencioYa(lugar)) {
+            avisar(lugar, "terminado", "no_disponible");
+            return;
+        }
         if (AUTOMATICO.equals(lugar)) {
             mostrarIntersticial(lugar);
             return;
         }
+        cargadoEn.remove(lugar);
         RewardedAd anuncio = cargados.remove(lugar);
         if (anuncio == null) {
             avisar(lugar, "terminado", "no_disponible");
@@ -440,6 +491,7 @@ public final class PuenteAnuncios {
 
     // El automatico: el mismo circuito que un video, sin premio. Termina "cerrado" o "falla".
     private static void mostrarIntersticial(final String lugar) {
+        cargadoEn.remove(lugar);
         InterstitialAd anuncio = intersticiales.remove(lugar);
         if (anuncio == null) {
             avisar(lugar, "terminado", "no_disponible");

@@ -421,6 +421,20 @@ public static class PruebasMejoras
             inf.Verdadero("halloween: y el sombrero", EventoHalloween.TieneSombrero);
             inf.Cerca("halloween: cerrar de nuevo no paga", 0, EventoHalloween.CerrarSiTermino(), 0);
             inf.Cerca("halloween: ni Asegurar fuera de las fechas", debe, AseguradoYMonedas(), 1e-6);
+
+            // Atrasar el reloj no reabre la edicion cerrada ni rearranca la fila (revision del 9/10).
+            EventoHalloween.UsarParaPruebas(20261105, 0);
+            inf.Verdadero("halloween: con el reloj atrasado al 5/11 sigue terminado", !EventoHalloween.Activo);
+            EventoHalloween.Sumar(500);
+            inf.Cerca("halloween: y los caramelos no cuentan", EventoHalloween.Umbral(EventoHalloween.Hitos - 1), Progreso.Halloween.caramelos, 1e-6);
+            EventoHalloween.UsarParaPruebas(20251030, 0);
+            EventoHalloween.Asegurar();
+            inf.Igual("halloween: llevado a octubre del anio anterior, la edicion no cambia", 2026, Progreso.Halloween.edicion);
+            inf.Cerca("halloween: ni se cobra otra vez", 0, EventoHalloween.CobrarSiguiente(), 0);
+            EventoHalloween.UsarParaPruebas(20261116, 0);
+            EventoHalloween.Asegurar();
+            inf.Verdadero("halloween: de vuelta en la fecha de hoy, sigue cerrada", Progreso.Halloween.cerrado && Progreso.Halloween.edicion == 2026);
+            inf.Cerca("halloween: con las mismas monedas", debe, Progreso.Monedas, 1e-6);
         }
         finally
         {
@@ -1770,6 +1784,22 @@ public static class PruebasMejoras
                              Vector3.Distance(afuera, adentro) < 4f && Mathf.Approximately(afuera.y, 0.9f);
                 }
                 inf.Verdadero("obstaculos: en " + decorado + " el jugador (o una caja) adentro de donde sale uno pasa al lado", salen);
+
+                // Las monedas frenan antes de cada obstaculo sin depender del rayo (con la horda
+                // alrededor, los zombis llenaban sus golpes): desde 3 m, hacia el centro.
+                bool frenan = true;
+                foreach (var h in huellas.GetRange(deEdificios, huellas.Count - deEdificios))
+                {
+                    var desdeAfuera = new Vector3(h.xMin - 3f, 0.3f, h.center.y);
+                    frenan &= Moneda.LibreHastaLosObstaculos(desdeAfuera, Vector3.right, 10f) <= 3.01f;
+                }
+                foreach (var r in redondos)
+                {
+                    var desdeAfuera = new Vector3(r.centro.x - 3f, 0.3f, r.centro.y);
+                    // Antes o en su borde: otra tumba de la fila puede quedar en el medio.
+                    frenan &= Moneda.LibreHastaLosObstaculos(desdeAfuera, Vector3.right, 10f) <= 3f - r.radio + 0.01f;
+                }
+                inf.Verdadero("obstaculos: en " + decorado + " una moneda que vuela hacia uno se frena en su borde", frenan);
 
                 ProbarPersecucionEntreObstaculos(inf, decorado, huellas, redondos, nombres, radios, velocidades, salidas);
             }
@@ -4153,8 +4183,13 @@ public static class PruebasMejoras
             ServicioAnuncios.UsarParaPruebas(proveedor, config);
             proveedor.resultado = ResultadoAnuncio.Cerrado;
             premios = cierres = 0;
+            Progreso.EmpezarPartida();
             ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
             ServicioAnuncios.AtenderAvisos();
+            // El que lo miro y lo cerro no se come el automatico al salir (revision del 9/10).
+            inf.Igual("circuito: cerrarlo cuenta como video visto en la partida", 1, Progreso.VideosVistosDeLaPartida);
+            inf.Verdadero("circuito: y en esa partida no sale el automatico",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 9, 0, Progreso.VideosVistosDeLaPartida));
             inf.Igual("circuito: cerrarlo no premia", 0, premios);
             inf.Igual("circuito: cerrarlo avisa que no hubo premio", 1, cierres);
             inf.Igual("circuito: y no gasta el tope del dia", 0, Progreso.UsosDeHoy(lugar));
@@ -4172,8 +4207,10 @@ public static class PruebasMejoras
             ServicioAnuncios.UsarParaPruebas(proveedor, config);
             proveedor.resultado = ResultadoAnuncio.NoDisponible;
             premios = cierres = 0;
+            Progreso.EmpezarPartida();
             ServicioAnuncios.Mostrar(lugar, alPremiar, alCerrar);
             ServicioAnuncios.AtenderAvisos();
+            inf.Igual("circuito: sin video no cuenta como visto", 0, Progreso.VideosVistosDeLaPartida);
             inf.Igual("circuito: sin video no hay premio", 0, premios);
             inf.Igual("circuito: sin video no gasta tope", 0, Progreso.UsosDeHoy(lugar));
 
