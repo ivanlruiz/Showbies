@@ -74,7 +74,7 @@ Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (caj
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
 Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
-Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola)
+Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón y los iconos del evento (IconoCalabaza, IconoCaramelo)
 ```
 
@@ -707,6 +707,16 @@ así la física no cambia. **Las tres cajas y la granada están en esa capa desd
 de la 8 en la matriz de física es igual a la de la 0, y la prueba de lógica lo mira), y **la bala no recibe luz**
 (`Bullet.mat` es `Unlit/Color`, que también pinta el brillo de la caja de balas): hasta el 29/9 la caja de vida quedaba
 más oscura que el piso y la bala casi no se veía (superauditoría).
+
+**Y los zombis brillan con su color** (1.5.0; en Discord, el 8/10, dijeron que a algunos no se los veía). Aun con el
+relleno, la textura del pack es oscura y los cinco eran casi siluetas negras: **ShowBies > Escenarios > Fotos de la horda
+de noche** (`FotosDeLaHorda`, que los pone en cada capítulo con la calidad del teléfono y mide su contraste contra el
+piso) daba entre 1,0 y 2,4, y subir el relleno no servía: el piso de la ciudad, mojado, es más claro que los zombis, y
+el del cementerio más oscuro, así que ninguna intensidad los despegaba de los dos. La piel de cada tipo es
+`ShowBies/PielDeZombi`: la de `Legacy Shaders/Diffuse` (la textura por `_Color`) más un brillo propio de su mismo color
+(`_Brillo`, 0,5), que no depende de la luz. Ivan lo eligió entre maquetas (un borde de neón por tipo, que se probó, no
+le gustó), con los tintes un poco más claros y saturados que antes. La prueba de lógica mira que cada tipo tenga su
+material con el shader, la textura y brillo.
 
 El decorado del capítulo que viene **se arma apagado unos segundos después de entrar al anterior**
 (`PrepararElSiguiente`): instanciar ochocientos objetos en el frame del cambio era un tirón justo en el momento del
@@ -1861,8 +1871,9 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   normal y a y −1 los otros tres, con los pies en el fondo de la cápsula: a −0,79 el jefe flotaba 0,4 m). El
   rápido es la excepción: su hijo es el prefab `zombiRapido` de ToonyTiny, a y −0,92, con la malla, el avatar y el
   controller de `TT_demo_zombie` pisados (ver la trampa del zombi invisible). Cada tipo tiñe el modelo con su
-  material de `Assets/Materiales/`: el normal sin teñir, `ZombiRapidoPiel` lima, `ZombiTanquePiel` rojo,
-  `ZombiFasterPiel` celeste y `ZombiJefePiel` violeta. **La cápsula y los dos cubos de cada prefab son sólo
+  material de `Assets/Materiales/`, con brillo propio (ver Capítulos): `ZombiNormalPiel` verde pálido (hasta la
+  1.5.0 usaba `TT_demo.mat`, el del pack, que es también el del jugador: no lo uses para un zombi), `ZombiRapidoPiel`
+  lima, `ZombiTanquePiel` rojo, `ZombiFasterPiel` celeste y `ZombiJefePiel` violeta. **La cápsula y los dos cubos de cada prefab son sólo
   colliders**, con los renderers apagados: los cubos son las hitboxes y no se borran (con la cabeza grande y los
   brazos de la animación, el modelo cubre casi toda la cápsula). `EnemyController.velocidadDeAnimacion` ajusta el paso del modelo a lo que camina
   cada uno (1 el normal y el rápido, 0,8 el tanque y 0,55 el jefe, que caminan con `Ritmo` 0, y 2,5 el FASTER), por el parámetro `Paso` del
@@ -2027,7 +2038,7 @@ enterrado.
   `Prefabs/Personajes/ZombiRapido.prefab` ahora pisa la malla, la cabeza, el avatar y el controller con los de
   `TT_demo_zombie.FBX` (mismos 15 huesos en el mismo orden). No uses ese FBX para nada nuevo. Para que no se
   confunda con el normal, el cuerpo y la cabeza usan `Materiales/ZombiRapidoPiel.mat`: la textura de TT_demo con
-  `_Color` verde lima (Legacy Diffuse multiplica la textura por ese color).
+  `_Color` verde lima (`ShowBies/PielDeZombi`, como Legacy Diffuse, multiplica la textura por ese color).
 
 - **Player (capa 6) y Bala (capa 7) no colisionan, y eso está en la matriz del proyecto.** Antes se
   seteaba con `Physics.IgnoreLayerCollision(6, 7)` en el `Start` de cada bala. No lo hagas por código.

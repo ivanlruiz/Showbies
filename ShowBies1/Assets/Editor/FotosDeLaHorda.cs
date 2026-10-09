@@ -14,17 +14,20 @@ using UnityEngine.SceneManagement;
 //
 // Existe porque en Discord (8/10) dijeron que a algunos zombis no se los ve de noche. El
 // contraste de cada uno es el de la WCAG entre el brillo medio de sus pixeles y el del piso
-// en esos mismos pixeles sin el (una foto con cada zombi solo y otra sin ninguno), y se mide
-// con la luz de relleno de la escena y con otras mas fuertes, para elegir con numeros.
-// Escribe Builds/prueba_horda.txt y las fotos en Builds/horda_*.png.
+// en esos mismos pixeles sin el (una foto con cada zombi solo y otra sin ninguno). Con la piel de
+// antes (Legacy Diffuse) daba entre 1,0 y 2,4, y subiendo la luz de relleno no mejoraba en
+// ningun capitulo: el piso de la ciudad es mas claro que los zombis y el del cementerio mas
+// oscuro. Se compararon un borde de neon y la piel con brillo propio (ShowBies/PielDeZombi), y
+// Ivan eligio esa, con el brillo en 0,5. El promedio no mide el contorno, que es lo que hace leer
+// una figura de 40 px: para mirar estan las fotos, a 1920 x 1080 y con un recorte de cada
+// zombi. Escribe Builds/prueba_horda.txt y Builds/horda/<capitulo>.png (y _<n> los recortes).
 public static class FotosDeLaHorda
 {
     const string Ruta = "../Builds/prueba_horda.txt";
     const string Escena = "Assets/Escenas/WaveMode.unity";
-    const int Ancho = 1280, Alto = 720;
-
-    // Lo que se prueba ademas de la intensidad de la escena.
-    static readonly float[] Intensidades = { 1.4f, 1.9f, 2.5f };
+    const string Carpeta = "../Builds/horda";
+    const int Ancho = 1920, Alto = 1080;
+    const int Recorte = 220;   // el cuadrado de cada zombi, en pixeles de la foto
 
     static readonly string[] Zombis = { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS" };
 
@@ -77,14 +80,13 @@ public static class FotosDeLaHorda
                 int telefono = CalidadDeAndroid.Guardada() >= 0 ? CalidadDeAndroid.Guardada() : CalidadDeAndroid.Medium;
                 QualitySettings.SetQualityLevel(telefono, false);
                 inf.AppendLine("Calidad: " + QualitySettings.names[telefono] + "; relleno de la escena: " + relleno.intensity);
-                var intensidades = new List<float> { relleno.intensity };
-                intensidades.AddRange(Intensidades);
+                Directory.CreateDirectory(Path.GetFullPath(Carpeta));
                 for (int i = 0; i < capitulos.escenarios.Length; i++)
                 {
                     var escenario = capitulos.escenarios[i];
                     if (escenario.decorado == null) continue;
                     if (i == 0) escenario = LoQueTraeLaEscena(escenario, capitulos, camaraDelJuego, waveMode);
-                    Fotografiar(escenario, camaraDelJuego, relleno, intensidades, rt, inf);
+                    Fotografiar(escenario, camaraDelJuego, relleno, rt, inf);
                 }
             }
         }
@@ -124,7 +126,7 @@ public static class FotosDeLaHorda
         return e;
     }
 
-    static void Fotografiar(EscenarioDeCapitulo escenario, Camera camaraDelJuego, Light rellenoDeLaEscena, List<float> intensidades,
+    static void Fotografiar(EscenarioDeCapitulo escenario, Camera camaraDelJuego, Light rellenoDeLaEscena,
                             RenderTexture rt, StringBuilder inf)
     {
         var escena = EditorSceneManager.NewPreviewScene();
@@ -220,12 +222,10 @@ public static class FotosDeLaHorda
 
                 inf.AppendLine();
                 inf.AppendLine(escenario.idTexto + ":");
-                foreach (float intensidad in intensidades)
                 {
-                    relleno.intensity = intensidad;
                     Mostrar(zombis, -1);
                     var sin = Foto(camara, rt);
-                    var linea = new StringBuilder("  relleno " + intensidad.ToString("0.00") + ":");
+                    var linea = new StringBuilder("  relleno " + relleno.intensity.ToString("0.00") + ":");
                     float peor = float.MaxValue;
                     for (int i = 0; i < zombis.Count; i++)
                     {
@@ -241,7 +241,27 @@ public static class FotosDeLaHorda
                     inf.AppendLine(linea.ToString());
                     Mostrar(zombis, -2);
                     var todos = Foto(camara, rt);
-                    File.WriteAllBytes(Path.GetFullPath("../Builds/horda_" + escenario.idTexto + "_" + intensidad.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + ".png"), todos.EncodeToPNG());
+                    string nombre = Path.GetFullPath(Carpeta + "/" + escenario.idTexto);
+                    File.WriteAllBytes(nombre + ".png", todos.EncodeToPNG());
+                    // El recorte de cada uno, alrededor del centro de su figura en la foto.
+                    for (int i = 0; i < zombis.Count; i++)
+                    {
+                        Bounds caja = default;
+                        bool hay = false;
+                        foreach (var r in zombis[i].GetComponentsInChildren<Renderer>(true))
+                        {
+                            if (r.GetComponent<Collider>() != null) continue;
+                            if (hay) caja.Encapsulate(r.bounds); else { caja = r.bounds; hay = true; }
+                        }
+                        Vector3 centro = camara.WorldToScreenPoint(hay ? caja.center : zombis[i].transform.position);
+                        int x0 = Mathf.Clamp((int)centro.x - Recorte / 2, 0, Ancho - Recorte);
+                        int y0 = Mathf.Clamp((int)centro.y - Recorte / 2, 0, Alto - Recorte);
+                        var recorte = new Texture2D(Recorte, Recorte, TextureFormat.RGB24, false);
+                        recorte.SetPixels(todos.GetPixels(x0, y0, Recorte, Recorte));
+                        recorte.Apply();
+                        File.WriteAllBytes(nombre + "_" + i + ".png", recorte.EncodeToPNG());
+                        Object.DestroyImmediate(recorte);
+                    }
                     Object.DestroyImmediate(todos);
                     Object.DestroyImmediate(sin);
                 }

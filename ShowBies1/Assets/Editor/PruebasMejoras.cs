@@ -219,6 +219,7 @@ public static class PruebasMejoras
             ProbarHudDeCaramelos(informe);
             ProbarPartidaNeon(informe);
             ProbarMundoDeNoche(informe);
+            ProbarPielDeLosZombis(informe);
             ProbarPildorasRedondas(informe);
             ProbarFuenteDelJuego(informe);
             ProbarOrdenDeEscenas(informe);
@@ -2616,6 +2617,38 @@ public static class PruebasMejoras
     // a los personajes; WaveMode tiene los tres capitulos de noche, y el libre y el tutorial, la
     // pradera puesta y fija. Los halos del neon miran a la camara del juego con un giro fijo:
     // tiene que ser el de las escenas. Y la capa: un zombi pasa sus mallas, no sus colliders.
+    // De noche los zombis eran siluetas casi negras (Discord, 8/10): la piel de cada tipo brilla
+    // con su color (ShowBies/PielDeZombi). Cada uno con su material, con la textura del pack y
+    // brillo; el normal no puede usar el del pack, que es tambien el del jugador. Los cinco
+    // distintos, que el color es lo que dice que tipo es.
+    static void ProbarPielDeLosZombis(Informe inf)
+    {
+        var delPack = AssetDatabase.LoadAssetAtPath<Material>("Assets/ToonyTinyPeople/TT_demo/models/Materials/TT_demo.mat");
+        var pieles = new HashSet<Material>();
+        foreach (string nombre in new[] { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/" + nombre + ".prefab");
+            if (!inf.Verdadero("piel: esta el prefab " + nombre, prefab != null)) continue;
+            int visibles = 0;
+            bool vivas = true;
+            foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r.GetComponent<Collider>() != null) continue;
+                visibles++;
+                foreach (var m in r.sharedMaterials)
+                {
+                    bool viva = m != null && m != delPack && m.shader != null && m.shader.name == "ShowBies/PielDeZombi" &&
+                                m.mainTexture != null && m.GetFloat("_Brillo") > 0.2f;
+                    if (!viva) vivas = false;
+                    else pieles.Add(m);
+                }
+            }
+            inf.Verdadero("piel: " + nombre + " tiene cuerpo y cabeza", visibles >= 2);
+            inf.Verdadero("piel: " + nombre + " brilla con su color, con su propio material", vivas);
+        }
+        inf.Igual("piel: un material por tipo", 5, pieles.Count);
+    }
+
     static void ProbarMundoDeNoche(Informe inf)
     {
         inf.Igual("noche: la capa de los personajes se llama Personajes", "Personajes", LayerMask.LayerToName(Personajes.Capa));
