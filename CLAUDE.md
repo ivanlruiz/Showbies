@@ -627,8 +627,9 @@ zombi se reemplazaba en vez de sumarse: desde la oleada 20 sólo salían jefes.
 Dorado, raro, no ataca y huye (1.5.0, mejora 8 de la revisión del 9/10: el duende del tesoro de Diablo, para romper la
 rutina de quedarse quieto disparando). **Lo saca `WaveManager.SacarTesoro`** con un 25 % por oleada desde la 3
 (`ProbabilidadTesoro`, `DesdeOleadaTesoro`), a mitad de la oleada, **a 6 m del jugador y de costado** (a 11, como al
-principio, nacía en el borde de la pantalla y se iba en el acto), con los multiplicadores de la oleada, y con
-"¡ZOMBI DEL TESORO!" arriba (`Efectos.TesoroAparece`). **No cuenta en la oleada, que no lo espera.** Lleva su flecha dorada
+principio, nacía en el borde de la pantalla y se iba en el acto; con el jugador contra una pared, del otro lado, que
+acomodado adentro del mapa nacía encima de él), con los multiplicadores de la oleada, y con "¡ZOMBI DEL TESORO!" arriba
+(`Efectos.TesoroAparece`). **No cuenta en la oleada, que no lo espera.** Lleva su flecha dorada
 en el borde (ver Las flechas del borde).
 
 - **Se mueve por su cuenta** (`ZombiDelTesoro`, `IMovimientoPropio`): primero se queda 0,7 s mirando al jugador, y después en
@@ -640,7 +641,8 @@ en el borde (ver Las flechas del borde).
 - **Si lo matás, revienta en una lluvia de monedas**: suelta de 14 a 20 (más que `Moneda.lluviaDesde`, así salen todas aunque
   el piso esté lleno), con "¡TESORO!", chispas, temblor y el festejo del cofre (`EnemyController` le avisa en el bloque de
   la muerte: `ZombiDelTesoro.AlMorir`). **Si no, a los 12 s se escapa** con "¡SE ESCAPÓ!" y sin dejar nada: sale del mapa con
-  `EnemyController.Retirar`, que es el despeje del revivir de a uno (sin puntos, monedas ni mancha). La pausa congela el reloj.
+  `EnemyController.Retirar`, que es el despeje del revivir de a uno (sin puntos, monedas ni mancha). La pausa congela el reloj,
+  y con el jugador muerto no se escapa: festeja con los demás, y "¡SE ESCAPÓ!" saldría encima de la derrota.
 - **Su brillo es un objeto aparte que lo sigue** (un halo de frente a la cámara y un charco, con el shader de los faroles, como
   las cajas), igual que la barra de vida: hijo del zombi, el destello del golpe lo pintaría de blanco, giraría con él y se
   aplastaría con cada bala. Late más rápido el último cuarto de su tiempo. El halo va medio metro arriba: corrido hacia atrás
@@ -653,8 +655,10 @@ en el borde (ver Las flechas del borde).
   corre y los materiales del brillo. El Enemy lo crea una sola vez: después es balance y se toca en el asset.
 - **ShowBies > Pruebas > Zombi del tesoro (play)** (`PruebaTesoro`): que no cuente en la oleada, que huya sin pegarle al
   jugador, que tenga su flecha si sale de la pantalla, que al matarlo llueva su tanda entera y festeje, y que otro se escape
-  a su tiempo sin contar como muerte (`Builds/prueba_tesoro.txt`, con la foto). La prueba de lógica mira el asset, el prefab y
-  por dónde huye.
+  a su tiempo sin contar como muerte ni dejar alta la cuenta de vivos (`Builds/prueba_tesoro.txt`, con la foto). La prueba de
+  lógica mira el asset, el prefab y por dónde huye. **Los demás bancos no tienen tesoro al azar**: `RespaldoDelBanco.SigueArmado`,
+  que corre en cada cuadro de todo banco en play, prende `WaveManager.SinTesoroAutomatico` (los que miran a todos los zombis
+  fallaban uno de cada cuatro). `SacarTesoro` a mano sigue andando.
 
 ### Las animaciones de los zombis
 

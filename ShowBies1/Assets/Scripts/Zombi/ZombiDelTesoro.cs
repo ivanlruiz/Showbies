@@ -159,6 +159,9 @@ public class ZombiDelTesoro : MonoBehaviour, IMovimientoPropio
     private void Update()
     {
         if (zombi == null || !zombi.Vivo || SeEscapo || Atrapado) return;
+        // Con el jugador muerto no: festeja con los demas, y "¡SE ESCAPO!" saldria encima de la
+        // derrota (lo que cambia la partida despues de morir mira esto, ver CLAUDE.md).
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
         // Con tiempo escalado: la pausa lo congela.
         if (Time.time - aparecioEn < duracion) return;
         SeEscapo = true;

@@ -116,7 +116,14 @@ public static class RespaldoDelBanco
     // si la copia no es suya, apaga su clave, avisa y no corre.
     public static bool SigueArmado(string banco, string clave)
     {
-        if (EsDe(banco)) return true;
+        if (EsDe(banco))
+        {
+            // Un banco no quiere un zombi del tesoro al azar (uno de cada cuatro desde la oleada
+            // 3): huye, no cuenta en la oleada y hacia fallar de vez en cuando lo que mira a todos
+            // los zombis. El que lo necesita (PruebaTesoro) lo saca a mano.
+            WaveManager.SinTesoroAutomatico = true;
+            return true;
+        }
         SessionState.SetBool(clave, false);
         Debug.LogWarning(banco + ": quedo armado de una corrida cortada, sin su respaldo; no corre en este Play. Se vuelve a arrancar desde su menu.");
         return false;

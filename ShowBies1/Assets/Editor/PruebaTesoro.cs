@@ -35,7 +35,8 @@ public static class PruebaTesoro
     static float distanciaAlSalir, distanciaDespues, vidaAlSalir, vidaDespues;
     static bool cuentaEnLaOleada, tuvoFlecha, salioDeLaPantalla, festejo, foto;
     static int monedasAntes, monedasDespues, monedasEscapo, muertesAntesDelEscape, muertesDespuesDelEscape;
-    static bool seEscapo, sinMonedasAlEscapar;
+    static bool seEscapo, sinMonedasAlEscapar, cuentaBien;
+    static string cuenta = "";
 
     static PruebaTesoro()
     {
@@ -68,7 +69,8 @@ public static class PruebaTesoro
             terminado = false;
             paso = Paso.Esperar;
             primero = segundo = null;
-            cuentaEnLaOleada = tuvoFlecha = salioDeLaPantalla = festejo = foto = seEscapo = sinMonedasAlEscapar = false;
+            cuentaEnLaOleada = tuvoFlecha = salioDeLaPantalla = festejo = foto = seEscapo = sinMonedasAlEscapar = cuentaBien = false;
+            cuenta = "";
             distanciaAlSalir = distanciaDespues = vidaAlSalir = vidaDespues = -1f;
             monedasAntes = monedasDespues = monedasEscapo = muertesAntesDelEscape = muertesDespuesDelEscape = -1;
             inicio = EditorApplication.timeSinceStartup;
@@ -156,6 +158,13 @@ public static class PruebaTesoro
                 seEscapo = !segundo.Vivo && delSegundo.SeEscapo && !delSegundo.Atrapado;
                 muertesDespuesDelEscape = Progreso.Matados("ZombiTesoro");
                 sinMonedasAlEscapar = muertesDespuesDelEscape == muertesAntesDelEscape;
+                // Que escaparse no deje la cuenta de vivos alta: un contador que no baja tapa al
+                // generador para siempre. Se compara con los que de verdad estan vivos (los de la
+                // oleada siguen saliendo y muriendo, asi que antes y despues no sirve).
+                int deVerdad = 0;
+                foreach (var z in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None)) if (z.Vivo) deVerdad++;
+                cuentaBien = EnemyController.ZombisVivos == deVerdad;
+                cuenta = EnemyController.ZombisVivos + " en la cuenta y " + deVerdad + " vivos de verdad";
                 paso = Paso.Listo;
                 Terminar(null);
                 return;
@@ -190,7 +199,7 @@ public static class PruebaTesoro
         inf.AppendLine("Salio a " + distanciaAlSalir.ToString("0.0") + " m del jugador; a los 2,5 s estaba a " + distanciaDespues.ToString("0.0") +
                        " m. Vida del jugador: " + vidaAlSalir + " y " + vidaDespues + ". Salio de la pantalla: " + salioDeLaPantalla + ", con flecha: " + tuvoFlecha);
         inf.AppendLine("Monedas en el piso antes de matarlo: " + monedasAntes + ", despues: " + monedasDespues + " (suelta de " + minimo + " para arriba)");
-        inf.AppendLine("El segundo se escapo: " + seEscapo + "; muertes de tesoros " + muertesAntesDelEscape + " antes y " + muertesDespuesDelEscape + " despues");
+        inf.AppendLine("El segundo se escapo: " + seEscapo + "; muertes de tesoros " + muertesAntesDelEscape + " antes y " + muertesDespuesDelEscape + " despues; " + cuenta);
         inf.AppendLine("Foto: " + Foto);
         inf.AppendLine();
 
@@ -205,18 +214,20 @@ public static class PruebaTesoro
             festejo,
             seEscapo,
             sinMonedasAlEscapar && muertesDespuesDelEscape == muertesAntesDelEscape && muertesAntesDelEscape >= 1,
+            cuentaBien,
         };
         var que = new List<string>
         {
             "el banco llego hasta el final",
             "no cuenta en la oleada (la oleada no lo espera)",
             "huye: se aleja del jugador",
-            "no le pega al jugador",
+            "no le pega al jugador (no llega a tocarlo: lo que lo asegura es su golpe en 0 y sin zarpazos)",
             "si sale de la pantalla, tiene su flecha",
             "al matarlo suelta la lluvia de monedas entera",
             "y festeja (¡TESORO!)",
             "el que no se mata se escapa a su tiempo",
             "sin contar como muerte (sin monedas ni puntos, que salen de la muerte)",
+            "y la cuenta de zombis vivos queda bien (ZombisVivos)",
         };
         bool todo = true;
         for (int i = 0; i < ok.Count; i++)

@@ -106,6 +106,15 @@ public class WaveManager : MonoBehaviour
     public const float DistanciaDelTesoro = 6f;   // a 11 nacia en el borde de la pantalla y se iba en el acto
     public const string RutaTesoro = "ZombiTesoro";
     private GameObject tesoroPrefab;
+
+    // Lo prenden los bancos en play (RespaldoDelBanco): sin tesoro al azar. SacarTesoro sigue andando.
+    public static bool SinTesoroAutomatico { get; set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetearEstadoCompartido()
+    {
+        SinTesoroAutomatico = false;
+    }
     public bool UltimaFuePerfecta { get; private set; }
 
     public static int Bono(int bonoPorOleada, int oleada, bool perfecta)
@@ -206,7 +215,7 @@ public class WaveManager : MonoBehaviour
                 }
 
                 Aparecer(ElegirTipo(), i == 0 ? puntoDelJefe : null);
-                if (conTesoro && i == cantidad / 2) SacarTesoro();
+                if (conTesoro && i == cantidad / 2 && !SinTesoroAutomatico) SacarTesoro();
                 yield return new WaitForSeconds(intervaloEntreApariciones);
             }
 
@@ -431,10 +440,10 @@ public class WaveManager : MonoBehaviour
         var jugador = PlayerHealth.instance;
         if (tesoroPrefab == null || jugador == null || jugador.EstaMuerto) return null;
         float angulo = Random.Range(-25f, 25f) + (Random.value < 0.5f ? 0f : 180f);
-        Vector3 donde = jugador.transform.position + Quaternion.Euler(0f, angulo, 0f) * Vector3.right * DistanciaDelTesoro;
-        donde.x = Mathf.Clamp(donde.x, -42f, 42f);
-        donde.z = Mathf.Clamp(donde.z, -42f, 42f);
-        donde.y = 0f;
+        Vector3 donde = LugarDelTesoro(jugador.transform.position, angulo);
+        // Contra una pared, del otro lado: si no, acomodado adentro del mapa nacia encima del jugador.
+        if (Vector3.Distance(Plano(donde), Plano(jugador.transform.position)) < DistanciaDelTesoro - 1f)
+            donde = LugarDelTesoro(jugador.transform.position, angulo + 180f);
         var tesoro = EnemyController.Aparecer(tesoroPrefab, donde);
         if (tesoro == null) return null;
         tesoro.multiplicadorVida = Escalado.PorOleada(crecimientoVida, OleadaActual);
@@ -443,6 +452,21 @@ public class WaveManager : MonoBehaviour
         tesoro.monedaPrefab = monedaPrefab;
         Efectos.TesoroAparece(tesoro.transform.position);
         return tesoro;
+    }
+
+    public static Vector3 LugarDelTesoro(Vector3 jugador, float angulo)
+    {
+        Vector3 donde = jugador + Quaternion.Euler(0f, angulo, 0f) * Vector3.right * DistanciaDelTesoro;
+        donde.x = Mathf.Clamp(donde.x, -42f, 42f);
+        donde.z = Mathf.Clamp(donde.z, -42f, 42f);
+        donde.y = 0f;
+        return donde;
+    }
+
+    private static Vector3 Plano(Vector3 v)
+    {
+        v.y = 0f;
+        return v;
     }
 
     // Cuantos zombis le faltan matar a la oleada (los que no salieron todavia tambien), y en
