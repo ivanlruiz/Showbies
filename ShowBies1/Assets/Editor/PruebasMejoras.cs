@@ -1300,7 +1300,8 @@ public static class PruebasMejoras
         }
         var ciudad = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Escenarios/Ciudad.prefab");
         if (!inf.Verdadero("edificios: esta el prefab de la ciudad", ciudad != null)) return;
-        CapitulosDeEscenario.LoQueTapanLosEdificios(ciudad, mirada, tapado);
+        var huellas = new List<Rect>();
+        CapitulosDeEscenario.LoQueTapanLosEdificios(ciudad, mirada, tapado, huellas);
         var edificios = new List<Transform>();
         foreach (Transform t in ciudad.GetComponentsInChildren<Transform>(true))
         {
@@ -1308,11 +1309,46 @@ public static class PruebasMejoras
         }
         inf.Verdadero("edificios: la ciudad tiene", edificios.Count > 0);
         inf.Igual("edificios: una zona tapada por edificio", edificios.Count, tapado.Count);
+        inf.Igual("edificios: una huella por edificio", edificios.Count, huellas.Count);
+
+        // Las paredes: una caja por edificio, del tamaño de su huella y del piso al techo, y
+        // ponerlas dos veces no las duplica (el decorado se arma una vez, pero por las dudas).
+        var vistaCiudad = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var copia = (GameObject)PrefabUtility.InstantiatePrefab(ciudad, vistaCiudad);
+            CapitulosDeEscenario.PonerParedes(copia);
+            CapitulosDeEscenario.PonerParedes(copia);
+            int paredes = 0;
+            bool calzan = true;
+            foreach (Transform t in copia.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name != CapitulosDeEscenario.Pared) continue;
+                var caja = t.GetComponent<BoxCollider>();
+                if (caja == null || t.parent == null || t.parent.name != "Edificio") { calzan = false; continue; }
+                paredes++;
+                Vector3 centro = t.TransformPoint(caja.center);
+                Vector3 tamanio = Vector3.Scale(caja.size, t.lossyScale);
+                bool calza = false;
+                foreach (var h in huellas)
+                {
+                    calza |= Mathf.Abs(h.center.x - centro.x) < 0.05f && Mathf.Abs(h.center.y - centro.z) < 0.05f &&
+                             Mathf.Abs(h.width - tamanio.x) < 0.05f && Mathf.Abs(h.height - tamanio.z) < 0.05f;
+                }
+                if (!calza || Mathf.Abs(centro.y - tamanio.y * 0.5f) > 0.05f || tamanio.y < 3f || caja.isTrigger) calzan = false;
+            }
+            inf.Igual("paredes: una por edificio", edificios.Count, paredes);
+            inf.Verdadero("paredes: del tamaño de la huella, del piso al techo y solidas", calzan);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vistaCiudad);
+        }
 
         var estadoDelAzar = UnityEngine.Random.state;
         try
         {
-            CapitulosDeEscenario.UsarParaPruebas(tapado);
+            CapitulosDeEscenario.UsarParaPruebas(tapado, huellas);
             bool centrosTapados = true;
             foreach (var edificio in edificios) centrosTapados &= CapitulosDeEscenario.Tapado(edificio.position);
             inf.Verdadero("edificios: el centro de cada uno esta tapado", centrosTapados);
@@ -1381,6 +1417,8 @@ public static class PruebasMejoras
             var libre = new Vector3(0f, 1f, 0f);
             inf.Verdadero("edificios: en la calle la moneda sale donde murio el zombi", Moneda.SacarDeLoTapado(libre, 0.3f) == libre);
 
+            if (huellas.Count > 0) ProbarRodeoDeLosEdificios(inf, huellas, tapado);
+
             // Sin decorado (la pradera, el modo libre) no hay nada tapado.
             CapitulosDeEscenario.UsarParaPruebas(null);
             inf.Verdadero("edificios: sin decorado no hay nada tapado",
@@ -1391,6 +1429,156 @@ public static class PruebasMejoras
             CapitulosDeEscenario.UsarParaPruebas(null);
             UnityEngine.Random.state = estadoDelAzar;
         }
+    }
+
+    // Los zombis rodean los edificios de la ciudad (los atravesaban: lo dijeron en Discord el
+    // 8/10). Se simula la persecucion con EnemyController.Rodeo, paso de fisica a paso de
+    // fisica y con el radio y la velocidad de cada zombi: desde detras de cada edificio, desde
+    // las esquinas del mapa y desde los puntos de aparicion de WaveMode hasta el jugador en
+    // distintos lugares de las calles. Ninguno puede meterse en una huella (agrandada en su
+    // radio) y todos tienen que llegar sin dar una vuelta de mas.
+    static void ProbarRodeoDeLosEdificios(Informe inf, List<Rect> huellas, List<Rect> tapado)
+    {
+        bool huellasAdentro = huellas.Count == tapado.Count;
+        for (int i = 0; i < huellas.Count && huellasAdentro; i++)
+            huellasAdentro = tapado[i].Contains(huellas[i].min) && tapado[i].Contains(huellas[i].center);
+        inf.Verdadero("rodeo: cada huella es parte de lo que tapa su edificio", huellasAdentro);
+        inf.Verdadero("rodeo: la huella es el cuerpo del edificio (11 m de lado), sin la franja del techo",
+                      Mathf.Abs(huellas[0].width - 11f) < 0.3f && Mathf.Abs(huellas[0].height - 11f) < 0.3f);
+
+        // Sin edificios, derecho: la pradera, el cementerio y el modo libre no cambian.
+        var jugador = new Vector3(3f, 0f, 4f);
+        var zombi = new Vector3(-20f, 0.5f, 30f);
+        inf.Verdadero("rodeo: sin edificios va derecho al jugador", EnemyController.Rodeo(zombi, jugador, new List<Rect>(), 0.5f) == jugador);
+        inf.Verdadero("rodeo: con la recta libre va derecho", EnemyController.Rodeo(new Vector3(0f, 0.5f, 35f), jugador, huellas, 0.5f) == jugador);
+
+        var jugadores = new List<Vector3>
+        {
+            Vector3.zero, new Vector3(20f, 0f, 20f), new Vector3(24f, 0f, 40f), new Vector3(-40f, 0f, 24f),
+            new Vector3(0f, 0f, -44f), new Vector3(-24f, 0f, -24f), new Vector3(44f, 0f, 0f),
+        };
+        // Y pegado a las paredes de tres edificios, de los cuatro lados (el radio del jugador
+        // es 0,45): mas cerca de lo que el radio de un zombi grande deja llegar.
+        for (int i = 0; i < 3 && i < huellas.Count; i++)
+        {
+            Rect h = huellas[i];
+            jugadores.Add(new Vector3(h.center.x + 2f, 0f, h.yMax + 0.45f));
+            jugadores.Add(new Vector3(h.center.x - 1f, 0f, h.yMin - 0.45f));
+            jugadores.Add(new Vector3(h.xMax + 0.45f, 0f, h.center.y + 3f));
+            jugadores.Add(new Vector3(h.xMin - 0.45f, 0f, h.center.y));
+        }
+        var salidas = new List<Vector3>
+        {
+            new Vector3(45f, 0f, 45f), new Vector3(-45f, 0f, 45f), new Vector3(45f, 0f, -45f), new Vector3(-45f, 0f, -45f),
+            new Vector3(0f, 0f, 35f), new Vector3(35f, 0f, 0f), new Vector3(0f, 0f, -35f), new Vector3(-35f, 0f, 0f),
+        };
+        // Detras de cada edificio, de los cuatro lados.
+        foreach (var h in huellas)
+        {
+            salidas.Add(new Vector3(h.center.x, 0f, h.yMax + 3f));
+            salidas.Add(new Vector3(h.center.x, 0f, h.yMin - 3f));
+            salidas.Add(new Vector3(h.xMax + 3f, 0f, h.center.y));
+            salidas.Add(new Vector3(h.xMin - 3f, 0f, h.center.y));
+        }
+
+        const float Paso = 0.02f;
+        int recorridos = 0, adentro = 0, sinLlegar = 0, largos = 0;
+        string ejemplo = null;
+        foreach (string nombre in new[] { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/" + nombre + ".prefab");
+            var controlador = prefab != null ? prefab.GetComponent<EnemyController>() : null;
+            if (!inf.Verdadero("rodeo: esta el prefab " + nombre, controlador != null && controlador.enemyType != null)) continue;
+            float radio = EnemyController.RadioDelCuerpo(prefab);
+            float velocidad = controlador.enemyType.velocidad;
+            // Mas las salidas pegadas a cada pared, a 0,99 del radio: la horda lo empujo ahi.
+            var desde = new List<Vector3>(salidas);
+            foreach (var h in huellas)
+            {
+                desde.Add(new Vector3(h.center.x + 1f, 0f, h.yMax + radio * 0.99f));
+                desde.Add(new Vector3(h.center.x - 2f, 0f, h.yMin - radio * 0.99f));
+                desde.Add(new Vector3(h.xMax + radio * 0.99f, 0f, h.center.y + 1f));
+                desde.Add(new Vector3(h.xMin - radio * 0.99f, 0f, h.center.y - 2f));
+            }
+            foreach (var destino in jugadores)
+            {
+                foreach (var salida in desde)
+                {
+                    // Las que caen adentro de un edificio agrandado no son salidas de verdad.
+                    bool salidaAdentro = false;
+                    foreach (var h in huellas)
+                        salidaAdentro |= Agrandado(h, radio * 0.995f).Contains(new Vector2(salida.x, salida.z));
+                    if (salidaAdentro) continue;
+
+                    recorridos++;
+                    Vector3 p = salida;
+                    float recorrido = 0f;
+                    bool llego = false, entro = false;
+                    for (int n = 0; n < 6000; n++)
+                    {
+                        float falta = Vector3.Distance(new Vector3(p.x, 0f, p.z), destino);
+                        if (falta < Mathf.Max(1f, radio + 0.45f)) { llego = true; break; }
+                        Vector3 rumbo = EnemyController.Rodeo(p, destino, huellas, radio) - p;
+                        rumbo.y = 0f;
+                        float avance = Mathf.Min(velocidad * Paso, rumbo.magnitude);
+                        if (avance < 1e-5f) break;
+                        p += rumbo.normalized * avance;
+                        recorrido += avance;
+                        foreach (var h in huellas)
+                        {
+                            if (!Agrandado(h, radio * 0.98f).Contains(new Vector2(p.x, p.z))) continue;
+                            // Con el jugador pegado a esa pared, el ultimo metro y medio va derecho
+                            // a el (la fisica lo frena contra la pared, al lado del jugador).
+                            bool alLado = Agrandado(h, radio).Contains(new Vector2(destino.x, destino.z)) &&
+                                          Vector3.Distance(new Vector3(p.x, 0f, p.z), destino) < 1.5f;
+                            if (!alLado) entro = true;
+                        }
+                    }
+                    float derecho = Vector3.Distance(new Vector3(salida.x, 0f, salida.z), destino);
+                    bool largo = llego && recorrido > derecho + 30f;
+                    if (entro) adentro++;
+                    if (!llego) sinLlegar++;
+                    if (largo) largos++;
+                    if ((entro || !llego || largo) && ejemplo == null)
+                        ejemplo = nombre + " de " + salida + " a " + destino + (entro ? " entro" : "") + (llego ? "" : " no llego") +
+                                  " (" + recorrido.ToString("0.0") + " m)";
+                }
+            }
+        }
+        inf.Verdadero("rodeo: se simularon recorridos (" + recorridos + ")", recorridos > 500);
+
+        // El jugador parado donde sale un edificio (al pasar a la ciudad) sale a la calle.
+        bool alaCalle = true;
+        foreach (var h in huellas)
+        {
+            Vector3 afuera = CapitulosDeEscenario.FueraDeLasHuellas(new Vector3(h.center.x + 1f, 0.9f, h.center.y), 1f);
+            bool libre = true;
+            foreach (var otra in huellas) libre &= !Agrandado(otra, 0.99f).Contains(new Vector2(afuera.x, afuera.z));
+            if (!libre || !Agrandado(h, 1.01f).Contains(new Vector2(afuera.x, afuera.z)) || !Mathf.Approximately(afuera.y, 0.9f)) alaCalle = false;
+        }
+        inf.Verdadero("paredes: el jugador adentro de donde sale un edificio pasa al borde, a 1 m", alaCalle);
+        var enLaCalle = new Vector3(0f, 0.9f, 24f);
+        inf.Verdadero("paredes: en la calle no se mueve", CapitulosDeEscenario.FueraDeLasHuellas(enLaCalle, 1f) == enLaCalle);
+        if (ejemplo != null) inf.Verdadero("rodeo: primer recorrido que falla: " + ejemplo, false);
+        inf.Igual("rodeo: ningun zombi se mete en un edificio", 0, adentro);
+        inf.Igual("rodeo: todos llegan al jugador", 0, sinLlegar);
+        inf.Igual("rodeo: ninguno da una vuelta de mas (rodear uno es, como mucho, medio perimetro)", 0, largos);
+
+        // El jugador pegado a la pared, del lado del jefe: el jefe no puede llegar a su centro
+        // sin entrar a la huella agrandada en su radio, y va al borde de afuera frente a el, sin
+        // rodear nada; ya ahi, derecho al jugador.
+        var pegado = new Vector3(huellas[0].center.x, 0f, huellas[0].yMin - 0.6f);
+        var lejos = new Vector3(huellas[0].center.x, 0f, huellas[0].yMin - 15f);
+        Vector3 alFrente = EnemyController.Rodeo(lejos, pegado, huellas, 1.4f);
+        inf.Verdadero("rodeo: con el jugador pegado a la pared, el jefe va al frente de el",
+                      Mathf.Abs(alFrente.x - pegado.x) < 0.01f && alFrente.z < huellas[0].yMin - 1.39f && alFrente.z > huellas[0].yMin - 1.5f);
+        var yaAlFrente = new Vector3(pegado.x, 0f, huellas[0].yMin - 1.6f);
+        inf.Verdadero("rodeo: ya al frente, derecho al jugador", EnemyController.Rodeo(yaAlFrente, pegado, huellas, 1.4f) == pegado);
+    }
+
+    static Rect Agrandado(Rect r, float margen)
+    {
+        return Rect.MinMaxRect(r.xMin - margen, r.yMin - margen, r.xMax + margen, r.yMax + margen);
     }
 
     // 6. El daño con decimales de los zombis escalados se acumula y sale entero.

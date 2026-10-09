@@ -91,6 +91,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         public readonly List<float> demoras = new List<float>();
         public float saliendoDesde = -1f;
         public readonly List<Rect> tapado = new List<Rect>();   // lo que tapan sus edificios (ver Tapado)
+        public readonly List<Rect> huellas = new List<Rect>();  // y lo que ocupan (ver Huellas)
     }
 
     private Puesta[] puestas;
@@ -134,6 +135,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         RenderSettings.fog = false;
         RenderSettings.ambientLight = ambienteDeLaEscena;
         loTapado.Clear();
+        huellasPuestas.Clear();
         if (puestas == null) return;
         foreach (var puesta in puestas) if (puesta.objeto != null) Destroy(puesta.objeto);
     }
@@ -264,6 +266,9 @@ public class CapitulosDeEscenario : MonoBehaviour
         // Desde que empieza a salir del piso: una caja que nace ahora queda adentro.
         loTapado.Clear();
         loTapado.AddRange(puesta.tapado);
+        huellasPuestas.Clear();
+        huellasPuestas.AddRange(puesta.huellas);
+        SacarAlJugador();
 
         if (!saliendo)
         {
@@ -306,7 +311,8 @@ public class CapitulosDeEscenario : MonoBehaviour
             }
         }
         // Recien instanciado: todo en su lugar y sin juntar todavia.
-        LoQueTapanLosEdificios(puesta.objeto, mirada, puesta.tapado);
+        LoQueTapanLosEdificios(puesta.objeto, mirada, puesta.tapado, puesta.huellas);
+        PonerParedes(puesta.objeto);
     }
 
     // Todo en su lugar y, la primera vez, pegado en una sola malla.
@@ -348,6 +354,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         puesta.saliendoDesde = -1f;
         // Se saca siempre el que esta puesto (el de antes del fundido).
         loTapado.Clear();
+        huellasPuestas.Clear();
     }
 
     private void AnimarDecorado()
@@ -382,8 +389,8 @@ public class CapitulosDeEscenario : MonoBehaviour
 
     // --- Lo que tapan los edificios ---------------------------------------------------
     //
-    // Los decorados no tienen colliders, asi que nada choca con un edificio de la ciudad,
-    // pero desde la camara del juego (arriba y atras del jugador, mirando siempre hacia el
+    // Los decorados no tienen colliders, salvo las paredes de los edificios (ver
+    // PonerParedes), y desde la camara del juego (arriba y atras del jugador, mirando siempre hacia el
     // mismo lado) el techo tapa todo lo que queda adentro y una franja del piso del lado de
     // atras. Una de cada seis cajas nacia adentro de un edificio y vencia sin que nadie la
     // viera, y las monedas de un zombi que moria cruzandolo caian adentro. Aca queda, en el
@@ -394,15 +401,21 @@ public class CapitulosDeEscenario : MonoBehaviour
     private const string Edificio = "Edificio";
 
     private static readonly List<Rect> loTapado = new List<Rect>();
+    private static readonly List<Rect> huellasPuestas = new List<Rect>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
         loTapado.Clear();
+        huellasPuestas.Clear();
     }
 
     // Un rectangulo por edificio: x es x y y es z.
     public static IReadOnlyList<Rect> LoTapado => loTapado;
+
+    // Lo que ocupa cada edificio en el piso, sin la franja que tapa el techo: lo que los
+    // zombis rodean (EnemyController.Rodeo), porque los atravesaban. Mismo orden que LoTapado.
+    public static IReadOnlyList<Rect> Huellas => huellasPuestas;
 
     // Si un edificio del decorado puesto tapa ese punto del piso, agrandando lo tapado en
     // 'margen' (lo que mide lo que se quiere ver).
@@ -417,11 +430,13 @@ public class CapitulosDeEscenario : MonoBehaviour
         return false;
     }
 
-    // Para la prueba de logica, sin escena: fija lo tapado a mano (null lo vacia).
-    public static void UsarParaPruebas(List<Rect> tapado)
+    // Para la prueba de logica, sin escena: fija lo tapado y las huellas a mano (null lo vacia).
+    public static void UsarParaPruebas(List<Rect> tapado, List<Rect> huellas = null)
     {
         loTapado.Clear();
         if (tapado != null) loTapado.AddRange(tapado);
+        huellasPuestas.Clear();
+        if (huellas != null) huellasPuestas.AddRange(huellas);
     }
 
     // Lo que tapan los edificios de un decorado con la camara mirando hacia 'mirada': la
@@ -429,27 +444,22 @@ public class CapitulosDeEscenario : MonoBehaviour
     // rayo que pasa rozando el borde del techo llega al piso tanto mas alla). Se mide con las
     // mallas y no con Renderer.bounds, que en un objeto apagado viene vacio (el decorado se
     // arma apagado), y antes de juntarlo con StaticBatchingUtility, que les cambia la malla.
-    public static void LoQueTapanLosEdificios(GameObject decorado, Vector3 mirada, List<Rect> tapado)
+    // En 'huellas', si viene, la huella sola de cada uno.
+    public static void LoQueTapanLosEdificios(GameObject decorado, Vector3 mirada, List<Rect> tapado, List<Rect> huellas = null)
     {
         tapado.Clear();
+        if (huellas != null) huellas.Clear();
         if (decorado == null) return;
         foreach (Transform grupo in decorado.transform)
         {
             foreach (Transform pieza in grupo)
             {
                 if (pieza.name != Edificio) continue;
-                bool hay = false;
-                Bounds caja = default;
-                foreach (var filtro in pieza.GetComponentsInChildren<MeshFilter>(true))
-                {
-                    if (filtro.sharedMesh == null) continue;
-                    Bounds b = EnElMundo(filtro.sharedMesh.bounds, filtro.transform.localToWorldMatrix);
-                    if (hay) caja.Encapsulate(b);
-                    else { caja = b; hay = true; }
-                }
-                if (!hay) continue;
+                Bounds caja;
+                if (!CajaDe(pieza, Matrix4x4.identity, out caja)) continue;
 
                 Rect zona = Rect.MinMaxRect(caja.min.x, caja.min.z, caja.max.x, caja.max.z);
+                if (huellas != null) huellas.Add(zona);
                 if (mirada.y < -0.01f)
                 {
                     float porAltura = caja.max.y / -mirada.y;
@@ -462,6 +472,89 @@ public class CapitulosDeEscenario : MonoBehaviour
                 tapado.Add(zona);
             }
         }
+    }
+
+    // Las paredes de los edificios de la ciudad: una caja por edificio, del tamaño de su
+    // cuerpo, en un hijo del grupo del edificio (sube del piso con el; StaticBatchingUtility
+    // solo junta las mallas). Hasta el 8/10 no tenian ninguna y todo los atravesaba (lo dijeron
+    // en Discord): ahora el jugador choca, los zombis los rodean (EnemyController.Rodeo) y a
+    // los que empuja la horda los frena la pared, y los invocados del jefe salen del lado de la
+    // calle (JefePatrones.RadioLibre mira los colliders fijos). Las balas los siguen cruzando:
+    // no tienen Rigidbody, y contra un collider fijo no pasa nada.
+    public const string Pared = "Pared";
+
+    public static void PonerParedes(GameObject decorado)
+    {
+        if (decorado == null) return;
+        foreach (Transform grupo in decorado.transform)
+        {
+            foreach (Transform pieza in grupo)
+            {
+                if (pieza.name != Edificio || pieza.Find(Pared) != null) continue;
+                Bounds caja;
+                if (!CajaDe(pieza, pieza.worldToLocalMatrix, out caja)) continue;
+                var pared = new GameObject(Pared);
+                pared.transform.SetParent(pieza, false);
+                var collider = pared.AddComponent<BoxCollider>();
+                collider.center = caja.center;
+                collider.size = caja.size;
+            }
+        }
+    }
+
+    // El jugador parado donde sale un edificio (en la pradera y el cementerio ahi es campo
+    // abierto) pasa a la calle mas cercana, en lo mas oscuro del fundido, antes de que la pared
+    // suba con el adentro y la fisica lo escupa.
+    public const float MargenDelJugador = 1f;
+
+    private static void SacarAlJugador()
+    {
+        var salud = PlayerHealth.instance;
+        if (salud == null) return;
+        Vector3 donde = salud.transform.position;
+        Vector3 afuera = FueraDeLasHuellas(donde, MargenDelJugador);
+        if (afuera == donde) return;
+        var cuerpo = salud.GetComponentInParent<Rigidbody>();
+        if (cuerpo != null) cuerpo.position = afuera;
+        salud.transform.position = afuera;
+    }
+
+    // El punto, o si cae en la huella de un edificio agrandada en 'margen', el borde mas
+    // cercano de ella. Las huellas no se tocan (entre dos hay una calle): con salir de una alcanza.
+    public static Vector3 FueraDeLasHuellas(Vector3 punto, float margen)
+    {
+        for (int i = 0; i < huellasPuestas.Count; i++)
+        {
+            Rect zona = huellasPuestas[i];
+            float oeste = zona.xMin - margen, este = zona.xMax + margen;
+            float sur = zona.yMin - margen, norte = zona.yMax + margen;
+            if (punto.x <= oeste || punto.x >= este || punto.z <= sur || punto.z >= norte) continue;
+
+            float hastaOeste = punto.x - oeste, hastaEste = este - punto.x;
+            float hastaSur = punto.z - sur, hastaNorte = norte - punto.z;
+            float menor = Mathf.Min(Mathf.Min(hastaOeste, hastaEste), Mathf.Min(hastaSur, hastaNorte));
+            if (menor == hastaOeste) punto.x = oeste;
+            else if (menor == hastaEste) punto.x = este;
+            else if (menor == hastaSur) punto.z = sur;
+            else punto.z = norte;
+            return punto;
+        }
+        return punto;
+    }
+
+    // La caja de las mallas de una pieza, llevadas con 'hacia' (al mundo o a la pieza).
+    private static bool CajaDe(Transform pieza, Matrix4x4 hacia, out Bounds caja)
+    {
+        caja = default;
+        bool hay = false;
+        foreach (var filtro in pieza.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (filtro.sharedMesh == null) continue;
+            Bounds b = EnElMundo(filtro.sharedMesh.bounds, hacia * filtro.transform.localToWorldMatrix);
+            if (hay) caja.Encapsulate(b);
+            else { caja = b; hay = true; }
+        }
+        return hay;
     }
 
     // La caja de una malla en el mundo, sin armar sus ocho esquinas.

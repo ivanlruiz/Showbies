@@ -281,8 +281,8 @@ public class Moneda : MonoBehaviour
             if (golpeado.attachedRigidbody != null || golpeado.GetComponentInParent<BulletController>() != null) continue;
             libre = Mathf.Min(libre, golpesDeSalida[i].distance);
         }
-        // Los edificios de la ciudad no tienen collider, pero la taparian igual: se frena
-        // antes, como contra una pared.
+        // Lo que tapa un edificio de la ciudad va mas alla de su pared (del otro lado de la
+        // camara, el techo esconde una franja de piso): se frena antes, como contra una pared.
         libre = LibreHastaLoTapado(origen, direccion, libre);
         if (libre >= alcance) return v;
 
@@ -292,9 +292,9 @@ public class Moneda : MonoBehaviour
         return v;
     }
 
-    // Un zombi que muere cruzando un edificio de la ciudad (no tienen collider: los zombis
-    // se trabarian) soltaba las monedas adentro, donde el techo las tapa y sin iman habia
-    // que entrar a buscarlas a ciegas. Salen por el borde mas cercano de lo que tapa el
+    // Un zombi que muere pegado a un edificio de la ciudad (o, hasta el 8/10, cruzandolo: no
+    // tenian paredes) soltaba las monedas en lo que tapa el techo, y sin iman habia que ir a
+    // buscarlas a ciegas. Salen por el borde mas cercano de lo que tapa el
     // edificio (ver CapitulosDeEscenario.Tapado), a 'margen' de el; afuera, nada cambia. Las
     // zonas no se tocan (entre dos edificios hay una calle): con salir de una alcanza.
     // Publico para la prueba de logica.

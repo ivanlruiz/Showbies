@@ -126,6 +126,10 @@ public class EnemyController : MonoBehaviour
     private Collider[] colliders;
     private CapsuleCollider capsula;
 
+    // Lo que mide de radio el cuerpo en el piso (la capsula de la raiz, con su escala): lo que
+    // deja de margen al rodear un edificio de la ciudad (ver Rodeo).
+    private float radioDelCuerpo = 0.5f;
+
     // Lo que le falta bajar al cadaver hasta el piso, y a que velocidad baja. El cadaver
     // queda kinematic donde muere, y uno que muere en el aire (subido encima de la horda,
     // despedido por la embestida del jefe, recien aparecido) se desplomaba flotando hasta
@@ -437,6 +441,186 @@ public class EnemyController : MonoBehaviour
         return JefePatrones.DentroDelCuadro(enPantalla, new Vector2(-MargenAlAparecer, -MargenAlAparecer));
     }
 
+    // --- Los edificios de la ciudad ----------------------------------------------------
+    //
+    // Hacia donde caminar para ir de 'desde' a 'hasta' sin atravesar las huellas de los
+    // edificios (CapitulosDeEscenario.Huellas: x es x, y es z). Si la recta cruza uno, va a
+    // la esquina por la que es mas corto rodearlo, agrandado en el radio del cuerpo mas
+    // HolguraDelRodeo; al llegar a la esquina sigue a la proxima, o derecho si ya ve el destino.
+    // Los edificios son cuadrados sueltos con calles de 13 m entre uno y otro, asi que alcanza
+    // con rodear el primero que se cruza (y, si para llegar a su esquina se cruza otro, ese
+    // antes). El zombi o el jugador pegados a una pared estan mas cerca de lo que el radio deja:
+    // se cuentan desde el borde de afuera, o la recta no cruzaria nada y el zombi quedaria
+    // empujando la pared. Si alguno esta adentro del edificio de verdad (no deberia: tienen
+    // paredes, ver CapitulosDeEscenario.PonerParedes), ese no cuenta: derecho. Sin edificios
+    // (todo lo que no es la ciudad) devuelve 'hasta'. Estatica para la prueba.
+    public const float HolguraDelRodeo = 0.6f;
+    public const float EsquinaAlcanzada = 0.4f;   // mas que lo que avanza el FASTER en un paso
+
+    public static Vector3 Rodeo(Vector3 desde, Vector3 hasta, IReadOnlyList<Rect> huellas, float radio)
+    {
+        return Rodeo(desde, hasta, huellas, radio, 2);
+    }
+
+    // El radio de la capsula de la raiz con su escala (la de un prefab, para la prueba).
+    public static float RadioDelCuerpo(GameObject zombi)
+    {
+        var capsula = zombi != null ? zombi.GetComponent<CapsuleCollider>() : null;
+        if (capsula == null) return 0.5f;
+        Vector3 escala = zombi.transform.lossyScale;
+        return capsula.radius * Mathf.Max(Mathf.Abs(escala.x), Mathf.Abs(escala.z));
+    }
+
+    private static Vector3 Rodeo(Vector3 desde, Vector3 hasta, IReadOnlyList<Rect> huellas, float radio, int vueltas)
+    {
+        if (huellas == null || huellas.Count == 0) return hasta;
+        var a = new Vector2(desde.x, desde.z);
+        var b = new Vector2(hasta.x, hasta.z);
+        int primero = -1;
+        float entrada = float.MaxValue;
+        for (int i = 0; i < huellas.Count; i++)
+        {
+            if (huellas[i].Contains(a) || huellas[i].Contains(b)) continue;
+            Rect cuerpo = Agrandar(huellas[i], radio);
+            float t;
+            if (Cruza(Afuera(a, cuerpo), Afuera(b, cuerpo), cuerpo, out t) && t < entrada)
+            {
+                entrada = t;
+                primero = i;
+            }
+        }
+        if (primero < 0)
+        {
+            // El jugador pegado a una pared: al borde de afuera de la franja frente a el (si no,
+            // el ultimo tramo raspa la pared en diagonal), y ya ahi, derecho a el.
+            for (int i = 0; i < huellas.Count; i++)
+            {
+                if (huellas[i].Contains(b)) continue;
+                Rect cuerpo = Agrandar(huellas[i], radio);
+                if (!cuerpo.Contains(b)) continue;
+                Vector2 frente = Afuera(b, cuerpo);
+                if ((frente - a).sqrMagnitude > 1f) return new Vector3(frente.x, hasta.y, frente.y);
+                break;
+            }
+            return hasta;
+        }
+
+        Rect elCuerpo = Agrandar(huellas[primero], radio);
+        Vector2 llegada = Afuera(b, elCuerpo);
+        Vector2 esquina = Esquina(Afuera(a, elCuerpo), llegada, elCuerpo, Agrandar(huellas[primero], radio + HolguraDelRodeo));
+        if (esquina == llegada) return hasta;
+        var punto = new Vector3(esquina.x, hasta.y, esquina.y);
+        return vueltas > 1 ? Rodeo(desde, punto, huellas, radio, vueltas - 1) : punto;
+    }
+
+    private static Rect Agrandar(Rect r, float margen)
+    {
+        return Rect.MinMaxRect(r.xMin - margen, r.yMin - margen, r.xMax + margen, r.yMax + margen);
+    }
+
+    // El punto, o si cae dentro del rectangulo, el borde mas cercano, un pelo afuera.
+    private static Vector2 Afuera(Vector2 p, Rect r)
+    {
+        if (!r.Contains(p)) return p;
+        const float Pelo = 0.01f;
+        float oeste = p.x - r.xMin, este = r.xMax - p.x, sur = p.y - r.yMin, norte = r.yMax - p.y;
+        float menor = Mathf.Min(Mathf.Min(oeste, este), Mathf.Min(sur, norte));
+        if (menor == oeste) p.x = r.xMin - Pelo;
+        else if (menor == este) p.x = r.xMax + Pelo;
+        else if (menor == sur) p.y = r.yMin - Pelo;
+        else p.y = r.yMax + Pelo;
+        return p;
+    }
+
+    // Si el tramo a-b entra al rectangulo y en que fraccion del tramo (Liang-Barsky). Rozar
+    // un borde o una esquina no es entrar.
+    private static bool Cruza(Vector2 a, Vector2 b, Rect r, out float entrada)
+    {
+        float t0 = 0f, t1 = 1f;
+        Vector2 d = b - a;
+        entrada = 0f;
+        if (!Recortar(-d.x, a.x - r.xMin, ref t0, ref t1)) return false;
+        if (!Recortar(d.x, r.xMax - a.x, ref t0, ref t1)) return false;
+        if (!Recortar(-d.y, a.y - r.yMin, ref t0, ref t1)) return false;
+        if (!Recortar(d.y, r.yMax - a.y, ref t0, ref t1)) return false;
+        entrada = t0;
+        return (t1 - t0) * d.magnitude > 1e-3f;
+    }
+
+    private static bool Recortar(float p, float q, ref float t0, ref float t1)
+    {
+        if (Mathf.Abs(p) < 1e-7f) return q >= 0f;
+        float t = q / p;
+        if (p < 0f)
+        {
+            if (t > t1) return false;
+            if (t > t0) t0 = t;
+        }
+        else
+        {
+            if (t < t0) return false;
+            if (t < t1) t1 = t;
+        }
+        return true;
+    }
+
+    // Las cuatro esquinas, en orden alrededor del edificio: compartidas para no alocar en
+    // cada paso de fisica de cada zombi (todo esto corre en el hilo principal).
+    private static readonly Vector2[] esquinas = new Vector2[4];
+    private static readonly bool[] seVenDesdeA = new bool[4];
+    private static readonly bool[] seVenDesdeB = new bool[4];
+
+    // La primera esquina del camino mas corto de a a b alrededor del cuerpo, que es el
+    // edificio agrandado en el radio: se prueban las dos vueltas (horaria y antihoraria) desde
+    // cada esquina que se ve desde a hasta la primera que ve b. Las esquinas son las del
+    // edificio agrandado un poco mas, asi que ir de una a otra no roza el cuerpo. Devuelve b si
+    // no hay camino (no deberia pasar: desde afuera de un rectangulo siempre se ven dos).
+    private static Vector2 Esquina(Vector2 a, Vector2 b, Rect cuerpo, Rect afuera)
+    {
+        esquinas[0] = new Vector2(afuera.xMin, afuera.yMin);
+        esquinas[1] = new Vector2(afuera.xMax, afuera.yMin);
+        esquinas[2] = new Vector2(afuera.xMax, afuera.yMax);
+        esquinas[3] = new Vector2(afuera.xMin, afuera.yMax);
+        float t;
+        for (int i = 0; i < 4; i++)
+        {
+            seVenDesdeA[i] = !Cruza(a, esquinas[i], cuerpo, out t);
+            seVenDesdeB[i] = !Cruza(esquinas[i], b, cuerpo, out t);
+        }
+
+        float mejor = float.MaxValue;
+        Vector2 elegida = b;
+        for (int i = 0; i < 4; i++)
+        {
+            if (!seVenDesdeA[i]) continue;
+            float hastaLaPrimera = Vector2.Distance(a, esquinas[i]);
+            bool yaLlego = hastaLaPrimera < EsquinaAlcanzada;
+            for (int sentido = 1; sentido <= 3; sentido += 2)
+            {
+                float largo = hastaLaPrimera;
+                int j = i;
+                for (int pasos = 0; pasos < 4; pasos++)
+                {
+                    if (seVenDesdeB[j])
+                    {
+                        float total = largo + Vector2.Distance(esquinas[j], b);
+                        if (total < mejor)
+                        {
+                            mejor = total;
+                            // En la esquina ya: a la que sigue, o derecho si desde ahi se ve b.
+                            elegida = !yaLlego ? esquinas[i] : j == i ? b : esquinas[(i + sentido) % 4];
+                        }
+                        break;
+                    }
+                    int k = (j + sentido) % 4;
+                    largo += Vector2.Distance(esquinas[j], esquinas[k]);
+                    j = k;
+                }
+            }
+        }
+        return elegida;
+    }
+
     // Vivo y en la misma aparicion que se anoto: un zombi que murio y volvio a
     // salir del pool es otro zombi, aunque sea el mismo objeto.
     public static bool SigueVivo(EnemyController zombi, int numeroDeAparicion)
@@ -456,6 +640,7 @@ public class EnemyController : MonoBehaviour
         animadores = ConControlador(GetComponentsInChildren<Animator>(true));
         colliders = GetComponentsInChildren<Collider>(true);
         capsula = GetComponent<CapsuleCollider>();
+        radioDelCuerpo = RadioDelCuerpo(gameObject);
         BuscarElModelo();
         // En Halloween salen disfrazados. Despues de medir el modelo (un sombrero de bruja
         // agrandaria altoDelModelo, y con el las poses del jefe y la barra) y antes de la
@@ -823,7 +1008,8 @@ public class EnemyController : MonoBehaviour
        // cada paso: la gravedad nunca actuaba, y un zombi que terminaba debajo del
        // piso se quedaba ahi, invisible, persiguiendo al jugador y pegandole desde
        // abajo. Ahora cae y lo saca el kill-Z.
-       Vector3 objetivo = thePlayer.transform.position;
+       // En la ciudad, rodeando los edificios: los atravesaban (lo dijeron en Discord, 8/10).
+       Vector3 objetivo = Rodeo(transform.position, thePlayer.transform.position, CapitulosDeEscenario.Huellas, radioDelCuerpo);
        objetivo.y = transform.position.y;
        if ((objetivo - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(objetivo);
        Vector3 velocidad = transform.forward * enemyType.velocidad;
@@ -1172,7 +1358,9 @@ public class EnemyController : MonoBehaviour
         Vector3 velocidad = Vector3.zero;
         if (yendo)
         {
-            transform.rotation = Quaternion.LookRotation(falta);
+            Vector3 rumbo = Rodeo(transform.position, lugarDelFestejo, CapitulosDeEscenario.Huellas, radioDelCuerpo) - transform.position;
+            rumbo.y = 0f;
+            transform.rotation = Quaternion.LookRotation(rumbo.sqrMagnitude > 0.0001f ? rumbo : falta);
             velocidad = transform.forward * enemyType.velocidad;
         }
         else
