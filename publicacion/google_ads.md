@@ -6,7 +6,7 @@ imágenes y videos; Google arma los anuncios, prueba combinaciones y se queda co
 
 **Para qué sirve acá:** no para ganar plata enseguida (con los anuncios del juego, cada jugador deja centavos), sino
 para que entren los primeros cientos de jugadores. Con más instalaciones, reseñas y gente que se queda, Play empieza a
-recomendar el juego solo. **El mejor momento es durante el evento (24/10 al 9/11)**: la ficha y la tarjeta muestran
+recomendar el juego solo. **El mejor momento es durante el evento (desde la 1.5.0 al 9/11)**: la ficha y la tarjeta muestran
 Halloween, y el que entra encuentra algo especial.
 
 La cuenta, la tarjeta de crédito y el gasto son tuyos: yo no puedo cargar medios de pago ni aceptar términos por vos.

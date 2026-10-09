@@ -24,7 +24,7 @@ Es un **incremental**: las monedas que se juntan en las partidas se gastan en la
 los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos. Además, jugar y ganar logros da
 experiencia para el **nivel del jugador**, y cada nivel da monedas (ver Nivel del jugador y logros).
 
-Del **24/10 al 9/11** hay **evento de Halloween**: calabazas por el mapa, zombis disfrazados y caramelos que llenan una
+Del **9/10 al 9/11** hay **evento de Halloween** (arrancaba el 24/10; Ivan lo quiso ya, con la 1.5.0): calabazas por el mapa, zombis disfrazados y caramelos que llenan una
 fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
 
 ## Entorno
@@ -1257,7 +1257,7 @@ pinta a la horda, elegido por Ivan), las gemas y las armas (ver TAREAS).
 
 ## Evento de Halloween
 
-Pedido de Ivan (8/10, para atraer jugadores, con la tarjeta de contenido promocional de Play). **Del 24/10 al 9/11,
+Pedido de Ivan (8/10, para atraer jugadores, con la tarjeta de contenido promocional de Play). **Del 9/10 al 9/11,
 ambos incluidos** (`EventoHalloween.Inicio` y `Fin`, en mmdd: si el juego sigue instalado, vuelve solo cada año). Eligió:
 calabazas por todos lados, zombis disfrazados, caramelos con premios y, al final, un **sombrero de calabaza** que se lleva
 para siempre.

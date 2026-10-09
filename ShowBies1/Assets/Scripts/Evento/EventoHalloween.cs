@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 // El evento de Halloween (pedido de Ivan, 8/10: algo para atraer jugadores, con su ficha en
-// Play). Del 24/10 al 9/11, ambos incluidos, el mundo se llena de calabazas, los zombis salen
+// Play). Del 9/10 al 9/11, ambos incluidos, el mundo se llena de calabazas, los zombis salen
 // disfrazados y sueltan caramelos ademas de monedas. Los caramelos llenan una fila de cinco
 // hitos (VentanaHalloween, en el menu): los cuatro primeros pagan monedas y el ultimo es el
 // SOMBRERO DE CALABAZA, que el jugador lleva puesto para siempre (se apaga en OPCIONES).
@@ -20,7 +20,7 @@ using UnityEngine;
 // fijos, uno de la oleada 40 llenaba la fila en una partida y uno nuevo no llegaba nunca.
 public static class EventoHalloween
 {
-    public const int Inicio = 1024;   // mmdd, el primer dia
+    public const int Inicio = 1009;   // mmdd, el primer dia: era el 24/10, y Ivan lo quiso ya, con la 1.5.0 (9/10)
     public const int Fin = 1109;      // mmdd, el ultimo dia (incluido)
 
     // Cuantos caramelos suelta cada zombi que muere: uno con esta probabilidad, y el jefe

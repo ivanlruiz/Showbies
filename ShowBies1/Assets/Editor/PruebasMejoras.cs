@@ -303,12 +303,12 @@ public static class PruebasMejoras
     {
         try
         {
-            inf.Verdadero("halloween: el 23/10 todavia no", !EventoHalloween.EnFechas(20261023));
-            inf.Verdadero("halloween: el 24/10 empieza", EventoHalloween.EnFechas(20261024));
+            inf.Verdadero("halloween: el 8/10 todavia no", !EventoHalloween.EnFechas(20261008));
+            inf.Verdadero("halloween: el 9/10 empieza", EventoHalloween.EnFechas(20261009));
             inf.Verdadero("halloween: el 9/11 sigue", EventoHalloween.EnFechas(20261109));
             inf.Verdadero("halloween: el 10/11 ya no", !EventoHalloween.EnFechas(20261110));
             inf.Verdadero("halloween: vuelve en 2027", EventoHalloween.EnFechas(20271031));
-            inf.Igual("halloween: el primer dia quedan 17", 17, EventoHalloween.DiasQueFaltan(20261024));
+            inf.Igual("halloween: el primer dia quedan 32", 32, EventoHalloween.DiasQueFaltan(20261009));
             inf.Igual("halloween: el 9/11 es el ultimo", 1, EventoHalloween.DiasQueFaltan(20261109));
             inf.Igual("halloween: el 8/11 quedan 2", 2, EventoHalloween.DiasQueFaltan(20261108));
             inf.Igual("halloween: el jefe suelta una lluvia", EventoHalloween.CaramelosDelJefe, EventoHalloween.CaramelosAlMorir(true, 0.9f));
@@ -346,8 +346,8 @@ public static class PruebasMejoras
 
             // Antes de las fechas no pasa nada.
             EmpezarCaso("{\"version\":6,\"monedas\":100,\"mejorOleada\":10}", null);
-            EventoHalloween.UsarParaPruebas(20261023, 0);
-            inf.Verdadero("halloween: el 23/10 no esta activo", !EventoHalloween.Activo);
+            EventoHalloween.UsarParaPruebas(20261008, 0);
+            inf.Verdadero("halloween: el 8/10 no esta activo", !EventoHalloween.Activo);
             string objetivo;
             float fraccionObjetivo;
             inf.Verdadero("halloween: fuera del evento la derrota muestra lo de siempre", !ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo));
@@ -360,7 +360,7 @@ public static class PruebasMejoras
             inf.Verdadero("halloween: forzado (la APK de prueba) esta activo fuera de las fechas", EventoHalloween.Activo);
 
             // El primer dia: la edicion arranca con la mejor oleada de ese momento, congelada.
-            EventoHalloween.UsarParaPruebas(20261024, 0);
+            EventoHalloween.UsarParaPruebas(20261009, 0);
             EventoHalloween.Asegurar();
             inf.Igual("halloween: la edicion es 2026", 2026, Progreso.Halloween.edicion);
             inf.Igual("halloween: congela la oleada 10", 10, Progreso.Halloween.oleada);

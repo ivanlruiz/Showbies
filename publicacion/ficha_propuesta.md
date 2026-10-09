@@ -7,14 +7,14 @@ emojis, sin "#1", sin "el mejor", sin precios en el título, sin palabras repeti
 
 > **8/10: la primera tanda está enviada a revisión** (con el OK de Ivan): los títulos de es-ES y es-419, las
 > descripciones cortas normales y las largas sin el bloque de Halloween, en los tres idiomas (8 cambios en Play
-> Console). La declaración de recursos de IA de la ficha ya venía marcada y no se tocó. Falta la segunda tanda (el
-> 24/10), las capturas, el video y la tarjeta del evento.
+> Console). La declaración de recursos de IA de la ficha ya venía marcada y no se tocó. Falta la segunda tanda (con la
+> 1.5.0, que trae Halloween ya activo), las capturas, el video y la tarjeta del evento.
 
 Hay dos tandas:
 
 - **Ya:** títulos, descripción corta normal, descripción larga sin el bloque de Halloween, capturas y video.
-- **Del 24/10 al 9/11:** la descripción corta de Halloween y el bloque de Halloween arriba de la larga. Se cambian a
-  mano el 24/10 (o junto con la 1.5.0, si sale antes) y el 10/11 se vuelve a la normal.
+- **Desde la 1.5.0 al 9/11:** la descripción corta de Halloween y el bloque de Halloween arriba de la larga. Se cambian a
+  mano cuando sale la 1.5.0, que trae el evento ya activo (Ivan, 9/10), y el 10/11 se vuelve a la normal.
 
 La tarjeta del evento (contenido promocional) va aparte, al final.
 
@@ -36,7 +36,7 @@ como la misma palabra, así que cada ficha va con la suya. (El juego por dentro 
 
 ## 2. Descripción corta (máx. 80)
 
-| idioma | normal | del 24/10 al 9/11 |
+| idioma | normal | desde la 1.5.0 al 9/11 |
 |---|---|---|
 | inglés | `Top-down zombie shooter. Survive the horde, grab coins, upgrade and go again.` (77) | `Halloween event: zombies in costume, candy and a pumpkin hat to win.` (68) |
 | es-ES | `Shooter de zombis visto desde arriba. Sobrevive, recoge monedas y mejora.` (73) | `Evento de Halloween: zombis disfrazados, caramelos y un sombrero de calabaza.` (77) |
@@ -48,7 +48,7 @@ como la misma palabra, así que cada ficha va con la suya. (El juego por dentro 
 
 ## 3. Descripción larga (máx. 4000)
 
-El bloque **HALLOWEEN** va solo del 24/10 al 9/11: el resto es la descripción de siempre, puesta al día.
+El bloque **HALLOWEEN** va solo desde la 1.5.0 al 9/11: el resto es la descripción de siempre, puesta al día.
 
 ### Inglés
 
@@ -162,7 +162,7 @@ los resultados de búsqueda Play muestra las primeras dos o tres, así que el or
 **Capturas** (en el teléfono, en horizontal: encendido + bajar volumen). Al menos 4, mejor 8. Sin pausa ni menús
 abiertos, en plena acción:
 
-1. La horda grande, disparando, con monedas volando. **Del 24/10 al 9/11:** la misma, con disfraces y calabazas.
+1. La horda grande, disparando, con monedas volando. **Desde la 1.5.0 al 9/11:** la misma, con disfraces y calabazas.
 2. El salto del jefe: el anillo rojo en el piso y el jefe en el aire.
 3. Una granada explotando en un grupo, con los números de daño.
 4. La FURIA prendida, rodeado.
@@ -188,8 +188,8 @@ Play Console > **Crecimiento > Contenido promocional**. Es lo que hace aparecer 
 en la búsqueda y en la ficha, también para gente que no tiene el juego.
 
 - **Tipo:** evento por tiempo limitado.
-- **Fechas:** del 24/10 al 9/11. **El evento tiene que estar en el juego en esas fechas**: la 1.5.0 tiene que estar
-  publicada antes del 24/10, o Play puede sacar la tarjeta y avisar.
+- **Fechas:** desde el día que sale la 1.5.0 al 9/11 (el evento arranca el 9/10, ya activo en la actualización). **El
+  evento tiene que estar en el juego en esas fechas**: la tarjeta empieza cuando la 1.5.0 ya está publicada.
 - **Cuándo cargarla:** como mínimo 24 h antes, pero cuanto antes mejor: Play considera para destacar las que llegan
   con bastante anticipación (dos semanas antes del inicio sería el 10/10).
 - **Eslogan** (máx. 80; para el "Spotlight", máx. 48):
@@ -199,15 +199,15 @@ en la búsqueda y en la ficha, también para gente que no tiene el juego.
 - **Descripción** (máx. 500; no repetir el eslogan ni poner "descarga ya"):
   - inglés:
     ```
-    From October 24 to November 9 the map fills with glowing jack-o'-lanterns and the horde comes in costume: pumpkin heads, witch hats and a boss dressed for the night. Collect the candy they drop to unlock five prizes: four piles of coins and a pumpkin hat your survivor keeps forever.
+    Until November 9 the map fills with glowing jack-o'-lanterns and the horde comes in costume: pumpkin heads, witch hats and a boss dressed for the night. Collect the candy they drop to unlock five prizes: four piles of coins and a pumpkin hat your survivor keeps forever.
     ```
   - es-ES:
     ```
-    Del 24 de octubre al 9 de noviembre el mapa se llena de calabazas que brillan y la horda llega disfrazada: cabezas de calabaza, sombreros de bruja y un jefe vestido para la ocasión. Recoge los caramelos que sueltan para ganar cinco premios: cuatro montones de monedas y un sombrero de calabaza que tu superviviente se queda para siempre.
+    Hasta el 9 de noviembre el mapa se llena de calabazas que brillan y la horda llega disfrazada: cabezas de calabaza, sombreros de bruja y un jefe vestido para la ocasión. Recoge los caramelos que sueltan para ganar cinco premios: cuatro montones de monedas y un sombrero de calabaza que tu superviviente se queda para siempre.
     ```
   - es-419:
     ```
-    Del 24 de octubre al 9 de noviembre el mapa se llena de calabazas que brillan y la horda llega disfrazada: cabezas de calabaza, sombreros de bruja y un jefe vestido para la ocasión. Junta los caramelos que sueltan para ganar cinco premios: cuatro montones de monedas y un sombrero de calabaza que tu sobreviviente se queda para siempre.
+    Hasta el 9 de noviembre el mapa se llena de calabazas que brillan y la horda llega disfrazada: cabezas de calabaza, sombreros de bruja y un jefe vestido para la ocasión. Junta los caramelos que sueltan para ganar cinco premios: cuatro montones de monedas y un sombrero de calabaza que tu sobreviviente se queda para siempre.
     ```
 - **Imagen principal:** 1920 × 1080, JPG o PNG, **sin ningún texto** (ni el logo, ni "Halloween"), sin marcos ni
   botones dibujados, con lo importante en el centro (márgenes de 15 % arriba, 10 % a los costados y 20 % abajo).
