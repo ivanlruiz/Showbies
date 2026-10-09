@@ -146,7 +146,20 @@ MonoBehaviour:
   - {fileID: 2800000, guid: eb68a545b98b039419d6a0bd6982f09d, type: 3}
   duracionMancha: 2
   intervaloDeGolpe: 0.8
-  velocidadDeAnimacion: 2.5
+  momentoDelImpacto: 0.37
+  anticipacionDelGolpe: 0.2
+  alcanceDelBrazo: 0.5
+  velocidadDeAnimacion: 2.2
+  ritmoDeAndar: 1
+  duracionDeLaMuerte: 1.4
+  costadoDelFestejo: {x: -5, y: 1.8}
+  alturaDelFestejo: {x: -4.5, y: 4.5}
+  cercaDelCuerpo: 1.6
+  gradosDelFestejo: 22
+  saltoDelFestejo: 0.5
+  empujeAlMorir: 5
+  frenadoDelEmpuje: 14
+  inclinacionDelEmpuje: 12
   aplastadoAlGolpear: {x: 1.15, y: 0.85, z: 1.15}
   recuperacionDelAplastado: 0.35
 --- !u!54 &3442675162900010491

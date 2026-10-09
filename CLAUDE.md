@@ -230,7 +230,7 @@ Los cinco assets viven en `Assets/Zombies/`. Balance actual:
 |---|---|---|---|---|---|---|
 | ZombiNormal | 5 | 1 | 5 | 1 | 1–3 | 5 |
 | ZombiRapido | 3 | 2 | 9 | 2 | 1–3 | 3 |
-| ZombiFASTER | 3 | 1 | 12 | 5 | 2–4 | 3 |
+| ZombiFASTER | 3 | 1 | 10,5 | 5 | 2–4 | 3 |
 | ZombiTanque | 25 | 1 | 3 | 20 | 5–8 | 25 |
 | ZombiBOSS | 500 | 10 | 2 | 100 | 30–40 | 500 |
 
@@ -1830,9 +1830,11 @@ Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`
 `Plataforma.EsMovil` dé falso en el editor aunque el target sea Android. Se aplica al entrar en play. Ojo que
 también cambia los techos que dependen de la plataforma: 60 zombis vivos y 150 monedas en vez de 35 y 80.
 **El teclado va topado a 1 en diagonal** (`PlayerController.DireccionDelTeclado`), como el joystick: hasta el 30/9
-W+D daba 1,41 y en PC se corría un 41 % más rápido que en el teléfono. **El jugador corre a 13** (`moveSpeed`, override
-en las tres escenas de juego; el prefab dice 10 y el código 8): era 15 y Ivan lo pidió un poco más lento el 8/10. No
-conviene bajarlo de 12, que es el zombi FASTER: más lento que él, no hay forma de escaparle.
+W+D daba 1,41 y en PC se corría un 41 % más rápido que en el teléfono. **El jugador corre a 11,5** (`moveSpeed`, override
+en las tres escenas de juego; el prefab dice 10 y el código 8): era 15, Ivan lo pidió más lento el 8/10 (13) y otra vez el
+9/10. **Siempre por encima del zombi FASTER** (10,5 desde el 9/10, que era 12): más lento que él, no hay forma de escaparle.
+Por eso `Enemy.velocidad` es un `float` (era entero), y el `Paso` del FASTER bajó con él (2,2, era 2,5), para que los pies
+no patinen.
 
 **En PC el puntero es una mira** mientras se juega (pedido de Ivan): `CursorMira`, en la raíz de `MenuPausa.prefab`, así
 está en las tres escenas de juego. La textura es `Sprites/UI/Mira.png`, importada como **Cursor** (legible, RGBA32 y sin
@@ -1876,7 +1878,7 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   lima, `ZombiTanquePiel` rojo, `ZombiFasterPiel` celeste y `ZombiJefePiel` violeta. **La cápsula y los dos cubos de cada prefab son sólo
   colliders**, con los renderers apagados: los cubos son las hitboxes y no se borran (con la cabeza grande y los
   brazos de la animación, el modelo cubre casi toda la cápsula). `EnemyController.velocidadDeAnimacion` ajusta el paso del modelo a lo que camina
-  cada uno (1 el normal y el rápido, 0,8 el tanque y 0,55 el jefe, que caminan con `Ritmo` 0, y 2,5 el FASTER), por el parámetro `Paso` del
+  cada uno (1 el normal y el rápido, 0,8 el tanque y 0,55 el jefe, que caminan con `Ritmo` 0, y 2,2 el FASTER), por el parámetro `Paso` del
   controller y no por `animador.speed` (ver Las animaciones de los zombis). Antes el tanque, el jefe y el
   FASTER eran la cápsula y los cubos a la vista.
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin

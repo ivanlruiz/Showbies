@@ -177,7 +177,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919473, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: moveSpeed
-      value: 13
+      value: 11.5
       objectReference: {fileID: 0}
     - target: {fileID: 3275518440274919473, guid: 86afb72845d896a4795f43d31515b4a9, type: 3}
       propertyPath: granadaPrefab
@@ -2749,7 +2749,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4278195242
   m_fontColor: {r: 0.165, g: 0.078, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -2762,7 +2762,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2901,7 +2901,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 1942804940
   m_fontColor: {r: 0.8, g: 0.85, b: 0.8, a: 0.45}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -2914,7 +2914,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -4218,7 +4218,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -4569,7 +4569,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -5767,6 +5767,10 @@ PrefabInstance:
     - target: {fileID: 1562932709356616390, guid: 2043432f704c0c74780665acf0140e88, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4888577355150416629, guid: 2043432f704c0c74780665acf0140e88, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

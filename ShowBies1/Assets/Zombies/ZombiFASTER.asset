@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hp: 3
   "da\xF1o": 1
-  velocidad: 12
+  velocidad: 10.5
   puntos: 5
   monedasMin: 2
   monedasMax: 4

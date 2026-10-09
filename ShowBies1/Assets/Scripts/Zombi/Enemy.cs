@@ -7,7 +7,9 @@ public class Enemy : ScriptableObject
 {
     public int hp;
     public int daño;
-    public int velocidad;
+    // En m/s. Con decimales desde el 9/10 (era entero): el veloz va a 10,5, un poco mas lento que
+    // el jugador (11,5), que si no no tiene como escaparle.
+    public float velocidad;
 
     // Cuánto suma matarlo. Antes esto estaba repartido en cinco if de
     // BulletController, que sumaba por bala en vez de por muerte.
