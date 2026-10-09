@@ -72,7 +72,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda y PruebaReiniciar (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar y PruebaArrastre (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón y los iconos del evento (IconoCalabaza, IconoCaramelo)
@@ -2024,6 +2024,20 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   bordes por los que la física empuja cosas, y un zombi caído seguía contando en `ZombisVivos` — cada caído era un
   cupo del techo de población perdido para siempre. El de los zombis es más alto porque bajo el piso ya no se ven
   ni se les puede disparar. Si agregás entidades con Rigidbody que importen, dales su propio kill-Z.
+
+- **El jugador pesa 1e8 en las escenas** (el prefab dice 10), para que la horda no lo empuje, y por eso atropellaba: corriendo
+  contra un zombi se lo llevaba por delante a cualquiera, tanque incluido (casi 13 m en un segundo), porque el zombi volvía
+  a caminar hacia él en cada paso de física y quedaba en su camino, pegándole (Discord, 9/10). **Cada uno tiene su peso**
+  (elegido por Ivan): `EnemyController.Ceder(masa)` es cuánto le cede al jugador, con la masa del prefab del jugador
+  (`MasaDelJugador`, 10). Los que ceden la mitad o más (el normal, 1; el rápido y el veloz, 0,5) **se apartan**
+  (`Apartarse`): si tocan al jugador y él se les viene encima, se corren de costado a su velocidad por lo que ceden,
+  mirándolo. El tanque (100) y el jefe se plantan, y es el jugador el que se frena contra ellos
+  (`PlayerController.FrenarContraLosPesados`: pierde lo que va hacia el zombi en lo que el zombi no cede, y lo demás lo
+  desliza por al lado). Los colliders de los zombis van **sin fricción** (un `PhysicsMaterial` armado en código): con la
+  de fábrica, el roce con la caja del jugador no los dejaba correrse. **ShowBies > Pruebas > Arrastre de zombis (play)**
+  (`PruebaArrastre`) choca al jugador de frente y de costado contra un normal, un veloz, un rápido y un tanque y mide
+  que los livianos se aparten y el jugador los pase, que el tanque ceda poco y que de costado no arrastre a nadie
+  (`Builds/prueba_arrastre.txt`); la prueba de lógica mira que la masa de cada prefab caiga del lado que corresponde.
 
 - **Los zombis caminan en horizontal y la gravedad es de la física.** `EnemyController` mira al jugador a su propia
   altura y sólo pisa la velocidad horizontal. Antes miraba al centro del jugador y pisaba la velocidad entera en cada

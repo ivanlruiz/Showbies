@@ -130,6 +130,14 @@ public class EnemyController : MonoBehaviour
     // deja de margen al rodear un edificio de la ciudad (ver Rodeo).
     private float radioDelCuerpo = 0.5f;
 
+    // Hasta cuando (en tiempo de fisica) cuenta que esta tocando al jugador: lo anota cada
+    // OnCollisionStay, y lo mira Apartarse en el paso siguiente.
+    private float tocaAlJugadorHasta = -1f;
+
+    // Los colliders de los zombis, sin friccion (ver Apartarse). Uno para todos, armado la primera
+    // vez que hace falta.
+    private static PhysicsMaterial sinFriccion;
+
     // Lo que le falta bajar al cadaver hasta el piso, y a que velocidad baja. El cadaver
     // queda kinematic donde muere, y uno que muere en el aire (subido encima de la horda,
     // despedido por la embestida del jefe, recien aparecido) se desplomaba flotando hasta
@@ -305,6 +313,8 @@ public class EnemyController : MonoBehaviour
         pool.Clear();
         ultimaAparicion = 0;
         jugadorCache = null;
+        sinFriccion = null;
+        PasosApartado = 0;
         spritesDeSangre.Clear();
         MuertesConBotin = 0;
         ZarpazosEmpezados = 0;
@@ -641,6 +651,21 @@ public class EnemyController : MonoBehaviour
         colliders = GetComponentsInChildren<Collider>(true);
         capsula = GetComponent<CapsuleCollider>();
         radioDelCuerpo = RadioDelCuerpo(gameObject);
+        // Sin friccion: con la de fabrica, el roce con la caja del jugador que se les venia encima
+        // no los dejaba correrse de costado (ver Apartarse).
+        if (sinFriccion == null)
+        {
+            sinFriccion = new PhysicsMaterial("SinFriccion")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+        }
+        foreach (var c in colliders)
+            if (c.sharedMaterial == null) c.sharedMaterial = sinFriccion;
         BuscarElModelo();
         // En Halloween salen disfrazados. Despues de medir el modelo (un sombrero de bruja
         // agrandaria altoDelModelo, y con el las poses del jefe y la barra) y antes de la
@@ -1003,6 +1028,18 @@ public class EnemyController : MonoBehaviour
 
        if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform)) return;
 
+       // Si el jugador se le viene encima corriendo, el liviano se corre de costado, mirandolo.
+       Vector3 apartado;
+       if (Apartarse(out apartado))
+       {
+           Vector3 alJugador = thePlayer.transform.position;
+           alJugador.y = transform.position.y;
+           if ((alJugador - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(alJugador);
+           apartado.y = rb.linearVelocity.y;
+           rb.linearVelocity = apartado;
+           return;
+       }
+
        // Mira y camina en horizontal, y la velocidad vertical queda en manos de la
        // fisica. Antes miraba al centro del jugador y pisaba la velocidad entera en
        // cada paso: la gravedad nunca actuaba, y un zombi que terminaba debajo del
@@ -1232,12 +1269,65 @@ public class EnemyController : MonoBehaviour
     // toque mas de una vez.
     private void OnCollisionEnter(Collision collision)
     {
+        AnotarAlJugador(collision);
         Golpear(collision);
     }
 
     private void OnCollisionStay(Collision collision)
     {
+        AnotarAlJugador(collision);
         Golpear(collision);
+    }
+
+    private void AnotarAlJugador(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player")) tocaAlJugadorHasta = Time.fixedTime + 0.05f;
+    }
+
+    // --- El empujon del jugador ------------------------------------------------------
+    //
+    // Corriendo contra un zombi, el jugador lo atropellaba y se lo llevaba por delante, pegandole
+    // (Discord, 9/10: "te llevas un zombi para la direccion que estas yendo"): en las escenas el
+    // jugador pesa 1e8, para que la horda no lo empuje, y el zombi, que volvia a caminar hacia el
+    // en cada paso de fisica, quedaba en su camino. El banco del arrastre lo medio: de frente, el
+    // jugador se llevaba casi 13 m en un segundo a cualquiera, tanque incluido. Ivan eligio que se
+    // aparten de costado, cada uno con su peso: si lo toca y se le viene encima, el que cede (el
+    // normal, el rapido y el veloz) se corre de costado a casi la velocidad del jugador; el tanque
+    // y el jefe no se corren, y es el jugador el que se frena contra ellos
+    // (PlayerController.FrenarContraLosPesados).
+    public const float MasaDelJugador = 10f;    // la del prefab: en las escenas pesa mas, a proposito
+
+    // Los pasos de fisica en que algun zombi se aparto: para el banco del arrastre.
+    public static int PasosApartado { get; private set; }
+
+    // Cuanto le cede al jugador un cuerpo de esa masa: 1 lo que no pesa nada, 0 lo inamovible. El
+    // normal (1) cede 0,91, el rapido y el veloz (0,5) 0,95, el tanque (100) 0,09 y el jefe nada.
+    public static float Ceder(float masa)
+    {
+        return MasaDelJugador / (MasaDelJugador + Mathf.Max(0f, masa));
+    }
+
+    private bool Apartarse(out Vector3 velocidad)
+    {
+        velocidad = Vector3.zero;
+        if (Time.fixedTime > tocaAlJugadorHasta || thePlayer == null) return false;
+        float ceder = Ceder(rb.mass);
+        if (ceder < 0.5f) return false;
+        Vector3 avance = thePlayer.VelocidadDeseada;
+        avance.y = 0f;
+        float rapidez = avance.magnitude;
+        if (rapidez < 1f) return false;
+        Vector3 hacia = avance / rapidez;
+        Vector3 lado = transform.position - thePlayer.transform.position;
+        lado.y = 0f;
+        // Solo el que le queda adelante: al que viene de atras o de costado no lo pisa.
+        if (lado.sqrMagnitude < 1e-4f || Vector3.Dot(hacia, lado.normalized) < 0.3f) return false;
+        lado -= Vector3.Dot(lado, hacia) * hacia;
+        // De frente justo, a un costado fijo por zombi (no a uno distinto en cada paso).
+        if (lado.sqrMagnitude < 0.0025f) lado = Vector3.Cross(Vector3.up, hacia) * ((NumeroDeAparicion & 1) == 0 ? 1f : -1f);
+        velocidad = lado.normalized * (rapidez * ceder);
+        PasosApartado++;
+        return true;
     }
 
     private void Golpear(Collision collision)

@@ -186,9 +186,60 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Lo que el jugador quiere caminar (el joystick o el teclado). Lo miran los zombis livianos
+    // para correrse de costado cuando se les viene encima (EnemyController.Apartarse).
+    public Vector3 VelocidadDeseada
+    {
+        get { return EnElAire ? Vector3.zero : moveVelocity; }
+    }
+
+    // Los zombis que toco en el ultimo paso de fisica.
+    private readonly List<EnemyController> tocados = new List<EnemyController>();
+
     private void FixedUpdate()
     {
-        myRigidbody.linearVelocity = EnElAire ? vueloVelocidad : moveVelocity;
+        Vector3 velocidad = EnElAire ? vueloVelocidad : FrenarContraLosPesados(moveVelocity);
+        tocados.Clear();
+        myRigidbody.linearVelocity = velocidad;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        AnotarZombi(collision);
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        AnotarZombi(collision);
+    }
+
+    private void AnotarZombi(Collision collision)
+    {
+        var zombi = collision.collider != null ? collision.collider.GetComponentInParent<EnemyController>() : null;
+        if (zombi != null && zombi.Vivo && !tocados.Contains(zombi)) tocados.Add(zombi);
+    }
+
+    // Contra un zombi que no cede (el tanque, el jefe) el jugador se frena: pierde lo que va hacia
+    // el en la parte que el zombi no le cede (EnemyController.Ceder) y lo demas lo desliza por al
+    // lado. En las escenas pesa 1e8, para que la horda no lo empuje, y sin esto atropellaba a
+    // cualquiera; los livianos se corren ellos (EnemyController.Apartarse).
+    private Vector3 FrenarContraLosPesados(Vector3 velocidad)
+    {
+        for (int i = 0; i < tocados.Count; i++)
+        {
+            var zombi = tocados[i];
+            if (zombi == null || !zombi.Vivo) continue;
+            Vector3 hacia = zombi.transform.position - transform.position;
+            hacia.y = 0f;
+            if (hacia.sqrMagnitude < 1e-4f) continue;
+            hacia.Normalize();
+            float contra = Vector3.Dot(velocidad, hacia);
+            if (contra <= 0f) continue;
+            var cuerpo = zombi.GetComponent<Rigidbody>();
+            float frena = 1f - EnemyController.Ceder(cuerpo != null ? cuerpo.mass : 1f);
+            velocidad -= hacia * (contra * frena);
+        }
+        return velocidad;
     }
 
     private void OnTriggerEnter(Collider other)

@@ -220,6 +220,7 @@ public static class PruebasMejoras
             ProbarPartidaNeon(informe);
             ProbarMundoDeNoche(informe);
             ProbarPielDeLosZombis(informe);
+            ProbarPesoDeLosZombis(informe);
             ProbarPildorasRedondas(informe);
             ProbarFuenteDelJuego(informe);
             ProbarOrdenDeEscenas(informe);
@@ -2647,6 +2648,27 @@ public static class PruebasMejoras
             inf.Verdadero("piel: " + nombre + " brilla con su color, con su propio material", vivas);
         }
         inf.Igual("piel: un material por tipo", 5, pieles.Count);
+    }
+
+    // Corriendo contra un zombi, los livianos se corren de costado y el tanque y el jefe se
+    // plantan (EnemyController.Apartarse y PlayerController.FrenarContraLosPesados; el banco del
+    // arrastre lo mide en play). Lo decide la masa de cada prefab contra la del jugador: si alguien
+    // cambia una masa, que siga cayendo del lado que corresponde.
+    static void ProbarPesoDeLosZombis(Informe inf)
+    {
+        inf.Verdadero("peso: lo que no pesa nada cede todo y lo inamovible nada",
+                      Mathf.Approximately(EnemyController.Ceder(0f), 1f) && EnemyController.Ceder(1e9f) < 1e-6f);
+        foreach (var par in new[] { new KeyValuePair<string, bool>("Zombi", true), new KeyValuePair<string, bool>("ZombiRapido", true),
+                                    new KeyValuePair<string, bool>("ZombiFASTER", true), new KeyValuePair<string, bool>("ZombiTanque", false),
+                                    new KeyValuePair<string, bool>("ZombiBOSS", false) })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/" + par.Key + ".prefab");
+            var cuerpo = prefab != null ? prefab.GetComponent<Rigidbody>() : null;
+            if (!inf.Verdadero("peso: " + par.Key + " tiene cuerpo", cuerpo != null)) continue;
+            float cede = EnemyController.Ceder(cuerpo.mass);
+            inf.Verdadero("peso: " + par.Key + (par.Value ? " se aparta (cede " : " se planta (cede ") + cede.ToString("0.00", Invariante) + ")",
+                          par.Value ? cede >= 0.5f : cede < 0.5f);
+        }
     }
 
     static void ProbarMundoDeNoche(Informe inf)
