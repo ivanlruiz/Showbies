@@ -1547,8 +1547,8 @@ librería de Google y JNI.
 
 - **El lado de Android es una librería propia**, `Assets/Plugins/Android/ShowBiesAnuncios.androidlib` (Unity la suma
   sola a `unityLibrary`): su `build.gradle` pide `play-services-ads` 25.5.0 y UMP 4.0.0 (no la plantilla de Gradle), y
-  `androidx.activity` 1.9.3 a mano: AdMob traía de rebote la 1.0.0, que Play marca como obsoleta (aviso del 9/10 sobre la
-  1.4.0),
+  `androidx.activity` 1.9.3 y `androidx.fragment` 1.8.5 a mano: AdMob traía de rebote la 1.0.0 y la 1.1.0, que Play marca
+  como obsoletas (avisos del 9/10 sobre la 1.4.0; el AAB 9 salió solo con `activity` y se rehízo como 10),
   su manifiesto lleva el id de la app de AdMob (`ConfigAnuncios.IdAppAdMob`, el mismo en la APK y en el AAB) y **saca
   el servicio en primer plano de WorkManager y su permiso** (`tools:node="remove"`), que trae el SDK sin usarlos y por
   los que Play pide una declaración aparte, y

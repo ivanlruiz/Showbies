@@ -14,11 +14,13 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:25.5.0'
     // El consentimiento de Europa, el Reino Unido y Suiza (UMP).
     implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
-    // androidx.activity pedida a mano (Play Console, 9/10: "activity:1.0.0 esta obsoleta" en la
-    // 1.4.0). AdMob la trae vieja de rebote (play-services-basement -> fragment 1.1.0 ->
-    // activity 1.0.0) y nadie pedia una mas nueva; pedida aca, Gradle se queda con esta. AdMob
-    // ya trae Kotlin 2.x, asi que no choca con el de esta.
+    // androidx.activity y androidx.fragment pedidas a mano (Play Console, 9/10: "activity:1.0.0
+    // esta obsoleta" y "fragment:1.1.0 esta obsoleta" en la 1.4.0). AdMob las trae viejas de
+    // rebote (play-services-basement -> fragment 1.1.0 -> activity 1.0.0) y nadie pedia unas mas
+    // nuevas; pedidas aca, Gradle se queda con estas. AdMob ya trae Kotlin 2.x, asi que no
+    // chocan con el de estas. La 1.9.3 de activity cubre lo que pide fragment 1.8.5.
     implementation 'androidx.activity:activity:1.9.3'
+    implementation 'androidx.fragment:fragment:1.8.5'
 }
 
 android {

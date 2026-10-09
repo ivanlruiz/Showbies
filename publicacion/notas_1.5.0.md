@@ -1,4 +1,4 @@
-# Notas de la versión 1.5.0 (9) para Play
+# Notas de la versión 1.5.0 (10) para Play
 
 Las que van en "Novedades" de la versión de producción. Máximo 500 caracteres por idioma (contados: en-US 429,
 es-ES 469, es-419 471). Como la 1.4.0, la de Latinoamérica (es-419) no es la de España: allá se escribe "zombies".
@@ -43,14 +43,15 @@ Novedades de la 1.5.0
   daño** (más chicas, con luz en el piso) y las **flechas del borde**.
 - **MEJORAS en la pausa** de las oleadas, **cajas dibujadas** (corazón, balas, rayo), **paredes** en los edificios y
   **obstáculos** con collider, zombis con **colores vivos**, el **arrastre** arreglado, el jugador a 11,5.
-- La pradera **sin faroles**, y `androidx.activity` 1.9.3 (Play avisó que la 1.4.0 usaba la 1.0.0, obsoleta).
+- La pradera **sin faroles**, y `androidx.activity` 1.9.3 y `androidx.fragment` 1.8.5 (Play avisó que la 1.4.0 usaba
+  la 1.0.0 y la 1.1.0, obsoletas).
 - Los 10 arreglos de la revisión del 9/10 (anuncios vencidos, el reloj atrasado en Halloween, la invocación del jefe en
   el cementerio y el resto: `auditorias/9-10/informe.md`).
 
 ## Antes de enviarla
 
-- Ivan probó la APK el 9/10 y anda bien. `bundleVersion` 1.5.0 y `AndroidBundleVersionCode` **9** (el 8 se armó con
-  Halloween el 24/10 y no se subió); el AAB está en `Builds/ShowBies.aab`.
+- Ivan probó la APK el 9/10 y anda bien. `bundleVersion` 1.5.0 y `AndroidBundleVersionCode` **10** (el 8 se armó con
+  Halloween el 24/10 y el 9 sin `androidx.fragment` nuevo; ninguno se subió); el AAB está en `Builds/ShowBies.aab`.
 - **Halloween arranca con la actualización**: el evento corre del 9/10 al 9/11, así que en cuanto se publica ya está.
   Cuanto antes se mande a revisión, más días de evento.
 - **No cambia ninguna declaración**: el evento y lo nuevo no juntan datos nuevos (todo va en el `progreso.json` del
