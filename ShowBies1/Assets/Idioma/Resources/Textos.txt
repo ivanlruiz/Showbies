@@ -98,8 +98,10 @@ aviso_logro_plata	SILVER ACHIEVEMENT!	¡LOGRO DE PLATA!
 aviso_logro_oro	GOLD ACHIEVEMENT!	¡LOGRO DE ORO!
 objetivo_nivel	{0} XP TO LEVEL {1}	TE FALTAN {0} XP PARA EL NIVEL {1}
 objetivo_nivel_uno	{0} XP TO LEVEL {1}	TE FALTA {0} XP PARA EL NIVEL {1}
-objetivo_halloween_partida	+{0} CANDIES! {1} MORE FOR {2}	¡+{0} CARAMELOS! TE FALTAN {1} PARA {2}
-objetivo_halloween_partida_uno	+{0} CANDIES! {1} MORE FOR {2}	¡+{0} CARAMELOS! TE FALTA {1} PARA {2}
+objetivo_halloween_juntados	+{0} CANDIES!	¡+{0} CARAMELOS!
+objetivo_halloween_juntados_uno	+{0} CANDY!	¡+{0} CARAMELO!
+objetivo_halloween_partida	{0} MORE FOR {1}	TE FALTAN {0} PARA {1}
+objetivo_halloween_partida_uno	{0} MORE FOR {1}	TE FALTA {0} PARA {1}
 objetivo_halloween	{0} MORE CANDIES FOR {1}	TE FALTAN {0} CARAMELOS PARA {1}
 objetivo_halloween_uno	{0} MORE CANDY FOR {1}	TE FALTA {0} CARAMELO PARA {1}
 objetivo_halloween_premio	THE NEXT PRIZE	EL PRÓXIMO PREMIO

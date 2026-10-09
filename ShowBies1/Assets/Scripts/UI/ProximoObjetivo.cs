@@ -74,9 +74,10 @@ public class ProximoObjetivo : MonoBehaviour
         string premio = Textos.De(EventoHalloween.EsElSombrero(alcanzados) ? "objetivo_halloween_sombrero" : "objetivo_halloween_premio");
         double juntados = System.Math.Floor(EventoHalloween.CaramelosDeLaPartida + 1e-6);
         string cuantos = FormatoNumeros.Compacto(faltan);
+        // Lo juntado va aparte, con su propio singular: "+1 CARAMELOS" se leia mal.
         if (juntados >= 1)
-            texto = Textos.Formato(faltan == 1 ? "objetivo_halloween_partida_uno" : "objetivo_halloween_partida",
-                                   FormatoNumeros.Compacto(juntados), cuantos, premio);
+            texto = Textos.Formato(juntados == 1 ? "objetivo_halloween_juntados_uno" : "objetivo_halloween_juntados", FormatoNumeros.Compacto(juntados))
+                    + " " + Textos.Formato(faltan == 1 ? "objetivo_halloween_partida_uno" : "objetivo_halloween_partida", cuantos, premio);
         else
             texto = Textos.Formato(faltan == 1 ? "objetivo_halloween_uno" : "objetivo_halloween", cuantos, premio);
         return true;

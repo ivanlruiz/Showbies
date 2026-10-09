@@ -374,7 +374,8 @@ public static class PruebasMejoras
             inf.Verdadero("halloween: la derrota muestra el hito siguiente", ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo));
             string premioSiguiente = Textos.De("objetivo_halloween_premio");
             inf.Igual("halloween: con los de la partida y el que falta",
-                      Textos.Formato("objetivo_halloween_partida_uno", FormatoNumeros.Compacto(umbral0 - 1), FormatoNumeros.Compacto(1), premioSiguiente), objetivo);
+                      Textos.Formato("objetivo_halloween_juntados", FormatoNumeros.Compacto(umbral0 - 1)) + " " +
+                      Textos.Formato("objetivo_halloween_partida_uno", FormatoNumeros.Compacto(1), premioSiguiente), objetivo);
             inf.Cerca("halloween: con la barra casi llena", (umbral0 - 1) / umbral0, fraccionObjetivo, 1e-4);
             EventoHalloween.EmpezarPartida();
             ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo);
@@ -382,6 +383,10 @@ public static class PruebasMejoras
                       Textos.Formato("objetivo_halloween_uno", FormatoNumeros.Compacto(1), premioSiguiente), objetivo);
             EventoHalloween.Sumar(1);
             inf.Igual("halloween: con el que falta, el primero", 1, EventoHalloween.Alcanzados);
+            ProximoObjetivo.ElegirHalloween(out objetivo, out fraccionObjetivo);
+            inf.Verdadero("halloween: un caramelo en la partida va en singular (" + objetivo + ")",
+                          objetivo != null && objetivo.StartsWith(Textos.Formato("objetivo_halloween_juntados_uno", FormatoNumeros.Compacto(1)) + " "));
+            inf.Cerca("halloween: con la barra vacia recien alcanzado el hito", 0, fraccionObjetivo, 1e-4);
             inf.Igual("halloween: uno para cobrar", 1, EventoHalloween.PorCobrar);
             double antes = Progreso.Monedas;
             double premio0 = EventoHalloween.Premio(0);
