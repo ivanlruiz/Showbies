@@ -211,6 +211,9 @@ cartel_oleada	Wave {0}	Oleada {0}
 cartel_oleada_superada	Wave {0} cleared!	¡Oleada {0} superada!
 cartel_bono	\n<size=45%>+{0} coins</size>	\n<size=45%>+{0} monedas</size>
 cartel_bono_perfecta	\n<size=45%><color=#FFE14D>PERFECT! +{0} coins</color></size>	\n<size=45%><color=#FFE14D>¡PERFECTA! +{0} monedas</color></size>
+tesoro_aparece	TREASURE ZOMBIE!	¡ZOMBI DEL TESORO!
+tesoro_atrapado	TREASURE!	¡TESORO!
+tesoro_escapo	IT GOT AWAY!	¡SE ESCAPÓ!
 furia_boton	RAGE	FURIA
 furia_boton_pc	RAGE\n<size=55%>(F)</size>	FURIA\n<size=55%>(F)</size>
 furia_cartel	RAGE!	¡FURIA!

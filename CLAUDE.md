@@ -49,7 +49,7 @@ fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
-Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio
+Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
@@ -66,13 +66,13 @@ Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial
 Assets/Prefabs/             ← Bullet, Gun, Pistola (la de la mano), Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
-Assets/Zombies/*.asset      ← los cinco Enemy: stats POR TIPO, editables sin recompilar
+Assets/Zombies/*.asset      ← los seis Enemy (los cinco de siempre y el del tesoro): stats POR TIPO, editables sin recompilar
 Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMejoras
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
@@ -225,7 +225,7 @@ class Enemy : ScriptableObject {
 }
 ```
 
-Los cinco assets viven en `Assets/Zombies/`. Balance actual:
+Los cinco assets viven en `Assets/Zombies/`, con el del tesoro, que es aparte (ver El zombi del tesoro). Balance actual:
 
 | zombi | hp | daño | velocidad | puntos | monedas | balas para matarlo |
 |---|---|---|---|---|---|---|
@@ -234,6 +234,7 @@ Los cinco assets viven en `Assets/Zombies/`. Balance actual:
 | ZombiFASTER | 3 | 1 | 10,5 | 5 | 2–4 | 3 |
 | ZombiTanque | 25 | 1 | 3 | 20 | 5–8 | 25 |
 | ZombiBOSS | 500 | 10 | 2 | 100 | 30–40 | 500 |
+| ZombiTesoro | 15 | 0 | 7 | 15 | 14–20 | 15 |
 
 La vida y el daño **de cada zombi** se calculan como float en `EnemyController`: el valor del `.asset` por
 `multiplicadorVida` y `multiplicadorDano`, que pone quien lo hace aparecer antes de su primer golpe (ver Generación de
@@ -445,7 +446,8 @@ Lo que importa y no se ve lleva una flecha en el borde de la pantalla (1.5.0, me
 `FlechasDelBorde`), un solo sistema para tres cosas: **las cajas**, de su color y con un punto detrás, latiendo más rápido
 cuando les queda menos del 30 % (hasta ahí casi todas nacían y vencían sin que nadie las viera); **los últimos zombis de la
 oleada**, cuando faltan 3 o menos (`WaveManager.FaltanDeLaOleada`, que cuenta también los que no salieron: buscar al último
-corredor en la ciudad era tiempo muerto), en verde; y **el jefe**, en los dos modos, más grande y violeta como su piel.
+corredor en la ciudad era tiempo muerto), en verde; **el jefe**, en los dos modos, más grande y violeta como su piel; y **el
+zombi del tesoro**, dorada, latiendo más rápido cuando está por irse.
 
 - **Dónde va** (`EnElBorde`): en el borde del área segura, a 64 del borde, sobre la recta del centro a lo que señala, y
   apuntando hacia eso. Lo que se ve no lleva; lo pegado al borde (a menos de 24 px) sí. Lo que queda detrás del plano de la
@@ -619,6 +621,40 @@ Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
 
 Antes las oleadas eran por tiempo (salía la siguiente aunque quedaran zombis) y cada 5 oleadas el tipo de
 zombi se reemplazaba en vez de sumarse: desde la oleada 20 sólo salían jefes.
+
+### El zombi del tesoro
+
+Dorado, raro, no ataca y huye (1.5.0, mejora 8 de la revisión del 9/10: el duende del tesoro de Diablo, para romper la
+rutina de quedarse quieto disparando). **Lo saca `WaveManager.SacarTesoro`** con un 25 % por oleada desde la 3
+(`ProbabilidadTesoro`, `DesdeOleadaTesoro`), a mitad de la oleada, **a 6 m del jugador y de costado** (a 11, como al
+principio, nacía en el borde de la pantalla y se iba en el acto), con los multiplicadores de la oleada, y con
+"¡ZOMBI DEL TESORO!" arriba (`Efectos.TesoroAparece`). **No cuenta en la oleada, que no lo espera.** Lleva su flecha dorada
+en el borde (ver Las flechas del borde).
+
+- **Se mueve por su cuenta** (`ZombiDelTesoro`, `IMovimientoPropio`): primero se queda 0,7 s mirando al jugador, y después en
+  cada paso de física elige, entre dieciséis rumbos, el que más lo aleja sin meterse más allá de 45 del centro (las paredes
+  invisibles están en 49) ni en un obstáculo (`ElegirRumbo`), con un vaivén de 35° de un lado al otro, y dobla de a poco.
+  Contra una pared corre a lo largo; arrinconado, sale por un costado, a veces cerca del jugador: es la chance de agarrarlo.
+  Corre a 7, más que el normal y menos que el jugador. No tira zarpazos (`puedeZarpar`, que se apaga en cada paso porque
+  `EnemyController` lo prende al aparecer) y su golpe es 0.
+- **Si lo matás, revienta en una lluvia de monedas**: suelta de 14 a 20 (más que `Moneda.lluviaDesde`, así salen todas aunque
+  el piso esté lleno), con "¡TESORO!", chispas, temblor y el festejo del cofre (`EnemyController` le avisa en el bloque de
+  la muerte: `ZombiDelTesoro.AlMorir`). **Si no, a los 12 s se escapa** con "¡SE ESCAPÓ!" y sin dejar nada: sale del mapa con
+  `EnemyController.Retirar`, que es el despeje del revivir de a uno (sin puntos, monedas ni mancha). La pausa congela el reloj.
+- **Su brillo es un objeto aparte que lo sigue** (un halo de frente a la cámara y un charco, con el shader de los faroles, como
+  las cajas), igual que la barra de vida: hijo del zombi, el destello del golpe lo pintaría de blanco, giraría con él y se
+  aplastaría con cada bala. Late más rápido el último cuarto de su tiempo. El halo va medio metro arriba: corrido hacia atrás
+  según la cámara, que mira para abajo, se hundía en el piso, que lo cortaba con una raya.
+- **No está en el bestiario** ni en `NivelJugador.PuntosPorTipo` (es de la 1.5.0, y la migración a v6 es de antes): sus
+  muertes se cuentan igual (`Progreso.ContarMuerte("ZombiTesoro")`). Su Enemy no se renombra.
+- **El prefab va en `Prefabs/Personajes/Resources`** (`WaveManager` lo carga solo; la escena no lo cablea) y no se edita a
+  mano: lo arma **ShowBies > Zombis > Armar el zombi del tesoro** (`ConstructorTesoro`) desde el normal, más chico (0,42),
+  con la piel dorada (`ZombiTesoroPiel`, `ShowBies/PielDeZombi` con brillo 0,8), las partículas amarillas, el paso de lo que
+  corre y los materiales del brillo. El Enemy lo crea una sola vez: después es balance y se toca en el asset.
+- **ShowBies > Pruebas > Zombi del tesoro (play)** (`PruebaTesoro`): que no cuente en la oleada, que huya sin pegarle al
+  jugador, que tenga su flecha si sale de la pantalla, que al matarlo llueva su tanda entera y festeje, y que otro se escape
+  a su tiempo sin contar como muerte (`Builds/prueba_tesoro.txt`, con la foto). La prueba de lógica mira el asset, el prefab y
+  por dónde huye.
 
 ### Las animaciones de los zombis
 

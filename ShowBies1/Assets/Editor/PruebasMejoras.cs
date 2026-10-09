@@ -255,6 +255,7 @@ public static class PruebasMejoras
                     ProbarOleadaPerfecta(informe);
                     ProbarBalasPorTramo(informe);
                     ProbarFlechasDelBorde(informe);
+                    ProbarZombiDelTesoro(informe);
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
                     ProbarLogros(informe);
@@ -5468,6 +5469,76 @@ public static class PruebasMejoras
         inf.Verdadero("flechas: abajo, sobre la vida, pasa al costado mas cercano (" + vida + ")", Mathf.Abs(vida.x - 1100f) < 0.5f);
         Vector2 libre = FlechasDelBorde.FueraDelHud(new Vector2(1856f, 540f), pantalla, 64f, hud, 40f);
         inf.Verdadero("flechas: lejos del HUD no se mueve", (libre - new Vector2(1856f, 540f)).sqrMagnitude < 0.01f);
+    }
+
+    // El zombi del tesoro (ZombiDelTesoro, mejora 8 de la revision del 9/10): su Enemy (no pega,
+    // corre menos que el jugador y mas que el normal, y suelta una lluvia entera de monedas), el
+    // prefab en Resources con su piel dorada y su brillo, y por donde huye.
+    static void ProbarZombiDelTesoro(Informe inf)
+    {
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(ConstructorTesoro.RutaEnemigo);
+        var normal = AssetDatabase.LoadAssetAtPath<Enemy>("Assets/Zombies/ZombiNormal.asset");
+        var moneda = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Moneda.prefab");
+        if (!inf.Verdadero("tesoro: estan su Enemy, el del normal y la moneda", enemigo != null && normal != null && moneda != null)) return;
+        inf.Igual("tesoro: no pega", 0, enemigo.daño);
+        // El jugador corre a 11,5 (override en las escenas, ver Movil en CLAUDE.md).
+        inf.Verdadero("tesoro: corre mas que el normal y menos que el jugador (" + enemigo.velocidad + ")",
+                      enemigo.velocidad > normal.velocidad && enemigo.velocidad < 11.5f);
+        inf.Verdadero("tesoro: suelta una lluvia entera (de " + enemigo.monedasMin + ", desde " + moneda.GetComponent<Moneda>().lluviaDesde + " salen todas)",
+                      enemigo.monedasMin >= moneda.GetComponent<Moneda>().lluviaDesde && enemigo.monedasMax >= enemigo.monedasMin);
+
+        var prefab = Resources.Load<GameObject>(WaveManager.RutaTesoro);
+        if (!inf.Verdadero("tesoro: el prefab esta en Resources", prefab != null)) return;
+        var zombi = prefab.GetComponent<EnemyController>();
+        var tesoro = prefab.GetComponent<ZombiDelTesoro>();
+        inf.Verdadero("tesoro: con su Enemy y el componente que lo hace huir", zombi != null && zombi.enemyType == enemigo && tesoro != null);
+        inf.Verdadero("tesoro: con los materiales de su brillo (el charco de los faroles)",
+                      tesoro != null && tesoro.materialHalo != null && tesoro.materialCharco != null &&
+                      tesoro.materialHalo.shader.name == "ShowBies/CharcoDeLuz" && tesoro.materialCharco.shader.name == "ShowBies/CharcoDeLuz");
+        bool dorado = false, otraPiel = false;
+        foreach (var r in prefab.GetComponentsInChildren<Renderer>(true))
+        {
+            if (!r.enabled) continue;
+            foreach (var m in r.sharedMaterials)
+            {
+                if (m == null) continue;
+                if (m.shader.name == "ShowBies/PielDeZombi" && m.color.r > 0.9f && m.color.b < 0.4f) dorado = true;
+                else otraPiel = true;
+            }
+        }
+        inf.Verdadero("tesoro: la piel es dorada, con brillo propio, y no queda otra", dorado && !otraPiel);
+        inf.Verdadero("tesoro: es un poco mas chico que el normal",
+                      prefab.transform.localScale.x < AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/Zombi.prefab").transform.localScale.x);
+        inf.Verdadero("tesoro: sale desde la oleada " + WaveManager.DesdeOleadaTesoro + " con un " + (WaveManager.ProbabilidadTesoro * 100f) + " %",
+                      WaveManager.DesdeOleadaTesoro >= 2 && WaveManager.ProbabilidadTesoro > 0f && WaveManager.ProbabilidadTesoro < 0.5f);
+
+        // Por donde huye: en campo abierto, para el otro lado; contra una pared, a lo largo; con
+        // algo adelante, por el costado.
+        CapitulosDeEscenario.UsarParaPruebas(null);
+        try
+        {
+            Vector3 rumbo = ZombiDelTesoro.ElegirRumbo(Vector3.zero, new Vector3(-5f, 0f, 0f), 0f, 0f, 1f, 45f, 0.3f);
+            inf.Verdadero("tesoro: en campo abierto huye para el otro lado (" + rumbo + ")", Vector3.Dot(rumbo, Vector3.right) > 0.95f);
+            rumbo = ZombiDelTesoro.ElegirRumbo(new Vector3(44f, 0f, 0f), new Vector3(36f, 0f, 1f), 0f, 0f, 1f, 45f, 0.3f);
+            inf.Verdadero("tesoro: contra la pared del este corre a lo largo, sin meterse mas de un metro del borde blando (" + rumbo + ")",
+                          Mathf.Abs(rumbo.z) > 0.9f && (new Vector3(44f, 0f, 0f) + rumbo * ZombiDelTesoro.MirarAdelante).x <= 46f);
+            rumbo = ZombiDelTesoro.ElegirRumbo(new Vector3(44f, 0f, 44f), new Vector3(38f, 0f, 38f), 0f, 0f, 1f, 45f, 0.3f);
+            inf.Verdadero("tesoro: arrinconado sale por un costado (" + rumbo + ")",
+                          Mathf.Abs((new Vector3(44f, 0f, 44f) + rumbo * ZombiDelTesoro.MirarAdelante).x) <= 46f &&
+                          Mathf.Abs((new Vector3(44f, 0f, 44f) + rumbo * ZombiDelTesoro.MirarAdelante).z) <= 46f);
+            CapitulosDeEscenario.UsarParaPruebas(null, null,
+                new List<CapitulosDeEscenario.Redondo> { new CapitulosDeEscenario.Redondo(new Vector2(1.5f, 0f), 0.6f, false) });
+            rumbo = ZombiDelTesoro.ElegirRumbo(Vector3.zero, new Vector3(-5f, 0f, 0f), 0f, 0f, 1f, 45f, 0.3f);
+            inf.Verdadero("tesoro: con un arbol adelante, lo esquiva (" + rumbo + ")",
+                          !CapitulosDeEscenario.Ocupado(rumbo * 1.5f, 0.3f) && Vector3.Dot(rumbo, Vector3.right) > 0.3f);
+            bool sinVaiven = Vector3.Dot(ZombiDelTesoro.ElegirRumbo(new Vector3(0f, 0f, 10f), Vector3.zero, 0.4f, 35f, 1.6f, 45f, 0.3f),
+                                         ZombiDelTesoro.ElegirRumbo(new Vector3(0f, 0f, 10f), Vector3.zero, 1.2f, 35f, 1.6f, 45f, 0.3f)) > 0.99f;
+            inf.Verdadero("tesoro: el vaiven lo mece de un lado al otro", !sinVaiven);
+        }
+        finally
+        {
+            CapitulosDeEscenario.UsarParaPruebas(null);
+        }
     }
 
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.

@@ -96,6 +96,16 @@ public class WaveManager : MonoBehaviour
     // "¡PERFECTA! +N MONEDAS" en dorado: esquivar el zarpazo, la carga y el salto del jefe
     // tiene que pagar dentro de la partida, no solo en el logro INTOCABLE, que mira lo mismo.
     public const int MultiplicadorPerfecta = 2;
+
+    // El zombi del tesoro (ZombiDelTesoro, mejora 8 de la revision del 9/10): con esta
+    // probabilidad por oleada desde DesdeOleadaTesoro, a mitad de la oleada, cerca del jugador
+    // y de costado (a la vista: es para perseguirlo). No cuenta en la oleada, que no lo espera.
+    // El prefab esta en Resources (Prefabs/Personajes/Resources), asi la escena no lo cablea.
+    public const float ProbabilidadTesoro = 0.25f;
+    public const int DesdeOleadaTesoro = 3;
+    public const float DistanciaDelTesoro = 6f;   // a 11 nacia en el borde de la pantalla y se iba en el acto
+    public const string RutaTesoro = "ZombiTesoro";
+    private GameObject tesoroPrefab;
     public bool UltimaFuePerfecta { get; private set; }
 
     public static int Bono(int bonoPorOleada, int oleada, bool perfecta)
@@ -140,6 +150,7 @@ public class WaveManager : MonoBehaviour
         EnemyController.FijarTecho(maxZombisVivos);
         if (cartelOleada != null) cartelOleada.gameObject.SetActive(false);
         botin = CatalogoMejoras.MultiplicadorBotin;
+        tesoroPrefab = Resources.Load<GameObject>(RutaTesoro);
 
         // Una partida que quedo a medias sigue en la oleada en que se dejo, desde el
         // principio de esa oleada y con los puntos que se tenian al empezarla.
@@ -167,6 +178,7 @@ public class WaveManager : MonoBehaviour
             Progreso.Guardar();
             int golpesAlEmpezar = PlayerHealth.instance != null ? PlayerHealth.instance.GolpesRecibidos : -1;
             int cantidad = zombisBase + zombisPorOleada * OleadaActual;
+            bool conTesoro = OleadaActual >= DesdeOleadaTesoro && Random.value < ProbabilidadTesoro;
             bool conJefe = jefe != null && jefeCadaOleadas > 0 && OleadaActual % jefeCadaOleadas == 0;
             zombisEnLaOleada = cantidad + (conJefe ? 1 : 0);
             zombisDeLaOleada.Clear();
@@ -194,6 +206,7 @@ public class WaveManager : MonoBehaviour
                 }
 
                 Aparecer(ElegirTipo(), i == 0 ? puntoDelJefe : null);
+                if (conTesoro && i == cantidad / 2) SacarTesoro();
                 yield return new WaitForSeconds(intervaloEntreApariciones);
             }
 
@@ -408,6 +421,28 @@ public class WaveManager : MonoBehaviour
         if (zombi == null) return;
         zombisDeLaOleada.Add(new ZombiAnotado { zombi = zombi, aparicion = zombi.NumeroDeAparicion });
         zombisEnLaOleada++;
+    }
+
+    // Saca el zombi del tesoro a DistanciaDelTesoro del jugador, a un costado (en la pantalla
+    // apaisada, al este o al oeste se ve; al norte o al sur, a esa distancia, no), con los
+    // multiplicadores de la oleada. Publico para el banco (PruebaTesoro).
+    public EnemyController SacarTesoro()
+    {
+        var jugador = PlayerHealth.instance;
+        if (tesoroPrefab == null || jugador == null || jugador.EstaMuerto) return null;
+        float angulo = Random.Range(-25f, 25f) + (Random.value < 0.5f ? 0f : 180f);
+        Vector3 donde = jugador.transform.position + Quaternion.Euler(0f, angulo, 0f) * Vector3.right * DistanciaDelTesoro;
+        donde.x = Mathf.Clamp(donde.x, -42f, 42f);
+        donde.z = Mathf.Clamp(donde.z, -42f, 42f);
+        donde.y = 0f;
+        var tesoro = EnemyController.Aparecer(tesoroPrefab, donde);
+        if (tesoro == null) return null;
+        tesoro.multiplicadorVida = Escalado.PorOleada(crecimientoVida, OleadaActual);
+        tesoro.multiplicadorDano = Escalado.PorOleada(crecimientoDano, OleadaActual);
+        tesoro.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
+        tesoro.monedaPrefab = monedaPrefab;
+        Efectos.TesoroAparece(tesoro.transform.position);
+        return tesoro;
     }
 
     // Cuantos zombis le faltan matar a la oleada (los que no salieron todavia tambien), y en

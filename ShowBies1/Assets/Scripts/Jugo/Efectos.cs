@@ -260,6 +260,45 @@ public class Efectos : MonoBehaviour
     // A que altura del punto de la caja sale su cartel: arriba de la cabeza del jugador.
     private const float alturaDelCartelDeCaja = 2.2f;
 
+    // El zombi del tesoro (ZombiDelTesoro, mejora 8 de la revision del 9/10). Sale: chispas
+    // doradas, "¡ZOMBI DEL TESORO!" arriba y unas notas que suben. Lo atrapan: el triple de
+    // chispas, un temblor, "¡TESORO!" y el festejo del cofre (las monedas ya llovieron). Se
+    // escapa: unas chispas, "¡SE ESCAPO!" y las mismas notas para abajo.
+    public static readonly Color ColorTesoro = new Color(1f, 0.82f, 0.25f);
+    private static readonly float[] NotasDelTesoro = { 12f, 16f, 19f, 24f };
+
+    public static void TesoroAparece(Vector3 punto)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto + Vector3.up * 0.5f, e.chispasPorMuerteGrande, ColorTesoro);
+        e.MostrarCartel(punto + Vector3.up * alturaDelCartelDeCaja, Textos.De("tesoro_aparece"), ColorTesoro);
+        AudioClip nota = e.NotaDeAviso();
+        for (int i = 0; i < NotasDelTesoro.Length; i++)
+            Sonidos.Programar(nota, 0.06 * i, e.volumenOleadaSuperada, Sonidos.PitchDe(NotasDelTesoro[i]));
+    }
+
+    public static void TesoroAtrapado(Vector3 punto)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto + Vector3.up * 0.5f, e.chispasPorMuerteGrande * 3, ColorTesoro);
+        CamaraJugador.Temblar(0.35f);
+        e.MostrarCartel(punto + Vector3.up * alturaDelCartelDeCaja, Textos.De("tesoro_atrapado"), ColorTesoro);
+        Festejo();
+    }
+
+    public static void TesoroSeEscapo(Vector3 punto)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto + Vector3.up * 0.5f, e.chispasPorMuerte, ColorTesoro);
+        e.MostrarCartel(punto + Vector3.up * alturaDelCartelDeCaja, Textos.De("tesoro_escapo"), new Color(0.75f, 0.7f, 0.55f));
+        AudioClip nota = e.NotaDeAviso();
+        for (int i = 0; i < NotasDelTesoro.Length; i++)
+            Sonidos.Programar(nota, 0.08 * i, e.volumenOleadaSuperada * 0.8f, Sonidos.PitchDe(NotasDelTesoro[NotasDelTesoro.Length - 1 - i] - 12f));
+    }
+
     // Un zombi que invoca el jefe: las chispas de la caja, sin su pop, que es el sonido de
     // agarrar algo bueno y anunciaba enemigos nuevos. El aviso ya lo dio su rugido.
     public static void Invocado(Vector3 punto)

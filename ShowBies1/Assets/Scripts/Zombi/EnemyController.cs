@@ -781,6 +781,7 @@ public class EnemyController : MonoBehaviour
         // De noche, la luz de relleno de la escena solo alumbra la capa de los personajes.
         Personajes.PonerEnLaCapa(gameObject);
         movimientoPropio = GetComponent<IMovimientoPropio>();
+        tesoro = GetComponent<ZombiDelTesoro>();
         // La altura de la barra de vida, una vez y en la pose de reposo: medida en el golpe,
         // si el primero que no mataba le entraba al jefe agazapado para el salto o la carga,
         // la barra quedaba hundida en su cabeza, y del pool la heredaban los jefes siguientes
@@ -790,6 +791,9 @@ public class EnemyController : MonoBehaviour
     }
 
     public float AlturaDeLaCabeza { get; private set; }
+
+    // El zombi del tesoro, si lo es: festeja cuando lo matan (ZombiDelTesoro.AlMorir).
+    private ZombiDelTesoro tesoro;
 
     // Cada aparicion, nueva o salida del pool, arranca de cero. Corre antes de que
     // quien lo hizo aparecer le ponga los multiplicadores.
@@ -1033,6 +1037,15 @@ public class EnemyController : MonoBehaviour
         return despejados;
     }
 
+    // Lo saca del mapa sin puntos, monedas ni mancha, como el despeje del revivir pero de a uno:
+    // el zombi del tesoro que se escapa (ZombiDelTesoro).
+    public void Retirar()
+    {
+        if (!enUso) return;
+        estaMuerto = true;
+        Devolver();
+    }
+
     // Vuelve apagado al pool. Los que no salieron del pool se destruyen como antes.
     private void Devolver()
     {
@@ -1231,6 +1244,7 @@ public class EnemyController : MonoBehaviour
             SoltarCaramelos();
             Progreso.ContarMuerte(nombreTipo, EsJefe);
             Efectos.Muerte(transform.position, enemyType.hp);
+            if (tesoro != null) tesoro.AlMorir();
 
             // Al final: todo lo de arriba usa su posicion.
             Morir(empuje);

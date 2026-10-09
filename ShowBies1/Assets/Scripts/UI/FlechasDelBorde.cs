@@ -10,7 +10,8 @@ using UnityEngine.UI;
 //   hasta aca casi todas nacian y vencian sin que nadie las viera;
 // - los ultimos zombis de la oleada, cuando faltan UltimosZombis o menos: buscar al ultimo
 //   corredor en la ciudad era tiempo muerto;
-// - el jefe, mas grande y violeta como su piel, en los dos modos.
+// - el jefe, mas grande y violeta como su piel, en los dos modos;
+// - el zombi del tesoro (ZombiDelTesoro), dorada, latiendo mas rapido cuando esta por irse.
 // La flecha va en el borde del area segura, sobre la recta del centro de la pantalla a lo que
 // señala, y apunta hacia eso (EnElBorde). Lo que se ve no lleva flecha. Si cae encima del HUD
 // (los textos de arriba a la izquierda, la vida, los joysticks y los botones del telefono, la
@@ -33,6 +34,7 @@ public class FlechasDelBorde : MonoBehaviour
     public const float Largo = 1.25f;              // del lado, hacia donde apunta
     public const float Ancho = 0.75f;
     public const float TamanioJefe = 1.6f;
+    public const float TamanioTesoro = 1.3f;
     public const int UltimosZombis = 3;
     public const float PorVencer = 0.3f;          // de la vida de la caja: desde ahi late rapido
     public const float DentroDeLaPantalla = 24f;  // pixeles: algo pegado al borde no se ve, y lleva flecha
@@ -40,7 +42,7 @@ public class FlechasDelBorde : MonoBehaviour
     public static readonly Color ColorZombi = new Color(0.72f, 1f, 0.48f);   // el verde de la piel de los zombis
     public static readonly Color ColorJefe = new Color(0.66f, 0.36f, 1f);    // violeta, como su piel
 
-    public enum Que { Caja, Zombi, Jefe }
+    public enum Que { Caja, Zombi, Jefe, Tesoro }
 
     // Lo que se dibujo este cuadro, para el banco (PruebaFlechas).
     public struct Vista
@@ -244,9 +246,18 @@ public class FlechasDelBorde : MonoBehaviour
                 if (faltan > 0 && faltan <= UltimosZombis)
                 {
                     for (int i = 0; i < vivos.Count; i++)
-                        if (vivos[i] != null && !vivos[i].EsJefe)
+                        if (vivos[i] != null && !vivos[i].EsJefe && vivos[i].GetComponent<ZombiDelTesoro>() == null)
                             Poner(camara, Que.Zombi, vivos[i], vivos[i].transform.position + Vector3.up, ColorZombi, 1f, 2.5f, t);
                 }
+            }
+
+            var tesoros = ZombiDelTesoro.Vivos;
+            for (int i = 0; i < tesoros.Count; i++)
+            {
+                var tesoro = tesoros[i];
+                if (tesoro == null || tesoro.Zombi == null || !tesoro.Zombi.Vivo) continue;
+                Poner(camara, Que.Tesoro, tesoro.Zombi, tesoro.transform.position + Vector3.up * 0.8f, Efectos.ColorTesoro,
+                      TamanioTesoro, tesoro.Restante01 < ZombiDelTesoro.PorIrse ? 9f : 4f, t);
             }
 
             var jefes = EnemyController.Jefes;
