@@ -665,8 +665,8 @@ mitad del fundido —que es lo más oscuro— cambia el piso, se va el decorado 
 la manda lejísimos, así entrar o salir de la noche se ve como que se cierra o se abre, y no como un corte. Una partida
 retomada en la 25 arranca directamente en la ciudad, sin fundido. Al descargarse la escena la niebla se apaga.
 
-**Los decorados son prefabs hechos con formas simples**, sin colliders salvo las paredes de los edificios de la ciudad
-(ver abajo), y **cada uno se arma una sola vez por partida**: después se prende y se apaga. Cuando termina de salir se
+**Los decorados son prefabs hechos con formas simples**, sin colliders: las paredes de los edificios y los de los
+obstáculos se los pone `CapitulosDeEscenario` al armarlos (ver abajo), y **cada uno se arma una sola vez por partida**: después se prende y se apaga. Cuando termina de salir se
 junta con `StaticBatchingUtility` en pocos draw calls, y desde ahí las piezas ya no se mueven por separado, así que **la
 primera vez sale cada pieza sola del piso y las siguientes sale el decorado entero**.
 
@@ -674,8 +674,9 @@ primera vez sale cada pieza sola del piso y las siguientes sale el decorado ente
   al empezar, y el resto en ronda), matas, grupitos de flores de neón por todo el pasto (los puntos de color de donde se
   juega) y la cerca del borde con su línea de neón magenta. En el modo libre y el tutorial está puesta en la escena, fija:
   `DecoradoFijo` la junta al empezar (no va en el prefab, que en las oleadas sale del piso pieza por pieza).
-- `Prefabs/Escenarios/Cementerio`: lápidas, cruces (algunas de neón, verdes o violetas), árboles pelados, la reja del
-  borde con la baranda de arriba en neón violeta y cuatro faroles verdes y violetas, sobre tierra (`PisoCementerio.mat`,
+- `Prefabs/Escenarios/Cementerio`: lápidas y cruces (algunas de neón, verdes o violetas) en seis manzanas de tres filas
+  con las columnas cada 3 m (eran 2,4: entre dos no pasaba el tanque) y sueltas por todo el mapa, árboles pelados, la
+  reja del borde con la baranda de arriba en neón violeta y cuatro faroles verdes y violetas, sobre tierra (`PisoCementerio.mat`,
   la textura Brown Stony repetida 45 veces, teñida de violeta; también es el piso del menú). **La cruz de neón va con el
   grupo derecho y solo el cuerpo inclinado**: con todo inclinado, su charco quedaba medio enterrado y se veía como una
   franja cortada (lo vio Ivan el 25/9).
@@ -683,15 +684,16 @@ primera vez sale cada pieza sola del piso y las siguientes sale el decorado ente
   el cruce quede en el centro** (el jugador arranca en la calle: parado sobre una vereda lisa no se entendía que fuera
   una ciudad), las líneas del medio de cada calle en neón amarillo, edificios bajos sólo a más de 30 m (desde arriba, uno
   cerca taparía la partida), cada uno con un cartel de neón (BAR, 24H, MOTEL...) en su cara sur, que es la que ve la
-  cámara, y el reflejo de su color en la calle; dos letreros bajos arriba del cruce, autos contra el cordón con una luz de
-  color debajo, contenedores, canteros y faroles magenta y celestes en las esquinas. El piso es `PisoCiudad.mat` (Grey
+  cámara, y el reflejo de su color en la calle; dos letreros bajos arriba del cruce, autos con una luz de color debajo
+  (contra el cordón, o abandonados en el medio del carril donde el cordón queda pegado a un edificio), contenedores,
+  canteros y faroles magenta y celestes en las esquinas. El piso es `PisoCiudad.mat` (Grey
   Stones repetida 70 veces), oscuro y con brillo, como mojado. **El texto de los carteles es TextMeshPro y no se junta con
   el resto** (`CapitulosDeEscenario.Juntar`): su malla la arma TextMeshPro, y juntada la pisaría al volver a escribirla.
 
 **Lo que tapa un edificio** (su huella y, del lado contrario a la cámara, la franja de piso que esconde el techo) lo mide
 `CapitulosDeEscenario` al armar el decorado y lo expone mientras está puesto (`Tapado`, `LoTapado`): hasta la auditoría
 del 24/9 una de cada seis cajas de la ciudad nacía adentro de uno y vencía sin que nadie la viera. Las cajas vuelven a
-sortear el punto si cae tapado (`PowerUp.PuntoDeAparicion`) y las monedas no caen ahí.
+sortear el punto si cae tapado o adentro de un obstáculo (`PowerUp.PuntoDeAparicion`) y las monedas no caen ahí.
 
 **Los edificios tienen paredes y los zombis los rodean** (1.5.0; en Discord, el 8/10, dijeron que los zombis los
 atravesaban, y el jugador también lo hacía). Al armar el decorado, `CapitulosDeEscenario.PonerParedes` le pone a cada
@@ -712,6 +714,56 @@ Pruebas > Paredes de la ciudad (play)** (`PruebaParedes`) lo mira con la física
 oleada 25 retomada, el jugador quieto en dos calles con edificios en el medio, y que ningún zombi se desplace menos de
 0,75 m en 2,5 s pegado a un edificio ni termine adentro de uno (`Builds/prueba_paredes.txt`; que no se acerque no alcanza
 para decir que está trabado: rodear un edificio lleva unos segundos de caminar de costado).
+
+**Los obstáculos también tienen collider** (1.5.0, pedido de Ivan el 9/10: "poner colliders en todos los obstáculos que
+haya en el mapa"; eligió cuáles y cómo). Al armar el decorado, `CapitulosDeEscenario.PonerObstaculos` le pone a cada pieza
+un hijo `Obstaculo`:
+
+- **Los autos, los canteros y los contenedores**, una caja del tamaño de lo que se ve (sin la luz de color de abajo del
+  auto, que es un cuadrado de 3,2 x 5,6 m en el piso: `CajaDe` con `soloLoSolido` saltea los brillos), y su huella va a
+  `Huellas`, después de las de los edificios: **los zombis los rodean con el mismo `Rodeo`**.
+- **Las lápidas, las cruces y los troncos**, un cilindro (`RadioDeTumba` 0,4: la losa mide 0,9 x 0,25 y asoman las
+  puntas; `RadioDeTronco` 0,25, sin las ramas), y van a `Redondos`: **no se rodean, se esquivan** (`EnemyController.Esquive`,
+  después del `Rodeo`): contra algo redondo el zombi que empuja de costado resbala solo, pero de frente la física lo frena
+  justo en el medio y ahí se queda mientras el jugador no se mueva (lo encontró la prueba de lógica, con el jefe contra un
+  árbol). Si lo redondo que se cruza primero en el camino está a menos de `AlcanceDelEsquive` (2,5 m), va por la
+  tangente del lado que menos lo desvía; ya pegado, de costado. Solo mira lo que tiene adelante: con el que quedó al
+  costado iba y venía por su borde. El destino al lado de una tumba no se esquiva (el jugador escondido detrás: se va
+  derecho y la física lo frena).
+- **El jefe pisa lo chico** (elegido por Ivan: "es un gigante"): atraviesa las lápidas y las cruces, que van además a
+  `Chicos`, y lo frenan los edificios, los autos y los árboles. Es `Physics.IgnoreCollision` entre sus colliders y los de
+  lo chico (`EnemyController.PisarLoChico`), que Unity olvida cuando se apaga cualquiera de los dos (el jefe vuelve al
+  pool, el decorado se apaga al cambiar de capítulo): se pide al marcar al jefe (`EsJefe`) y al poner un decorado
+  (`Poner`, para el jefe que haya). El jefe tampoco esquiva lo que pisa.
+- **Todos miden `AlturaDeLosObstaculos` (2,5 m)**, más de lo que se ve: el rayo que busca paredes para el anillo de la
+  invocación sale del centro del jefe, a 2 m (`JefePatrones.RadioLibre`), y un auto mide 1,4. Arriba no hay nada que
+  choque: la granada y el salto del jefe van sin física.
+
+**Los obstáculos se arman sueltos** (`ConstructorEscenarios`, sección Separación, con la misma semilla: los que ya
+cumplían quedaron donde estaban). Puestos al azar como antes, dos autos se pisaban, un contenedor quedaba pegado a un
+cantero y en las filas de tumbas no pasaba el tanque: una simulación de la persecución trababa a uno de cada nueve tanques
+en el cementerio y a uno de cada siete jefes en la ciudad, en el rincón entre dos o dudando entre rodear uno u otro.
+Ahora, **entre dos cajas (o una caja y un edificio) queda lo que mide el jefe más la holgura del rodeo, 3,5 m**, medido
+por el lado más ancho (`Hueco`: el rodeo agranda en cuadrado, y en diagonal la esquina agrandada de una caía en la otra);
+**entre dos tumbas pasa el tanque** y **entre dos árboles, el jefe**; y **nada a menos de 3 m de los puntos de aparición
+de WaveMode** (`Salidas`, que la prueba compara con la escena). Por eso hay menos canteros que antes (3 y 7 contenedores,
+eran 10 y 7), los autos dejaron las calles del borde (quedaban del otro lado de las paredes invisibles) y, donde el
+cordón está pegado a un edificio, están en el medio del carril. **Si cambiás un decorado, que siga suelto**: la prueba de
+lógica lo mide.
+
+Lo demás que toca: **nada nace adentro de un obstáculo** (`EnemyController.Aparecer` saca el punto con
+`FueraDeLosObstaculos`, para los invocados del jefe, y `PowerUp.PuntoDeAparicion` vuelve a sortear con `Ocupado`); al
+cambiar de capítulo **el jugador y las cajas que haya en el piso** pasan al lugar libre más cercano (`SacarAlJugador`; con
+un margen grande dos tumbas vecinas se lo pasan de una a la otra, y ahí se busca en anillos). Las monedas frenan antes de
+los obstáculos como contra cualquier pared (son colliders fijos), y las balas los cruzan. Fuera de la ciudad y del
+cementerio (la pradera, el modo libre, el tutorial) no cambia nada.
+
+La prueba de lógica arma los dos decorados como en la partida y mira que cada pieza tenga su collider, que estén sueltos,
+los puntos de aparición libres, y simula unas dos mil persecuciones por decorado con el `Rodeo` y el `Esquive` de verdad y
+la física sacando a cada zombi de lo que pisa: que ninguno se trabe ni dé vueltas de más. **ShowBies > Pruebas > Tumbas
+del cementerio (play)** (`PruebaParedes`, como el de la ciudad: la oleada 15 retomada, `Builds/prueba_tumbas.txt`) lo mira
+con la física de verdad en el cementerio, y además saca un jefe sin sus patrones del otro lado de una manzana de tumbas:
+que ignore el choque con todas las lápidas y cruces y que pase por encima de una.
 
 **Los faroles alumbran el piso con un charco de luz, no con su luz.** Cada farol lleva en el piso un cuadrado aditivo
 (`Charco`, con el shader `ShowBies/CharcoDeLuz`, que se apaga como la luz puntual que cuelga encima, calculado en el

@@ -40,9 +40,9 @@ public class EscenarioDeCapitulo
 // va en lo oscuro. Una partida retomada en la 25 arranca directamente en la ciudad.
 //
 // Los decorados son prefabs hechos con formas simples (ConstructorEscenarios, en el
-// editor), sin colliders: los zombis van derecho al jugador y se trabarian. Cada uno se
-// arma una sola vez en la partida y despues se prende y se apaga, que son cientos de
-// objetos. Cuando termina de salir se junta en pocos draw calls (StaticBatchingUtility) y
+// editor), sin colliders: se los pone esto al armarlos, a los edificios (PonerParedes) y a
+// los obstaculos (PonerObstaculos). Cada uno se arma una sola vez en la partida y despues se
+// prende y se apaga, que son cientos de objetos. Cuando termina de salir se junta en pocos draw calls (StaticBatchingUtility) y
 // desde ahi las piezas ya no se mueven por separado, asi que **la primera vez sale cada
 // pieza sola del piso y las siguientes sale el decorado entero**.
 //
@@ -91,7 +91,9 @@ public class CapitulosDeEscenario : MonoBehaviour
         public readonly List<float> demoras = new List<float>();
         public float saliendoDesde = -1f;
         public readonly List<Rect> tapado = new List<Rect>();   // lo que tapan sus edificios (ver Tapado)
-        public readonly List<Rect> huellas = new List<Rect>();  // y lo que ocupan (ver Huellas)
+        public readonly List<Rect> huellas = new List<Rect>();  // y lo que ocupan, con los obstaculos de caja (ver Huellas)
+        public readonly List<Redondo> redondos = new List<Redondo>();  // los obstaculos redondos (ver Redondos)
+        public readonly List<Collider> chicos = new List<Collider>();  // los que pisa el jefe (ver Chicos)
     }
 
     private Puesta[] puestas;
@@ -136,6 +138,8 @@ public class CapitulosDeEscenario : MonoBehaviour
         RenderSettings.ambientLight = ambienteDeLaEscena;
         loTapado.Clear();
         huellasPuestas.Clear();
+        redondosPuestos.Clear();
+        chicosPuestos.Clear();
         if (puestas == null) return;
         foreach (var puesta in puestas) if (puesta.objeto != null) Destroy(puesta.objeto);
     }
@@ -268,7 +272,14 @@ public class CapitulosDeEscenario : MonoBehaviour
         loTapado.AddRange(puesta.tapado);
         huellasPuestas.Clear();
         huellasPuestas.AddRange(puesta.huellas);
+        redondosPuestos.Clear();
+        redondosPuestos.AddRange(puesta.redondos);
+        chicosPuestos.Clear();
+        chicosPuestos.AddRange(puesta.chicos);
         SacarAlJugador();
+        // Prendido el decorado, el jefe que haya pisa lo chico: Unity olvida que no chocan
+        // cuando se apaga uno de los dos colliders.
+        foreach (var jefe in EnemyController.Jefes) jefe.PisarLoChico(chicosPuestos);
 
         if (!saliendo)
         {
@@ -313,6 +324,7 @@ public class CapitulosDeEscenario : MonoBehaviour
         // Recien instanciado: todo en su lugar y sin juntar todavia.
         LoQueTapanLosEdificios(puesta.objeto, mirada, puesta.tapado, puesta.huellas);
         PonerParedes(puesta.objeto);
+        PonerObstaculos(puesta.objeto, puesta.huellas, puesta.redondos, puesta.chicos);
     }
 
     // Todo en su lugar y, la primera vez, pegado en una sola malla.
@@ -355,6 +367,8 @@ public class CapitulosDeEscenario : MonoBehaviour
         // Se saca siempre el que esta puesto (el de antes del fundido).
         loTapado.Clear();
         huellasPuestas.Clear();
+        redondosPuestos.Clear();
+        chicosPuestos.Clear();
     }
 
     private void AnimarDecorado()
@@ -402,20 +416,67 @@ public class CapitulosDeEscenario : MonoBehaviour
 
     private static readonly List<Rect> loTapado = new List<Rect>();
     private static readonly List<Rect> huellasPuestas = new List<Rect>();
+    private static readonly List<Redondo> redondosPuestos = new List<Redondo>();
+    private static readonly List<Collider> chicosPuestos = new List<Collider>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearEstadoCompartido()
     {
         loTapado.Clear();
         huellasPuestas.Clear();
+        redondosPuestos.Clear();
+        chicosPuestos.Clear();
     }
 
     // Un rectangulo por edificio: x es x y y es z.
     public static IReadOnlyList<Rect> LoTapado => loTapado;
 
-    // Lo que ocupa cada edificio en el piso, sin la franja que tapa el techo: lo que los
-    // zombis rodean (EnemyController.Rodeo), porque los atravesaban. Mismo orden que LoTapado.
+    // Lo que ocupa en el piso cada edificio (sin la franja que tapa el techo) y cada obstaculo
+    // de caja (los autos, los canteros y los contenedores, ver PonerObstaculos): lo que los
+    // zombis rodean (EnemyController.Rodeo), porque los atravesaban. Primero los edificios, en
+    // el orden de LoTapado.
     public static IReadOnlyList<Rect> Huellas => huellasPuestas;
+
+    // Los obstaculos redondos del decorado puesto (las lapidas, las cruces y los troncos): los
+    // zombis no los rodean, los esquivan resbalando, que en algo redondo y suelto alcanza.
+    public static IReadOnlyList<Redondo> Redondos => redondosPuestos;
+
+    // Los colliders de lo que pisa el jefe (las lapidas y las cruces: ver
+    // EnemyController.PisarLoChico).
+    public static IReadOnlyList<Collider> Chicos => chicosPuestos;
+
+    [System.Serializable]
+    public struct Redondo
+    {
+        public Vector2 centro;   // x, z
+        public float radio;
+        public bool chico;       // lo pisa el jefe
+
+        public Redondo(Vector2 centro, float radio, bool chico)
+        {
+            this.centro = centro;
+            this.radio = radio;
+            this.chico = chico;
+        }
+    }
+
+    // Si un obstaculo del decorado puesto (un edificio, una caja o algo redondo) ocupa ese
+    // punto del piso, agrandado en 'margen'.
+    public static bool Ocupado(Vector3 punto, float margen)
+    {
+        for (int i = 0; i < huellasPuestas.Count; i++)
+        {
+            Rect zona = huellasPuestas[i];
+            if (punto.x > zona.xMin - margen && punto.x < zona.xMax + margen &&
+                punto.z > zona.yMin - margen && punto.z < zona.yMax + margen) return true;
+        }
+        for (int i = 0; i < redondosPuestos.Count; i++)
+        {
+            float alcance = redondosPuestos[i].radio + margen;
+            if ((new Vector2(punto.x, punto.z) - redondosPuestos[i].centro).sqrMagnitude < alcance * alcance) return true;
+        }
+        return false;
+    }
 
     // Si un edificio del decorado puesto tapa ese punto del piso, agrandando lo tapado en
     // 'margen' (lo que mide lo que se quiere ver).
@@ -430,13 +491,17 @@ public class CapitulosDeEscenario : MonoBehaviour
         return false;
     }
 
-    // Para la prueba de logica, sin escena: fija lo tapado y las huellas a mano (null lo vacia).
-    public static void UsarParaPruebas(List<Rect> tapado, List<Rect> huellas = null)
+    // Para la prueba de logica, sin escena: fija lo tapado, las huellas y lo redondo a mano
+    // (null lo vacia).
+    public static void UsarParaPruebas(List<Rect> tapado, List<Rect> huellas = null, List<Redondo> redondos = null)
     {
         loTapado.Clear();
         if (tapado != null) loTapado.AddRange(tapado);
         huellasPuestas.Clear();
         if (huellas != null) huellasPuestas.AddRange(huellas);
+        redondosPuestos.Clear();
+        if (redondos != null) redondosPuestos.AddRange(redondos);
+        chicosPuestos.Clear();
     }
 
     // Lo que tapan los edificios de un decorado con la camara mirando hacia 'mirada': la
@@ -502,25 +567,140 @@ public class CapitulosDeEscenario : MonoBehaviour
         }
     }
 
-    // El jugador parado donde sale un edificio (en la pradera y el cementerio ahi es campo
-    // abierto) pasa a la calle mas cercana, en lo mas oscuro del fundido, antes de que la pared
-    // suba con el adentro y la fisica lo escupa.
+    // Los obstaculos del decorado (pedido de Ivan, 9/10: "poner colliders en todos los
+    // obstaculos que haya en el mapa"; hasta ahi todo los atravesaba), en un hijo de cada
+    // pieza, como las paredes:
+    //  - Los autos, los canteros y los contenedores llevan una caja del tamaño de lo que se ve
+    //    (sin la luz de color de abajo del auto, que es un cuadrado de 3,2 x 5,6 m en el piso)
+    //    y su huella va a 'huellas': los zombis los rodean como a un edificio
+    //    (EnemyController.Rodeo).
+    //  - Las lapidas, las cruces y los troncos llevan un cilindro y van a 'redondos': no se
+    //    rodean, que contra algo redondo y suelto el zombi que empuja resbala hacia un costado.
+    //    Las lapidas y las cruces van ademas a 'chicos', que el jefe pisa (ver
+    //    EnemyController.PisarLoChico): entre dos no pasaria.
+    // Todos miden AlturaDeLosObstaculos, mas de lo que se ve: los rayos que buscan paredes
+    // salen de la altura del centro de quien los tira (el anillo de la invocacion del jefe,
+    // JefePatrones.RadioLibre, a 2 m) y un auto mide 1,4. Arriba no hay nada que choque: la
+    // granada y el salto del jefe van sin fisica. Que esten sueltos (dos mas cerca que lo que
+    // mide un zombi forman un rincon donde se traba) lo cuida ConstructorEscenarios.
+    public const string Obstaculo = "Obstaculo";
+    public const float AlturaDeLosObstaculos = 2.5f;
+    public const float RadioDeTumba = 0.4f;    // la losa mide 0,9 x 0,25: asoman las puntas
+    public const float RadioDeTronco = 0.25f;  // sin las ramas, que van por encima de las cabezas
+    private static readonly string[] DeCaja = { "Auto", "Cantero", "Contenedor" };
+
+    public static void PonerObstaculos(GameObject decorado, List<Rect> huellas, List<Redondo> redondos, List<Collider> chicos)
+    {
+        if (decorado == null) return;
+        foreach (Transform grupo in decorado.transform)
+        {
+            foreach (Transform pieza in grupo)
+            {
+                if (pieza.Find(Obstaculo) != null) continue;
+                bool esTumba = pieza.name == "Lapida" || pieza.name == "Cruz";
+                if (System.Array.IndexOf(DeCaja, pieza.name) >= 0)
+                {
+                    Bounds caja, enElMundo;
+                    if (!CajaDe(pieza, pieza.worldToLocalMatrix, out caja, true) || !CajaDe(pieza, Matrix4x4.identity, out enElMundo, true)) continue;
+                    var go = new GameObject(Obstaculo);
+                    go.transform.SetParent(pieza, false);
+                    var collider = go.AddComponent<BoxCollider>();
+                    float alto = Mathf.Max(caja.max.y, AlturaDeLosObstaculos);
+                    collider.center = new Vector3(caja.center.x, alto * 0.5f, caja.center.z);
+                    collider.size = new Vector3(caja.size.x, alto, caja.size.z);
+                    if (huellas != null) huellas.Add(Rect.MinMaxRect(enElMundo.min.x, enElMundo.min.z, enElMundo.max.x, enElMundo.max.z));
+                }
+                else if (esTumba || pieza.name == "Arbol")
+                {
+                    float radio = esTumba ? RadioDeTumba : RadioDeTronco;
+                    var go = new GameObject(Obstaculo);
+                    go.transform.SetParent(pieza, false);
+                    var cilindro = go.AddComponent<CapsuleCollider>();
+                    cilindro.direction = 1;
+                    cilindro.radius = radio;
+                    cilindro.height = AlturaDeLosObstaculos;
+                    cilindro.center = new Vector3(0f, AlturaDeLosObstaculos * 0.5f, 0f);
+                    if (redondos != null) redondos.Add(new Redondo(new Vector2(pieza.position.x, pieza.position.z), radio, esTumba));
+                    if (esTumba && chicos != null) chicos.Add(cilindro);
+                }
+            }
+        }
+    }
+
+    // El jugador parado donde sale un edificio o un obstaculo (en la pradera ahi es campo
+    // abierto) pasa al lugar libre mas cercano, en lo mas oscuro del fundido, antes de que la
+    // pared suba con el adentro y la fisica lo escupa. Lo mismo las cajas que haya en el piso,
+    // que si no quedarian adentro de un auto hasta vencer.
     public const float MargenDelJugador = 1f;
 
     private static void SacarAlJugador()
     {
         var salud = PlayerHealth.instance;
-        if (salud == null) return;
-        Vector3 donde = salud.transform.position;
-        Vector3 afuera = FueraDeLasHuellas(donde, MargenDelJugador);
-        if (afuera == donde) return;
-        var cuerpo = salud.GetComponentInParent<Rigidbody>();
-        if (cuerpo != null) cuerpo.position = afuera;
-        salud.transform.position = afuera;
+        if (salud != null)
+        {
+            Vector3 donde = salud.transform.position;
+            Vector3 afuera = FueraDeLosObstaculos(donde, MargenDelJugador);
+            if (afuera != donde)
+            {
+                var cuerpo = salud.GetComponentInParent<Rigidbody>();
+                if (cuerpo != null) cuerpo.position = afuera;
+                salud.transform.position = afuera;
+            }
+        }
+        foreach (var caja in FindObjectsByType<PickupCaducidad>(FindObjectsSortMode.None))
+        {
+            Vector3 donde = caja.transform.position;
+            Vector3 afuera = FueraDeLosObstaculos(donde, PowerUp.MargenContraLosEdificios);
+            if (afuera != donde) caja.transform.position = afuera;
+        }
     }
 
-    // El punto, o si cae en la huella de un edificio agrandada en 'margen', el borde mas
-    // cercano de ella. Las huellas no se tocan (entre dos hay una calle): con salir de una alcanza.
+    // El punto, o si cae en un obstaculo del decorado puesto agrandado en 'margen', el lugar
+    // libre mas cercano. Casi siempre alcanza con salir del que se pisa, pero con un margen
+    // grande dos tumbas vecinas se lo pasan de una a la otra: ahi se busca en anillos.
+    public static Vector3 FueraDeLosObstaculos(Vector3 punto, float margen)
+    {
+        Vector3 inicio = punto;
+        for (int vuelta = 0; vuelta < 6; vuelta++)
+        {
+            Vector3 antes = punto;
+            punto = FueraDeLasHuellas(punto, margen);
+            punto = FueraDeLoRedondo(punto, margen);
+            if (punto == antes) return punto;
+        }
+        if (!Ocupado(punto, margen)) return punto;
+        for (float lejos = 0.5f; lejos <= 6f; lejos += 0.5f)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                float angulo = i * Mathf.PI / 8f;
+                var otro = inicio + new Vector3(Mathf.Cos(angulo) * lejos, 0f, Mathf.Sin(angulo) * lejos);
+                if (!Ocupado(otro, margen)) return otro;
+            }
+        }
+        return punto;
+    }
+
+    // Afuera del cilindro de lo redondo que pisa, agrandado en 'margen', para el lado de donde
+    // esta (justo en el centro, hacia +x).
+    private static Vector3 FueraDeLoRedondo(Vector3 punto, float margen)
+    {
+        for (int i = 0; i < redondosPuestos.Count; i++)
+        {
+            var r = redondosPuestos[i];
+            float alcance = r.radio + margen;
+            Vector2 desde = new Vector2(punto.x, punto.z) - r.centro;
+            if (desde.sqrMagnitude >= alcance * alcance) continue;
+            Vector2 hacia = desde.sqrMagnitude > 1e-6f ? desde.normalized : Vector2.right;
+            Vector2 afuera = r.centro + hacia * (alcance + 0.01f);
+            punto.x = afuera.x;
+            punto.z = afuera.y;
+        }
+        return punto;
+    }
+
+    // El punto, o si cae en una huella (un edificio o una caja) agrandada en 'margen', el borde
+    // mas cercano de ella.
     public static Vector3 FueraDeLasHuellas(Vector3 punto, float margen)
     {
         for (int i = 0; i < huellasPuestas.Count; i++)
@@ -542,19 +722,28 @@ public class CapitulosDeEscenario : MonoBehaviour
         return punto;
     }
 
-    // La caja de las mallas de una pieza, llevadas con 'hacia' (al mundo o a la pieza).
-    private static bool CajaDe(Transform pieza, Matrix4x4 hacia, out Bounds caja)
+    // La caja de las mallas de una pieza, llevadas con 'hacia' (al mundo o a la pieza). Con
+    // 'soloLoSolido', sin los brillos (el charco y el halo de los faroles, la luz de debajo de
+    // los autos), que son cuadrados pintados y no se chocan.
+    private static bool CajaDe(Transform pieza, Matrix4x4 hacia, out Bounds caja, bool soloLoSolido = false)
     {
         caja = default;
         bool hay = false;
         foreach (var filtro in pieza.GetComponentsInChildren<MeshFilter>(true))
         {
             if (filtro.sharedMesh == null) continue;
+            if (soloLoSolido && EsUnBrillo(filtro)) continue;
             Bounds b = EnElMundo(filtro.sharedMesh.bounds, hacia * filtro.transform.localToWorldMatrix);
             if (hay) caja.Encapsulate(b);
             else { caja = b; hay = true; }
         }
         return hay;
+    }
+
+    private static bool EsUnBrillo(MeshFilter filtro)
+    {
+        var r = filtro.GetComponent<Renderer>();
+        return r != null && r.sharedMaterial != null && r.sharedMaterial.shader != null && r.sharedMaterial.shader.name == "ShowBies/CharcoDeLuz";
     }
 
     // La caja de una malla en el mundo, sin armar sus ocho esquinas.

@@ -222,6 +222,7 @@ public static class PruebasMejoras
             ProbarPielDeLosZombis(informe);
             ProbarPesoDeLosZombis(informe);
             ProbarDibujosDeLasCajas(informe);
+            ProbarObstaculos(informe);
             ProbarPildorasRedondas(informe);
             ProbarFuenteDelJuego(informe);
             ProbarOrdenDeEscenas(informe);
@@ -1582,6 +1583,377 @@ public static class PruebasMejoras
     static Rect Agrandado(Rect r, float margen)
     {
         return Rect.MinMaxRect(r.xMin - margen, r.yMin - margen, r.xMax + margen, r.yMax + margen);
+    }
+
+    // Los obstaculos de la ciudad y del cementerio (pedido de Ivan, 9/10: "poner colliders en
+    // todos los obstaculos que haya en el mapa"). Sobre los prefabs de verdad, armados como en la
+    // partida (CapitulosDeEscenario.PonerObstaculos en una escena de vista previa): cada pieza con
+    // su collider; sueltas (ConstructorEscenarios.Separacion), que es lo que hace andar el Rodeo
+    // y la fisica de lo redondo; libres alrededor de los puntos de aparicion de WaveMode; y la
+    // persecucion de los cinco zombis entre ellas, paso de fisica a paso de fisica, con el Rodeo
+    // sobre las huellas y la fisica sacando a cada uno de lo que pisa: que todos lleguen, sin
+    // trabarse y sin vueltas de mas. El jefe pisa las tumbas y las cruces (ver PruebaParedes,
+    // en play, para el IgnoreCollision de verdad).
+    static void ProbarObstaculos(Informe inf)
+    {
+        var salidas = new List<Vector3>();
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (oleadas == null) return;
+            foreach (var t in oleadas.spawnPoints)
+                if (t != null) salidas.Add(new Vector3(t.position.x, 0f, t.position.z));
+        });
+        bool mismas = salidas.Count == ConstructorEscenarios.Salidas.Length;
+        foreach (var s in salidas)
+        {
+            bool esta = false;
+            foreach (var c in ConstructorEscenarios.Salidas) esta |= (new Vector2(s.x, s.z) - c).sqrMagnitude < 0.01f;
+            mismas &= esta;
+        }
+        inf.Verdadero("obstaculos: los puntos de aparicion del constructor son los de WaveMode", mismas);
+
+        // Los cinco zombis, con su radio y su velocidad.
+        var nombres = new[] { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS" };
+        var radios = new float[nombres.Length];
+        var velocidades = new float[nombres.Length];
+        for (int i = 0; i < nombres.Length; i++)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/" + nombres[i] + ".prefab");
+            var controlador = prefab != null ? prefab.GetComponent<EnemyController>() : null;
+            if (!inf.Verdadero("obstaculos: esta el prefab " + nombres[i], controlador != null && controlador.enemyType != null)) return;
+            radios[i] = EnemyController.RadioDelCuerpo(prefab);
+            velocidades[i] = controlador.enemyType.velocidad;
+        }
+        float radioJefe = radios[4], radioTanque = radios[3];
+        // El jefe, a 2 m del piso: el rayo de su invocacion tiene que ver los obstaculos.
+        var jefe = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
+        var capsulaJefe = jefe.GetComponent<CapsuleCollider>();
+        float centroDelJefe = capsulaJefe.height * 0.5f * jefe.transform.localScale.y;
+        inf.Verdadero("obstaculos: son mas altos que el centro del jefe (" + centroDelJefe.ToString("0.0", Invariante) + " m), de donde sale el rayo de la invocacion",
+                      CapitulosDeEscenario.AlturaDeLosObstaculos > centroDelJefe + 0.2f);
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        var estadoDelAzar = UnityEngine.Random.state;
+        try
+        {
+            foreach (string decorado in new[] { "Ciudad", "Cementerio" })
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Escenarios/" + decorado + ".prefab");
+                if (!inf.Verdadero("obstaculos: esta el prefab de " + decorado, prefab != null)) continue;
+                var copia = (GameObject)PrefabUtility.InstantiatePrefab(prefab, vista);
+                var tapado = new List<Rect>();
+                var huellas = new List<Rect>();
+                var redondos = new List<CapitulosDeEscenario.Redondo>();
+                var chicos = new List<Collider>();
+                CapitulosDeEscenario.LoQueTapanLosEdificios(copia, Vector3.down, tapado, huellas);
+                int deEdificios = huellas.Count;
+                CapitulosDeEscenario.PonerParedes(copia);
+                CapitulosDeEscenario.PonerObstaculos(copia, huellas, redondos, chicos);
+                CapitulosDeEscenario.PonerObstaculos(copia, null, null, null);
+
+                // Cada pieza con su collider, uno solo aunque se ponga dos veces.
+                int cajas = 0, tumbas = 0, arboles = 0;
+                bool bienPuestos = true;
+                string mal = null;
+                foreach (Transform grupo in copia.transform)
+                {
+                    foreach (Transform pieza in grupo)
+                    {
+                        bool esCaja = pieza.name == "Auto" || pieza.name == "Cantero" || pieza.name == "Contenedor";
+                        bool esTumba = pieza.name == "Lapida" || pieza.name == "Cruz";
+                        bool esArbol = pieza.name == "Arbol";
+                        int puestos = 0;
+                        foreach (Transform hijo in pieza) if (hijo.name == CapitulosDeEscenario.Obstaculo) puestos++;
+                        if (!esCaja && !esTumba && !esArbol)
+                        {
+                            if (puestos > 0) { bienPuestos = false; mal = mal ?? pieza.name + " con obstaculo"; }
+                            continue;
+                        }
+                        var obstaculo = pieza.Find(CapitulosDeEscenario.Obstaculo);
+                        bool bien = puestos == 1;
+                        if (esCaja)
+                        {
+                            cajas++;
+                            var caja = obstaculo != null ? obstaculo.GetComponent<BoxCollider>() : null;
+                            bien &= caja != null && !caja.isTrigger && caja.size.y >= CapitulosDeEscenario.AlturaDeLosObstaculos - 0.01f &&
+                                    Mathf.Abs(caja.center.y - caja.size.y * 0.5f) < 0.05f;
+                            // La del auto, del tamaño del auto: no la luz de color de abajo (3,2 x 5,6 m).
+                            if (bien && pieza.name == "Auto") bien &= caja.size.x < 2.3f && caja.size.z < 4.4f && caja.size.z > 4f;
+                        }
+                        else
+                        {
+                            if (esTumba) tumbas++; else arboles++;
+                            var cilindro = obstaculo != null ? obstaculo.GetComponent<CapsuleCollider>() : null;
+                            float radio = esTumba ? CapitulosDeEscenario.RadioDeTumba : CapitulosDeEscenario.RadioDeTronco;
+                            bien &= cilindro != null && !cilindro.isTrigger && cilindro.direction == 1 && Mathf.Approximately(cilindro.radius, radio) &&
+                                    cilindro.height >= CapitulosDeEscenario.AlturaDeLosObstaculos - 0.01f;
+                            if (bien && esTumba) bien &= chicos.Contains(cilindro);
+                            if (bien && esArbol) bien &= !chicos.Contains(cilindro);
+                        }
+                        if (!bien) { bienPuestos = false; mal = mal ?? pieza.name + " en " + pieza.position; }
+                    }
+                }
+                inf.Verdadero("obstaculos: en " + decorado + " cada pieza tiene su collider, uno solo" + (mal != null ? " (" + mal + ")" : ""), bienPuestos);
+                if (decorado == "Ciudad")
+                {
+                    inf.Verdadero("obstaculos: la ciudad tiene autos, canteros y contenedores (" + cajas + ")", cajas >= 25);
+                    inf.Igual("obstaculos: una huella por edificio y por caja", deEdificios + cajas, huellas.Count);
+                    inf.Igual("obstaculos: en la ciudad no hay nada redondo", 0, redondos.Count);
+                }
+                else
+                {
+                    inf.Verdadero("obstaculos: el cementerio tiene tumbas (" + tumbas + ") y arboles (" + arboles + ")", tumbas >= 100 && arboles >= 10);
+                    inf.Igual("obstaculos: en el cementerio no hay nada que rodear", 0, huellas.Count);
+                    inf.Igual("obstaculos: un redondo por tumba y por arbol", tumbas + arboles, redondos.Count);
+                    inf.Igual("obstaculos: el jefe pisa las tumbas y las cruces, no los arboles", tumbas, chicos.Count);
+                }
+
+                // Sueltos: entre dos cajas, lo que mide el jefe mas la holgura del rodeo (por el lado
+                // mas ancho: la esquina agrandada de una no cae en la otra); entre dos redondos, lo
+                // que mide el mas grande que los choca.
+                float menorEntreCajas = float.MaxValue;
+                for (int i = 0; i < huellas.Count; i++)
+                    for (int j = i + 1; j < huellas.Count; j++)
+                        menorEntreCajas = Mathf.Min(menorEntreCajas, ConstructorEscenarios.Hueco(huellas[i], huellas[j]));
+                if (huellas.Count > 1)
+                    inf.Verdadero("obstaculos: en " + decorado + " las cajas estan sueltas (" + menorEntreCajas.ToString("0.00", Invariante) + " m entre las mas cercanas)",
+                                  menorEntreCajas >= 2f * radioJefe + EnemyController.HolguraDelRodeo - 0.02f);
+                float peorRedondo = float.MaxValue;
+                string parPeor = "";
+                for (int i = 0; i < redondos.Count; i++)
+                {
+                    for (int j = i + 1; j < redondos.Count; j++)
+                    {
+                        // Entre dos arboles pasa el jefe; si hay una tumba, el tanque (el jefe la pisa).
+                        bool pasaElJefe = !redondos[i].chico && !redondos[j].chico;
+                        float hueco = Vector2.Distance(redondos[i].centro, redondos[j].centro) - redondos[i].radio - redondos[j].radio;
+                        float sobra = hueco - 2f * (pasaElJefe ? radioJefe : radioTanque);
+                        if (sobra < peorRedondo) { peorRedondo = sobra; parPeor = redondos[i].centro + " y " + redondos[j].centro; }
+                    }
+                }
+                if (redondos.Count > 1)
+                    inf.Verdadero("obstaculos: en " + decorado + " entre dos redondos pasa el mas grande que los choca (sobra " +
+                                  peorRedondo.ToString("0.00", Invariante) + " m, entre " + parPeor + ")", peorRedondo >= 0.1f);
+                float salidaMasCerca = float.MaxValue;
+                foreach (var s in salidas)
+                {
+                    var punto = new Rect(new Vector2(s.x, s.z), Vector2.zero);
+                    foreach (var h in huellas.GetRange(deEdificios, huellas.Count - deEdificios))
+                        salidaMasCerca = Mathf.Min(salidaMasCerca, ConstructorEscenarios.Hueco(h, punto));
+                    foreach (var r in redondos)
+                        salidaMasCerca = Mathf.Min(salidaMasCerca, Vector2.Distance(r.centro, new Vector2(s.x, s.z)));
+                }
+                inf.Verdadero("obstaculos: en " + decorado + " los puntos de aparicion quedan libres (" + salidaMasCerca.ToString("0.0", Invariante) + " m)",
+                              salidaMasCerca >= ConstructorEscenarios.LibreEnLasSalidas - 0.2f);
+
+                // Las cajas no nacen adentro de un obstaculo, y lo que cae adentro de uno sale.
+                CapitulosDeEscenario.UsarParaPruebas(tapado, huellas, redondos);
+                UnityEngine.Random.InitState(4321);
+                int ocupadas = 0;
+                for (int i = 0; i < 3000; i++)
+                    if (CapitulosDeEscenario.Ocupado(PowerUp.PuntoDeAparicion(), PowerUp.MargenContraLosEdificios)) ocupadas++;
+                inf.Igual("obstaculos: en " + decorado + " ninguna caja nace adentro de uno (de 3000)", 0, ocupadas);
+                bool salen = true;
+                foreach (var h in huellas)
+                {
+                    var adentro = new Vector3(h.center.x + 0.1f, 0.9f, h.center.y);
+                    Vector3 afuera = CapitulosDeEscenario.FueraDeLosObstaculos(adentro, CapitulosDeEscenario.MargenDelJugador);
+                    salen &= !CapitulosDeEscenario.Ocupado(afuera, CapitulosDeEscenario.MargenDelJugador - 0.02f) && Mathf.Approximately(afuera.y, 0.9f);
+                }
+                foreach (var r in redondos)
+                {
+                    // Entre dos tumbas vecinas el lugar libre puede estar un poco mas alla.
+                    var adentro = new Vector3(r.centro.x + 0.05f, 0.9f, r.centro.y);
+                    Vector3 afuera = CapitulosDeEscenario.FueraDeLosObstaculos(adentro, CapitulosDeEscenario.MargenDelJugador);
+                    salen &= !CapitulosDeEscenario.Ocupado(afuera, CapitulosDeEscenario.MargenDelJugador - 0.02f) &&
+                             Vector3.Distance(afuera, adentro) < 4f && Mathf.Approximately(afuera.y, 0.9f);
+                }
+                inf.Verdadero("obstaculos: en " + decorado + " el jugador (o una caja) adentro de donde sale uno pasa al lado", salen);
+
+                ProbarPersecucionEntreObstaculos(inf, decorado, huellas, redondos, nombres, radios, velocidades, salidas);
+            }
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+            CapitulosDeEscenario.UsarParaPruebas(null);
+            UnityEngine.Random.state = estadoDelAzar;
+        }
+    }
+
+    // La persecucion entre los obstaculos de un decorado: el Rodeo de verdad sobre las huellas
+    // y la fisica sacando al zombi de lo que pisa (las cajas agrandadas en su radio, como una
+    // capsula, y los cilindros de lo redondo, que el jefe pisa si son tumbas), en pasos de
+    // fisica. Desde los puntos de aparicion, desde detras de cada caja y desde lugares al azar
+    // (con semilla), hasta el jugador en lugares al azar y pegado a algunas cajas.
+    static void ProbarPersecucionEntreObstaculos(Informe inf, string decorado, List<Rect> huellas, List<CapitulosDeEscenario.Redondo> redondos,
+                                                 string[] nombres, float[] radios, float[] velocidades, List<Vector3> salidas)
+    {
+        const float Paso = 0.02f;
+        var azar = new System.Random(decorado.Length * 7919);
+        var desde = new List<Vector3>(salidas);
+        for (int i = 0; i < 14; i++) desde.Add(new Vector3((float)azar.NextDouble() * 88f - 44f, 0f, (float)azar.NextDouble() * 88f - 44f));
+        var hasta = new List<Vector3> { Vector3.zero };
+        for (int i = 0; i < 9; i++) hasta.Add(new Vector3((float)azar.NextDouble() * 88f - 44f, 0f, (float)azar.NextDouble() * 88f - 44f));
+        // Pegado a lo redondo, del lado de afuera, de a una de cada seis tumbas.
+        for (int i = 0; i < redondos.Count; i += 6)
+        {
+            Vector2 afuera = redondos[i].centro.sqrMagnitude > 1f ? redondos[i].centro.normalized : Vector2.right;
+            Vector2 punto = redondos[i].centro + afuera * (redondos[i].radio + 1.6f);
+            desde.Add(new Vector3(punto.x, 0f, punto.y));
+        }
+        // Detras de cada caja (del lado contrario al centro) y el jugador pegado a algunas.
+        int pegados = 0;
+        foreach (var h in huellas)
+        {
+            if (h.width > 8f) continue;   // los edificios ya los recorre ProbarRodeoDeLosEdificios
+            Vector2 afuera = h.center.normalized;
+            desde.Add(new Vector3(h.center.x + afuera.x * (h.width * 0.5f + 2f), 0f, h.center.y + afuera.y * (h.height * 0.5f + 2f)));
+            if (pegados++ < 4) hasta.Add(new Vector3(h.center.x, 0f, h.yMin - 0.45f));
+        }
+
+        var grilla = new GrillaDeRedondos(redondos);
+        int recorridos = 0, trabados = 0, largos = 0;
+        string ejemplo = null;
+        for (int z = 0; z < nombres.Length; z++)
+        {
+            float radio = radios[z], velocidad = velocidades[z];
+            bool esJefe = z == nombres.Length - 1;
+            foreach (var s in desde)
+            {
+                if (Pisa(s, radio, huellas, grilla, esJefe)) continue;
+                foreach (var d in hasta)
+                {
+                    if (Pisa(d, 0.45f, huellas, grilla, false) && d != Vector3.zero) continue;
+                    float derecho = Vector3.Distance(s, d);
+                    if (derecho < 3f) continue;
+                    recorridos++;
+                    Vector3 p = s;
+                    float recorrido = 0f, mejor = derecho, desdeMejor = 0f, t = 0f;
+                    bool llego = false;
+                    float tope = derecho / velocidad * 3f + 20f;
+                    while (t < tope)
+                    {
+                        if (Vector3.Distance(p, d) < radio + 0.6f) { llego = true; break; }
+                        Vector3 rumbo = EnemyController.Esquive(p, EnemyController.Rodeo(p, d, huellas, radio), redondos, radio, esJefe) - p;
+                        rumbo.y = 0f;
+                        float avance = Mathf.Min(velocidad * Paso, rumbo.magnitude);
+                        if (avance < 1e-5f) break;
+                        Vector3 q = SacarDeLoQuePisa(p + rumbo.normalized * avance, radio, huellas, grilla, esJefe);
+                        recorrido += Vector3.Distance(p, q);
+                        p = q;
+                        t += Paso;
+                        float falta = Vector3.Distance(p, d);
+                        if (falta < mejor - 0.3f) { mejor = falta; desdeMejor = t; }
+                        if (t - desdeMejor > 4f) break;   // cuatro segundos sin acercarse: trabado
+                    }
+                    bool largo = llego && recorrido > derecho * 1.6f + 25f;
+                    if (!llego) trabados++;
+                    if (largo) largos++;
+                    if ((!llego || largo) && ejemplo == null)
+                        ejemplo = nombres[z] + " de " + s + " a " + d + (llego ? " largo " : " trabado en " + p) + " (" + recorrido.ToString("0.0", Invariante) + " m)";
+                }
+            }
+        }
+        inf.Verdadero("obstaculos: en " + decorado + " se simularon persecuciones (" + recorridos + ")", recorridos > 1000);
+        if (ejemplo != null) inf.Verdadero("obstaculos: en " + decorado + " la primera que falla: " + ejemplo, false);
+        inf.Igual("obstaculos: en " + decorado + " ningun zombi se traba", 0, trabados);
+        inf.Igual("obstaculos: en " + decorado + " ninguno da una vuelta de mas", 0, largos);
+    }
+
+    // Lo redondo de un decorado por cuadros de 4 m, para no mirar las 130 tumbas en cada paso.
+    class GrillaDeRedondos
+    {
+        const float Lado = 4f, Desde = -52f;
+        const int Cuadros = 26;
+        readonly List<CapitulosDeEscenario.Redondo>[,] cuadros = new List<CapitulosDeEscenario.Redondo>[Cuadros, Cuadros];
+        static readonly List<CapitulosDeEscenario.Redondo> Ninguno = new List<CapitulosDeEscenario.Redondo>();
+
+        public GrillaDeRedondos(List<CapitulosDeEscenario.Redondo> redondos)
+        {
+            foreach (var r in redondos)
+            {
+                int cx = Cuadro(r.centro.x), cz = Cuadro(r.centro.y);
+                if (cuadros[cx, cz] == null) cuadros[cx, cz] = new List<CapitulosDeEscenario.Redondo>();
+                cuadros[cx, cz].Add(r);
+            }
+        }
+
+        static int Cuadro(float v)
+        {
+            return Mathf.Clamp(Mathf.FloorToInt((v - Desde) / Lado), 0, Cuadros - 1);
+        }
+
+        // Los de los nueve cuadros alrededor del punto (alcanza para radios de hasta 2 m).
+        public IEnumerable<CapitulosDeEscenario.Redondo> Cerca(Vector3 p)
+        {
+            int cx = Cuadro(p.x), cz = Cuadro(p.z);
+            for (int x = Mathf.Max(0, cx - 1); x <= Mathf.Min(Cuadros - 1, cx + 1); x++)
+                for (int z = Mathf.Max(0, cz - 1); z <= Mathf.Min(Cuadros - 1, cz + 1); z++)
+                    foreach (var r in cuadros[x, z] ?? Ninguno) yield return r;
+        }
+    }
+
+    // Si un cuerpo de ese radio parado ahi pisa un obstaculo (el jefe no cuenta las tumbas).
+    static bool Pisa(Vector3 p, float radio, List<Rect> huellas, GrillaDeRedondos redondos, bool esJefe)
+    {
+        var q = new Vector2(p.x, p.z);
+        foreach (var h in huellas)
+        {
+            var cerca = new Vector2(Mathf.Clamp(q.x, h.xMin, h.xMax), Mathf.Clamp(q.y, h.yMin, h.yMax));
+            if ((q - cerca).sqrMagnitude < radio * radio) return true;
+        }
+        foreach (var r in redondos.Cerca(p))
+        {
+            if (esJefe && r.chico) continue;
+            if (Vector2.Distance(q, r.centro) < r.radio + radio) return true;
+        }
+        return false;
+    }
+
+    // Lo que hace la fisica con el zombi que empuja contra un obstaculo fijo: lo saca por el
+    // camino mas corto, y lo que queda del paso lo lleva a lo largo de la pared.
+    static Vector3 SacarDeLoQuePisa(Vector3 p, float radio, List<Rect> huellas, GrillaDeRedondos redondos, bool esJefe)
+    {
+        for (int vuelta = 0; vuelta < 3; vuelta++)
+        {
+            foreach (var r in redondos.Cerca(p))
+            {
+                if (esJefe && r.chico) continue;
+                var desde = new Vector2(p.x, p.z) - r.centro;
+                float alcance = r.radio + radio;
+                if (desde.sqrMagnitude >= alcance * alcance) continue;
+                var hacia = desde.sqrMagnitude > 1e-8f ? desde.normalized : Vector2.right;
+                var afuera = r.centro + hacia * alcance;
+                p.x = afuera.x;
+                p.z = afuera.y;
+            }
+            foreach (var h in huellas)
+            {
+                if (p.x < h.xMin - radio || p.x > h.xMax + radio || p.z < h.yMin - radio || p.z > h.yMax + radio) continue;
+                var q = new Vector2(p.x, p.z);
+                var cerca = new Vector2(Mathf.Clamp(q.x, h.xMin, h.xMax), Mathf.Clamp(q.y, h.yMin, h.yMax));
+                var desde = q - cerca;
+                if (desde.sqrMagnitude >= radio * radio) continue;
+                if (desde.sqrMagnitude > 1e-8f)
+                {
+                    var afuera = cerca + desde.normalized * radio;
+                    p.x = afuera.x;
+                    p.z = afuera.y;
+                }
+                else
+                {
+                    float oeste = q.x - h.xMin, este = h.xMax - q.x, sur = q.y - h.yMin, norte = h.yMax - q.y;
+                    float menor = Mathf.Min(Mathf.Min(oeste, este), Mathf.Min(sur, norte));
+                    if (menor == oeste) p.x = h.xMin - radio;
+                    else if (menor == este) p.x = h.xMax + radio;
+                    else if (menor == sur) p.z = h.yMin - radio;
+                    else p.z = h.yMax + radio;
+                }
+            }
+        }
+        return p;
     }
 
     // 6. El daño con decimales de los zombis escalados se acumula y sale entero.

@@ -5,33 +5,64 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-// Banco de las paredes de la ciudad, en play: que ningun zombi se trabe contra un edificio ni
-// termine adentro de uno, con la fisica de verdad y la horda empujandose (la prueba de logica lo
-// simula sin fisica: EnemyController.Rodeo). Ivan lo pidio el 9/10: que no se queden trabados
-// en las paredes.
+// Banco de los obstaculos, en play: que ningun zombi se trabe contra un edificio, un auto, un
+// cantero, un contenedor, una tumba o un arbol, ni termine adentro de uno, con la fisica de
+// verdad y la horda empujandose (la prueba de logica lo simula sin fisica: EnemyController.Rodeo
+// y Esquive). Ivan lo pidio el 9/10: que no se queden trabados en las paredes, y despues que
+// todos los obstaculos tuvieran collider.
 //
-// WaveMode retomada en la oleada 25 (la ciudad, con los edificios ya puestos y sus paredes). El
-// jugador, quieto e inmortal, en dos calles con edificios entre el y los puntos de aparicion; los
-// zombis que llegan a 2 m se sacan (asi no se amontonan encima). Uno esta trabado si en 2,5 s se
-// desplazo menos de 0,75 m estando a mas de 4 m del jugador (pegado a algo, o yendo y viniendo), y
-// trabado contra una pared si ademas esta a menos de su radio y medio metro de un edificio: eso es
-// lo que no puede pasar. Que no se acerque no alcanza: rodear un edificio lleva unos segundos de
-// caminar de costado. Los parados en campo abierto se anotan aparte, con su velocidad y los zombis
-// que tienen alrededor (la horda tambien frena). Escribe Builds/prueba_paredes.txt.
+// Dos escenarios, cada uno con su entrada en el menu: la ciudad (WaveMode retomada en la oleada
+// 25, con los edificios, los autos y las cosas ya puestos) y el cementerio (en la 15, con las
+// tumbas y los arboles). El jugador, quieto e inmortal, en dos lugares con obstaculos entre el y
+// los puntos de aparicion; los zombis que llegan a 2 m se sacan (asi no se amontonan encima). Uno
+// esta trabado si en 2,5 s se desplazo menos de 0,75 m estando a mas de 4 m del jugador (pegado a
+// algo, o yendo y viniendo), y trabado contra un obstaculo si ademas esta a menos de su radio y
+// medio metro de uno: eso es lo que no puede pasar. Que no se acerque no alcanza: rodear un
+// edificio lleva unos segundos de caminar de costado. Los parados en campo abierto se anotan
+// aparte, con su velocidad y los zombis que tienen alrededor (la horda tambien frena).
+//
+// En el cementerio, ademas, el jefe pisa lo chico: se hace aparecer uno del otro lado de una
+// manzana de tumbas, sin sus patrones (asi camina derecho), y se mira que no choque con las
+// lapidas y las cruces (Physics.GetIgnoreCollision) y que pase por encima de alguna.
+// Escribe Builds/prueba_paredes.txt o Builds/prueba_tumbas.txt.
 [InitializeOnLoad]
 public static class PruebaParedes
 {
     const string Clave = "ShowBies.PruebaParedes";
+    const string ClaveEscenario = "ShowBies.PruebaParedes.Escenario";
     const string Banco = "PruebaParedes";
-    const string Ruta = "../Builds/prueba_paredes.txt";
     const string Escena = "Assets/Escenas/WaveMode.unity";
-    const int Oleada = 25;
     const float PorLugar = 14f;          // segundos de juego en cada lugar
     const float Ventana = 2.5f;          // segundos en que un trabado se desplaza menos de...
     const float Desplazamiento = 0.75f;  // ...esto
     const double TopeTotal = 90.0;
 
-    static readonly Vector3[] Lugares = { new Vector3(24f, 0f, 40f), new Vector3(-36f, 0f, 24f) };
+    class Escenario
+    {
+        public string nombre, ruta, que;
+        public int oleada;
+        public Vector3[] lugares;
+        public bool conJefe;
+    }
+
+    static readonly Escenario Ciudad = new Escenario
+    {
+        nombre = "Ciudad", ruta = "../Builds/prueba_paredes.txt", oleada = 25,
+        que = "la ciudad (los edificios, los autos, los canteros y los contenedores)",
+        lugares = new[] { new Vector3(24f, 0f, 40f), new Vector3(-36f, 0f, 24f) },
+    };
+
+    static readonly Escenario Cementerio = new Escenario
+    {
+        nombre = "Cementerio", ruta = "../Builds/prueba_tumbas.txt", oleada = 15, conJefe = true,
+        que = "el cementerio (las tumbas y los arboles)",
+        // Del otro lado de dos manzanas de tumbas, para los que vienen de los puntos de aparicion.
+        lugares = new[] { new Vector3(26f, 0f, -28f), new Vector3(-20f, 0f, 28f) },
+    };
+
+    // El jefe del cementerio: nace al norte de la manzana de (26, -20) y camina al jugador, que
+    // esta al sur, a traves de las tres filas.
+    static readonly Vector3 SalidaDelJefe = new Vector3(26f, 0f, -9f);
 
     class Seguido
     {
@@ -43,12 +74,18 @@ public static class PruebaParedes
     }
 
     static readonly Dictionary<int, Seguido> seguidos = new Dictionary<int, Seguido>();
+    static Escenario escenario;
     static int lugar;
     static float lugarDesde;
     static double inicio;
     static bool empezo, terminado, listo;
-    static int llegaron, trabados, contraParedes, adentro, vistos;
+    static int llegaron, trabados, contraObstaculos, adentro, vistos;
     static readonly StringBuilder detalle = new StringBuilder();
+    static EnemyController jefe;
+    static int aparicionDelJefe;
+    static bool jefeIgnora;
+    static int parejasDelJefe;
+    static float jefeMasCercaDeUnaTumba;
 
     static PruebaParedes()
     {
@@ -56,16 +93,28 @@ public static class PruebaParedes
     }
 
     [MenuItem("ShowBies/Pruebas/Paredes de la ciudad (play)")]
-    // Publico para correrlo por codigo (ver la trampa del registro de menus).
+    // Publicos para correrlos por codigo (ver la trampa del registro de menus).
     public static void Arrancar()
+    {
+        Arrancar(Ciudad);
+    }
+
+    [MenuItem("ShowBies/Pruebas/Tumbas del cementerio (play)")]
+    public static void ArrancarCementerio()
+    {
+        Arrancar(Cementerio);
+    }
+
+    static void Arrancar(Escenario cual)
     {
         if (!RespaldoDelBanco.PuedeArrancar(Banco)) return;
         RespaldoDelBanco.Guardar(Banco);
         PlayerSettings.runInBackground = true;
-        Progreso.GuardarOleadaEnCurso(Oleada, 0);
+        Progreso.GuardarOleadaEnCurso(cual.oleada, 0);
         Progreso.Guardar();
         EditorSceneManager.OpenScene(Escena);
         SessionState.SetBool(Clave, true);
+        SessionState.SetString(ClaveEscenario, cual.nombre);
         empezo = false;
         EditorApplication.EnterPlaymode();
     }
@@ -81,8 +130,13 @@ public static class PruebaParedes
             empezo = true;
             terminado = false;
             listo = false;
+            escenario = SessionState.GetString(ClaveEscenario, Ciudad.nombre) == Cementerio.nombre ? Cementerio : Ciudad;
             lugar = 0;
-            llegaron = trabados = contraParedes = adentro = vistos = 0;
+            llegaron = trabados = contraObstaculos = adentro = vistos = 0;
+            jefe = null;
+            jefeIgnora = false;
+            parejasDelJefe = 0;
+            jefeMasCercaDeUnaTumba = float.MaxValue;
             seguidos.Clear();
             detalle.Clear();
             inicio = EditorApplication.timeSinceStartup;
@@ -107,12 +161,14 @@ public static class PruebaParedes
         var cuerpo = vida.GetComponent<Rigidbody>();
         var control = vida.GetComponent<PlayerController>();
 
-        // Que la ciudad este puesta, con sus paredes.
+        // Que el decorado este puesto, con sus obstaculos.
         if (!listo)
         {
-            if (CapitulosDeEscenario.Huellas.Count == 0 || Time.time < 4f) return;
+            bool puesto = escenario == Ciudad ? CapitulosDeEscenario.Huellas.Count > 0 : CapitulosDeEscenario.Redondos.Count > 0;
+            if (!puesto || Time.time < 4f) return;
             listo = true;
             Poner(cuerpo, control, 0);
+            if (escenario.conJefe) SacarAlJefe();
             return;
         }
 
@@ -120,9 +176,15 @@ public static class PruebaParedes
         float ahora = Time.time;
         foreach (var z in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
         {
-            if (!z.Vivo || z.EsJefe) continue;
+            if (!z.Vivo) continue;
             Vector3 p = z.transform.position;
+            if (z.EsJefe)
+            {
+                if (z == jefe && z.NumeroDeAparicion == aparicionDelJefe) SeguirAlJefe(z);
+                continue;
+            }
             float d = Vector3.Distance(new Vector3(p.x, 0f, p.z), new Vector3(yo.x, 0f, yo.z));
+            float radio = EnemyController.RadioDelCuerpo(z.gameObject);
             if (!seguidos.TryGetValue(z.NumeroDeAparicion, out var s))
             {
                 s = new Seguido { zombi = z, aparicion = z.NumeroDeAparicion, donde = p, desde = ahora };
@@ -137,53 +199,103 @@ public static class PruebaParedes
                 s.donde = p;
                 s.desde = ahora;
             }
+            float alObstaculo = AlObstaculo(p, false);
             if (revisar && !s.trabado && d > 4f && movido < Desplazamiento)
             {
                 s.trabado = true;
                 trabados++;
-                float aLaPared = float.MaxValue;
-                foreach (var h in CapitulosDeEscenario.Huellas)
-                {
-                    float dx = Mathf.Max(h.xMin - p.x, 0f, p.x - h.xMax);
-                    float dz = Mathf.Max(h.yMin - p.z, 0f, p.z - h.yMax);
-                    aLaPared = Mathf.Min(aLaPared, Mathf.Sqrt(dx * dx + dz * dz));
-                }
-                bool contraLaPared = aLaPared < EnemyController.RadioDelCuerpo(z.gameObject) + 0.5f;
-                if (contraLaPared) contraParedes++;
+                bool contra = alObstaculo < radio + 0.5f;
+                if (contra) contraObstaculos++;
                 var rb = z.GetComponent<Rigidbody>();
                 int cerca = 0;
                 foreach (var otro in Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
                     if (otro != z && otro.Vivo && (otro.transform.position - p).sqrMagnitude < 1.5f * 1.5f) cerca++;
+                Vector3 rumbo = EnemyController.Esquive(p, EnemyController.Rodeo(p, yo, CapitulosDeEscenario.Huellas, radio), CapitulosDeEscenario.Redondos, radio, false);
                 if (trabados <= 8)
-                    detalle.AppendLine("  " + (contraLaPared ? "TRABADO CONTRA UNA PARED: " : "parado en campo abierto: ") + z.name + " en (" + p.x.ToString("0.0") + ", "
-                                       + p.z.ToString("0.0") + ") a " + d.ToString("0.0") + " m del jugador y " + aLaPared.ToString("0.0")
-                                       + " m del edificio mas cercano; velocidad " + (rb != null ? rb.linearVelocity.magnitude.ToString("0.0") : "?")
+                    detalle.AppendLine("  " + (contra ? "TRABADO CONTRA UN OBSTACULO: " : "parado en campo abierto: ") + z.name + " en " + Plano(p)
+                                       + " a " + d.ToString("0.0") + " m del jugador y " + alObstaculo.ToString("0.0")
+                                       + " m del obstaculo mas cercano; velocidad " + (rb != null ? rb.linearVelocity.magnitude.ToString("0.0") : "?")
                                        + " (camina a " + (z.enemyType != null ? z.enemyType.velocidad.ToString("0.0") : "?") + "), " + cerca + " zombis a menos de 1,5 m"
-                                       + "; se movio " + movido.ToString("0.00") + " m en " + Ventana + " s; jugador en (" + yo.x.ToString("0.0") + ", " + yo.z.ToString("0.0")
-                                       + "); el rodeo lo manda a " + Plano(EnemyController.Rodeo(p, yo, CapitulosDeEscenario.Huellas, EnemyController.RadioDelCuerpo(z.gameObject))));
+                                       + "; se movio " + movido.ToString("0.00") + " m en " + Ventana + " s; jugador en " + Plano(yo)
+                                       + "; el rodeo lo manda a " + Plano(rumbo));
             }
-            foreach (var h in CapitulosDeEscenario.Huellas)
+            if (alObstaculo < -0.2f)
             {
-                if (p.x > h.xMin + 0.2f && p.x < h.xMax - 0.2f && p.z > h.yMin + 0.2f && p.z < h.yMax - 0.2f)
-                {
-                    adentro++;
-                    if (adentro <= 5) detalle.AppendLine("  adentro de un edificio: " + z.name + " en (" + p.x.ToString("0.0") + ", " + p.z.ToString("0.0") + ")");
-                }
+                adentro++;
+                if (adentro <= 5) detalle.AppendLine("  adentro de un obstaculo: " + z.name + " en " + Plano(p));
             }
         }
-        // Los que llegan se sacan, sin puntos ni monedas.
+        // Los que llegan se sacan, sin puntos ni monedas (el jefe no: no se despeja).
         int sacados = EnemyController.DespejarAlrededor(yo, 2f);
         llegaron += sacados;
 
         if (ahora - lugarDesde < PorLugar) return;
         lugar++;
-        if (lugar >= Lugares.Length) { Terminar(null); return; }
+        if (lugar >= escenario.lugares.Length) { Terminar(null); return; }
         Poner(cuerpo, control, lugar);
+    }
+
+    // Cuanto hay del punto al obstaculo mas cercano (negativo: adentro). El jefe no cuenta lo
+    // que pisa.
+    static float AlObstaculo(Vector3 p, bool esJefe)
+    {
+        float menor = float.MaxValue;
+        foreach (var h in CapitulosDeEscenario.Huellas)
+        {
+            float dx = Mathf.Max(h.xMin - p.x, 0f, p.x - h.xMax);
+            float dz = Mathf.Max(h.yMin - p.z, 0f, p.z - h.yMax);
+            float fuera = Mathf.Sqrt(dx * dx + dz * dz);
+            if (fuera <= 0f) fuera = -Mathf.Min(Mathf.Min(p.x - h.xMin, h.xMax - p.x), Mathf.Min(p.z - h.yMin, h.yMax - p.z));
+            menor = Mathf.Min(menor, fuera);
+        }
+        foreach (var r in CapitulosDeEscenario.Redondos)
+        {
+            if (esJefe && r.chico) continue;
+            menor = Mathf.Min(menor, Vector2.Distance(new Vector2(p.x, p.z), r.centro) - r.radio);
+        }
+        return menor;
+    }
+
+    // Un jefe sin sus patrones (camina derecho, como cualquier zombi), del otro lado de una
+    // manzana de tumbas.
+    static void SacarAlJefe()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
+        jefe = EnemyController.Aparecer(prefab, SalidaDelJefe + Vector3.up * 2f);
+        if (jefe == null) return;
+        var patrones = jefe.GetComponent<JefePatrones>();
+        if (patrones != null) patrones.enabled = false;
+        jefe.EsJefe = true;
+        aparicionDelJefe = jefe.NumeroDeAparicion;
+        // Que no choque con ninguna lapida ni cruz del decorado puesto.
+        jefeIgnora = CapitulosDeEscenario.Chicos.Count > 0;
+        foreach (var propio in jefe.GetComponentsInChildren<Collider>())
+        {
+            foreach (var chico in CapitulosDeEscenario.Chicos)
+            {
+                parejasDelJefe++;
+                jefeIgnora &= Physics.GetIgnoreCollision(propio, chico);
+            }
+        }
+    }
+
+    static void SeguirAlJefe(EnemyController z)
+    {
+        Vector2 p = new Vector2(z.transform.position.x, z.transform.position.z);
+        foreach (var r in CapitulosDeEscenario.Redondos)
+            if (r.chico) jefeMasCercaDeUnaTumba = Mathf.Min(jefeMasCercaDeUnaTumba, Vector2.Distance(p, r.centro));
+        // Y nunca adentro de un arbol, que lo frena.
+        float alArbol = AlObstaculo(z.transform.position, true);
+        if (alArbol < -0.2f)
+        {
+            adentro++;
+            if (adentro <= 5) detalle.AppendLine("  el jefe adentro de un arbol en " + Plano(z.transform.position));
+        }
     }
 
     static void Poner(Rigidbody cuerpo, PlayerController control, int cual)
     {
-        Vector3 donde = new Vector3(Lugares[cual].x, cuerpo.position.y, Lugares[cual].z);
+        Vector3 donde = new Vector3(escenario.lugares[cual].x, cuerpo.position.y, escenario.lugares[cual].z);
         cuerpo.position = donde;
         cuerpo.linearVelocity = Vector3.zero;
         control.transform.position = donde;
@@ -207,33 +319,44 @@ public static class PruebaParedes
         if (terminado) return;
         terminado = true;
         var inf = new StringBuilder();
-        inf.AppendLine("Prueba de las paredes de la ciudad (WaveMode, oleada " + Oleada + "): el jugador quieto en dos calles, " + PorLugar + " s en cada una");
+        inf.AppendLine("Prueba de los obstaculos en " + escenario.que + " (WaveMode, oleada " + escenario.oleada + "): el jugador quieto en dos lugares, "
+                       + PorLugar + " s en cada uno");
         inf.AppendLine();
         if (error != null) inf.AppendLine("ERROR: " + error);
-        inf.AppendLine("Edificios: " + CapitulosDeEscenario.Huellas.Count + "; zombis seguidos: " + vistos + "; llegaron al jugador: " + llegaron
-                       + "; trabados (menos de " + Desplazamiento + " m en " + Ventana + " s): " + trabados + ", de esos contra una pared: " + contraParedes
-                       + "; vistos adentro de un edificio: " + adentro);
+        inf.AppendLine("Huellas: " + CapitulosDeEscenario.Huellas.Count + "; redondos: " + CapitulosDeEscenario.Redondos.Count + "; zombis seguidos: " + vistos
+                       + "; llegaron al jugador: " + llegaron + "; trabados (menos de " + Desplazamiento + " m en " + Ventana + " s): " + trabados
+                       + ", de esos contra un obstaculo: " + contraObstaculos + "; vistos adentro de un obstaculo: " + adentro);
+        if (escenario.conJefe)
+            inf.AppendLine("El jefe: " + parejasDelJefe + " parejas de colliders con lo chico; lo mas cerca que paso del centro de una tumba: "
+                           + (jefeMasCercaDeUnaTumba < float.MaxValue ? jefeMasCercaDeUnaTumba.ToString("0.00") + " m" : "nunca"));
         inf.Append(detalle);
         inf.AppendLine();
-        bool[] ok = { error == null, CapitulosDeEscenario.Huellas.Count > 0, llegaron >= 10, contraParedes == 0, adentro == 0 };
-        string[] que =
+        var ok = new List<bool> { error == null, listo, llegaron >= 10, contraObstaculos == 0, adentro == 0 };
+        var que = new List<string>
         {
             "el banco llego hasta el final",
-            "la ciudad estaba puesta, con sus edificios",
+            "el decorado estaba puesto, con sus obstaculos",
             "los zombis llegaron al jugador (al menos 10)",
-            "ningun zombi se quedo trabado contra una pared (menos de " + Desplazamiento + " m en " + Ventana + " s, pegado a un edificio)",
-            "ningun zombi entro a un edificio",
+            "ningun zombi se quedo trabado contra un obstaculo (menos de " + Desplazamiento + " m en " + Ventana + " s, pegado a uno)",
+            "ningun zombi entro a un obstaculo",
         };
+        if (escenario.conJefe)
+        {
+            ok.Add(jefe != null && jefeIgnora);
+            que.Add("el jefe no choca con las lapidas ni con las cruces (IgnoreCollision con todas)");
+            ok.Add(jefeMasCercaDeUnaTumba < CapitulosDeEscenario.RadioDeTumba + 0.3f);
+            que.Add("el jefe camino por encima de una tumba (su centro paso a menos de " + (CapitulosDeEscenario.RadioDeTumba + 0.3f).ToString("0.0") + " m de una)");
+        }
         bool todo = true;
-        for (int i = 0; i < ok.Length; i++)
+        for (int i = 0; i < ok.Count; i++)
         {
             inf.AppendLine((ok[i] ? "OK  " : "FALLA  ") + que[i]);
             todo &= ok[i];
         }
         inf.AppendLine();
         inf.AppendLine("RESULTADO: " + (todo ? "TODO OK" : "HAY FALLAS"));
-        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(Ruta)));
-        File.WriteAllText(Ruta, inf.ToString());
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(escenario.ruta)));
+        File.WriteAllText(escenario.ruta, inf.ToString());
         SessionState.SetBool(Clave, false);
         EditorApplication.ExitPlaymode();
         Debug.Log(inf.ToString());

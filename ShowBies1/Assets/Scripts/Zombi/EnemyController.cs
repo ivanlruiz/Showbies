@@ -378,6 +378,7 @@ public class EnemyController : MonoBehaviour
             if (value)
             {
                 if (!jefes.Contains(this)) jefes.Add(this);
+                PisarLoChico(CapitulosDeEscenario.Chicos);
             }
             else
             {
@@ -389,6 +390,26 @@ public class EnemyController : MonoBehaviour
     public static IReadOnlyList<EnemyController> Jefes
     {
         get { return jefes; }
+    }
+
+    // El jefe pisa lo chico (pedido de Ivan, 9/10: "es un gigante"): atraviesa las lapidas y
+    // las cruces del cementerio, que entre dos no le dejan lugar, y lo frenan los edificios, los
+    // autos y los arboles. Unity olvida un IgnoreCollision cuando se apaga cualquiera de los dos
+    // colliders (el jefe vuelve al pool al morir y el decorado se apaga al cambiar de
+    // capitulo), asi que se vuelve a pedir al marcar al jefe (EsJefe) y al poner un decorado
+    // (CapitulosDeEscenario.Poner).
+    public void PisarLoChico(IReadOnlyList<Collider> chicos)
+    {
+        if (chicos == null || chicos.Count == 0 || colliders == null || !gameObject.activeInHierarchy) return;
+        foreach (var propio in colliders)
+        {
+            if (propio == null || !propio.gameObject.activeInHierarchy) continue;
+            for (int i = 0; i < chicos.Count; i++)
+            {
+                var chico = chicos[i];
+                if (chico != null && chico.gameObject.activeInHierarchy) Physics.IgnoreCollision(propio, chico, true);
+            }
+        }
     }
 
     // Si ya se le calculo la vida con sus multiplicadores (ver IniciarVida): preguntar
@@ -403,6 +424,9 @@ public class EnemyController : MonoBehaviour
     public static EnemyController Aparecer(GameObject prefab, Vector3 posicion)
     {
         if (prefab == null) return null;
+        // Nunca adentro de un obstaculo (un invocado del jefe al lado de un auto): saldria
+        // disparado. Los puntos de aparicion de WaveMode ya estan libres.
+        posicion = CapitulosDeEscenario.FueraDeLosObstaculos(posicion, RadioDelCuerpo(prefab));
 
         // Al cambiar de escena los zombis guardados se destruyen y en la pila quedan
         // referencias muertas: se descartan antes de usarlas.
@@ -451,15 +475,19 @@ public class EnemyController : MonoBehaviour
         return JefePatrones.DentroDelCuadro(enPantalla, new Vector2(-MargenAlAparecer, -MargenAlAparecer));
     }
 
-    // --- Los edificios de la ciudad ----------------------------------------------------
+    // --- Los edificios y los obstaculos de caja --------------------------------------
     //
     // Hacia donde caminar para ir de 'desde' a 'hasta' sin atravesar las huellas de los
-    // edificios (CapitulosDeEscenario.Huellas: x es x, y es z). Si la recta cruza uno, va a
-    // la esquina por la que es mas corto rodearlo, agrandado en el radio del cuerpo mas
-    // HolguraDelRodeo; al llegar a la esquina sigue a la proxima, o derecho si ya ve el destino.
-    // Los edificios son cuadrados sueltos con calles de 13 m entre uno y otro, asi que alcanza
-    // con rodear el primero que se cruza (y, si para llegar a su esquina se cruza otro, ese
-    // antes). El zombi o el jugador pegados a una pared estan mas cerca de lo que el radio deja:
+    // edificios y de los autos, los canteros y los contenedores (CapitulosDeEscenario.Huellas:
+    // x es x, y es z). Si la recta cruza uno, va a la esquina por la que es mas corto rodearlo,
+    // agrandado en el radio del cuerpo mas HolguraDelRodeo; al llegar a la esquina sigue a la
+    // proxima, o derecho si ya ve el destino. Los edificios estan sueltos, con calles de 13 m
+    // entre uno y otro, y las cajas tambien, con lo que mide el jefe mas la holgura entre dos
+    // (ConstructorEscenarios.Separacion): asi alcanza con rodear la primera que se cruza (y, si
+    // para llegar a su esquina se cruza otra, esa antes), y la esquina de una nunca cae en la
+    // de al lado. Con dos pegadas el zombi se quedaba dudando entre rodear una u otra. Lo
+    // redondo (las tumbas, los troncos) no se rodea: se esquiva resbalando.
+    // El zombi o el jugador pegados a una pared estan mas cerca de lo que el radio deja:
     // se cuentan desde el borde de afuera, o la recta no cruzaria nada y el zombi quedaria
     // empujando la pared. Si alguno esta adentro del edificio de verdad (no deberia: tienen
     // paredes, ver CapitulosDeEscenario.PonerParedes), ese no cuenta: derecho. Sin edificios
@@ -488,9 +516,15 @@ public class EnemyController : MonoBehaviour
         var b = new Vector2(hasta.x, hasta.z);
         int primero = -1;
         float entrada = float.MaxValue;
+        // Lo que puede tocar el tramo: el resto ni lo cruza ni tiene adentro a ninguna punta.
+        // Con los obstaculos son unas cuarenta huellas por zombi y por paso de fisica.
+        float xMin = Mathf.Min(a.x, b.x) - radio, xMax = Mathf.Max(a.x, b.x) + radio;
+        float zMin = Mathf.Min(a.y, b.y) - radio, zMax = Mathf.Max(a.y, b.y) + radio;
         for (int i = 0; i < huellas.Count; i++)
         {
-            if (huellas[i].Contains(a) || huellas[i].Contains(b)) continue;
+            Rect h = huellas[i];
+            if (h.xMin > xMax || h.xMax < xMin || h.yMin > zMax || h.yMax < zMin) continue;
+            if (h.Contains(a) || h.Contains(b)) continue;
             Rect cuerpo = Agrandar(huellas[i], radio);
             float t;
             if (Cruza(Afuera(a, cuerpo), Afuera(b, cuerpo), cuerpo, out t) && t < entrada)
@@ -572,6 +606,79 @@ public class EnemyController : MonoBehaviour
             if (t < t1) t1 = t;
         }
         return true;
+    }
+
+    // --- Lo redondo -------------------------------------------------------------------
+    //
+    // Las tumbas, las cruces y los troncos (CapitulosDeEscenario.Redondos) no se rodean con
+    // el Rodeo: son mas de cien y estan sueltos, y contra algo redondo el zombi que empuja de
+    // costado resbala solo. Pero de frente no: la fisica lo frena justo en el medio y ahi se
+    // queda mientras el jugador no se mueva (lo encontro la prueba de logica, con el jefe
+    // contra un arbol). Asi que, si lo redondo que se cruza primero en el camino esta a menos
+    // de AlcanceDelEsquive, va por la tangente del lado que menos lo desvia; ya pegado, de
+    // costado. El destino al lado de una tumba (el jugador escondido detras) no se esquiva: se
+    // va derecho y la fisica lo frena contra ella. El jefe no esquiva lo que pisa. Estatica
+    // para la prueba.
+    public const float AlcanceDelEsquive = 2.5f;
+    public const float HolguraDelEsquive = 0.1f;
+
+    public static Vector3 Esquive(Vector3 desde, Vector3 hasta, IReadOnlyList<CapitulosDeEscenario.Redondo> redondos, float radio, bool pisaLoChico)
+    {
+        if (redondos == null || redondos.Count == 0) return hasta;
+        var a = new Vector2(desde.x, desde.z);
+        var b = new Vector2(hasta.x, hasta.z);
+        Vector2 camino = b - a;
+        float largo = camino.magnitude;
+        if (largo < 1e-3f) return hasta;
+        Vector2 u = camino / largo;
+        float mira = Mathf.Min(largo, AlcanceDelEsquive);
+
+        int primero = -1;
+        float masCerca = float.MaxValue;
+        for (int i = 0; i < redondos.Count; i++)
+        {
+            var r = redondos[i];
+            if (pisaLoChico && r.chico) continue;
+            float alcance = r.radio + radio + HolguraDelEsquive;
+            Vector2 hacia = r.centro - a;
+            // Solo lo que tiene adelante: del que queda al costado o atras el camino se aleja (si
+            // no, pegado a una tumba que ya paso, iba y venia por el borde).
+            float adelante = Vector2.Dot(hacia, u);
+            if (adelante <= 0f || adelante > mira + alcance) continue;
+            float costado = hacia.sqrMagnitude - adelante * adelante;
+            if (costado >= alcance * alcance) continue;
+            if ((b - r.centro).sqrMagnitude < alcance * alcance) continue;
+            if (adelante < masCerca)
+            {
+                masCerca = adelante;
+                primero = i;
+            }
+        }
+        if (primero < 0) return hasta;
+
+        var elRedondo = redondos[primero];
+        float elAlcance = elRedondo.radio + radio + HolguraDelEsquive;
+        Vector2 alCentro = elRedondo.centro - a;
+        float distancia = alCentro.magnitude;
+        // Del lado en que el camino pasa mas lejos del centro (si va justo al medio, a la derecha).
+        float lado = u.x * alCentro.y - u.y * alCentro.x >= 0f ? -1f : 1f;
+        Vector2 rumbo;
+        if (distancia <= elAlcance + 0.01f)
+        {
+            // Ya pegado: de costado, a lo largo del borde.
+            Vector2 normal = distancia > 1e-4f ? -alCentro / distancia : -u;
+            rumbo = new Vector2(-normal.y, normal.x) * -lado;
+            if (Vector2.Dot(rumbo, u) < 0f) rumbo = -rumbo;
+        }
+        else
+        {
+            float angulo = Mathf.Asin(Mathf.Clamp01(elAlcance / distancia)) * lado;
+            Vector2 alCentroUnitario = alCentro / distancia;
+            float c = Mathf.Cos(angulo), s = Mathf.Sin(angulo);
+            rumbo = new Vector2(alCentroUnitario.x * c - alCentroUnitario.y * s, alCentroUnitario.x * s + alCentroUnitario.y * c);
+        }
+        Vector2 punto = a + rumbo * Mathf.Max(1f, Mathf.Sqrt(Mathf.Max(0f, distancia * distancia - elAlcance * elAlcance)));
+        return new Vector3(punto.x, hasta.y, punto.y);
     }
 
     // Las cuatro esquinas, en orden alrededor del edificio: compartidas para no alocar en
@@ -1046,7 +1153,9 @@ public class EnemyController : MonoBehaviour
        // piso se quedaba ahi, invisible, persiguiendo al jugador y pegandole desde
        // abajo. Ahora cae y lo saca el kill-Z.
        // En la ciudad, rodeando los edificios: los atravesaban (lo dijeron en Discord, 8/10).
+       // Y esquivando lo redondo del cementerio.
        Vector3 objetivo = Rodeo(transform.position, thePlayer.transform.position, CapitulosDeEscenario.Huellas, radioDelCuerpo);
+       objetivo = Esquive(transform.position, objetivo, CapitulosDeEscenario.Redondos, radioDelCuerpo, EsJefe);
        objetivo.y = transform.position.y;
        if ((objetivo - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(objetivo);
        Vector3 velocidad = transform.forward * enemyType.velocidad;
@@ -1448,7 +1557,8 @@ public class EnemyController : MonoBehaviour
         Vector3 velocidad = Vector3.zero;
         if (yendo)
         {
-            Vector3 rumbo = Rodeo(transform.position, lugarDelFestejo, CapitulosDeEscenario.Huellas, radioDelCuerpo) - transform.position;
+            Vector3 hacia = Rodeo(transform.position, lugarDelFestejo, CapitulosDeEscenario.Huellas, radioDelCuerpo);
+            Vector3 rumbo = Esquive(transform.position, hacia, CapitulosDeEscenario.Redondos, radioDelCuerpo, EsJefe) - transform.position;
             rumbo.y = 0f;
             transform.rotation = Quaternion.LookRotation(rumbo.sqrMagnitude > 0.0001f ? rumbo : falta);
             velocidad = transform.forward * enemyType.velocidad;

@@ -13,9 +13,11 @@ using UnityEngine;
 //    con su linea violeta y faroles verdes y violetas);
 //  - la **ciudad** (manzanas con vereda, edificios en el borde con carteles de neon, autos
 //    con luz de color debajo, faroles, contenedores y las lineas del carril en neon).
-// Todo sin colliders: los zombis van derecho al jugador y se trabarian con cualquier
-// obstaculo, y los edificios van lejos del centro, que la camara mira desde arriba y
-// taparian la partida.
+// Todo sin colliders: los que llevan (las paredes de los edificios, los autos, los canteros,
+// los contenedores, las tumbas y los arboles) se los pone CapitulosDeEscenario al armar el
+// decorado. Por eso **los obstaculos se arman sueltos** (ver Separacion): dos mas cerca que
+// lo que mide un zombi forman un rincon donde se traba. Los edificios van lejos del centro,
+// que la camara mira desde arriba y taparian la partida.
 //
 // **El neon no es luz de verdad**: cada tubo es un material que no recibe luz, con un halo
 // aditivo de frente a la camara, y lo que alumbra el piso es un charco pintado (ver Charco).
@@ -48,6 +50,84 @@ public static class ConstructorEscenarios
 
     // Los colores del neon: los de la interfaz (ConstructorUI) y el violeta del cementerio.
     static readonly Color Violeta = new Color(0.65f, 0.3f, 1f);
+
+    // --- La separacion de los obstaculos ---------------------------------------------
+    //
+    // Desde la 1.5.0 los obstaculos tienen collider (pedido de Ivan, 9/10: "poner colliders en
+    // todos los obstaculos que haya en el mapa"): los de caja (autos, canteros, contenedores)
+    // los zombis los rodean con EnemyController.Rodeo, como a los edificios, y los redondos
+    // (lapidas, cruces y troncos) los esquivan resbalando. Eso anda con los obstaculos sueltos:
+    // con los de antes, puestos al azar, dos autos se pisaban, un contenedor quedaba pegado a un
+    // cantero y en las filas de tumbas no pasaba el tanque, y el zombi que llegaba ahi se
+    // quedaba trabado en el rincon o dudando entre rodear uno u otro (lo midio una simulacion
+    // de la persecucion: uno de cada nueve tanques en el cementerio, uno de cada siete jefes en
+    // la ciudad). Asi que se arman separados, con la misma semilla: los que ya cumplian quedan
+    // donde estaban.
+    //  - Entre dos cajas (y entre una caja y un edificio), lo que mide el jefe mas la holgura
+    //    del rodeo, 2 x 1,44 + 0,6: asi la esquina por la que se rodea una nunca cae en la otra.
+    //  - Entre los centros de dos tumbas (de 0,4 m de radio), o una tumba y un arbol, lo que
+    //    mide el tanque (1,52) con margen. El jefe las atraviesa (ver CapitulosDeEscenario).
+    //  - Entre dos arboles, que el jefe no atraviesa, lo que mide el jefe con margen.
+    //  - Nada a menos de 3 m de los puntos de aparicion de WaveMode (que la prueba de logica
+    //    compara con la escena): un zombi que nace adentro de un auto sale disparado.
+    public const float SeparacionDeCajas = 3.5f;
+    public const float SeparacionDeTumbas = 2.7f;
+    public const float SeparacionDeArboles = 4f;
+    public const float LibreEnLasSalidas = 3f;
+    public static readonly Vector2[] Salidas = { new Vector2(0f, 35f), new Vector2(35f, 0f), new Vector2(0f, -35f), new Vector2(-35f, 0f) };
+
+    // La caja en el piso (x, z) de un rectangulo de ancho x largo girado 'rumbo' grados.
+    static Rect CajaEnElPiso(Vector3 centro, float ancho, float largo, float rumbo)
+    {
+        float a = rumbo * Mathf.Deg2Rad;
+        float c = Mathf.Abs(Mathf.Cos(a)), s = Mathf.Abs(Mathf.Sin(a));
+        float mx = (ancho * c + largo * s) * 0.5f, mz = (ancho * s + largo * c) * 0.5f;
+        return Rect.MinMaxRect(centro.x - mx, centro.z - mz, centro.x + mx, centro.z + mz);
+    }
+
+    // Lo que hay entre dos cajas (0 si se tocan), por el lado mas ancho: el rodeo agranda las
+    // cajas en cuadrado, y una en diagonal a la otra tiene la esquina agrandada mas cerca de lo
+    // que dice la distancia en linea recta (lo encontro la simulacion: el jefe iba a la esquina
+    // de un contenedor que caia adentro del cantero de al lado, a 3,56 m en diagonal).
+    public static float Hueco(Rect a, Rect b)
+    {
+        float dx = Mathf.Max(0f, Mathf.Max(a.xMin - b.xMax, b.xMin - a.xMax));
+        float dz = Mathf.Max(0f, Mathf.Max(a.yMin - b.yMax, b.yMin - a.yMax));
+        return Mathf.Max(dx, dz);
+    }
+
+    static bool CajaSuelta(Rect caja, System.Collections.Generic.List<Rect> puestas)
+    {
+        foreach (var otra in puestas)
+            if (Hueco(caja, otra) < SeparacionDeCajas) return false;
+        foreach (var salida in Salidas)
+            if (Hueco(caja, new Rect(salida, Vector2.zero)) < LibreEnLasSalidas) return false;
+        return true;
+    }
+
+    static bool LejosDe(Vector3 punto, System.Collections.Generic.List<Vector2> puestos, float separacion)
+    {
+        var p = new Vector2(punto.x, punto.z);
+        foreach (var otro in puestos)
+            if ((otro - p).sqrMagnitude < separacion * separacion) return false;
+        return true;
+    }
+
+    static bool LejosDeLasSalidas(Vector3 punto)
+    {
+        var p = new Vector2(punto.x, punto.z);
+        foreach (var salida in Salidas)
+            if ((salida - p).sqrMagnitude < LibreEnLasSalidas * LibreEnLasSalidas) return false;
+        return true;
+    }
+
+    // Derecho, con un poco de desorden: girado al azar, la caja en el piso de un cantero a 45
+    // grados es 1,4 veces mas ancha que el, y los zombis lo rodearian por el aire.
+    static float CasiRecto(float rumbo)
+    {
+        float recto = Mathf.Round(rumbo / 90f) * 90f;
+        return recto + (rumbo - recto) * 0.15f;
+    }
 
     // El farol de neon: a que altura va el tubo, cuanto alumbra su luz de verdad y el charco.
     const float AlturaFarolNeon = 2.45f, AlcanceFarolNeon = 7.2f;
@@ -231,8 +311,11 @@ public static class ConstructorEscenarios
         var azar = new System.Random(7);
         float Azar(float min, float max) => min + (float)azar.NextDouble() * (max - min);
 
-        // Las tumbas, en manzanas con filas, lejos del centro donde arranca el jugador.
+        // Las tumbas, en manzanas con filas, lejos del centro donde arranca el jugador. Las
+        // columnas van cada 3 m (eran 2,4, y entre dos lapidas no pasaba el tanque) y con
+        // menos desorden; las que caen junto a un punto de aparicion no se ponen.
         var tumbas = Grupo(raiz, "Tumbas");
+        var puestas = new System.Collections.Generic.List<Vector2>();
         Vector2[] manzanas = { new Vector2(-26, -20), new Vector2(26, -20), new Vector2(-26, 22), new Vector2(26, 22), new Vector2(0, 34), new Vector2(0, -34) };
         foreach (var centro in manzanas)
         {
@@ -241,22 +324,34 @@ public static class ConstructorEscenarios
                 for (int col = 0; col < 5; col++)
                 {
                     if (azar.NextDouble() < 0.12) continue;
-                    var pos = new Vector3(centro.x + (col - 2) * 2.4f + Azar(-0.3f, 0.3f), 0f, centro.y + (fila - 1) * 3.2f + Azar(-0.3f, 0.3f));
+                    var pos = new Vector3(centro.x + (col - 2) * 3f + Azar(-0.2f, 0.2f), 0f, centro.y + (fila - 1) * 3.2f + Azar(-0.2f, 0.2f));
                     var giro = Quaternion.Euler(Azar(-6f, 6f), Azar(-12f, 12f), Azar(-6f, 6f));
-                    if (azar.NextDouble() < 0.25) Cruz(tumbas, pos, giro, piedra);
-                    else Lapida(tumbas, pos, giro, piedra, Azar(0.8f, 1.1f));
+                    bool esCruz = azar.NextDouble() < 0.25;
+                    float alto = esCruz ? 0f : Azar(0.8f, 1.1f);
+                    if (!LejosDeLasSalidas(pos)) continue;
+                    if (esCruz) Cruz(tumbas, pos, giro, piedra);
+                    else Lapida(tumbas, pos, giro, piedra, alto);
+                    puestas.Add(new Vector2(pos.x, pos.z));
                 }
             }
         }
 
         // Tumbas sueltas por todo el mapa, tambien cerca del centro: la camara ve unos
         // 36 x 20 m alrededor del jugador, y sin esto el cementerio no se veia al empezar.
-        // Algunas de las cruces son de neon, verde o violeta, con su resplandor.
+        // Algunas de las cruces son de neon, verde o violeta, con su resplandor. Si una cae
+        // pegada a otra (o a un punto de aparicion) se sortea otro lugar.
         int deNeon = 0;
         for (int i = 0; i < 40; i++)
         {
-            float angulo = Azar(0f, Mathf.PI * 2f), radio = Azar(4.5f, 45f);
-            var pos = new Vector3(Mathf.Cos(angulo) * radio, 0f, Mathf.Sin(angulo) * radio);
+            Vector3 pos = Vector3.zero;
+            bool suelta = false;
+            for (int intento = 0; intento < 30 && !suelta; intento++)
+            {
+                float angulo = Azar(0f, Mathf.PI * 2f), radio = Azar(4.5f, 45f);
+                pos = new Vector3(Mathf.Cos(angulo) * radio, 0f, Mathf.Sin(angulo) * radio);
+                suelta = LejosDe(pos, puestas, SeparacionDeTumbas) && LejosDeLasSalidas(pos);
+            }
+            if (!suelta) continue;
             var giro = Quaternion.Euler(Azar(-8f, 8f), Azar(0f, 360f), Azar(-8f, 8f));
             if (azar.NextDouble() < 0.3)
             {
@@ -264,14 +359,26 @@ public static class ConstructorEscenarios
                 else Cruz(tumbas, pos, giro, piedra);
             }
             else Lapida(tumbas, pos, giro, piedra, Azar(0.7f, 1.1f));
+            puestas.Add(new Vector2(pos.x, pos.z));
         }
 
-        // Arboles pelados, sueltos, fuera del centro.
+        // Arboles pelados, sueltos, fuera del centro: lejos de las tumbas, y entre ellos lo
+        // que mide el jefe, que no los atraviesa.
         var arboles = Grupo(raiz, "Arboles");
+        var plantados = new System.Collections.Generic.List<Vector2>();
         for (int i = 0; i < 12; i++)
         {
-            float angulo = Azar(0f, Mathf.PI * 2f), radio = Azar(9f, 44f);
-            Arbol(arboles, new Vector3(Mathf.Cos(angulo) * radio, 0f, Mathf.Sin(angulo) * radio), Azar(0f, 360f), madera, azar);
+            Vector3 pos = Vector3.zero;
+            bool suelto = false;
+            for (int intento = 0; intento < 30 && !suelto; intento++)
+            {
+                float angulo = Azar(0f, Mathf.PI * 2f), radio = Azar(9f, 44f);
+                pos = new Vector3(Mathf.Cos(angulo) * radio, 0f, Mathf.Sin(angulo) * radio);
+                suelto = LejosDe(pos, puestas, SeparacionDeTumbas) && LejosDe(pos, plantados, SeparacionDeArboles) && LejosDeLasSalidas(pos);
+            }
+            if (!suelto) continue;
+            Arbol(arboles, pos, Azar(0f, 360f), madera, azar);
+            plantados.Add(new Vector2(pos.x, pos.z));
         }
 
         // La reja del borde, con la baranda de arriba en neon violeta y su resplandor.
@@ -363,6 +470,9 @@ public static class ConstructorEscenarios
         var carteles = Grupo(raiz, "Carteles");
         string[] letreros = { "BAR", "24H", "MOTEL", "PIZZA", "CLUB", "HOTEL", "ZOMBIS", "DINER", "ARCADE", "SHOW", "CAFE", "NEON" };
         int luces = 0, cartel = 0, farol = 0;
+        // Lo que ocupan en el piso los edificios y las cosas puestas, para que la siguiente
+        // quede suelta (ver Separacion).
+        var cajas = new System.Collections.Generic.List<Rect>();
 
         for (int ix = -2; ix <= 1; ix++)
         {
@@ -378,20 +488,32 @@ public static class ConstructorEscenarios
                 {
                     float alto = Azar(3.5f, 6.5f);
                     Edificio(manzanas, centro, Manzana, alto, pared, ventanas, azar);
+                    float mitad = (Manzana - 3f) * 0.5f + 0.1f;
+                    cajas.Add(Rect.MinMaxRect(centro.x - mitad, centro.z - mitad, centro.x + mitad, centro.z + mitad));
                     int n = cartel % neones.Length;
                     Cartel(carteles, centro + new Vector3(0f, 0f, -(Manzana - 3f) * 0.5f), Mathf.Min(alto - 1f, 3f), letreros[cartel % letreros.Length], neones[n], pared, textos[n], fuente);
                     cartel++;
                 }
                 else
                 {
-                    // Cerca del centro, cosas bajas que no tapan.
+                    // Cerca del centro, cosas bajas que no tapan, sueltas: la que cae pegada
+                    // a otra se sortea de nuevo.
                     int cuantas = azar.Next(3, 6);
                     for (int i = 0; i < cuantas; i++)
                     {
-                        var donde = centro + new Vector3(Azar(-5.5f, 5.5f), 0f, Azar(-5.5f, 5.5f));
-                        if (donde.magnitude < 7f) continue;    // nada encima del jugador
-                        if (azar.NextDouble() < 0.5) Contenedor(cosas, donde, Azar(0f, 360f), contenedor);
-                        else Cantero(cosas, donde, Azar(0f, 360f), cordon, contenedor);
+                        for (int intento = 0; intento < 6; intento++)
+                        {
+                            var donde = centro + new Vector3(Azar(-5.5f, 5.5f), 0f, Azar(-5.5f, 5.5f));
+                            if (donde.magnitude < 7f) continue;    // nada encima del jugador
+                            bool esContenedor = azar.NextDouble() < 0.5;
+                            float rumbo = CasiRecto(Azar(0f, 360f));
+                            Rect caja = esContenedor ? CajaEnElPiso(donde, 1.7f, 1.2f, rumbo) : CajaEnElPiso(donde, 2.2f, 2.2f, rumbo);
+                            if (!CajaSuelta(caja, cajas)) continue;
+                            if (esContenedor) Contenedor(cosas, donde, rumbo, contenedor);
+                            else Cantero(cosas, donde, rumbo, cordon, contenedor);
+                            cajas.Add(caja);
+                            break;
+                        }
                     }
                     // Las dos de arriba del cruce, un letrero bajo parado en la vereda: son los
                     // que se ven al empezar. Cortos y hacia el medio, que arriba en las puntas
@@ -444,17 +566,31 @@ public static class ConstructorEscenarios
             }
         }
 
-        // Autos estacionados contra el cordon, con una luz de color debajo.
+        // Autos estacionados contra el cordon, con una luz de color debajo, o abandonados en
+        // el medio del carril: contra el cordon de una manzana con edificio el auto queda a 2 m
+        // de la pared, y entre los dos no pasa el jefe (ver Separacion). Sueltos, y no en las
+        // calles del borde, que quedaban del otro lado de las paredes invisibles.
         var flota = Grupo(raiz, "Autos");
-        for (int i = 0; i < 22; i++)
+        int estacionados = 0;
+        for (int i = 0; i < 400 && estacionados < 22; i++)
         {
             bool enX = azar.NextDouble() < 0.5;
             float calle = azar.Next(-2, 3) * Paso;
             float largo = Azar(-44f, 44f);
-            var donde = enX ? new Vector3(largo, 0f, calle + (azar.NextDouble() < 0.5 ? -3.2f : 3.2f))
-                            : new Vector3(calle + (azar.NextDouble() < 0.5 ? -3.2f : 3.2f), 0f, largo);
-            if (donde.magnitude < 12f) continue;   // no encima del jugador
-            Auto(flota, donde, enX ? 90f : 0f, autos[azar.Next(autos.Length)], vidrio, rueda, neones[azar.Next(neones.Length)]);
+            float lado = azar.NextDouble() < 0.5 ? -1f : 1f;
+            float rumbo = enX ? 90f : 0f;
+            foreach (float delMedio in new[] { 3.2f, 1.7f })
+            {
+                var donde = enX ? new Vector3(largo, 0f, calle + lado * delMedio) : new Vector3(calle + lado * delMedio, 0f, largo);
+                if (donde.magnitude < 12f) break;   // no encima del jugador
+                if (Mathf.Abs(donde.x) > 44f || Mathf.Abs(donde.z) > 44f) break;
+                Rect caja = CajaEnElPiso(donde, 2.2f, 4.3f, rumbo);
+                if (!CajaSuelta(caja, cajas)) continue;
+                Auto(flota, donde, rumbo, autos[azar.Next(autos.Length)], vidrio, rueda, neones[azar.Next(neones.Length)]);
+                cajas.Add(caja);
+                estacionados++;
+                break;
+            }
         }
 
         PrefabUtility.SaveAsPrefabAsset(raiz, RutaPrefabCiudad);
