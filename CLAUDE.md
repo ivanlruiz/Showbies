@@ -310,6 +310,14 @@ Fotos de las balas** (`FotosDeLasBalas`) saca un chorro de cada tramo y la crít
 cámara y la calidad del teléfono (`Builds/balas/`), y la prueba de lógica mira los tramos, los colores, el collider, los
 materiales compartidos y que `Bullet.mat` no cambie.
 
+**La bala es más chica que antes y alumbra el piso** (pedido de Ivan, 9/10). Se ve al 70 % (`EscalaVisual`; el collider
+se agranda en la misma proporción y pega igual), y cada una lleva debajo, en el piso, un charco de su color con el shader
+de los faroles (`ShowBies/CharcoDeLuz`, aditivo y sin textura): un hijo `Luz` acostado a 0,2 m (`AlturaDeLaLuz`, por
+encima de la vereda), de 1,3 m (`LadoDeLaLuz`) en el primer tramo y más grande con el tramo. El chorro de balas pinta el
+piso por donde pasa. Es hijo de la bala, así la sigue gratis, y se mide en el mundo en `Vestir`, que la bala cambia de
+escala. Un material por tramo, copiado en runtime del `BalaLuz.mat` (blanco) que lleva el prefab en
+`BulletController.materialLuz`, y lo pone **ShowBies > Armas > Armar la luz de la bala** (`ConstructorArmas`).
+
 **El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
 `intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,
 con la cadencia mejorada, no llegaba a oírse. **`shot.mp3` se importa en mono** (Force To Mono), que es lo que hace
@@ -775,9 +783,10 @@ obstáculos se los pone `CapitulosDeEscenario` al armarlos (ver abajo), y **cada
 junta con `StaticBatchingUtility` en pocos draw calls, y desde ahí las piezas ya no se mueven por separado, así que **la
 primera vez sale cada pieza sola del piso y las siguientes sale el decorado entero**.
 
-- `Prefabs/Escenarios/Pradera`: dieciséis faroles de neón celestes y magenta (cuatro alrededor del centro, que se ven
-  al empezar, y el resto en ronda), matas, grupitos de flores de neón por todo el pasto (los puntos de color de donde se
-  juega) y la cerca del borde con su línea de neón magenta. En el modo libre y el tutorial está puesta en la escena, fija:
+- `Prefabs/Escenarios/Pradera`: matas, grupitos de flores de neón por todo el pasto (los puntos de color de donde se
+  juega) y la cerca del borde con su línea de neón magenta. **Sin faroles** desde el 9/10 (pedido de Ivan: desde la
+  cámara de arriba el poste se leía como un palito negro en diagonal); el constructor sigue sorteando sus lugares para
+  que las matas y las flores queden donde estaban. La luz del piso la ponen las balas, las cajas y las flores. En el modo libre y el tutorial está puesta en la escena, fija:
   `DecoradoFijo` la junta al empezar (no va en el prefab, que en las oleadas sale del piso pieza por pieza).
 - `Prefabs/Escenarios/Cementerio`: lápidas y cruces (algunas de neón, verdes o violetas) en seis manzanas de tres filas
   con las columnas cada 3 m (eran 2,4: entre dos no pasaba el tanque) y sueltas por todo el mapa, árboles pelados, la
@@ -1297,14 +1306,15 @@ para siempre.
   después de `BuscarElModelo` (un sombrero agrandaría `altoDelModelo`, y con él las poses del jefe) y antes del destello.
 - **Las calabazas** (`DecoradoHalloween`): la grande es un farol, con la cara tallada que brilla hacia la cámara, su halo
   y su charco naranja (como los faroles de noche, ninguna luz de verdad); la chica, sola. En la partida, una grilla de
-  9 m con azar y semilla fija (unas 85 grandes), ninguna a menos de 6 m de donde arranca el jugador; en el menú, a los
+  12,5 m con azar y semilla fija (unas 54 grandes y 82 en total; con 9 m eran 119 y tapaban demasiado, pedido de Ivan
+  el 9/10), ninguna a menos de 6 m de donde arranca el jugador; en el menú, a los
   costados del camino de los zombis, mirando a su cámara. Sin colliders, en la capa de los personajes y juntadas con
   `CapitulosDeEscenario.Juntar`. Sus materiales usan solo Standard, `Unlit/Color` y `ShowBies/CharcoDeLuz`, que ya usan
   las escenas (la prueba lo mira). **La grilla es la misma en los tres capítulos**, y en la ciudad y el cementerio
   algunas caían adentro de un edificio, un auto o una tumba: al poner y al sacar cada decorado, `CapitulosDeEscenario`
   llama a `DecoradoHalloween.EsconderLasTapadas`, que apaga los renderers de las que quedan adentro de un obstáculo
-  (`Ocupado`, con el radio de la calabaza) o en el piso que esconde un techo (`Tapado`). En la ciudad son unas 25 de
-  119, en el cementerio una, y en la pradera ninguna (la prueba de lógica lo cuenta).
+  (`Ocupado`, con el radio de la calabaza) o en el piso que esconde un techo (`Tapado`). En la ciudad son unas 13 de
+  82, en el cementerio 5, y en la pradera ninguna (la prueba de lógica lo cuenta).
 - **El sombrero de calabaza** se pone en las tres escenas de juego, con evento o sin él (`SombreroDelJugador`, en Start,
   como la pistola), y se apaga en OPCIONES (SOMBRERO DE CALABAZA, solo si se ganó; `PlayerPrefs["SombreroCalabaza"]`,
   porque mostrarlo es del teléfono y tenerlo es progreso).

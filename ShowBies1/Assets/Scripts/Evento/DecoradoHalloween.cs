@@ -26,7 +26,7 @@ public static class DecoradoHalloween
     // El mapa: las paredes invisibles estan en +-49; las calabazas, adentro, en una grilla
     // con un poco de azar para que no se lea como grilla. Ninguna donde arranca el jugador.
     public const float Borde = 44f;
-    public const float Paso = 9f;
+    public const float Paso = 12.5f;   // era 9: la mitad de calabazas (pedido de Ivan, 9/10), tapaban demasiado
     public const float LibreAlCentro = 6f;
 
     // La cara mira a la camara (hacia el sur, -Z) con este giro como mucho para cada lado.

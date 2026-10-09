@@ -7,6 +7,7 @@ public class BulletController : MonoBehaviour
     public int velocidad;
     public float lifeTime;
     public int dañoDar;   // respaldo del prefab: el daño de verdad lo pone el arma en cada tiro
+    public Material materialLuz;   // el charco de luz del piso (ShowBies/CharcoDeLuz): lo pone ConstructorArmas
 
     // El daño de esta bala, puesto en cada tiro por GunController desde la mejora
     // de daño. No se serializa: si se guardara en el prefab, el primer tiro de la
@@ -46,6 +47,20 @@ public class BulletController : MonoBehaviour
     public static readonly Color ColorCritico = new Color(1f, 0.231f, 0.361f);   // el rojo del neon
     public const float TamanioCritico = 1.3f;   // por encima del de su tramo
 
+    // Mas chica que antes, y con luz (pedido de Ivan, 9/10). Lo que se ve, al 70 %: el collider
+    // se agranda en la misma proporcion y pega igual. Y cada bala alumbra el piso debajo de ella
+    // con un charco de su color (el shader de los faroles, aditivo y sin textura), que crece con
+    // el tramo: el chorro de balas pinta el piso por donde pasa. Un material por tramo,
+    // compartido, como los de la bala.
+    public const float EscalaVisual = 0.7f;
+    public const float LadoDeLaLuz = 1.3f;      // metros, con la bala del primer tramo
+    public const float AlturaDeLaLuz = 0.2f;    // por encima de la vereda de la ciudad, como los charcos
+
+    private static Material[] lucesPorTramo;
+    private static Material luzCritica;
+    private Transform luz;
+    private Renderer dibujoDeLaLuz;
+
     private static Material[] materialesPorTramo;
     private static Material materialCritico;
 
@@ -62,6 +77,8 @@ public class BulletController : MonoBehaviour
         pool.Clear();
         materialesPorTramo = null;
         materialCritico = null;
+        lucesPorTramo = null;
+        luzCritica = null;
     }
 
     // El tramo de un daño por tiro: 0 hasta 2, 1 hasta 4, 2 hasta 8, 3 hasta 16 y 4 de ahi
@@ -81,12 +98,34 @@ public class BulletController : MonoBehaviour
         Preparar();
         int tramo = Tramo(danoPorTiro);
         float tamanio = TamanioPorTramo[tramo] * (esCritica ? TamanioCritico : 1f);
-        transform.localScale = escalaBase * tamanio;
-        if (caja != null) caja.size = cajaBase / tamanio;
+        transform.localScale = escalaBase * (tamanio * EscalaVisual);
+        if (caja != null) caja.size = cajaBase / (tamanio * EscalaVisual);
+        PonerLaLuz(tramo, tamanio, esCritica);
         if (dibujo == null) return;
         ArmarMateriales(dibujo.sharedMaterial);
         if (materialesPorTramo != null) dibujo.sharedMaterial = esCritica ? materialCritico : materialesPorTramo[tramo];
     }
+
+    // El charco del piso: debajo de la bala, acostado, del tamaño y el color de su tramo. Es
+    // hijo de la bala, asi la sigue sin costo; se mide en el mundo, que la bala cambia de escala.
+    private void PonerLaLuz(int tramo, float tamanio, bool esCritica)
+    {
+        if (luz == null || materialLuz == null) return;
+        Vector3 escala = transform.localScale;
+        if (escala.x <= 0f || escala.y <= 0f) return;
+        luz.localScale = Vector3.one * (LadoDeLaLuz * Mathf.Sqrt(tamanio) / escala.x);
+        luz.localPosition = new Vector3(0f, (AlturaDeLaLuz - transform.position.y) / escala.y, 0f);
+        if (lucesPorTramo == null || lucesPorTramo[0] == null || luzCritica == null)
+        {
+            lucesPorTramo = new Material[ColoresPorTramo.Length];
+            for (int i = 0; i < lucesPorTramo.Length; i++)
+                lucesPorTramo[i] = new Material(materialLuz) { name = "LuzTramo" + i, color = ColoresPorTramo[i] };
+            luzCritica = new Material(materialLuz) { name = "LuzCritica", color = ColorCritico };
+        }
+        dibujoDeLaLuz.sharedMaterial = esCritica ? luzCritica : lucesPorTramo[tramo];
+    }
+
+    public Transform Luz { get { return luz; } }
 
     public Material MaterialPuesto { get { return dibujo != null ? dibujo.sharedMaterial : null; } }
 
@@ -100,6 +139,21 @@ public class BulletController : MonoBehaviour
         caja = GetComponent<BoxCollider>();
         if (caja != null) cajaBase = caja.size;
         dibujo = GetComponent<Renderer>();
+        if (materialLuz != null)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = "Luz";
+            // En el acto: un collider en la bala chocaria con los zombis por su cuenta.
+            DestroyImmediate(go.GetComponent<Collider>());
+            go.layer = gameObject.layer;
+            luz = go.transform;
+            luz.SetParent(transform, false);
+            luz.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            dibujoDeLaLuz = go.GetComponent<Renderer>();
+            dibujoDeLaLuz.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            dibujoDeLaLuz.receiveShadows = false;
+            dibujoDeLaLuz.sharedMaterial = materialLuz;
+        }
     }
 
     private static void ArmarMateriales(Material baseDeLaBala)

@@ -544,7 +544,7 @@ public static class PruebasMejoras
             adentro &= Mathf.Abs(l.posicion.x) <= DecoradoHalloween.Borde + 2f && Mathf.Abs(l.posicion.z) <= DecoradoHalloween.Borde + 2f;
             if (!l.chica) libre &= new Vector2(l.posicion.x, l.posicion.z).magnitude >= DecoradoHalloween.LibreAlCentro;
         }
-        inf.Verdadero("halloween: en la partida hay " + grandes + " calabazas farol (de 60 a 130)", grandes >= 60 && grandes <= 130);
+        inf.Verdadero("halloween: en la partida hay " + grandes + " calabazas farol (de 30 a 70: la mitad de antes, pedido de Ivan el 9/10)", grandes >= 30 && grandes <= 70);
         inf.Verdadero("halloween: todas adentro de las paredes invisibles", adentro);
         inf.Verdadero("halloween: ninguna donde arranca el jugador", libre);
         bool deFrente = true;
@@ -2327,7 +2327,9 @@ public static class PruebasMejoras
                 if (Mathf.Abs(Vector3.Dot(t.forward, Vector3.down)) < 0.999f || t.position.y < -0.01f || t.position.y > 0.25f) torcidos++;
             }
             inf.Igual("faroles: los charcos y resplandores del " + nombre + " van acostados y a ras del piso (" + enElPiso + ")", 0, torcidos);
-            inf.Verdadero("faroles: el " + nombre + " tiene faroles", faroles > 0);
+            // La pradera no tiene (pedido de Ivan, 9/10: desde arriba el poste era un palito negro).
+            if (ruta == ConstructorEscenarios.RutaPrefabPradera) inf.Igual("faroles: la pradera no tiene faroles", 0, faroles);
+            else inf.Verdadero("faroles: el " + nombre + " tiene faroles", faroles > 0);
             inf.Igual("faroles: cada farol del " + nombre + " tiene su charco de luz en el piso", faroles, conCharco);
             inf.Igual("faroles: las luces del " + nombre + " van solo por vertice (asi el editor ve lo del telefono)", 0, lucesPorPixel);
             inf.Igual("faroles: el charco del " + nombre + " esta en el piso, debajo de su luz", 0, charcosCorridos);
@@ -5419,6 +5421,34 @@ public static class PruebasMejoras
             b.Vestir(2f, false);
             inf.Verdadero("balas: reusada, vuelve a su tramo", b.MaterialPuesto.color == BulletController.ColoresPorTramo[1] &&
                           Mathf.Abs(b.transform.localScale.x / chica - BulletController.TamanioPorTramo[1]) < 1e-4f);
+
+            // Mas chica de lo que pega, y con su luz en el piso (pedido de Ivan, 9/10).
+            var c = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, vista)).GetComponent<BulletController>();
+            c.transform.position = new Vector3(0f, 1.1f, 0f);
+            c.Vestir(1f, false);
+            inf.Cerca("balas: se ve al " + (BulletController.EscalaVisual * 100f) + " % de lo que era", prefab.transform.localScale.x * BulletController.EscalaVisual,
+                      c.transform.localScale.x, 1e-4);
+            inf.Verdadero("balas: el prefab trae el material de su luz", prefab.GetComponent<BulletController>().materialLuz != null &&
+                          prefab.GetComponent<BulletController>().materialLuz.shader.name == "ShowBies/CharcoDeLuz");
+            var luz = c.Luz;
+            if (inf.Verdadero("balas: tiene su luz", luz != null))
+            {
+                var dibujoLuz = luz.GetComponent<Renderer>();
+                inf.Verdadero("balas: la luz va en el piso, acostada, debajo de la bala (" + luz.position + ")",
+                              Mathf.Abs(luz.position.y - BulletController.AlturaDeLaLuz) < 0.01f && Mathf.Abs(luz.position.x) < 0.01f &&
+                              Mathf.Abs(Vector3.Dot(luz.forward, Vector3.down)) > 0.999f);
+                inf.Cerca("balas: del tamaño de su tramo", BulletController.LadoDeLaLuz, luz.lossyScale.x, 1e-3);
+                inf.Verdadero("balas: del color de su tramo, sin collider", dibujoLuz.sharedMaterial.color == BulletController.ColoresPorTramo[0] &&
+                              luz.GetComponent<Collider>() == null);
+                Material luzBlanca = dibujoLuz.sharedMaterial;
+                var d = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, vista)).GetComponent<BulletController>();
+                d.transform.position = new Vector3(3f, 1.1f, 0f);
+                d.Vestir(1f, false);
+                inf.Verdadero("balas: las luces del mismo tramo comparten el material", d.Luz != null && d.Luz.GetComponent<Renderer>().sharedMaterial == luzBlanca);
+                c.Vestir(16f, true);
+                inf.Verdadero("balas: la de la critica es roja y crece con la bala", dibujoLuz.sharedMaterial.color == BulletController.ColorCritico &&
+                              luz.lossyScale.x > BulletController.LadoDeLaLuz * 1.5f && Mathf.Abs(luz.position.y - BulletController.AlturaDeLaLuz) < 0.01f);
+            }
         }
         finally
         {

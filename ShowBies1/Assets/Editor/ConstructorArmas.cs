@@ -23,6 +23,33 @@ public static class ConstructorArmas
     static readonly Color ColorMetal = new Color(0.62f, 0.64f, 0.7f);
     static readonly Color ColorMango = new Color(0.5f, 0.27f, 0.12f);
 
+    // La luz de la bala (BulletController.materialLuz, pedido de Ivan, 9/10): el material del
+    // charco de los faroles, blanco (cada tramo lo tiñe con su color en runtime), puesto en el
+    // prefab de la bala. Se vuelve a correr si se cambia el material.
+    public const string RutaLuzDeLaBala = "Assets/Materiales/BalaLuz.mat";
+
+    [MenuItem("ShowBies/Armas/Armar la luz de la bala")]
+    public static void ArmarLuzDeLaBala()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogError("ConstructorArmas: no en play"); return; }
+        var material = ConstructorEscenarios.MaterialDeBrillo("Assets/Materiales", "BalaLuz", Color.white, 1.1f, 0.35f, 4.5f);
+        const string rutaBala = "Assets/Prefabs/Bullet.prefab";
+        var contenido = PrefabUtility.LoadPrefabContents(rutaBala);
+        try
+        {
+            var bala = contenido.GetComponent<BulletController>();
+            if (bala == null) { Debug.LogError("ConstructorArmas: el prefab de la bala no tiene BulletController"); return; }
+            bala.materialLuz = material;
+            PrefabUtility.SaveAsPrefabAsset(contenido, rutaBala);
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(contenido);
+        }
+        AssetDatabase.SaveAssets();
+        Debug.Log("ConstructorArmas: la bala tiene su luz (" + RutaLuzDeLaBala + ")");
+    }
+
     [MenuItem("ShowBies/Armas/Armar la pistola")]
     public static void ArmarPistola()
     {

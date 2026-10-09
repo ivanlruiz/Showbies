@@ -172,24 +172,18 @@ public static class ConstructorEscenarios
         var azar = new System.Random(5);
         float Azar(float min, float max) => min + (float)azar.NextDouble() * (max - min);
 
-        // Los faroles: cuatro alrededor del centro, que se ven al empezar, y el resto en
-        // ronda, lejos unos de otros. Solo los cuatro del centro llevan luz de verdad.
-        var faroles = Grupo(raiz, "Faroles");
+        // Sin faroles (pedido de Ivan, 9/10: desde la camara de arriba el poste se leia como un
+        // palito negro en diagonal). Los lugares se siguen sorteando igual que cuando estaban
+        // (cuatro alrededor del centro y el resto en ronda) para que el azar llegue igual a las
+        // matas y las flores, que quedan donde estaban y siguen sin pisar esos lugares.
         var puestos = new System.Collections.Generic.List<Vector3>();
-        int luces = 0;
         foreach (var p in new[] { new Vector2(-9, -7), new Vector2(9, -7), new Vector2(-9, 7), new Vector2(9, 7) })
-        {
-            var donde = new Vector3(p.x, 0f, p.y);
-            FarolNeon(faroles, donde, puestos.Count % 2 == 0 ? celeste : magenta, poste, luces < MaxLucesPradera);
-            luces++;
-            puestos.Add(donde);
-        }
+            puestos.Add(new Vector3(p.x, 0f, p.y));
         for (int intento = 0; intento < 400 && puestos.Count < 16; intento++)
         {
             float angulo = Azar(0f, Mathf.PI * 2f), radio = Azar(16f, 43f);
             var donde = new Vector3(Mathf.Cos(angulo) * radio, 0f, Mathf.Sin(angulo) * radio);
             if (!LejosDeTodos(donde, puestos, 12f)) continue;
-            FarolNeon(faroles, donde, puestos.Count % 2 == 0 ? celeste : magenta, poste, false);
             puestos.Add(donde);
         }
 
@@ -208,7 +202,7 @@ public static class ConstructorEscenarios
         }
 
         // Flores de neon en matas de tres a cinco, por todo el pasto: los puntos de color de
-        // donde se juega, que los faroles quedan en los bordes de la pantalla.
+        // donde se juega.
         var jardin = Grupo(raiz, "Flores");
         for (int intento = 0, grupos = 0; intento < 400 && grupos < 22; intento++)
         {
@@ -234,7 +228,7 @@ public static class ConstructorEscenarios
         PrefabUtility.SaveAsPrefabAsset(raiz, RutaPrefabPradera);
         Object.DestroyImmediate(raiz);
         AssetDatabase.SaveAssets();
-        Debug.Log("ConstructorEscenarios: pradera armada en " + RutaPrefabPradera + " con " + puestos.Count + " faroles");
+        Debug.Log("ConstructorEscenarios: pradera armada en " + RutaPrefabPradera + ", sin faroles");
     }
 
     static bool LejosDeTodos(Vector3 donde, System.Collections.Generic.List<Vector3> puestos, float distancia)
