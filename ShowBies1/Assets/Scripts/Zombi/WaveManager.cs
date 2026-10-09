@@ -92,6 +92,23 @@ public class WaveManager : MonoBehaviour
     private Vector3 dondeQuedabaElUltimo;
     private EfectosUI monedasDelBono;
 
+    // Una oleada sin un solo golpe paga el bono doble (revision del 9/10, mejora 4), con
+    // "¡PERFECTA! +N MONEDAS" en dorado: esquivar el zarpazo, la carga y el salto del jefe
+    // tiene que pagar dentro de la partida, no solo en el logro INTOCABLE, que mira lo mismo.
+    public const int MultiplicadorPerfecta = 2;
+    public bool UltimaFuePerfecta { get; private set; }
+
+    public static int Bono(int bonoPorOleada, int oleada, bool perfecta)
+    {
+        return bonoPorOleada * oleada * (perfecta ? MultiplicadorPerfecta : 1);
+    }
+
+    // La segunda linea del cartel de la oleada superada.
+    public static string TextoDelBono(int bono, bool perfecta)
+    {
+        return Textos.Formato(perfecta ? "cartel_bono_perfecta" : "cartel_bono", bono);
+    }
+
     public float MultiplicadorVidaActual => Escalado.PorOleada(crecimientoVida, OleadaActual);
     public float MultiplicadorDanoActual => Escalado.PorOleada(crecimientoDano, OleadaActual);
 
@@ -194,13 +211,14 @@ public class WaveManager : MonoBehaviour
                 yield return null;
             }
 
-            bonoDeLaOleadaAnterior = bonoPorOleada * OleadaActual;
+            // Sin un solo golpe en toda la oleada: el bono doble y el logro INTOCABLE.
+            bool perfecta = golpesAlEmpezar >= 0 && PlayerHealth.instance != null && PlayerHealth.instance.GolpesRecibidos == golpesAlEmpezar;
+            UltimaFuePerfecta = perfecta;
+            bonoDeLaOleadaAnterior = Bono(bonoPorOleada, OleadaActual, perfecta);
             Efectos.OleadaSuperada(dondeQuedabaElUltimo);
             Progreso.Sumar(bonoDeLaOleadaAnterior);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
-            // Sin un solo golpe en toda la oleada: el logro INTOCABLE.
-            if (PlayerHealth.instance != null && PlayerHealth.instance.GolpesRecibidos == golpesAlEmpezar)
-                Progreso.RegistrarOleadaIntacta(OleadaActual);
+            if (perfecta) Progreso.RegistrarOleadaIntacta(OleadaActual);
             MisionesDiarias.RegistrarOleada(OleadaActual);
             DesafioSemanal.RegistrarOleada();
             // Sin Guardar aca: lo de esta oleada (el bono, la marca, las misiones) lo
@@ -246,9 +264,10 @@ public class WaveManager : MonoBehaviour
         // retomada, no hay).
         if (cartelOleada != null && bonoDeLaOleadaAnterior > 0)
         {
-            cartelOleada.text = Textos.Formato("cartel_oleada_superada", OleadaActual - 1) + Textos.Formato("cartel_bono", bonoDeLaOleadaAnterior);
+            cartelOleada.text = Textos.Formato("cartel_oleada_superada", OleadaActual - 1) + TextoDelBono(bonoDeLaOleadaAnterior, UltimaFuePerfecta);
             PrenderElCartel();
-            VolarMonedasDelBono(OleadaActual - 1);
+            VolarMonedasDelBono(OleadaActual - 1, UltimaFuePerfecta);
+            if (UltimaFuePerfecta) Efectos.OleadaPerfecta();
             float primero = Mathf.Min(DuracionSuperada, resto * 0.6f);
             yield return new WaitForSeconds(primero);
             resto -= primero;
@@ -277,7 +296,7 @@ public class WaveManager : MonoBehaviour
     // Las monedas del bono vuelan del cartel al contador del HUD, con una nota cada una. Los
     // efectos de UI son los de la tienda (EfectosUI), en un canvas propio arriba del HUD, que
     // se arma la primera vez. El bono ya se sumo: esto es lo que se ve.
-    private void VolarMonedasDelBono(int oleada)
+    private void VolarMonedasDelBono(int oleada, bool perfecta)
     {
         var contador = FindAnyObjectByType<ContadorMonedas>();
         if (contador == null || contador.texto == null || cartelOleada.canvas == null) return;
@@ -301,6 +320,7 @@ public class WaveManager : MonoBehaviour
             go.SetActive(true);
         }
         int cantidad = Mathf.Clamp(3 + oleada / 2, 4, 14);
+        if (perfecta) cantidad = Mathf.Min(cantidad * MultiplicadorPerfecta, 20);
         monedasDelBono.MonedasVolando(cartelOleada.rectTransform, contador.Rect, cantidad, Efectos.MonedaDelBono);
     }
 

@@ -12,7 +12,9 @@ using UnityEngine;
 // monedas para una mejora. Mira que al terminar la oleada salga "¡OLEADA 5 SUPERADA!" con
 // su bono, que el tiempo casi se pare un instante, que vuelen las monedas del bono, que
 // despues venga el cartel de la oleada 6, que salgan "¡NUEVO RECORD!" y "¡TE LLEGA PARA..."
-// y que el MEJORAS de la pausa tenga su insignia. Escribe Builds/prueba_fin_de_oleada.txt.
+// y que el MEJORAS de la pausa tenga su insignia. Como los zombis se despejan antes de
+// llegar, la oleada sale sin un golpe: PERFECTA, con el bono doble (mejora 4). Escribe
+// Builds/prueba_fin_de_oleada.txt.
 [InitializeOnLoad]
 public static class PruebaFinDeOleada
 {
@@ -24,7 +26,7 @@ public static class PruebaFinDeOleada
     const double TopeTotal = 90.0;
 
     static double inicio;
-    static bool empezo, terminado, sumoMonedas, vioSuperada, vioSiguiente, pauso;
+    static bool empezo, terminado, sumoMonedas, vioSuperada, vioSiguiente, pauso, perfecta;
     static float superadaEn = -1f, siguienteEn = -1f, pausoEn;
     static float menorEscalaDeTiempo = 1f;
     static int monedasVolando;
@@ -74,7 +76,7 @@ public static class PruebaFinDeOleada
         if (!empezo)
         {
             empezo = true;
-            terminado = sumoMonedas = vioSuperada = vioSiguiente = pauso = insigniaPrendida = false;
+            terminado = sumoMonedas = vioSuperada = vioSiguiente = pauso = insigniaPrendida = perfecta = false;
             superadaEn = siguienteEn = -1f;
             menorEscalaDeTiempo = 1f;
             monedasVolando = 0;
@@ -121,6 +123,7 @@ public static class PruebaFinDeOleada
             {
                 vioSuperada = true;
                 superadaEn = t;
+                perfecta = oleadas.UltimaFuePerfecta;
                 textoSuperada = cartel.text.Replace("\n", " / ");
             }
             if (vioSuperada && !vioSiguiente && cartel.text == siguiente)
@@ -189,6 +192,7 @@ public static class PruebaFinDeOleada
         if (error != null) inf.AppendLine("ERROR: " + error);
         inf.AppendLine("Cartel al terminar: \"" + textoSuperada + "\"; despues: \"" + textoSiguiente + "\" a los "
                        + (siguienteEn >= 0f && superadaEn >= 0f ? (siguienteEn - superadaEn).ToString("0.00") : "?") + " s");
+        inf.AppendLine("Sin golpes en la oleada (perfecta): " + perfecta);
         inf.AppendLine("Escala de tiempo mas baja al terminar: " + menorEscalaDeTiempo.ToString("0.00") + "; monedas del bono volando: " + monedasVolando);
         inf.AppendLine("Avisos vistos: " + string.Join(" | ", avisos));
         inf.AppendLine("Insignia de MEJORAS en la pausa: " + (insigniaPrendida ? "prendida, dice " + numeroDeLaInsignia : "apagada"));
@@ -197,7 +201,8 @@ public static class PruebaFinDeOleada
         var ok = new List<bool>
         {
             error == null,
-            vioSuperada && textoSuperada.Contains("+" + (4 * Oleada)),
+            vioSuperada && textoSuperada.Contains("+" + WaveManager.Bono(4, Oleada, perfecta)),
+            vioSuperada && perfecta && textoSuperada.Contains("+" + WaveManager.Bono(4, Oleada, true)) && textoSuperada.Contains("PERFECTA"),
             menorEscalaDeTiempo <= 0.1f,
             monedasVolando > 0,
             vioSiguiente && siguienteEn - superadaEn > 1f && siguienteEn - superadaEn < 2.5f,
@@ -209,6 +214,7 @@ public static class PruebaFinDeOleada
         {
             "el banco llego hasta el final",
             "al terminar la oleada sale ¡OLEADA " + Oleada + " SUPERADA! con su bono",
+            "sin un golpe sale ¡PERFECTA! con el bono doble",
             "el tiempo casi se para un instante (pausa de impacto)",
             "las monedas del bono vuelan al contador",
             "despues, en el mismo descanso, el cartel de la oleada " + (Oleada + 1),

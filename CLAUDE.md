@@ -541,6 +541,14 @@ Después, el cartel de la oleada que viene. **El descanso dura lo mismo** (3 s):
 (`Economia.SegundosPorPartida` lo cuenta). En la primera oleada de la partida, o en una retomada, no hay superada. Las
 cartas de la 1.6.0 van en este mismo descanso: tienen que convivir con esto.
 
+**Una oleada sin un solo golpe paga el bono doble** (1.5.0, mejora 4 de la revisión del 9/10: esquivar el zarpazo, la
+carga y el salto del jefe no pagaba nada dentro de la partida). Lo decide el mismo contador que el logro INTOCABLE
+(`PlayerHealth.GolpesRecibidos` al empezar y al terminar la oleada; un golpe que no saca vida, como en la gracia del
+revivir, no cuenta). El bono es `WaveManager.Bono` (× `MultiplicadorPerfecta`, 2), el cartel dice "¡PERFECTA! +N
+MONEDAS" en el dorado de las monedas (`cartel_bono_perfecta`), vuelan el doble de monedas (hasta 20) y
+`Efectos.OleadaPerfecta` suelta chispas doradas alrededor del jugador y unas campanitas que entran cuando termina el
+arpegio de la superada. `Economia` no cuenta el bono, así que los premios que se miden con ella no cambian.
+
 **Las invocaciones respetan el techo de población.** El generador de cada escena lo fija al empezar
 (`EnemyController.FijarTecho`, 60 o 35 en móvil) y el jefe saca `min(los suyos, maxInvocadosVivos,
 EnemyController.LugarParaZombis)`: sin eso, en el modo libre se juntaban jefes invocando y el teléfono se trababa.
@@ -854,8 +862,8 @@ propósito: es estado estructurado.
 - **El pool es uno por prefab** (`Moneda.Obtener` y `Devolver`, como el de los zombis), y el techo de 150/80 es de
   todas juntas: los caramelos de Halloween son monedas con otro modelo y `caramelo` prendido (ver Evento de
   Halloween). Con la pila única de antes, un caramelo guardado volvía a salir como moneda.
-- **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, que se festeja
-  en el cartel de la oleada superada, con sus monedas volando al contador). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
+- **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, el doble si la oleada
+  salió sin un golpe, que se festeja en el cartel de la oleada superada, con sus monedas volando al contador). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
   que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. **Al terminar la oleada las monedas
   se quedan donde cayeron**: no hay imán global (antes `Moneda.AtraerTodas` las traía todas), juntarlas es parte del
   juego y la mejora de imán es la que ayuda. Siguen desapareciendo a los 20 s.

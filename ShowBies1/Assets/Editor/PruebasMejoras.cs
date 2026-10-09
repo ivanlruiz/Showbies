@@ -252,6 +252,7 @@ public static class PruebasMejoras
                     ProbarMisiones(informe);
                     ProbarDesafioSemanal(informe);
                     ProbarProximoObjetivo(informe);
+                    ProbarOleadaPerfecta(informe);
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
                     ProbarLogros(informe);
@@ -5309,6 +5310,23 @@ public static class PruebasMejoras
                   esperadoDeLaSemanaVieja, Progreso.Monedas - antes, 1e-9);
         inf.Verdadero("semanal: y queda uno nuevo sin cobrar",
                       Progreso.Semanal.lunes == lunesGuardado && !Progreso.Semanal.cobrado);
+    }
+
+    // La oleada sin un golpe (WaveManager, mejora 4 de la revision del 9/10): el bono doble y
+    // su linea dorada en el cartel. Que sea sin golpes lo decide el mismo contador del logro
+    // INTOCABLE (PlayerHealth.GolpesRecibidos).
+    static void ProbarOleadaPerfecta(Informe inf)
+    {
+        inf.Igual("perfecta: el bono de la oleada 5 es 4 x 5", 20, WaveManager.Bono(4, 5, false));
+        inf.Igual("perfecta: sin un golpe, el doble", 40, WaveManager.Bono(4, 5, true));
+        inf.Igual("perfecta: en la 30, 240", 240, WaveManager.Bono(4, 30, true));
+        string normal = WaveManager.TextoDelBono(20, false);
+        string perfecta = WaveManager.TextoDelBono(40, true);
+        inf.Igual("perfecta: la linea de siempre", Textos.Formato("cartel_bono", 20), normal);
+        inf.Verdadero("perfecta: la linea dice PERFECTA y el bono doble (" + perfecta + ")",
+                      perfecta.Contains("PERFECTA") && perfecta.Contains("+40") && !normal.Contains("PERFECTA"));
+        inf.Verdadero("perfecta: en el dorado de las monedas, en su propio renglon como la de siempre",
+                      perfecta.Contains("#FFE14D") && perfecta.Length > 0 && normal.Length > 0 && perfecta[0] == normal[0]);
     }
 
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.

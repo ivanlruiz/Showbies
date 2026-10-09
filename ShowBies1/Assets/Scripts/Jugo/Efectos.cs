@@ -47,6 +47,7 @@ public class Efectos : MonoBehaviour
     public float pausaOleadaSuperada = 0.35f;
     public float volumenOleadaSuperada = 0.55f;
     public float volumenMonedaDelBono = 0.3f;
+    public Color colorPerfecta = new Color(1f, 0.882f, 0.302f);   // el dorado de las monedas del HUD
 
     [Header("Destello de golpe")]
     public Material materialDestello;
@@ -295,6 +296,25 @@ public class Efectos : MonoBehaviour
 
     // La bemol mayor de una octava a la otra, y el acorde de arriba.
     private static readonly float[] ArpegioSuperada = { 0f, 4f, 7f, 12f, 16f, 19f, 24f };
+
+    // Una oleada sin un solo golpe (WaveManager, el bono doble): chispas doradas alrededor
+    // del jugador y unas campanitas que entran cuando termina el arpegio de la oleada
+    // superada. Sonidos.Programar va con el reloj del audio, que la pausa de impacto no frena.
+    public static void OleadaPerfecta()
+    {
+        var e = instance;
+        if (e == null || MenuPausa.JuegoCongelado) return;
+
+        if (PlayerHealth.instance != null)
+            e.Emitir(PlayerHealth.instance.transform.position + Vector3.up, e.chispasPorMuerteGrande * 2, e.colorPerfecta);
+        AudioClip nota = e.NotaDeAviso();
+        for (int i = 0; i < ArpegioPerfecta.Length; i++)
+            Sonidos.Programar(nota, DemoraPerfecta + 0.05 * i, e.volumenOleadaSuperada * (i < 3 ? 1f : 0.7f), Sonidos.PitchDe(ArpegioPerfecta[i]));
+    }
+
+    // El acorde de arriba dos veces, la segunda mas suave: un brillo, no otro arpegio.
+    private static readonly float[] ArpegioPerfecta = { 12f, 16f, 19f, 12f, 16f, 19f };
+    private const double DemoraPerfecta = 0.5;
     // La pentatonica, para las monedas del bono que llegan al contador.
     private static readonly float[] Pentatonica = { 0f, 2f, 4f, 7f, 9f };
 
