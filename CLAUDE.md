@@ -72,7 +72,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
@@ -293,6 +293,21 @@ escena sin `AplicarMejoras`. **Nunca escribas sobre `gun.bala`**: es el prefab, 
 durante `duracionMejora` (10 s); la última pisa a la anterior y al vencer vuelve a la cadencia mejorada. Antes
 fijaban un intervalo, y con la cadencia al tope una caja de balas empeoraba el arma. La munición no expira. La
 furia multiplica aparte (`FijarFuria`), así una caja que llega durante la furia no la pisa.
+
+**Lo que se compra se ve en el tiro** (1.5.0, mejora 6 de la revisión del 9/10; sin el cartel de "¡MEJORADO!" al
+empezar, que Ivan no quiso). La bala cambia de color y crece por **tramos del daño de cada tiro** (`DanoPorTiro`: la
+mejora por la furia), que se duplican: blanca hasta 2, amarilla hasta 4, naranja hasta 8, magenta hasta 16 y violeta de
+ahí para arriba (`BulletController.Tramo`), del tamaño de siempre al doble. La primera compra ya cambia el color, y la
+furia, que pega ×2, sube justo un tramo. **La crítica sale roja** y 1,3 veces más grande que su tramo; por eso el cuarto
+tramo es magenta y no rojo, como decía el informe: una bala roja se lee como una sola cosa. Con muchos críticos
+comprados casi todas salen rojas, y es lo que pasa: el arma critica casi siempre. **Solo crece lo que se ve**: el
+`BoxCollider` se achica en la misma proporción (`Vestir`), así la bala pega igual que antes. **Un material por tramo**,
+armado una vez a partir del de la bala y compartido por todas, para no romper el batching; **`Bullet.mat` no se toca**,
+que también pinta el brillo de la caja de balas. El disparo suena más grave en cada tramo (`GunController.TonoPorTramo`,
+de 1 a 0,8) y las chispas de la boca salen del color de la bala (`Efectos.Disparo(punto, color)`). **ShowBies > Armas >
+Fotos de las balas** (`FotosDeLasBalas`) saca un chorro de cada tramo y la crítica de noche en los tres capítulos, con la
+cámara y la calidad del teléfono (`Builds/balas/`), y la prueba de lógica mira los tramos, los colores, el collider, los
+materiales compartidos y que `Bullet.mat` no cambie.
 
 **El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
 `intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,

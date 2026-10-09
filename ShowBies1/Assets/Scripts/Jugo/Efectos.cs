@@ -278,6 +278,15 @@ public class Efectos : MonoBehaviour
         e.Emitir(punto, e.chispasPorDisparo);
     }
 
+    // Las chispas de la boca del color de la bala que sale (su tramo de daño, o la critica).
+    public static void Disparo(Vector3 punto, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+
+        e.Emitir(punto, e.chispasPorDisparo, color);
+    }
+
     // Termino la oleada: el ultimo zombi revienta en chispas, la camara tiembla, el tiempo
     // casi se para un instante y suena un arpegio que sube. Con el juego congelado (la
     // derrota) no.

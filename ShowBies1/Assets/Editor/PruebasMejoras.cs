@@ -253,6 +253,7 @@ public static class PruebasMejoras
                     ProbarDesafioSemanal(informe);
                     ProbarProximoObjetivo(informe);
                     ProbarOleadaPerfecta(informe);
+                    ProbarBalasPorTramo(informe);
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
                     ProbarLogros(informe);
@@ -5350,6 +5351,79 @@ public static class PruebasMejoras
                       perfecta.Contains("PERFECTA") && perfecta.Contains("+40") && !normal.Contains("PERFECTA"));
         inf.Verdadero("perfecta: en el dorado de las monedas, en su propio renglon como la de siempre",
                       perfecta.Contains("#FFE14D") && perfecta.Length > 0 && normal.Length > 0 && perfecta[0] == normal[0]);
+    }
+
+    // Lo que se compra se ve en el tiro (mejora 6 de la revision del 9/10): el color y el tamaño
+    // de la bala por tramos del daño, la critica roja, el collider que no crece, los materiales
+    // compartidos y Bullet.mat sin tocar (tambien pinta el brillo de la caja de balas).
+    static void ProbarBalasPorTramo(Informe inf)
+    {
+        inf.Igual("balas: con 1 de daño, el primer tramo", 0, BulletController.Tramo(1f));
+        inf.Igual("balas: la primera compra (2) ya cambia de tramo", 1, BulletController.Tramo(2f));
+        inf.Igual("balas: con 3, el mismo", 1, BulletController.Tramo(3f));
+        inf.Igual("balas: con 4, el tercero", 2, BulletController.Tramo(4f));
+        inf.Igual("balas: con 8, el cuarto", 3, BulletController.Tramo(8f));
+        inf.Igual("balas: con 16, el ultimo", 4, BulletController.Tramo(16f));
+        inf.Igual("balas: con 500, el ultimo", 4, BulletController.Tramo(500f));
+        bool furiaSubeUno = true;
+        for (float dano = 1f; dano <= 8f; dano *= 2f)
+            furiaSubeUno &= BulletController.Tramo(dano * 2f) == BulletController.Tramo(dano) + 1;
+        inf.Verdadero("balas: la furia (x2) sube justo un tramo", furiaSubeUno);
+        inf.Igual("balas: un tono por tramo", BulletController.ColoresPorTramo.Length, GunController.TonoPorTramo.Length);
+        bool masGrave = true;
+        for (int i = 1; i < GunController.TonoPorTramo.Length; i++) masGrave &= GunController.TonoPorTramo[i] < GunController.TonoPorTramo[i - 1];
+        inf.Verdadero("balas: el disparo suena mas grave en cada tramo", masGrave);
+        bool distintos = true;
+        for (int i = 0; i < BulletController.ColoresPorTramo.Length; i++)
+        {
+            var c = BulletController.ColoresPorTramo[i];
+            var r = BulletController.ColorCritico;
+            distintos &= Mathf.Abs(c.r - r.r) + Mathf.Abs(c.g - r.g) + Mathf.Abs(c.b - r.b) > 0.3f;
+            for (int j = 0; j < i; j++)
+            {
+                var d = BulletController.ColoresPorTramo[j];
+                distintos &= Mathf.Abs(c.r - d.r) + Mathf.Abs(c.g - d.g) + Mathf.Abs(c.b - d.b) > 0.3f;
+            }
+        }
+        inf.Verdadero("balas: los colores de los tramos y el de la critica se distinguen", distintos);
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Bullet.prefab");
+        if (!inf.Verdadero("balas: esta el prefab", prefab != null && prefab.GetComponent<BulletController>() != null)) return;
+        var materialDelPrefab = prefab.GetComponent<Renderer>().sharedMaterial;
+        Color colorDelPrefab = materialDelPrefab != null ? materialDelPrefab.color : Color.clear;
+        var cajaDelPrefab = prefab.GetComponent<BoxCollider>();
+        Vector3 hitbox = Vector3.Scale(cajaDelPrefab.size, prefab.transform.localScale);
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var a = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, vista)).GetComponent<BulletController>();
+            var b = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, vista)).GetComponent<BulletController>();
+            a.Vestir(1f, false);
+            b.Vestir(1.5f, false);
+            inf.Verdadero("balas: dos del mismo tramo comparten el material (el batching)",
+                          a.MaterialPuesto != null && a.MaterialPuesto == b.MaterialPuesto && a.MaterialPuesto != materialDelPrefab);
+            inf.Verdadero("balas: la base es blanca", a.MaterialPuesto != null && a.MaterialPuesto.color == BulletController.ColoresPorTramo[0]);
+            float chica = a.transform.localScale.x;
+            a.Vestir(16f, false);
+            inf.Cerca("balas: la del ultimo tramo crece", BulletController.TamanioPorTramo[4], a.transform.localScale.x / chica, 1e-4);
+            inf.Verdadero("balas: con su color", a.MaterialPuesto.color == BulletController.ColoresPorTramo[4]);
+            var caja = a.GetComponent<BoxCollider>();
+            inf.Verdadero("balas: pero el collider no: pega igual que antes",
+                          (Vector3.Scale(caja.size, a.transform.localScale) - hitbox).magnitude < 1e-4f);
+            b.Vestir(1f, true);
+            inf.Verdadero("balas: la critica sale roja", b.MaterialPuesto.color == BulletController.ColorCritico);
+            inf.Cerca("balas: y mas grande que las de su tramo", BulletController.TamanioCritico, b.transform.localScale.x / chica, 1e-4);
+            b.Vestir(2f, false);
+            inf.Verdadero("balas: reusada, vuelve a su tramo", b.MaterialPuesto.color == BulletController.ColoresPorTramo[1] &&
+                          Mathf.Abs(b.transform.localScale.x / chica - BulletController.TamanioPorTramo[1]) < 1e-4f);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
+        inf.Verdadero("balas: Bullet.mat no cambia (pinta tambien la caja de balas)",
+                      prefab.GetComponent<Renderer>().sharedMaterial == materialDelPrefab && materialDelPrefab.color == colorDelPrefab);
     }
 
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.

@@ -24,11 +24,92 @@ public class BulletController : MonoBehaviour
     private float lifeTimeInicial;
     private bool enUso;
 
+    // Lo que se compra se ve en el tiro (revision del 9/10, mejora 6): la bala cambia de color
+    // y crece por tramos del daño que lleva cada tiro (la mejora por la furia), y la critica
+    // sale roja y mas grande desde el arma. Los tramos se duplican (1, 2, 4, 8 y 16): la
+    // primera compra ya cambia el color, y la furia, que pega x2, sube justo un tramo. El
+    // cuarto es magenta y no rojo, como decia el informe: el rojo es de la critica, y una bala
+    // roja tiene que leerse como una sola cosa. Un material por tramo, armado una vez a partir
+    // del de la bala y compartido por todas (asi no se rompe el batching); Bullet.mat no se
+    // toca, que tambien pinta el brillo de la caja de balas. Solo crece lo que se ve: el
+    // collider se achica en la misma proporcion, y la bala pega igual que antes.
+    public static readonly float[] DesdeDano = { 0f, 2f, 4f, 8f, 16f };
+    public static readonly Color[] ColoresPorTramo =
+    {
+        new Color(1f, 1f, 1f),            // blanca
+        new Color(1f, 0.882f, 0.302f),    // amarilla, la de la tienda
+        new Color(1f, 0.624f, 0.11f),     // naranja
+        new Color(1f, 0.169f, 0.839f),    // magenta, la de los titulos de neon
+        new Color(0.62f, 0.33f, 1f),      // violeta
+    };
+    public static readonly float[] TamanioPorTramo = { 1f, 1.2f, 1.45f, 1.7f, 2f };
+    public static readonly Color ColorCritico = new Color(1f, 0.231f, 0.361f);   // el rojo del neon
+    public const float TamanioCritico = 1.3f;   // por encima del de su tramo
+
+    private static Material[] materialesPorTramo;
+    private static Material materialCritico;
+
+    private Vector3 escalaBase;
+    private Vector3 cajaBase;
+    private BoxCollider caja;
+    private Renderer dibujo;
+    private bool preparada;
+
     // El static sobrevive al cambio de escena, pero las balas guardadas no.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetearPool()
     {
         pool.Clear();
+        materialesPorTramo = null;
+        materialCritico = null;
+    }
+
+    // El tramo de un daño por tiro: 0 hasta 2, 1 hasta 4, 2 hasta 8, 3 hasta 16 y 4 de ahi
+    // para arriba.
+    public static int Tramo(float dano)
+    {
+        int tramo = 0;
+        for (int i = 1; i < DesdeDano.Length; i++)
+            if (dano + 1e-4f >= DesdeDano[i]) tramo = i;
+        return tramo;
+    }
+
+    // Viste la bala para el tiro: el color y el tamaño de su tramo, o los de la critica.
+    // 'danoPorTiro' es el de la mejora con la furia, sin la critica.
+    public void Vestir(float danoPorTiro, bool esCritica)
+    {
+        Preparar();
+        int tramo = Tramo(danoPorTiro);
+        float tamanio = TamanioPorTramo[tramo] * (esCritica ? TamanioCritico : 1f);
+        transform.localScale = escalaBase * tamanio;
+        if (caja != null) caja.size = cajaBase / tamanio;
+        if (dibujo == null) return;
+        ArmarMateriales(dibujo.sharedMaterial);
+        if (materialesPorTramo != null) dibujo.sharedMaterial = esCritica ? materialCritico : materialesPorTramo[tramo];
+    }
+
+    public Material MaterialPuesto { get { return dibujo != null ? dibujo.sharedMaterial : null; } }
+
+    // Lo de la bala recien salida del prefab, antes de vestirla: sin Awake, asi tambien
+    // anda en el editor (la prueba de logica).
+    private void Preparar()
+    {
+        if (preparada) return;
+        preparada = true;
+        escalaBase = transform.localScale;
+        caja = GetComponent<BoxCollider>();
+        if (caja != null) cajaBase = caja.size;
+        dibujo = GetComponent<Renderer>();
+    }
+
+    private static void ArmarMateriales(Material baseDeLaBala)
+    {
+        if (materialesPorTramo != null && materialesPorTramo[0] != null && materialCritico != null) return;
+        if (baseDeLaBala == null) return;
+        materialesPorTramo = new Material[ColoresPorTramo.Length];
+        for (int i = 0; i < materialesPorTramo.Length; i++)
+            materialesPorTramo[i] = new Material(baseDeLaBala) { name = "BalaTramo" + i, color = ColoresPorTramo[i] };
+        materialCritico = new Material(baseDeLaBala) { name = "BalaCritica", color = ColorCritico };
     }
 
     public static BulletController Obtener(BulletController prefab, Vector3 posicion, Quaternion rotacion)

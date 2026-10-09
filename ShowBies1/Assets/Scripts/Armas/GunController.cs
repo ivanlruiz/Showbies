@@ -36,6 +36,10 @@ public class GunController : MonoBehaviour
 
     [Header("Sonido")]
     public float intervaloMinimoSonido = 0.04f;   // techo de sonidos de disparo por segundo
+
+    // El disparo suena mas grave cuanto mas pega: el tono de cada tramo de la bala
+    // (BulletController.Tramo), del 1 de la base a 0,8 en el violeta.
+    public static readonly float[] TonoPorTramo = { 1f, 0.95f, 0.9f, 0.85f, 0.8f };
     private float proximoSonido;
 
 
@@ -237,19 +241,22 @@ public class GunController : MonoBehaviour
         // cadencia lo cortaba en cada tiro antes de que llegara a oirse. El
         // techo evita apilar decenas de sonidos con la cadencia mejorada, y
         // también varios tiros del mismo frame.
+        bool critico = probabilidadCritico > 0f && EsCritico(probabilidadCritico, Random.value);
+        int tramo = BulletController.Tramo(DanoPorTiro);
         if (Time.time >= proximoSonido && AudioSource != null && AudioSource.clip != null)
         {
+            AudioSource.pitch = TonoPorTramo[tramo];
             AudioSource.PlayOneShot(AudioSource.clip);
             proximoSonido = Time.time + intervaloMinimoSonido;
-            Efectos.Disparo(salida);
+            Efectos.Disparo(salida, critico ? BulletController.ColorCritico : BulletController.ColoresPorTramo[tramo]);
         }
 
         // Antes era un Instantiate por disparo. Ahora las balas se reusan.
         BulletController newBullet = BulletController.Obtener(bala, salida, firePoint.rotation);
         newBullet.velocidad = velocidadBala;
-        bool critico = probabilidadCritico > 0f && EsCritico(probabilidadCritico, Random.value);
         newBullet.critico = critico;
         newBullet.danoAplicado = critico ? DanoPorTiro * multiplicadorCritico : DanoPorTiro;
+        newBullet.Vestir(DanoPorTiro, critico);
         newBullet.Adelantar(atraso);
     }
 
