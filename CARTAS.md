@@ -1,102 +1,184 @@
 # Cartas de la partida (diseño para la 1.6.0)
 
-Elegir 1 de 3 cartas entre oleadas, como en Archero. Lo pidió Jeff en Discord el 8/10 y ya estaba en `TAREAS.md`
-(Ideas de Archero, 19/9). Esto es el diseño para que Ivan lo revise: **todavía no hay código**. Las preguntas que
-deciden cosas están al final.
+Matar zombis da experiencia; al llenar la barra se sube un nivel de **PODER**, el juego se congela y aparecen **tres
+cartas**. Se elige una, se aplica en el acto y dura toda la partida. Es el corazón de la 1.6.0: en la revisión de
+Gemini del 10/10 salió como lo que más retiene ("una partida más, a ver si me toca la build"), por encima de todo lo
+demás. Lo pidió también Jeff en Discord el 8/10.
+
+Este documento reemplaza al del 9/10, que daba las cartas cada 3 oleadas: Ivan eligió el plan de Gemini, por
+experiencia. **Todavía no hay código.** Lo que hay que decidir está al final.
 
 ## Qué es
 
-Al terminar ciertas oleadas el juego se congela (como la ventanita de revivir) y aparecen **tres cartas**. Se toca una,
-se aplica en el acto y **dura toda la partida**, sumándose a las anteriores. Morir o REINICIAR las pierde.
-
 - **La tienda es lo permanente y las cartas son la partida.** Una carta nunca toca `Progreso` como mejora: multiplica
-  encima de lo que ya dejó `AplicarMejoras`, igual que hoy la caja de balas y la furia multiplican aparte en el arma.
-- **Ayuda con dos cosas que se quejaron**: la oleada 5 sin mejoras se hace difícil (Jeff), y el muro de las oleadas
-  altas (`CLAUDE.md`, Los zombis escalan con la oleada), donde el daño comprable ya no alcanza a la vida.
-- **Solo en el modo oleadas** al principio. El libre podría darlas al subir de nivel, después.
+  encima de lo que dejó `AplicarMejoras`, como hoy la caja de balas y la furia multiplican aparte en el arma. Morir o
+  REINICIAR las pierde.
+- **Las cartas cambian cómo se juega, no solo los números**: además de daño y cadencia, balas que atraviesan, que
+  rebotan, que salen de a dos, que congelan o que saltan de un zombi a otro, un dron que dispara solo. Es lo que pidió
+  Gemini, y lo que hace que dos partidas no sean iguales.
+- **En los dos modos**: oleadas y libre. En el libre le da a la partida un objetivo que hoy no tiene.
 
-## Cuándo salen
+## La experiencia y el PODER
 
-Propuesta: **al terminar cada 3 oleadas** (3, 6, 9...) y **después de cada jefe** (10, 20, 30...) una elección mejor
-(ver Raras). Hasta la oleada 30 son 12 cartas. Cada oleada sería mucho: con oleadas de 30-60 s en el arranque, se
-pasaría más tiempo eligiendo que jugando.
+- **Cada zombi da experiencia al morir**, en el mismo bloque de `DanoZombi` que suma los puntos (la regla de siempre:
+  nada se suma desde otro lado). Normal, rápido y veloz 1; tanque 3; tesoro 5; jefe 15; los invocados por el jefe, 1.
+  **Va en un campo `experiencia` de cada `Enemy`** (con 1 si no se carga, como `puntos`): tocar el balance no
+  recompila, y la prueba de lógica arma la tabla de la curva leyendo los assets.
+- **El tutorial no da experiencia ni abre cartas** (sus zombis mueren por `DanoZombi`), y **los bancos en play tampoco**:
+  `RespaldoDelBanco.SigueArmado` prende `SinCartasAutomaticas` en cada cuadro, como `WaveManager.SinTesoroAutomatico`.
+  Sin esto, cualquier banco que mata zombis quedaría congelado con tres cartas en pantalla. Va primero en la etapa 1.
+- **Cómo llega al jugador** (decisión 1): directo al matar, con una chispa que vuela del zombi al jugador, o con
+  cristales en el piso que hay que juntar, como las monedas. Recomiendo **directo**: las monedas ya son el "ir a
+  juntar", los cristales compartirían su techo de 150/80 en escena (con 35 zombis el piso se llena) y la experiencia
+  perdida por no pasar cerca frustra justo al que está aprendiendo.
+- **El nombre**: el nivel de la partida se llama **PODER** ("¡PODER 4!"), porque ya existen el NIVEL del jugador (la
+  cuenta) y el "Nivel N" del modo libre (decisión 2).
+- **La barra**: fina, con "PODER N" chico al costado, **donde entre sin pisar nada, medido en 16:9, 20:9 y 21:9** (la
+  prueba de lógica ya mide esas franjas). Arriba al centro es la franja más llena del HUD (el botón de pausa del
+  teléfono, el cartel de la oleada, la barra del jefe, el del capítulo); los candidatos son encima de la vida, abajo
+  al centro, o pegada al bloque de arriba a la izquierda. Se elige con maquetas.
 
-La elección va **antes del cartel de la oleada siguiente**, en el descanso (`WaveManager`, paso 1): el cartel y el
-bono esperan a que se elija. Con el juego congelado no corren el descanso ni las cajas.
+### La curva
 
-## Las cartas (unas 14 para empezar)
+Pasar del PODER L al siguiente cuesta `round(8 × 1,15^L)` de experiencia: la primera carta a los 8 zombis (unos 20 s
+de la primera oleada), y después cada vez más espaciadas. Con la mezcla de zombis de WaveMode:
 
-Cada una con su tope de veces. Solo salen las que se pueden usar (las de granada y furia, si están compradas).
+| hasta la oleada | 1 | 2 | 3 | 5 | 10 | 15 | 20 | 30 | 40 | 50 | 60 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| cartas | 1 | 3 | 5 | 8 | 14 | 19 | 22 | 27 | 31 | 34 | 36 |
 
-| carta | efecto por vez | tope | dónde se engancha |
+Gemini pedía 12-15 hasta la 10. Al principio es una carta cada uno o dos minutos; en las oleadas altas, una cada dos o
+tres oleadas. En el libre la experiencia sale igual, de los zombis que se matan.
+
+## La elección
+
+- **El juego se congela** como con la oferta de revivir (`MenuPausa.JuegoCongelado` suma la elección): no corren los
+  zombis, las cajas, la furia ni los relojes del jefe. La pausa no se abre encima y Escape no la cierra: hay que
+  elegir.
+- **Tres tarjetas de carbón neón** que entran girando una tras otra, con el jingle del cartel (`ConstructorUI`). Cada
+  una: su dibujo, el nombre, lo que hace ("DAÑO ×1,25") y cuántas veces se tiene ("2/4"). Tocar una la hace saltar, las
+  otras se van, y la elegida vuela a una fila de íconos chicos del HUD.
+- **Si se sube más de un nivel de golpe** (una granada que mata a seis tanques), salen dos elecciones seguidas.
+- **La elección mira lo mismo que la derrota**: nunca se abre con el jugador muerto (`PlayerHealth.EstaMuerto`), con la
+  oferta de revivir o la derrota en pantalla, ni con la pausa abierta; **queda pendiente** y se abre en cuanto se
+  puede (al revivir, al reanudar). Así nunca hay dos cosas congelando y descongelando el `timeScale` (el caso: la
+  granada que llena la barra en el mismo paso de física en que un zarpazo mata al jugador). Sumada a
+  `MenuPausa.OtroLoCongela`, la pausa de impacto de `Efectos` ya no le devuelve el `timeScale` a 1 por detrás.
+- **El sorteo**: solo cartas que no llegaron a su tope y que se pueden usar (las de granada y furia, si están
+  compradas). Con todo al tope sale **CURACIÓN** (vida entera), que no tiene tope.
+- **Después de cada jefe, una de las tres sale dorada y vale el doble** (decisión 5).
+- **Sin cartas de monedas**: la jugada óptima sería elegirlas siempre, y llegar más lejos ya da más monedas.
+
+## Las cartas
+
+Cada una con su tope. Las de números (las del diseño anterior) y las que cambian las reglas (las de Gemini):
+
+| carta | qué hace por vez | tope | dónde se engancha |
 |---|---|---|---|
-| Disparo doble | +1 bala por tiro, en abanico de 8° | 2 | `GunController` (tiros por cada tiro del acumulador) |
-| Atravesar | la bala sigue después de pegar, 1 zombi más | 3 | `BulletController.OnCollisionEnter` (hoy vuelve al pool al pegar) |
-| Rebote | la bala rebota hacia el zombi más cercano | 2 | `BulletController` (nuevo rumbo en vez de volver al pool) |
-| Hacia atrás | una bala más por la espalda | 1 | `GunController` |
-| Daño | daño ×1,25 | 4 | `GunController`, multiplicador aparte como `FijarFuria` |
+| Daño | daño ×1,25 | 4 | `GunController`, un multiplicador aparte como `FijarFuria` |
 | Cadencia | tiros/s ×1,2 | 4 | `GunController`, respeta `maxTirosPorSegundo` |
 | Crítico | +10 % de crítico | 3 | `GunController.EsCritico` |
 | Vida | vida máxima ×1,2 y cura entera | 3 | `PlayerHealth` |
-| Vampiro | cada 20 muertes cura el 5 % | 2 | `EnemyController.DanoZombi`, en el bloque de muerte |
-| Escudo | bloquea un golpe cada 15 s | 1 | `PlayerHealth.TakeDamage` |
-| Velocidad | +10 % | 2 | `PlayerController.multiplicadorVelocidad` (lo usa la furia: se multiplican) |
-| Imán | +2 m | 2 | `Moneda.FijarRadioIman` (sin imán comprado, da 2 m) |
-| Granada rápida | recarga −30 % | 2 | `PlayerController.granadaCooldown` |
-| Furia larga | la furia dura +2 s | 2 | `Furia` |
+| Velocidad | +10 % | 2 | `PlayerController.multiplicadorVelocidad` (se multiplica con la furia) |
+| Imán | +2 m (sin imán comprado, da 2 m) | 2 | `Moneda.FijarRadioIman` |
+| Granada rápida | recarga −30 % | 2 | `PlayerController.granadaCooldown` (si está comprada) |
+| Furia larga | la furia dura +2 s | 2 | `Furia` (si está comprada) |
+| **Perforante** | la bala sigue después de pegar, con la mitad del daño, 1 zombi más | 3 | `BulletController.OnCollisionEnter` (hoy vuelve al pool al pegar) |
+| **Rebote** | al pegar, la bala sale hacia el zombi más cercano | 2 | `BulletController`, nuevo rumbo en vez de volver al pool |
+| **Disparo doble** | +1 bala por tiro, en abanico de 8° | 2 | `GunController`, al sacar cada bala del pool |
+| **Hacia atrás** | una bala más por la espalda | 1 | `GunController` |
+| **Explosiva** | daño en área chico al pegar (1,5 m, 30 % del daño) | 2 | `BulletController`, con las chispas de `Efectos` y el dedup por componente de la granada |
+| **Hielo** | el zombi que recibe un tiro va 40 % más lento 2 s, teñido de celeste | 2 | `EnemyController`, un multiplicador de velocidad con su reloj |
+| **Eléctrica** | 1 de cada 4 tiros salta a otro zombi a 4 m, con una línea como la del jefe | 2 | `BulletController`, un `LineRenderer` de un pool |
+| **Dron** | una esfera que orbita al jugador y dispara sola al más cercano, 1 tiro/s | 2 | componente nuevo en el jugador, con las balas del pool |
+| **Vampiro** | cada 15 muertes cura el 5 % | 2 | `DanoZombi`, en el bloque de muerte |
+| **Escudo** | bloquea un golpe cada 15 s, con un anillo que se ve | 1 | `PlayerHealth.TakeDamage` |
+| Curación | vida entera | — | solo cuando todo lo demás está al tope |
 
-**Raras (después del jefe)**: una de las tres sale dorada y vale el doble, o se cura entero y se elige igual (el
-"ángel del jefe" de las notas del 19/9). Las combinaciones secretas (fuego + rebote) quedan para después.
+Son 41 elecciones antes de que salga Curación: alcanza para la oleada 60 de la tabla de arriba. Los números son
+de partida y se ajustan con la simulación (ver El balance).
 
-**Monedas no**: una carta de botín haría que la jugada óptima sea elegirla siempre, y las monedas ya escalan con la
-oleada. Las cartas son para llegar más lejos, y llegar más lejos ya da más monedas.
+**Atravesar, rebotar, explotar y saltar tocan el conteo de muertes**: un zombi no puede morir dos veces ni sumar
+puntos dobles (la guarda `estaMuerto` de `DanoZombi` ya lo cubre, y el daño en área deduplica por componente, como la
+granada). La bala que sigue viva no vuelve al pool hasta terminar. **Y no le puede pegar dos veces al mismo zombi**:
+cada zombi tiene tres colliders (la cápsula y dos cubos), y una bala que sigue entra en uno y después en otro; hoy no
+pasa porque vuelve al pool en el primero. La bala que perfora, rebota o salta se acuerda de los `EnemyController` que ya
+tocó, no de los colliders.
 
-## Cómo se ve
-
-- Una ventana de carbón neón como la tienda (`ConstructorUI`), con tres tarjetas que entran girando, una tras otra,
-  con el jingle del cartel. Cada tarjeta: icono, nombre, qué hace ("DAÑO ×1,25") y cuántas veces la tiene ("2/4").
-- Tocar una la hace saltar, las otras dos se van, y la elegida vuela a una fila de iconos chiquitos del HUD (abajo
-  del renglón de los FPS), que es lo que se lleva en la partida.
-- Sin reloj: es una pausa. Escape / atrás no la cierra (hay que elegir). La pausa no se abre encima.
-- Textos nuevos en `Textos.txt` (`carta_<id>_nombre`, `carta_<id>`), en inglés y español de España.
+**Disparo doble y Hacia atrás gastan una sola bala del cargador por tiro**: si gastaran una por bala, con 500 de
+arranque la carta sería un castigo. **El hielo frena la persecución, no los patrones del jefe**: el jefe se mueve solo
+(`IMovimientoPropio`) y su carga va a 16 m/s; congelado camina más lento hacia el jugador, pero salta y embiste igual.
 
 ## Lo que se guarda (y la trampa de salir)
 
-La partida de oleadas se retoma (`Progreso.GuardarOleadaEnCurso`), y la 1.5.0 suma **MEJORAS en la pausa**, que sale
-de la partida y vuelve a la misma oleada. Si las cartas no se guardaran, salir a comprar costaría todas las cartas y
-el botón nuevo no serviría. Entonces:
+La partida de oleadas se retoma (`Progreso.GuardarOleadaEnCurso`), y MEJORAS de la pausa sale de la partida y vuelve.
+Si las cartas no se guardaran, salir a comprar costaría todas las cartas. Entonces:
 
-- **Las cartas elegidas se guardan con la partida en curso** (una lista de ids en el progreso, al lado de
-  `oleadaEnCurso`), y se olvidan donde se olvida la partida (morir, REINICIAR).
-- **Las tres que se ofrecen salen de una semilla de la partida y la oleada**: salir y volver a entrar no las cambia
-  (si no, salir sería la forma de buscar las que uno quiere).
+- **Con la partida en curso se guardan** las cartas elegidas (ids y veces), el PODER y la experiencia, y se olvidan
+  donde se olvida la partida (morir, REINICIAR). Retomar arranca la oleada de cero, pero con las cartas.
+- **Cada elección guarda en el acto** (con `Guardar`, no en segundo plano: es un punto seguro, como comprar). Si solo se
+  guardara al empezar la oleada, como hoy la partida en curso, la carta elegida a mitad de la oleada se perdería al
+  salir por MEJORAS de la pausa, que es la trampa que esto quiere evitar.
+- **Lo de la partida es `static`** (lo leen el arma, el jugador y las balas): va al reset de `SubsystemRegistration`,
+  o la segunda partida del editor arrancaría con las cartas de la primera.
+- **Las tres que se ofrecen salen de una semilla de la partida y del PODER**: salir y volver no las cambia.
 - **Una elección pendiente se guarda**: si se cierra la app con las cartas en pantalla, vuelven al retomar.
-- La versión del JSON sube (un build viejo abre el archivo en solo lectura, como siempre).
+- **La versión del JSON pasa a 8**, con su migración (un build viejo lo abre en solo lectura, como siempre).
+- El libre no se retoma: ahí no se guarda nada.
+
+## El arma que cambia con el daño
+
+Gemini pidió "desbloqueos que se vean, no solo números". Desde la 1.5.0 la bala cambia de color y tamaño en cinco
+tramos del daño de cada tiro (blanca, amarilla, naranja, magenta, violeta: `BulletController.Tramo`). **La pistola de la
+mano cambia con el mismo tramo**: una pistola, un revólver, una escopeta corta, un rifle y un arma de energía, con
+formas simples como la pistola de hoy (`ConstructorArmas`), cada una con su color de detalle y su fogonazo del color de
+la bala. Al subir de tramo en la partida (una carta de daño, la furia), un destello y el sonido del cartel.
+
+Primero, **maquetas** de las cinco armas en la mano del jugador, con la cámara del juego, para que Ivan elija.
 
 ## El balance
 
-Las cartas hacen las partidas más largas, y eso mueve todo lo que se mide con la mejor oleada: la recompensa diaria,
-las misiones, el bestiario y Halloween (`Economia`). No se rompe nada (todo se mide "de menos"), pero la curva de
-dificultad de las oleadas altas hay que volver a mirarla con las cartas puestas: una simulación como la del 19/9, con
-un jugador que elige bien. Puede que haya que subir `crecimientoVida` de las oleadas, o que las cartas de daño sean
-más chicas. Se hace antes de publicar, no después.
+Las cartas hacen al jugador más fuerte dentro de la partida y mueven el muro: Gemini eligió la curva de la 1.5.2
+(×1,08 y ×1,04 desde la 11) pensando en eso. Antes de publicar, la simulación de la curva (`simulaciones/curva_1.5.2`)
+suma un jugador que elige cartas, para ver dónde queda el muro y si las cartas de daño tienen que ser más chicas.
+Las partidas más largas mueven también lo que se mide con la mejor oleada (las misiones, la diaria, el bestiario,
+Halloween), pero eso se mide siempre de menos y no se rompe.
+
+## Rendimiento
+
+Las explosiones, los rayos y los drones salen de pools y de `Efectos`, nunca de `Instantiate` por tiro. Con 35 zombis
+en el teléfono se mide con el contador de FPS (el peor cuadro y los tirones), en el Redmi.
 
 ## Pruebas
 
-- Prueba de lógica: el sorteo (sin pasar topes, sin cartas que no se pueden usar, la misma semilla da las mismas tres),
-  lo que aplica cada carta sobre el arma y el jugador (con los números de arriba, y que se apilen bien con la caja de
-  balas y la furia), el guardado y la migración.
-- Banco en play: completar la 3, elegir, salir con MEJORAS, volver y ver que la carta sigue; morir y ver que se fue.
-- Atravesar y rebotar tocan el pool de balas y el conteo de muertes: un banco que cuente que ningún zombi muera dos
-  veces ni sume puntos dobles.
+- **Prueba de lógica**:
+  - la curva y los topes;
+  - el sorteo: sin cartas topeadas ni que no se puedan usar, y la misma semilla da las mismas tres;
+  - lo que aplica cada carta sobre el arma y el jugador, y que se apile bien con la caja de balas y la furia;
+  - el guardado al retomar y la migración a v8;
+  - que la barra no pise la pausa ni la barra del jefe.
+- **Banco en play**: subir de PODER, elegir, salir con MEJORAS, volver y ver que la carta sigue; morir y ver que se
+  fue. Y uno que tire con perforante, rebote, explosiva y eléctrica y cuente que ningún zombi muera dos veces ni sume
+  puntos dobles, y que `ZombisVivos` no se despegue.
+
+## Las etapas
+
+| etapa | qué | cuánto |
+|---|---|---|
+| 1 | Primero el interruptor de los bancos y el tutorial; después la experiencia (en los assets), el PODER, la barra, la elección y las 8 cartas de números, con el guardado (v8) y las pruebas | 3-4 días |
+| 2 | Las 10 cartas que cambian las reglas, con su banco | 4-5 días |
+| 3 | El arma que cambia con el daño: maquetas, y después el constructor | 1-2 días |
+| 4 | El balance con la simulación, el Redmi, la APK de prueba y el AAB | 1-2 días |
+
+Cada etapa termina con la prueba de lógica en TODO OK y una APK de prueba para el teléfono.
 
 ## Lo que hay que decidir
 
-1. **¿Cada cuántas oleadas?** Propuesta: cada 3 y después de cada jefe.
-2. **¿Un vídeo para cambiar las tres cartas?** Sería un lugar nuevo de anuncios con premio, en una pausa real del
-   juego, pero hoy la regla es que los vídeos con premio salen solo en la derrota y en el menú. Se puede abrir esa
-   puerta o no.
-3. **¿También en el modo libre?** Propuesta: no en la 1.6.0.
-4. **¿Las cartas raras después del jefe?** Propuesta: sí, es poco trabajo y le da algo más a la oleada del jefe.
-
-Estimación: una semana de trabajo, la mitad en atravesar/rebotar y en el balance.
+1. **La experiencia: directa al matar o cristales para juntar.** Recomiendo directa.
+2. **El nombre del nivel de la partida.** Recomiendo PODER.
+3. **La curva**: la primera carta a los 8 zombis y cada nivel ×1,15 (14 cartas hasta la 10). Recomiendo esta.
+4. **También en el modo libre.** Recomiendo que sí: es el mismo sistema.
+5. **La carta dorada después de cada jefe.** Recomiendo que sí.
+6. **Un vídeo para cambiar las tres cartas** (un lugar nuevo de anuncios con premio, en la pausa de la elección).
+   Hoy la regla es que los vídeos con premio no salen en la partida. Recomiendo que no en la 1.6.0, y verlo después con
+   los números de la 1.6.0.
