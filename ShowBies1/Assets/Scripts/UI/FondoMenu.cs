@@ -134,7 +134,8 @@ public class FondoMenu : MonoBehaviour
             luz.type = LightType.Directional;
         }
         luz.intensity = intensidadLuz;
-        luz.shadows = LightShadows.Soft;
+        // En el telefono sin sombras de verdad, como las partidas (SombrasFalsas).
+        luz.shadows = SombrasFalsas.EnUso ? LightShadows.None : LightShadows.Soft;
         luz.transform.rotation = Quaternion.Euler(50f, -25f, 0f);
 
         if (materialPiso != null)

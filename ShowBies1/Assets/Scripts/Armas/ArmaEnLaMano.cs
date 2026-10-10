@@ -93,6 +93,10 @@ public class ArmaEnLaMano : MonoBehaviour
         antebrazo = animador.GetBoneTransform(HumanBodyBones.RightLowerArm);
         muñeco = animador.transform;
         tirosVistos = arma.TirosDisparados;
+
+        // La remera blanca, el aura y la sombra falsa (AspectoDelHeroe): aca, que es donde se
+        // encuentra el modelo.
+        gameObject.AddComponent<AspectoDelHeroe>().Vestir(animador.transform);
     }
 
     // Despues del Animator, que escribe los huesos en cada cuadro: lo que se toca antes se

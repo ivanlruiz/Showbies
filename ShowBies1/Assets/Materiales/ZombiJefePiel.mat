@@ -61,11 +61,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Borde: 1.6
     - _Brillo: 0.5
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _FinuraBorde: 2.5
     - _Glossiness: 0.5
     - _Metallic: 0
     - _Mode: 0
@@ -76,6 +78,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 0.75, g: 0.35, b: 1, a: 1}
+    - _ColorBorde: {r: 0.8375, g: 0.5775, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

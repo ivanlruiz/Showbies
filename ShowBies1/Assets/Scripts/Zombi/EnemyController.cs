@@ -797,6 +797,13 @@ public class EnemyController : MonoBehaviour
         // (revision del 9/10). Con el disfraz puesto, que lo agranda.
         AlturaDeLaCabeza = BarraDeVida.AlturaDeLaCabeza(this);
         PrepararDestello();
+        // En el telefono, la sombra falsa bajo los pies (SombrasFalsas). Despues del destello,
+        // que pinta de blanco los renderers que junto: el disco no tiene que entrar.
+        if (SombrasFalsas.EnUso && capsula != null)
+        {
+            float mitad = capsula.direction == 1 ? Mathf.Max(capsula.height * 0.5f, capsula.radius) : capsula.radius;
+            SombrasFalsas.Poner(transform, capsula.center + Vector3.down * mitad, radioDelCuerpo * SombrasFalsas.DiametroPorRadio);
+        }
     }
 
     public float AlturaDeLaCabeza { get; private set; }

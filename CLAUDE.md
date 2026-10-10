@@ -48,7 +48,7 @@ fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
 
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
-Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia
+Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia, AspectoDelHeroe (la remera blanca, el aura y su sombra)
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde
@@ -60,7 +60,7 @@ Assets/Scripts/Actualizacion/ ← ActualizacionDePlay (la actualización flexibl
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, DiagnosticoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
 Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña y las actualizaciones) y ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle)
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
-Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno)
+Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno), SombrasFalsas (las del teléfono)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
 Assets/Scripts/Evento/      ← EventoHalloween (fechas, caramelos, hitos), InstaladorHalloween, DecoradoHalloween, Disfraces, ContadorCaramelos, SombreroDelJugador, VentanaHalloween
 Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
@@ -73,10 +73,10 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
-Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
+Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
 Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón, los iconos del evento (IconoCalabaza, IconoCaramelo) y los de los botones armados en código (IconoMejoras, IconoActualizar, IconoReiniciar)
 ```
 
@@ -930,7 +930,20 @@ el del cementerio más oscuro, así que ninguna intensidad los despegaba de los 
 `ShowBies/PielDeZombi`: la de `Legacy Shaders/Diffuse` (la textura por `_Color`) más un brillo propio de su mismo color
 (`_Brillo`, 0,5), que no depende de la luz. Ivan lo eligió entre maquetas (un borde de neón por tipo, que se probó, no
 le gustó), con los tintes un poco más claros y saturados que antes. La prueba de lógica mira que cada tipo tenga su
-material con el shader, la textura y brillo.
+material con el shader, la textura y brillo. **Desde el 10/10 llevan además un borde de luz de su color, aclarado**
+(`_Borde` 1,6 y `_ColorBorde`, el tinte un 35 % hacia el blanco, de la revisión de Gemini: Ivan lo eligió entre sin borde,
+de su color y blanco, con **ShowBies > Arte > Maquetas de la 1.5.2**, `MaquetasDelHeroe`): lo que mira de costado a la
+cámara se prende y la silueta se despega del piso. Se calcula **por vértice** en la misma pasada (un contorno de dos
+pasadas duplicaría el skinning de cada zombi). Lo pone **ShowBies > Arte > Armar el héroe, el borde y las sombras falsas**
+(`ConstructorHeroe`), que se vuelve a correr para cambiarlo.
+
+**El héroe se encuentra de un vistazo** (10/10, elegido por Ivan en las mismas maquetas: con la remera negra y la gorra
+era un bulto oscuro): **la remera es blanca** y lleva **un aura**, un charco de luz blanca bajo los pies que late apenas
+(el shader de los faroles, no una luz). Lo pone `AspectoDelHeroe`, que agrega `ArmaEnLaMano` al encontrar el modelo:
+cambia el material del pack (`TT_demo`, que no se toca) por `Materiales/Resources/HeroeRemeraBlanca`, una copia de su
+textura con el bloque de la remera pintado (el que pintan los vértices del hueso `Bip001 Spine`, medido de la malla), y
+pone el aura (`AuraHeroe`) a la altura de los pies de siempre, sin seguir al modelo cuando vuela por el golpe del jefe.
+Muerto, el aura se apaga. Los tres materiales los arma `ConstructorHeroe`.
 
 El decorado del capítulo que viene **se arma apagado unos segundos después de entrar al anterior**
 (`PrepararElSiguiente`): instanciar ochocientos objetos en el frame del cambio era un tirón justo en el momento del
@@ -2225,6 +2238,13 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   detrás se seguían pintando el piso con niebla y los zombis del fondo con su sombra. Depende de que ese fondo tape
   todo, y lo mira la prueba de lógica. Todo lo estático está marcado `BatchingStatic`.
 - Los generadores usan `maxZombisVivosMovil` (35) en vez de 60 cuando `Plataforma.EsMovil`.
+- **En el teléfono las sombras son falsas** (`SombrasFalsas`, 10/10, elegido por Ivan entre maquetas): al cargar cada
+  escena ninguna luz proyecta sombra (también `FondoMenu`, que pone la del menú en su `Start`), y cada personaje lleva
+  debajo un disco oscuro (`ShowBies/SombraFalsa`, `Materiales/Resources/SombraFalsa`): los zombis desde el final de su
+  `Awake` (después del destello, que si no lo pintaría de blanco) y el héroe desde `AspectoDelHeroe`. Le saca al Redmi
+  la pasada de sombras de toda la escena (Halloween suma ~900 piezas que proyectan). Se apagan las luces y no
+  `QualitySettings.shadows`, que cambiado en play en el editor queda escrito en `ProjectSettings`. En PC quedan las de
+  verdad y no hay discos.
 - Los Animators de los zombis están en **Cull Update Transforms**: fuera de pantalla no
   mueven huesos. El rápido tiene **dos** Animators: el que tiene el esqueleto usa el controller y el avatar del
   normal, sin root motion; el otro no tiene controller y no hace nada (ver la trampa del zombi invisible).
