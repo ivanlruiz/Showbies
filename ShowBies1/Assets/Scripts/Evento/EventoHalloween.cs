@@ -47,6 +47,9 @@ public static class EventoHalloween
     // ShowBies > Halloween > Forzar en el editor: el evento prendido fuera de las fechas,
     // para probarlo. Es de esta maquina (EditorPrefs), no del proyecto.
     public const string ClaveForzarEnElEditor = "ShowBies.HalloweenEnElEditor";
+    // Lo contrario: apagado aunque sea la fecha. Lo usan las fotos de la ficha (FotosDeLaFicha)
+    // para las tomas del juego de siempre durante el evento.
+    public const string ClaveApagarEnElEditor = "ShowBies.HalloweenApagadoEnElEditor";
 #endif
 
     // Activo se pregunta en cada muerte y el dia confiable cuesta una llamada por JNI en
@@ -138,6 +141,9 @@ public static class EventoHalloween
         int hoy = DiaQueCuenta(Hoy(), Progreso.Halloween);
         activo = Forzado || EnFechas(hoy);
         edicion = EdicionDe(hoy);
+#if UNITY_EDITOR
+        if (!deprueba && UnityEditor.EditorPrefs.GetBool(ClaveApagarEnElEditor, false)) activo = false;
+#endif
     }
 
     // El dia de hoy, sin volver atras del ultimo que se vio: atrasando el reloj del telefono
