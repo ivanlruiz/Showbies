@@ -121,8 +121,8 @@ public class GeneradorZombis : MonoBehaviour
 
             // Un punto seguro para guardar, como el fin de oleada en WaveMode: antes el
             // modo libre solo guardaba al pausar y al morir, y si Android mataba la app
-            // se perdian las monedas de toda la partida.
-            Progreso.Guardar();
+            // se perdian las monedas de toda la partida. En otro hilo, como el de cada oleada.
+            Progreso.GuardarEnSegundoPlano();
             if (textoNivel != null)
             {
                 textoNivel.gameObject.SetActive(false);

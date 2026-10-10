@@ -170,7 +170,7 @@ public class VentanaMisiones : MonoBehaviour
         if (relojInsignia >= proximaCuenta || Progreso.Revision != revisionContada)
         {
             proximaCuenta = relojInsignia + 0.5f;
-            cuentaInsignia = MisionesDiarias.PorCobrar + (DesafioSemanal.PorCobrar ? 1 : 0);
+            cuentaInsignia = MisionesDiarias.PorCobrar + (Desbloqueo.Todo && DesafioSemanal.PorCobrar ? 1 : 0);
             // Despues de contar: armar las misiones del dia nuevo tambien sube la revision.
             revisionContada = Progreso.Revision;
         }
@@ -340,6 +340,13 @@ public class VentanaMisiones : MonoBehaviour
     private void PintarSemana()
     {
         if (semana == null) return;
+        // Hasta el nivel 5 el desafio semanal no se ve (Desbloqueo): sin su fila, las tres del
+        // dia suben a ocupar el medio.
+        bool todo = Desbloqueo.Todo;
+        if (semana.raiz.gameObject.activeSelf != todo) semana.raiz.gameObject.SetActive(todo);
+        for (int i = 0; i < filas.Length; i++)
+            if (filas[i] != null) filas[i].raiz.anchoredPosition = new Vector2(0f, (todo ? 20f : 90f) - 125f * i);
+        if (!todo) return;
         var estado = DesafioSemanal.Estado;
         bool cumplido = DesafioSemanal.Cumplido;
         double avance = Math.Min(DesafioSemanal.Avance, estado.objetivo);

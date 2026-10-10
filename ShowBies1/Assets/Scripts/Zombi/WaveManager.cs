@@ -184,7 +184,8 @@ public class WaveManager : MonoBehaviour
         {
             OleadaActual++;
             Progreso.GuardarOleadaEnCurso(OleadaActual, Puntaje.instance != null ? Puntaje.instance.contadorKill : 0);
-            Progreso.Guardar();
+            // En otro hilo: el fsync en el del juego era un tiron justo con el cartel de la oleada.
+            Progreso.GuardarEnSegundoPlano();
             int golpesAlEmpezar = PlayerHealth.instance != null ? PlayerHealth.instance.GolpesRecibidos : -1;
             int cantidad = zombisBase + zombisPorOleada * OleadaActual;
             bool conTesoro = OleadaActual >= DesdeOleadaTesoro && Random.value < ProbabilidadTesoro;

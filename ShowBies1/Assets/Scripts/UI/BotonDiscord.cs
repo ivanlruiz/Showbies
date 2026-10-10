@@ -26,6 +26,9 @@ public class BotonDiscord : MonoBehaviour
     public float separacion = 24f;
 
     private float proximoToque;
+    private RectTransform rtBoton;
+    private float delGlobo, anchoDelGlobo;
+    private int lugarPuesto = -1;
 
     // Start y no Awake: SelectorIdioma pone los dibujos del globo en su Awake, y la copia
     // tiene que salir con ellos.
@@ -35,6 +38,13 @@ public class BotonDiscord : MonoBehaviour
         var globo = (RectTransform)selectorIdioma.botonGlobo.transform;
         var boton = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonDiscord",
                                                  DesdeLaDerecha(globo.anchoredPosition.x, globo.rect.width, separacion), icono, Abrir);
+        if (boton != null)
+        {
+            rtBoton = (RectTransform)boton.transform;
+            delGlobo = globo.anchoredPosition.x;
+            anchoDelGlobo = globo.rect.width;
+            Acomodar();
+        }
 
         // Blanco puro: los iconos de las esquinas salen color crema, el del icono del globo, y
         // el logo de Discord no se tine.
@@ -48,6 +58,29 @@ public class BotonDiscord : MonoBehaviour
     public static float DesdeLaDerecha(float delGlobo, float ancho, float separacion)
     {
         return delGlobo + 3f * (ancho + separacion);
+    }
+
+    // Hasta el nivel 5 el bestiario y la medalla no estan (Desbloqueo): Discord pasa al lugar
+    // del bestiario, al lado de las misiones, y no queda un hueco de dos botones.
+    public static float DesdeLaDerechaSinDesbloquear(float delGlobo, float ancho, float separacion)
+    {
+        return delGlobo + (ancho + separacion);
+    }
+
+    private void Update()
+    {
+        Acomodar();
+    }
+
+    private void Acomodar()
+    {
+        if (rtBoton == null) return;
+        int lugar = Desbloqueo.Todo ? 3 : 1;
+        if (lugar == lugarPuesto) return;
+        lugarPuesto = lugar;
+        float x = lugar == 3 ? DesdeLaDerecha(delGlobo, anchoDelGlobo, separacion)
+                             : DesdeLaDerechaSinDesbloquear(delGlobo, anchoDelGlobo, separacion);
+        rtBoton.anchoredPosition = new Vector2(-x, rtBoton.anchoredPosition.y);
     }
 
     private void Abrir()

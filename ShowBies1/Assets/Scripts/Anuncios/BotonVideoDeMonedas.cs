@@ -121,7 +121,8 @@ public class BotonVideoDeMonedas : MonoBehaviour
         proximaMirada = Time.unscaledTime + 0.25f;
         long faltan = VideoDeMonedas.Faltan;
         bool esperando = faltan > 0;
-        bool existe = esperando || esperandoVideo || VideoDeMonedas.HayVideo;
+        // Hasta el nivel 5 no esta (Desbloqueo), salvo que ya se este mirando uno.
+        bool existe = esperandoVideo || Desbloqueo.Todo && (esperando || VideoDeMonedas.HayVideo);
         if (boton.gameObject.activeSelf != existe) boton.gameObject.SetActive(existe);
         if (!existe) return;
 

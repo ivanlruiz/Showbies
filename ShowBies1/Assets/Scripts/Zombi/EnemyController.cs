@@ -265,6 +265,9 @@ public class EnemyController : MonoBehaviour
     // tirones. El pool es por prefab: un tanque no vuelve como zombi normal.
     private static readonly Dictionary<GameObject, Stack<EnemyController>> pool = new Dictionary<GameObject, Stack<EnemyController>>();
     private static readonly List<EnemyController> jefes = new List<EnemyController>();
+    // Los que cuentan en ZombisVivos, en el orden en que entran: lo que el contador cuenta, con
+    // nombre. La usa el auto-apuntado del telefono (PlayerJS), que asi no busca con fisica.
+    private static readonly List<EnemyController> vivos = new List<EnemyController>();
     private static int ultimaAparicion;
 
     private GameObject prefabDeOrigen;   // null si no salio del pool (el tutorial): al morir se destruye
@@ -306,6 +309,7 @@ public class EnemyController : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         ZombisVivos = 0;
+        vivos.Clear();
         cadaveres = 0;
         TechoDeZombis = 0;
         Reservados = 0;
@@ -385,6 +389,11 @@ public class EnemyController : MonoBehaviour
                 jefes.Remove(this);
             }
         }
+    }
+
+    public static IReadOnlyList<EnemyController> Vivos
+    {
+        get { return vivos; }
     }
 
     public static IReadOnlyList<EnemyController> Jefes
@@ -802,6 +811,7 @@ public class EnemyController : MonoBehaviour
         enUso = true;
         EsJefe = false;
         ZombisVivos++;
+        vivos.Add(this);
         NumeroDeAparicion = ++ultimaAparicion;
 
         vidaIniciada = false;
@@ -892,6 +902,7 @@ public class EnemyController : MonoBehaviour
         enUso = false;
         EsJefe = false;
         ZombisVivos--;
+        vivos.Remove(this);
 
         // La barra se apaga en el acto, no en su LateUpdate: el zombi puede volver a
         // salir del pool en este mismo frame. Queda guardada para la aparicion

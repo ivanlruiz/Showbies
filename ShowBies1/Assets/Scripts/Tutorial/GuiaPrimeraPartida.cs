@@ -53,7 +53,9 @@ public class GuiaPrimeraPartida : MonoBehaviour
         if (Plataforma.EsMovil && joysticks != null)
         {
             mover = CrearGuia(joysticks.moveJoystick, Textos.De("guia_mover"), false);
-            disparar = CrearGuia(joysticks.lookJoystick, Textos.De("guia_disparar"), true);
+            // Con AUTO-APUNTAR dispara solo (PlayerJS): no hay que ensenarle el joystick derecho.
+            if (PlayerJS.AutoApuntar) disparo = true;
+            else disparar = CrearGuia(joysticks.lookJoystick, Textos.De("guia_disparar"), true);
         }
         else if (canvas != null)
         {

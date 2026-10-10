@@ -202,6 +202,7 @@ public static class Progreso
     private static void ResetearEstadoCompartido()
     {
         Application.quitting -= Guardar;
+        EsperarLaEscritura();
         datos = null;
         soloLectura = false;
         MonedasDeLaPartida = 0;
@@ -849,30 +850,78 @@ public static class Progreso
     public static void Guardar()
     {
         if (datos == null || soloLectura) return;
+        EsperarLaEscritura();
+        Escribir(Ruta(), Serializar());
+    }
 
+    // El guardado del principio de cada oleada (y el de subir de nivel en el libre) va en un hilo
+    // aparte (10/10, por los tirones del Redmi Note 8): el fsync de Guardar en el hilo del juego
+    // puede tardar decenas de milisegundos en un telefono, justo cuando sale el cartel de la
+    // oleada. El JSON se arma aca, en el hilo del juego, y el hilo solo escribe. Todo lo demas
+    // (pausar, perder el foco, morir, antes de un video, comprar) sigue guardando en el acto con
+    // Guardar, porque Android puede matar la app justo despues. Guardar, Cargar y
+    // UsarCarpetaDePruebas esperan antes al que esta en vuelo: nunca se escriben dos a la vez ni
+    // se lee un archivo a medio cambiar de nombre.
+    public static void GuardarEnSegundoPlano()
+    {
+        if (datos == null || soloLectura) return;
+        EsperarLaEscritura();
         string ruta = Ruta();
-        string temporal = ruta + ".tmp";
-        string anterior = ruta + ".anterior";
+        byte[] json = Serializar();
+        escrituraEnVuelo = System.Threading.Tasks.Task.Run(() => Escribir(ruta, json));
+    }
+
+    // Termina lo que este escribiendo el hilo de GuardarEnSegundoPlano.
+    public static void EsperarLaEscritura()
+    {
+        var enVuelo = escrituraEnVuelo;
+        if (enVuelo == null) return;
         try
         {
-            byte[] json = new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(datos, true));
-            using (var archivo = new FileStream(temporal, FileMode.Create, FileAccess.Write, FileShare.Read))
-            {
-                archivo.Write(json, 0, json.Length);
-                archivo.Flush(true);
-            }
-
-            // File.Move no pisa un archivo que ya existe: primero se hace lugar.
-            if (File.Exists(ruta))
-            {
-                if (File.Exists(anterior)) File.Delete(anterior);
-                File.Move(ruta, anterior);
-            }
-            File.Move(temporal, ruta);
+            enVuelo.Wait();
         }
         catch (Exception e)
         {
-            Debug.LogWarning("Progreso: no se pudo guardar en " + ruta + ": " + e.Message);
+            Debug.LogWarning("Progreso: el guardado en segundo plano fallo: " + e.Message);
+        }
+        escrituraEnVuelo = null;
+    }
+
+    private static System.Threading.Tasks.Task escrituraEnVuelo;
+    private static readonly object candadoDelDisco = new object();
+
+    private static byte[] Serializar()
+    {
+        return new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(datos, true));
+    }
+
+    // Puede correr en otro hilo: no toca nada de Unity salvo el aviso de la consola.
+    private static void Escribir(string ruta, byte[] json)
+    {
+        lock (candadoDelDisco)
+        {
+            string temporal = ruta + ".tmp";
+            string anterior = ruta + ".anterior";
+            try
+            {
+                using (var archivo = new FileStream(temporal, FileMode.Create, FileAccess.Write, FileShare.Read))
+                {
+                    archivo.Write(json, 0, json.Length);
+                    archivo.Flush(true);
+                }
+
+                // File.Move no pisa un archivo que ya existe: primero se hace lugar.
+                if (File.Exists(ruta))
+                {
+                    if (File.Exists(anterior)) File.Delete(anterior);
+                    File.Move(ruta, anterior);
+                }
+                File.Move(temporal, ruta);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("Progreso: no se pudo guardar en " + ruta + ": " + e.Message);
+            }
         }
     }
 
@@ -885,6 +934,7 @@ public static class Progreso
     private static void Cargar()
     {
         if (datos != null) return;
+        EsperarLaEscritura();
 
         string ruta = Ruta();
         Datos leidos = null;

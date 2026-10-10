@@ -162,6 +162,7 @@ public class VentanaLogros : MonoBehaviour
         var medalla = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonLogros",
                                                    globo.anchoredPosition.x + 2f * (ancho + separacion), iconoBoton, Abrir);
         if (medalla != null) insignia = ConstructorUI.Insignia(botonMejoras, (RectTransform)medalla.transform, out numeroInsignia);
+        botonMedalla = medalla;
 
         // El nivel, arriba a la izquierda: despues del globo y el engranaje (que es una copia
         // del globo corrida su ancho y la separacion). Una pildora de vidrio como el fondo
@@ -218,6 +219,7 @@ public class VentanaLogros : MonoBehaviour
         }
         Logros.Revisar();
         Refrescar();
+        MostrarLaLista();
         panel.SetActive(true);
         panel.transform.SetAsLastSibling();
         Abierta = true;
@@ -287,6 +289,8 @@ public class VentanaLogros : MonoBehaviour
     private void Update()
     {
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+        if (botonMedalla != null && botonMedalla.gameObject.activeSelf != Desbloqueo.Todo)
+            botonMedalla.gameObject.SetActive(Desbloqueo.Todo);
 
         // Lo que se gana en el menu (el critico se compra en la tienda) aparece en la
         // insignia sin tener que abrir la ventana.
@@ -498,6 +502,11 @@ public class VentanaLogros : MonoBehaviour
 
         ArmarTarjetaDelNivel();
         ArmarLista();
+        // Hasta el nivel 5 la lista no esta (Desbloqueo): en su lugar, cuando se ve.
+        textoBloqueado = ConstructorUI.Texto(ventana, "Bloqueado", Textos.Formato("logros_bloqueados", Desbloqueo.NivelDeTodo),
+                                             46f, ColorDeTexto, new Vector2(0f, -79f), new Vector2(1000f, 200f), fuente);
+        textoBloqueado.textWrappingMode = TextWrappingModes.Normal;
+        MostrarLaLista();
 
         var volver = ConstructorUI.Boton(ventana, "Volver", new Vector2(0f, -345f), new Vector2(340f, 100f), ColorDeVidrio,
                                          Color.white, iconoAtras, Textos.De("comun_volver"), 46f, fuente, pildora, sonidoClick);
@@ -534,9 +543,24 @@ public class VentanaLogros : MonoBehaviour
         PintarMedidor(enLaVentana, true);
     }
 
+    // La medalla de arriba a la derecha, la lista y el aviso de cuando se ve: hasta el nivel 5
+    // solo esta la tarjeta del nivel (Desbloqueo).
+    private Button botonMedalla;
+    private RectTransform listaDeLogros;
+    private TMP_Text textoBloqueado;
+
+    private void MostrarLaLista()
+    {
+        bool todo = Desbloqueo.Todo;
+        if (listaDeLogros != null) listaDeLogros.gameObject.SetActive(todo);
+        if (textoTotal != null) textoTotal.gameObject.SetActive(todo);
+        if (textoBloqueado != null) textoBloqueado.gameObject.SetActive(!todo);
+    }
+
     private void ArmarLista()
     {
         var vista = ConstructorUI.Rect(ventana, "Lista", new Vector2(0f, -79f), new Vector2(1100f, AltoVista));
+        listaDeLogros = vista;
         vista.gameObject.AddComponent<RectMask2D>();
         // Transparente, pero recibe el arrastre entre fila y fila.
         vista.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0f);

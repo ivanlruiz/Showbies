@@ -2089,6 +2089,7 @@ public static class PruebasMejoras
         public int version;
         public double monedas;
         public int mejorOleada;
+        public int oleadaEnCurso;
         public List<NivelGuardado> mejoras;
     }
 
@@ -3837,6 +3838,25 @@ public static class PruebasMejoras
         inf.Verdadero("guardado: el principal queda con lo nuevo", principalGuardado != null && Math.Abs(principalGuardado.monedas - 20) < 1e-9);
         inf.Verdadero("guardado: el .anterior queda con lo de antes", anteriorGuardado != null && Math.Abs(anteriorGuardado.monedas - 10) < 1e-9);
         inf.Verdadero("guardado: no queda .tmp", !File.Exists(ruta + ".tmp"));
+
+        // El guardado en segundo plano (el de cada oleada): el JSON se arma en el hilo del juego y
+        // otro hilo lo escribe. Guardar espera al que esta en vuelo, asi lo ultimo es lo que queda.
+        ruta = EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":10}", null);
+        _ = Progreso.Monedas;
+        Progreso.GuardarOleadaEnCurso(7, 700);
+        Progreso.GuardarEnSegundoPlano();
+        Progreso.EsperarLaEscritura();
+        var enOtroHilo = LeerGuardado(ruta);
+        inf.Verdadero("guardado en segundo plano: escribe la oleada", enOtroHilo != null && enOtroHilo.oleadaEnCurso == 7);
+        Progreso.GuardarOleadaEnCurso(8, 800);
+        Progreso.GuardarEnSegundoPlano();
+        Progreso.GuardarOleadaEnCurso(9, 900);
+        Progreso.Guardar();
+        var ultimo = LeerGuardado(ruta);
+        inf.Verdadero("guardado en segundo plano: el Guardar de despues queda ultimo", ultimo != null && ultimo.oleadaEnCurso == 9);
+        var anteriorDelHilo = LeerGuardado(ruta + ".anterior");
+        inf.Verdadero("guardado en segundo plano: el .anterior es el del hilo", anteriorDelHilo != null && anteriorDelHilo.oleadaEnCurso == 8);
+        inf.Verdadero("guardado en segundo plano: no queda .tmp", !File.Exists(ruta + ".tmp"));
 
         // Normalizacion: monedas negativas, ids repetidos, vacios y desconocidos.
         string sucio = "{\"version\":2,\"monedas\":-5,\"mejorOleada\":3,\"mejoras\":[" +

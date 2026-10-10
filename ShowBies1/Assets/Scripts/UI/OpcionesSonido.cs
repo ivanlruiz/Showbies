@@ -7,7 +7,8 @@ using UnityEngine.UI;
 // 24/9 tenia tambien el modo oscuro, que se fue cuando el neon paso a ser el unico tema
 // (ver Tema), y el interruptor de los FPS ocupa su lugar. Con anuncios de AdMob suma
 // PRIVACIDAD, para cambiar el consentimiento de Europa, solo cuando UMP lo pide, y el
-// interruptor del SOMBRERO DE CALABAZA, solo si ya se gano (EventoHalloween). No tiene
+// interruptor del SOMBRERO DE CALABAZA, solo si ya se gano (EventoHalloween), y en el
+// telefono AUTO-APUNTAR (PlayerJS, desde el 10/10), que en PC no hace nada. No tiene
 // objetos propios en la escena: al arrancar copia el globo y la ventana del idioma
 // (SelectorIdioma) y los adapta, asi se ven igual sin mantener dos copias a mano. El
 // engranaje queda a la derecha del globo.
@@ -39,6 +40,7 @@ public class OpcionesSonido : MonoBehaviour
     private const float DePrivacidadAlFps = 135f;
     private const float CrecidaConPrivacidad = 130f;
     private const float DelSombreroAlFps = 120f;
+    private const float DelAutoAlFps = 120f;
 
     private GameObject panel;
     private RectTransform ventana;
@@ -49,7 +51,8 @@ public class OpcionesSonido : MonoBehaviour
     private RectTransform botonVolver;
     private RectTransform botonPrivacidad;
     private RectTransform controlSombrero;
-    private int acomodada = -1;   // -1 sin acomodar; si no, 1 con PRIVACIDAD + 2 con el SOMBRERO
+    private RectTransform controlAuto;
+    private int acomodada = -1;   // -1 sin acomodar; si no, 1 con PRIVACIDAD + 2 con el SOMBRERO + 4 con AUTO-APUNTAR
     private Texture2D texturaEngranaje;
     private Texture2D texturaPerilla;
     private Sprite spriteEngranaje;
@@ -178,8 +181,13 @@ public class OpcionesSonido : MonoBehaviour
         controlSombrero = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_sombrero", Vector2.zero, AnchoControl, fuente,
                                             () => EventoHalloween.SombreroPuesto, EventoHalloween.PonerSombrero, pildora, spritePerilla, sonidoClick, colorDelTexto)));
 
+        // AUTO-APUNTAR: solo en el telefono, que es donde se apunta con un joystick. Se guarda
+        // con los volumenes, como MOSTRAR FPS.
+        controlAuto = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_auto_apuntar", Vector2.zero, AnchoControl, fuente,
+                                        () => PlayerJS.AutoApuntar, PlayerJS.FijarAutoApuntar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
+
         CrearPrivacidad(fuente, pildora, sonidoClick);
-        Acomodar(false, false);
+        Acomodar(false, false, false);
     }
 
     // PRIVACIDAD: el cartel de consentimiento de Europa para cambiar lo que se eligio (lo
@@ -213,16 +221,17 @@ public class OpcionesSonido : MonoBehaviour
         botonPrivacidad = (RectTransform)boton.transform;
     }
 
-    // Sin los dos que pueden faltar, los tres controles de siempre; con cada uno, la ventana
-    // crece y todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: primero el SOMBRERO y
-    // abajo PRIVACIDAD.
-    private void Acomodar(bool conPrivacidad, bool conSombrero)
+    // Sin los que pueden faltar, los tres controles de siempre; con cada uno, la ventana crece y
+    // todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: AUTO-APUNTAR, el SOMBRERO y abajo
+    // PRIVACIDAD.
+    private void Acomodar(bool conPrivacidad, bool conSombrero, bool conAuto)
     {
-        int cual = (conPrivacidad ? 1 : 0) + (conSombrero ? 2 : 0);
+        int cual = (conPrivacidad ? 1 : 0) + (conSombrero ? 2 : 0) + (conAuto ? 4 : 0);
         if (cual == acomodada || ventana == null) return;
         acomodada = cual;
 
-        float crecida = (conPrivacidad ? CrecidaConPrivacidad : 0f) + (conSombrero ? DelSombreroAlFps : 0f);
+        float crecida = (conPrivacidad ? CrecidaConPrivacidad : 0f) + (conSombrero ? DelSombreroAlFps : 0f)
+                        + (conAuto ? DelAutoAlFps : 0f);
         float subir = crecida * 0.5f;
         ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana + crecida);
         Poner(titulo, YTitulo + subir);
@@ -231,6 +240,12 @@ public class OpcionesSonido : MonoBehaviour
         Poner(controlFps, YFps + subir);
         Poner(botonVolver, YVolver - subir);
         float y = YFps + subir;
+        if (controlAuto != null)
+        {
+            if (conAuto) y -= DelAutoAlFps;
+            Poner(controlAuto, y);
+            controlAuto.gameObject.SetActive(conAuto);
+        }
         if (controlSombrero != null)
         {
             if (conSombrero) y -= DelSombreroAlFps;
@@ -281,7 +296,7 @@ public class OpcionesSonido : MonoBehaviour
     {
         if (panel == null) return;
         if (selectorIdioma != null) selectorIdioma.Cerrar();
-        Acomodar(ServicioAnuncios.PrivacidadRequerida, EventoHalloween.TieneSombrero);
+        Acomodar(ServicioAnuncios.PrivacidadRequerida, EventoHalloween.TieneSombrero, Plataforma.EsMovil);
         panel.SetActive(true);
         abiertaDesde = Time.unscaledTime;
         if (ventana != null) ventana.localScale = Vector3.zero;

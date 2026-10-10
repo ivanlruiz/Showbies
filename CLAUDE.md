@@ -53,7 +53,7 @@ Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), Gener
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
-Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros
+Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros, Desbloqueo
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Actualizacion/ ← ActualizacionDePlay (la actualización flexible de Play, por JNI) y AvisoDeActualizacion (el cartel del menú)
@@ -73,7 +73,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
@@ -87,6 +87,7 @@ Marketing/                  ← logo.py: el logo del juego dibujado en código, 
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
+PLAN.md                     ← el plan a partir de la revisión de Gemini (10/10): de la 1.5.2 a la 1.8.0, con las decisiones de Ivan
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -161,6 +162,14 @@ retomarla es empezarla de cero), `NoTerminoPartidas` y `NuncaCompro`.
   para el daño, la lista se desplaza hasta esa tarjeta si no se ve y una flecha dorada la señala desde abajo; al comprar
   (también en la demora del principio), la flecha pasa a ¡A JUGAR!, desde su izquierda: encima pisaba las tarjetas en
   20:9. Es el triángulo de `TexturasUI.Play` girado.
+- **Lo avanzado aparece en el nivel 5 del jugador** (`Desbloqueo`, 10/10, de la revisión de Gemini: para un juego chico
+  había demasiados sistemas de golpe). Hasta entonces el menú no muestra el trofeo del bestiario, la medalla de los logros
+  (la ventana del nivel sigue, con "LOS LOGROS SE DESBLOQUEAN EN EL NIVEL 5" en lugar de la lista), la fila del desafío
+  semanal (las tres misiones del día suben al medio) ni el botón de monedas por video, y Discord pasa al lugar del
+  trofeo (`BotonDiscord.DesdeLaDerechaSinDesbloquear`) para no dejar un hueco de dos botones. En la partida no salen los
+  avisos de estrellas, logros y desafío. **Los contadores siguen sumando**: al aparecer no se perdió nada, y lo ganado
+  espera para cobrarse. Al llegar al 5, `AvisoDeMisiones` saca "¡NUEVO EN EL MENÚ!" con el festejo. El nivel es el de
+  `NivelJugador`, del progreso: quien ya pasó el 5 no ve ninguna diferencia.
 - **La recompensa diaria espera a la primera partida terminada**: si no, se cobran 150 monedas y se compra antes de jugar.
   Y sale antes que la tienda que abre MEJORAS de la derrota (ver Recompensa diaria): el circuito que enseña la guía
   (MEJORAS, comprar, ¡A JUGAR!) no pasa nunca por el menú con la tienda cerrada.
@@ -987,7 +996,12 @@ propósito: es estado estructurado.
   pausar (también pasa cuando la app pierde el foco, antes de que Android pueda matarla), al morir y al
   cerrar, y **cada compra guarda en el acto**. Se escribe un `.tmp` bajado al disco (fsync) y después se cambian
   los nombres: el principal pasa a `.anterior` y el `.tmp` a principal, así en disco siempre queda una copia
-  entera, aun con un corte de energía (antes se copiaba el `.tmp` encima del principal, y tras un corte podía
+  entera, aun con un corte de energía. **El del principio de cada oleada y el de subir de nivel en el libre van en un
+  hilo aparte** (`Progreso.GuardarEnSegundoPlano`, 10/10: el fsync en el hilo del juego era un tirón en el Redmi justo
+  con el cartel de la oleada): el JSON se arma en el hilo del juego y el otro solo escribe, bajo un candado. Todo lo
+  demás (pausar, perder el foco, morir, antes de un video, comprar) sigue guardando en el acto con `Guardar`, porque
+  Android puede matar la app justo después, y `Guardar`, `Cargar` y `UsarCarpetaDePruebas` esperan antes al que está en
+  vuelo (`EsperarLaEscritura`) (antes se copiaba el `.tmp` encima del principal, y tras un corte podía
   quedar vacío y sin `.tmp`); al cargar se prueba el principal, después el `.tmp` y después el `.anterior`. Un
   principal que no es un JSON válido se copia a `progreso.json.roto`; uno que está pero no se pudo leer (un error
   de E/S, otro proceso que lo tenía tomado) no se toma por roto: se juega en solo lectura, como con una versión
@@ -1491,7 +1505,8 @@ de la oferta de revivir en el naranja del video), para mirar un video y cobrar m
 - **Debajo cuelga una etiqueta**: "+240" dorada (y el botón respira) cuando se puede, o la cuenta atrás ("9:41", en
   vidrio, y tocarlo lo hace temblar) mientras espera. **Sin video para ofrecer no existe**, como toda oferta. Al cobrar,
   el arpegio de cobrar una misión y "¡+240 MONEDAS!" que sube desde el botón: el menú no muestra monedas.
-- Pide lo de todos los videos (los 3 minutos jugados, video cargado, videos prendidos), no cuenta para el tope por
+- Pide lo de todos los videos (los 3 minutos jugados, video cargado, videos prendidos) y **el nivel 5 del jugador**
+  (`Desbloqueo`, ver Primera vez), no cuenta para el tope por
   partida y tiene su bloque en AdMob (`monedas_menu`, creado el 10/10). No está en la escena: se instala al cargar el
   menú. **ShowBies > Anuncios > Fotos del botón de video** lo saca en sus dos estados (`Builds/actualizacion/`).
 
@@ -1975,7 +1990,7 @@ uno cada 0,2 s como mucho, por `Sonidos.TocarUI`: en la pausa también suena), a
   responden sin componente.
 - **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
   (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes y el interruptor MOSTRAR FPS (`ContadorFps`,
-  pedido de Ivan el 6/10), más el SOMBRERO DE CALABAZA si se ganó (ver Evento de Halloween) y PRIVACIDAD cuando UMP lo
+  pedido de Ivan el 6/10), más AUTO-APUNTADO en el teléfono (ver Móvil), el SOMBRERO DE CALABAZA si se ganó (ver Evento de Halloween) y PRIVACIDAD cuando UMP lo
   pide (ver AdMob): la ventana crece al abrirse, todo sube (`OpcionesSonido.Acomodar`) y, si no entra en la pantalla,
   se achica (`EscalaQueEntra`, como las ventanas de las misiones). Se llama OPCIONES y no SONIDO porque tuvo el modo oscuro, que se fue con el neón (ver Tema:
   carbón neón); la clase conserva el nombre de antes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
@@ -2000,6 +2015,7 @@ progreso):
 | `"ActualizacionPostergada"` | AHORA NO del aviso de actualización (o el no de la hoja de Play), "versión\|aaaa-mm-dd" | `AvisoDeActualizacion`, por `ActualizacionDePlay.Ofrecer` |
 | `"MostrarFps"` | el interruptor MOSTRAR FPS de OPCIONES (`OpcionesSonido`), 1 o 0 | `ContadorFps`; sin nada guardado, apagado |
 | `"SombreroCalabaza"` | el interruptor SOMBRERO DE CALABAZA de OPCIONES, 1 o 0 | `EventoHalloween.SombreroPuesto`; sin nada guardado, puesto |
+| `"AutoApuntar"` | el interruptor AUTO-APUNTADO de OPCIONES (solo en el teléfono), 1 o 0 | `PlayerJS.AutoApuntar`; sin nada guardado, prendido |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
@@ -2156,6 +2172,19 @@ en el editor con target Android los joysticks se veían pero no respondían.
   ya están puestos en el Canvas de las dos escenas de juego con eso, igual que el **botón de granada**
   (`BotonGranada`, sólo Android), que es un joystick para apuntarla (ver la sección Granada).
 
+**AUTO-APUNTAR** (10/10, de la revisión de Gemini: el twin-stick con las dos manos aleja al público casual): en el
+teléfono, sin el pulgar en el joystick de disparo, `PlayerJS` apunta solo al zombi vivo más cercano **que se ve en
+pantalla** (a menos de `AlcanceAutoApuntar`, 16 m) y dispara, por el mismo camino que el joystick (`FijarDisparo`, el
+cuerpo girado hacia él y la dirección de la granada sin arrastrar). **El joystick sigue mandando**: tocarlo apunta a
+mano, para elegir al jefe o al tesoro, y al soltarlo vuelve el automático. No salta de un blanco a otro mientras el otro
+no esté bastante más cerca (`VentajaParaCambiar`). La lista de los vivos es `EnemyController.Vivos`, que se lleva donde
+se lleva `ZombisVivos` (sin física). Es una preferencia del teléfono (`PlayerPrefs["AutoApuntar"]`), **prendida de
+fábrica**, y se apaga en OPCIONES (AUTO-APUNTADO, solo en el teléfono). En el tutorial no anda (ahí se enseña el
+joystick), y con él prendido la guía de la primera partida no muestra el pulgar del joystick derecho. **ShowBies >
+Pruebas > Auto-apuntar (play)** (`PruebaAutoApuntar`) lo mira: que apunte y mate al que se ve, que no le tire a uno
+fuera de la pantalla, que el joystick lo pise y al soltarlo vuelva, que apagado no dispare solo y que la lista de vivos
+coincida con la cuenta en cada cuadro (`Builds/prueba_auto_apuntar.txt`).
+
 **Para jugar con teclado y mouse en el editor sin cambiar el target** (que reimporta todo): **ShowBies > Controles >
 Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`), no del proyecto, y hace que
 `Plataforma.EsMovil` dé falso en el editor aunque el target sea Android. Se aplica al entrar en play. Ojo que
@@ -2214,7 +2243,21 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
   FASTER eran la cápsula y los cubos a la vista.
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
   Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí. Desde el 6/10 está apagado de fábrica: se prende
-  con MOSTRAR FPS en OPCIONES (`PlayerPrefs["MostrarFps"]`).
+  con MOSTRAR FPS en OPCIONES (`PlayerPrefs["MostrarFps"]`). **Desde el 10/10 dice también el peor cuadro de los últimos
+  5 s y los tirones (cuadros de más de 50 ms) desde que empezó la escena** ("47 FPS · PEOR 120 MS · 3 TIRONES", sin
+  contar los 2 primeros segundos, que son la carga): un promedio bajo y parejo es temblor; los saltos sueltos (un tipo
+  de zombi que sale por primera vez, la primera explosión) se ven en el número de tirones.
+- **Los tirones del Redmi Note 8** (10/10: 30 FPS y a tirones, lo reportó Ivan). Tres arreglos que no cambian cómo se
+  ve:
+  - **El Rigidbody del jugador interpola** (`Jugador.prefab`, `m_Interpolate: 1`): el cuerpo se mueve con la física, a
+    50 Hz, y la pantalla va a otro ritmo; sin interpolar, el jugador avanzaba uno o dos pasos por cuadro, y la cámara,
+    que lo sigue, sacudía la pantalla entera. Los zombis no interpolan: `EnemyController` escribe su transform en
+    varios lugares (el desplome, `SubirSobreElPiso`, el pool), y la interpolación los pisaría.
+  - **`CamaraJugador` sigue en `LateUpdate` con `[DefaultExecutionOrder(-100)]`**: después de la interpolación y antes
+    de los `LateUpdate` que se ubican contra la cámara (las flechas del borde, las barras, los halos), que si no irían un
+    cuadro atrasados.
+  - **El paso máximo de la física es 0,1 s** (`TimeManager.asset`, era 0,333): después de un tirón, Unity ya no encadena
+    hasta 16 pasos de física para ponerse al día, que alargaban el tirón.
 
 ### El ícono
 

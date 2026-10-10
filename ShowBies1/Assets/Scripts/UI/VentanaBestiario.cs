@@ -104,6 +104,7 @@ public class VentanaBestiario : MonoBehaviour
         var boton = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonBestiario", desdeLaDerecha + ancho + separacionDeMisiones,
                                                  iconoBoton, Abrir);
         if (boton != null) insignia = ConstructorUI.Insignia(botonMejoras, (RectTransform)boton.transform, out numeroInsignia);
+        botonEsquina = boton;
 
         Armar();
         panel.SetActive(false);
@@ -151,9 +152,14 @@ public class VentanaBestiario : MonoBehaviour
         Refrescar();
     }
 
+    // El trofeo de arriba a la derecha: hasta el nivel 5 no se ve (Desbloqueo).
+    private Button botonEsquina;
+
     private void Update()
     {
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+        if (botonEsquina != null && botonEsquina.gameObject.activeSelf != Desbloqueo.Todo)
+            botonEsquina.gameObject.SetActive(Desbloqueo.Todo);
         relojInsignia += dt;
         // El numero se escribe solo cuando cambia, como en las misiones y los logros:
         // escribirlo en cada cuadro armaba una cadena por cuadro. Latir sin texto sigue

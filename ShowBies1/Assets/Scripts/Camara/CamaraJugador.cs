@@ -7,6 +7,13 @@ using UnityEngine;
 // tiempo, y la sacudida crece con el cuadrado, asi los golpes chicos casi no se
 // notan y los grandes si. Usa tiempo sin escalar para seguir durante la pausa de
 // impacto, y se detiene en la pausa del menu.
+//
+// Sigue en LateUpdate, despues de la interpolacion del Rigidbody del jugador (el cuerpo se
+// mueve con la fisica, a 50 Hz, y la pantalla va a otro ritmo: sin interpolar, el jugador, y
+// con el toda la pantalla, avanzaba a saltitos, uno o dos pasos de fisica por cuadro). El
+// orden -100 la pone antes de los LateUpdate que se ubican contra la camara (las flechas del
+// borde, las barras de vida, los halos), asi no van un cuadro atrasados.
+[DefaultExecutionOrder(-100)]
 public class CamaraJugador : MonoBehaviour
 {
     public GameObject personaje;
@@ -122,7 +129,7 @@ public class CamaraJugador : MonoBehaviour
         rotacionBase = transform.rotation;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         // Al morir, PlayerHealth destruye al jugador y recien despues carga la
         // escena de Perdiste. En ese hueco esto seguia leyendo un objeto muerto y

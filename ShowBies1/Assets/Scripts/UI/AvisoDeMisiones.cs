@@ -156,6 +156,7 @@ public class AvisoDeMisiones : MonoBehaviour
     {
         if (semanalVisto || !DesafioSemanal.Cumplido) return;
         semanalVisto = true;
+        if (!Desbloqueo.Todo) return;
         pendientes.Enqueue(new Aviso
         {
             titulo = Textos.De("aviso_semanal"),
@@ -220,10 +221,12 @@ public class AvisoDeMisiones : MonoBehaviour
     // Los logros nuevos, uno por moneda, del color de su escalon.
     private void AnotarLogros()
     {
+        // Se revisan igual hasta el nivel 5, asi quedan anotados; lo que no sale es el aviso.
+        bool avisar = Desbloqueo.Todo;
         foreach (var logro in Logros.Revisar())
         {
             var familia = Logros.Buscar(logro.familia);
-            if (familia == null) continue;
+            if (familia == null || !avisar) continue;
             pendientes.Enqueue(new Aviso
             {
                 titulo = Textos.De(TitulosDeLogro[Mathf.Clamp(logro.escalon, 0, TitulosDeLogro.Length - 1)]),
@@ -249,6 +252,17 @@ public class AvisoDeMisiones : MonoBehaviour
                 detalle = premio != null ? Textos.Formato("aviso_nivel_premio", FormatoNumeros.Compacto(NivelJugador.Monto(premio))) : "",
                 color = colorNivel,
             });
+            // El nivel que destapa el bestiario, los logros y el desafio (Desbloqueo).
+            if (nivelVisto == Desbloqueo.NivelDeTodo)
+            {
+                pendientes.Enqueue(new Aviso
+                {
+                    titulo = Textos.De("aviso_desbloqueo"),
+                    detalle = Textos.De("aviso_desbloqueo_detalle"),
+                    color = colorNivel,
+                    festejo = true,
+                });
+            }
         }
     }
 
@@ -264,6 +278,7 @@ public class AvisoDeMisiones : MonoBehaviour
             {
                 int escalon = escalones[estrellasVistas[i]];
                 estrellasVistas[i]++;
+                if (!Desbloqueo.Todo) continue;
                 pendientes.Enqueue(new Aviso
                 {
                     titulo = Textos.De("aviso_estrella"),
