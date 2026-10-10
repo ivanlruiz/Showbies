@@ -60,11 +60,19 @@ public class BotonDiscord : MonoBehaviour
         return delGlobo + 3f * (ancho + separacion);
     }
 
-    // Hasta el nivel 5 el bestiario y la medalla no estan (Desbloqueo): Discord pasa al lugar
-    // del bestiario, al lado de las misiones, y no queda un hueco de dos botones.
-    public static float DesdeLaDerechaSinDesbloquear(float delGlobo, float ancho, float separacion)
+    // El lugar en la fila de arriba a la derecha, desde el borde: 0 las misiones, 1 el
+    // bestiario, 2 la medalla y 3 Discord, con todo destapado.
+    public static float EnElLugar(int lugar, float delGlobo, float ancho, float separacion)
     {
-        return delGlobo + (ancho + separacion);
+        return delGlobo + lugar * (ancho + separacion);
+    }
+
+    // Donde va segun lo que haya destapado (Desbloqueo), para no dejar huecos: hasta el nivel 5
+    // no estan el bestiario ni la medalla, y va al lado de las misiones; antes de la oleada 5
+    // tampoco estan las misiones, y va primero.
+    public static int Lugar()
+    {
+        return Desbloqueo.Todo ? 3 : Desbloqueo.Misiones ? 1 : 0;
     }
 
     private void Update()
@@ -75,11 +83,10 @@ public class BotonDiscord : MonoBehaviour
     private void Acomodar()
     {
         if (rtBoton == null) return;
-        int lugar = Desbloqueo.Todo ? 3 : 1;
+        int lugar = Lugar();
         if (lugar == lugarPuesto) return;
         lugarPuesto = lugar;
-        float x = lugar == 3 ? DesdeLaDerecha(delGlobo, anchoDelGlobo, separacion)
-                             : DesdeLaDerechaSinDesbloquear(delGlobo, anchoDelGlobo, separacion);
+        float x = EnElLugar(lugar, delGlobo, anchoDelGlobo, separacion);
         rtBoton.anchoredPosition = new Vector2(-x, rtBoton.anchoredPosition.y);
     }
 

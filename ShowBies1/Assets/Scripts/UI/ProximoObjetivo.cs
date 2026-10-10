@@ -98,7 +98,8 @@ public class ProximoObjetivo : MonoBehaviour
         texto = null;
         fraccion = -1f;
 
-        foreach (var mision in MisionesDiarias.DeHoy)
+        // Antes de la oleada 5 no hay misiones (Desbloqueo), y mirarlas las armaria.
+        if (Desbloqueo.Misiones) foreach (var mision in MisionesDiarias.DeHoy)
         {
             if (mision.cobrada || MisionesDiarias.Cumplida(mision) || !(mision.objetivo > 0)) continue;
             double avance = MisionesDiarias.Avance(mision);

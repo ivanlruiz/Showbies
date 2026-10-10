@@ -105,6 +105,7 @@ public class VentanaMisiones : MonoBehaviour
     private readonly Fila[] filas = new Fila[MisionesDiarias.Cantidad];
     private Texture2D texturaCirculo;
     private Sprite circulo;
+    private GameObject botonEsquina;
     private RectTransform insignia;
     private TMP_Text numeroInsignia;
     private int revisionVista = -1;
@@ -149,7 +150,20 @@ public class VentanaMisiones : MonoBehaviour
         // Una copia del globo, en espejo arriba a la derecha (pedido de Ivan), con el
         // portapapeles en vez del globo.
         var boton = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonMisiones", DesdeLaDerecha, iconoBoton, Abrir);
-        if (boton != null) insignia = ConstructorUI.Insignia(botonMejoras, (RectTransform)boton.transform, out numeroInsignia);
+        if (boton != null)
+        {
+            botonEsquina = boton.gameObject;
+            insignia = ConstructorUI.Insignia(botonMejoras, (RectTransform)boton.transform, out numeroInsignia);
+        }
+    }
+
+    // Hasta la oleada 5 no hay misiones (Desbloqueo): ni el boton ni su insignia, que al
+    // contar las armaria.
+    private bool MostrarBoton()
+    {
+        bool hay = Desbloqueo.Misiones;
+        if (botonEsquina != null && botonEsquina.activeSelf != hay) botonEsquina.SetActive(hay);
+        return hay;
     }
 
     // A la misma distancia del borde derecho que el globo del izquierdo.
@@ -195,7 +209,7 @@ public class VentanaMisiones : MonoBehaviour
             Armar();
         }
         MisionesDiarias.Asegurar();
-        DesafioSemanal.Asegurar();
+        if (Desbloqueo.Todo) DesafioSemanal.Asegurar();
         Refrescar();
         panel.SetActive(true);
         panel.transform.SetAsLastSibling();
@@ -243,7 +257,7 @@ public class VentanaMisiones : MonoBehaviour
     private void Update()
     {
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
-        RefrescarInsignia(dt);
+        if (MostrarBoton()) RefrescarInsignia(dt);
         if (!Abierta) return;
 
         reloj += dt;

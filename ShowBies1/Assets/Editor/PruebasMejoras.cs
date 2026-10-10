@@ -255,6 +255,7 @@ public static class PruebasMejoras
                     ProbarMisiones(informe);
                     ProbarDesafioSemanal(informe);
                     ProbarProximoObjetivo(informe);
+                    ProbarDesbloqueo(informe);
                     ProbarOleadaPerfecta(informe);
                     ProbarBalasPorTramo(informe);
                     ProbarFlechasDelBorde(informe);
@@ -5759,10 +5760,38 @@ public static class PruebasMejoras
         }
     }
 
+    // Lo que se destapa de a poco (Desbloqueo, 10/10, de la revision de Gemini): las misiones al
+    // llegar a la oleada 5 y el resto en el nivel 5, siempre en ese orden, y Discord corriendose
+    // en la fila de arriba a la derecha para no dejar huecos.
+    static void ProbarDesbloqueo(Informe inf)
+    {
+        string v = "{\"version\":" + Progreso.VersionActual;
+        // El nivel 5 empieza en 700 de experiencia (NivelJugador.ExperienciaDelNivel).
+        inf.Cerca("desbloqueo: el nivel 5 empieza en 700 de experiencia", 700, NivelJugador.ExperienciaDelNivel(Desbloqueo.NivelDeTodo), 1e-9);
+
+        EmpezarCaso(v + ",\"mejorOleada\":3,\"jugador\":{\"experiencia\":5000}}", null);
+        inf.Verdadero("desbloqueo: sin completar la 4 no hay misiones", !Desbloqueo.Misiones);
+        inf.Verdadero("desbloqueo: sin misiones tampoco lo del nivel 5, aunque se tenga el nivel",
+                      NivelJugador.Nivel >= Desbloqueo.NivelDeTodo && !Desbloqueo.Todo);
+        inf.Igual("desbloqueo: sin nada destapado, Discord va primero", 0, BotonDiscord.Lugar());
+
+        EmpezarCaso(v + ",\"mejorOleada\":4,\"jugador\":{\"experiencia\":375}}", null);
+        inf.Verdadero("desbloqueo: completada la 4 (se llego a la 5) hay misiones", Desbloqueo.Misiones);
+        inf.Verdadero("desbloqueo: en el nivel 4 todavia no lo demas", NivelJugador.Nivel == 4 && !Desbloqueo.Todo);
+        inf.Igual("desbloqueo: con las misiones, Discord va al lado", 1, BotonDiscord.Lugar());
+
+        EmpezarCaso(v + ",\"mejorOleada\":4,\"jugador\":{\"experiencia\":700}}", null);
+        inf.Verdadero("desbloqueo: con las misiones y el nivel 5, todo", Desbloqueo.Todo);
+        inf.Igual("desbloqueo: con todo, Discord va cuarto", 3, BotonDiscord.Lugar());
+        inf.Cerca("desbloqueo: el cuarto lugar es el de siempre",
+                  BotonDiscord.DesdeLaDerecha(36f, 120f, 24f), BotonDiscord.EnElLugar(3, 36f, 120f, 24f), 1e-4);
+    }
+
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.
     static void ProbarProximoObjetivo(Informe inf)
     {
-        EmpezarCaso("{\"version\":4,\"monedas\":20}", null);
+        // Con la oleada 4 completada: antes no hay misiones (Desbloqueo).
+        EmpezarCaso("{\"version\":4,\"monedas\":20,\"mejorOleada\":4}", null);
         MisionesDiarias.Asegurar();
         var estado = Progreso.Misiones;
         estado.lista = new List<MisionDelDia>
@@ -5776,6 +5805,28 @@ public static class PruebasMejoras
         inf.Verdadero("objetivo: hay uno", ProximoObjetivo.Elegir(out texto, out fraccion));
         inf.Cerca("objetivo: la mision al 90 % le gana a la mejora", 0.9, fraccion, 1e-4);
         inf.Verdadero("objetivo: dice la mision", texto != null && texto.Contains("10"));
+
+        // Antes de la oleada 5 no propone misiones, aunque haya una casi cumplida de antes (un
+        // progreso de la 1.5.1), ni las arma por mirarlas.
+        EmpezarCaso("{\"version\":4,\"monedas\":20,\"mejorOleada\":3}", null);
+        Progreso.Misiones.lista = new List<MisionDelDia>
+        {
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 0, objetivo = 10, inicio = Progreso.MatadosEnTotal - 9 },
+        };
+        int diaAntes = Progreso.Misiones.dia;
+        ProximoObjetivo.Elegir(out texto, out fraccion);
+        inf.Verdadero("objetivo: antes de la oleada 5 no propone misiones", Math.Abs(fraccion - 0.9f) > 1e-3f);
+        inf.Igual("objetivo: antes de la oleada 5 no arma las misiones", diaAntes, Progreso.Misiones.dia);
+
+        EmpezarCaso("{\"version\":4,\"monedas\":20,\"mejorOleada\":4}", null);
+        MisionesDiarias.Asegurar();
+        estado = Progreso.Misiones;
+        estado.lista = new List<MisionDelDia>
+        {
+            new MisionDelDia { tipo = MisionesDiarias.Matar, dificultad = 0, objetivo = 10, inicio = Progreso.MatadosEnTotal - 9 },
+            new MisionDelDia { tipo = MisionesDiarias.Oleada, dificultad = 1, objetivo = 5 },
+            new MisionDelDia { tipo = MisionesDiarias.Jefe, dificultad = 2, objetivo = 1, inicio = Progreso.JefesMatados },
+        };
 
         estado.lista[0].inicio = Progreso.MatadosEnTotal;   // la mision vuelve a 0 de 10
         inf.Verdadero("objetivo: sin misiones cerca, una mejora", ProximoObjetivo.Elegir(out texto, out fraccion));

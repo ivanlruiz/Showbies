@@ -263,8 +263,10 @@ public class WaveManager : MonoBehaviour
             Progreso.Sumar(bonoDeLaOleadaAnterior);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
             if (perfecta) Progreso.RegistrarOleadaIntacta(OleadaActual);
-            MisionesDiarias.RegistrarOleada(OleadaActual);
-            DesafioSemanal.RegistrarOleada();
+            // Hasta la oleada 5 no hay misiones, ni desafio hasta el nivel 5 (Desbloqueo). Completar
+            // la 4 destapa las misiones, y como la marca ya se anoto, esta oleada ya cuenta.
+            if (Desbloqueo.Misiones) MisionesDiarias.RegistrarOleada(OleadaActual);
+            if (Desbloqueo.Todo) DesafioSemanal.RegistrarOleada();
             // Sin Guardar aca: lo de esta oleada (el bono, la marca, las misiones) lo
             // escribe el Guardar del principio de la vuelta siguiente, que corre en este
             // mismo cuadro porque no hay ningun yield en el medio. Guardar aca tambien

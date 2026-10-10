@@ -11,8 +11,9 @@ using UnityEngine;
 // Tambien avisa las estrellas del bestiario que se ganan jugando ("¡ESTRELLA!", en
 // dorado, con el tipo y el escalon), los logros ("¡LOGRO DE PLATA!", del color de su
 // moneda), cada nivel del jugador que se sube ("¡NIVEL 13!", con el premio que espera
-// en el menu), el desbloqueo del modo libre y, en Halloween, cada hito de caramelos que se
-// alcanza (EventoHalloween). Si llegan dos a la vez, salen una despues de otra.
+// en el menu), el desbloqueo del modo libre, lo que destapa Desbloqueo (las misiones en la
+// oleada 5, el resto en el nivel 5) y, en Halloween, cada hito de caramelos que se alcanza
+// (EventoHalloween). Si llegan dos a la vez, salen una despues de otra.
 //
 // Y lo que antes pasaba en silencio (revision del 9/10, mejora 5): "¡DESAFIO SEMANAL
 // CUMPLIDO!", el premio mas grande del juego, al cumplirse en la partida, y lo que se cobro
@@ -73,6 +74,8 @@ public class AvisoDeMisiones : MonoBehaviour
 
     private int nivelVisto;
     private bool libreVisto;
+    private bool misionesVistas;
+    private bool todoVisto;
     private bool semanalVisto;
     private int hitosVistos;
 
@@ -86,10 +89,14 @@ public class AvisoDeMisiones : MonoBehaviour
 
     private void Start()
     {
-        MisionesDiarias.Asegurar();
-        DesafioSemanal.Asegurar();
+        // Antes de la oleada 5 las misiones no se arman, ni el desafio antes del nivel 5
+        // (Desbloqueo): no avanzan ni se cobran solos sin que el jugador los haya visto.
+        if (Desbloqueo.Misiones) MisionesDiarias.Asegurar();
+        if (Desbloqueo.Todo) DesafioSemanal.Asegurar();
+        misionesVistas = Desbloqueo.Misiones;
+        todoVisto = Desbloqueo.Todo;
         Anotar(true);
-        semanalVisto = DesafioSemanal.Cumplido;
+        semanalVisto = Desbloqueo.Todo && DesafioSemanal.Cumplido;
         for (int i = 0; i < estrellasVistas.Length; i++) estrellasVistas[i] = Bestiario.Alcanzadas(Bestiario.Tipos[i]);
         // Los logros que se ganaron fuera de una partida (en el menu, comprando el
         // critico) se anotan sin aviso: no se ganaron aca.
@@ -154,9 +161,9 @@ public class AvisoDeMisiones : MonoBehaviour
     // El desafio de la semana, una vez, al cumplirse en esta partida.
     private void AnotarSemanal()
     {
-        if (semanalVisto || !DesafioSemanal.Cumplido) return;
+        // Mirarlo lo armaria: antes del nivel 5 no hay desafio (Desbloqueo).
+        if (semanalVisto || !Desbloqueo.Todo || !DesafioSemanal.Cumplido) return;
         semanalVisto = true;
-        if (!Desbloqueo.Todo) return;
         pendientes.Enqueue(new Aviso
         {
             titulo = Textos.De("aviso_semanal"),
@@ -252,17 +259,35 @@ public class AvisoDeMisiones : MonoBehaviour
                 detalle = premio != null ? Textos.Formato("aviso_nivel_premio", FormatoNumeros.Compacto(NivelJugador.Monto(premio))) : "",
                 color = colorNivel,
             });
-            // El nivel que destapa el bestiario, los logros y el desafio (Desbloqueo).
-            if (nivelVisto == Desbloqueo.NivelDeTodo)
+        }
+    }
+
+    // Lo que destapa Desbloqueo, una vez, en la partida en que pasa: las misiones al llegar a
+    // la oleada 5 y el resto en el nivel 5. Va despues de AnotarNivel, asi "¡NIVEL 5!" sale
+    // antes que lo que destapa.
+    private void AnotarDesbloqueos()
+    {
+        if (!misionesVistas && Desbloqueo.Misiones)
+        {
+            misionesVistas = true;
+            pendientes.Enqueue(new Aviso
             {
-                pendientes.Enqueue(new Aviso
-                {
-                    titulo = Textos.De("aviso_desbloqueo"),
-                    detalle = Textos.De("aviso_desbloqueo_detalle"),
-                    color = colorNivel,
-                    festejo = true,
-                });
-            }
+                titulo = Textos.De("aviso_misiones"),
+                detalle = Textos.De("aviso_misiones_detalle"),
+                color = colorMision,
+                festejo = true,
+            });
+        }
+        if (!todoVisto && Desbloqueo.Todo)
+        {
+            todoVisto = true;
+            pendientes.Enqueue(new Aviso
+            {
+                titulo = Textos.De("aviso_desbloqueo"),
+                detalle = Textos.De("aviso_desbloqueo_detalle"),
+                color = colorNivel,
+                festejo = true,
+            });
         }
     }
 
@@ -292,6 +317,8 @@ public class AvisoDeMisiones : MonoBehaviour
     // Las cumplidas pasan a yaCumplidas; con avisar, las nuevas van a la fila de avisos.
     private void Anotar(bool alEmpezar)
     {
+        // Mirar las del dia las armaria (MisionesDiarias.DeHoy): antes de la oleada 5 no hay.
+        if (!Desbloqueo.Misiones) return;
         var estado = Progreso.Misiones;
         if (estado.dia != diaVisto)
         {
@@ -328,6 +355,7 @@ public class AvisoDeMisiones : MonoBehaviour
             AnotarEstrellas();
             AnotarLogros();
             AnotarNivel();
+            AnotarDesbloqueos();
             AnotarHalloween();
             AnotarRecord();
             AnotarMejoras();

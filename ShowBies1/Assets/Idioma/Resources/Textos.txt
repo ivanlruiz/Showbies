@@ -33,6 +33,8 @@ opciones_fps	SHOW FPS	MOSTRAR FPS
 logros_bloqueados	ACHIEVEMENTS UNLOCK AT LEVEL {0}	LOS LOGROS SE DESBLOQUEAN EN EL NIVEL {0}
 aviso_desbloqueo	NEW IN THE MENU!	¡NUEVO EN EL MENÚ!
 aviso_desbloqueo_detalle	BESTIARY, ACHIEVEMENTS AND WEEKLY CHALLENGE	BESTIARIO, LOGROS Y DESAFÍO SEMANAL
+aviso_misiones	DAILY MISSIONS UNLOCKED!	¡MISIONES DEL DÍA DESBLOQUEADAS!
+aviso_misiones_detalle	Three goals a day, with rewards: find them in the menu	Tres objetivos por día, con premio: están en el menú
 opciones_auto_apuntar	AUTO-AIM	AUTO-APUNTADO
 hud_fps	{0} FPS · WORST {1} MS · {2} STUTTERS	{0} FPS · PEOR {1} MS · {2} TIRONES
 opciones_privacidad	PRIVACY	PRIVACIDAD

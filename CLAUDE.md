@@ -139,7 +139,8 @@ La abren `MainMenu.QuitGame` y el atrás de Android en el principal; el atrás c
 pudo armar, las dos cosas cierran el juego como antes.
 
 **El botón de Discord** (pedido de Ivan, 1.4.0): `BotonDiscord` (raíz del canvas "Main Menu") arma con
-`ConstructorUI.BotonDeEsquina` el cuarto botón redondo de arriba a la derecha, después de la medalla, con el logo oficial
+`ConstructorUI.BotonDeEsquina` el cuarto botón redondo de arriba a la derecha, después de la medalla (antes, si las
+misiones o lo del nivel 5 todavía no aparecieron, se corre a su lugar: ver Primera vez), con el logo oficial
 de Discord en blanco (`Sprites/UI/IconoDiscord.png`: el "Clyde" de `discord-mark-white.svg`, rasterizado con PIL; las
 reglas de la marca dejan usarlo para llevar a un servidor, sin cambiarle la forma ni el color), y abre la invitación
 permanente (`BotonDiscord.Invitacion`, la de `publicacion/pasos.md`) con `Application.OpenURL`: en el teléfono, la app de
@@ -163,14 +164,24 @@ retomarla es empezarla de cero), `NoTerminoPartidas` y `NuncaCompro`.
   para el daño, la lista se desplaza hasta esa tarjeta si no se ve y una flecha dorada la señala desde abajo; al comprar
   (también en la demora del principio), la flecha pasa a ¡A JUGAR!, desde su izquierda: encima pisaba las tarjetas en
   20:9. Es el triángulo de `TexturasUI.Play` girado.
-- **Lo avanzado aparece en el nivel 5 del jugador** (`Desbloqueo`, 10/10, de la revisión de Gemini: para un juego chico
-  había demasiados sistemas de golpe). Hasta entonces el menú no muestra el trofeo del bestiario, la medalla de los logros
-  (la ventana del nivel sigue, con "LOS LOGROS SE DESBLOQUEAN EN EL NIVEL 5" en lugar de la lista), la fila del desafío
-  semanal (las tres misiones del día suben al medio) ni el botón de monedas por video, y Discord pasa al lugar del
-  trofeo (`BotonDiscord.DesdeLaDerechaSinDesbloquear`) para no dejar un hueco de dos botones. En la partida no salen los
-  avisos de estrellas, logros y desafío. **Los contadores siguen sumando**: al aparecer no se perdió nada, y lo ganado
-  espera para cobrarse. Al llegar al 5, `AvisoDeMisiones` saca "¡NUEVO EN EL MENÚ!" con el festejo. El nivel es el de
-  `NivelJugador`, del progreso: quien ya pasó el 5 no ve ninguna diferencia.
+- **Lo que no es jugar aparece de a poco, en dos tandas** (`Desbloqueo`, 10/10, de la revisión de Gemini: para un juego
+  chico había demasiados sistemas de golpe, y el que recién entiende los joysticks no lee), siempre en este orden:
+  - **Las misiones del día, al llegar a la oleada 5** (`Desbloqueo.Misiones`: completada la 4). Antes no está su botón,
+    la derrota no las propone de próximo objetivo y **no se arman**: no avanzan, no se cumplen a escondidas y no se
+    cobran solas a medianoche con un cartel de algo que el jugador nunca vio. Se arman al destaparse, en la misma partida
+    (`WaveManager` anota la marca antes de avisarles, así la 4 ya cuenta).
+  - **El resto, en el nivel 5 del jugador** (`Desbloqueo.Todo`, que pide también las misiones): el trofeo del
+    bestiario, la medalla de los logros (la ventana del nivel sigue, con "LOS LOGROS SE DESBLOQUEAN EN EL NIVEL 5" en
+    lugar de la lista), la fila del desafío semanal (las tres misiones del día suben al medio) y el botón de monedas por
+    video, y en la partida los avisos de estrellas, logros y desafío. **Los contadores del bestiario y los logros siguen
+    sumando**: al aparecer no se perdió nada, y lo ganado espera para cobrarse. **El desafío semanal no se arma** hasta
+    entonces, por lo mismo que las misiones.
+
+  Cada tanda la anuncia `AvisoDeMisiones` con el festejo, en la partida en que pasa ("¡MISIONES DEL DÍA
+  DESBLOQUEADAS!", "¡NUEVO EN EL MENÚ!"). **Discord se corre para no dejar huecos** en la fila de arriba a la derecha
+  (`BotonDiscord.Lugar`): primero sin nada destapado, al lado de las misiones hasta el nivel 5 y cuarto con todo. El nivel
+  es el de `NivelJugador` y la oleada, `Progreso.MejorOleada`: quien ya pasó los dos no ve ninguna diferencia. Lo mira la
+  prueba de lógica.
 - **La recompensa diaria espera a la primera partida terminada**: si no, se cobran 150 monedas y se compra antes de jugar.
   Y sale antes que la tienda que abre MEJORAS de la derrota (ver Recompensa diaria): el circuito que enseña la guía
   (MEJORAS, comprar, ¡A JUGAR!) no pasa nunca por el menú con la tienda cerrada.
@@ -1167,7 +1178,8 @@ completada en el día y la lista).
 - **En el menú**: un botón redondo **arriba a la derecha** (pedido de Ivan), en espejo con el globo y el engranaje, con el
   portapapeles de Material (`Sprites/UI/IconoMisiones`) y una insignia contando las que hay para cobrar. Es una copia del
   globo hecha en código por `VentanaMisiones` (raíz del canvas "Main Menu"), que también arma la ventana: cada misión con
-  su barra, el premio y COBRAR, y cuánto falta para las nuevas. El atrás de Android la cierra.
+  su barra, el premio y COBRAR, y cuánto falta para las nuevas. El atrás de Android la cierra. **No hay misiones hasta
+  la oleada 5** (ver Primera vez): ni el botón ni la insignia, y nada las arma.
 - **En la partida**: `AvisoDeMisiones` (objeto propio en ShowBies1 y WaveMode) muestra "¡MISIÓN CUMPLIDA!" con lo que pedía,
   un rebote y el jingle del cartel cuando se cumple una; las que ya estaban cumplidas al empezar no se repiten. Avisa
   también, en dorado, las estrellas del bestiario que se ganan jugando ("¡ESTRELLA! CAMINANTE x100"); si llegan dos a
@@ -1190,7 +1202,8 @@ completada en el día y la lista).
 Uno solo, grande, que dura de lunes a domingo y paga bastante más que una misión del día (pedido de Ivan). Las
 diarias dan una razón para entrar hoy; este da una para volver toda la semana, que es otra escala de tiempo. La
 lógica es `DesafioSemanal` (`Assets/Scripts/Progreso/`), guardada en el progreso (`semanal`), y se ve en la fila
-dorada de arriba de la ventana de misiones.
+dorada de arriba de la ventana de misiones. **No existe hasta el nivel 5 del jugador** (ver Primera vez): ni la fila, ni
+el aviso, y nada lo arma.
 
 - **Cambia el lunes**, con el mismo día confiable que las misiones (`LunesDe(Progreso.DiaDeHoy())`), y el mismo
   lunes sale siempre el mismo: se sortea con el lunes de semilla. Un reloj atrasado no lo cambia, porque sólo
