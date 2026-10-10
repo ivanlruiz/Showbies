@@ -6,7 +6,7 @@ Gemini del 10/10 salió como lo que más retiene ("una partida más, a ver si me
 demás. Lo pidió también Jeff en Discord el 8/10.
 
 Este documento reemplaza al del 9/10, que daba las cartas cada 3 oleadas: Ivan eligió el plan de Gemini, por
-experiencia. **Todavía no hay código.** Lo que hay que decidir está al final.
+experiencia. Las seis decisiones las tomó Gemini a pedido de Ivan (10/10): están al final.
 
 ## Qué es
 
@@ -66,7 +66,8 @@ tres oleadas. En el libre la experiencia sale igual, de los zombis que se matan.
   `MenuPausa.OtroLoCongela`, la pausa de impacto de `Efectos` ya no le devuelve el `timeScale` a 1 por detrás.
 - **El sorteo**: solo cartas que no llegaron a su tope y que se pueden usar (las de granada y furia, si están
   compradas). Con todo al tope sale **CURACIÓN** (vida entera), que no tiene tope.
-- **Después de cada jefe, una de las tres sale dorada y vale el doble** (decisión 5).
+- **Después de cada jefe, una de las tres sale dorada y vale el doble** (decisión 5): con el marco que brilla mucho y
+  un sonido propio, épico (pedido de Gemini).
 - **Sin cartas de monedas**: la jugada óptima sería elegirlas siempre, y llegar más lejos ya da más monedas.
 
 ## Las cartas
@@ -92,7 +93,7 @@ Cada una con su tope. Las de números (las del diseño anterior) y las que cambi
 | **Eléctrica** | 1 de cada 4 tiros salta a otro zombi a 4 m, con una línea como la del jefe | 2 | `BulletController`, un `LineRenderer` de un pool |
 | **Dron** | una esfera que orbita al jugador y dispara sola al más cercano, 1 tiro/s | 2 | componente nuevo en el jugador, con las balas del pool |
 | **Vampiro** | cada 15 muertes cura el 5 % | 2 | `DanoZombi`, en el bloque de muerte |
-| **Escudo** | bloquea un golpe cada 15 s, con un anillo que se ve | 1 | `PlayerHealth.TakeDamage` |
+| **Escudo** | bloquea un golpe cada 15 s, con un anillo que se ve, y al romperse empuja medio metro a los zombis pegados | 1 | `PlayerHealth.TakeDamage`, y el empuje como el del jefe a los invocados |
 | Curación | vida entera | — | solo cuando todo lo demás está al tope |
 
 Son 41 elecciones antes de que salga Curación: alcanza para la oleada 60 de la tabla de arriba. Los números son
@@ -172,13 +173,17 @@ en el teléfono se mide con el contador de FPS (el peor cuadro y los tirones), e
 
 Cada etapa termina con la prueba de lógica en TODO OK y una APK de prueba para el teléfono.
 
-## Lo que hay que decidir
+## Lo que se decidió
 
-1. **La experiencia: directa al matar o cristales para juntar.** Recomiendo directa.
-2. **El nombre del nivel de la partida.** Recomiendo PODER.
-3. **La curva**: la primera carta a los 8 zombis y cada nivel ×1,15 (14 cartas hasta la 10). Recomiendo esta.
-4. **También en el modo libre.** Recomiendo que sí: es el mismo sistema.
-5. **La carta dorada después de cada jefe.** Recomiendo que sí.
-6. **Un vídeo para cambiar las tres cartas** (un lugar nuevo de anuncios con premio, en la pausa de la elección).
-   Hoy la regla es que los vídeos con premio no salen en la partida. Recomiendo que no en la 1.6.0, y verlo después con
-   los números de la 1.6.0.
+Las seis las decidió Gemini, a pedido de Ivan (10/10), todas como se recomendaron:
+
+1. **La experiencia llega directa al matar**, con una chispa que vuela del zombi al jugador. Sin cristales.
+2. **El nivel de la partida se llama PODER.**
+3. **La curva**: la primera carta a los 8 zombis y cada nivel ×1,15 (14 cartas hasta la 10).
+4. **También en el modo libre.**
+5. **La carta dorada después de cada jefe**, que brille mucho y suene épica.
+6. **Sin vídeo para cambiar las cartas en la 1.6.0.** Gemini propone sumar el cambio en la 1.7.0, pagado con monedas de
+   la partida o, más adelante, con gemas.
+
+Y un cambio suyo: **el escudo, al romperse, empuja medio metro a los zombis pegados**. Bloquear un golpe cada 15 s,
+solo, no sirve en la oleada 40 con cinco zombis encima.
