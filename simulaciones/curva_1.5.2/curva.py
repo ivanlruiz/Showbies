@@ -89,6 +89,21 @@ VARIANTES = {
     'c25_105_d103': variante('cola 25 x1,05 + golpe x1,03 desde la 25', vida_k=25, vida_g=1.05, dano_k=25, dano_g=1.03),
 }
 
+# Lo que eligio Ivan (10/10): la cola desde la oleada 11, despues del primer jefe, y la
+# cadencia base 6. Faltaba cuanto: estas son las candidatas, todas con cadencia 6.
+DESDE_LA_11 = {
+    'hoy_c6': variante('hoy, con cadencia 6', cad_base=6),
+    'c25_v105_d103_c6': variante('desde la 25: vida x1,05, golpe x1,03', vida_k=25, vida_g=1.05, dano_k=25, dano_g=1.03, cad_base=6),
+    'c11_v109_d105': variante('desde la 11: vida x1,09, golpe x1,05', vida_k=11, vida_g=1.09, dano_k=11, dano_g=1.05, cad_base=6),
+    'c11_v108_d105': variante('desde la 11: vida x1,08, golpe x1,05', vida_k=11, vida_g=1.08, dano_k=11, dano_g=1.05, cad_base=6),
+    'c11_v108_d104': variante('desde la 11: vida x1,08, golpe x1,04', vida_k=11, vida_g=1.08, dano_k=11, dano_g=1.04, cad_base=6),
+    'c11_v107_d104': variante('desde la 11: vida x1,07, golpe x1,04', vida_k=11, vida_g=1.07, dano_k=11, dano_g=1.04, cad_base=6),
+    'c11_v107_d103': variante('desde la 11: vida x1,07, golpe x1,03', vida_k=11, vida_g=1.07, dano_k=11, dano_g=1.03, cad_base=6),
+    'c11_v106_d103': variante('desde la 11: vida x1,06, golpe x1,03', vida_k=11, vida_g=1.06, dano_k=11, dano_g=1.03, cad_base=6),
+    'c11_v105_d103': variante('desde la 11: vida x1,05, golpe x1,03', vida_k=11, vida_g=1.05, dano_k=11, dano_g=1.03, cad_base=6),
+}
+VARIANTES.update(DESDE_LA_11)
+
 ARRANQUES = {
     'hoy': variante('hoy: danio 1, cadencia 4'),
     'cad6': variante('cadencia base 6', cad_base=6),
