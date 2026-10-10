@@ -82,6 +82,8 @@ actualizacion_lista	UPDATE READY!	¡ACTUALIZACIÓN LISTA!
 actualizacion_lista_detalle	Restart to play the new version	Reinicia para jugar con la versión nueva
 actualizacion_reiniciar	RESTART	REINICIAR
 actualizacion_mas_tarde	LATER	MÁS TARDE
+video_monedas_premio	+{0}	+{0}
+video_monedas_cobrado	+{0} COINS!	¡+{0} MONEDAS!
 misiones_cofre_abierto	OPENED! +{0}	¡ABIERTO! +{0}
 objetivo_mision	NEXT: {0}  {1}/{2}	PRÓXIMO: {0}  {1}/{2}
 objetivo_mejora	{0} MORE COINS FOR {1} LV {2}	TE FALTAN {0} MONEDAS PARA {1} NIVEL {2}

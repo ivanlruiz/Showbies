@@ -76,6 +76,8 @@ public class ConfigAnuncios : ScriptableObject
     public string bloqueRevivir = "ca-app-pub-5295383586829735/1512416812";
     public string bloqueDuplicarDerrota = "ca-app-pub-5295383586829735/8640931940";
     public string bloqueRegaloX2 = "ca-app-pub-5295383586829735/6299120897";
+    [Tooltip("El del boton de monedas del menu (VideoDeMonedas): \"monedas_menu\" en AdMob, creado el 10/10/2026.")]
+    public string bloqueMonedasMenu = "ca-app-pub-5295383586829735/5483137754";
     [Tooltip("El bloque intersticial de los automáticos (\"automatico\" en AdMob, creado el 6/10/2026). Sin él, con los "
         + "automáticos prendidos, el AAB no sale.")]
     public string bloqueAutomatico = "ca-app-pub-5295383586829735/6659600004";
@@ -105,7 +107,7 @@ public class ConfigAnuncios : ScriptableObject
     // Los lugares que tienen video hoy, en el orden en que se le pasan al puente de AdMob.
     public static readonly string[] LugaresConVideo =
     {
-        LugarAnuncio.Revivir, LugarAnuncio.DuplicarDerrota, LugarAnuncio.DuplicarRegalo
+        LugarAnuncio.Revivir, LugarAnuncio.DuplicarDerrota, LugarAnuncio.DuplicarRegalo, LugarAnuncio.MonedasMenu
     };
 
     public static readonly string[] ClasificacionesValidas = { "G", "PG", "T", "MA" };
@@ -128,6 +130,7 @@ public class ConfigAnuncios : ScriptableObject
             case LugarAnuncio.Revivir: return bloqueRevivir;
             case LugarAnuncio.DuplicarDerrota: return bloqueDuplicarDerrota;
             case LugarAnuncio.DuplicarRegalo: return bloqueRegaloX2;
+            case LugarAnuncio.MonedasMenu: return bloqueMonedasMenu;
             case LugarAnuncio.Automatico: return bloqueAutomatico;
             default: return null;
         }

@@ -179,6 +179,7 @@ lo abre el botón de Discord del menú (`BotonDiscord.Invitacion`): si se cambia
 | Bonificado `duplicar_derrota` (recompensa 1 "monedas_x2") | `ca-app-pub-5295383586829735/8640931940` |
 | Bonificado `regalo_x2` (recompensa 1 "monedas_x2", el video de la recompensa diaria) | `ca-app-pub-5295383586829735/6299120897` |
 | Intersticial `automatico` (los automáticos de la derrota; creado el 6/10) | `ca-app-pub-5295383586829735/6659600004` |
+| Bonificado `monedas_menu` (recompensa 1 "monedas", el botón de monedas por video del menú; creado el 10/10) | `ca-app-pub-5295383586829735/5483137754` |
 
 Los nombres de los bloques son los de `LugarAnuncio`. Mientras la app no esté vinculada a su ficha publicada, AdMob
 limita los anuncios: para probar se usan los bloques de prueba de Google. Al publicar en producción, vincular la

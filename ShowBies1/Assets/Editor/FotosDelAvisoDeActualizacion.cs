@@ -96,6 +96,78 @@ public static class FotosDelAvisoDeActualizacion
         EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
     }
 
+    // El boton de monedas por video (BotonVideoDeMonedas), debajo del de las misiones: listo para
+    // mirar (con un proveedor de mentira que siempre tiene video) y esperando el proximo. Va en
+    // esta misma herramienta porque arma el mismo menu. Fotos en Builds/actualizacion.
+    [MenuItem("ShowBies/Anuncios/Fotos del boton de video")]
+    public static void SacarBotonDeVideo()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode || EscenasSinGuardar.Hay("Fotos del boton de video")) return;
+        var abiertas = EscenasSinGuardar.Recordar();
+        Directory.CreateDirectory(Path.GetFullPath(Carpeta));
+        string carpetaProgreso = Path.Combine(Path.GetTempPath(), "ShowBiesFotosVideo");
+        if (Directory.Exists(carpetaProgreso)) Directory.Delete(carpetaProgreso, true);
+        Directory.CreateDirectory(carpetaProgreso);
+        File.WriteAllText(Path.Combine(carpetaProgreso, "progreso.json"), "{\"version\":" + Progreso.VersionActual
+                          + ",\"monedas\":0,\"mejorOleada\":10,\"partidasTerminadas\":5,\"segundosJugados\":900}");
+        Idioma.UsarParaPruebas(Lengua.Espanol);
+        Progreso.UsarCarpetaDePruebas(carpetaProgreso);
+        ServicioAnuncios.UsarParaPruebas(new ConVideo(), ConfigAnuncios.Instancia);
+        try
+        {
+            foreach (var ancho in new[] { 1920, 2400 })
+            {
+                FotoDelBoton(ancho, 1080, "boton_video_listo");
+                Progreso.RegistrarVideoDeMonedas(VideoDeMonedas.Ahora - 19);
+                FotoDelBoton(ancho, 1080, "boton_video_esperando");
+                Progreso.RegistrarVideoDeMonedas(0);
+            }
+        }
+        finally
+        {
+            ServicioAnuncios.UsarParaPruebas(null, null);
+            Progreso.UsarCarpetaDePruebas(null);
+            Idioma.UsarParaPruebas(null);
+            EscenasSinGuardar.Volver(abiertas);
+        }
+        Debug.Log("FotosDelAvisoDeActualizacion: las del boton de video, listas en " + Path.GetFullPath(Carpeta));
+    }
+
+    class ConVideo : IProveedorAnuncios
+    {
+        public string Nombre { get { return "fotos"; } }
+        public void Inicializar() { }
+        public bool Listo(string lugar) { return true; }
+        public void Mostrar(string lugar, Action<ResultadoAnuncio> alTerminar) { alTerminar(ResultadoAnuncio.Cerrado); }
+    }
+
+    static void FotoDelBoton(int ancho, int alto, string nombre)
+    {
+        var escena = EditorSceneManager.OpenScene("Assets/Escenas/Menu.unity", OpenSceneMode.Single);
+        foreach (var tipo in new[] { typeof(SelectorIdioma), typeof(VentanaMisiones), typeof(VentanaBestiario),
+                                     typeof(VentanaLogros), typeof(BotonDiscord) })
+        {
+            var componente = Object.FindFirstObjectByType(tipo, FindObjectsInactive.Include);
+            Llamar(componente, "Awake");
+            Llamar(componente, "Start");
+        }
+        var go = new GameObject("BotonVideoDeMonedas");
+        SceneManager_Mover(go, escena);
+        Llamar(go.AddComponent<BotonVideoDeMonedas>(), "Start");
+
+        var camara = new GameObject("CamaraUI").AddComponent<Camera>();
+        camara.clearFlags = CameraClearFlags.SolidColor;
+        camara.backgroundColor = new Color(0.05f, 0.06f, 0.12f);
+        camara.transform.position = new Vector3(0f, -1000f, -10f);
+        var rt = new RenderTexture(ancho, alto, 24) { hideFlags = HideFlags.HideAndDontSave };
+        camara.targetTexture = rt;
+        Foto(camara, rt, nombre + "_" + ancho + "x" + alto);
+        camara.targetTexture = null;
+        rt.Release();
+        Object.DestroyImmediate(rt);
+        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+    }
+
     static void SceneManager_Mover(GameObject go, UnityEngine.SceneManagement.Scene escena)
     {
         UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(go, escena);

@@ -1399,9 +1399,9 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 
 ## Anuncios
 
-La monetización son anuncios: los **videos con recompensa**, que entran por **tres lugares** (**revivir** al morir,
+La monetización son anuncios: los **videos con recompensa**, que entran por **cuatro lugares** (**revivir** al morir,
 el **x2 de las monedas en la pantalla de derrota**, y en el menú el **x2 de la recompensa diaria**, ver Recompensa
-diaria), y desde el 6/10 **los automáticos** al salir de la derrota (ver Los automáticos, abajo). **Desde el 6/10 no
+diaria, y **el botón de monedas por video**, ver abajo), y desde el 6/10 **los automáticos** al salir de la derrota (ver Los automáticos, abajo). **Desde el 6/10 no
 hay topes de videos** (pedido de Ivan: "quiero que vean anuncios"): en una misma partida se puede revivir con un video
 y después duplicar con otro, sin tope por día ni espera entre videos. Lo que queda son las reglas del juego (revivir
 una vez por partida, duplicar una vez) y que AdMob tenga video. Todo lo demás (topes, proveedor, hilos) vive en
@@ -1427,7 +1427,7 @@ una vez por partida, duplicar una vez) y que AdMob tenga video. Todo lo demás (
 
 | pieza | qué hace |
 |---|---|
-| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir`, `duplicar_derrota` y `regalo_x2` (la recompensa diaria), que son videos con premio, y `automatico`, el intersticial de la derrota (el puente de Java lo reconoce por ese nombre). |
+| `LugarAnuncio` | los nombres de los lugares, como strings. Se guardan en el JSON: **un lugar no se renombra nunca**. Hoy se usan `revivir`, `duplicar_derrota`, `regalo_x2` (la recompensa diaria) y `monedas_menu` (el botón de monedas del menú), que son videos con premio, y `automatico`, el intersticial de la derrota (el puente de Java lo reconoce por ese nombre). |
 | `IProveedorAnuncios` | quién muestra el video: `Listo(lugar)` y `Mostrar(lugar, aviso)`. Cambiar de red es escribir otra clase. |
 | `ProveedorNulo` | nunca tiene video: no se ofrece nada. Es el de Windows (fuera del editor, en PC se fuerza aunque el asset diga otra cosa), el del editor con el asset en `Real` y el de "no hay red". |
 | `ProveedorFalso` | el de las pruebas: un cartel a pantalla completa armado por código, con una barra de 5 s y SALTEAR / LISTO. Prueba el circuito entero sin cuenta ni internet; se usa poniendo el asset en `Falso`. |
@@ -1474,6 +1474,24 @@ tras 20 minutos en segundo plano (antes era `Time.realtimeSinceStartup`, que en 
 
 **Cerrar el video del x2 de la derrota antes de tiempo no esconde la oferta**: `OfertaDeDuplicar.NoSeCobro` la vuelve a
 mostrar si todavía se puede ofrecer (hasta la auditoría del 24/9 desaparecía para esa partida).
+
+### El botón de monedas por video
+
+Pedido de Ivan (10/10), que eligió el premio, el límite y el lugar: **un botón redondo arriba a la derecha del menú,
+debajo del de las misiones** (`BotonVideoDeMonedas`, una copia del globo como los otros de las esquinas, con la claqueta
+de la oferta de revivir en el naranja del video), para mirar un video y cobrar monedas.
+
+- **Paga un cuarto de partida** en la mejor oleada (`VideoDeMonedas.Premio`, con la vara de `Economia`), con piso de 50:
+  50 al principio, 240 en la oleada 10, 3.450 en la 30. Entra por `CobrarPremio`.
+- **Uno cada 10 minutos** (`SegundosEntreVideos`), con la hora del teléfono guardada en el progreso
+  (`ultimoVideoDeMonedas`, segundos Unix, sin cambiar la versión). Adelantar el reloj da otro video antes, que es mirar
+  más anuncios; atrasarlo no deja esperando.
+- **Debajo cuelga una etiqueta**: "+240" dorada (y el botón respira) cuando se puede, o la cuenta atrás ("9:41", en
+  vidrio, y tocarlo lo hace temblar) mientras espera. **Sin video para ofrecer no existe**, como toda oferta. Al cobrar,
+  el arpegio de cobrar una misión y "¡+240 MONEDAS!" que sube desde el botón: el menú no muestra monedas.
+- Pide lo de todos los videos (los 3 minutos jugados, video cargado, videos prendidos), no cuenta para el tope por
+  partida y tiene su bloque en AdMob (`monedas_menu`, creado el 10/10). No está en la escena: se instala al cargar el
+  menú. **ShowBies > Anuncios > Fotos del botón de video** lo saca en sus dos estados (`Builds/actualizacion/`).
 
 ### Los automáticos
 

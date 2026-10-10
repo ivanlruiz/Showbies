@@ -248,6 +248,7 @@ public static class PruebasMejoras
                     ProbarPrimeraVez(informe);
                     ProbarPedidoDeResena(informe);
                     ProbarActualizacion(informe);
+                    ProbarVideoDeMonedas(informe);
                     ProbarRelojConfiable(informe);
                     ProbarJugoSonoro(informe);
                     ProbarMisiones(informe);
@@ -4459,7 +4460,7 @@ public static class PruebasMejoras
         var puente = new PuenteDePrueba();
         var resultados = new List<ResultadoAnuncio>();
         Action<ResultadoAnuncio> anotar = r => resultados.Add(r);
-        var admob = new ProveedorAdMob(puente, ConfigAnuncios.LugaresConVideo, new[] { "a", "b", "c" }, "T", true, () => ahora);
+        var admob = new ProveedorAdMob(puente, ConfigAnuncios.LugaresConVideo, new[] { "a", "b", "c", "d" }, "T", true, () => ahora);
 
         admob.Inicializar();
         admob.Inicializar();
@@ -4622,7 +4623,7 @@ public static class PruebasMejoras
             config.segundosJugadosMinimos = 0f;
             EmpezarConMonedas(0);
             var puente2 = new PuenteDePrueba();
-            var admob2 = new ProveedorAdMob(puente2, ConfigAnuncios.LugaresConVideo, new[] { "a", "b", "c" }, "T", false, () => ahora);
+            var admob2 = new ProveedorAdMob(puente2, ConfigAnuncios.LugaresConVideo, new[] { "a", "b", "c", "d" }, "T", false, () => ahora);
             ServicioAnuncios.UsarParaPruebas(admob2, config);
             admob2.Inicializar();
             puente2.avisar("", "consentimiento", "requerido");
@@ -4937,6 +4938,38 @@ public static class PruebasMejoras
                       !PedidoDeResena.Corresponde(12, 5, "2026-12-01", hoy, 10, 3, 60));
         inf.Verdadero("resena: fecha guardada rota, se pide",
                       PedidoDeResena.Corresponde(12, 5, "ayer", hoy, 10, 3, 60));
+    }
+
+    // El boton de monedas por video del menu (VideoDeMonedas, Ivan 10/10): un cuarto de partida
+    // con piso de 50, uno cada 10 minutos, y su lugar con un bloque de verdad en el asset.
+    static void ProbarVideoDeMonedas(Informe inf)
+    {
+        inf.Cerca("video de monedas: al principio paga el piso", 50.0, VideoDeMonedas.Premio(0), Tolerancia);
+        inf.Cerca("video de monedas: en la oleada 10, un cuarto de partida", 240.0, VideoDeMonedas.Premio(10), Tolerancia);
+        inf.Cerca("video de monedas: en la oleada 30", 3450.0, VideoDeMonedas.Premio(30), Tolerancia);
+        bool crece = true;
+        for (int o = 1; o <= 60; o++) crece &= VideoDeMonedas.Premio(o) >= VideoDeMonedas.Premio(o - 1);
+        inf.Verdadero("video de monedas: nunca paga menos con una oleada mas alta", crece);
+        inf.Verdadero("video de monedas: paga menos que lo que deja jugar la partida",
+                      VideoDeMonedas.Premio(30) < Economia.MonedasPorPartida(30));
+
+        long ahora = 1791600000L;
+        inf.Verdadero("video de monedas: sin uno anterior, ya", VideoDeMonedas.SegundosQueFaltan(0, ahora) == 0);
+        inf.Verdadero("video de monedas: recien mirado, 10 minutos",
+                      VideoDeMonedas.SegundosQueFaltan(ahora, ahora) == VideoDeMonedas.SegundosEntreVideos);
+        inf.Verdadero("video de monedas: a un segundo de los 10 minutos, falta uno",
+                      VideoDeMonedas.SegundosQueFaltan(ahora - VideoDeMonedas.SegundosEntreVideos + 1, ahora) == 1);
+        inf.Verdadero("video de monedas: a los 10 minutos, ya",
+                      VideoDeMonedas.SegundosQueFaltan(ahora - VideoDeMonedas.SegundosEntreVideos, ahora) == 0);
+        inf.Verdadero("video de monedas: con el reloj atrasado no deja esperando",
+                      VideoDeMonedas.SegundosQueFaltan(ahora + 100, ahora) == 0);
+
+        inf.Verdadero("video de monedas: su lugar esta entre los videos que carga AdMob",
+                      System.Array.IndexOf(ConfigAnuncios.LugaresConVideo, LugarAnuncio.MonedasMenu) >= 0);
+        ConfigAnuncios real = ConfigAnuncios.Instancia;
+        string bloque = real != null ? real.BloqueReal(LugarAnuncio.MonedasMenu) : null;
+        inf.Verdadero("video de monedas: el asset tiene un bloque de verdad para el lugar",
+                      !string.IsNullOrEmpty(bloque) && !ConfigAnuncios.EsBloqueDePrueba(bloque));
     }
 
     // Las actualizaciones dentro del juego (ActualizacionDePlay y AvisoDeActualizacion): lo que

@@ -97,6 +97,10 @@ public static class Progreso
         // espaciarlos (ServicioAnuncios.PuedeMostrarAutomatico). Un JSON sin el campo lo
         // lee como 0, asi que no cambia la version.
         public int partidaDelUltimoAutomatico;
+        // Cuando se miro el ultimo video del boton de monedas del menu (VideoDeMonedas), en
+        // segundos Unix: el siguiente espera VideoDeMonedas.SegundosEntreVideos. Un JSON sin el
+        // campo lo lee como 0 (nunca), asi que no cambia la version.
+        public long ultimoVideoDeMonedas;
 
         // La partida de oleadas a medias: la oleada que se estaba jugando y los puntos
         // con que empezo. 0 = ninguna. Un JSON sin estos campos los lee como 0, asi que
@@ -691,6 +695,19 @@ public static class Progreso
         Guardar();
     }
 
+    // El ultimo video del boton de monedas del menu (ver VideoDeMonedas).
+    public static long UltimoVideoDeMonedas
+    {
+        get { Cargar(); return datos.ultimoVideoDeMonedas; }
+    }
+
+    public static void RegistrarVideoDeMonedas(long segundosUnix)
+    {
+        Cargar();
+        datos.ultimoVideoDeMonedas = segundosUnix;
+        Guardar();
+    }
+
     public static void RegistrarFallaPremiada()
     {
         Cargar();
@@ -1022,6 +1039,7 @@ public static class Progreso
         // Una marca mas adelante que las partidas (un progreso tocado a mano) dejaria sin
         // automaticos hasta alcanzarla.
         d.partidaDelUltimoAutomatico = Math.Max(0, Math.Min(d.partidaDelUltimoAutomatico, d.partidasTerminadas));
+        if (d.ultimoVideoDeMonedas < 0) d.ultimoVideoDeMonedas = 0;
 
         if (d.estrellasCobradas == null) d.estrellasCobradas = new List<Conteo>();
         d.estrellasCobradas.RemoveAll(c => c == null || string.IsNullOrEmpty(c.id));

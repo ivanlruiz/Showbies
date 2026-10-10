@@ -238,8 +238,9 @@ public static class ServicioAnuncios
                                     Progreso.UsosDeHoyEnTotal(), SegundosDesdeElUltimo,
                                     Proveedor.Listo(lugar),
                                     // El tope por partida es para la derrota y el revivir; la diaria
-                                    // se cobra en el menu, entre partidas.
-                                    lugar == LugarAnuncio.DuplicarRegalo ? 0 : Progreso.VideosDeLaPartida);
+                                    // y el boton de monedas se cobran en el menu, entre partidas.
+                                    lugar == LugarAnuncio.DuplicarRegalo || lugar == LugarAnuncio.MonedasMenu
+                                        ? 0 : Progreso.VideosDeLaPartida);
     }
 
     // Los segundos jugados que mira la oferta. Para revivir cuenta tambien la partida en curso
