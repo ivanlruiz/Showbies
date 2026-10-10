@@ -28,3 +28,13 @@ python curva.py modo=arranque semillas=8 perfiles=bajo,medio,alto salida=resulta
   lejos. Con daño 2 y cadencia 6, bastante más; la primera compra de daño pasa a ser +50 % y no ×2.
 
 Los resultados están en `resultados_*.md`.
+
+## Lo que se eligió (10/10)
+
+- **La cadencia base 6** (Ivan).
+- **El segundo tramo desde la oleada 11**, después del primer jefe (Ivan). Los números los eligió **Gemini** entre tres
+  candidatas (`resultados_desde_la_11.md`): **vida ×1,08 y golpe ×1,04**. Deja el muro entre la 50 y la 60 para que el
+  renacer de la 1.8.0 tenga sentido, y le deja margen a las cartas de la 1.6.0, que van a sumar poder sin estirar las
+  partidas más allá de los 25-30 minutos. El que juega flojo queda por debajo de la 50 hasta el renacer.
+- En el juego la 11 ya vale la 10 por el tardío; en la simulación (`dos_tramos`, `vida_k=11`) el tardío empieza en la
+  12. Es un 3 % de diferencia desde la 11.

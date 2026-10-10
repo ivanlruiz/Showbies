@@ -22,6 +22,6 @@ MonoBehaviour:
   crecimientoPrecio: 1.45
   nivelMaximo: 16
   crecimiento: 0
-  efectoPorNivel: 0.25
-  valorBase: 4
+  efectoPorNivel: 0.16666666666666666
+  valorBase: 6
   formato: 0

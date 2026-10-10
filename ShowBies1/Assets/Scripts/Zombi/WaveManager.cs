@@ -67,6 +67,15 @@ public class WaveManager : MonoBehaviour
     [Header("Dificultad")]
     public float crecimientoVida = 1.11f;    // la vida de cada zombi es hp * crecimientoVida^(oleada - 1)
     public float crecimientoDano = 1.07f;    // su golpe es daño * crecimientoDano^(oleada - 1)
+    // Desde esta oleada la vida y el golpe crecen mas despacio (10/10: Ivan eligio empezar
+    // despues del primer jefe, y entre las tres candidatas simuladas Gemini eligio x1,08 y
+    // x1,04, que dejan el muro entre la 50 y la 60 para cuando llegue el renacer). Con todo
+    // creciendo igual hasta el final el jugador se frenaba en la 40-45, casi siempre en un
+    // jefe, y suavizar solo la vida dejaba de muro el golpe: lo simulado esta en
+    // simulaciones/curva_1.5.2. 0 = sin segundo tramo.
+    public int oleadaDelSegundoTramo = 11;
+    public float crecimientoVidaTardio = 1.08f;
+    public float crecimientoDanoTardio = 1.04f;
 
     [Header("Monedas")]
     public Moneda monedaPrefab;              // la que sueltan los zombis al morir
@@ -128,8 +137,20 @@ public class WaveManager : MonoBehaviour
         return Textos.Formato(perfecta ? "cartel_bono_perfecta" : "cartel_bono", bono);
     }
 
-    public float MultiplicadorVidaActual => Escalado.PorOleada(crecimientoVida, OleadaActual);
-    public float MultiplicadorDanoActual => Escalado.PorOleada(crecimientoDano, OleadaActual);
+    public float MultiplicadorVidaActual => MultiplicadorVidaEn(OleadaActual);
+    public float MultiplicadorDanoActual => MultiplicadorDanoEn(OleadaActual);
+
+    // La vida y el golpe de los zombis de una oleada, en sus dos tramos. Publicos para las
+    // pruebas, que comparan contra esto lo que de verdad le pusieron a cada zombi.
+    public float MultiplicadorVidaEn(int oleada)
+    {
+        return Escalado.PorOleada(crecimientoVida, oleada, oleadaDelSegundoTramo, crecimientoVidaTardio);
+    }
+
+    public float MultiplicadorDanoEn(int oleada)
+    {
+        return Escalado.PorOleada(crecimientoDano, oleada, oleadaDelSegundoTramo, crecimientoDanoTardio);
+    }
 
     // Incluye el botin: es lo que vale cada moneda de un zombi de la oleada actual.
     public float MultiplicadorMonedasActual => Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
@@ -413,8 +434,8 @@ public class WaveManager : MonoBehaviour
 
         // Antes de su primer golpe, que es cuando calcula la vida. Los .asset no se
         // tocan: son los stats de la oleada 1.
-        enemigo.multiplicadorVida = Escalado.PorOleada(crecimientoVida, OleadaActual);
-        enemigo.multiplicadorDano = Escalado.PorOleada(crecimientoDano, OleadaActual);
+        enemigo.multiplicadorVida = MultiplicadorVidaActual;
+        enemigo.multiplicadorDano = MultiplicadorDanoActual;
         enemigo.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
         enemigo.monedaPrefab = monedaPrefab;
         enemigo.EsJefe = prefab == jefe;
@@ -447,8 +468,8 @@ public class WaveManager : MonoBehaviour
             donde = LugarDelTesoro(jugador.transform.position, angulo + 180f);
         var tesoro = EnemyController.Aparecer(tesoroPrefab, donde);
         if (tesoro == null) return null;
-        tesoro.multiplicadorVida = Escalado.PorOleada(crecimientoVida, OleadaActual);
-        tesoro.multiplicadorDano = Escalado.PorOleada(crecimientoDano, OleadaActual);
+        tesoro.multiplicadorVida = MultiplicadorVidaActual;
+        tesoro.multiplicadorDano = MultiplicadorDanoActual;
         tesoro.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
         tesoro.monedaPrefab = monedaPrefab;
         Efectos.TesoroAparece(tesoro.transform.position);

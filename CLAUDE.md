@@ -88,6 +88,7 @@ auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada ha
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
 PLAN.md                     ← el plan a partir de la revisión de Gemini (10/10): de la 1.5.2 a la 1.8.0, con las decisiones de Ivan
+simulaciones/               ← las simulaciones de la economía, con su script y sus tablas (curva_1.5.2: la curva de las oleadas)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -296,7 +297,7 @@ rápido que la cadencia no tira más balas. Antes el contador volvía a 0 al sol
 de disparo a golpecitos disparaba mucho más que la mejora.
 
 **La cadencia y el daño los fija la mejora, en tiros por segundo.** `AplicarMejoras` llama a
-`FijarTirosPorSegundo` (4 de base, +1 por nivel) y `FijarDanoPorBala` (1 de base, +1 por nivel). Cada bala lleva su
+`FijarTirosPorSegundo` (6 de base, +1 por nivel) y `FijarDanoPorBala` (1 de base, +1 por nivel). Cada bala lleva su
 `danoAplicado`; el `dañoDar` del prefab y el override `tiempoDisparo` de las escenas quedan como respaldo para una
 escena sin `AplicarMejoras`. **Nunca escribas sobre `gun.bala`**: es el prefab, no una bala.
 
@@ -634,6 +635,22 @@ jugador. **La vida era 1,15 y las monedas 1,05** hasta el 19/9: una simulación 
 comprable crece con el logaritmo de las monedas y la vida, exponencial), y con 1,11 y 1,08 (Ivan lo probó en la 35 y
 lo notó bien) se corre a la 45-48. La solución de fondo (hitos de daño multiplicativos, renacer) está en TAREAS. `EnemyController` inicializa la vida perezosa (en el primer golpe o al consultarla, una vez por aparición) y muere con vida ≤ 0,01;
 el daño al jugador acumula las fracciones (`PlayerHealth.AcumularDano`) y resta enteros.
+
+**Desde la oleada 11 la curva va en un segundo tramo** (1.5.2, del plan de Gemini): la vida crece ×1,08 y el golpe ×1,04
+(`oleadaDelSegundoTramo`, `crecimientoVidaTardio` y `crecimientoDanoTardio`, con `Escalado.PorOleada` de dos tramos:
+la 11 ya vale la 10 por el tardío, y el jefe de la 10 queda en el primero). Ivan eligió empezar después del primer jefe,
+y entre tres candidatas simuladas Gemini eligió esta. **Lo simulado está en `simulaciones/curva_1.5.2`**, con el
+script y sus tablas (la del 19/9 quedó en un scratchpad y se perdió):
+- **Con un solo tramo, el jugador medio se frenaba en la 40-45**, y el 70 % de las muertes en el muro eran en un jefe:
+  su vida crece exponencial, y su carga (×2,5 de un golpe que también crece exponencial) le sacaba ~350 a una vida
+  comprable que crece lineal.
+- **Suavizar solo la vida dejaba de muro el golpe de los zombis**, con el jugador aguantando 4-8 golpes. Por eso
+  bajan los dos.
+- **Con el segundo tramo**, el medio llega a la 40 en la partida 7 y a la 55 en la 18, y se frena cerca de la 60:
+  el muro queda para el renacer (1.8.0), y las cartas (1.6.0) lo van a correr un poco.
+
+Los valores van con el valor por defecto del script y no con un override en la escena, y la prueba de lógica los lee de
+`WaveMode.unity`. El modo libre sigue con un solo tramo (`GeneradorZombis`, 1,15 por nivel).
 
 Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
 
@@ -1372,7 +1389,7 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 | mejora | id | precio inicial | crecimiento | tope | efecto |
 |---|---|---|---|---|---|
 | Daño de bala | `dano_bala` | 40 | ×1,45 | — | 1 × (1 + nivel) por bala |
-| Cadencia | `cadencia` | 50 | ×1,45 | 16 | 4 × (1 + 0,25 × nivel) tiros/s (de 4 a 20) |
+| Cadencia | `cadencia` | 50 | ×1,45 | 16 | 6 + nivel tiros/s (de 6 a 22) |
 | Golpes críticos | `criticos` | 150 | ×1,8 | 8 | probabilidad de daño ×2 por bala: 0, 5, 10, 20, 30, 50, 75, 90 y 100 % (`valoresPorNivel`) |
 | Vida máxima | `vida_maxima` | 40 | ×1,45 | — | 80 × (1 + 0,25 × nivel) |
 | Granada | `granada` | 250 | — | 1 | desbloquea la granada (ver Granada) |
@@ -1380,10 +1397,13 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 | Botín | `botin` | 120 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
 | Furia | `furia` | 5.000 | — | 1 | desbloquea el botón de furia: 6 s de cadencia y daño ×2 (ver Furia) |
 
-- **El jugador arranca flojo a propósito** (fase 4, pedido de Ivan después de jugar en el teléfono): dispara lento, pega
-  1, tiene 80 de vida y no tiene imán (junta las monedas pasándoles por encima). Lo que lo hace fuerte son las compras, y por eso los primeros precios
+- **El jugador arranca flojo a propósito** (fase 4, pedido de Ivan después de jugar en el teléfono): pega 1, tiene 80 de
+  vida y no tiene imán (junta las monedas pasándoles por encima). Lo que lo hace fuerte son las compras, y por eso los primeros precios
   son bajos: la primera partida tiene que alcanzar para una o dos. El daño y la cadencia suben de a uno para que
-  cada compra se lea en la tarjeta ("1 → 2") y en los números de daño.
+  cada compra se lea en la tarjeta ("1 → 2") y en los números de daño. **La cadencia arranca en 6 desde la 1.5.2** (era 4;
+  de la revisión de Gemini, elegido por Ivan entre esto, dejarlo y daño 2): `valorBase` 6 y `efectoPorNivel` 1/6, así
+  sigue sumando 1 por compra, de 6 a 22. Con eso las primeras partidas llegan 2-3 oleadas más lejos, y la compra de daño
+  sigue duplicando.
 - **Golpes críticos**: cada bala sortea al salir (`GunController.EsCritico`, con el 100 % tratado aparte porque
   `Random.value` puede dar 1) y la crítica lleva `DanoPorTiro × multiplicadorCritico` (2). La bala marca `critico` y el
   número de daño sale rojo, más grande y con "!", con el doble de chispas y el golpe más agudo. La granada no tira

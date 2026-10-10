@@ -195,6 +195,7 @@ public static class PruebasMejoras
             ProbarIdiomas(informe);
             ProbarTema(informe);
             ProbarEscalado(informe);
+            ProbarSegundoTramo(informe);
             ProbarLugaresDelTutorial(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarDanoAlJugador(informe);
@@ -761,11 +762,11 @@ public static class PruebasMejoras
         ChequearValor(inf, "valor dano_bala", c.danoBala, 2, 3);
         ChequearValor(inf, "valor dano_bala", c.danoBala, 5, 6);
         ChequearValor(inf, "valor dano_bala", c.danoBala, 10, 11);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 0, 4);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 1, 5);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 5, 9);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 16, 20);
-        ChequearValor(inf, "valor cadencia", c.cadencia, 17, 20);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 0, 6);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 1, 7);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 5, 11);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 16, 22);
+        ChequearValor(inf, "valor cadencia", c.cadencia, 17, 22);
         ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 0, 80);
         ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 1, 100);
         ChequearValor(inf, "valor vida_maxima", c.vidaMaxima, 5, 180);
@@ -783,8 +784,8 @@ public static class PruebasMejoras
         inf.Igual("texto dano_bala nivel 0", "1", c.danoBala.TextoValor(0));
         inf.Igual("texto dano_bala nivel 1", "2", c.danoBala.TextoValor(1));
         inf.Igual("texto dano_bala nivel 10", "11", c.danoBala.TextoValor(10));
-        inf.Igual("texto cadencia nivel 0", "4", c.cadencia.TextoValor(0));
-        inf.Igual("texto cadencia nivel 16", "20", c.cadencia.TextoValor(16));
+        inf.Igual("texto cadencia nivel 0", "6", c.cadencia.TextoValor(0));
+        inf.Igual("texto cadencia nivel 16", "22", c.cadencia.TextoValor(16));
         inf.Igual("texto vida_maxima nivel 0", "80", c.vidaMaxima.TextoValor(0));
         inf.Igual("texto iman nivel 0", "0", c.iman.TextoValor(0));
         inf.Igual("texto iman nivel 1", "2", c.iman.TextoValor(1));
@@ -1205,6 +1206,53 @@ public static class PruebasMejoras
         inf.Cerca("escalado: PorOleada(1,15; 10)", 3.5179, Escalado.PorOleada(1.15f, 10), 1e-3);
         inf.Cerca("escalado: PorOleada(1,07; 10)", 1.8385, Escalado.PorOleada(1.07f, 10), 1e-3);
         inf.Cerca("escalado: PorOleada(1,05; 10)", 1.5513, Escalado.PorOleada(1.05f, 10), 1e-3);
+
+        // Dos tramos: hasta la anterior a 'desde' es la de siempre, y 'desde' ya crece con el tardio.
+        inf.Cerca("escalado en dos tramos: antes de 'desde' es la de siempre",
+                  Escalado.PorOleada(1.11f, 10), Escalado.PorOleada(1.11f, 10, 11, 1.07f), 1e-6);
+        inf.Cerca("escalado en dos tramos: 'desde' vale la anterior por el tardio",
+                  Escalado.PorOleada(1.11f, 10) * 1.07, Escalado.PorOleada(1.11f, 11, 11, 1.07f), 1e-4);
+        inf.Cerca("escalado en dos tramos: la oleada 30",
+                  Math.Pow(1.11, 9) * Math.Pow(1.07, 20), Escalado.PorOleada(1.11f, 30, 11, 1.07f), 1e-2);
+        inf.Cerca("escalado en dos tramos: 'desde' 0 es un tramo",
+                  Escalado.PorOleada(1.11f, 30), Escalado.PorOleada(1.11f, 30, 0, 1.07f), 1e-6);
+        inf.Cerca("escalado en dos tramos: un tardio sin cargar es un tramo",
+                  Escalado.PorOleada(1.11f, 30), Escalado.PorOleada(1.11f, 30, 11, 0f), 1e-6);
+    }
+
+    // La curva de WaveMode (10/10): desde la oleada 11, despues del primer jefe, la vida y el
+    // golpe crecen mas despacio (lo eligio Ivan; simulado en simulaciones/curva_1.5.2). Se lee
+    // la escena, porque lo que cuenta es lo que tiene el inspector, y se mira que cada zombi
+    // salga con eso: el jefe de la 10 todavia en el primer tramo, el de la 20 en el segundo.
+    static void ProbarSegundoTramo(Informe inf)
+    {
+        WaveManager oleadas = null;
+        int desde = -1;
+        float vida = float.NaN, golpe = float.NaN, vidaTardia = float.NaN, golpeTardio = float.NaN;
+        float vida10 = float.NaN, vida11 = float.NaN, golpe10 = float.NaN, golpe11 = float.NaN;
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            oleadas = Buscar<WaveManager>(escena);
+            if (oleadas == null) return;
+            desde = oleadas.oleadaDelSegundoTramo;
+            vida = oleadas.crecimientoVida;
+            golpe = oleadas.crecimientoDano;
+            vidaTardia = oleadas.crecimientoVidaTardio;
+            golpeTardio = oleadas.crecimientoDanoTardio;
+            vida10 = oleadas.MultiplicadorVidaEn(10);
+            vida11 = oleadas.MultiplicadorVidaEn(11);
+            golpe10 = oleadas.MultiplicadorDanoEn(10);
+            golpe11 = oleadas.MultiplicadorDanoEn(11);
+        });
+        if (!inf.Verdadero("curva: WaveMode tiene su WaveManager", desde >= 0)) return;
+        inf.Igual("curva: el segundo tramo empieza en la 11, despues del primer jefe", 11, desde);
+        inf.Verdadero("curva: en el segundo tramo la vida crece, mas despacio que en el primero",
+                      vidaTardia > 1f && vidaTardia < vida);
+        inf.Verdadero("curva: en el segundo tramo el golpe crece, mas despacio que en el primero",
+                      golpeTardio > 1f && golpeTardio < golpe);
+        inf.Cerca("curva: el jefe de la 10 sale con la vida del primer tramo", Math.Pow(vida, 9), vida10, 1e-3);
+        inf.Cerca("curva: la 11 ya crece con el segundo tramo (vida)", vida10 * vidaTardia, vida11, 1e-3);
+        inf.Cerca("curva: la 11 ya crece con el segundo tramo (golpe)", golpe10 * golpeTardio, golpe11, 1e-3);
     }
 
     // 5. El acumulador de disparo: la cadencia promedio no depende de los FPS
@@ -3892,7 +3940,7 @@ public static class PruebasMejoras
     {
         EmpezarCaso(null, null);
         inf.Cerca("getters nivel 0: DanoPorBala", 1, CatalogoMejoras.DanoPorBala, Tolerancia);
-        inf.Cerca("getters nivel 0: TirosPorSegundo", 4, CatalogoMejoras.TirosPorSegundo, Tolerancia);
+        inf.Cerca("getters nivel 0: TirosPorSegundo", 6, CatalogoMejoras.TirosPorSegundo, Tolerancia);
         inf.Igual("getters nivel 0: VidaMaxima", 80, CatalogoMejoras.VidaMaxima);
         inf.Cerca("getters nivel 0: MultiplicadorVida", 1, CatalogoMejoras.MultiplicadorVida, Tolerancia);
         inf.Cerca("getters nivel 0: RadioIman", 0, CatalogoMejoras.RadioIman, Tolerancia);
@@ -3928,7 +3976,7 @@ public static class PruebasMejoras
         Progreso.DepurarFijarNivel(c.iman.id, 6);
         Progreso.DepurarFijarNivel(c.botin.id, 15);
         inf.Cerca("getters 5/10/5/6/15: DanoPorBala", 6, CatalogoMejoras.DanoPorBala, Tolerancia);
-        inf.Cerca("getters 5/10/5/6/15: TirosPorSegundo", 14, CatalogoMejoras.TirosPorSegundo, Tolerancia);
+        inf.Cerca("getters 5/10/5/6/15: TirosPorSegundo", 16, CatalogoMejoras.TirosPorSegundo, Tolerancia);
         inf.Igual("getters 5/10/5/6/15: VidaMaxima", 180, CatalogoMejoras.VidaMaxima);
         inf.Cerca("getters 5/10/5/6/15: MultiplicadorVida", 2.25, CatalogoMejoras.MultiplicadorVida, Tolerancia);
         inf.Cerca("getters 5/10/5/6/15: RadioIman", 4.5, CatalogoMejoras.RadioIman, Tolerancia);
@@ -6608,8 +6656,8 @@ public static class PruebasMejoras
         if (m.oleadas != null)
         {
             par.conEsperado = true;
-            par.vidaEsperada = zombi.enemyType.hp * Escalado.PorOleada(m.oleadas.crecimientoVida, oleada);
-            par.danoEsperado = zombi.enemyType.daño * Escalado.PorOleada(m.oleadas.crecimientoDano, oleada);
+            par.vidaEsperada = zombi.enemyType.hp * m.oleadas.MultiplicadorVidaEn(oleada);
+            par.danoEsperado = zombi.enemyType.daño * m.oleadas.MultiplicadorDanoEn(oleada);
             par.monedasEsperadas = Escalado.PorOleada(m.oleadas.crecimientoMonedas, oleada) * m.botin;
         }
         else if (m.generador != null)

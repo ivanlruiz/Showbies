@@ -13,4 +13,15 @@ public static class Escalado
         // dejar a los zombis con vida cero.
         return crecimiento <= 0f ? 1f : (float)System.Math.Pow(crecimiento, System.Math.Max(0, oleada - 1));
     }
+
+    // En dos tramos: crece 'crecimiento' hasta la oleada anterior a 'desde', y 'tardio' de
+    // ahi en adelante: la oleada 'desde' ya vale la anterior por 'tardio'. Con 'desde' en 0
+    // o un 'tardio' sin cargar es la de un tramo. Lo usan las oleadas desde el 10/10 (ver
+    // WaveManager.oleadaDelSegundoTramo); el modo libre sigue con la de un tramo.
+    public static float PorOleada(float crecimiento, int oleada, int desde, float tardio)
+    {
+        if (desde <= 1 || tardio <= 0f || oleada < desde) return PorOleada(crecimiento, oleada);
+        double primero = crecimiento <= 0f ? 1.0 : System.Math.Pow(crecimiento, desde - 2);
+        return (float)(primero * System.Math.Pow(tardio, oleada - desde + 1));
+    }
 }

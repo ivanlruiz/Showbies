@@ -417,6 +417,12 @@ el Profiler o el Frame Debugger (oleada 10+, 35 zombis):
 
 ### Balance (lo que más pesa)
 
+- **`Economia.BalasPorPartida` cuenta de más las balas por zombi** (media; visto al simular la curva de la 1.5.2). Supone
+  5 × 1,03^m balas por zombi, pero con el daño y los críticos comprados un zombi de la frontera muere de 3 a 5 balas
+  (en la 50, con la curva nueva: ~4 contra 22). Dimensiona la misión de críticos, que pediría más de lo que dan las
+  partidas que dice costar; la prueba no lo ve porque mide con la misma función. Propuesta: sacarlo de la simulación
+  (`simulaciones/curva_1.5.2`) para la curva nueva, o medirlo con `MedirPartida` en la 20, la 35 y la 50.
+
 - **El muro es un precipicio y lo causan los topes de cadencia (16) y críticos (8)** (alta). Simulado en seis
   calibraciones: con las dos mejoras al tope (hacia la oleada 33-40) solo queda el daño a +1 por nivel y ×1,45 de
   precio; la 30 cuesta ~1 partida por oleada y la 35, ~150. **Propuesta**: hitos multiplicativos solo para el daño
