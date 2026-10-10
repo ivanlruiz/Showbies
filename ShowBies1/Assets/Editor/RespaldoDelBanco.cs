@@ -140,6 +140,8 @@ public static class RespaldoDelBanco
         }
         // Si quedo una copia sin devolver, la buena es esa: se devuelve antes de hacer otra.
         if (Pendiente) Restaurar();
+        // El banco entra en play solo, a veces con Ivan usando la PC: sin traer Unity al frente.
+        PlaySinFoco.Prender();
 
         string carpeta = CarpetaCompleta;
         if (Directory.Exists(carpeta)) Directory.Delete(carpeta, true);
