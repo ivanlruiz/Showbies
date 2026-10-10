@@ -18,7 +18,8 @@ MonoBehaviour:
   radioDeDespeje: 7
   segundosDeGracia: 2.5
   segundosDeLaPartidaParaRevivir: 30
-  partidasTerminadasMinimas: 2
+  partidasTerminadasMinimas: 0
+  partidasAntesDelConsentimiento: 2
   segundosDeLaPartidaMinimos: 30
   segundosJugadosMinimos: 180
   monedasMinimasParaDuplicar: 10

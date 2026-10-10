@@ -16,7 +16,8 @@ using UnityEngine;
 // y no se da nada a cambio de reseñar.
 //
 // En ese mismo momento tranquilo, y antes, pide el cartel de consentimiento de los anuncios
-// cuando hace falta (ServicioAnuncios.PedirConsentimientoSiHaceFalta).
+// cuando hace falta (ServicioAnuncios.PedirConsentimientoSiHaceFalta). Con una version nueva
+// para avisar (AvisoDeActualizacion), la reseña queda para otra visita.
 //
 // Llama a la libreria oficial (com.google.android.play:review, sumada en
 // Plugins/Android/mainTemplate.gradle) por JNI, sin el plugin de Unity. Solo en Android:
@@ -109,7 +110,7 @@ public class PedidoDeResena : MonoBehaviour
                          && (opcionesSonido == null || !opcionesSonido.Abierto)
                          && (menuModos == null || !menuModos.activeSelf)
                          && !VentanaHalloween.Abierta && !CartelDeCobros.Abierto
-                         && !ServicioAnuncios.ConsentimientoEnPantalla;
+                         && !ServicioAnuncios.ConsentimientoEnPantalla && !AvisoDeActualizacion.Abierto;
         if (!tranquilo)
         {
             tranquiloDesde = -1f;
@@ -126,6 +127,10 @@ public class PedidoDeResena : MonoBehaviour
         // terminada, si UMP dice que hace falta. Sin el, ahi no hay videos. Si sale, la reseña
         // queda para otra visita: dos ventanas seguidas son demasiado.
         if (ServicioAnuncios.PedirConsentimientoSiHaceFalta()) return;
+
+        // Con una version nueva para avisar (AvisoDeActualizacion, que sale un segundo despues),
+        // tampoco: la hoja de Play y el cartel saldrian a la vez.
+        if (AvisoDeActualizacion.Pendiente) return;
 
         if (!Corresponde(Progreso.MejorOleada, Progreso.PartidasTerminadas, PlayerPrefs.GetString(ClaveUltimoPedido, ""),
                          DateTime.Now, oleadaMinima, partidasMinimas, diasEntrePedidos)) return;

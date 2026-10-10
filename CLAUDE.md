@@ -56,8 +56,9 @@ Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDe
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
+Assets/Scripts/Actualizacion/ ← ActualizacionDePlay (la actualización flexible de Play, por JNI) y AvisoDeActualizacion (el cartel del menú)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, DiagnosticoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
-Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña) y ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle)
+Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña y las actualizaciones) y ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle)
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
 Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
@@ -72,11 +73,11 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor e IdiomaEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio)
-Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón y los iconos del evento (IconoCalabaza, IconoCaramelo)
+Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón, los iconos del evento (IconoCalabaza, IconoCaramelo) y los de los botones armados en código (IconoMejoras, IconoActualizar, IconoReiniciar)
 ```
 
 Y **fuera del proyecto de Unity**, en la raíz del repo:
@@ -1439,8 +1440,12 @@ una vez por partida, duplicar una vez) y que AdMob tenga video. Todo lo demás (
 | `OfertaDeDuplicar` | el botón de la derrota (objeto `OfertaVideo` en `Perdiste.unity`, componente en `Menu`). |
 | `OfertaDeRevivir` | la ventanita de "¡HAS MUERTO!" (prefab `Prefabs/UI/OfertaRevivir` en ShowBies1 y WaveMode). |
 
-**Cuándo se ofrece** (valores del asset): a partir de la 2ª partida terminada y con 180 s jugados en total (solo
-partidas terminadas: el revivir se decide antes de sumar la que está en curso). El x2 pide además una partida de 30 s
+**Cuándo se ofrece** (valores del asset): con **180 s jugados en total, sin mirar cuántas partidas** (desde el 9/10,
+pedido de Ivan; hasta ahí pedía además 2 partidas terminadas, `partidasTerminadasMinimas`, que quedó en 0). **Para
+revivir cuenta también la partida en curso** (`ServicioAnuncios.SegundosQueCuentan`): así es el primer video que ve un
+jugador nuevo, en cuanto pasa los 3 minutos; el x2 de la derrota suma la partida al terminarla, y salía antes. El
+cartel de consentimiento de Europa sigue saliendo desde la 2.ª partida terminada, con su propio número
+(`partidasAntesDelConsentimiento`): ahí no hay videos hasta que se contesta. El x2 pide además una partida de 30 s
 y 10 monedas (eran 90 s y 20 hasta el 6/10: Ivan lo bajó para que salga en más partidas); revivir, una partida de 30 s. **Los topes (`vecesPorDia`, `vecesPorPartida`, `segundosEntreAnuncios`)
 están en 0, que es "sin tope"**; hasta el 6/10 eran 3 por día, 1 por partida y 60 s entre videos. Si se vuelve a
 poner uno, **el del día es global y se cuenta con `Progreso.UsosDeHoyEnTotal()`, sumando los lugares**: contándolo por
@@ -1603,9 +1608,50 @@ Play (una APK a mano) no muestra nada.
 **Sin el plugin de Unity de Google:** la librería oficial (`com.google.android.play:review:2.0.1`) entra como dependencia
 en `Assets/Plugins/Android/mainTemplate.gradle` (la plantilla propia está prendida en Player Settings) y se llama por JNI,
 con un `AndroidJavaProxy` para el `OnCompleteListener`. El plugin trae el External Dependency Manager, que se pelea con
-Unity 6. **Si se actualiza Unity, hay que volver a copiar su `mainTemplate.gradle` y sumarle la línea.** Solo en Android,
+Unity 6. **Si se actualiza Unity, hay que volver a copiar su `mainTemplate.gradle` y sumarle las dos líneas (esta y la de las
+actualizaciones).** Solo en Android,
 decidido en runtime; en el editor loguea "se pediría". **En el mismo momento tranquilo, y antes, va el cartel de
 consentimiento de los anuncios** cuando hace falta (ver AdMob); si sale, la reseña queda para otra visita.
+
+## Actualizaciones dentro del juego
+
+Pedido de Ivan (9/10): que el juego avise cuando hay una versión nueva. Hasta ahí el jugador se enteraba si Play
+actualizaba solo o si entraba a la ficha. Es la **actualización flexible** de Play (In-App Updates): Play baja la versión
+nueva mientras se sigue jugando y después se reinicia con un toque. La lógica es `ActualizacionDePlay` y lo que se ve,
+`AvisoDeActualizacion` (`Assets/Scripts/Actualizacion/`).
+
+- **Por JNI, sin el plugin de Unity**, como la reseña: la librería oficial (`com.google.android.play:app-update:2.1.0`)
+  va en `mainTemplate.gradle`, al lado de la de la reseña. Las constantes (`UPDATE_AVAILABLE`, `DOWNLOADED`,
+  `FLEXIBLE`...) están copiadas del jar con `javap`. Lo que contesta Play llega en el hilo de Android: ahí solo se
+  escriben campos sueltos, y lo que toca `PlayerPrefs` se hace en `Atender`, en el de Unity. La hoja de Play y
+  `completeUpdate` van en el hilo de la interfaz de Android (`runOnUiThread`).
+- **El aviso es un cartel arriba al centro del menú, no una ventana**: va en la franja de `CartelDeCobros`, con su canvas
+  que escala por el alto, y no tapa nada ni hay que cerrarlo para jugar. Se instala solo al cargar el menú
+  (`sceneLoaded`), toma las piezas de `VentanaMisiones` y sale con el menú tranquilo 2,5 s (`Espera`): después de la
+  diaria, del cartel de los cobros y del de consentimiento (que se pide a los 1,5 s). Si se abre la tienda o una
+  ventana, se va, y vuelve al cerrarla. Tiene tres caras:
+  - **¡NUEVA VERSIÓN DISPONIBLE!** con ACTUALIZAR (verde, abre la hoja de Play) y AHORA NO, que no ofrece esa versión
+    por 3 días (`DiasDePostergacion`, en `PlayerPrefs["ActualizacionPostergada"]` como "versión|fecha"; una más nueva
+    sí, y atrasar el reloj no la adelanta). Decirle que no a la hoja de Play cuenta igual.
+  - **Mientras baja**, una barra con el porcentaje (se le pregunta a Play cada 1,5 s mientras se mira el menú). Se puede
+    jugar: Play la baja igual, y el aviso de que está lista sale en la próxima visita al menú, **nunca en la partida**.
+  - **¡ACTUALIZACIÓN LISTA!** con REINICIAR y MÁS TARDE, que la esconde hasta la próxima visita. REINICIAR guarda el
+    progreso y los `PlayerPrefs`, como antes de un video: `completeUpdate` termina el proceso, y Play instala y vuelve a
+    abrir el juego. Una bajada en otra sesión y sin instalar sale así directamente.
+- **Recién aceptada, Play puede seguir diciendo "disponible"** un momento: se la da por bajando (`DespuesDeAceptar`),
+  salvo que la descarga falle o se cancele (desde la notificación de Play), y ahí no se ofrece más en la sesión.
+- **La reseña no se pide mientras hay una para avisar** (`AvisoDeActualizacion.Pendiente`) ni con el cartel en pantalla
+  (`Abierto`): saldrían a la vez.
+- **Solo anda instalada desde Play** y con una versión más nueva publicada: la primera que la trae es la que sigue a la
+  1.5.1, y quien tenga una anterior se entera recién desde la siguiente. Instalada a mano, Play contesta con un error y
+  no sale nada.
+- **Para probarlo**: la APK de prueba (`.prueba`) usa el `FakeAppUpdateManager` de la misma librería, con las mismas
+  llamadas de JNI: siempre hay una versión nueva, la "descarga" avanza sola mientras se mira el menú (5 s) y REINICIAR
+  no reinicia (avisa con un Toast); la caja del diagnóstico de los anuncios tiene un renglón con el estado. En el editor,
+  **ShowBies > Actualización > Simular en el editor** (`EditorPrefs`) hace lo mismo en C#. La prueba de lógica mira lo
+  que se decide (`Decidir`, `DespuesDeAceptar`, `Ofrecer`), que el cartel entre entre las esquinas y MEJORAS en 16:9,
+  20:9 y 21:9 (con el brillo del borde), los íconos y la línea del Gradle. El camino de verdad se puede probar antes de
+  publicar con el uso compartido interno de apps de Play Console.
 
 ## Pantallas: idioma, fuente y botones
 
@@ -1931,6 +1977,7 @@ progreso):
 | `"Idioma"` | `SelectorIdioma` (el globo del menú), `"en"` o `"es"` | `Idioma`; sin nada guardado, inglés |
 | `"TemaOscuro"` | nadie desde el 24/9 (era el interruptor del modo oscuro) | nadie: el neón es el único tema |
 | `"ResenaPedidaEn"` | `PedidoDeResena`, la fecha `yyyy-MM-dd` del último pedido | `PedidoDeResena` |
+| `"ActualizacionPostergada"` | AHORA NO del aviso de actualización (o el no de la hoja de Play), "versión\|aaaa-mm-dd" | `AvisoDeActualizacion`, por `ActualizacionDePlay.Ofrecer` |
 | `"MostrarFps"` | el interruptor MOSTRAR FPS de OPCIONES (`OpcionesSonido`), 1 o 0 | `ContadorFps`; sin nada guardado, apagado |
 | `"SombreroCalabaza"` | el interruptor SOMBRERO DE CALABAZA de OPCIONES, 1 o 0 | `EventoHalloween.SombreroPuesto`; sin nada guardado, puesto |
 

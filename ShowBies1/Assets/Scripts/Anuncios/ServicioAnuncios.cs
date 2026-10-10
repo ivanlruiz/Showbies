@@ -143,7 +143,7 @@ public static class ServicioAnuncios
         IConsentimientoAnuncios c = Consentimiento;
         ConfigAnuncios config = ConfigEnUso;
         if (c == null || config == null || !c.ConsentimientoRequerido || c.ConsentimientoEnPantalla) return false;
-        if (!Progreso.OfrecerVideos || Progreso.PartidasTerminadas < config.partidasTerminadasMinimas) return false;
+        if (!Progreso.OfrecerVideos || Progreso.PartidasTerminadas < config.partidasAntesDelConsentimiento) return false;
         c.PedirConsentimiento();
         return true;
     }
@@ -231,7 +231,7 @@ public static class ServicioAnuncios
 
         ConfigAnuncios config = ConfigEnUso;
         return PuedeOfrecerConDatos(config, Progreso.OfrecerVideos, MostrandoAnuncio,
-                                    Progreso.PartidasTerminadas, Progreso.SegundosJugados,
+                                    Progreso.PartidasTerminadas, SegundosQueCuentan(lugar),
                                     // En TOTAL, no por lugar: el tope de "3 videos por dia"
                                     // es global. Contandolo por lugar eran 3 de revivir mas
                                     // 3 del x2 de la derrota mas 3 del x2 de la diaria: nueve.
@@ -240,6 +240,16 @@ public static class ServicioAnuncios
                                     // El tope por partida es para la derrota y el revivir; la diaria
                                     // se cobra en el menu, entre partidas.
                                     lugar == LugarAnuncio.DuplicarRegalo ? 0 : Progreso.VideosDeLaPartida);
+    }
+
+    // Los segundos jugados que mira la oferta. Para revivir cuenta tambien la partida en curso
+    // (pedido de Ivan, 9/10: que revivir sea lo primero que ve un jugador nuevo): si no, el
+    // primero salia en la derrota, en el x2, que ya suma la partida que acaba de terminar.
+    public static double SegundosQueCuentan(string lugar)
+    {
+        double jugados = Progreso.SegundosJugados;
+        if (lugar == LugarAnuncio.Revivir && PlayerHealth.instance != null) jugados += PlayerHealth.instance.SegundosDePartida;
+        return jugados;
     }
 
     // Pide el video. Devuelve si se lanzo; el premio llega despues, en el hilo

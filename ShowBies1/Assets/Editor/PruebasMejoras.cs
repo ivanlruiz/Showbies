@@ -247,6 +247,7 @@ public static class PruebasMejoras
                     ProbarEstadisticas(informe);
                     ProbarPrimeraVez(informe);
                     ProbarPedidoDeResena(informe);
+                    ProbarActualizacion(informe);
                     ProbarRelojConfiable(informe);
                     ProbarJugoSonoro(informe);
                     ProbarMisiones(informe);
@@ -4149,6 +4150,22 @@ public static class PruebasMejoras
                           real != null && real.vecesPorDia == 0 && real.vecesPorPartida == 0 && real.segundosEntreAnuncios == 0f);
             inf.Verdadero("asset: el x2 de la derrota pide una partida de 30 s y 10 monedas (Ivan, 6/10)",
                           real != null && real.segundosDeLaPartidaMinimos == 30f && real.monedasMinimasParaDuplicar == 10);
+            inf.Verdadero("asset: los videos piden solo 3 minutos jugados, sin partidas terminadas (Ivan, 9/10)",
+                          real != null && real.partidasTerminadasMinimas == 0 && real.segundosJugadosMinimos == 180f);
+            inf.Verdadero("asset: el consentimiento sigue saliendo desde la segunda partida terminada (Ivan, 6/10)",
+                          real != null && real.partidasAntesDelConsentimiento == 2);
+            if (real != null)
+            {
+                inf.Verdadero("asset: en la primera partida, con 3 minutos se puede ofrecer",
+                              ServicioAnuncios.PuedeOfrecerConDatos(real, true, false, 0, 180, 0, 0f, true, 0));
+                inf.Verdadero("asset: con menos de 3 minutos, no",
+                              !ServicioAnuncios.PuedeOfrecerConDatos(real, true, false, 5, 179, 0, 0f, true, 0));
+            }
+            // Revivir suma la partida en curso; el x2 de la derrota y el de la diaria, no (la de la
+            // derrota ya esta sumada al terminar, y la diaria se cobra entre partidas).
+            inf.Verdadero("revivir: sin partida en curso, cuentan solo los segundos jugados",
+                          ServicioAnuncios.SegundosQueCuentan(LugarAnuncio.Revivir) == Progreso.SegundosJugados
+                          && ServicioAnuncios.SegundosQueCuentan(LugarAnuncio.DuplicarDerrota) == Progreso.SegundosJugados);
         }
         finally
         {
@@ -4599,7 +4616,9 @@ public static class PruebasMejoras
         try
         {
             // --- por ServicioAnuncios: el consentimiento espera a la segunda partida ---------
-            config.partidasTerminadasMinimas = 2;
+            // (su propio numero: los videos, desde el 9/10, no piden partidas)
+            config.partidasTerminadasMinimas = 0;
+            config.partidasAntesDelConsentimiento = 2;
             config.segundosJugadosMinimos = 0f;
             EmpezarConMonedas(0);
             var puente2 = new PuenteDePrueba();
@@ -4918,6 +4937,74 @@ public static class PruebasMejoras
                       !PedidoDeResena.Corresponde(12, 5, "2026-12-01", hoy, 10, 3, 60));
         inf.Verdadero("resena: fecha guardada rota, se pide",
                       PedidoDeResena.Corresponde(12, 5, "ayer", hoy, 10, 3, 60));
+    }
+
+    // Las actualizaciones dentro del juego (ActualizacionDePlay y AvisoDeActualizacion): lo que
+    // se ofrece segun lo que contesta Play, cuando vuelve una version postergada, que el aviso
+    // entre entre las esquinas y MEJORAS del menu, sus iconos y la libreria en el Gradle. Lo de
+    // Play en si solo se ve en el telefono (la APK de prueba usa el FakeAppUpdateManager).
+    static void ProbarActualizacion(Informe inf)
+    {
+        const int hay = ActualizacionDePlay.HayActualizacion;
+        inf.Verdadero("actualizacion: hay una y deja la flexible, se ofrece",
+                      ActualizacionDePlay.Decidir(hay, 0, true) == EstadoActualizacion.Disponible);
+        inf.Verdadero("actualizacion: hay una pero no deja la flexible, nada",
+                      ActualizacionDePlay.Decidir(hay, 0, false) == EstadoActualizacion.Nada);
+        inf.Verdadero("actualizacion: no hay (1) o no se sabe (0), nada",
+                      ActualizacionDePlay.Decidir(1, 0, true) == EstadoActualizacion.Nada
+                      && ActualizacionDePlay.Decidir(0, 0, true) == EstadoActualizacion.Nada);
+        inf.Verdadero("actualizacion: pendiente o bajando, se muestra la descarga",
+                      ActualizacionDePlay.Decidir(hay, ActualizacionDePlay.InstalacionPendiente, true) == EstadoActualizacion.Descargando
+                      && ActualizacionDePlay.Decidir(hay, ActualizacionDePlay.InstalacionBajando, true) == EstadoActualizacion.Descargando);
+        inf.Verdadero("actualizacion: bajada en otra sesion, lista para reiniciar",
+                      ActualizacionDePlay.Decidir(1, ActualizacionDePlay.InstalacionBajada, false) == EstadoActualizacion.Lista);
+
+        inf.Verdadero("actualizacion: recien aceptada y Play todavia dice disponible, sigue bajando",
+                      ActualizacionDePlay.DespuesDeAceptar(EstadoActualizacion.Disponible, 0, true) == EstadoActualizacion.Descargando);
+        inf.Verdadero("actualizacion: aceptada y la descarga fallo o se cancelo, no se ofrece mas",
+                      ActualizacionDePlay.DespuesDeAceptar(EstadoActualizacion.Disponible, ActualizacionDePlay.InstalacionFallo, true) == EstadoActualizacion.Nada
+                      && ActualizacionDePlay.DespuesDeAceptar(EstadoActualizacion.Disponible, ActualizacionDePlay.InstalacionCancelada, true) == EstadoActualizacion.Nada);
+        inf.Verdadero("actualizacion: sin aceptar, lo que dice Play",
+                      ActualizacionDePlay.DespuesDeAceptar(EstadoActualizacion.Disponible, 0, false) == EstadoActualizacion.Disponible
+                      && ActualizacionDePlay.DespuesDeAceptar(EstadoActualizacion.Lista, 0, true) == EstadoActualizacion.Lista);
+
+        var hoy = new DateTime(2026, 10, 9);
+        int dias = ActualizacionDePlay.DiasDePostergacion;
+        inf.Verdadero("actualizacion: nunca postergada, se ofrece", ActualizacionDePlay.Ofrecer(12, "", hoy, dias));
+        inf.Verdadero("actualizacion: AHORA NO hoy, no se ofrece",
+                      !ActualizacionDePlay.Ofrecer(12, ActualizacionDePlay.Postergacion(12, hoy), hoy, dias));
+        inf.Verdadero("actualizacion: postergada hace " + (dias - 1) + " dias, todavia no",
+                      !ActualizacionDePlay.Ofrecer(12, ActualizacionDePlay.Postergacion(12, hoy.AddDays(-(dias - 1))), hoy, dias));
+        inf.Verdadero("actualizacion: postergada hace " + dias + " dias, se vuelve a ofrecer",
+                      ActualizacionDePlay.Ofrecer(12, ActualizacionDePlay.Postergacion(12, hoy.AddDays(-dias)), hoy, dias));
+        inf.Verdadero("actualizacion: una version mas nueva se ofrece aunque la anterior este postergada",
+                      ActualizacionDePlay.Ofrecer(13, ActualizacionDePlay.Postergacion(12, hoy), hoy, dias));
+        inf.Verdadero("actualizacion: reloj atrasado no la vuelve a ofrecer antes",
+                      !ActualizacionDePlay.Ofrecer(12, ActualizacionDePlay.Postergacion(12, hoy.AddDays(5)), hoy, dias));
+        inf.Verdadero("actualizacion: postergacion guardada rota, se ofrece", ActualizacionDePlay.Ofrecer(12, "ayer", hoy, dias));
+
+        // El aviso va en la franja de CartelDeCobros, con su canvas que escala por el alto: los
+        // botones redondos de las esquinas terminan a 132k del borde de arriba y MEJORAS empieza a
+        // 540 - 50k, con k el ancho relativo a 16:9 (lo mide PruebaCobrosSolos en play). Abajo
+        // cuenta el brillo del borde de neon, que sobresale.
+        foreach (float k in new[] { 1f, 20f / 16f, 21f / 16f })
+        {
+            string proporcion = k == 1f ? "16:9" : k < 1.3f ? "20:9" : "21:9";
+            inf.Verdadero("actualizacion: el aviso empieza debajo de los botones de las esquinas en " + proporcion,
+                          AvisoDeActualizacion.DesdeArriba >= 132f * k);
+            inf.Verdadero("actualizacion: el aviso termina encima de MEJORAS en " + proporcion,
+                          AvisoDeActualizacion.DesdeArriba + AvisoDeActualizacion.Alto + AvisoDeActualizacion.BrilloDelBorde <= 540f - 50f * k);
+        }
+        float fila = AvisoDeActualizacion.TamanioSecundario.x + AvisoDeActualizacion.EntreBotones + AvisoDeActualizacion.TamanioAccion.x;
+        inf.Verdadero("actualizacion: los dos botones entran en el aviso con su halo",
+                      fila + 2f * ConstructorUI.MargenDelHalo <= AvisoDeActualizacion.Ancho);
+
+        inf.Verdadero("actualizacion: el icono de ACTUALIZAR esta en Resources", Resources.Load<Sprite>("IconoActualizar") != null);
+        inf.Verdadero("actualizacion: el icono de REINICIAR esta en Resources", Resources.Load<Sprite>("IconoReiniciar") != null);
+
+        string gradle = Path.Combine(Application.dataPath, "Plugins/Android/mainTemplate.gradle");
+        inf.Verdadero("actualizacion: la libreria de Play (app-update) esta en mainTemplate.gradle",
+                      File.Exists(gradle) && File.ReadAllText(gradle).Contains("com.google.android.play:app-update:"));
     }
 
     // El reloj adelantado a mano: en el mismo arranque del telefono vale la hora de la

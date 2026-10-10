@@ -35,11 +35,13 @@ public class ConfigAnuncios : ScriptableObject
     public float segundosDeLaPartidaParaRevivir = 30f;
 
     [Header("Cuándo se puede ofrecer")]
-    [Tooltip("Partidas terminadas que hacen falta: 2 = nunca en la primera partida.")]
+    [Tooltip("Partidas terminadas que hacen falta para los videos. En 0 desde el 9/10 (Ivan): alcanza con los segundos jugados.")]
     public int partidasTerminadasMinimas = 2;
+    [Tooltip("Partidas terminadas antes de pedir el cartel de consentimiento de Europa: la primera vez que se abre el juego no sale nada (Ivan, 6/10).")]
+    public int partidasAntesDelConsentimiento = 2;
     [Tooltip("Segundos de la partida que acaba de terminar, para que morir a propósito no regale videos.")]
     public float segundosDeLaPartidaMinimos = 90f;
-    [Tooltip("Segundos jugados en total desde que se instaló.")]
+    [Tooltip("Segundos jugados en total desde que se instaló. Para revivir cuenta también la partida en curso: así es el primer video que ve un jugador nuevo.")]
     public float segundosJugadosMinimos = 180f;
     [Tooltip("Monedas mínimas de la partida para ofrecer el x2.")]
     public int monedasMinimasParaDuplicar = 20;
@@ -180,6 +182,7 @@ public class ConfigAnuncios : ScriptableObject
     private void OnValidate()
     {
         partidasTerminadasMinimas = Mathf.Max(0, partidasTerminadasMinimas);
+        partidasAntesDelConsentimiento = Mathf.Max(0, partidasAntesDelConsentimiento);
         segundosDeLaPartidaMinimos = Mathf.Max(0f, segundosDeLaPartidaMinimos);
         segundosParaDecidirRevivir = Mathf.Max(1f, segundosParaDecidirRevivir);
         segundosDeAgrisado = Mathf.Max(0f, segundosDeAgrisado);

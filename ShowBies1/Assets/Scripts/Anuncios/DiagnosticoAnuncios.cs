@@ -6,7 +6,8 @@ using UnityEngine.SceneManagement;
 // menu con el estado de los anuncios, para saber por que no aparece una oferta sin conectar
 // el telefono a la PC. Muestra si AdMob arranco, que dijo el consentimiento, como quedo el
 // video de cada lugar (con el codigo de error si no cargo), cuantos avisos llegaron de Java
-// y los topes que miran las ofertas.
+// y los topes que miran las ofertas. Y, en un renglon, como va la actualizacion de mentira
+// (ActualizacionDePlay), que en la APK de prueba recorre el camino de JNI de verdad.
 //
 // La crea VigiaAplicacion; en el AAB y en el editor no existe. No es para el jugador: por
 // eso va en IMGUI, sin la fuente del juego y sin pasar por la tabla de textos.
@@ -67,6 +68,13 @@ public class DiagnosticoAnuncios : MonoBehaviour
         }
         if (!string.IsNullOrEmpty(PuenteAdMobAndroid.UltimoFallo))
             sb.Append("fallo JNI: ").Append(PuenteAdMobAndroid.UltimoFallo).Append('\n');
+
+        sb.Append("actualizacion: ").Append(ActualizacionDePlay.Estado);
+        if (ActualizacionDePlay.Estado == EstadoActualizacion.Descargando)
+            sb.Append(' ').Append(Mathf.FloorToInt(ActualizacionDePlay.Avance * 100f)).Append('%');
+        if (ActualizacionDePlay.VersionDisponible > 0) sb.Append(" | version ").Append(ActualizacionDePlay.VersionDisponible);
+        if (!string.IsNullOrEmpty(ActualizacionDePlay.UltimoError)) sb.Append(" | error: ").Append(ActualizacionDePlay.UltimoError);
+        sb.Append('\n');
 
         ConfigAnuncios config = ServicioAnuncios.ConfigEnUso;
         if (config != null)
