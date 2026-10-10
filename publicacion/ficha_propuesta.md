@@ -184,6 +184,11 @@ Conviene cuando ya entren unas cuantas visitas por día.
 
 ## 5. La tarjeta del evento (contenido promocional)
 
+> **Enviada el 9/10 a la noche** (con el OK de Ivan): "Halloween 2026", ID 4830085591430792656, evento por tiempo
+> limitado "Especial", del 11/10 3:00 UTC al 8/11 3:00 UTC (Play pide más de 24 h de anticipación y como mucho cuatro
+> semanas), 177 países, vista previa un día antes, los textos de abajo en en-US, es-ES y es-419, y la imagen
+> `Builds/halloween/tarjeta_evento_1920x1080.png` (Nano Banana Pro, declarada como hecha con IA).
+
 Play Console > **Crecimiento > Contenido promocional**. Es lo que hace aparecer el evento en la pestaña de Juegos,
 en la búsqueda y en la ficha, también para gente que no tiene el juego.
 
