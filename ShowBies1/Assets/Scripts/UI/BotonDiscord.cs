@@ -7,6 +7,10 @@ using UnityEngine.UI;
 // app de Discord si esta instalada, y si no el navegador. Es un enlace y nada mas: el juego
 // no le manda nada a Discord.
 //
+// Aparece en el nivel 5, con el bestiario y la medalla (Desbloqueo, 10/10, de la revision
+// de Gemini elegido por Ivan): nadie se une a la comunidad de un juego que instalo hace dos
+// minutos, y para el que recien empieza es un boton mas.
+//
 // El logo es el oficial (el "Clyde" de discord-mark-white.svg, en Sprites/UI/IconoDiscord),
 // en blanco: las reglas de la marca dejan usarlo para llevar a un servidor, sin cambiarle la
 // forma ni el color.
@@ -26,9 +30,7 @@ public class BotonDiscord : MonoBehaviour
     public float separacion = 24f;
 
     private float proximoToque;
-    private RectTransform rtBoton;
-    private float delGlobo, anchoDelGlobo;
-    private int lugarPuesto = -1;
+    private GameObject boton;
 
     // Start y no Awake: SelectorIdioma pone los dibujos del globo en su Awake, y la copia
     // tiene que salir con ellos.
@@ -36,20 +38,16 @@ public class BotonDiscord : MonoBehaviour
     {
         if (selectorIdioma == null || selectorIdioma.botonGlobo == null) return;
         var globo = (RectTransform)selectorIdioma.botonGlobo.transform;
-        var boton = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonDiscord",
+        var copia = ConstructorUI.BotonDeEsquina(selectorIdioma, "BotonDiscord",
                                                  DesdeLaDerecha(globo.anchoredPosition.x, globo.rect.width, separacion), icono, Abrir);
-        if (boton != null)
-        {
-            rtBoton = (RectTransform)boton.transform;
-            delGlobo = globo.anchoredPosition.x;
-            anchoDelGlobo = globo.rect.width;
-            Acomodar();
-        }
+        if (copia == null) return;
+        boton = copia.gameObject;
+        Mostrar();
 
         // Blanco puro: los iconos de las esquinas salen color crema, el del icono del globo, y
         // el logo de Discord no se tine.
-        if (boton == null || selectorIdioma.iconoGlobo == null) return;
-        var dibujo = boton.transform.Find(ConstructorUI.Ruta(selectorIdioma.iconoGlobo.transform, globo));
+        if (selectorIdioma.iconoGlobo == null) return;
+        var dibujo = copia.transform.Find(ConstructorUI.Ruta(selectorIdioma.iconoGlobo.transform, globo));
         var imagen = dibujo != null ? dibujo.GetComponent<Image>() : null;
         if (imagen != null) imagen.color = Color.white;
     }
@@ -60,34 +58,15 @@ public class BotonDiscord : MonoBehaviour
         return delGlobo + 3f * (ancho + separacion);
     }
 
-    // El lugar en la fila de arriba a la derecha, desde el borde: 0 las misiones, 1 el
-    // bestiario, 2 la medalla y 3 Discord, con todo destapado.
-    public static float EnElLugar(int lugar, float delGlobo, float ancho, float separacion)
-    {
-        return delGlobo + lugar * (ancho + separacion);
-    }
-
-    // Donde va segun lo que haya destapado (Desbloqueo), para no dejar huecos: hasta el nivel 5
-    // no estan el bestiario ni la medalla, y va al lado de las misiones; antes de la oleada 5
-    // tampoco estan las misiones, y va primero.
-    public static int Lugar()
-    {
-        return Desbloqueo.Todo ? 3 : Desbloqueo.Misiones ? 1 : 0;
-    }
-
     private void Update()
     {
-        Acomodar();
+        Mostrar();
     }
 
-    private void Acomodar()
+    private void Mostrar()
     {
-        if (rtBoton == null) return;
-        int lugar = Lugar();
-        if (lugar == lugarPuesto) return;
-        lugarPuesto = lugar;
-        float x = EnElLugar(lugar, delGlobo, anchoDelGlobo, separacion);
-        rtBoton.anchoredPosition = new Vector2(-x, rtBoton.anchoredPosition.y);
+        bool hay = Desbloqueo.Todo;
+        if (boton != null && boton.activeSelf != hay) boton.SetActive(hay);
     }
 
     private void Abrir()

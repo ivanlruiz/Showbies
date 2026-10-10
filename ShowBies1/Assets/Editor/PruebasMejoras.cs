@@ -5761,8 +5761,7 @@ public static class PruebasMejoras
     }
 
     // Lo que se destapa de a poco (Desbloqueo, 10/10, de la revision de Gemini): las misiones al
-    // llegar a la oleada 5 y el resto en el nivel 5, siempre en ese orden, y Discord corriendose
-    // en la fila de arriba a la derecha para no dejar huecos.
+    // llegar a la oleada 5 y el resto (Discord incluido) en el nivel 5, siempre en ese orden.
     static void ProbarDesbloqueo(Informe inf)
     {
         string v = "{\"version\":" + Progreso.VersionActual;
@@ -5773,18 +5772,32 @@ public static class PruebasMejoras
         inf.Verdadero("desbloqueo: sin completar la 4 no hay misiones", !Desbloqueo.Misiones);
         inf.Verdadero("desbloqueo: sin misiones tampoco lo del nivel 5, aunque se tenga el nivel",
                       NivelJugador.Nivel >= Desbloqueo.NivelDeTodo && !Desbloqueo.Todo);
-        inf.Igual("desbloqueo: sin nada destapado, Discord va primero", 0, BotonDiscord.Lugar());
 
         EmpezarCaso(v + ",\"mejorOleada\":4,\"jugador\":{\"experiencia\":375}}", null);
         inf.Verdadero("desbloqueo: completada la 4 (se llego a la 5) hay misiones", Desbloqueo.Misiones);
         inf.Verdadero("desbloqueo: en el nivel 4 todavia no lo demas", NivelJugador.Nivel == 4 && !Desbloqueo.Todo);
-        inf.Igual("desbloqueo: con las misiones, Discord va al lado", 1, BotonDiscord.Lugar());
 
         EmpezarCaso(v + ",\"mejorOleada\":4,\"jugador\":{\"experiencia\":700}}", null);
         inf.Verdadero("desbloqueo: con las misiones y el nivel 5, todo", Desbloqueo.Todo);
-        inf.Igual("desbloqueo: con todo, Discord va cuarto", 3, BotonDiscord.Lugar());
-        inf.Cerca("desbloqueo: el cuarto lugar es el de siempre",
-                  BotonDiscord.DesdeLaDerecha(36f, 120f, 24f), BotonDiscord.EnElLugar(3, 36f, 120f, 24f), 1e-4);
+
+        // SALIR solo en PC (10/10, de la misma revision): en el telefono se sale con el atras,
+        // que pregunta antes (ConfirmarSalir), y en PC es la unica forma de cerrar el juego.
+        bool hayQuit = false, enTelefono = true, enPc = false;
+        LeerEscena("Assets/Escenas/Menu.unity", escena =>
+        {
+            foreach (var raiz in escena.GetRootGameObjects())
+            {
+                var quit = raiz.transform.Find("MainMenu/Quit");
+                if (quit == null) continue;
+                hayQuit = true;
+                var cs = quit.GetComponent<ConditionalShow>();
+                enTelefono = cs == null || cs.showOnAndroid;
+                enPc = cs == null || cs.showOnPC;
+            }
+        });
+        inf.Verdadero("menu: esta el boton SALIR", hayQuit);
+        inf.Verdadero("menu: SALIR no se ve en el telefono", !enTelefono);
+        inf.Verdadero("menu: SALIR se ve en PC", enPc);
     }
 
     // El proximo objetivo de la derrota: gana el de mas avance, y lo que ya alcanza no cuenta.

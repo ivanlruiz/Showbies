@@ -136,11 +136,13 @@ real de la pantalla.
 `ConfirmarSalir` (raíz del canvas "Main Menu") copia al arrancar la ventana del idioma, como `OpcionesSonido`, más ancha
 para tapar los botones del menú, y la arma como "¿SALIR DEL JUEGO?" con SEGUIR JUGANDO (verde, late) y SALIR (vidrio).
 La abren `MainMenu.QuitGame` y el atrás de Android en el principal; el atrás con la ventana abierta la cierra. Si no se
-pudo armar, las dos cosas cierran el juego como antes.
+pudo armar, las dos cosas cierran el juego como antes. **El botón SALIR está solo en PC** (desde el 10/10, de la revisión
+de Gemini elegido por Ivan: en el teléfono nadie cierra un juego con un botón): lleva un `ConditionalShow`, y en el
+teléfono se sale con el atrás, que abre esta misma ventana. En PC, en pantalla completa sin bordes, es la única forma.
 
 **El botón de Discord** (pedido de Ivan, 1.4.0): `BotonDiscord` (raíz del canvas "Main Menu") arma con
-`ConstructorUI.BotonDeEsquina` el cuarto botón redondo de arriba a la derecha, después de la medalla (antes, si las
-misiones o lo del nivel 5 todavía no aparecieron, se corre a su lugar: ver Primera vez), con el logo oficial
+`ConstructorUI.BotonDeEsquina` el cuarto botón redondo de arriba a la derecha, después de la medalla, y **aparece con ella
+en el nivel 5** (ver Primera vez: nadie se une a la comunidad de un juego que instaló hace dos minutos), con el logo oficial
 de Discord en blanco (`Sprites/UI/IconoDiscord.png`: el "Clyde" de `discord-mark-white.svg`, rasterizado con PIL; las
 reglas de la marca dejan usarlo para llevar a un servidor, sin cambiarle la forma ni el color), y abre la invitación
 permanente (`BotonDiscord.Invitacion`, la de `publicacion/pasos.md`) con `Application.OpenURL`: en el teléfono, la app de
@@ -170,18 +172,19 @@ retomarla es empezarla de cero), `NoTerminoPartidas` y `NuncaCompro`.
     la derrota no las propone de próximo objetivo y **no se arman**: no avanzan, no se cumplen a escondidas y no se
     cobran solas a medianoche con un cartel de algo que el jugador nunca vio. Se arman al destaparse, en la misma partida
     (`WaveManager` anota la marca antes de avisarles, así la 4 ya cuenta).
-  - **El resto, en el nivel 5 del jugador** (`Desbloqueo.Todo`, que pide también las misiones): el trofeo del
-    bestiario, la medalla de los logros (la ventana del nivel sigue, con "LOS LOGROS SE DESBLOQUEAN EN EL NIVEL 5" en
-    lugar de la lista), la fila del desafío semanal (las tres misiones del día suben al medio) y el botón de monedas por
-    video, y en la partida los avisos de estrellas, logros y desafío. **Los contadores del bestiario y los logros siguen
+  - **El resto, en el nivel 5 del jugador** (`Desbloqueo.Todo`, que pide también las misiones, así la fila de arriba a
+    la derecha se llena en orden y sin huecos): el trofeo del bestiario, la medalla de los logros (la ventana del nivel
+    sigue, con "LOS LOGROS SE DESBLOQUEAN EN EL NIVEL 5" en lugar de la lista), Discord, la fila del desafío semanal (las
+    tres misiones del día suben al medio) y el botón de monedas por video, y en la partida los avisos de estrellas,
+    logros y desafío. **Los contadores del bestiario y los logros siguen
     sumando**: al aparecer no se perdió nada, y lo ganado espera para cobrarse. **El desafío semanal no se arma** hasta
     entonces, por lo mismo que las misiones.
 
   Cada tanda la anuncia `AvisoDeMisiones` con el festejo, en la partida en que pasa ("¡MISIONES DEL DÍA
-  DESBLOQUEADAS!", "¡NUEVO EN EL MENÚ!"). **Discord se corre para no dejar huecos** en la fila de arriba a la derecha
-  (`BotonDiscord.Lugar`): primero sin nada destapado, al lado de las misiones hasta el nivel 5 y cuarto con todo. El nivel
-  es el de `NivelJugador` y la oleada, `Progreso.MejorOleada`: quien ya pasó los dos no ve ninguna diferencia. Lo mira la
-  prueba de lógica.
+  DESBLOQUEADAS!", "¡NUEVO EN EL MENÚ!"). El nivel es el de `NivelJugador` y la oleada, `Progreso.MejorOleada`: quien
+  ya pasó los dos no ve ninguna diferencia. Lo mira la prueba de lógica. **Quedan a la vista desde el principio**, a
+  propósito: el botón HALLOWEEN mientras dura el evento (le dice al que llega que el juego está vivo) y la píldora del
+  nivel, que es la meta corta que destapa lo demás. En el teléfono, además, no hay SALIR (ver arriba).
 - **La recompensa diaria espera a la primera partida terminada**: si no, se cobran 150 monedas y se compra antes de jugar.
   Y sale antes que la tienda que abre MEJORAS de la derrota (ver Recompensa diaria): el circuito que enseña la guía
   (MEJORAS, comprar, ¡A JUGAR!) no pasa nunca por el menú con la tienda cerrada.
@@ -1787,7 +1790,7 @@ trampa).
   y abajo los tres botones, en y = -290 (se bajaron para hacerle lugar; en 21:9 terminan a 50 del borde). Si la partida
   fue record, el puntaje dice "NEW BEST!" y el texto del record se calla (`Score.HuboRecordNuevo`, que mira
   `PlayerHealth.RecordNuevo`: solo superarlo cuenta, un empate no).
-- **Menu**: el nombre del juego arriba (en el fondo 3D, no en el canvas), UPGRADES y QUIT en el centro, PLAY grande abajo a la derecha, y el globo del
+- **Menu**: el nombre del juego arriba (en el fondo 3D, no en el canvas), UPGRADES y QUIT (solo en PC) en el centro, PLAY grande abajo a la derecha, y el globo del
   idioma, el engranaje del sonido y el nivel arriba a la izquierda, y arriba a la derecha las misiones, el bestiario, la
   medalla y Discord. Sin monedas: se ven en la tienda.
 

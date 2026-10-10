@@ -7,12 +7,12 @@
 //    cumplen a escondidas ni se cobran solas a medianoche. Se arman al destaparse, en la misma
 //    partida, y empiezan a contar desde ahi.
 //  - El resto, en el nivel 5 del jugador (Todo): el trofeo del bestiario, la medalla de los
-//    logros (la ventana del nivel sigue, sin la lista), la fila del desafio semanal y el boton
-//    de monedas por video, y en la partida los avisos de estrellas, logros y desafio. Esos
-//    contadores siguen sumando por detras: al aparecer no se perdio nada, y lo ganado espera
-//    para cobrarse. Pide tambien las misiones, asi la fila de botones de arriba a la derecha
-//    se llena de izquierda a derecha (el de video cuelga del de las misiones) y Discord nunca
-//    deja un hueco.
+//    logros (la ventana del nivel sigue, sin la lista), Discord, la fila del desafio semanal y
+//    el boton de monedas por video, y en la partida los avisos de estrellas, logros y desafio.
+//    Los contadores del bestiario y los logros siguen sumando por detras: al aparecer no se
+//    perdio nada, y lo ganado espera para cobrarse. El desafio, como las misiones, recien se
+//    arma ahi. Pide tambien las misiones, asi la fila de botones de arriba a la derecha se
+//    llena en orden y sin huecos (el de video cuelga del de las misiones).
 //
 // AvisoDeMisiones anuncia cada tanda con su festejo. El nivel sale de NivelJugador y la oleada
 // de Progreso.MejorOleada: quien ya paso los dos no ve ninguna diferencia.
