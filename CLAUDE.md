@@ -82,7 +82,7 @@ Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo
 Y **fuera del proyecto de Unity**, en la raíz del repo:
 
 ```
-Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README
+Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono)
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
@@ -2148,6 +2148,18 @@ La primera prueba en un teléfono dio bajos FPS. Lo que hay y por qué:
 - `ContadorFps` muestra los FPS en el HUD de las escenas de juego, para medir en el teléfono sin
   Profiler. "Anda lento" no se optimiza; "32 FPS con 35 zombis" sí. Desde el 6/10 está apagado de fábrica: se prende
   con MOSTRAR FPS en OPCIONES (`PlayerPrefs["MostrarFps"]`).
+
+### El ícono
+
+El ícono es la cara del zombi verde, enojado y con la boca abierta, sobre la noche violeta con un halo naranja (9/10, Ivan lo
+eligió entre cuatro ideas de **Nano Banana Pro**; el de antes era la misma cara sobre naranja, sacada del juego). Las
+fuentes están en `Marketing/iconos/` (`icono_base_2048.png` y la de Halloween, `icono_halloween_2048.png`: la cabeza es una
+calabaza tallada, con caramelos), y `armar_iconos.py base` o `halloween` arma todo lo demás en su carpeta: el cuadrado
+(`IconoApp`, 1024), el redondo, las dos capas del adaptativo (`IconoFondo` lleva el dibujo al 72 % con el mismo ícono
+desenfocado alrededor, para que el recorte del launcher, dos tercios del centro, no corte la cabeza; `IconoFrente` va vacía)
+y `play_512.png` para la ficha. **Se cambia copiando los cuatro `Icono*.png` encima de los de `Assets/Sprites/Icono`**
+(conservan el guid que usa Player Settings) y armando una versión: el del teléfono no cambia sin actualizar. **Del 9/10 al
+9/11 va el de Halloween** (la 1.5.1); después hay que volver al de base con otra versión y cambiar el de la ficha.
 
 ### Build de Android
 
