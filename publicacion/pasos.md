@@ -149,14 +149,23 @@ subida (por eso la copia: te ahorra ese trámite).
 
 Servidor **ShowBies**, creado el 4/10/2026 desde la cuenta de Discord "j'ntr" (la otra que hay en el Chrome de Ivan
 no). **Invitación permanente: https://discord.gg/XsKgU7BBUd** (no vence, sin límite de usos, entra a #welcome y da el
-rol Player). Es un servidor de Comunidad, todo en inglés (pedido de Ivan, que primero lo quería en español):
+rol Player). Es un servidor de Comunidad. Nació todo en inglés, y desde el 10/10 **los avisos van en el idioma que
+elige cada uno** (pedido de Ivan; eligió separar solo los avisos, con el español neutro y de tú):
 
-- **INFO**, solo lectura para los miembros: #welcome y #rules (con su mensaje fijado), #announcements y #patch-notes
-  (canales de anuncios, se pueden seguir) y #dev, privado, donde llegan los avisos de Discord para moderadores.
-- **COMMUNITY**: #general (ahí salen los "X se unió"), #screenshots-and-clips y #high-scores.
+- **El idioma lo pregunta la Incorporación de Discord** (Ajustes del servidor > Incorporación): una pregunta
+  obligatoria de una sola respuesta, "What language do you speak? / ¿Qué idioma hablas?". English da el rol English;
+  Español, el rol Español y #general-español. Los que ya estaban lo eligen en "Canales y roles" (se avisó en #general).
+  Ocho canales por defecto: #welcome, #rules, #general, #screenshots-and-clips, #high-scores, #feedback, #bugs e #ideas.
+- **INFO**, solo lectura para los miembros: #welcome y #rules, bilingües (con su mensaje fijado: #welcome lleva el
+  link de Play y "Canales y roles" con `<id:customize>`); **#announcements y #patch-notes, privados para el rol
+  English, y #anuncios y #novedades, privados para el rol Español** (canales de anuncios, se pueden seguir); y #dev,
+  privado, donde llegan los avisos de Discord para moderadores. **Cada novedad se publica dos veces**, una en cada
+  idioma.
+- **COMMUNITY**: #general (ahí salen los "X se unió"), #screenshots-and-clips, #high-scores y #general-español.
 - **SHOWBIES**: #feedback y #bugs son foros con pautas y etiquetas (Fixed, en #bugs, solo la pone Ivan) y #ideas.
 - **VOICE**: Lounge.
-- Roles: Dev (Ivan), Tester (a mano, para los de la prueba cerrada) y Player (lo da la invitación).
+- Roles: Dev (Ivan), Tester (a mano, para los de la prueba cerrada), Player (lo da la invitación) y English y
+  Español (los da la Incorporación).
 - **AutoMod de Discord** prendido: spam, menciones masivas y palabras marcadas (lenguaje muy inapropiado, insultos y
   contenido sexual); bloquea el mensaje y avisa en #dev.
 - **Carl-bot** (configurable en carl.gg con la misma cuenta), con solo seis permisos y sin Administrador: gestionar
