@@ -18,10 +18,12 @@ public static class ConstructorArmas
     public const string RutaPistola = "Assets/Prefabs/Pistola.prefab";
     const string CarpetaMateriales = "Assets/Materiales";
 
-    // Clara y con la empuñadura marron: sobre la remera negra del muñeco, una pistola
-    // oscura no se ve, y a la distancia de la camara mide unos pocos pixeles.
-    static readonly Color ColorMetal = new Color(0.62f, 0.64f, 0.7f);
-    static readonly Color ColorMango = new Color(0.5f, 0.27f, 0.12f);
+    // Gris oscuro (#333333), de la revision de arte de Gemini (12/10): con la remera blanca del
+    // heroe (10/10) una pistola oscura se recorta, y lo que dice que arma es el color de la luz
+    // (LED) y el fogonazo. Hasta ahi era plateada con la empuñadura marron, porque la remera
+    // era negra.
+    static readonly Color ColorMetal = new Color(0.2f, 0.2f, 0.2f);
+    static readonly Color ColorMango = new Color(0.14f, 0.14f, 0.14f);
 
     // La luz de la bala (BulletController.materialLuz, pedido de Ivan, 9/10): el material del
     // charco de los faroles, blanco (cada tramo lo tiñe con su color en runtime), puesto en el
@@ -64,6 +66,17 @@ public static class ConstructorArmas
         Pieza(raiz, "Mango", PrimitiveType.Cube, new Vector3(0f, -0.035f, -0.03f), Quaternion.Euler(-14f, 0f, 0f), new Vector3(0.06f, 0.17f, 0.085f), mango);
         Pieza(raiz, "Guardamonte", PrimitiveType.Cube, new Vector3(0f, -0.005f, 0.05f), Quaternion.identity, new Vector3(0.03f, 0.015f, 0.09f), metal);
 
+        // La luz de neon (el "LED"): una tira arriba y una a cada costado de la corredera, asi se
+        // ve gire como gire la mano. Blanca: ArmaEnLaMano.VestirArma la tiñe del color del tramo.
+        var luz = MaterialDeLaLuz();
+        var led = new GameObject("LED");
+        led.transform.SetParent(raiz.transform, false);
+        Pieza(led, "Arriba", PrimitiveType.Cube, new Vector3(0f, 0.112f, 0.08f), Quaternion.identity, new Vector3(0.024f, 0.006f, 0.22f), luz);
+        Pieza(led, "Izquierda", PrimitiveType.Cube, new Vector3(-0.037f, 0.08f, 0.08f), Quaternion.identity, new Vector3(0.006f, 0.022f, 0.22f), luz);
+        Pieza(led, "Derecha", PrimitiveType.Cube, new Vector3(0.037f, 0.08f, 0.08f), Quaternion.identity, new Vector3(0.006f, 0.022f, 0.22f), luz);
+        foreach (var r in led.GetComponentsInChildren<MeshRenderer>())
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
         var boca = new GameObject("Boca");
         boca.transform.SetParent(raiz.transform, false);
         boca.transform.localPosition = new Vector3(0f, 0.075f, 0.27f);
@@ -98,6 +111,23 @@ public static class ConstructorArmas
         go.transform.localRotation = rotacion;
         go.transform.localScale = escala;
         go.GetComponent<MeshRenderer>().sharedMaterial = material;
+    }
+
+    // Unlit/Color, que ya usan las escenas (el neon de los decorados): la luz no depende de la
+    // luna ni del relleno.
+    static Material MaterialDeLaLuz()
+    {
+        string ruta = CarpetaMateriales + "/PistolaLuz.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(ruta);
+        if (mat == null)
+        {
+            mat = new Material(Shader.Find("Unlit/Color"));
+            AssetDatabase.CreateAsset(mat, ruta);
+        }
+        mat.shader = Shader.Find("Unlit/Color");
+        mat.color = Color.white;
+        EditorUtility.SetDirty(mat);
+        return mat;
     }
 
     static Material MaterialDelFogonazo()

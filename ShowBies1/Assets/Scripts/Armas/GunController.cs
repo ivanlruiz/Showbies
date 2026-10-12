@@ -54,6 +54,29 @@ public class GunController : MonoBehaviour
     public static readonly float[] TonoPorTramo = { 1f, 0.95f, 0.9f, 0.85f, 0.8f };
     private float proximoSonido;
 
+    // Cada arma de la mano suena distinto (1.6.0, etapa 3 de las cartas; ArmaEnLaMano): la pistola
+    // con el clip del AudioSource (shot.mp3) y las otras con el suyo, sintetizado por
+    // sonidos/disparos.py, de Resources/Disparos. Su tono es el de su arma, y baja con lo que la
+    // bala sube por encima de ella (la furia). Las de cola larga dejan mas aire entre sonido y
+    // sonido, que a 20 tiros por segundo se apilaban en un rugido.
+    public static readonly string[] SonidosDeLasArmas = { null, "Disparos/Revolver", "Disparos/Escopeta", "Disparos/Rifle", "Disparos/Energia" };
+    public static readonly float[] IntervaloDeSonidoPorArma = { 0.04f, 0.06f, 0.09f, 0.04f, 0.06f };
+    private AudioClip[] sonidosDeLasArmas;
+
+    public AudioClip SonidoDelArma(int tramoDelArma)
+    {
+        int i = Mathf.Clamp(tramoDelArma, 0, SonidosDeLasArmas.Length - 1);
+        if (sonidosDeLasArmas == null)
+        {
+            sonidosDeLasArmas = new AudioClip[SonidosDeLasArmas.Length];
+            for (int k = 1; k < SonidosDeLasArmas.Length; k++)
+                sonidosDeLasArmas[k] = Resources.Load<AudioClip>(SonidosDeLasArmas[k]);
+        }
+        var clip = sonidosDeLasArmas[i];
+        if (clip == null && AudioSource != null) clip = AudioSource.clip;
+        return clip;
+    }
+
 
     public Transform firePoint;
 
@@ -121,6 +144,12 @@ public class GunController : MonoBehaviour
     {
         get { return DanoPorBala * multiplicadorDanoFuria * PoderDeLaPartida.MultiplicadorDano; }
     }
+
+    // El arma de la mano cambia con el daño (1.6.0, etapa 3 de las cartas): el de la mejora por
+    // las cartas de daño, sin la furia, que es un pico de 6 s (las balas si suben un tramo con
+    // ella). Es el poder que el jugador tiene de verdad, y no cambia de arma en cada furia.
+    public float DanoSinFuria { get { return DanoPorBala * PoderDeLaPartida.MultiplicadorDano; } }
+    public int TramoDelArma { get { return BulletController.Tramo(DanoSinFuria); } }
 
     // Start is called before the first frame update
     void Start()
@@ -260,11 +289,13 @@ public class GunController : MonoBehaviour
         float probabilidad = ProbabilidadCriticoEnLaPartida;
         bool critico = probabilidad > 0f && EsCritico(probabilidad, Random.value);
         int tramo = BulletController.Tramo(DanoPorTiro);
-        if (Time.time >= proximoSonido && AudioSource != null && AudioSource.clip != null)
+        int tramoDelArma = Mathf.Min(TramoDelArma, tramo);
+        var sonido = AudioSource != null ? SonidoDelArma(tramoDelArma) : null;
+        if (Time.time >= proximoSonido && sonido != null)
         {
-            AudioSource.pitch = TonoPorTramo[tramo];
-            AudioSource.PlayOneShot(AudioSource.clip);
-            proximoSonido = Time.time + intervaloMinimoSonido;
+            AudioSource.pitch = TonoPorTramo[tramo] / TonoPorTramo[tramoDelArma];
+            AudioSource.PlayOneShot(sonido);
+            proximoSonido = Time.time + intervaloMinimoSonido * IntervaloDeSonidoPorArma[tramoDelArma] / IntervaloDeSonidoPorArma[0];
             Efectos.Disparo(salida, critico ? BulletController.ColorCritico : BulletController.ColoresPorTramo[tramo]);
         }
 

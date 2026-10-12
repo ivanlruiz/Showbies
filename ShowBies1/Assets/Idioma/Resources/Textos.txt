@@ -75,6 +75,11 @@ carta_vampiro	Heals {0}% every 15 kills	Cura {0} % cada 15 bajas
 carta_escudo_nombre	SHIELD	ESCUDO
 carta_escudo	Blocks 1 hit every {0} s	Bloquea 1 golpe cada {0} s
 carta_escudo_bloqueo	BLOCKED!	¡BLOQUEADO!
+arma_pistola	PISTOL!	¡PISTOLA!
+arma_revolver	REVOLVER!	¡REVÓLVER!
+arma_escopeta	SHOTGUN!	¡ESCOPETA!
+arma_rifle	RIFLE!	¡RIFLE!
+arma_energia	ENERGY GUN!	¡ARMA DE ENERGÍA!
 carta_curacion_nombre	FULL HEAL	CURACIÓN
 carta_curacion	Restores 100% health	Restaura el 100 % de la vida
 opciones_auto_apuntar	AUTO-AIM	AUTO-APUNTADO

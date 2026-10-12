@@ -282,6 +282,20 @@ public class Efectos : MonoBehaviour
     // A que altura del punto de la caja sale su cartel: arriba de la cabeza del jugador.
     private const float alturaDelCartelDeCaja = 2.2f;
 
+    // El arma de la mano subio de tramo (ArmaEnLaMano, etapa 3 de las cartas): chispas de su color
+    // en la boca, el jingle del cartel de la oleada mas agudo, un temblor chico y su nombre arriba
+    // del jugador ("¡ESCOPETA!"), del color de la bala.
+    public static void ArmaNueva(Vector3 boca, Vector3 jugador, Color color, string nombre)
+    {
+        var e = instance;
+        if (e == null) return;
+
+        e.Emitir(boca, e.chispasPorExplosion, color);
+        Sonidos.Tocar(e.cartelOleada, 0.8f, 1.25f);
+        CamaraJugador.Temblar(0.2f);
+        if (!string.IsNullOrEmpty(nombre)) e.MostrarCartel(jugador + Vector3.up * alturaDelCartelDeCaja, nombre, color);
+    }
+
     // El zombi del tesoro (ZombiDelTesoro, mejora 8 de la revision del 9/10). Sale: chispas
     // doradas, "¡ZOMBI DEL TESORO!" arriba y unas notas que suben. Lo atrapan: el triple de
     // chispas, un temblor, "¡TESORO!" y el festejo del cofre (las monedas ya llovieron). Se

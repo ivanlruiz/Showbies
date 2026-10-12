@@ -40,7 +40,7 @@ public class ArmaEnLaMano : MonoBehaviour
     // Los ejes de la mano en las poses de pistola del pack: +Z del contenedor es el frente
     // del muñeco y -X es arriba (medido muestreando los clips). La pistola tiene el cañon
     // en +Z y arriba en +Y, asi que va girada un cuarto de vuelta.
-    private static readonly Quaternion GiroEnLaMano = Quaternion.Euler(0f, 0f, 90f);
+    public static readonly Quaternion GiroEnLaMano = Quaternion.Euler(0f, 0f, 90f);
 
     private Transform instancia, antebrazo, muñeco;
     private int tirosVistos;
@@ -49,9 +49,79 @@ public class ArmaEnLaMano : MonoBehaviour
     private Transform fogonazo;
     private Renderer renderDelFogonazo;
     private MaterialPropertyBlock propiedades;
+    private float fogonazoDesde = -1f;
     private float fogonazoHasta = -1f;
     private float tamañoDelFogonazo = 1f;
+    private float giroDelFogonazo;
     private static readonly int IdGiro = Shader.PropertyToID("_Giro");
+    private static readonly int IdColor = Shader.PropertyToID("_Color");
+    private static readonly int IdPuntas = Shader.PropertyToID("_Puntas");
+    private static readonly int IdAnillo = Shader.PropertyToID("_Anillo");
+    private static readonly int IdRadioAnillo = Shader.PropertyToID("_RadioAnillo");
+
+    // --- El arma que cambia con el daño (1.6.0, etapa 3 de las cartas) ----------------------
+    //
+    // Un arma por tramo del daño (el de GunController.TramoDelArma, sin la furia), como la bala:
+    // pistola, revolver, escopeta, rifle y arma de energia. No son cinco modelos (de la revision
+    // de arte de Gemini, 12/10: a 15 px, desde arriba, un revolver y una pistola son la misma
+    // mancha): es la misma pistola gris con el cañon mas largo (y mas ancho en la escopeta), una
+    // luz del color del tramo encima, y sobre todo el fogonazo y el sonido de cada una. Al subir de
+    // arma en la partida, un festejo con su nombre (Efectos.ArmaNueva); al empezar, no.
+    public const int Armas = 5;
+    public static readonly string[] IdsDeLasArmas = { "arma_pistola", "arma_revolver", "arma_escopeta", "arma_rifle", "arma_energia" };
+    // El cañon, desde el frente de la corredera, y su ancho, en unidades de la mano (la corredera
+    // mide 0,3). La pistola es la de siempre.
+    public static readonly float[] LargoDelCanon = { 0.04f, 0.13f, 0.26f, 0.5f, 0.34f };
+    public static readonly float[] AnchoDelCanon = { 0.045f, 0.05f, 0.095f, 0.04f, 0.065f };
+    // El fogonazo de cada una: su largo (por largoDelFogonazo), lo ancho que es, las puntas (0 es
+    // un disco), lo que dura, y si es un anillo que crece (la de energia, sin fuego).
+    public static readonly float[] LargoDelFogonazoPorArma = { 0.6f, 0.75f, 1.05f, 1.15f, 0.95f };
+    public static readonly float[] AnchoDelFogonazoPorArma = { 1f, 1f, 1.25f, 0.6f, 1f };
+    public static readonly float[] PuntasPorArma = { 0f, 0f, 7f, 4f, 0f };
+    public static readonly float[] DuracionPorArma = { 0.05f, 0.05f, 0.1f, 0.04f, 0.12f };
+    public static readonly bool[] AnilloPorArma = { false, false, false, false, true };
+    // Lo que dice el constructor de la pistola (ConstructorArmas): donde termina la corredera y
+    // a que altura va el cañon.
+    public const float FrenteDeLaCorredera = 0.225f;
+    public const float AlturaDelCanon = 0.075f;
+    // El fuego de la pistola es el de siempre; las demas, del color de su bala.
+    public static readonly Color FuegoDeLaPistola = new Color(1f, 0.72f, 0.25f);
+
+    private int tramoPuesto = -1;
+    private MaterialPropertyBlock propiedadesDeLaLuz;
+
+    public int TramoPuesto { get { return tramoPuesto; } }
+    public int ArmasNuevas { get; private set; }
+
+    public static Color ColorDelArma(int tramo)
+    {
+        return BulletController.ColoresPorTramo[Mathf.Clamp(tramo, 0, Armas - 1)];
+    }
+
+    // Viste la pistola para un tramo: el largo y el ancho del cañon, la boca en la punta y la luz
+    // de su color. Estatico: lo usan la partida y las fotos (FotosDeLasArmas).
+    public static void VestirArma(Transform pistola, int tramo, MaterialPropertyBlock propiedades)
+    {
+        if (pistola == null) return;
+        tramo = Mathf.Clamp(tramo, 0, Armas - 1);
+        float largo = LargoDelCanon[tramo], ancho = AnchoDelCanon[tramo];
+        var canon = pistola.Find("Canon");
+        if (canon != null)
+        {
+            // Un cilindro acostado: su alto (2 unidades) va a lo largo del cañon.
+            canon.localPosition = new Vector3(0f, AlturaDelCanon, FrenteDeLaCorredera + largo * 0.5f);
+            canon.localScale = new Vector3(ancho, largo * 0.5f, ancho);
+        }
+        var boca = pistola.Find("Boca");
+        if (boca != null) boca.localPosition = new Vector3(0f, AlturaDelCanon, FrenteDeLaCorredera + largo + 0.005f);
+        var luz = pistola.Find("LED");
+        if (luz != null && propiedades != null)
+        {
+            propiedades.SetColor(IdColor, ColorDelArma(tramo));
+            foreach (var render in luz.GetComponentsInChildren<Renderer>(true))
+                render.SetPropertyBlock(propiedades);
+        }
+    }
 
     public Transform Boca { get; private set; }
 
@@ -90,6 +160,7 @@ public class ArmaEnLaMano : MonoBehaviour
             fogonazo.gameObject.SetActive(false);
         }
 
+        propiedadesDeLaLuz = new MaterialPropertyBlock();
         antebrazo = animador.GetBoneTransform(HumanBodyBones.RightLowerArm);
         muñeco = animador.transform;
         tirosVistos = arma.TirosDisparados;
@@ -104,6 +175,20 @@ public class ArmaEnLaMano : MonoBehaviour
     private void LateUpdate()
     {
         if (instancia == null) return;
+
+        // El arma del tramo de ahora; al subir en la partida, el festejo (al empezar, no).
+        int tramo = arma.TramoDelArma;
+        if (tramo != tramoPuesto)
+        {
+            bool sube = tramoPuesto >= 0 && tramo > tramoPuesto;
+            tramoPuesto = tramo;
+            VestirArma(instancia, tramo, propiedadesDeLaLuz);
+            if (sube)
+            {
+                ArmasNuevas++;
+                Efectos.ArmaNueva(Boca != null ? Boca.position : transform.position, transform.position, ColorDelArma(tramo), Textos.De(IdsDeLasArmas[tramo]));
+            }
+        }
 
         if (arma.TirosDisparados != tirosVistos)
         {
@@ -128,18 +213,16 @@ public class ArmaEnLaMano : MonoBehaviour
     {
         if (fogonazo == null) return;
         Fogonazos++;
-        fogonazoHasta = Time.unscaledTime + duracionDelFogonazo;
+        int tramo = Mathf.Clamp(tramoPuesto, 0, Armas - 1);
+        // La duracion del inspector es la de la pistola; las demas, en proporcion.
+        fogonazoDesde = Time.unscaledTime;
+        fogonazoHasta = fogonazoDesde + duracionDelFogonazo * DuracionPorArma[tramo] / DuracionPorArma[0];
         tamañoDelFogonazo = Random.Range(0.8f, 1.15f);
-        if (renderDelFogonazo != null)
-        {
-            propiedades.SetFloat(IdGiro, Random.Range(0f, Mathf.PI * 2f));
-            renderDelFogonazo.SetPropertyBlock(propiedades);
-        }
+        giroDelFogonazo = Random.Range(0f, Mathf.PI * 2f);
+        PintarFogonazo(renderDelFogonazo, propiedades, tramo, giroDelFogonazo, 0f);
         fogonazo.gameObject.SetActive(true);
     }
 
-    // De frente a la camara, estirado hacia donde apunta el cañon y corrido hacia adelante:
-    // el fuego sale de la boca, no la rodea.
     private void AcomodarElFogonazo()
     {
         if (fogonazo == null || !fogonazo.gameObject.activeSelf) return;
@@ -149,16 +232,43 @@ public class ArmaEnLaMano : MonoBehaviour
             fogonazo.gameObject.SetActive(false);
             return;
         }
+        int tramo = Mathf.Clamp(tramoPuesto, 0, Armas - 1);
+        AcomodarFogonazo(fogonazo, Boca, camara.transform, tramo, largoDelFogonazo * tamañoDelFogonazo);
+        // La de energia: el anillo crece mientras dura.
+        if (AnilloPorArma[tramo])
+            PintarFogonazo(renderDelFogonazo, propiedades, tramo, giroDelFogonazo, Mathf.InverseLerp(fogonazoDesde, fogonazoHasta, Time.unscaledTime));
+    }
 
-        Vector3 cañon = Boca.forward;
-        Vector3 frente = camara.transform.forward;
+    // El fogonazo de un arma: su color, sus puntas o su anillo (t es cuanto del fogonazo paso,
+    // de 0 a 1: el anillo crece). Estatico: lo usan la partida y las fotos (FotosDeLasArmas).
+    public static void PintarFogonazo(Renderer render, MaterialPropertyBlock propiedades, int tramo, float giro, float t)
+    {
+        if (render == null || propiedades == null) return;
+        tramo = Mathf.Clamp(tramo, 0, Armas - 1);
+        propiedades.SetFloat(IdGiro, giro);
+        propiedades.SetColor(IdColor, tramo == 0 ? FuegoDeLaPistola : ColorDelArma(tramo));
+        propiedades.SetFloat(IdPuntas, PuntasPorArma[tramo]);
+        propiedades.SetFloat(IdAnillo, AnilloPorArma[tramo] ? 1f : 0f);
+        propiedades.SetFloat(IdRadioAnillo, Mathf.Lerp(0.25f, 0.9f, t));
+        render.SetPropertyBlock(propiedades);
+    }
+
+    // De frente a la camara, estirado hacia donde apunta el cañon y corrido hacia adelante:
+    // el fuego sale de la boca, no la rodea. "metros" es el largo del de la pistola.
+    public static void AcomodarFogonazo(Transform fogonazo, Transform boca, Transform camara, int tramo, float metros)
+    {
+        tramo = Mathf.Clamp(tramo, 0, Armas - 1);
+        Vector3 cañon = boca.forward;
+        Vector3 frente = camara.forward;
         Vector3 largo = Vector3.ProjectOnPlane(cañon, frente);
-        largo = largo.sqrMagnitude > 0.0001f ? largo.normalized : camara.transform.right;
-        float metros = largoDelFogonazo * tamañoDelFogonazo;
-        fogonazo.SetPositionAndRotation(Boca.position + cañon * (metros * 0.35f),
+        largo = largo.sqrMagnitude > 0.0001f ? largo.normalized : camara.right;
+        metros *= LargoDelFogonazoPorArma[tramo];
+        bool anillo = AnilloPorArma[tramo];
+        fogonazo.SetPositionAndRotation(boca.position + cañon * (metros * (anillo ? 0.2f : 0.35f)),
                                         Quaternion.LookRotation(frente, Vector3.Cross(frente, largo)));
         // El padre viene escalado con la mano: el tamaño se lleva a metros.
         float escalaDelPadre = Mathf.Max(0.0001f, fogonazo.parent.lossyScale.x);
-        fogonazo.localScale = new Vector3(metros, metros * 0.7f, 1f) / escalaDelPadre;
+        float ancho = anillo ? 1f : 0.7f * AnchoDelFogonazoPorArma[tramo];
+        fogonazo.localScale = new Vector3(metros, metros * ancho, 1f) / escalaDelPadre;
     }
 }

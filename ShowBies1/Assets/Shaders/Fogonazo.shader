@@ -1,7 +1,9 @@
 // El fogonazo de la pistola (ArmaEnLaMano): una estrella aditiva, un nucleo casi blanco con
 // puntas del color del fuego, calculada en el shader y sin textura, asi queda nitida a
 // cualquier tamaño. El cuadrado se estira hacia donde apunta el cañon; _Giro cambia las
-// puntas en cada tiro para que no se vea siempre la misma.
+// puntas en cada tiro para que no se vea siempre la misma. Con _Puntas en 0 es un disco
+// (la pistola y el revolver); con _Anillo en 1, un anillo de radio _RadioAnillo sin fuego,
+// el del arma de energia, que ArmaEnLaMano agranda mientras dura.
 Shader "ShowBies/Fogonazo"
 {
     Properties
@@ -10,6 +12,8 @@ Shader "ShowBies/Fogonazo"
         _Intensidad ("Intensidad", Float) = 2
         _Puntas ("Puntas", Float) = 4
         _Giro ("Giro de las puntas", Float) = 0
+        _Anillo ("Anillo (arma de energia)", Float) = 0
+        _RadioAnillo ("Radio del anillo", Float) = 0.5
     }
 
     SubShader
@@ -30,6 +34,8 @@ Shader "ShowBies/Fogonazo"
             half _Intensidad;
             half _Puntas;
             half _Giro;
+            half _Anillo;
+            half _RadioAnillo;
 
             struct v2f
             {
@@ -56,6 +62,11 @@ Shader "ShowBies/Fogonazo"
                 half halo = saturate(1 - r) * 0.25;
                 half3 fuego = _Color.rgb * (puntas + halo);
                 half3 col = (fuego + nucleo * half3(1, 0.97, 0.85) * 1.6) * _Intensidad;
+                // El anillo: una banda fina en _RadioAnillo, que se apaga al crecer.
+                half d = (r - _RadioAnillo) * 9;
+                half anillo = exp(-d * d) * saturate(1.15 - r);
+                half3 colAnillo = (_Color.rgb + anillo * 0.35) * anillo * _Intensidad;
+                col = lerp(col, colAnillo, _Anillo);
                 return fixed4(col, 1);
             }
             ENDCG

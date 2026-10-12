@@ -262,6 +262,7 @@ public static class PruebasMejoras
                     ProbarCartas(informe);
                     ProbarOleadaPerfecta(informe);
                     ProbarBalasPorTramo(informe);
+                    ProbarArmasPorTramo(informe);
                     ProbarFlechasDelBorde(informe);
                     ProbarZombiDelTesoro(informe);
                     ProbarBestiario(informe);
@@ -5659,6 +5660,106 @@ public static class PruebasMejoras
         }
         inf.Verdadero("balas: Bullet.mat no cambia (pinta tambien la caja de balas)",
                       prefab.GetComponent<Renderer>().sharedMaterial == materialDelPrefab && materialDelPrefab.color == colorDelPrefab);
+    }
+
+    // El arma de la mano cambia con el daño (1.6.0, etapa 3 de las cartas; ArmaEnLaMano): una por
+    // tramo de la bala, sin contar la furia; el cañon, la boca en su punta, la luz de su color,
+    // el fogonazo y el sonido de cada una, y su nombre en la tabla.
+    static void ProbarArmasPorTramo(Informe inf)
+    {
+        int n = ArmaEnLaMano.Armas;
+        inf.Igual("armas: una por tramo de la bala", BulletController.ColoresPorTramo.Length, n);
+        bool tablas = ArmaEnLaMano.IdsDeLasArmas.Length == n && ArmaEnLaMano.LargoDelCanon.Length == n && ArmaEnLaMano.AnchoDelCanon.Length == n &&
+                      ArmaEnLaMano.LargoDelFogonazoPorArma.Length == n && ArmaEnLaMano.AnchoDelFogonazoPorArma.Length == n &&
+                      ArmaEnLaMano.PuntasPorArma.Length == n && ArmaEnLaMano.DuracionPorArma.Length == n && ArmaEnLaMano.AnilloPorArma.Length == n &&
+                      GunController.SonidosDeLasArmas.Length == n && GunController.IntervaloDeSonidoPorArma.Length == n;
+        inf.Verdadero("armas: todas las tablas tienen una por arma", tablas);
+        if (!tablas) return;
+        bool masLargo = true, escopetaAncha = true;
+        for (int i = 1; i < n; i++)
+        {
+            masLargo &= ArmaEnLaMano.LargoDelCanon[i] > ArmaEnLaMano.LargoDelCanon[0];
+            if (i != 2) escopetaAncha &= ArmaEnLaMano.AnchoDelCanon[2] > ArmaEnLaMano.AnchoDelCanon[i];
+        }
+        inf.Verdadero("armas: el cañon de cada una es mas largo que el de la pistola", masLargo);
+        inf.Verdadero("armas: la escopeta tiene el cañon mas ancho", escopetaAncha && ArmaEnLaMano.AnchoDelCanon[2] > ArmaEnLaMano.AnchoDelCanon[0]);
+        inf.Verdadero("armas: solo la de energia es un anillo",
+                      ArmaEnLaMano.AnilloPorArma[4] && !ArmaEnLaMano.AnilloPorArma[0] && !ArmaEnLaMano.AnilloPorArma[1] && !ArmaEnLaMano.AnilloPorArma[2] && !ArmaEnLaMano.AnilloPorArma[3]);
+        inf.Verdadero("armas: la pistola y el revolver, un disco; la escopeta y el rifle, con puntas",
+                      ArmaEnLaMano.PuntasPorArma[0] == 0f && ArmaEnLaMano.PuntasPorArma[1] == 0f && ArmaEnLaMano.PuntasPorArma[2] > 0f && ArmaEnLaMano.PuntasPorArma[3] > 0f);
+        bool nombres = true;
+        foreach (var id in ArmaEnLaMano.IdsDeLasArmas) nombres &= !Textos.De(id).StartsWith("[");
+        inf.Verdadero("armas: cada una tiene su nombre en la tabla", nombres);
+
+        // El sonido: la pistola, el del AudioSource (shot.mp3); las demas, el suyo, distinto.
+        bool sonidos = GunController.SonidosDeLasArmas[0] == null;
+        var vistos = new HashSet<AudioClip>();
+        for (int i = 1; i < n; i++)
+        {
+            var clip = Resources.Load<AudioClip>(GunController.SonidosDeLasArmas[i]);
+            sonidos &= clip != null && clip.channels == 1 && clip.length < 0.5f && vistos.Add(clip);
+        }
+        inf.Verdadero("armas: cada una tiene su sonido, en mono y corto", sonidos);
+
+        // El fogonazo: el shader tiene el anillo de la de energia.
+        var shaderDelFogonazo = Shader.Find("ShowBies/Fogonazo");
+        inf.Verdadero("armas: el fogonazo tiene el anillo", shaderDelFogonazo != null &&
+                      shaderDelFogonazo.FindPropertyIndex("_Anillo") >= 0 && shaderDelFogonazo.FindPropertyIndex("_RadioAnillo") >= 0);
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorArmas.RutaPistola);
+        if (!inf.Verdadero("armas: esta la pistola", prefab != null)) return;
+        var canonDelPrefab = prefab.transform.Find("Canon");
+        var bocaDelPrefab = prefab.transform.Find("Boca");
+        var led = prefab.transform.Find("LED");
+        if (!inf.Verdadero("armas: la pistola tiene cañon, boca con fogonazo y la luz",
+                           canonDelPrefab != null && bocaDelPrefab != null && bocaDelPrefab.Find("Fogonazo") != null && led != null)) return;
+        var luces = led.GetComponentsInChildren<Renderer>(true);
+        bool unlit = luces.Length > 0;
+        foreach (var r in luces) unlit &= r.sharedMaterial != null && r.sharedMaterial.shader.name == "Unlit/Color";
+        inf.Verdadero("armas: la luz no recibe luz (Unlit/Color)", unlit);
+        inf.Verdadero("armas: la pistola no tiene colliders", prefab.GetComponentsInChildren<Collider>(true).Length == 0);
+        var metal = canonDelPrefab.GetComponent<Renderer>().sharedMaterial;
+        inf.Verdadero("armas: el cuerpo es gris oscuro (" + (metal != null ? metal.color.ToString() : "-") + ")",
+                      metal != null && metal.color.r < 0.3f && Mathf.Abs(metal.color.r - metal.color.b) < 0.05f);
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var p = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, vista)).transform;
+            var canon = p.Find("Canon");
+            var boca = p.Find("Boca");
+            ArmaEnLaMano.VestirArma(p, 0, new MaterialPropertyBlock());
+            inf.Verdadero("armas: la pistola queda como la arma el constructor",
+                          (canon.localPosition - canonDelPrefab.localPosition).sqrMagnitude < 1e-8f &&
+                          (canon.localScale - canonDelPrefab.localScale).sqrMagnitude < 1e-8f &&
+                          (boca.localPosition - bocaDelPrefab.localPosition).sqrMagnitude < 1e-8f);
+            bool enLaPunta = true;
+            for (int i = 1; i < n; i++)
+            {
+                ArmaEnLaMano.VestirArma(p, i, new MaterialPropertyBlock());
+                float punta = canon.localPosition.z + canon.localScale.y;
+                enLaPunta &= Mathf.Abs(boca.localPosition.z - punta - 0.005f) < 1e-4f && boca.localPosition.z > bocaDelPrefab.localPosition.z;
+            }
+            inf.Verdadero("armas: la boca va en la punta de cada cañon, delante de la de la pistola", enLaPunta);
+            ArmaEnLaMano.VestirArma(p, 2, new MaterialPropertyBlock());
+            var bloque = new MaterialPropertyBlock();
+            p.Find("LED").GetComponentInChildren<Renderer>().GetPropertyBlock(bloque);
+            inf.Verdadero("armas: la luz toma el color del tramo", bloque.GetColor("_Color") == BulletController.ColoresPorTramo[2]);
+
+            // El tramo del arma no cuenta la furia: la bala sube, el arma no.
+            var go = new GameObject("Arma");
+            SceneManager.MoveGameObjectToScene(go, vista);
+            var arma = go.AddComponent<GunController>();
+            arma.FijarDanoPorBala(4f);
+            inf.Igual("armas: con 4 de daño, la escopeta", 2, arma.TramoDelArma);
+            arma.FijarFuria(2f, 2f);
+            inf.Verdadero("armas: con la furia la bala sube y el arma no",
+                          arma.TramoDelArma == 2 && BulletController.Tramo(arma.DanoPorTiro) == 3);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
     }
 
     // Donde va la flecha del borde (FlechasDelBorde.EnElBorde, mejora 7 de la revision del
