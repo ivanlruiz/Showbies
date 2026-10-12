@@ -205,6 +205,8 @@ public class WaveManager : MonoBehaviour
         {
             OleadaActual++;
             Progreso.GuardarOleadaEnCurso(OleadaActual, Puntaje.instance != null ? Puntaje.instance.contadorKill : 0);
+            // Las cartas, como estan al empezar la oleada: retomarla las devuelve asi.
+            Progreso.GuardarPoderEnCurso(PoderDeLaPartida.Instantanea());
             // En otro hilo: el fsync en el del juego era un tiron justo con el cartel de la oleada.
             Progreso.GuardarEnSegundoPlano();
             int golpesAlEmpezar = PlayerHealth.instance != null ? PlayerHealth.instance.GolpesRecibidos : -1;

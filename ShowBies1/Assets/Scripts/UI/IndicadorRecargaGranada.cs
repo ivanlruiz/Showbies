@@ -13,7 +13,7 @@ public class IndicadorRecargaGranada : MonoBehaviour
     {
         if (jugador == null || relleno == null) return;
 
-        float valor = jugador.granadaCooldown > 0f ? jugador.GranadaRestante / jugador.granadaCooldown : 0f;
+        float valor = jugador.RecargaGranada > 0f ? jugador.GranadaRestante / jugador.RecargaGranada : 0f;
         if (!Mathf.Approximately(relleno.fillAmount, valor)) relleno.fillAmount = valor;
     }
 }

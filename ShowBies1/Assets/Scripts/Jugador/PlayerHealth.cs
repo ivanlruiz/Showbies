@@ -121,10 +121,31 @@ public class PlayerHealth : MonoBehaviour
     // máximo mejorado.
     public void FijarVidaMaxima(int vidaMaxima, float multiplicadorCura)
     {
-        maxHealth = Mathf.Max(1, vidaMaxima);
+        vidaMaximaDeLaMejora = Mathf.Max(1, vidaMaxima);
+        maxHealth = vidaMaximaDeLaMejora;
         health = maxHealth;
         this.multiplicadorCura = Mathf.Max(0f, multiplicadorCura);
         danoPendiente = 0f;
+    }
+
+    // El maximo que dejo la mejora, sin las cartas: lo que multiplican las de vida.
+    private int vidaMaximaDeLaMejora = -1;
+
+    // Las cartas de vida de la partida (PoderDeLaPartida) multiplican el maximo de la mejora. Al
+    // elegir una se llena la vida; al retomar una partida, tambien, que arranca la oleada de cero.
+    public void AplicarCartasDeVida()
+    {
+        if (estaMuerto) return;
+        int base0 = vidaMaximaDeLaMejora > 0 ? vidaMaximaDeLaMejora : maxHealth;
+        maxHealth = Mathf.Max(1, Mathf.RoundToInt(base0 * PoderDeLaPartida.MultiplicadorVida));
+        health = maxHealth;
+    }
+
+    // La carta de reserva (Curacion): la vida entera.
+    public void CurarEntero()
+    {
+        if (estaMuerto) return;
+        health = maxHealth;
     }
 
     // Suma "cantidad" a lo pendiente y devuelve la parte entera, que es lo que se

@@ -1257,6 +1257,11 @@ public class EnemyController : MonoBehaviour
             Puntaje.instance.UpdateKillCounterUI();
             // La experiencia del nivel del jugador son los mismos puntos.
             NivelJugador.Sumar(enemyType.puntos);
+            // Y la de la partida, la que saca las cartas (PoderDeLaPartida): la de su asset. El
+            // jefe deja ademas la carta dorada para la proxima eleccion.
+            PoderDeLaPartida.Sumar(enemyType.experiencia);
+            if (EsJefe) PoderDeLaPartida.MarcarDorada();
+            EleccionDeCartas.Chispa(transform.position, enemyType.experiencia);
 
             SoltarMonedas();
             SoltarCaramelos();

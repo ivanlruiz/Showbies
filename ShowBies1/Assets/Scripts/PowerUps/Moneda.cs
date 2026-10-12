@@ -407,8 +407,8 @@ public class Moneda : MonoBehaviour
             Vector3 distancia = objetivo.transform.position - posicion;
             distancia.y = 0f;
             // Sin la mejora de iman el radio es 0 y se agarran igual, pasandoles por
-            // encima: nunca menos que la distancia de cobro.
-            float radio = Mathf.Max(radioImanDeLaPartida >= 0f ? radioImanDeLaPartida : radioIman, distanciaDeCobro);
+            // encima: nunca menos que la distancia de cobro. Las cartas de iman suman encima.
+            float radio = Mathf.Max((radioImanDeLaPartida >= 0f ? radioImanDeLaPartida : radioIman) + PoderDeLaPartida.ImanExtra, distanciaDeCobro);
             if (distancia.sqrMagnitude <= radio * radio)
             {
                 atraida = true;

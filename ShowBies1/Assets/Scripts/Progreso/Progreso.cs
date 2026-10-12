@@ -144,6 +144,10 @@ public static class Progreso
         // v7: el evento de Halloween (EventoHalloween): los caramelos de la edicion y el
         // sombrero de calabaza, que es para siempre.
         public EstadoHalloween halloween = new EstadoHalloween();
+
+        // v8: el PODER y las cartas de la partida de oleadas a medias (PoderDeLaPartida), como
+        // estaban al empezar la oleada en curso, al lado de oleadaEnCurso y puntosEnCurso.
+        public EstadoPoder poderEnCurso = new EstadoPoder();
     }
 
     // 1: monedas y mejor oleada. 2: suma los niveles de las mejoras. 3: suma lo que
@@ -152,8 +156,9 @@ public static class Progreso
     // un build viejo abra el archivo en solo lectura y no borre los contadores.
     // 5: el desafio semanal. 6: el nivel del jugador y los logros; al migrar, la
     // experiencia sale de los zombis ya matados (ver MigrarAlNivel). 7: el evento de
-    // Halloween; no migra nada, sube para que un build viejo no borre el sombrero.
-    public const int VersionActual = 7;
+    // Halloween; no migra nada, sube para que un build viejo no borre el sombrero. 8: las
+    // cartas de la partida en curso (1.6.0); tampoco migra nada.
+    public const int VersionActual = 8;
 
     private const string NombreArchivo = "progreso.json";
 
@@ -283,6 +288,20 @@ public static class Progreso
         get { Cargar(); return datos.puntosEnCurso; }
     }
 
+    // Las cartas de la partida en curso: se guardan al empezar cada oleada, con los puntos, y
+    // retomar la oleada las devuelve como estaban (PoderDeLaPartida). Lo que se gano a mitad de la
+    // oleada se vuelve a ganar al jugarla de nuevo, con las mismas cartas ofrecidas.
+    public static EstadoPoder PoderEnCurso
+    {
+        get { Cargar(); return datos.poderEnCurso ?? new EstadoPoder(); }
+    }
+
+    public static void GuardarPoderEnCurso(EstadoPoder estado)
+    {
+        Cargar();
+        datos.poderEnCurso = estado != null ? estado.Copia() : new EstadoPoder();
+    }
+
     public static void GuardarOleadaEnCurso(int oleada, int puntos)
     {
         Cargar();
@@ -294,6 +313,7 @@ public static class Progreso
     public static void OlvidarOleadaEnCurso()
     {
         Cargar();
+        datos.poderEnCurso = new EstadoPoder();
         if (datos.oleadaEnCurso == 0 && datos.puntosEnCurso == 0) return;
         datos.oleadaEnCurso = 0;
         datos.puntosEnCurso = 0;
@@ -1122,6 +1142,10 @@ public static class Progreso
         if (e.mejorNivelLibre < 0) e.mejorNivelLibre = 0;
         if (e.mejorRacha < 0) e.mejorRacha = 0;
         if (e.misionesCobradas < 0) e.misionesCobradas = 0;
+
+        // Las cartas de la partida en curso: PoderDeLaPartida.Empezar vuelve a acotar lo demas.
+        if (d.poderEnCurso == null) d.poderEnCurso = new EstadoPoder();
+        if (d.poderEnCurso.cartas == null) d.poderEnCurso.cartas = new List<CartaElegida>();
 
         if (d.halloween == null) d.halloween = new EstadoHalloween();
         EstadoHalloween h = d.halloween;

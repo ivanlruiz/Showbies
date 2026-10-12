@@ -389,6 +389,26 @@ public class Efectos : MonoBehaviour
         }
     }
 
+    // Al elegir una carta (EleccionDeCartas): un arpegio corto. La dorada, la del jefe, el
+    // festejo doble con las campanitas de la oleada perfecta encima y un temblor: Gemini pidio
+    // que suene epica. Va con el reloj del audio, porque el juego esta congelado.
+    public static void CartaElegida(bool dorada)
+    {
+        var e = instance;
+        if (e == null) return;
+        AudioClip nota = e.NotaDeAviso();
+        if (!dorada)
+        {
+            for (int i = 0; i < 4; i++)
+                Sonidos.Programar(nota, 0.05 * i, e.volumenOleadaSuperada, Sonidos.PitchDe(ArpegioSuperada[i] + 12f));
+            return;
+        }
+        Festejo();
+        for (int i = 0; i < ArpegioPerfecta.Length; i++)
+            Sonidos.Programar(nota, 0.72 + 0.05 * i, e.volumenOleadaSuperada * 0.8f, Sonidos.PitchDe(ArpegioPerfecta[i] + 12f));
+        CamaraJugador.Temblar(0.35f);
+    }
+
     public static void CartelOleada()
     {
         var e = instance;

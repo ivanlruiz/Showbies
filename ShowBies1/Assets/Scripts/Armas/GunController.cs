@@ -69,10 +69,11 @@ public class GunController : MonoBehaviour
     public float MultiplicadorCadenciaFuria { get { return multiplicadorCadenciaFuria; } }
     public float MultiplicadorDanoFuria { get { return multiplicadorDanoFuria; } }
 
-    // La cadencia vigente: la base por la caja y por la furia, con el techo.
+    // La cadencia vigente: la base por la caja, por la furia y por las cartas de la partida
+    // (PoderDeLaPartida), con el techo.
     public float TirosPorSegundo
     {
-        get { return Mathf.Min(TirosPorSegundoBase * multiplicadorPickup * multiplicadorCadenciaFuria, Mathf.Max(1f, maxTirosPorSegundo)); }
+        get { return Mathf.Min(TirosPorSegundoBase * multiplicadorPickup * multiplicadorCadenciaFuria * PoderDeLaPartida.MultiplicadorCadencia, Mathf.Max(1f, maxTirosPorSegundo)); }
     }
 
     // El daño de la mejora, sin la furia: el que muestran el medidor y las pruebas.
@@ -88,6 +89,9 @@ public class GunController : MonoBehaviour
 
     public float ProbabilidadCritico { get { return probabilidadCritico; } }
 
+    // La de la mejora mas la de las cartas de la partida: la que sortea cada bala.
+    public float ProbabilidadCriticoEnLaPartida { get { return Mathf.Clamp01(probabilidadCritico + PoderDeLaPartida.CriticoExtra); } }
+
     public void FijarProbabilidadCritico(float probabilidad)
     {
         probabilidadCritico = Mathf.Clamp01(probabilidad);
@@ -100,10 +104,10 @@ public class GunController : MonoBehaviour
         return probabilidad >= 1f || sorteo < probabilidad;
     }
 
-    // Lo que lleva cada bala que sale ahora, con la furia.
+    // Lo que lleva cada bala que sale ahora, con la furia y las cartas de la partida.
     public float DanoPorTiro
     {
-        get { return DanoPorBala * multiplicadorDanoFuria; }
+        get { return DanoPorBala * multiplicadorDanoFuria * PoderDeLaPartida.MultiplicadorDano; }
     }
 
     // Start is called before the first frame update
@@ -241,7 +245,8 @@ public class GunController : MonoBehaviour
         // cadencia lo cortaba en cada tiro antes de que llegara a oirse. El
         // techo evita apilar decenas de sonidos con la cadencia mejorada, y
         // también varios tiros del mismo frame.
-        bool critico = probabilidadCritico > 0f && EsCritico(probabilidadCritico, Random.value);
+        float probabilidad = ProbabilidadCriticoEnLaPartida;
+        bool critico = probabilidad > 0f && EsCritico(probabilidad, Random.value);
         int tramo = BulletController.Tramo(DanoPorTiro);
         if (Time.time >= proximoSonido && AudioSource != null && AudioSource.clip != null)
         {

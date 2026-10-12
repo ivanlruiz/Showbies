@@ -48,6 +48,9 @@ public class PlayerController : MonoBehaviour
     // AplicarMejoras siga teniendo granada.
     public bool GranadaDesbloqueada { get; set; } = true;
 
+    // La recarga de la granada en esta partida: la del prefab por las cartas (PoderDeLaPartida).
+    public float RecargaGranada { get { return granadaCooldown * PoderDeLaPartida.MultiplicadorRecargaGranada; } }
+
     // Segundos que faltan para poder tirar otra granada. Lo muestra el boton de granada.
     public float GranadaRestante { get { return Mathf.Max(0f, granadaDisponibleEn - Time.time); } }
 
@@ -176,7 +179,7 @@ public class PlayerController : MonoBehaviour
     {
         if (EnElAire) return;
         moveInput = new Vector3(input.x, 0f, input.y);
-        moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad;
+        moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad * PoderDeLaPartida.MultiplicadorVelocidad;
 
         if (trans != null && trans.anim != null)
         {
@@ -299,7 +302,7 @@ public class PlayerController : MonoBehaviour
     private void HandleMovement()
     {
         moveInput = DireccionDelTeclado(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-        moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad;
+        moveVelocity = moveInput * moveSpeed * multiplicadorVelocidad * PoderDeLaPartida.MultiplicadorVelocidad;
 
         if (moveInput.magnitude > 0.1f)
         {
@@ -445,7 +448,7 @@ public class PlayerController : MonoBehaviour
         OcultarPunteroGranada();
         if (!GranadaLista) return;
 
-        granadaDisponibleEn = Time.time + granadaCooldown;
+        granadaDisponibleEn = Time.time + RecargaGranada;
 
         // La granada se encarga sola del vuelo, de explotar y de destruirse.
         Granade granada = Instantiate(granadaPrefab, transform.position, transform.rotation);

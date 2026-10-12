@@ -178,6 +178,9 @@ public static class PruebasMejoras
         // Los textos y numeros esperados de abajo estan en espaniol; el idioma real
         // del editor se devuelve en el finally.
         Idioma.UsarParaPruebas(Lengua.Espanol);
+        // Las cartas de una partida jugada en el editor sobreviven al salir de play: con
+        // alguna puesta, el arma y el jugador de las pruebas no darian los numeros de la tabla.
+        PoderDeLaPartida.Terminar();
         try
         {
             var catalogo = CatalogoMejoras.Instancia;
@@ -256,6 +259,7 @@ public static class PruebasMejoras
                     ProbarDesafioSemanal(informe);
                     ProbarProximoObjetivo(informe);
                     ProbarDesbloqueo(informe);
+                    ProbarCartas(informe);
                     ProbarOleadaPerfecta(informe);
                     ProbarBalasPorTramo(informe);
                     ProbarFlechasDelBorde(informe);
@@ -5760,6 +5764,215 @@ public static class PruebasMejoras
         }
     }
 
+    // Las cartas de la partida (1.6.0, CARTAS.md): la experiencia de los zombis, la curva del PODER,
+    // el sorteo, la eleccion, lo que cada carta le hace al arma y al jugador, y lo que se guarda
+    // con la partida en curso. Deja todo neutro al terminar.
+    static void ProbarCartas(Informe inf)
+    {
+        try { ProbarCartasAdentro(inf); }
+        finally
+        {
+            PoderDeLaPartida.Terminar();
+            PoderDeLaPartida.SinCartasAutomaticas = false;
+        }
+    }
+
+    static void ProbarCartasAdentro(Informe inf)
+    {
+        // La experiencia de cada tipo, en su asset.
+        var esperada = new Dictionary<string, int>
+        {
+            { "ZombiNormal", 1 }, { "ZombiRapido", 1 }, { "ZombiFASTER", 1 },
+            { "ZombiTanque", 3 }, { "ZombiTesoro", 5 }, { "ZombiBOSS", 15 },
+        };
+        foreach (var par in esperada)
+        {
+            var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>("Assets/Zombies/" + par.Key + ".asset");
+            inf.Igual("cartas: la experiencia de " + par.Key, par.Value, enemigo != null ? enemigo.experiencia : -1);
+        }
+
+        // La curva: 8 la primera, x1,15 cada una.
+        inf.Igual("cartas: la primera carta cuesta 8", 8, PoderDeLaPartida.Costo(0));
+        inf.Igual("cartas: la segunda cuesta 9", 9, PoderDeLaPartida.Costo(1));
+        inf.Igual("cartas: la del PODER 5 cuesta 16", 16, PoderDeLaPartida.Costo(5));
+
+        // Con la mezcla de zombis del WaveManager de WaveMode y la experiencia de los assets: entre
+        // 12 y 15 cartas hasta la oleada 10 (lo que pidio Gemini) y unas 22 hasta la 20.
+        int hasta10 = -1, hasta20 = -1;
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (oleadas == null) return;
+            int jefe = 0;
+            if (oleadas.jefe != null)
+            {
+                var ecJefe = oleadas.jefe.GetComponent<EnemyController>();
+                if (ecJefe != null && ecJefe.enemyType != null) jefe = ecJefe.enemyType.experiencia;
+            }
+            double xp = 0;
+            int poder = 0;
+            double debe = PoderDeLaPartida.Costo(0);
+            for (int n = 1; n <= 20; n++)
+            {
+                double pesos = 0, conXp = 0;
+                foreach (var t in oleadas.tipos)
+                {
+                    if (t == null || t.prefab == null || n < t.desdeOleada) continue;
+                    var ec = t.prefab.GetComponent<EnemyController>();
+                    pesos += t.peso;
+                    conXp += t.peso * (ec != null && ec.enemyType != null ? ec.enemyType.experiencia : 1);
+                }
+                xp += (oleadas.zombisBase + oleadas.zombisPorOleada * n) * (pesos > 0 ? conXp / pesos : 1);
+                if (oleadas.jefeCadaOleadas > 0 && n % oleadas.jefeCadaOleadas == 0) xp += jefe;
+                while (xp >= debe) { xp -= debe; poder++; debe = PoderDeLaPartida.Costo(poder); }
+                if (n == 10) hasta10 = poder;
+                if (n == 20) hasta20 = poder;
+            }
+        });
+        inf.Verdadero("cartas: hasta la oleada 10 salen entre 12 y 15 (" + hasta10 + ")", hasta10 >= 12 && hasta10 <= 15);
+        inf.Verdadero("cartas: hasta la oleada 20 salen unas 22 (" + hasta20 + ")", hasta20 >= 19 && hasta20 <= 25);
+
+        // El catalogo: en Resources, sin ids repetidos, con su texto en los dos idiomas.
+        var catalogo = CatalogoCartas.Instancia;
+        if (!inf.Verdadero("cartas: el catalogo esta en Resources", catalogo != null && catalogo.cartas.Count > 0)) return;
+        var ids = new List<string>();
+        foreach (var c in catalogo.cartas)
+        {
+            if (!inf.Verdadero("cartas: ninguna carta vacia en el catalogo", c != null && !string.IsNullOrEmpty(c.id))) continue;
+            inf.Verdadero("cartas: el id " + c.id + " no se repite", !ids.Contains(c.id));
+            ids.Add(c.id);
+            foreach (Lengua lengua in new[] { Lengua.Ingles, Lengua.Espanol })
+            {
+                inf.Verdadero("cartas: " + c.id + " tiene nombre en " + lengua, !string.IsNullOrEmpty(Textos.Crudo("carta_" + c.id + "_nombre", lengua)));
+                string que = Textos.Crudo("carta_" + c.id, lengua);
+                inf.Verdadero("cartas: " + c.id + " dice que hace en " + lengua, !string.IsNullOrEmpty(que));
+                if (c.id != PoderDeLaPartida.Curacion)
+                    inf.Verdadero("cartas: lo que hace " + c.id + " lleva su numero en " + lengua, que != null && que.Contains("{0}"));
+            }
+            if (c.id != PoderDeLaPartida.Curacion) inf.Verdadero("cartas: " + c.id + " tiene tope", c.tope > 0);
+        }
+        foreach (var id in new[] { PoderDeLaPartida.Dano, PoderDeLaPartida.Cadencia, PoderDeLaPartida.Critico, PoderDeLaPartida.Vida,
+                                   PoderDeLaPartida.Velocidad, PoderDeLaPartida.Iman, PoderDeLaPartida.GranadaRapida,
+                                   PoderDeLaPartida.FuriaLarga, PoderDeLaPartida.Curacion })
+            inf.Verdadero("cartas: esta la de " + id, ids.Contains(id));
+        inf.Cerca("cartas: la de daño dice +25 %", 25, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Dano)), 1e-9);
+        inf.Cerca("cartas: la de la granada dice 30 % mas rapido", 30, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.GranadaRapida)), 1e-9);
+        inf.Cerca("cartas: la de criticos dice +10 %", 10, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Critico)), 1e-9);
+        inf.Igual("cartas: la descripcion de la de daño", "+25 % de daño", EleccionDeCartas.Descripcion(PoderDeLaPartida.Dano));
+
+        // Fuera de una partida, todo neutro y no suma.
+        PoderDeLaPartida.Terminar();
+        PoderDeLaPartida.Sumar(100);
+        inf.Igual("cartas: fuera de una partida no se sube de PODER", 0, PoderDeLaPartida.Poder);
+        inf.Cerca("cartas: fuera de una partida el daño es neutro", 1, PoderDeLaPartida.MultiplicadorDano, 1e-9);
+
+        // La experiencia y el PODER.
+        PoderDeLaPartida.Empezar(new EstadoPoder { semilla = 1234 });
+        PoderDeLaPartida.Sumar(7);
+        inf.Igual("cartas: con 7 de experiencia todavia no hay carta", 0, PoderDeLaPartida.Pendientes);
+        PoderDeLaPartida.Sumar(1);
+        inf.Igual("cartas: con 8 se sube al PODER 1", 1, PoderDeLaPartida.Poder);
+        inf.Igual("cartas: y queda una eleccion pendiente", 1, PoderDeLaPartida.Pendientes);
+        inf.Igual("cartas: la experiencia vuelve a cero", 0, PoderDeLaPartida.Experiencia);
+        PoderDeLaPartida.Sumar(9 + 11);
+        inf.Igual("cartas: una granada que da 20 sube dos PODER de golpe", 3, PoderDeLaPartida.Poder);
+        inf.Igual("cartas: y quedan tres elecciones", 3, PoderDeLaPartida.Pendientes);
+
+        // El sorteo: tres distintas, siempre las mismas con la misma semilla y el mismo PODER.
+        int dorada;
+        var a = PoderDeLaPartida.Ofrecer(out dorada);
+        var b = PoderDeLaPartida.Ofrecer(out dorada);
+        inf.Igual("cartas: se ofrecen tres", 3, a.Count);
+        inf.Verdadero("cartas: las tres son distintas", a.Count == 3 && a[0] != a[1] && a[1] != a[2] && a[0] != a[2]);
+        inf.Verdadero("cartas: salir y volver no cambia las tres", string.Join(",", a) == string.Join(",", b));
+        inf.Igual("cartas: sin jefe no hay dorada", -1, dorada);
+        inf.Verdadero("cartas: la de reserva no sale si hay otras", !a.Contains(PoderDeLaPartida.Curacion));
+
+        int dummy;
+        bool algunaQueNoSirve = false, siempreTres = true;
+        for (int s = 0; s < 40; s++)
+        {
+            var tres = PoderDeLaPartida.Sortear(catalogo.cartas, c => PoderDeLaPartida.Disponible(c, 0, false, false), s, s, out dummy, false);
+            if (tres.Contains(PoderDeLaPartida.GranadaRapida) || tres.Contains(PoderDeLaPartida.FuriaLarga)) algunaQueNoSirve = true;
+            if (tres.Count != 3) siempreTres = false;
+        }
+        inf.Verdadero("cartas: sin granada ni furia compradas no salen sus cartas", !algunaQueNoSirve && siempreTres);
+        var nada = PoderDeLaPartida.Sortear(catalogo.cartas, c => false, 5, 5, out dummy, true);
+        inf.Verdadero("cartas: con todo al tope sale la curacion, sola", nada.Count == 1 && nada[0] == PoderDeLaPartida.Curacion && dummy == -1);
+        PoderDeLaPartida.MarcarDorada();
+        PoderDeLaPartida.Ofrecer(out dorada);
+        inf.Verdadero("cartas: despues de un jefe una de las tres es dorada", dorada >= 0 && dorada < 3);
+
+        // Elegir: suma, gasta una eleccion, respeta el tope; la dorada vale doble.
+        int sumadas = PoderDeLaPartida.Elegir(PoderDeLaPartida.Dano, false);
+        inf.Igual("cartas: elegir la de daño la suma una vez", 1, sumadas);
+        inf.Igual("cartas: y gasta una eleccion", 2, PoderDeLaPartida.Pendientes);
+        sumadas = PoderDeLaPartida.Elegir(PoderDeLaPartida.Dano, true);
+        inf.Igual("cartas: la dorada suma dos", 2, sumadas);
+        inf.Verdadero("cartas: elegir la dorada la gasta", !PoderDeLaPartida.DoradaPendiente);
+        inf.Igual("cartas: daño 3 veces", 3, PoderDeLaPartida.Veces(PoderDeLaPartida.Dano));
+        PoderDeLaPartida.Sumar(1000);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.Dano, true);
+        inf.Igual("cartas: la dorada no pasa del tope (4)", 4, PoderDeLaPartida.Veces(PoderDeLaPartida.Dano));
+        inf.Cerca("cartas: daño x1,25^4", Math.Pow(1.25, 4), PoderDeLaPartida.MultiplicadorDano, 1e-4);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.Cadencia, false);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.Critico, false);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.Velocidad, false);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.Iman, false);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.GranadaRapida, false);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.FuriaLarga, false);
+        inf.Cerca("cartas: cadencia x1,2", 1.2, PoderDeLaPartida.MultiplicadorCadencia, 1e-5);
+        inf.Cerca("cartas: critico +10 %", 0.1, PoderDeLaPartida.CriticoExtra, 1e-5);
+        inf.Cerca("cartas: velocidad +10 %", 1.1, PoderDeLaPartida.MultiplicadorVelocidad, 1e-5);
+        inf.Cerca("cartas: iman +2 m", 2, PoderDeLaPartida.ImanExtra, 1e-5);
+        inf.Cerca("cartas: la granada recarga en el 70 %", 0.7, PoderDeLaPartida.MultiplicadorRecargaGranada, 1e-5);
+        inf.Cerca("cartas: la furia dura 2 s mas", 2, PoderDeLaPartida.SegundosFuriaExtra, 1e-5);
+
+        // En el arma: encima de la mejora, de la caja y de la furia, con el techo.
+        var objeto = UnityEditor.EditorUtility.CreateGameObjectWithHideFlags("prueba_arma_cartas", HideFlags.HideAndDontSave);
+        try
+        {
+            var arma = objeto.AddComponent<GunController>();
+            arma.FijarTirosPorSegundo(10f);
+            arma.FijarDanoPorBala(2f);
+            arma.FijarProbabilidadCritico(0.5f);
+            inf.Cerca("cartas en el arma: el daño de la mejora no cambia", 2, arma.DanoPorBala, Tolerancia);
+            inf.Cerca("cartas en el arma: el daño por tiro lleva las cartas", 2 * Math.Pow(1.25, 4), arma.DanoPorTiro, 1e-3);
+            inf.Cerca("cartas en el arma: la cadencia lleva las cartas", 12, arma.TirosPorSegundo, 1e-3);
+            arma.FijarFuria(2f, 2f);
+            inf.Cerca("cartas en el arma: se multiplican con la furia", 4 * Math.Pow(1.25, 4), arma.DanoPorTiro, 1e-3);
+            arma.PotenciarCadencia(3f);
+            arma.FijarTirosPorSegundo(20f);
+            inf.Cerca("cartas en el arma: con caja y furia, el techo de 120", 120, arma.TirosPorSegundo, Tolerancia);
+            inf.Cerca("cartas en el arma: el critico suma el de las cartas", 0.6, arma.ProbabilidadCriticoEnLaPartida, 1e-5);
+        }
+        finally
+        {
+            Object.DestroyImmediate(objeto);
+        }
+
+        // Lo que se guarda: la instantanea vuelve igual de disco, y retomar la devuelve.
+        var foto = PoderDeLaPartida.Instantanea();
+        int poderAntes = PoderDeLaPartida.Poder, danoAntes = PoderDeLaPartida.Veces(PoderDeLaPartida.Dano);
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"mejorOleada\":12,\"oleadaEnCurso\":13}", null);
+        Progreso.GuardarPoderEnCurso(foto);
+        Progreso.Guardar();
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);   // la vuelve a leer de disco
+        var leida = Progreso.PoderEnCurso;
+        PoderDeLaPartida.Empezar(leida);
+        inf.Igual("cartas: retomar devuelve el PODER", poderAntes, PoderDeLaPartida.Poder);
+        inf.Igual("cartas: retomar devuelve las cartas", danoAntes, PoderDeLaPartida.Veces(PoderDeLaPartida.Dano));
+        inf.Igual("cartas: retomar devuelve la semilla", 1234, PoderDeLaPartida.Semilla);
+        Progreso.OlvidarOleadaEnCurso();
+        inf.Igual("cartas: morir o reiniciar olvida las cartas", 0, Progreso.PoderEnCurso.cartas.Count);
+        inf.Igual("cartas: la version del progreso es la 8", 8, Progreso.VersionActual);
+
+        // Un progreso de la 7 se lee sin cartas en curso.
+        EmpezarCaso("{\"version\":7,\"mejorOleada\":12,\"oleadaEnCurso\":13}", null);
+        inf.Verdadero("cartas: un progreso de la 7 arranca sin cartas en curso",
+                      Progreso.PoderEnCurso != null && Progreso.PoderEnCurso.cartas.Count == 0 && Progreso.PoderEnCurso.poder == 0);
+    }
+
     // Lo que se destapa de a poco (Desbloqueo, 10/10, de la revision de Gemini): las misiones al
     // llegar a la oleada 5 y el resto (Discord incluido) en el nivel 5, siempre en ese orden.
     static void ProbarDesbloqueo(Informe inf)
@@ -6509,6 +6722,9 @@ public static class PruebasMejoras
             Debug.LogWarning("PruebasMejoras.MedirPartida: ya hay una medicion en curso");
             return;
         }
+
+        // Mata zombis sin parar: una eleccion de cartas la dejaria congelada (PoderDeLaPartida).
+        PoderDeLaPartida.SinCartasAutomaticas = true;
 
         var m = new Medicion();
         m.informe = informe;

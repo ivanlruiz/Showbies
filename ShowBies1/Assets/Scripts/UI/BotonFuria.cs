@@ -101,7 +101,7 @@ public class BotonFuria : MonoBehaviour
         int cuenta = 0;
         if (activa)
         {
-            cubierto = 1f - furia.RestanteFuria / Mathf.Max(0.01f, furia.Duracion);
+            cubierto = 1f - furia.RestanteFuria / Mathf.Max(0.01f, furia.DuracionEnLaPartida);
             color = colorActivo;
         }
         else if (!lista)

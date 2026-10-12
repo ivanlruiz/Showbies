@@ -53,10 +53,11 @@ public class MenuPausa : MonoBehaviour
     }
 
     // Pausar encima de la oferta de revivir o de la derrota solo puede romper el
-    // timeScale: al reanudar volveria a 1 con el jugador muerto.
+    // timeScale: al reanudar volveria a 1 con el jugador muerto. La eleccion de las cartas
+    // tambien congela (y no se pausa encima: hay que elegir).
     private static bool OtroLoCongela
     {
-        get { return OfertaDeRevivir.Activa || DerrotaEnLaPartida.Activa; }
+        get { return OfertaDeRevivir.Activa || DerrotaEnLaPartida.Activa || EleccionDeCartas.Activa; }
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

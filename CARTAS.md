@@ -115,15 +115,18 @@ arranque la carta sería un castigo. **El hielo frena la persecución, no los pa
 La partida de oleadas se retoma (`Progreso.GuardarOleadaEnCurso`), y MEJORAS de la pausa sale de la partida y vuelve.
 Si las cartas no se guardaran, salir a comprar costaría todas las cartas. Entonces:
 
-- **Con la partida en curso se guardan** las cartas elegidas (ids y veces), el PODER y la experiencia, y se olvidan
-  donde se olvida la partida (morir, REINICIAR). Retomar arranca la oleada de cero, pero con las cartas.
-- **Cada elección guarda en el acto** (con `Guardar`, no en segundo plano: es un punto seguro, como comprar). Si solo se
-  guardara al empezar la oleada, como hoy la partida en curso, la carta elegida a mitad de la oleada se perdería al
-  salir por MEJORAS de la pausa, que es la trampa que esto quiere evitar.
+- **Con la partida en curso se guardan** las cartas elegidas (ids y veces), el PODER, la experiencia, las elecciones
+  pendientes, la semilla y si toca la dorada, y se olvidan donde se olvida la partida (morir, REINICIAR). Retomar
+  arranca la oleada de cero, pero con las cartas.
+- **Se guarda una foto al empezar cada oleada**, con los puntos (`WaveManager`, `Progreso.GuardarPoderEnCurso`), y no en
+  cada elección como decía la primera versión de este documento: retomar arranca la oleada de cero, con todos sus
+  zombis, y si se guardara lo ganado a mitad de oleada, esos zombis darían su experiencia dos veces (salir por MEJORAS
+  y volver sería una forma de sacar cartas gratis). **Lo de mitad de oleada no se pierde**: al jugarla de nuevo se
+  vuelve a ganar, y con la misma semilla y el mismo PODER salen las mismas tres cartas.
 - **Lo de la partida es `static`** (lo leen el arma, el jugador y las balas): va al reset de `SubsystemRegistration`,
   o la segunda partida del editor arrancaría con las cartas de la primera.
 - **Las tres que se ofrecen salen de una semilla de la partida y del PODER**: salir y volver no las cambia.
-- **Una elección pendiente se guarda**: si se cierra la app con las cartas en pantalla, vuelven al retomar.
+- **Una elección pendiente se guarda** si quedó de la oleada anterior: vuelve al retomar.
 - **La versión del JSON pasa a 8**, con su migración (un build viejo lo abre en solo lectura, como siempre).
 - El libre no se retoma: ahí no se guarda nada.
 

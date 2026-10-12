@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f871396c9f9ee114fa45ad36e7d8ca74, type: 3}
+  m_Name: CatalogoCartas
+  m_EditorClassIdentifier: Assembly-CSharp::CatalogoCartas
+  cartas:
+  - {fileID: 11400000, guid: e1cc433e6af750849b83afc81240fd81, type: 2}
+  - {fileID: 11400000, guid: 633eae9a3d6e55a45a66ce038e0b0ff4, type: 2}
+  - {fileID: 11400000, guid: 95fec805e2c3afd449e8d1ebfee253e9, type: 2}
+  - {fileID: 11400000, guid: e4d33f7e0b263fe4abc1dbfabcd34a9b, type: 2}
+  - {fileID: 11400000, guid: 1a13bff0405157c41a8a57ac4fc46019, type: 2}
+  - {fileID: 11400000, guid: 8d7de6cd51d3aaa4b95e46ba486369af, type: 2}
+  - {fileID: 11400000, guid: 56b1166b34bda1e4bad3f6af7f677114, type: 2}
+  - {fileID: 11400000, guid: cc7958d1bd091264b9075244c1c26280, type: 2}
+  - {fileID: 11400000, guid: 289a23f3f14745f44a4aed29b679472b, type: 2}

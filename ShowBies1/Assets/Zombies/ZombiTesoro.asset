@@ -18,3 +18,4 @@ MonoBehaviour:
   puntos: 15
   monedasMin: 14
   monedasMax: 20
+  experiencia: 5

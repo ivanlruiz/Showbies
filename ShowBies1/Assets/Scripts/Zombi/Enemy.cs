@@ -19,4 +19,9 @@ public class Enemy : ScriptableObject
     // Cada una vale el multiplicador que le puso quien lo hizo aparecer.
     public int monedasMin = 1;
     public int monedasMax = 3;
+
+    // La experiencia de la partida que da al morir: la que llena la barra del PODER y saca
+    // las cartas (PoderDeLaPartida, 1.6.0). Aca y no en el codigo, como los puntos: tocar el
+    // balance no recompila. Normal, rapido y veloz 1; tanque 3; tesoro 5; jefe 15.
+    public int experiencia = 1;
 }

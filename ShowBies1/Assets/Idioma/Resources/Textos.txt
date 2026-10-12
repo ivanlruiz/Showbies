@@ -35,6 +35,28 @@ aviso_desbloqueo	NEW IN THE MENU!	¡NUEVO EN EL MENÚ!
 aviso_desbloqueo_detalle	BESTIARY, ACHIEVEMENTS AND WEEKLY CHALLENGE	BESTIARIO, LOGROS Y DESAFÍO SEMANAL
 aviso_misiones	DAILY MISSIONS UNLOCKED!	¡MISIONES DEL DÍA DESBLOQUEADAS!
 aviso_misiones_detalle	Three goals a day, with rewards: find them in the menu	Tres objetivos por día, con premio: están en el menú
+poder_barra	POWER {0}	PODER {0}
+poder_titulo	POWER {0}!	¡PODER {0}!
+poder_elige	CHOOSE A CARD	ELIGE UNA CARTA
+carta_dorada	x2	x2
+carta_dano_nombre	DAMAGE	DAÑO
+carta_dano	+{0}% damage	+{0} % de daño
+carta_cadencia_nombre	FIRE RATE	CADENCIA
+carta_cadencia	+{0}% shots per second	+{0} % de tiros por segundo
+carta_critico_nombre	CRITICAL	CRÍTICO
+carta_critico	+{0}% critical hit chance	+{0} % de probabilidad de crítico
+carta_vida_nombre	HEALTH	VIDA
+carta_vida	+{0}% max health, and full health	+{0} % de vida máxima, y la vida llena
+carta_velocidad_nombre	SPEED	VELOCIDAD
+carta_velocidad	+{0}% move speed	+{0} % de velocidad
+carta_iman_nombre	MAGNET	IMÁN
+carta_iman	Coins come to you from {0} m further	Las monedas vienen desde {0} m más lejos
+carta_granada_rapida_nombre	QUICK GRENADE	GRANADA RÁPIDA
+carta_granada_rapida	The grenade recharges {0}% faster	La granada recarga un {0} % más rápido
+carta_furia_larga_nombre	LONG RAGE	FURIA LARGA
+carta_furia_larga	Rage lasts {0} s longer	La furia dura {0} s más
+carta_curacion_nombre	HEAL	CURACIÓN
+carta_curacion	Full health	Vida llena
 opciones_auto_apuntar	AUTO-AIM	AUTO-APUNTADO
 hud_fps	{0} FPS · WORST {1} MS · {2} STUTTERS	{0} FPS · PEOR {1} MS · {2} TIRONES
 opciones_privacidad	PRIVACY	PRIVACIDAD

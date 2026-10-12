@@ -122,6 +122,9 @@ public static class RespaldoDelBanco
             // 3): huye, no cuenta en la oleada y hacia fallar de vez en cuando lo que mira a todos
             // los zombis. El que lo necesita (PruebaTesoro) lo saca a mano.
             WaveManager.SinTesoroAutomatico = true;
+            // Ni las cartas: un banco mata zombis sin parar, y una eleccion lo dejaria congelado
+            // con tres cartas en pantalla (PoderDeLaPartida). El que las prueba las abre a mano.
+            PoderDeLaPartida.SinCartasAutomaticas = true;
             return true;
         }
         SessionState.SetBool(clave, false);

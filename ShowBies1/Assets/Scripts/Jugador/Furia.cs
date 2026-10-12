@@ -34,7 +34,9 @@ public class Furia : MonoBehaviour
     }
 
     public bool Desbloqueada { get; private set; }
+    // La de la mejora (el asset). La que vale en la partida suma las cartas: DuracionEnLaPartida.
     public float Duracion { get; private set; }
+    public float DuracionEnLaPartida { get { return Duracion + PoderDeLaPartida.SegundosFuriaExtra; } }
 
     // Cuantas veces se activo en la partida. El boton la mira para prender el
     // cartel tambien cuando se activa con la tecla.
@@ -45,7 +47,7 @@ public class Furia : MonoBehaviour
 
     public float RestanteFuria
     {
-        get { return Desbloqueada ? Restante(Time.time, activadaEn, Duracion) : 0f; }
+        get { return Desbloqueada ? Restante(Time.time, activadaEn, DuracionEnLaPartida) : 0f; }
     }
 
     public float RestanteEnfriamiento
@@ -104,7 +106,7 @@ public class Furia : MonoBehaviour
         Activaciones++;
         Progreso.ContarFuria();
         Aplicar(true);
-        Efectos.EmpezarFuria(transform.position, Duracion);
+        Efectos.EmpezarFuria(transform.position, DuracionEnLaPartida);
         return true;
     }
 
