@@ -6027,13 +6027,14 @@ public static class PruebasMejoras
         }
 
         // La curva: 8 la primera, x1,15 cada una.
-        inf.Igual("cartas: la primera carta cuesta 8", 8, PoderDeLaPartida.Costo(0));
-        inf.Igual("cartas: la segunda cuesta 9", 9, PoderDeLaPartida.Costo(1));
-        inf.Igual("cartas: la del PODER 5 cuesta 16", 16, PoderDeLaPartida.Costo(5));
+        inf.Igual("cartas: la primera carta cuesta 12", 12, PoderDeLaPartida.Costo(0));
+        inf.Igual("cartas: la segunda cuesta 14", 14, PoderDeLaPartida.Costo(1));
+        inf.Igual("cartas: la del PODER 5 cuesta 24", 24, PoderDeLaPartida.Costo(5));
 
-        // Con la mezcla de zombis del WaveManager de WaveMode y la experiencia de los assets: entre
-        // 12 y 15 cartas hasta la oleada 10 (lo que pidio Gemini) y unas 22 hasta la 20.
-        int hasta10 = -1, hasta20 = -1;
+        // Con la mezcla de zombis del WaveManager de WaveMode y la experiencia de los assets: una
+        // carta por oleada al principio (Ivan tenia tres a mitad de la oleada 2, con la curva de
+        // antes), entre 12 y 15 hasta la oleada 10 (lo que pidio Gemini) y unas 19 hasta la 20.
+        int hasta10 = -1, hasta20 = -1, hasta1 = -1, hasta2 = -1, hasta3 = -1;
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
             var oleadas = Buscar<WaveManager>(escena);
@@ -6060,12 +6061,17 @@ public static class PruebasMejoras
                 xp += (oleadas.zombisBase + oleadas.zombisPorOleada * n) * (pesos > 0 ? conXp / pesos : 1);
                 if (oleadas.jefeCadaOleadas > 0 && n % oleadas.jefeCadaOleadas == 0) xp += jefe;
                 while (xp >= debe) { xp -= debe; poder++; debe = PoderDeLaPartida.Costo(poder); }
+                if (n == 1) hasta1 = poder;
+                if (n == 2) hasta2 = poder;
+                if (n == 3) hasta3 = poder;
                 if (n == 10) hasta10 = poder;
                 if (n == 20) hasta20 = poder;
             }
         });
         inf.Verdadero("cartas: hasta la oleada 10 salen entre 12 y 15 (" + hasta10 + ")", hasta10 >= 12 && hasta10 <= 15);
-        inf.Verdadero("cartas: hasta la oleada 20 salen unas 22 (" + hasta20 + ")", hasta20 >= 19 && hasta20 <= 25);
+        inf.Verdadero("cartas: hasta la oleada 20 salen unas 19 (" + hasta20 + ")", hasta20 >= 17 && hasta20 <= 22);
+        inf.Verdadero("cartas: al principio, una por oleada (" + hasta1 + ", " + hasta2 + ", " + hasta3 + ")",
+                      hasta1 == 1 && hasta2 == 2 && hasta3 == 3);
 
         // El catalogo: en Resources, sin ids repetidos, con su texto en los dos idiomas.
         var catalogo = CatalogoCartas.Instancia;
@@ -6112,14 +6118,16 @@ public static class PruebasMejoras
 
         // La experiencia y el PODER.
         PoderDeLaPartida.Empezar(new EstadoPoder { semilla = 1234 });
-        PoderDeLaPartida.Sumar(7);
-        inf.Igual("cartas: con 7 de experiencia todavia no hay carta", 0, PoderDeLaPartida.Pendientes);
+        int primera = PoderDeLaPartida.Costo(0);
+        PoderDeLaPartida.Sumar(primera - 1);
+        inf.Igual("cartas: con " + (primera - 1) + " de experiencia todavia no hay carta", 0, PoderDeLaPartida.Pendientes);
         PoderDeLaPartida.Sumar(1);
-        inf.Igual("cartas: con 8 se sube al PODER 1", 1, PoderDeLaPartida.Poder);
+        inf.Igual("cartas: con " + primera + " se sube al PODER 1", 1, PoderDeLaPartida.Poder);
         inf.Igual("cartas: y queda una eleccion pendiente", 1, PoderDeLaPartida.Pendientes);
         inf.Igual("cartas: la experiencia vuelve a cero", 0, PoderDeLaPartida.Experiencia);
-        PoderDeLaPartida.Sumar(9 + 11);
-        inf.Igual("cartas: una granada que da 20 sube dos PODER de golpe", 3, PoderDeLaPartida.Poder);
+        int dosDeGolpe = PoderDeLaPartida.Costo(1) + PoderDeLaPartida.Costo(2);
+        PoderDeLaPartida.Sumar(dosDeGolpe);
+        inf.Igual("cartas: una granada que da " + dosDeGolpe + " sube dos PODER de golpe", 3, PoderDeLaPartida.Poder);
         inf.Igual("cartas: y quedan tres elecciones", 3, PoderDeLaPartida.Pendientes);
 
         // El sorteo: tres distintas, siempre las mismas con la misma semilla y el mismo PODER.

@@ -40,15 +40,19 @@ experiencia. Las seis decisiones las tomó Gemini a pedido de Ivan (10/10): est�
 
 ### La curva
 
-Pasar del PODER L al siguiente cuesta `round(8 × 1,15^L)` de experiencia: la primera carta a los 8 zombis (unos 20 s
-de la primera oleada), y después cada vez más espaciadas. Con la mezcla de zombis de WaveMode:
+Pasar del PODER L al siguiente cuesta `round(12 × 1,15^L)` de experiencia: la primera carta a los 12 zombis (casi al
+final de la primera oleada), y después una por oleada al principio y cada vez más espaciadas. Con la mezcla de zombis de
+WaveMode:
 
 | hasta la oleada | 1 | 2 | 3 | 5 | 10 | 15 | 20 | 30 | 40 | 50 | 60 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| cartas | 1 | 3 | 5 | 8 | 14 | 19 | 22 | 27 | 31 | 34 | 36 |
+| cartas | 1 | 2 | 3 | 6 | 12 | 16 | 19 | 24 | 28 | 31 | 33 |
 
-Gemini pedía 12-15 hasta la 10. Al principio es una carta cada uno o dos minutos; en las oleadas altas, una cada dos o
-tres oleadas. En el libre la experiencia sale igual, de los zombis que se matan.
+Gemini pedía 12-15 hasta la 10. **Hasta el 12/10 arrancaba en 8** (1, 3, 5, 8, 14...): en el teléfono Ivan tenía tres cartas
+a mitad de la oleada 2 ("el poder es muy fácil de conseguir"), y Gemini eligió esta entre cinco curvas simuladas (8, 12 y
+14 de arranque, y 16 y 20 más planas). En las oleadas altas sale una cada dos o tres oleadas. En el libre la experiencia
+sale igual, de los zombis que se matan. **Una partida guardada antes de las cartas** se retoma con PODER 0 en una oleada
+alta, y salen cinco o seis seguidas (en la 25, seis): Gemini lo deja así, como ponerse al día.
 
 ## La elección
 

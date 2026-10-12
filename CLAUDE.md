@@ -546,8 +546,10 @@ las nueve que cambian las reglas** (ver abajo). Faltan el arma que cambia con el
 
 - **La experiencia** sale de `Enemy.experiencia`, en el bloque de la muerte de `DanoZombi` (la regla de siempre), y
   vuela como una chispa celeste del zombi al jugador (`EleccionDeCartas.Chispa`, un pool de 24 sprites). Pasar del
-  PODER L al siguiente cuesta `round(8 × 1,15^L)` (`PoderDeLaPartida.Costo`): 14 cartas hasta la oleada 10, 22 hasta
-  la 20 y 31 hasta la 40, con la mezcla de WaveMode. Una granada puede subir dos de golpe: quedan dos elecciones.
+  PODER L al siguiente cuesta `round(12 × 1,15^L)` (`PoderDeLaPartida.Costo`): una por oleada al principio, 12 cartas
+  hasta la oleada 10, 19 hasta la 20 y 28 hasta la 40, con la mezcla de WaveMode. Arrancaba en 8 hasta el 12/10, y Ivan
+  tenía tres cartas a mitad de la oleada 2; Gemini eligió esta entre cinco curvas (ver `CARTAS.md`). Una granada puede
+  subir dos de golpe: quedan dos elecciones.
 - **`PoderDeLaPartida` es estático y nadie lo "aplica"**: el arma (`TirosPorSegundo`, `DanoPorTiro`,
   `ProbabilidadCriticoEnLaPartida`), el jugador (la velocidad, `RecargaGranada`), `Furia.DuracionEnLaPartida` y el imán
   de `Moneda` leen sus multiplicadores, así retomar no depende del orden en que arranca cada cosa. Solo la vida se

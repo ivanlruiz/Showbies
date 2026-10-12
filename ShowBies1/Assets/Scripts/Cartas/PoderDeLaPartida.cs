@@ -80,9 +80,12 @@ public static class PoderDeLaPartida
     public const float AlcanceDelDron = 12f;
     public const int BajasParaElVampiro = 15;
 
-    // La curva: pasar del PODER L al siguiente cuesta round(8 x 1,15^L). Con la mezcla de zombis
-    // de WaveMode da 14 cartas hasta la oleada 10, 22 hasta la 20 y 31 hasta la 40.
-    public const int PrimerCosto = 8;
+    // La curva: pasar del PODER L al siguiente cuesta round(12 x 1,15^L). Con la mezcla de zombis
+    // de WaveMode da una carta por oleada al principio (la primera en la 1, la segunda en la 2 y la
+    // tercera en la 3), 12 hasta la oleada 10, 19 hasta la 20 y 28 hasta la 40. Hasta el 12/10
+    // arrancaba en 8, y en el teléfono Ivan tenia tres cartas a mitad de la oleada 2: lo eligio
+    // Gemini entre cinco curvas simuladas.
+    public const int PrimerCosto = 12;
     public const double CrecimientoDelCosto = 1.15;
     public const int CartasPorEleccion = 3;
 
