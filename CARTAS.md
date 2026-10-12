@@ -169,7 +169,7 @@ en el teléfono se mide con el contador de FPS (el peor cuadro y los tirones), e
 | etapa | qué | cuánto |
 |---|---|---|
 | 1 | Primero el interruptor de los bancos y el tutorial; después la experiencia (en los assets), el PODER, la barra, la elección y las 8 cartas de números, con el guardado (v8) y las pruebas | 3-4 días |
-| 2 | Las 9 cartas que cambian las reglas, con su banco, y los íconos | 4-5 días |
+| 2 | Las 9 cartas que cambian las reglas, con su banco, y los íconos (**hecha el 12/10**) | 4-5 días |
 | 3 | El arma que cambia con el daño: maquetas, y después el constructor | 1-2 días |
 | 4 | El balance con la simulación, el Redmi, la APK de prueba y el AAB | 1-2 días |
 

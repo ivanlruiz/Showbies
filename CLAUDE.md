@@ -54,7 +54,7 @@ Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros, Desbloqueo
-Assets/Scripts/Cartas/      ← PoderDeLaPartida (el PODER y las cartas de la partida), EleccionDeCartas (la barra, las chispas y la elección), Carta, CatalogoCartas
+Assets/Scripts/Cartas/      ← PoderDeLaPartida (el PODER y las cartas de la partida), EleccionDeCartas (la barra, las chispas y la elección), CartasEnElJugador (el anillo del escudo y los drones), Carta, CatalogoCartas
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
 Assets/Scripts/Actualizacion/ ← ActualizacionDePlay (la actualización flexible de Play, por JNI) y AvisoDeActualizacion (el cartel del menú)
@@ -75,7 +75,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaCartas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaCartas, PruebaCartasDeReglas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -452,8 +452,8 @@ en la partida. `Furia` (`Assets/Scripts/Jugador/`, en la raíz de `Jugador.prefa
 El corazón de la 1.6.0 (de la revisión de Gemini del 10/10; el diseño entero y lo que falta están en `CARTAS.md`):
 **matar zombis da experiencia, al llenar la barra se sube un PODER, el juego se congela y se elige una de tres
 cartas**, que dura toda la partida. La tienda es lo permanente y las cartas son la partida: morir o REINICIAR las
-pierde. Va en los dos modos, no en el tutorial. **Etapa 1 (12/10): las ocho de números y la de reserva**; las que
-cambian las reglas (perforante, rebote, dron...) son la etapa 2.
+pierde. Va en los dos modos, no en el tutorial. **Etapa 1 (12/10): las ocho de números y la de reserva. Etapa 2 (12/10):
+las nueve que cambian las reglas** (ver abajo). Faltan el arma que cambia con el daño y el balance.
 
 - **La experiencia** sale de `Enemy.experiencia`, en el bloque de la muerte de `DanoZombi` (la regla de siempre), y
   vuela como una chispa celeste del zombi al jugador (`EleccionDeCartas.Chispa`, un pool de 24 sprites). Pasar del
@@ -489,7 +489,37 @@ cambian las reglas (perforante, rebote, dron...) son la etapa 2.
 | Imán | +2 m | 2 |
 | Granada rápida | recarga ×0,7 (con la granada comprada) | 2 |
 | Furia larga | +2 s de furia (con la furia comprada) | 2 |
+| Perforante | la bala sigue, con la mitad del daño, un zombi más | 2 |
+| Disparo doble | una bala más, en abanico de 8° | 2 |
+| Hacia atrás | una bala por la espalda | 1 |
+| Explosiva | el 30 % del daño en 1,5 m (2 m con dos) | 2 |
+| Hielo | frena un 40 % 2 s (64 % con dos) | 2 |
+| Quemadura | una de cada cuatro balas quema: 10 % del daño por segundo, 3 s | 2 |
+| Dron | un dron que tira solo una vez por segundo | 2 |
+| Vampiro | cura el 5 % cada 15 muertes | 2 |
+| Escudo | para un golpe cada 15 s | 1 |
 | Curación | vida entera; solo con todo lo demás al tope | — |
+
+- **Las de reglas** (etapa 2, elegidas por Gemini pensando en el Redmi: sin Rebote, y la Eléctrica pasó a ser
+  Quemadura, que no busca a nadie):
+  - **Todo lo de la bala se decide al dispararla**, en un solo lugar (`GunController.SacarBala`, por donde salen las del
+    tiro, las de más y las del dron): cuánto perfora, la explosión, el hielo y la quemadura (sorteada bala por bala).
+    `BulletController` lo vuelve a cero en `Obtener`, como el daño y el crítico.
+  - **La perforante pasa a trigger después del primer zombi** (chocando, la física empujaba a cada zombi mientras la
+    bala lo atravesaba) y cuenta a cada zombi una vez aunque tenga tres colliders (`tocados`). Un cadáver de ese mismo
+    paso gasta la perforación igual. La explosión deduplica como la granada, sin el tocado.
+  - **El disparo doble y hacia atrás salen del mismo tiro**: no gastan cargador ni cuentan en `TirosDisparados`.
+  - **El hielo y la quemadura viven en el zombi** (`EnemyController.Congelar` y `Quemar`, con tiempo escalado, de cero
+    en cada aparición). El hielo frena la persecución y el `Paso` (no los patrones del jefe ni del tesoro, que se mueven
+    solos) y pinta la piel de celeste con un `MaterialPropertyBlock` (sobrevive al destello sin crear materiales). La
+    quemadura pega en ticks contados (seis de 0,5 s) por `DanoZombi` con `colorDeCarta`: el número naranja
+    (`Efectos.GolpeDeCarta`) y sin el destello ni el aplastado.
+  - **El escudo** lo para `PlayerHealth.TakeDamage` antes de todo: no cuenta como golpe (la oleada sigue pudiendo salir
+    perfecta), y al romperse corre medio metro a los zombis pegados (`EnemyController.Empujar`; al jefe no). **El
+    vampiro** cuenta en el bloque de la muerte; la cuenta va con la foto de la oleada (`EstadoPoder.bajasDelVampiro`).
+  - **`CartasEnElJugador`** (lo agrega `EleccionDeCartas` al jugador) dibuja el anillo del escudo mientras está listo y
+    lleva los drones: esferas rosas que orbitan y le tiran al zombi más cercano que se ve, a 12 m, con las balas del arma
+    (y sus cartas). No hace nada con el juego congelado ni el jugador muerto.
 
 - **El sorteo** (`PoderDeLaPartida.Sortear`, estático y puro): tres distintas entre las que no llegaron a su tope y se
   pueden usar, con una semilla de la partida y el PODER que se elige. Salir y volver da las mismas tres.
@@ -519,7 +549,10 @@ cambian las reglas (perforante, rebote, dron...) son la etapa 2.
   dorada del jefe en plena pausa de impacto, dos elecciones seguidas, la pausa y la foto al empezar la oleada siguiente
   (`Builds/prueba_cartas.txt`, con `cartas_barra.png` y `cartas_eleccion.png`). La prueba de lógica mira la curva, el
   sorteo, los topes, la dorada, los multiplicadores y cómo se apilan con la caja y la furia, y el guardado con su
-  migración a v8.
+  migración a v8. **ShowBies > Pruebas > Cartas de reglas (play)** (`PruebaCartasDeReglas`) prueba las nueve con zombis
+  puestos a mano y quietos (el hielo al 100 %): lo que pierde cada uno con la perforante y la explosiva, que juntas no
+  maten dos veces ni sumen puntos dobles, el abanico, el hielo y la quemadura medidos, el vampiro, el escudo y los
+  drones, y que `ZombisVivos` coincida con la lista en cada cuadro (`Builds/prueba_cartas_de_reglas.txt`).
 
 ## Las cajas (power-ups)
 

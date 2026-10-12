@@ -845,7 +845,7 @@ public class EnemyController : MonoBehaviour
         multiplicadorDano = 1f;
         congeladoHasta = 0f;
         lentitudDelHielo = 0f;
-        quemaduraHasta = 0f;
+        ticksDeQuemadura = 0;
         PintarHielo(false);
 
         // Uno que sale del pool puede venir de desplomarse: colliders de vuelta y
@@ -1367,12 +1367,12 @@ public class EnemyController : MonoBehaviour
     private float lentitudDelHielo;
     private bool pintadoDeHielo;
     private MaterialPropertyBlock propiedadesDelHielo;
-    private float quemaduraHasta;
+    private int ticksDeQuemadura;   // los que faltan: la duracion entera, contada en ticks
     private float quemaduraPorTick;
     private float proximoTickDeQuemadura;
 
     public bool Congelado { get { return enUso && Time.time < congeladoHasta; } }
-    public bool Quemandose { get { return enUso && Time.time < quemaduraHasta; } }
+    public bool Quemandose { get { return enUso && ticksDeQuemadura > 0; } }
     public float LentitudActual { get { return Congelado ? lentitudDelHielo : 0f; } }
 
     // "lentitud" es cuanto frena (0,4 es un 40 %); si ya estaba congelado, gana el mas fuerte
@@ -1397,7 +1397,7 @@ public class EnemyController : MonoBehaviour
             proximoTickDeQuemadura = Time.time + CadaTickDeQuemadura;
         }
         else quemaduraPorTick = Mathf.Max(quemaduraPorTick, porTick);
-        quemaduraHasta = Time.time + duracion;
+        ticksDeQuemadura = Mathf.Max(1, Mathf.RoundToInt(duracion / CadaTickDeQuemadura));
     }
 
     private void ActualizarCartas()
@@ -1407,9 +1407,9 @@ public class EnemyController : MonoBehaviour
             PintarHielo(false);
             AjustarPaso();
         }
-        if (quemaduraHasta > 0f && Time.time >= proximoTickDeQuemadura)
+        if (ticksDeQuemadura > 0 && Time.time >= proximoTickDeQuemadura)
         {
-            if (Time.time > quemaduraHasta + 0.01f) { quemaduraHasta = 0f; return; }
+            ticksDeQuemadura--;
             proximoTickDeQuemadura += CadaTickDeQuemadura;
             DanoZombi(quemaduraPorTick, false, Vector3.zero, ColorDeLaQuemadura);
         }
