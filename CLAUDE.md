@@ -73,9 +73,9 @@ Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMej
 Assets/Cartas/              ← las Carta de la partida (.asset) y Resources/CatalogoCartas: los crea ConstructorCartas
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
-Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav)
+Assets/otros/               ← los audios: MainMenu.mp3, shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaCartas, PruebaCartasDeReglas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaCartas, PruebaCartasDeReglas, PruebaArmas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -92,6 +92,7 @@ CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 e
 ARTE.md                     ← la dirección de arte: las revisiones de Gemini, lo hecho y lo que falta (el top 10, el arma que cambia con el daño)
 PLAN.md                     ← el plan a partir de la revisión de Gemini (10/10): de la 1.5.2 a la 1.8.0, con las decisiones de Ivan
 simulaciones/               ← las simulaciones de la economía, con su script y sus tablas (curva_1.5.2: la curva de las oleadas)
+sonidos/                    ← disparos.py: sintetiza el sonido de cada arma de la mano (ver La pistola en la mano)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -335,8 +336,9 @@ tramo es magenta y no rojo, como decía el informe: una bala roja se lee como un
 comprados casi todas salen rojas, y es lo que pasa: el arma critica casi siempre. **Solo crece lo que se ve**: el
 `BoxCollider` se achica en la misma proporción (`Vestir`), así la bala pega igual que antes. **Un material por tramo**,
 armado una vez a partir del de la bala y compartido por todas, para no romper el batching; **`Bullet.mat` no se toca**,
-que también pinta el brillo de la caja de balas. El disparo suena más grave en cada tramo (`GunController.TonoPorTramo`,
-de 1 a 0,8) y las chispas de la boca salen del color de la bala (`Efectos.Disparo(punto, color)`). **ShowBies > Armas >
+que también pinta el brillo de la caja de balas. Cada arma de la mano suena distinto (ver El arma cambia con el daño), y
+el disparo baja de tono con lo que la bala sube por encima de su arma, que es la furia (`GunController.TonoPorTramo`, de 1 a
+0,8, en proporción), y las chispas de la boca salen del color de la bala (`Efectos.Disparo(punto, color)`). **ShowBies > Armas >
 Fotos de las balas** (`FotosDeLasBalas`) saca un chorro de cada tramo y la crítica de noche en los tres capítulos, con la
 cámara y la calidad del teléfono (`Builds/balas/`), y la prueba de lógica mira los tramos, los colores, el collider, los
 materiales compartidos y que `Bullet.mat` no cambie.
@@ -366,8 +368,8 @@ traía **un bate en la mano**, y con las poses de pistola lo levantaba delante d
 volvía a correr hasta soltar: se deslizaba en la pose).
 
 - **`ArmaEnLaMano`** (raíz de `Jugador.prefab`) al arrancar esconde el bate y el cubito, pone la pistola
-  (`Prefabs/Pistola`, que arma **ShowBies > Armas > Armar la pistola**, `ConstructorArmas`, con formas simples: plateada
-  y con la empuñadura marrón, porque oscura no se ve sobre la remera negra) en la mano derecha y le pasa su **boca** al
+  (`Prefabs/Pistola`, que arma **ShowBies > Armas > Armar la pistola**, `ConstructorArmas`, con formas simples, gris
+  oscuro desde el 12/10: con la remera blanca se recorta; era plateada por la remera negra) en la mano derecha y le pasa su **boca** al
   arma (`GunController.boca`): las balas y las chispas salen de ahí, con la dirección de siempre, la de `firePoint`, que
   es hacia donde se apunta (la mano se mueve con la animación y no sirve para apuntar). **En cada tiro la pistola
   patea**: el antebrazo se levanta y el arma va hacia atrás, después del Animator (`retroceso`, `levantada` y
@@ -393,6 +395,34 @@ volvía a correr hasta soltar: se deslizaba en la pose).
   mueve los huesos hasta que algo renderiza: la medición sale en la pose de reposo.
 - **ShowBies > Pruebas > Disparo con el joystick** lo verifica y **Grabar el disparo** (`GrabarDisparo`) lo graba de
   cerca, quieto y corriendo, en `Builds/disparo_video/`.
+
+### El arma cambia con el daño
+
+Etapa 3 de las cartas (1.6.0, `CARTAS.md`, con la revisión de arte de Gemini del 12/10 en `ARTE.md`): el arma de la mano
+sube con el **tramo del daño**, el mismo de la bala (`GunController.TramoDelArma`): **pistola, revólver, escopeta, rifle y
+arma de energía**. Es el daño de la mejora por las cartas, **sin la furia** (`DanoSinFuria`): la furia es un pico de 6 s, y
+cambiaría de arma en cada uso; la bala sí sube un tramo con ella.
+
+- **No son cinco modelos**: a 15 px desde arriba un revólver y una pistola son la misma mancha (Gemini). Es la misma
+  pistola, con el cañón más largo (y más ancho en la escopeta) y una **luz de neón del color del tramo** sobre la corredera
+  (el hijo `LED`, `Unlit/Color`, teñido con un `MaterialPropertyBlock`). La boca va a la punta de cada cañón, así las balas
+  salen de ahí. Lo hace `ArmaEnLaMano.VestirArma`, con las tablas del componente (`LargoDelCanon`, `AnchoDelCanon`).
+- **Lo que de verdad la distingue jugando es el fogonazo y el sonido.** El fogonazo (`PintarFogonazo` y
+  `AcomodarFogonazo`, estáticos): un disco la pistola (del color del fuego) y el revólver (más grande), una estrella de
+  siete puntas la escopeta (dura 0,1 s), una cruz larga y fina el rifle, y la de energía, sin fuego, **un anillo que crece**
+  (`_Anillo` y `_RadioAnillo` en `ShowBies/Fogonazo`). El sonido (`GunController.SonidoDelArma`): la pistola con
+  `shot.mp3` y las otras con el suyo, de `otros/Resources/Disparos` (un BAM grave, un BOOM con perdigones, un chasquido
+  corto que la cadencia vuelve ráfaga y un zap), que sintetiza `sonidos/disparos.py` con la energía de `shot.mp3`; las de
+  cola larga dejan más aire entre sonido y sonido (`IntervaloDeSonidoPorArma`), que a 20 tiros por segundo se apilaban.
+- **Al subir de arma en la partida**, `Efectos.ArmaNueva`: chispas de su color en la boca, el jingle del cartel más agudo,
+  un temblor chico y su nombre arriba del jugador ("¡ESCOPETA!"). Al empezar o al retomar, nada; bajar (una partida
+  nueva) tampoco.
+- **ShowBies > Armas > Fotos de las armas** (`FotosDeLasArmas`) saca las cinco de cerca y con el héroe de noche en cada
+  capítulo, con la cámara y la calidad del teléfono (`Builds/armas/`, y al doble para ver los píxeles). **ShowBies >
+  Pruebas > Armas por tramo (play)** (`PruebaArmas`): retomada con cartas de daño, que el arma arranque en su tramo sin
+  festejo, que bajar no festeje y subir sí, una vez por escalón, con la boca en la punta, que la furia no la cambie y que
+  cada una dispare con su fogonazo desde su boca (`Builds/prueba_armas.txt`, con la foto del cartel). La prueba de lógica
+  mira las tablas, el prefab y el tramo sin la furia.
 
 ## Granada
 
