@@ -201,7 +201,7 @@ public class EleccionDeCartas : MonoBehaviour
     public const float AltoDeLaBarra = 10f;
     public const float LadoDelIconoDelHud = 30f;
     private const float PasoDelIconoDelHud = 34f;
-    private const float DondeEmpiezanLosIconos = 190f;
+    private const float DondeEmpiezanLosIconos = 150f;
 
     private RectTransform seguro;
 

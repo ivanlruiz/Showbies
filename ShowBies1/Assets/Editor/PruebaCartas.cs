@@ -149,6 +149,8 @@ public static class PruebaCartas
 
             case 1:
             {
+                // La foto sale al final del cuadro: se espera a que se tome antes de abrir nada.
+                if (t < 0.5f) return;
                 // Un zombi muerto por el camino de las balas: su experiencia y su chispa.
                 var tipo = oleadas.tipos != null && oleadas.tipos.Length > 0 ? oleadas.tipos[0].prefab : null;
                 if (tipo == null) { Terminar("el WaveManager no tiene tipos"); return; }
@@ -346,7 +348,7 @@ public static class PruebaCartas
         Anotar(guardado.poder == 2 && MismasElegidas(guardado), "al empezar la oleada retomada se guardo lo mismo");
 
         var barra = GameObject.Find("BarraDePoder");
-        var bloque = barra != null ? (RectTransform)barra.transform.Find("Bloque") : null;
+        var bloque = barra != null ? (RectTransform)barra.transform.Find("AreaSegura/Bloque") : null;
         var texto = bloque != null ? bloque.Find("Poder") : null;
         var poder = texto != null ? texto.GetComponent<TMP_Text>() : null;
         Anotar(poder != null && poder.text == Textos.Formato("poder_barra", 2), "la barra dice \"" + (poder != null ? poder.text : "") + "\"");
@@ -500,7 +502,7 @@ public static class PruebaCartas
     static int IconosDeLaBarra()
     {
         var barra = GameObject.Find("BarraDePoder");
-        var fila = barra != null ? barra.transform.Find("Bloque/Cartas") : null;
+        var fila = barra != null ? barra.transform.Find("AreaSegura/Bloque/Cartas") : null;
         if (fila == null) return -1;
         // Los destruidos en este cuadro siguen contando hasta el final: se cuentan los que quedan.
         int n = 0;
