@@ -25,18 +25,20 @@ public static class ConstructorCartas
         }
     }
 
-    // Etapa 1: las de numeros. El simbolo queda de respaldo: lo que se ve es el icono.
+    // Etapa 1: las de numeros. El simbolo queda de respaldo: lo que se ve es el icono. Los colores
+    // los eligio Gemini (12/10), por familia: las estadisticas en naranja, amarillo y rojo, la
+    // supervivencia en verdes, la tactica en naranja y rojo oscuros, la curacion blanca.
     private static readonly Molde[] Moldes =
     {
-        new Molde(PoderDeLaPartida.Dano, 4, 1.25f, Carta.Requisito.Ninguno, new Color(1f, 0.42f, 0.25f), "+"),
-        new Molde(PoderDeLaPartida.Cadencia, 4, 1.2f, Carta.Requisito.Ninguno, new Color(0.3f, 0.75f, 1f), ">>"),
-        new Molde(PoderDeLaPartida.Critico, 3, 0.1f, Carta.Requisito.Ninguno, new Color(1f, 0.23f, 0.36f), "!"),
-        new Molde(PoderDeLaPartida.Vida, 3, 1.2f, Carta.Requisito.Ninguno, new Color(0.22f, 1f, 0.53f), "V"),
-        new Molde(PoderDeLaPartida.Velocidad, 2, 0.1f, Carta.Requisito.Ninguno, new Color(0.75f, 1f, 0.3f), ">"),
-        new Molde(PoderDeLaPartida.Iman, 2, 2f, Carta.Requisito.Ninguno, new Color(1f, 0.88f, 0.3f), "U"),
-        new Molde(PoderDeLaPartida.GranadaRapida, 2, 0.7f, Carta.Requisito.Granada, new Color(1f, 0.62f, 0.11f), "G"),
-        new Molde(PoderDeLaPartida.FuriaLarga, 2, 2f, Carta.Requisito.Furia, new Color(1f, 0.17f, 0.84f), "F"),
-        new Molde(PoderDeLaPartida.Curacion, 0, 1f, Carta.Requisito.Ninguno, new Color(0.22f, 1f, 0.53f), "+"),
+        new Molde(PoderDeLaPartida.Dano, 4, 1.25f, Carta.Requisito.Ninguno, new Color(1f, 0.55f, 0.15f), "+"),
+        new Molde(PoderDeLaPartida.Cadencia, 4, 1.2f, Carta.Requisito.Ninguno, new Color(1f, 0.86f, 0.2f), ">>"),
+        new Molde(PoderDeLaPartida.Critico, 3, 0.1f, Carta.Requisito.Ninguno, new Color(1f, 0.27f, 0.33f), "!"),
+        new Molde(PoderDeLaPartida.Vida, 3, 1.2f, Carta.Requisito.Ninguno, new Color(0.62f, 1f, 0.2f), "V"),
+        new Molde(PoderDeLaPartida.Velocidad, 2, 0.1f, Carta.Requisito.Ninguno, new Color(0.45f, 1f, 0.62f), ">"),
+        new Molde(PoderDeLaPartida.Iman, 2, 2f, Carta.Requisito.Ninguno, new Color(0.32f, 0.58f, 1f), "U"),
+        new Molde(PoderDeLaPartida.GranadaRapida, 2, 0.7f, Carta.Requisito.Granada, new Color(0.95f, 0.42f, 0.08f), "G"),
+        new Molde(PoderDeLaPartida.FuriaLarga, 2, 2f, Carta.Requisito.Furia, new Color(0.82f, 0.13f, 0.2f), "F"),
+        new Molde(PoderDeLaPartida.Curacion, 0, 1f, Carta.Requisito.Ninguno, new Color(0.95f, 0.96f, 1f), "+"),
     };
 
     [MenuItem("ShowBies/Cartas/Armar las cartas")]
@@ -71,13 +73,18 @@ public static class ConstructorCartas
                 AssetDatabase.CreateAsset(carta, ruta);
                 creadas++;
             }
-            // El icono no es balance: se pone siempre, desde su PNG.
+            // El icono y el color no son balance: se ponen siempre.
             var icono = Icono(m.id);
             if (icono != null && carta.icono != icono)
             {
                 carta.icono = icono;
                 EditorUtility.SetDirty(carta);
                 conIcono++;
+            }
+            if (carta.color != m.color)
+            {
+                carta.color = m.color;
+                EditorUtility.SetDirty(carta);
             }
             catalogo.cartas.Add(carta);
         }

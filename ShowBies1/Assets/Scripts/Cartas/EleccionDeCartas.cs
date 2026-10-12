@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Las cartas en la partida (1.6.0, ver CARTAS.md): la barra del PODER encima de la vida, la fila
+// Las cartas en la partida (1.6.0, ver CARTAS.md): la barra del PODER pegada abajo, la fila
 // de las cartas que se tienen, la chispa que vuela de cada zombi muerto al jugador, y la eleccion
 // de una entre tres al subir de PODER.
 //
@@ -86,6 +86,10 @@ public class EleccionDeCartas : MonoBehaviour
     private Sprite pildora;
     private Sprite circulo;
     private Texture2D texturaCirculo;
+    // El brillo de los iconos y del interior de las tarjetas, y los anillos que los rodean: el de la
+    // tarjeta fino (unos 2 px a 170) y el del HUD mas grueso, que a 30 px el fino no se veria.
+    private Sprite resplandor, anilloFino, anilloHud;
+    private Texture2D texturaResplandor, texturaAnilloFino, texturaAnilloHud;
 
     private RectTransform lienzoBarra;
     private RectTransform bloqueBarra;
@@ -141,6 +145,12 @@ public class EleccionDeCartas : MonoBehaviour
         }
         texturaCirculo = TexturasUI.Circulo(128);
         circulo = Sprite.Create(texturaCirculo, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        texturaResplandor = TexturasUI.Resplandor(128);
+        resplandor = Sprite.Create(texturaResplandor, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+        texturaAnilloFino = TexturasUI.Anillo(256, 0.03f);
+        anilloFino = Sprite.Create(texturaAnilloFino, new Rect(0, 0, 256, 256), new Vector2(0.5f, 0.5f));
+        texturaAnilloHud = TexturasUI.Anillo(128, 0.12f);
+        anilloHud = Sprite.Create(texturaAnilloHud, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
 
         // Una partida retomada con cartas de vida arranca con el maximo de las cartas.
         if (PoderDeLaPartida.MultiplicadorVida > 1f && PlayerHealth.instance != null)
@@ -163,6 +173,8 @@ public class EleccionDeCartas : MonoBehaviour
         foreach (var c in chispas) if (c.sprite != null) Destroy(c.sprite.gameObject);
         if (circulo != null) Destroy(circulo);
         if (texturaCirculo != null) Destroy(texturaCirculo);
+        foreach (var sp in new[] { resplandor, anilloFino, anilloHud }) if (sp != null) Destroy(sp);
+        foreach (var tx in new[] { texturaResplandor, texturaAnilloFino, texturaAnilloHud }) if (tx != null) Destroy(tx);
     }
 
     // --- La barra ---------------------------------------------------------------------------
@@ -182,21 +194,50 @@ public class EleccionDeCartas : MonoBehaviour
         return (RectTransform)go.transform;
     }
 
+    // La barra va fina, a todo el ancho, pegada al borde de abajo (12/10, de Gemini: arriba esta
+    // lleno y el centro es de la accion; abajo es informacion pasiva). Encima, a la izquierda,
+    // "PODER N" chico y las cartas que se tienen: los joysticks y la granada empiezan a unos 108
+    // del borde y el numero de la vida esta al centro, asi que esa franja esta libre.
+    public const float AltoDeLaBarra = 10f;
+    public const float LadoDelIconoDelHud = 30f;
+    private const float PasoDelIconoDelHud = 34f;
+    private const float DondeEmpiezanLosIconos = 190f;
+
+    private RectTransform seguro;
+
     private void ArmarBarra()
     {
         lienzoBarra = NuevoLienzo(gameObject.scene, "BarraDePoder", OrdenBarra, false);
-        bloqueBarra = ConstructorUI.Rect(lienzoBarra, "Bloque", Vector2.zero, new Vector2(620f, 90f));
-        bloqueBarra.anchorMin = bloqueBarra.anchorMax = new Vector2(0.5f, 0f);
+        seguro = ConstructorUI.Estirar(lienzoBarra, "AreaSegura");
+        bloqueBarra = ConstructorUI.Rect(seguro, "Bloque", Vector2.zero, new Vector2(0f, 56f));
+        bloqueBarra.anchorMin = new Vector2(0f, 0f);
+        bloqueBarra.anchorMax = new Vector2(1f, 0f);
         bloqueBarra.pivot = new Vector2(0.5f, 0f);
-        bloqueBarra.anchoredPosition = new Vector2(0f, 150f);
+        bloqueBarra.anchoredPosition = Vector2.zero;
 
-        textoPoder = ConstructorUI.Texto(bloqueBarra, "Poder", "", 34f, ConstructorUI.Celeste,
-                                         new Vector2(-230f, 12f), new Vector2(160f, 44f), fuente);
+        rellenoBarra = ConstructorUI.Barra(bloqueBarra, "Barra", Vector2.zero, new Vector2(100f, AltoDeLaBarra), pildora,
+                                           new Color(0f, 0f, 0f, 0.6f), ConstructorUI.Celeste);
+        var barra = (RectTransform)rellenoBarra.parent;
+        barra.anchorMin = new Vector2(0f, 0f);
+        barra.anchorMax = new Vector2(1f, 0f);
+        barra.pivot = new Vector2(0.5f, 0f);
+        barra.sizeDelta = new Vector2(0f, AltoDeLaBarra);
+        barra.anchoredPosition = Vector2.zero;
+
+        textoPoder = ConstructorUI.Texto(bloqueBarra, "Poder", "", 30f, ConstructorUI.Celeste,
+                                         Vector2.zero, new Vector2(160f, 38f), fuente);
         if (materialContorno != null) textoPoder.fontSharedMaterial = materialContorno;
-        textoPoder.alignment = TextAlignmentOptions.Right;
-        rellenoBarra = ConstructorUI.Barra(bloqueBarra, "Barra", new Vector2(80f, 12f), new Vector2(420f, 18f), pildora,
-                                           new Color(0f, 0f, 0f, 0.55f), ConstructorUI.Celeste);
-        filaIconos = ConstructorUI.Rect(bloqueBarra, "Cartas", new Vector2(80f, 54f), new Vector2(420f, 40f));
+        textoPoder.alignment = TextAlignmentOptions.Left;
+        var rt = textoPoder.rectTransform;
+        rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+        rt.pivot = new Vector2(0f, 0f);
+        rt.anchoredPosition = new Vector2(24f, AltoDeLaBarra + 4f);
+
+        filaIconos = ConstructorUI.Rect(bloqueBarra, "Cartas", Vector2.zero, new Vector2(600f, LadoDelIconoDelHud));
+        filaIconos.anchorMin = filaIconos.anchorMax = new Vector2(0f, 0f);
+        filaIconos.pivot = new Vector2(0f, 0f);
+        filaIconos.anchoredPosition = new Vector2(DondeEmpiezanLosIconos, AltoDeLaBarra + 8f);
+        Acomodar();
         Refrescar();
     }
 
@@ -222,7 +263,8 @@ public class EleccionDeCartas : MonoBehaviour
         }
     }
 
-    // Una fila de circulitos con las cartas que se tienen, del color de cada una, con las veces.
+    // Una fila de circulitos chicos con las cartas que se tienen (una por carta, con las veces),
+    // del color de cada una. Son a lo sumo las 17 que hay: entran antes del numero de la vida.
     private void ArmarIconos()
     {
         if (filaIconos == null) return;
@@ -234,50 +276,56 @@ public class EleccionDeCartas : MonoBehaviour
         {
             var carta = catalogo.Buscar(par.Key);
             if (carta == null) continue;
-            var icono = ConstructorUI.Imagen(filaIconos, carta.id, new Vector2(-190f + 44f * n, 0f), new Vector2(38f, 38f), circulo, carta.color);
-            PonerDibujo((RectTransform)icono.transform, carta, 38f);
+            float x = LadoDelIconoDelHud * 0.5f + PasoDelIconoDelHud * n;
+            var rt = ConstructorUI.Rect(filaIconos, carta.id, new Vector2(x, LadoDelIconoDelHud * 0.5f),
+                                        new Vector2(LadoDelIconoDelHud, LadoDelIconoDelHud));
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+            PonerDibujo(rt, carta, LadoDelIconoDelHud, true);
             if (par.Value > 1)
-                ConstructorUI.Texto((RectTransform)icono.transform, "Veces", par.Value.ToString(), 18f, Color.white,
-                                    new Vector2(16f, -14f), new Vector2(24f, 22f), fuente);
+            {
+                var veces = ConstructorUI.Texto(rt, "Veces", par.Value.ToString(), 17f, Color.white,
+                                                new Vector2(13f, -11f), new Vector2(22f, 20f), fuente);
+                if (materialContorno != null) veces.fontSharedMaterial = materialContorno;
+            }
             n++;
-            if (n >= 10) break;
         }
     }
 
-    // El dibujo de la carta dentro de su circulo de color, oscuro: el icono (de Gemini, ver
-    // ConstructorCartas) o, si no tiene, su simbolo escrito.
-    private static readonly Color ColorDelDibujo = new Color(0.04f, 0.04f, 0.07f);
+    // El dibujo de la carta, de neon (de la revision de arte de Gemini, 12/10: en un circulo
+    // relleno parecian senales de transito): el icono del color de la carta, con su brillo, dentro
+    // de un anillo fino del mismo color. En el HUD lleva ademas un disco oscuro debajo, que ahi el
+    // fondo es el piso de la partida. Sin icono, el simbolo escrito.
+    public const float AlfaDelInterior = 0.14f;
+    private const float AlfaDelBrillo = 0.3f;
+    public static readonly Color ColorDeLaDescripcion = new Color(0.667f, 0.667f, 0.667f);
 
-    private void PonerDibujo(RectTransform circulo, Carta carta, float lado)
+    private void PonerDibujo(RectTransform marco, Carta carta, float lado, bool enElHud)
     {
+        Color color = carta != null ? carta.color : ConstructorUI.Verde;
+        if (enElHud)
+            ConstructorUI.Imagen(marco, "Fondo", Vector2.zero, new Vector2(lado, lado), circulo, new Color(0f, 0f, 0f, 0.6f));
+        else
+            ConstructorUI.Imagen(marco, "Brillo", Vector2.zero, new Vector2(lado * 1.35f, lado * 1.35f), resplandor,
+                                 new Color(color.r, color.g, color.b, AlfaDelBrillo));
+        ConstructorUI.Imagen(marco, "Anillo", Vector2.zero, new Vector2(lado, lado), enElHud ? anilloHud : anilloFino, color);
         if (carta != null && carta.icono != null)
         {
-            float dibujo = lado * 0.64f;
-            ConstructorUI.Imagen(circulo, "Dibujo", Vector2.zero, new Vector2(dibujo, dibujo), carta.icono, ColorDelDibujo);
+            float dibujo = lado * (enElHud ? 0.6f : 0.56f);
+            ConstructorUI.Imagen(marco, "Dibujo", Vector2.zero, new Vector2(dibujo, dibujo), carta.icono, color);
             return;
         }
-        ConstructorUI.Texto(circulo, "Simbolo", carta != null ? carta.simbolo : "+", lado * 0.5f, ColorDelDibujo,
+        ConstructorUI.Texto(marco, "Simbolo", carta != null ? carta.simbolo : "+", lado * 0.45f, color,
                             new Vector2(0f, -lado * 0.025f), new Vector2(lado, lado), fuente);
     }
 
-    // La barra va justo encima del numero de la vida, donde esta abajo al centro en las dos
-    // plataformas; se mide cada medio segundo porque el HUD escala con la pantalla.
+    // Adentro del area segura (la camara frontal en un costado, la barra de gestos abajo); se
+    // mira cada medio segundo, porque el telefono puede girar.
     private void Acomodar()
     {
-        if (bloqueBarra == null || PlayerHealth.instance == null || PlayerHealth.instance.healthTMP == null) return;
-        var vida = PlayerHealth.instance.healthTMP.rectTransform;
-        var esquinas = new Vector3[4];
-        vida.GetWorldCorners(esquinas);
-        // Lo que ocupan las letras, no la caja: la caja del numero es mucho mas alta.
-        float arriba = esquinas[1].y;
-        var bounds = PlayerHealth.instance.healthTMP.textBounds;
-        if (bounds.size.y > 0f) arriba = vida.TransformPoint(new Vector3(0f, bounds.max.y, 0f)).y;
-        Vector2 local;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(lienzoBarra, new Vector2(Screen.width * 0.5f, arriba), null, out local))
-        {
-            float desdeAbajo = local.y + lienzoBarra.rect.height * 0.5f;
-            bloqueBarra.anchoredPosition = new Vector2(0f, desdeAbajo + 8f);
-        }
+        if (seguro == null || Screen.width <= 0 || Screen.height <= 0) return;
+        var area = Screen.safeArea;
+        seguro.anchorMin = new Vector2(area.xMin / Screen.width, area.yMin / Screen.height);
+        seguro.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
     }
 
     // --- Las chispas ------------------------------------------------------------------------
@@ -361,12 +409,13 @@ public class EleccionDeCartas : MonoBehaviour
         }
         MoverChispas();
 
-        if (golpeBarra >= 0f && bloqueBarra != null)
+        // Salta el "PODER N", no la barra: a todo el ancho, escalarla la sacaria de la pantalla.
+        if (golpeBarra >= 0f && textoPoder != null)
         {
             golpeBarra += Mathf.Min(Time.unscaledDeltaTime, 0.1f);
-            float salto = 0.12f * CurvasUI.Campana(Mathf.Clamp01(golpeBarra / 0.3f));
-            bloqueBarra.localScale = Vector3.one * (1f + salto);
-            if (golpeBarra >= 0.3f) { golpeBarra = -1f; bloqueBarra.localScale = Vector3.one; }
+            float salto = 0.25f * CurvasUI.Campana(Mathf.Clamp01(golpeBarra / 0.3f));
+            textoPoder.rectTransform.localScale = Vector3.one * (1f + salto);
+            if (golpeBarra >= 0.3f) { golpeBarra = -1f; textoPoder.rectTransform.localScale = Vector3.one; }
         }
 
         if (!Activa)
@@ -393,8 +442,10 @@ public class EleccionDeCartas : MonoBehaviour
             t.aparece = EntradaPorCarta * i;
             tarjetas.Add(t);
         }
+        // Con la dorada, el titulo dice por que salio (de Gemini, 12/10), en el amarillo de la dorada.
         int eligiendo = PoderDeLaPartida.Poder - PoderDeLaPartida.Pendientes + 1;
-        titulo.text = Textos.Formato("poder_titulo", eligiendo);
+        titulo.text = dorada >= 0 ? Textos.De("carta_bono_jefe") : Textos.Formato("poder_titulo", eligiendo);
+        titulo.color = dorada >= 0 ? ConstructorUI.Amarillo : ConstructorUI.TituloNeon;
 
         lienzoEleccion.SetActive(true);
         Activa = true;
@@ -456,13 +507,22 @@ public class EleccionDeCartas : MonoBehaviour
         var tarjeta = t;
         t.boton.onClick.AddListener(() => Elegir(tarjeta));
 
-        var circ = ConstructorUI.Imagen(t.raiz, "Icono", new Vector2(0f, 130f), new Vector2(170f, 170f), circulo, color);
-        PonerDibujo((RectTransform)circ.transform, carta, 170f);
+        // Un brillo del color de la carta adentro (de la revision de arte de Gemini, 12/10: vacias
+        // por dentro no parecian objetos de luz). Primero, asi queda debajo del borde y del resto.
+        var interior = ConstructorUI.Imagen(t.raiz, "Interior", Vector2.zero, TamCarta * 1.1f, resplandor,
+                                            new Color(color.r, color.g, color.b, AlfaDelInterior));
+        interior.preserveAspect = false;
+        interior.transform.SetSiblingIndex(0);
 
-        var nombre = ConstructorUI.Texto(t.raiz, "Nombre", Textos.De("carta_" + id + "_nombre"), 48f, Color.white,
+        var marco = ConstructorUI.Rect(t.raiz, "Icono", new Vector2(0f, 130f), new Vector2(170f, 170f));
+        PonerDibujo(marco, carta, 170f, false);
+
+        const float TamanioDelNombre = 48f;
+        var nombre = ConstructorUI.Texto(t.raiz, "Nombre", Textos.De("carta_" + id + "_nombre"), TamanioDelNombre, Color.white,
                                          new Vector2(0f, -8f), new Vector2(TamCarta.x - 40f, 60f), fuente);
         if (materialContorno != null) nombre.fontSharedMaterial = materialContorno;
-        var desc = ConstructorUI.Texto(t.raiz, "Que", Descripcion(id), 31f, new Color(0.78f, 0.84f, 0.95f),
+        // La descripcion en gris y un 20 % mas chica que el titulo: el ojo va al nombre y al icono.
+        var desc = ConstructorUI.Texto(t.raiz, "Que", Descripcion(id), TamanioDelNombre * 0.8f, ColorDeLaDescripcion,
                                        new Vector2(0f, -100f), new Vector2(TamCarta.x - 50f, 120f), fuente);
         desc.textWrappingMode = TextWrappingModes.Normal;
 

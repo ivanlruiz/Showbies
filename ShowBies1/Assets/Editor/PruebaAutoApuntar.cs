@@ -42,6 +42,8 @@ public static class PruebaAutoApuntar
     static bool joystickSinBlanco = true, joystickHaciaElOeste, joystickDispara;
     static bool alSoltarLoApunta;
     static bool apagadoSinDisparar = true, apagadoSinBlanco = true;
+    // El automatico tira a la mitad y el joystick se ve apagado; a mano, entero (12/10, de Gemini).
+    static bool mitadAlVerlo, joystickApagadoAlVerlo, enteraAMano, joystickPrendidoAMano;
 
     static PruebaAutoApuntar()
     {
@@ -83,6 +85,7 @@ public static class PruebaAutoApuntar
             joystickHaciaElOeste = joystickDispara = false;
             alSoltarLoApunta = false;
             apagadoSinDisparar = apagadoSinBlanco = true;
+            mitadAlVerlo = joystickApagadoAlVerlo = enteraAMano = joystickPrendidoAMano = false;
             fase = Fase.Preparar;
             desde = Time.time;
             inicio = EditorApplication.timeSinceStartup;
@@ -157,6 +160,8 @@ public static class PruebaAutoApuntar
             case Fase.AlaVista:
                 if (joysticks.Blanco == zombi) loApunto = true;
                 if (loApunto && disparando) disparoAlVerlo = true;
+                if (loApunto && disparando && joysticks.thegun.MultiplicadorAutomatico == GunController.CadenciaDelAutomatico) mitadAlVerlo = true;
+                if (loApunto && Mathf.Abs(joysticks.AlfaDelJoystickDeDisparo - PlayerJS.AlfaDelJoystickEnAutomatico) < 0.02f) joystickApagadoAlVerlo = true;
                 if (!EnemyController.SigueVivo(zombi, numeroDelZombi)) loMato = true;
                 if (!loMato && t < 6f) return;
                 EnemyController.DespejarAlrededor(Vector3.zero, 500f);
@@ -181,6 +186,8 @@ public static class PruebaAutoApuntar
                 if (joysticks.Blanco != null) joystickSinBlanco = false;
                 if (control.transform.forward.x < -0.9f) joystickHaciaElOeste = true;
                 if (disparando) joystickDispara = true;
+                if (t > 0.5f && disparando && joysticks.thegun.MultiplicadorAutomatico == 1f) enteraAMano = true;
+                if (t > 0.5f && joysticks.AlfaDelJoystickDeDisparo > 0.98f) joystickPrendidoAMano = true;
                 if (t < 1f) return;
                 PruebaDisparo.Soltar(joysticks.lookJoystick);
                 Pasar(Fase.Soltar);
@@ -221,11 +228,15 @@ public static class PruebaAutoApuntar
         oks.Add(new KeyValuePair<string, bool>("a la vista: lo apunta solo", loApunto));
         oks.Add(new KeyValuePair<string, bool>("a la vista: dispara", disparoAlVerlo));
         oks.Add(new KeyValuePair<string, bool>("a la vista: lo mata", loMato));
+        oks.Add(new KeyValuePair<string, bool>("el automatico tira a la mitad de la cadencia", mitadAlVerlo));
+        oks.Add(new KeyValuePair<string, bool>("con el automatico el joystick de disparo se ve apagado", joystickApagadoAlVerlo));
         oks.Add(new KeyValuePair<string, bool>("lejos y fuera de la pantalla: no lo apunta", lejosSinBlanco));
         oks.Add(new KeyValuePair<string, bool>("lejos y fuera de la pantalla: no dispara", lejosSinDisparar));
         oks.Add(new KeyValuePair<string, bool>("el joystick manda: sin blanco mientras se apunta", joystickSinBlanco));
         oks.Add(new KeyValuePair<string, bool>("el joystick manda: gira hacia donde se apunta (el oeste)", joystickHaciaElOeste));
         oks.Add(new KeyValuePair<string, bool>("el joystick manda: dispara", joystickDispara));
+        oks.Add(new KeyValuePair<string, bool>("el joystick manda: con la cadencia entera", enteraAMano));
+        oks.Add(new KeyValuePair<string, bool>("el joystick manda: se ve prendido", joystickPrendidoAMano));
         oks.Add(new KeyValuePair<string, bool>("al soltar el joystick vuelve a apuntarle solo", alSoltarLoApunta));
         oks.Add(new KeyValuePair<string, bool>("apagado: no lo apunta", apagadoSinBlanco));
         oks.Add(new KeyValuePair<string, bool>("apagado: no dispara solo", apagadoSinDisparar));

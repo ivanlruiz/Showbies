@@ -115,21 +115,52 @@ public class PlayerJS : MonoBehaviour
         float hoz = lookJoystick.Horizontal;
         float ver = lookJoystick.Vertical;
 
-        if (hoz == 0 && ver == 0)
+        bool aMano = hoz != 0 || ver != 0;
+        MostrarJoystickDeDisparo(aMano);
+        if (!aMano)
         {
             Vector3 haciaElBlanco;
             if (AutoApuntar && !enTutorial && BuscarBlanco(out haciaElBlanco))
             {
+                thegun.FijarAutomatico(true);
                 Apuntar(haciaElBlanco);
                 return;
             }
             blanco = null;
+            thegun.FijarAutomatico(false);
             player.FijarDisparo(false);
             return;
         }
 
         blanco = null;
+        thegun.FijarAutomatico(false);
         Apuntar(new Vector3(hoz, 0f, ver));
+    }
+
+    // Con el auto-apuntado el joystick de disparo se queda (es el "boton de daño maximo": a mano
+    // la cadencia es entera), pero mientras tira el automatico se ve apagado, y al tocarlo se
+    // prende y salta un poco (12/10, de Gemini). Sin auto-apuntado, o en el tutorial, siempre entero.
+    public const float AlfaDelJoystickEnAutomatico = 0.4f;
+    private const float EscalaDelJoystickTocado = 1.08f;
+    private CanvasGroup grupoDelJoystick;
+    private Vector3 escalaDelJoystick = Vector3.one;
+    private float tocado;   // 0 suelto, 1 con el pulgar: se acerca de a poco
+
+    public float AlfaDelJoystickDeDisparo { get { return grupoDelJoystick != null ? grupoDelJoystick.alpha : 1f; } }
+
+    void MostrarJoystickDeDisparo(bool aMano)
+    {
+        if (grupoDelJoystick == null)
+        {
+            grupoDelJoystick = lookJoystick.GetComponent<CanvasGroup>();
+            if (grupoDelJoystick == null) grupoDelJoystick = lookJoystick.gameObject.AddComponent<CanvasGroup>();
+            escalaDelJoystick = lookJoystick.transform.localScale;
+        }
+        float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+        tocado = Mathf.MoveTowards(tocado, aMano ? 1f : 0f, dt / 0.12f);
+        bool apagable = AutoApuntar && !enTutorial;
+        grupoDelJoystick.alpha = apagable ? Mathf.Lerp(AlfaDelJoystickEnAutomatico, 1f, tocado) : 1f;
+        lookJoystick.transform.localScale = escalaDelJoystick * Mathf.Lerp(1f, EscalaDelJoystickTocado, CurvasUI.Campana(tocado) * 0.5f + tocado * 0.5f);
     }
 
     void Apuntar(Vector3 hacia)

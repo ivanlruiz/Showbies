@@ -831,6 +831,16 @@ public static class PruebasMejoras
             arma.FijarFuria(1f, 1f);
             inf.Cerca("furia apagada: vuelve la caja sola", 60, arma.TirosPorSegundo, Tolerancia);
             inf.Cerca("furia apagada: daño por tiro vuelve a la mejora", 3, arma.DanoPorTiro, Tolerancia);
+
+            // El auto-apuntado del telefono tira a la mitad, tambien con el techo, y no toca el daño.
+            arma.FijarAutomatico(true);
+            inf.Cerca("auto-apuntado: la mitad de la cadencia", 30, arma.TirosPorSegundo, Tolerancia);
+            inf.Cerca("auto-apuntado: el daño por tiro no cambia", 3, arma.DanoPorTiro, Tolerancia);
+            arma.FijarFuria(2f, 2f);
+            inf.Cerca("auto-apuntado con el techo de 120: la mitad del techo", 60, arma.TirosPorSegundo, Tolerancia);
+            arma.FijarFuria(1f, 1f);
+            arma.FijarAutomatico(false);
+            inf.Cerca("a mano: la cadencia entera", 60, arma.TirosPorSegundo, Tolerancia);
         }
         finally
         {
@@ -5864,7 +5874,7 @@ public static class PruebasMejoras
         inf.Cerca("cartas: la de daño dice +25 %", 25, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Dano)), 1e-9);
         inf.Cerca("cartas: la de la granada dice 30 % mas rapido", 30, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.GranadaRapida)), 1e-9);
         inf.Cerca("cartas: la de criticos dice +10 %", 10, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Critico)), 1e-9);
-        inf.Igual("cartas: la descripcion de la de daño", "+25 % de daño", EleccionDeCartas.Descripcion(PoderDeLaPartida.Dano));
+        inf.Igual("cartas: la descripcion de la de daño", "+25 % base", EleccionDeCartas.Descripcion(PoderDeLaPartida.Dano));
 
         // Fuera de una partida, todo neutro y no suma.
         PoderDeLaPartida.Terminar();

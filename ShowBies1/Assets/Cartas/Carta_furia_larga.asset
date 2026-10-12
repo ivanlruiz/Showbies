@@ -16,6 +16,6 @@ MonoBehaviour:
   tope: 2
   valor: 2
   requiere: 2
-  color: {r: 1, g: 0.17, b: 0.84, a: 1}
+  color: {r: 0.82, g: 0.13, b: 0.2, a: 1}
   icono: {fileID: 21300000, guid: ea704196b342f57409df8f2fc535e104, type: 3}
   simbolo: F

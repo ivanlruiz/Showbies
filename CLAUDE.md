@@ -89,6 +89,7 @@ Marketing/                  ← logo.py: el logo del juego dibujado en código, 
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
+ARTE.md                     ← la dirección de arte: las revisiones de Gemini, lo hecho y lo que falta (el top 10, el arma que cambia con el daño)
 PLAN.md                     ← el plan a partir de la revisión de Gemini (10/10): de la 1.5.2 a la 1.8.0, con las decisiones de Ivan
 simulaciones/               ← las simulaciones de la economía, con su script y sus tablas (curva_1.5.2: la curva de las oleadas)
 ```
@@ -471,8 +472,12 @@ cambian las reglas (perforante, rebote, dron...) son la etapa 2.
 - **Los íconos los generó Gemini** (Nano Banana, 12/10, con las capturas de la ficha y los íconos del menú de
   referencia): una hoja de 18 dibujos blancos sobre negro, en `Marketing/cartas/iconos_gemini.jpg`, que
   `Marketing/cartas/recortar_iconos.py` corta en `Assets/Cartas/Iconos/IconoCarta_<id>.png` (256 px, blancos con alfa,
-  ya con los de la etapa 2). `ConstructorCartas` los importa con mipmaps (en el HUD se ven a 26 px) y se los pone a cada
-  carta; la tarjeta y la fila del HUD los dibujan oscuros dentro del círculo del color de la carta.
+  ya con los de la etapa 2). `ConstructorCartas` los importa con mipmaps (en el HUD se ven a 18 px) y se los pone a cada
+  carta, con su color (los eligió Gemini por familia; el ícono y el color no son balance: se pisan siempre).
+- **La tarjeta** (de la revisión de arte de Gemini, 12/10): el ícono de neón, del color de la carta, con su brillo y
+  dentro de un anillo fino del mismo color (en un círculo relleno parecían señales de tránsito); el nombre corto y abajo
+  solo el número ("DAÑO", "+25 % base"), en gris y un 20 % más chico; un brillo del color de la carta adentro. Con la
+  dorada, el título dice **¡BONO DE JEFE!** en amarillo.
 
 | carta | por vez | tope |
 |---|---|---|
@@ -497,9 +502,11 @@ cambian las reglas (perforante, rebote, dron...) son la etapa 2.
   primeros 0,6 s no eligen** (`SinElegirAlAbrir`): el pulgar del joystick de disparo cae donde aparecen las cartas. Son
   tres tarjetas de neón de 380 × 520 en un canvas propio (orden 12, por encima de la pausa) con el título de neón que
   toma de la pausa.
-- **La barra del PODER** va encima del número de la vida (`Acomodar`, medido cada medio segundo con lo que ocupan las
-  letras), en un canvas propio (orden 9), con "PODER N", la barra celeste y una fila de círculos con las cartas que se
-  tienen. Salta al subir.
+- **La barra del PODER va fina (10 u), a todo el ancho y pegada al borde de abajo** (de Gemini: arriba está lleno y el
+  centro es de la acción), dentro del área segura (`Acomodar`, cada medio segundo), en un canvas propio (orden 9).
+  Encima, a la izquierda, "PODER N" chico (salta al subir) y una fila de círculos de 30 u con las cartas que se tienen,
+  con un disco oscuro, el anillo y el ícono de su color: los joysticks y la granada empiezan a unos 108 del borde y la vida
+  está al centro, así que esa franja está libre. El banco lo mide con el HUD del teléfono.
 - **Se guarda una foto al empezar cada oleada** (`Progreso.poderEnCurso`, v8, con la oleada y los puntos) y retomar la
   devuelve. No en cada elección: retomar arranca la oleada de cero, y lo ganado a mitad de oleada se ganaría dos veces.
   Al rejugarla salen las mismas cartas. Se olvida donde se olvida la partida.
@@ -2306,6 +2313,13 @@ joystick), y con él prendido la guía de la primera partida no muestra el pulga
 Pruebas > Auto-apuntar (play)** (`PruebaAutoApuntar`) lo mira: que apunte y mate al que se ve, que no le tire a uno
 fuera de la pantalla, que el joystick lo pise y al soltarlo vuelva, que apagado no dispare solo y que la lista de vivos
 coincida con la cuenta en cada cuadro (`Builds/prueba_auto_apuntar.txt`).
+
+**El automático tira a la mitad de la cadencia** (12/10: Ivan lo encontró demasiado fuerte, "mata todo solo", y Gemini
+eligió esto entre disparar solo quieto, la mitad, solo girar o un cono): `GunController.FijarAutomatico`
+(`CadenciaDelAutomatico`, 0,5, después del techo de 120), y con el joystick vuelve la cadencia entera: el joystick pasa a
+ser "el botón de daño máximo". **El joystick de disparo se queda**, pero mientras tira el automático se ve al 40 %
+(`PlayerJS.AlfaDelJoystickEnAutomatico`, con un `CanvasGroup`) y al tocarlo se prende entero y salta un poco. Sin
+auto-apuntado, o en el tutorial, se ve siempre entero.
 
 **Para jugar con teclado y mouse en el editor sin cambiar el target** (que reimporta todo): **ShowBies > Controles >
 Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`), no del proyecto, y hace que

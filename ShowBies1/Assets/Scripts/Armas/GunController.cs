@@ -28,7 +28,19 @@ public class GunController : MonoBehaviour
     private float multiplicadorPickup = 1f;
     private float multiplicadorCadenciaFuria = 1f;
     private float multiplicadorDanoFuria = 1f;
+    private float multiplicadorAutomatico = 1f;
     private float danoPorBala = -1f;           // -1: nadie lo fijó, se usa el dañoDar del prefab
+
+    // El auto-apuntado del teléfono tira a la mitad de la cadencia (12/10, de Gemini: tiraba
+    // entero y mataba todo solo); apuntar con el joystick de disparo da la cadencia entera.
+    public const float CadenciaDelAutomatico = 0.5f;
+
+    public float MultiplicadorAutomatico { get { return multiplicadorAutomatico; } }
+
+    public void FijarAutomatico(bool automatico)
+    {
+        multiplicadorAutomatico = automatico ? CadenciaDelAutomatico : 1f;
+    }
     private float mejoraVenceEn;
     private bool mejoraActiva;
 
@@ -70,10 +82,10 @@ public class GunController : MonoBehaviour
     public float MultiplicadorDanoFuria { get { return multiplicadorDanoFuria; } }
 
     // La cadencia vigente: la base por la caja, por la furia y por las cartas de la partida
-    // (PoderDeLaPartida), con el techo.
+    // (PoderDeLaPartida), con el techo, y la mitad con el auto-apuntado.
     public float TirosPorSegundo
     {
-        get { return Mathf.Min(TirosPorSegundoBase * multiplicadorPickup * multiplicadorCadenciaFuria * PoderDeLaPartida.MultiplicadorCadencia, Mathf.Max(1f, maxTirosPorSegundo)); }
+        get { return Mathf.Min(TirosPorSegundoBase * multiplicadorPickup * multiplicadorCadenciaFuria * PoderDeLaPartida.MultiplicadorCadencia, Mathf.Max(1f, maxTirosPorSegundo)) * multiplicadorAutomatico; }
     }
 
     // El daño de la mejora, sin la furia: el que muestran el medidor y las pruebas.

@@ -63,6 +63,10 @@ public static class PruebaCartas
     {
         if (!RespaldoDelBanco.PuedeArrancar(Banco)) return;
         RespaldoDelBanco.Guardar(Banco);
+        // Con el HUD del telefono (los joysticks y la granada), que es contra lo que se mide la
+        // barra; sin auto-apuntado, que mataria zombis por su cuenta y sumaria experiencia.
+        PruebaDisparo.ModoTelefono(Clave);
+        PlayerJS.FijarAutoApuntar(false);
         PlayerSettings.runInBackground = true;
         Progreso.GuardarOleadaEnCurso(Oleada, 0);
         var estado = new EstadoPoder { poder = 2, experiencia = 0, pendientes = 0, semilla = Semilla };
@@ -242,6 +246,9 @@ public static class PruebaCartas
                 var cartas = Cartas();
                 Anotar(CuantasDoradas(cartas) == 1 && doradaEsperada >= 0 && doradaEsperada < cartas.Count && EsDorada(cartas[doradaEsperada]),
                        "una sola carta es la dorada, la del sorteo");
+                var tituloDelJefe = TituloDeLaEleccion();
+                Anotar(tituloDelJefe != null && tituloDelJefe.text == Textos.De("carta_bono_jefe"),
+                       "con la dorada el titulo dice \"" + (tituloDelJefe != null ? tituloDelJefe.text : "") + "\"");
                 var dorada = cartas.Find(EsDorada);
                 if (dorada == null) { Terminar("no hay carta dorada"); return; }
                 elegida = IdDe(dorada);
@@ -345,23 +352,50 @@ public static class PruebaCartas
         Anotar(poder != null && poder.text == Textos.Formato("poder_barra", 2), "la barra dice \"" + (poder != null ? poder.text : "") + "\"");
         Anotar(IconosDeLaBarra() == 2, "y tiene dos iconos (" + IconosDeLaBarra() + ")");
 
-        // Encima del numero de la vida, sin pisarlo, y adentro de la pantalla.
-        if (bloque != null && vida.healthTMP != null)
+        // Fina, a todo el ancho del area segura y pegada abajo (de Gemini, 12/10); el "PODER N" y
+        // los iconos, encima, sin pisar el numero de la vida, los joysticks ni la granada.
+        var laBarra = bloque != null ? (RectTransform)bloque.Find("Barra") : null;
+        if (laBarra != null && poder != null && vida.healthTMP != null)
         {
-            var esquinas = new Vector3[4];
-            bloque.GetWorldCorners(esquinas);
-            float abajo = esquinas[0].y, arriba = esquinas[1].y, izq = esquinas[0].x, der = esquinas[2].x;
+            var area = Screen.safeArea;
+            Rect r = EnPantalla(laBarra);
+            notas.AppendLine("Barra en pantalla: x " + r.xMin.ToString("0") + "-" + r.xMax.ToString("0") + ", y " + r.yMin.ToString("0") + "-" + r.yMax.ToString("0")
+                             + "; area segura x " + area.xMin.ToString("0") + "-" + area.xMax.ToString("0") + ", y desde " + area.yMin.ToString("0")
+                             + "; pantalla " + Screen.width + "x" + Screen.height);
+            Anotar(Mathf.Abs(r.yMin - area.yMin) <= 2f && r.width >= area.width * 0.95f && r.height <= 20f,
+                   "la barra va fina, a todo el ancho del area segura y pegada abajo");
+
             var b = vida.healthTMP.textBounds;
-            float letras = vida.healthTMP.rectTransform.TransformPoint(new Vector3(0f, b.max.y, 0f)).y;
-            notas.AppendLine("Barra en pantalla: x " + izq.ToString("0") + "-" + der.ToString("0") + ", y " + abajo.ToString("0") + "-" + arriba.ToString("0")
-                             + "; letras de la vida hasta y " + letras.ToString("0") + "; pantalla " + Screen.width + "x" + Screen.height);
-            Anotar(abajo >= letras - 1f && izq >= 0f && der <= Screen.width && arriba <= Screen.height,
-                   "la barra va encima del numero de la vida, sin pisarlo, y adentro de la pantalla");
+            var t = vida.healthTMP.rectTransform;
+            Vector3 a0 = t.TransformPoint(b.min), a1 = t.TransformPoint(b.max);
+            var letras = Rect.MinMaxRect(Mathf.Min(a0.x, a1.x), Mathf.Min(a0.y, a1.y), Mathf.Max(a0.x, a1.x), Mathf.Max(a0.y, a1.y));
+            var lo = new List<Rect> { EnPantalla(poder.rectTransform) };
+            var fila = bloque.Find("Cartas");
+            if (fila != null) foreach (RectTransform hijo in fila) lo.Add(EnPantalla(hijo));
+            var estorbos = new List<KeyValuePair<string, Rect>> { new KeyValuePair<string, Rect>("el numero de la vida", letras) };
+            foreach (var nombre in new[] { "MoveJoystick", "ShootJoystick", "BotonGranada" })
+            {
+                var go = GameObject.Find(nombre);
+                if (go != null && go.activeInHierarchy) estorbos.Add(new KeyValuePair<string, Rect>(nombre, EnPantalla((RectTransform)go.transform)));
+            }
+            string pisa = null;
+            foreach (var mio in lo)
+                foreach (var e in estorbos)
+                    if (mio.Overlaps(e.Value)) pisa = e.Key;
+            Anotar(pisa == null, "el PODER y los iconos no pisan " + (pisa ?? "el numero de la vida, los joysticks ni la granada"));
         }
         else
         {
-            Anotar(false, "la barra va encima del numero de la vida (no se encontro la barra o el numero)");
+            Anotar(false, "la barra va pegada abajo (no se encontro la barra, el texto o el numero de la vida)");
         }
+    }
+
+    // Lo que ocupa un RectTransform de un canvas overlay, en pixeles de la pantalla.
+    static Rect EnPantalla(RectTransform rt)
+    {
+        var e = new Vector3[4];
+        rt.GetWorldCorners(e);
+        return Rect.MinMaxRect(e[0].x, e[0].y, e[2].x, e[2].y);
     }
 
     static void AnotarAntes(PlayerHealth vida, GunController gun)
