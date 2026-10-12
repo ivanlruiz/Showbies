@@ -161,7 +161,9 @@ elige cada uno** (pedido de Ivan; eligió separar solo los avisos, con el españ
   English, y #anuncios y #novedades, privados para el rol Español** (canales de anuncios, se pueden seguir); y #dev,
   privado, donde llegan los avisos de Discord para moderadores. **Cada novedad se publica dos veces**, una en cada
   idioma.
-- **COMMUNITY**: #general (ahí salen los "X se unió"), #screenshots-and-clips, #high-scores y #general-español.
+- **COMMUNITY**: #general, #screenshots-and-clips, #high-scores, #general-español y #new-members, donde salen
+  los "X se unió" (el canal de mensajes del sistema, en Ajustes del servidor > Interacción; hasta el 12/10 era #general
+  y las bienvenidas ocupaban mucho lugar, pedido de Ivan).
 - **SHOWBIES**: #feedback y #bugs son foros con pautas y etiquetas (Fixed, en #bugs, solo la pone Ivan) y #ideas.
 - **VOICE**: Lounge.
 - Roles: Dev (Ivan), Tester (a mano, para los de la prueba cerrada), Player (lo da la invitación) y English y
