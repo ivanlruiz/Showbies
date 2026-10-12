@@ -21,6 +21,8 @@ public class EstadoPoder
     public int pendientes;
     public int semilla;
     public bool dorada;
+    // Las muertes que lleva la carta de vampiro hacia la proxima cura.
+    public int bajasDelVampiro;
     public List<CartaElegida> cartas = new List<CartaElegida>();
 
     public EstadoPoder Copia()
@@ -53,8 +55,30 @@ public static class PoderDeLaPartida
     public const string Iman = "iman";
     public const string GranadaRapida = "granada_rapida";
     public const string FuriaLarga = "furia_larga";
+    // Las que cambian las reglas (etapa 2, elegidas por Gemini el 12/10 pensando en el Redmi:
+    // sin Rebote, y la Electrica paso a ser Quemadura).
+    public const string Perforante = "perforante";
+    public const string DisparoDoble = "disparo_doble";
+    public const string HaciaAtras = "hacia_atras";
+    public const string Explosiva = "explosiva";
+    public const string Hielo = "hielo";
+    public const string Quemadura = "quemadura";
+    public const string Dron = "dron";
+    public const string Vampiro = "vampiro";
+    public const string Escudo = "escudo";
     // La de reserva: sale sola cuando todas las demas llegaron a su tope. Llena la vida.
     public const string Curacion = "curacion";
+
+    // Lo fijo de las cartas de reglas; lo que se balancea por vez esta en el valor de cada asset.
+    public const float DanoAlPerforar = 0.5f;          // cada zombi que atraviesa, la mitad del anterior
+    public const float AbanicoDelDisparoDoble = 8f;    // grados entre bala y bala
+    public const float RadioDeLaExplosiva = 1.5f;      // y medio metro mas por cada vez despues de la primera
+    public const float RadioPorVezDeLaExplosiva = 0.5f;
+    public const float DuracionDelHielo = 2f;
+    public const float DuracionDeLaQuemadura = 3f;
+    public const float QuemaduraPorSegundo = 0.1f;     // del daño de la bala que la prendio
+    public const float AlcanceDelDron = 12f;
+    public const int BajasParaElVampiro = 15;
 
     // La curva: pasar del PODER L al siguiente cuesta round(8 x 1,15^L). Con la mezcla de zombis
     // de WaveMode da 14 cartas hasta la oleada 10, 22 hasta la 20 y 31 hasta la 40.
@@ -193,6 +217,39 @@ public static class PoderDeLaPartida
     public static float ImanExtra { get { return Suma(Iman, 2f); } }
     public static float MultiplicadorRecargaGranada { get { return Multiplica(GranadaRapida, 0.7f); } }
     public static float SegundosFuriaExtra { get { return Suma(FuriaLarga, 2f); } }
+
+    // Las de reglas. Todas neutras fuera de una partida, como las de numeros.
+    public static int Perforaciones { get { return Mathf.RoundToInt(Suma(Perforante, 1f)); } }
+    public static int BalasExtraAdelante { get { return Mathf.RoundToInt(Suma(DisparoDoble, 1f)); } }
+    public static int BalasAtras { get { return Mathf.RoundToInt(Suma(HaciaAtras, 1f)); } }
+    public static float FraccionDeLaExplosion { get { return Suma(Explosiva, 0.3f); } }
+    public static float RadioDeLaExplosion
+    {
+        get { int n = Activo ? Veces(Explosiva) : 0; return n > 0 ? RadioDeLaExplosiva + RadioPorVezDeLaExplosiva * (n - 1) : 0f; }
+    }
+    // Cuanto frena el hielo: 40 % con una, 64 % con dos (se compone, nunca para del todo).
+    public static float LentitudDelHielo
+    {
+        get { int n = Activo ? Veces(Hielo) : 0; return n > 0 ? 1f - Mathf.Pow(1f - Valor(Hielo, 0.4f), n) : 0f; }
+    }
+    public static float ProbabilidadDeQuemadura { get { return Mathf.Clamp01(Suma(Quemadura, 0.25f)); } }
+    public static int Drones { get { return Activo ? Veces(Dron) : 0; } }
+    public static float TirosPorSegundoDelDron { get { return Drones > 0 ? Valor(Dron, 1f) : 0f; } }
+    public static float CuraDelVampiro { get { return Suma(Vampiro, 0.05f); } }
+    public static bool ConEscudo { get { return Activo && Veces(Escudo) > 0; } }
+    public static float RecargaDelEscudo { get { return Valor(Escudo, 15f); } }
+
+    // Una muerte para el vampiro: devuelve si toca curar (cada BajasParaElVampiro).
+    public static bool ContarBajaDelVampiro()
+    {
+        if (!Activo || Veces(Vampiro) <= 0) return false;
+        estado.bajasDelVampiro++;
+        if (estado.bajasDelVampiro < BajasParaElVampiro) return false;
+        estado.bajasDelVampiro = 0;
+        return true;
+    }
+
+    public static int BajasDelVampiro { get { return estado.bajasDelVampiro; } }
 
     // Si la carta puede salir ahora: no llego a su tope y tiene lo que necesita comprado.
     public static bool Disponible(Carta carta, int vecesQueTiene, bool conGranada, bool conFuria)

@@ -567,6 +567,10 @@ public class EleccionDeCartas : MonoBehaviour
                 return System.Math.Round((1f - carta.valor) * 100.0);
             case PoderDeLaPartida.Critico:
             case PoderDeLaPartida.Velocidad:
+            case PoderDeLaPartida.Explosiva:
+            case PoderDeLaPartida.Hielo:
+            case PoderDeLaPartida.Quemadura:
+            case PoderDeLaPartida.Vampiro:
                 return System.Math.Round(carta.valor * 100.0);
             default:
                 return System.Math.Round(carta.valor, 1);

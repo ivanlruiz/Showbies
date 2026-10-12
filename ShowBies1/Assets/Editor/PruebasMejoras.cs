@@ -5869,7 +5869,10 @@ public static class PruebasMejoras
         }
         foreach (var id in new[] { PoderDeLaPartida.Dano, PoderDeLaPartida.Cadencia, PoderDeLaPartida.Critico, PoderDeLaPartida.Vida,
                                    PoderDeLaPartida.Velocidad, PoderDeLaPartida.Iman, PoderDeLaPartida.GranadaRapida,
-                                   PoderDeLaPartida.FuriaLarga, PoderDeLaPartida.Curacion })
+                                   PoderDeLaPartida.FuriaLarga, PoderDeLaPartida.Perforante, PoderDeLaPartida.DisparoDoble,
+                                   PoderDeLaPartida.HaciaAtras, PoderDeLaPartida.Explosiva, PoderDeLaPartida.Hielo,
+                                   PoderDeLaPartida.Quemadura, PoderDeLaPartida.Dron, PoderDeLaPartida.Vampiro,
+                                   PoderDeLaPartida.Escudo, PoderDeLaPartida.Curacion })
             inf.Verdadero("cartas: esta la de " + id, ids.Contains(id));
         inf.Cerca("cartas: la de daño dice +25 %", 25, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Dano)), 1e-9);
         inf.Cerca("cartas: la de la granada dice 30 % mas rapido", 30, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.GranadaRapida)), 1e-9);
@@ -5966,6 +5969,59 @@ public static class PruebasMejoras
         {
             Object.DestroyImmediate(objeto);
         }
+
+        // Las que cambian las reglas (etapa 2): neutras sin elegir, y lo que valen con una y dos.
+        inf.Igual("cartas de reglas: sin elegir, no perfora", 0, PoderDeLaPartida.Perforaciones);
+        inf.Igual("cartas de reglas: sin elegir, sin balas de mas", 0, PoderDeLaPartida.BalasExtraAdelante + PoderDeLaPartida.BalasAtras);
+        inf.Verdadero("cartas de reglas: sin elegir, sin explosion, hielo ni quemadura",
+                      PoderDeLaPartida.FraccionDeLaExplosion == 0f && PoderDeLaPartida.RadioDeLaExplosion == 0f
+                      && PoderDeLaPartida.LentitudDelHielo == 0f && PoderDeLaPartida.ProbabilidadDeQuemadura == 0f);
+        inf.Verdadero("cartas de reglas: sin elegir, sin dron, vampiro ni escudo",
+                      PoderDeLaPartida.Drones == 0 && PoderDeLaPartida.CuraDelVampiro == 0f && !PoderDeLaPartida.ConEscudo);
+        inf.Verdadero("cartas de reglas: sin vampiro no se cuentan bajas", !PoderDeLaPartida.ContarBajaDelVampiro() && PoderDeLaPartida.BajasDelVampiro == 0);
+        var deReglas = new[] { PoderDeLaPartida.Perforante, PoderDeLaPartida.DisparoDoble, PoderDeLaPartida.Explosiva, PoderDeLaPartida.Hielo,
+                               PoderDeLaPartida.Quemadura, PoderDeLaPartida.Dron, PoderDeLaPartida.Vampiro };
+        PoderDeLaPartida.Sumar(100000);   // elecciones de sobra para lo que sigue
+        foreach (var id in deReglas) PoderDeLaPartida.Elegir(id, false);
+        PoderDeLaPartida.MarcarDorada();
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.HaciaAtras, true);
+        inf.Igual("cartas de reglas: la dorada de una carta de tope 1 suma una", 1, PoderDeLaPartida.Veces(PoderDeLaPartida.HaciaAtras));
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.Escudo, false);
+        inf.Igual("cartas de reglas: perfora un zombi", 1, PoderDeLaPartida.Perforaciones);
+        inf.Igual("cartas de reglas: una bala de mas adelante", 1, PoderDeLaPartida.BalasExtraAdelante);
+        inf.Igual("cartas de reglas: una bala hacia atras", 1, PoderDeLaPartida.BalasAtras);
+        inf.Cerca("cartas de reglas: explota con el 30 %", 0.3, PoderDeLaPartida.FraccionDeLaExplosion, 1e-5);
+        inf.Cerca("cartas de reglas: en 1,5 m", 1.5, PoderDeLaPartida.RadioDeLaExplosion, 1e-5);
+        inf.Cerca("cartas de reglas: el hielo frena un 40 %", 0.4, PoderDeLaPartida.LentitudDelHielo, 1e-5);
+        inf.Cerca("cartas de reglas: quema uno de cada cuatro tiros", 0.25, PoderDeLaPartida.ProbabilidadDeQuemadura, 1e-5);
+        inf.Igual("cartas de reglas: un dron", 1, PoderDeLaPartida.Drones);
+        inf.Cerca("cartas de reglas: que tira una vez por segundo", 1, PoderDeLaPartida.TirosPorSegundoDelDron, 1e-5);
+        inf.Cerca("cartas de reglas: el vampiro cura el 5 %", 0.05, PoderDeLaPartida.CuraDelVampiro, 1e-5);
+        inf.Verdadero("cartas de reglas: escudo cada 15 s", PoderDeLaPartida.ConEscudo && Math.Abs(PoderDeLaPartida.RecargaDelEscudo - 15f) < 1e-4);
+        foreach (var id in deReglas) PoderDeLaPartida.Elegir(id, false);
+        PoderDeLaPartida.Elegir(PoderDeLaPartida.Escudo, false);
+        inf.Igual("cartas de reglas: el escudo no pasa de su tope (1)", 1, PoderDeLaPartida.Veces(PoderDeLaPartida.Escudo));
+        inf.Igual("cartas de reglas: con dos, perfora dos", 2, PoderDeLaPartida.Perforaciones);
+        inf.Igual("cartas de reglas: con dos, dos balas de mas", 2, PoderDeLaPartida.BalasExtraAdelante);
+        inf.Cerca("cartas de reglas: con dos, explota con el 60 %", 0.6, PoderDeLaPartida.FraccionDeLaExplosion, 1e-5);
+        inf.Cerca("cartas de reglas: con dos, en 2 m", 2, PoderDeLaPartida.RadioDeLaExplosion, 1e-5);
+        inf.Cerca("cartas de reglas: con dos, el hielo frena un 64 % (se compone)", 0.64, PoderDeLaPartida.LentitudDelHielo, 1e-5);
+        inf.Cerca("cartas de reglas: con dos, quema la mitad de los tiros", 0.5, PoderDeLaPartida.ProbabilidadDeQuemadura, 1e-5);
+        inf.Igual("cartas de reglas: con dos, dos drones", 2, PoderDeLaPartida.Drones);
+        inf.Cerca("cartas de reglas: con dos, el vampiro cura el 10 %", 0.1, PoderDeLaPartida.CuraDelVampiro, 1e-5);
+        bool antesDeQuince = false;
+        for (int i = 0; i < PoderDeLaPartida.BajasParaElVampiro - 1; i++) antesDeQuince |= PoderDeLaPartida.ContarBajaDelVampiro();
+        inf.Verdadero("cartas de reglas: el vampiro no cura antes de 15 bajas", !antesDeQuince);
+        inf.Verdadero("cartas de reglas: y a las 15 cura y vuelve a contar",
+                      PoderDeLaPartida.ContarBajaDelVampiro() && PoderDeLaPartida.BajasDelVampiro == 0);
+        for (int i = 0; i < 3; i++) PoderDeLaPartida.ContarBajaDelVampiro();
+        inf.Igual("cartas de reglas: la foto de la oleada lleva las bajas del vampiro", 3, PoderDeLaPartida.Instantanea().bajasDelVampiro);
+        inf.Cerca("cartas de reglas: la explosiva dice 30 %", 30, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Explosiva)), 1e-9);
+        inf.Cerca("cartas de reglas: el hielo dice 40 %", 40, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Hielo)), 1e-9);
+        inf.Cerca("cartas de reglas: la quemadura dice 25 %", 25, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Quemadura)), 1e-9);
+        inf.Cerca("cartas de reglas: el vampiro dice 5 %", 5, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Vampiro)), 1e-9);
+        inf.Cerca("cartas de reglas: el escudo dice 15 s", 15, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Escudo)), 1e-9);
+        inf.Igual("cartas de reglas: la descripcion de la explosiva", "Daño en área 30 %", EleccionDeCartas.Descripcion(PoderDeLaPartida.Explosiva));
 
         // Lo que se guarda: la instantanea vuelve igual de disco, y retomar la devuelve.
         var foto = PoderDeLaPartida.Instantanea();

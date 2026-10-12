@@ -56,6 +56,24 @@ carta_granada_rapida_nombre	GRENADE	GRANADA
 carta_granada_rapida	Cooldown -{0}%	Recarga -{0} %
 carta_furia_larga_nombre	RAGE	FURIA
 carta_furia_larga	Duration +{0} s	Duración +{0} s
+carta_perforante_nombre	PIERCING	PERFORANTE
+carta_perforante	Pierces {0} zombie	Atraviesa {0} zombi
+carta_disparo_doble_nombre	MULTISHOT	MÚLTIPLE
+carta_disparo_doble	+{0} front bullet	+{0} bala frontal
+carta_hacia_atras_nombre	REAR SHOT	RETAGUARDIA
+carta_hacia_atras	+{0} rear bullet	+{0} bala trasera
+carta_explosiva_nombre	EXPLOSIVE	EXPLOSIVA
+carta_explosiva	Area damage {0}%	Daño en área {0} %
+carta_hielo_nombre	FROST	CONGELACIÓN
+carta_hielo	Slows {0}% (2 s)	Ralentiza {0} % (2 s)
+carta_quemadura_nombre	BURN	QUEMADURA
+carta_quemadura	{0}% of shots burn (3 s)	{0} % de tiros queman (3 s)
+carta_dron_nombre	DRONE	DRON
+carta_dron	Support fire, {0} shot/s	Fuego de apoyo, {0} tiro/s
+carta_vampiro_nombre	VAMPIRE	VAMPIRISMO
+carta_vampiro	Heals {0}% every 15 kills	Cura {0} % cada 15 bajas
+carta_escudo_nombre	SHIELD	ESCUDO
+carta_escudo	Blocks 1 hit every {0} s	Bloquea 1 golpe cada {0} s
 carta_curacion_nombre	FULL HEAL	CURACIÓN
 carta_curacion	Restores 100% health	Restaura el 100 % de la vida
 opciones_auto_apuntar	AUTO-AIM	AUTO-APUNTADO

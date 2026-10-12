@@ -38,6 +38,17 @@ public static class ConstructorCartas
         new Molde(PoderDeLaPartida.Iman, 2, 2f, Carta.Requisito.Ninguno, new Color(0.32f, 0.58f, 1f), "U"),
         new Molde(PoderDeLaPartida.GranadaRapida, 2, 0.7f, Carta.Requisito.Granada, new Color(0.95f, 0.42f, 0.08f), "G"),
         new Molde(PoderDeLaPartida.FuriaLarga, 2, 2f, Carta.Requisito.Furia, new Color(0.82f, 0.13f, 0.2f), "F"),
+        // Etapa 2: las que cambian las reglas. Alteracion en violeta, elementales en cian, el dron
+        // rosa, el vampiro rojo sangre y el escudo azul claro.
+        new Molde(PoderDeLaPartida.Perforante, 2, 1f, Carta.Requisito.Ninguno, new Color(0.66f, 0.42f, 1f), "P"),
+        new Molde(PoderDeLaPartida.DisparoDoble, 2, 1f, Carta.Requisito.Ninguno, new Color(0.66f, 0.42f, 1f), "2"),
+        new Molde(PoderDeLaPartida.HaciaAtras, 1, 1f, Carta.Requisito.Ninguno, new Color(0.66f, 0.42f, 1f), "<"),
+        new Molde(PoderDeLaPartida.Explosiva, 2, 0.3f, Carta.Requisito.Ninguno, new Color(0.2f, 0.9f, 1f), "*"),
+        new Molde(PoderDeLaPartida.Hielo, 2, 0.4f, Carta.Requisito.Ninguno, new Color(0.2f, 0.9f, 1f), "H"),
+        new Molde(PoderDeLaPartida.Quemadura, 2, 0.25f, Carta.Requisito.Ninguno, new Color(0.2f, 0.9f, 1f), "Q"),
+        new Molde(PoderDeLaPartida.Dron, 2, 1f, Carta.Requisito.Ninguno, new Color(1f, 0.38f, 0.78f), "D"),
+        new Molde(PoderDeLaPartida.Vampiro, 2, 0.05f, Carta.Requisito.Ninguno, new Color(0.72f, 0.06f, 0.14f), "V"),
+        new Molde(PoderDeLaPartida.Escudo, 1, 15f, Carta.Requisito.Ninguno, new Color(0.55f, 0.8f, 1f), "E"),
         new Molde(PoderDeLaPartida.Curacion, 0, 1f, Carta.Requisito.Ninguno, new Color(0.95f, 0.96f, 1f), "+"),
     };
 
