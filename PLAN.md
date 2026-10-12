@@ -226,6 +226,27 @@ dejando la estilizada para los títulos.
 
 ---
 
+## 4d. El bate: un golpe cuerpo a cuerpo (1.7.0)
+
+Ivan preguntó si se podía (12/10, con Nex Machina de referencia de jugabilidad), y Gemini lo diseñó en "Análisis de diseño
+para ShowBies":
+
+- **Una herramienta defensiva para sacarse la horda de encima, no una fuente de daño**: el botón de pánico para cuando
+  te acorralan.
+- **Un botón** un poco más chico que el de la granada, arriba o a la izquierda del joystick derecho; en PC, el clic
+  derecho o Shift. **Nada de golpe automático de cerca**: le saca al jugador la decisión de cuándo usar su salvavidas.
+- **Los números**: daño = el de la bala × 3 (escala solo con la mejora de daño y las cartas); un cono de 120° y 2,5 m
+  delante del jugador; **empuja 3 m** a los normales, los rápidos y los veloces, **al tanque lo frena 1 s** sin empujarlo y
+  **al jefe no le hace nada**; enfriamiento de 4 s.
+- **Una mejora de la tienda**, de compra única, como la granada y la furia: 1.500 monedas. Una carta no, porque aparecer y
+  desaparecer botones en medio de la partida confunde.
+- **Con la escopeta** es la red de seguridad cuando la horda entra a 2 m; **con el auto-apuntado**, el bate abre un hueco
+  y el automático sigue limpiando mientras el jugador toma distancia.
+- **Que no frene al jugador**: el golpe va de la cintura para arriba (una máscara en el Animator, como la del brazo que
+  dispara, `BrazoDerecho`) y las piernas siguen corriendo. El pack trae un solo ataque (`m_melee_combat_attack_A`), la
+  espera y el correr de pelea, y el bate que el muñeco tenía en la mano.
+- **Después de la 1.6.0**: Gemini lo pone en la 1.7.0, con las compras. Las cartas y las armas van primero.
+
 ## 5. Compras dentro del juego (1.7.0)
 
 **Gemini dice:** Unity IAP, la compra guardada en `PlayerPrefs` y el intersticial envuelto en un `if`.
