@@ -84,19 +84,18 @@ Cada una con su tope. Las de números (las del diseño anterior) y las que cambi
 | Imán | +2 m (sin imán comprado, da 2 m) | 2 | `Moneda.FijarRadioIman` |
 | Granada rápida | recarga −30 % | 2 | `PlayerController.granadaCooldown` (si está comprada) |
 | Furia larga | la furia dura +2 s | 2 | `Furia` (si está comprada) |
-| **Perforante** | la bala sigue después de pegar, con la mitad del daño, 1 zombi más | 3 | `BulletController.OnCollisionEnter` (hoy vuelve al pool al pegar) |
-| **Rebote** | al pegar, la bala sale hacia el zombi más cercano | 2 | `BulletController`, nuevo rumbo en vez de volver al pool |
+| **Perforante** | la bala sigue después de pegar, con la mitad del daño, 1 zombi más | 2 | `BulletController.OnCollisionEnter` (hoy vuelve al pool al pegar) |
 | **Disparo doble** | +1 bala por tiro, en abanico de 8° | 2 | `GunController`, al sacar cada bala del pool |
 | **Hacia atrás** | una bala más por la espalda | 1 | `GunController` |
 | **Explosiva** | daño en área chico al pegar (1,5 m, 30 % del daño) | 2 | `BulletController`, con las chispas de `Efectos` y el dedup por componente de la granada |
 | **Hielo** | el zombi que recibe un tiro va 40 % más lento 2 s, teñido de celeste | 2 | `EnemyController`, un multiplicador de velocidad con su reloj |
-| **Eléctrica** | 1 de cada 4 tiros salta a otro zombi a 4 m, con una línea como la del jefe | 2 | `BulletController`, un `LineRenderer` de un pool |
+| **Quemadura** | 1 de cada 4 balas quema al zombi: 10 % del daño base por segundo durante 3 s | 2 | `EnemyController`, un reloj y un daño por segundo, como el hielo |
 | **Dron** | una esfera que orbita al jugador y dispara sola al más cercano, 1 tiro/s | 2 | componente nuevo en el jugador, con las balas del pool |
 | **Vampiro** | cada 15 muertes cura el 5 % | 2 | `DanoZombi`, en el bloque de muerte |
 | **Escudo** | bloquea un golpe cada 15 s, con un anillo que se ve, y al romperse empuja medio metro a los zombis pegados | 1 | `PlayerHealth.TakeDamage`, y el empuje como el del jefe a los invocados |
 | Curación | vida entera | — | solo cuando todo lo demás está al tope |
 
-Son 41 elecciones antes de que salga Curación: alcanza para la oleada 60 de la tabla de arriba. Los números son
+Son 38 elecciones antes de que salga Curación: alcanzan hasta cerca de la oleada 50 de la tabla de arriba. Los números son
 de partida y se ajustan con la simulación (ver El balance).
 
 **Atravesar, rebotar, explotar y saltar tocan el conteo de muertes**: un zombi no puede morir dos veces ni sumar
@@ -170,7 +169,7 @@ en el teléfono se mide con el contador de FPS (el peor cuadro y los tirones), e
 | etapa | qué | cuánto |
 |---|---|---|
 | 1 | Primero el interruptor de los bancos y el tutorial; después la experiencia (en los assets), el PODER, la barra, la elección y las 8 cartas de números, con el guardado (v8) y las pruebas | 3-4 días |
-| 2 | Las 10 cartas que cambian las reglas, con su banco | 4-5 días |
+| 2 | Las 9 cartas que cambian las reglas, con su banco, y los íconos | 4-5 días |
 | 3 | El arma que cambia con el daño: maquetas, y después el constructor | 1-2 días |
 | 4 | El balance con la simulación, el Redmi, la APK de prueba y el AAB | 1-2 días |
 
@@ -190,3 +189,44 @@ Las seis las decidió Gemini, a pedido de Ivan (10/10), todas como se recomendar
 
 Y un cambio suyo: **el escudo, al romperse, empuja medio metro a los zombis pegados**. Bloquear un golpe cada 15 s,
 solo, no sirve en la oleada 40 con cinco zombis encima.
+
+### La revisión de la etapa 1 (12/10)
+
+Con la etapa 1 andando, Gemini revisó todo a pedido de Ivan:
+
+- **El guardado al empezar la oleada, aprobado** (ver Lo que se guarda).
+- **Las cartas que cambian las reglas son nueve**, pensadas para el Redmi Note 8: **sin Rebote** (buscar el próximo
+  blanco y rebotar por cada bala que choca es lo que más cuesta en un teléfono de gama baja), **la Eléctrica pasa a ser
+  Quemadura** (un contador en el zombi, sin buscar a nadie) y **Perforante con tope 2**. Ya están en la tabla.
+- **Los textos de la tarjeta, cortos y sin repetir el nombre**: "DAÑO" y abajo "+25 %", no "+25 % de daño".
+- **La dorada dice "¡BONO DE JEFE!"** arriba del panel, para que se entienda por qué salió.
+- **La barra del PODER va fina, a todo el ancho, pegada al borde de abajo** (arriba está lleno: las monedas, las balas,
+  el botón de pausa, la barra del jefe y los carteles; y el centro tiene que quedar libre para la acción). Se muestra
+  con maquetas antes de cambiarla.
+- **La fila de las cartas que se tienen, chica**: con 30 cartas ensucia; o las últimas 5 y un "ver build" en la pausa.
+- **El 0,6 s sin elegir al abrir, aprobado.**
+
+| carta | nombre (es / en) | en la tarjeta | color | familia |
+|---|---|---|---|---|
+| Daño | Daño / Damage | +25 % | naranja | estadísticas |
+| Cadencia | Cadencia / Fire Rate | +20 % | amarillo | estadísticas |
+| Crítico | Crítico / Critical | +10 % | rojo | estadísticas |
+| Vida | Vida / Max Health | +20 % y cura | verde lima | supervivencia |
+| Velocidad | Movimiento / Speed | +10 % | verde claro | supervivencia |
+| Imán | Imán / Magnet | +2 m | azul | utilidad |
+| Granada rápida | Granada / Grenade | recarga −30 % | naranja oscuro | táctica |
+| Furia larga | Furia / Rage | +2 s | rojo oscuro | táctica |
+| Perforante | Perforante / Piercing | atraviesa 1 zombi | violeta | alteración |
+| Disparo doble | Múltiple / Multishot | +1 bala | violeta | alteración |
+| Hacia atrás | Retaguardia / Rear Shot | +1 bala atrás | violeta | alteración |
+| Explosiva | Explosiva / Explosive | área 30 % | cian | elemental |
+| Hielo | Congelación / Frost | −40 % 2 s | cian | elemental |
+| Quemadura | Quemadura / Burn | daño 3 s | cian | elemental |
+| Dron | Dron / Drone | fuego de apoyo | rosa | aliados |
+| Vampiro | Vampirismo / Vampire | cura 5 % cada 15 | rojo sangre | supervivencia |
+| Escudo | Escudo / Shield | 1 golpe cada 15 s | azul claro | supervivencia |
+| Curación | Curación / Full Heal | vida entera | blanco | comodín |
+
+**Los íconos los generó Gemini** (Nano Banana, con las capturas de la ficha y los íconos del menú de referencia): una
+hoja de 6 × 3, blancos sobre negro, en el orden de la tabla. Cada uno va en el círculo de la tarjeta y en la fila del
+HUD, teñido con el color de su carta.
