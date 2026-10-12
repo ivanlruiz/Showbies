@@ -2605,14 +2605,25 @@ public static class PruebasMejoras
         }
 
         // El disparo viene a -27 dBFS, y el Normalize del importador solo actua al pasarlo
-        // a mono: en mono sube ~27 dB. La musica del menu, comprimida y en segundo plano,
-        // y en estereo (en mono, el Normalize le subiria el volumen).
+        // a mono: en mono sube ~27 dB. La musica del menu (Kingball, el tema de Ivan, desde el
+        // 12/10), en streaming (dura 3:18: entera en memoria serian unos 35 MB) y en estereo (en
+        // mono, el Normalize le subiria el volumen).
         var disparo = AssetImporter.GetAtPath("Assets/otros/shot.mp3") as AudioImporter;
         inf.Verdadero("importacion: el disparo va en mono, que es lo que hace actuar su Normalize", disparo != null && disparo.forceToMono);
-        var musica = AssetImporter.GetAtPath("Assets/otros/MainMenu.mp3") as AudioImporter;
-        inf.Verdadero("importacion: la musica del menu no se descomprime entera al cargar el menu",
-                      musica != null && musica.defaultSampleSettings.loadType != AudioClipLoadType.DecompressOnLoad && musica.loadInBackground);
+        const string rutaDeLaMusica = "Assets/otros/Kingball.ogg";
+        var musica = AssetImporter.GetAtPath(rutaDeLaMusica) as AudioImporter;
+        inf.Verdadero("importacion: la musica del menu va en streaming",
+                      musica != null && musica.defaultSampleSettings.loadType == AudioClipLoadType.Streaming && musica.loadInBackground);
         inf.Verdadero("importacion: la musica del menu sigue en estereo, con su volumen", musica != null && !musica.forceToMono);
+        string clipDelMenu = null;
+        LeerEscena("Assets/Escenas/Menu.unity", escena =>
+        {
+            foreach (var raiz in escena.GetRootGameObjects())
+                foreach (var fuente in raiz.GetComponentsInChildren<AudioSource>(true))
+                    if (fuente.loop && fuente.clip != null && fuente.GetComponent<FuenteConVolumen>() != null)
+                        clipDelMenu = AssetDatabase.GetAssetPath(fuente.clip);
+        });
+        inf.Igual("importacion: el menu toca Kingball", rutaDeLaMusica, clipDelMenu);
     }
 
     // El gris de poca vida (pedido de Ivan): nada hasta un cuarto de la vida y de ahi, en
