@@ -17,4 +17,5 @@ MonoBehaviour:
   valor: 0.1
   requiere: 0
   color: {r: 0.75, g: 1, b: 0.3, a: 1}
+  icono: {fileID: 21300000, guid: 04ec27ae7b4c7754fb70a791ee21c09f, type: 3}
   simbolo: '>'

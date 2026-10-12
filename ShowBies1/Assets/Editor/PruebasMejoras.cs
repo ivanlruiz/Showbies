@@ -5850,6 +5850,12 @@ public static class PruebasMejoras
                     inf.Verdadero("cartas: lo que hace " + c.id + " lleva su numero en " + lengua, que != null && que.Contains("{0}"));
             }
             if (c.id != PoderDeLaPartida.Curacion) inf.Verdadero("cartas: " + c.id + " tiene tope", c.tope > 0);
+            // El icono de Gemini, blanco sobre transparente (se tine) y con mipmaps: en el HUD se ve a 26 px.
+            var textura = c.icono != null ? c.icono.texture : null;
+            inf.Verdadero("cartas: " + c.id + " tiene su icono", textura != null);
+            if (textura != null)
+                inf.Verdadero("cartas: el icono de " + c.id + " es blanco con alfa, cuadrado y con mipmaps",
+                              textura.width == textura.height && textura.mipmapCount > 1 && EsBlancoConAlfa(c.icono));
         }
         foreach (var id in new[] { PoderDeLaPartida.Dano, PoderDeLaPartida.Cadencia, PoderDeLaPartida.Critico, PoderDeLaPartida.Vida,
                                    PoderDeLaPartida.Velocidad, PoderDeLaPartida.Iman, PoderDeLaPartida.GranadaRapida,
@@ -5971,6 +5977,34 @@ public static class PruebasMejoras
         EmpezarCaso("{\"version\":7,\"mejorOleada\":12,\"oleadaEnCurso\":13}", null);
         inf.Verdadero("cartas: un progreso de la 7 arranca sin cartas en curso",
                       Progreso.PoderEnCurso != null && Progreso.PoderEnCurso.cartas.Count == 0 && Progreso.PoderEnCurso.poder == 0);
+    }
+
+    // Un icono que se tine: lo que se ve es blanco, y alrededor es transparente. Se lee el PNG de
+    // disco (la textura importada no es legible).
+    static bool EsBlancoConAlfa(Sprite icono)
+    {
+        string ruta = AssetDatabase.GetAssetPath(icono);
+        if (string.IsNullOrEmpty(ruta) || !File.Exists(ruta)) return false;
+        var tex = new Texture2D(2, 2);
+        try
+        {
+            if (!tex.LoadImage(File.ReadAllBytes(ruta))) return false;
+            int opacos = 0, transparentes = 0, coloreados = 0;
+            foreach (var p in tex.GetPixels32())
+            {
+                if (p.a < 8) transparentes++;
+                else if (p.a > 128)
+                {
+                    opacos++;
+                    if (p.r < 230 || p.g < 230 || p.b < 230) coloreados++;
+                }
+            }
+            return opacos > 0 && transparentes > opacos / 4 && coloreados == 0 && tex.GetPixel(0, 0).a < 0.03f;
+        }
+        finally
+        {
+            Object.DestroyImmediate(tex);
+        }
     }
 
     // Lo que se destapa de a poco (Desbloqueo, 10/10, de la revision de Gemini): las misiones al

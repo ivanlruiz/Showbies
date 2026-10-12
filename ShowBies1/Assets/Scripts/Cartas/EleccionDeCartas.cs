@@ -235,14 +235,29 @@ public class EleccionDeCartas : MonoBehaviour
             var carta = catalogo.Buscar(par.Key);
             if (carta == null) continue;
             var icono = ConstructorUI.Imagen(filaIconos, carta.id, new Vector2(-190f + 44f * n, 0f), new Vector2(38f, 38f), circulo, carta.color);
-            var t = ConstructorUI.Texto((RectTransform)icono.transform, "Simbolo", carta.simbolo, 20f, new Color(0.05f, 0.05f, 0.08f),
-                                        Vector2.zero, new Vector2(38f, 38f), fuente);
+            PonerDibujo((RectTransform)icono.transform, carta, 38f);
             if (par.Value > 1)
                 ConstructorUI.Texto((RectTransform)icono.transform, "Veces", par.Value.ToString(), 18f, Color.white,
                                     new Vector2(16f, -14f), new Vector2(24f, 22f), fuente);
             n++;
             if (n >= 10) break;
         }
+    }
+
+    // El dibujo de la carta dentro de su circulo de color, oscuro: el icono (de Gemini, ver
+    // ConstructorCartas) o, si no tiene, su simbolo escrito.
+    private static readonly Color ColorDelDibujo = new Color(0.04f, 0.04f, 0.07f);
+
+    private void PonerDibujo(RectTransform circulo, Carta carta, float lado)
+    {
+        if (carta != null && carta.icono != null)
+        {
+            float dibujo = lado * 0.64f;
+            ConstructorUI.Imagen(circulo, "Dibujo", Vector2.zero, new Vector2(dibujo, dibujo), carta.icono, ColorDelDibujo);
+            return;
+        }
+        ConstructorUI.Texto(circulo, "Simbolo", carta != null ? carta.simbolo : "+", lado * 0.5f, ColorDelDibujo,
+                            new Vector2(0f, -lado * 0.025f), new Vector2(lado, lado), fuente);
     }
 
     // La barra va justo encima del numero de la vida, donde esta abajo al centro en las dos
@@ -442,8 +457,7 @@ public class EleccionDeCartas : MonoBehaviour
         t.boton.onClick.AddListener(() => Elegir(tarjeta));
 
         var circ = ConstructorUI.Imagen(t.raiz, "Icono", new Vector2(0f, 130f), new Vector2(170f, 170f), circulo, color);
-        ConstructorUI.Texto((RectTransform)circ.transform, "Simbolo", carta != null ? carta.simbolo : "+", 84f,
-                            new Color(0.04f, 0.04f, 0.07f), new Vector2(0f, -4f), new Vector2(170f, 170f), fuente);
+        PonerDibujo((RectTransform)circ.transform, carta, 170f);
 
         var nombre = ConstructorUI.Texto(t.raiz, "Nombre", Textos.De("carta_" + id + "_nombre"), 48f, Color.white,
                                          new Vector2(0f, -8f), new Vector2(TamCarta.x - 40f, 60f), fuente);

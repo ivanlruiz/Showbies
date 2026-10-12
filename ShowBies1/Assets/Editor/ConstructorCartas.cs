@@ -25,7 +25,7 @@ public static class ConstructorCartas
         }
     }
 
-    // Etapa 1: las de numeros. El simbolo es provisorio, hasta que tengan dibujo.
+    // Etapa 1: las de numeros. El simbolo queda de respaldo: lo que se ve es el icono.
     private static readonly Molde[] Moldes =
     {
         new Molde(PoderDeLaPartida.Dano, 4, 1.25f, Carta.Requisito.Ninguno, new Color(1f, 0.42f, 0.25f), "+"),
@@ -53,7 +53,7 @@ public static class ConstructorCartas
             AssetDatabase.CreateAsset(catalogo, rutaCatalogo);
         }
 
-        int creadas = 0;
+        int creadas = 0, conIcono = 0;
         catalogo.cartas.Clear();
         foreach (var m in Moldes)
         {
@@ -71,10 +71,41 @@ public static class ConstructorCartas
                 AssetDatabase.CreateAsset(carta, ruta);
                 creadas++;
             }
+            // El icono no es balance: se pone siempre, desde su PNG.
+            var icono = Icono(m.id);
+            if (icono != null && carta.icono != icono)
+            {
+                carta.icono = icono;
+                EditorUtility.SetDirty(carta);
+                conIcono++;
+            }
             catalogo.cartas.Add(carta);
         }
         EditorUtility.SetDirty(catalogo);
         AssetDatabase.SaveAssets();
-        Debug.Log("ConstructorCartas: " + catalogo.cartas.Count + " cartas en el catalogo, " + creadas + " nuevas");
+        Debug.Log("ConstructorCartas: " + catalogo.cartas.Count + " cartas en el catalogo, " + creadas + " nuevas, " + conIcono + " iconos puestos");
+    }
+
+    // Los iconos los genero Gemini en una hoja y los recorta Marketing/cartas/recortar_iconos.py:
+    // blancos sobre transparente, de 256 px. Se importan como los del menu, con mipmaps porque en
+    // la fila del HUD se ven a unos 26 px.
+    public const string CarpetaIconos = Carpeta + "/Iconos";
+
+    private static Sprite Icono(string id)
+    {
+        string ruta = CarpetaIconos + "/IconoCarta_" + id + ".png";
+        var importador = AssetImporter.GetAtPath(ruta) as TextureImporter;
+        if (importador == null) return null;
+        bool cambio = importador.textureType != TextureImporterType.Sprite || importador.spriteImportMode != SpriteImportMode.Single
+                      || !importador.alphaIsTransparency || !importador.mipmapEnabled;
+        if (cambio)
+        {
+            importador.textureType = TextureImporterType.Sprite;
+            importador.spriteImportMode = SpriteImportMode.Single;
+            importador.alphaIsTransparency = true;
+            importador.mipmapEnabled = true;
+            importador.SaveAndReimport();
+        }
+        return AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
     }
 }

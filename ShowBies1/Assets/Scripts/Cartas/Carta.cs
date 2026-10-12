@@ -22,6 +22,8 @@ public class Carta : ScriptableObject
     public Requisito requiere = Requisito.Ninguno;
     [Tooltip("El color de la tarjeta y de su icono en el HUD.")]
     public Color color = Color.white;
-    [Tooltip("Lo que dice el circulo de la tarjeta mientras no tenga dibujo: uno o dos signos.")]
+    [Tooltip("El dibujo del circulo de la tarjeta y del HUD: blanco sobre transparente, se tine. Lo pone ConstructorCartas desde Assets/Cartas/Iconos.")]
+    public Sprite icono;
+    [Tooltip("Lo que dice el circulo si la carta no tiene icono: uno o dos signos.")]
     public string simbolo = "?";
 }

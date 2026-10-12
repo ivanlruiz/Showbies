@@ -17,4 +17,5 @@ MonoBehaviour:
   valor: 0.7
   requiere: 1
   color: {r: 1, g: 0.62, b: 0.11, a: 1}
+  icono: {fileID: 21300000, guid: 4956c23f9433bc442a960eb52e4a91cf, type: 3}
   simbolo: G

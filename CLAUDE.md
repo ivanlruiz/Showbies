@@ -85,7 +85,7 @@ Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo
 Y **fuera del proyecto de Unity**, en la raíz del repo:
 
 ```
-Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono)
+Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono); cartas/: los íconos de las cartas
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
@@ -464,10 +464,15 @@ cambian las reglas (perforante, rebote, dron...) son la etapa 2.
   aplica (`PlayerHealth.AplicarCartasDeVida`, sobre el máximo de la mejora, y llena la vida). **Fuera de una partida
   (`!Activo`: el menú, el tutorial, la prueba de lógica) todo vale neutro.** Lo prende `EleccionDeCartas` al
   instalarse y lo apaga una carga Single de cualquier otra escena (la derrota, que va aditiva, no).
-- **Las cartas son `Carta` en `Assets/Cartas/`** (id, tope, valor, si piden la granada o la furia compradas, color y
-  símbolo, este provisorio hasta que tengan dibujo), juntadas en `Resources/CatalogoCartas`. **ShowBies > Cartas >
+- **Las cartas son `Carta` en `Assets/Cartas/`** (id, tope, valor, si piden la granada o la furia compradas, color,
+  ícono y un símbolo de respaldo), juntadas en `Resources/CatalogoCartas`. **ShowBies > Cartas >
   Armar las cartas** (`ConstructorCartas`) crea las que faltan y rearma el catálogo; los números se balancean en el
   asset y no se pisan. **Un id no se renombra**: se guarda con la partida.
+- **Los íconos los generó Gemini** (Nano Banana, 12/10, con las capturas de la ficha y los íconos del menú de
+  referencia): una hoja de 18 dibujos blancos sobre negro, en `Marketing/cartas/iconos_gemini.jpg`, que
+  `Marketing/cartas/recortar_iconos.py` corta en `Assets/Cartas/Iconos/IconoCarta_<id>.png` (256 px, blancos con alfa,
+  ya con los de la etapa 2). `ConstructorCartas` los importa con mipmaps (en el HUD se ven a 26 px) y se los pone a cada
+  carta; la tarjeta y la fila del HUD los dibujan oscuros dentro del círculo del color de la carta.
 
 | carta | por vez | tope |
 |---|---|---|
