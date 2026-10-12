@@ -292,6 +292,9 @@ public static class PruebaCartasDeReglas
                 var disparar = typeof(GunController).GetMethod("Disparar", BindingFlags.Instance | BindingFlags.NonPublic);
                 if (disparar == null) { Terminar("no se encontro GunController.Disparar"); return; }
                 control.cantBalas = Mathf.Max(control.cantBalas, 100);
+                // Con la pistola: el abanico es de la carta, no del arma (con 4 de daño saldria la
+                // escopeta, con sus perdigones).
+                arma.FijarDanoPorBala(1f);
                 Poner(PoderDeLaPartida.DisparoDoble, 1, PoderDeLaPartida.HaciaAtras, 1);
                 var antes = new HashSet<BulletController>(BalasPrendidas());
                 tirosAntes = arma.TirosDisparados;

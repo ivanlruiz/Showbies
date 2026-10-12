@@ -183,6 +183,14 @@ public class PlayerJS : MonoBehaviour
         player.FijarDisparo(true);
     }
 
+    // Hasta donde apunta solo: AlcanceAutoApuntar, o lo que llega el arma de la mano si es menos
+    // (la escopeta, 7 m: tirarle a lo que no alcanza era gastar balas en el aire).
+    public static float AlcanceDelAutoApuntado(GunController arma)
+    {
+        if (arma == null) return AlcanceAutoApuntar;
+        return Mathf.Min(AlcanceAutoApuntar, Proyectiles.Alcance(arma.TramoDelArma));
+    }
+
     // El zombi vivo mas cercano que se ve, a menos de AlcanceAutoApuntar, y la direccion hacia
     // el en el piso. Se queda con el de antes mientras el otro no este bastante mas cerca.
     bool BuscarBlanco(out Vector3 hacia)
@@ -190,7 +198,8 @@ public class PlayerJS : MonoBehaviour
         hacia = Vector3.zero;
         if (camara == null) camara = Camera.main;
         Vector3 yo = player.transform.position;
-        float alcance2 = AlcanceAutoApuntar * AlcanceAutoApuntar;
+        float alcance = AlcanceDelAutoApuntado(player != null ? player.theGun : null);
+        float alcance2 = alcance * alcance;
 
         EnemyController mejor = null;
         float mejorDistancia2 = float.MaxValue;

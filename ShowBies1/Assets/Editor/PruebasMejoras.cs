@@ -263,6 +263,7 @@ public static class PruebasMejoras
                     ProbarOleadaPerfecta(informe);
                     ProbarBalasPorTramo(informe);
                     ProbarArmasPorTramo(informe);
+                    ProbarProyectiles(informe);
                     ProbarFlechasDelBorde(informe);
                     ProbarZombiDelTesoro(informe);
                     ProbarBestiario(informe);
@@ -5585,15 +5586,13 @@ public static class PruebasMejoras
         for (int i = 0; i < BulletController.ColoresPorTramo.Length; i++)
         {
             var c = BulletController.ColoresPorTramo[i];
-            var r = BulletController.ColorCritico;
-            distintos &= Mathf.Abs(c.r - r.r) + Mathf.Abs(c.g - r.g) + Mathf.Abs(c.b - r.b) > 0.3f;
             for (int j = 0; j < i; j++)
             {
                 var d = BulletController.ColoresPorTramo[j];
                 distintos &= Mathf.Abs(c.r - d.r) + Mathf.Abs(c.g - d.g) + Mathf.Abs(c.b - d.b) > 0.3f;
             }
         }
-        inf.Verdadero("balas: los colores de los tramos y el de la critica se distinguen", distintos);
+        inf.Verdadero("balas: los colores de los tramos se distinguen", distintos);
 
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Bullet.prefab");
         if (!inf.Verdadero("balas: esta el prefab", prefab != null && prefab.GetComponent<BulletController>() != null)) return;
@@ -5614,17 +5613,17 @@ public static class PruebasMejoras
             inf.Verdadero("balas: la base es blanca", a.MaterialPuesto != null && a.MaterialPuesto.color == BulletController.ColoresPorTramo[0]);
             float chica = a.transform.localScale.x;
             a.Vestir(16f, false);
-            inf.Cerca("balas: la del ultimo tramo crece", BulletController.TamanioPorTramo[4], a.transform.localScale.x / chica, 1e-4);
+            inf.Cerca("balas: la pistola no crece con el tramo (la forma es del arma)", 1f, a.transform.localScale.x / chica, 1e-4);
             inf.Verdadero("balas: con su color", a.MaterialPuesto.color == BulletController.ColoresPorTramo[4]);
             var caja = a.GetComponent<BoxCollider>();
-            inf.Verdadero("balas: pero el collider no: pega igual que antes",
+            inf.Verdadero("balas: y el collider pega igual que antes",
                           (Vector3.Scale(caja.size, a.transform.localScale) - hitbox).magnitude < 1e-4f);
             b.Vestir(1f, true);
-            inf.Verdadero("balas: la critica sale roja", b.MaterialPuesto.color == BulletController.ColorCritico);
-            inf.Cerca("balas: y mas grande que las de su tramo", BulletController.TamanioCritico, b.transform.localScale.x / chica, 1e-4);
+            inf.Verdadero("balas: la critica sale blanca", b.MaterialPuesto.color == Proyectiles.ColorCritico);
+            inf.Cerca("balas: y la mitad mas grande", Proyectiles.TamanioCritico, b.transform.localScale.x / chica, 1e-4);
             b.Vestir(2f, false);
             inf.Verdadero("balas: reusada, vuelve a su tramo", b.MaterialPuesto.color == BulletController.ColoresPorTramo[1] &&
-                          Mathf.Abs(b.transform.localScale.x / chica - BulletController.TamanioPorTramo[1]) < 1e-4f);
+                          Mathf.Abs(b.transform.localScale.x / chica - 1f) < 1e-4f);
 
             // Mas chica de lo que pega, y con su luz en el piso (pedido de Ivan, 9/10).
             var c = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, vista)).GetComponent<BulletController>();
@@ -5650,8 +5649,8 @@ public static class PruebasMejoras
                 d.Vestir(1f, false);
                 inf.Verdadero("balas: las luces del mismo tramo comparten el material", d.Luz != null && d.Luz.GetComponent<Renderer>().sharedMaterial == luzBlanca);
                 c.Vestir(16f, true);
-                inf.Verdadero("balas: la de la critica es roja y crece con la bala", dibujoLuz.sharedMaterial.color == BulletController.ColorCritico &&
-                              luz.lossyScale.x > BulletController.LadoDeLaLuz * 1.5f && Mathf.Abs(luz.position.y - BulletController.AlturaDeLaLuz) < 0.01f);
+                inf.Verdadero("balas: la de la critica es del color de su tramo y crece con la bala", dibujoLuz.sharedMaterial.color == BulletController.ColoresPorTramo[4] &&
+                              luz.lossyScale.x > BulletController.LadoDeLaLuz * 1.15f && Mathf.Abs(luz.position.y - BulletController.AlturaDeLaLuz) < 0.01f);
             }
         }
         finally
@@ -5660,6 +5659,114 @@ public static class PruebasMejoras
         }
         inf.Verdadero("balas: Bullet.mat no cambia (pinta tambien la caja de balas)",
                       prefab.GetComponent<Renderer>().sharedMaterial == materialDelPrefab && materialDelPrefab.color == colorDelPrefab);
+    }
+
+    // Lo que tira cada arma (Proyectiles, 12/10: "que no sean todos cubitos"): la forma, la
+    // velocidad y el alcance de cada una, el daño por segundo igual con cualquier arma (la
+    // cadencia del arma compensada en cada bala), la escopeta de cuatro perdigones de un tercio,
+    // el charco de luz donde va, la critica blanca y el auto-apuntado hasta donde llega el arma.
+    static void ProbarProyectiles(Informe inf)
+    {
+        int n = ArmaEnLaMano.Armas;
+        bool tablas = Proyectiles.Velocidad.Length == n && Proyectiles.Vida.Length == n && Proyectiles.Cadencia.Length == n &&
+                      Proyectiles.Forma.Length == n && Proyectiles.Redonda.Length == n && Proyectiles.PerforacionesPropias.Length == n;
+        if (!inf.Verdadero("proyectiles: una fila por arma", tablas)) return;
+        inf.Cerca("proyectiles: la escopeta llega a unos 7 m", 7.2, Proyectiles.Alcance(Proyectiles.Escopeta), 1e-3);
+        bool alcances = true;
+        for (int i = 0; i < n; i++) if (i != Proyectiles.Escopeta) alcances &= Proyectiles.Alcance(i) >= PlayerJS.AlcanceAutoApuntar;
+        inf.Verdadero("proyectiles: las demas llegan mas lejos que el auto-apuntado", alcances);
+        inf.Verdadero("proyectiles: el rifle es el mas rapido; la escopeta y la energia, lentas",
+                      Proyectiles.Velocidad[Proyectiles.Rifle] > Proyectiles.Velocidad[Proyectiles.Revolver] &&
+                      Proyectiles.Velocidad[Proyectiles.Revolver] > Proyectiles.Velocidad[Proyectiles.Pistola] &&
+                      Proyectiles.Velocidad[Proyectiles.Escopeta] < Proyectiles.Velocidad[Proyectiles.Pistola]);
+        inf.Igual("proyectiles: la escopeta tira cuatro perdigones", 4, Proyectiles.BalasAdelante(Proyectiles.Escopeta, 0));
+        inf.Igual("proyectiles: y el disparo doble le suma dos", 6, Proyectiles.BalasAdelante(Proyectiles.Escopeta, 1));
+        inf.Igual("proyectiles: las demas, una y una por carta", 2, Proyectiles.BalasAdelante(Proyectiles.Rifle, 1));
+        inf.Verdadero("proyectiles: el charco: el rifle no, la escopeta en un solo perdigon, las demas si",
+                      !Proyectiles.LlevaLuz(Proyectiles.Rifle, 0) && Proyectiles.LlevaLuz(Proyectiles.Escopeta, Proyectiles.PerdigonConLuz) &&
+                      !Proyectiles.LlevaLuz(Proyectiles.Escopeta, 0) && !Proyectiles.LlevaLuz(Proyectiles.Escopeta, 3) &&
+                      !Proyectiles.LlevaLuz(Proyectiles.Escopeta, -1) && Proyectiles.LlevaLuz(Proyectiles.Pistola, 0) &&
+                      Proyectiles.LlevaLuz(Proyectiles.Revolver, 0) && Proyectiles.LlevaLuz(Proyectiles.Energia, 0));
+        inf.Verdadero("proyectiles: solo la de energia atraviesa por su cuenta (2)",
+                      Proyectiles.PerforacionesPropias[Proyectiles.Energia] == 2 && Proyectiles.PerforacionesPropias[Proyectiles.Rifle] == 0);
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Bullet.prefab");
+        if (!inf.Verdadero("proyectiles: esta la bala", prefab != null)) return;
+        var balaDelPrefab = prefab.GetComponent<BulletController>();
+        inf.Verdadero("proyectiles: la bala trae la malla redonda de la onda", balaDelPrefab.mallaRedonda != null &&
+                      balaDelPrefab.mallaRedonda != prefab.GetComponent<MeshFilter>().sharedMesh);
+        Vector3 hitbox = Vector3.Scale(prefab.GetComponent<BoxCollider>().size, prefab.transform.localScale);
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            // La forma de cada una, sin cambiar lo que pega.
+            var b = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, vista)).GetComponent<BulletController>();
+            b.transform.position = new Vector3(0f, 1.1f, 0f);
+            b.Vestir(1f, false, Proyectiles.Pistola, true, 1f);
+            Vector3 pistola = b.transform.localScale;
+            bool hitboxIgual = true;
+            for (int i = 0; i < n; i++)
+            {
+                b.Vestir(1f, false, i, Proyectiles.LlevaLuz(i, Proyectiles.PerdigonConLuz), 1f);
+                hitboxIgual &= (Vector3.Scale(b.GetComponent<BoxCollider>().size, b.transform.localScale) - hitbox).magnitude < 1e-4f;
+            }
+            inf.Verdadero("proyectiles: con cualquier forma, el collider pega igual", hitboxIgual);
+            b.Vestir(1f, false, Proyectiles.Rifle, false, 1f);
+            inf.Verdadero("proyectiles: el rifle, una trazadora larga y fina",
+                          Mathf.Abs(b.transform.localScale.z / pistola.z - 4f) < 1e-3f && Mathf.Abs(b.transform.localScale.x / pistola.x - 0.5f) < 1e-3f &&
+                          !b.LlevaLuz);
+            b.Vestir(1f, false, Proyectiles.Energia, true, 1f);
+            inf.Verdadero("proyectiles: la de energia, una onda ancha y redonda",
+                          b.GetComponent<MeshFilter>().sharedMesh == balaDelPrefab.mallaRedonda && b.transform.localScale.x / pistola.x > 2.9f && b.LlevaLuz);
+            b.Vestir(1f, false, Proyectiles.Revolver, true, 1f);
+            inf.Verdadero("proyectiles: el revolver, mas grande y con el cubo de vuelta",
+                          Mathf.Abs(b.transform.localScale.x / pistola.x - 1.75f) < 1e-3f &&
+                          b.GetComponent<MeshFilter>().sharedMesh == prefab.GetComponent<MeshFilter>().sharedMesh);
+            b.Vestir(4f, false, Proyectiles.Escopeta, true, 1f);
+            inf.Verdadero("proyectiles: el perdigon, chico, con una luz grande y tenue",
+                          Mathf.Abs(b.transform.localScale.x / pistola.x - 0.75f) < 1e-3f && b.LlevaLuz &&
+                          Mathf.Abs(b.Luz.lossyScale.x - BulletController.LadoDeLaLuzDeLaEscopeta) < 1e-3f &&
+                          Mathf.Abs(b.Luz.lossyScale.y - BulletController.LadoDeLaLuzDeLaEscopeta) < 1e-3f &&
+                          b.Luz.GetComponent<Renderer>().sharedMaterial.color.r < BulletController.ColoresPorTramo[2].r);
+            b.Vestir(4f, true, Proyectiles.Escopeta, false, 1f);
+            inf.Verdadero("proyectiles: la critica, blanca y la mitad mas grande, tambien en la escopeta",
+                          b.MaterialPuesto.color == Proyectiles.ColorCritico && Mathf.Abs(b.transform.localScale.x / pistola.x - 0.75f * 1.5f) < 1e-3f &&
+                          !b.LlevaLuz);
+
+            // El daño por segundo, igual con cualquier arma (sin el techo de la cadencia).
+            var go = new GameObject("Arma");
+            SceneManager.MoveGameObjectToScene(go, vista);
+            var arma = go.AddComponent<GunController>();
+            arma.FijarTirosPorSegundo(10f);
+            bool dps = true, cadencias = true, alcanceDelAuto = true;
+            string detalle = "";
+            for (int t = 0; t < n; t++)
+            {
+                arma.FijarDanoPorBala(Mathf.Max(1f, BulletController.DesdeDano[t]));
+                int a = arma.TramoDelArma;
+                float porTiro = arma.CompensacionDelArma * (a == Proyectiles.Escopeta ? Proyectiles.PartePorPerdigon * 4f : 1f);
+                float relativo = porTiro * arma.TirosPorSegundoDelArma / arma.TirosPorSegundo;
+                float esperado = a == Proyectiles.Escopeta ? 4f / 3f : 1f;
+                dps &= Mathf.Abs(relativo - esperado) < 1e-3f;
+                cadencias &= Mathf.Abs(arma.TirosPorSegundoDelArma - 10f * Proyectiles.Cadencia[a]) < 1e-3f;
+                float alcance = PlayerJS.AlcanceDelAutoApuntado(arma);
+                alcanceDelAuto &= Mathf.Abs(alcance - Mathf.Min(PlayerJS.AlcanceAutoApuntar, Proyectiles.Alcance(a))) < 1e-4f;
+                detalle += " " + a + ":" + relativo.ToString("0.00");
+            }
+            inf.Verdadero("proyectiles: cada arma tira a su cadencia", cadencias);
+            inf.Verdadero("proyectiles: el daño por segundo es el de las mejoras (la escopeta, 133 % con los cuatro adentro):" + detalle, dps);
+            inf.Verdadero("proyectiles: con la escopeta el auto-apuntado llega a 7 m", alcanceDelAuto);
+            // Con el techo de 120, el rifle no pierde daño por una cadencia que no gano.
+            arma.FijarDanoPorBala(8f);
+            arma.FijarTirosPorSegundo(200f);
+            inf.Verdadero("proyectiles: el rifle al techo no pierde daño",
+                          Mathf.Abs(arma.CompensacionDelArma - 1f) < 1e-3f && Mathf.Abs(arma.TirosPorSegundoDelArma - 120f) < 1e-3f);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
     }
 
     // El arma de la mano cambia con el daño (1.6.0, etapa 3 de las cartas; ArmaEnLaMano): una por
@@ -6858,7 +6965,7 @@ public static class PruebasMejoras
     private class Regimen
     {
         public bool conCaja;
-        public float decimos;       // Mathf.Round(TirosPorSegundo * 10): la clave
+        public float decimos;       // Mathf.Round(TirosPorSegundoDelArma * 10): la clave
         public float esperado;      // TirosPorSegundo del arma al entrar al tramo
         public double duracion;
         public long tiros;
@@ -7100,7 +7207,7 @@ public static class PruebasMejoras
         // 3. Tiros por tramo: solo cuenta el intervalo entre dos ticks con la misma
         // cadencia, asi el tick en que vence una caja no mezcla los dos tramos.
         bool caja = m.arma.MejoraActiva;
-        float decimos = Mathf.Round(m.arma.TirosPorSegundo * 10f);
+        float decimos = Mathf.Round(m.arma.TirosPorSegundoDelArma * 10f);
         int tiros = m.arma.TirosDisparados;
         float ahora = Time.time;
         if (m.hayAnterior && caja == m.cajaAnterior && decimos == m.decimosAnterior)
@@ -7124,7 +7231,7 @@ public static class PruebasMejoras
         {
             if (r.conCaja == caja && r.decimos == decimos) return r;
         }
-        var nuevo = new Regimen { conCaja = caja, decimos = decimos, esperado = m.arma.TirosPorSegundo };
+        var nuevo = new Regimen { conCaja = caja, decimos = decimos, esperado = m.arma.TirosPorSegundoDelArma };
         m.regimenes.Add(nuevo);
         return nuevo;
     }

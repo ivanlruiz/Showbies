@@ -64,6 +64,24 @@ línea de un píxel), el revólver parecía "la pistola con la bala más grande"
 
 Queda de esa revisión, fuera del top 10: un zumbido que quede sonando después del zap de la de energía.
 
+### Las balas de cada arma (12/10)
+
+Ivan: "que no sean todos cubitos" (para la escopeta se imaginaba proyectiles muy chiquitos que recorren poca distancia).
+Gemini, con las fotos de las balas de noche: cada arma tiene que cambiar también cómo dispara, no solo cómo se ve. **Hecho
+el 12/10** (la tabla y los detalles, en Lo que tira cada arma de `CLAUDE.md`):
+
+- La pistola, la de siempre; el revólver, más grande y rápido; la escopeta, cuatro perdigones chicos en abanico que
+  llegan a 7 m; el rifle, una trazadora larga, muy rápida; la de energía, una onda ancha y lenta que atraviesa dos zombis.
+- El revólver y la escopeta tiran más lento y el rifle más rápido, para que cada arma tenga su ritmo; el daño por bala lo
+  compensa (lo confirmó Gemini: una compra nunca puede bajar el daño por segundo).
+- La escopeta reparte el tiro a un tercio por perdigón (133 % con los cuatro adentro); las cartas, en cada perdigón; el
+  disparo doble le suma dos a los costados y la de atrás tira uno gordo.
+- El charco de luz: el rifle sin, la escopeta uno solo por tiro, más grande y tenue (el Redmi no aguanta el piso lleno de
+  transparencias).
+- La crítica, blanca, la mitad más grande y con estela de chispas (la roja se confundía con los tramos 4 y 5 y la sangre).
+- Las medidas, en proporción a la bala de 0,09 m de hoy (Ivan las había pedido más chicas); el auto-apuntado, hasta los
+  7 m de la escopeta.
+
 ### Las tarjetas de las cartas
 
 Hecho el 12/10, junto con el 6 y el 7 de la lista: **sin el círculo relleno** (el fondo ya es oscuro y el círculo era

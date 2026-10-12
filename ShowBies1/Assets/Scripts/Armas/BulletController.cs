@@ -8,6 +8,7 @@ public class BulletController : MonoBehaviour
     public float lifeTime;
     public int dañoDar;   // respaldo del prefab: el daño de verdad lo pone el arma en cada tiro
     public Material materialLuz;   // el charco de luz del piso (ShowBies/CharcoDeLuz): lo pone ConstructorArmas
+    public Mesh mallaRedonda;      // la de la onda del arma de energia (la esfera): la pone ConstructorArmas
 
     // El daño de esta bala, puesto en cada tiro por GunController desde la mejora
     // de daño. No se serializa: si se guardara en el prefab, el primer tiro de la
@@ -19,6 +20,8 @@ public class BulletController : MonoBehaviour
     // (GunController.SacarBala): cuantos zombis mas atraviesa, la explosion al pegar, y si
     // congela o quema al que toca. Como el daño y el critico, vuelve a cero en Obtener.
     [System.NonSerialized] public int perforacionesRestantes;
+    // Las que atraviesa por su arma, sin perder daño (la de energia: Proyectiles.PerforacionesPropias).
+    [System.NonSerialized] public int perforacionesSinPerder;
     [System.NonSerialized] public float fraccionDeExplosion;
     [System.NonSerialized] public float radioDeExplosion;
     [System.NonSerialized] public float lentitudDelHielo;
@@ -41,14 +44,14 @@ public class BulletController : MonoBehaviour
     private bool enUso;
 
     // Lo que se compra se ve en el tiro (revision del 9/10, mejora 6): la bala cambia de color
-    // y crece por tramos del daño que lleva cada tiro (la mejora por la furia), y la critica
-    // sale roja y mas grande desde el arma. Los tramos se duplican (1, 2, 4, 8 y 16): la
-    // primera compra ya cambia el color, y la furia, que pega x2, sube justo un tramo. El
-    // cuarto es magenta y no rojo, como decia el informe: el rojo es de la critica, y una bala
-    // roja tiene que leerse como una sola cosa. Un material por tramo, armado una vez a partir
-    // del de la bala y compartido por todas (asi no se rompe el batching); Bullet.mat no se
-    // toca, que tambien pinta el brillo de la caja de balas. Solo crece lo que se ve: el
-    // collider se achica en la misma proporcion, y la bala pega igual que antes.
+    // por tramos del daño que lleva cada tiro (la mejora por la furia). Los tramos se duplican
+    // (1, 2, 4, 8 y 16): la primera compra ya cambia el color, y la furia, que pega x2, sube
+    // justo un tramo. La forma y el tamaño son del arma de la mano (Proyectiles, desde el
+    // 12/10: antes todas eran el mismo cubo, que crecia con el tramo), y la critica sale blanca
+    // y la mitad mas grande, con una estela. Un material por tramo, armado una vez a partir del
+    // de la bala y compartido por todas (asi no se rompe el batching); Bullet.mat no se toca,
+    // que tambien pinta el brillo de la caja de balas. Solo crece lo que se ve: el collider se
+    // achica en la misma proporcion, y la bala pega igual con cualquier forma.
     public static readonly float[] DesdeDano = { 0f, 2f, 4f, 8f, 16f };
     public static readonly Color[] ColoresPorTramo =
     {
@@ -58,23 +61,30 @@ public class BulletController : MonoBehaviour
         new Color(1f, 0.169f, 0.839f),    // magenta, la de los titulos de neon
         new Color(0.62f, 0.33f, 1f),      // violeta
     };
-    public static readonly float[] TamanioPorTramo = { 1f, 1.2f, 1.45f, 1.7f, 2f };
-    public static readonly Color ColorCritico = new Color(1f, 0.231f, 0.361f);   // el rojo del neon
-    public const float TamanioCritico = 1.3f;   // por encima del de su tramo
 
     // Mas chica que antes, y con luz (pedido de Ivan, 9/10). Lo que se ve, al 70 %: el collider
     // se agranda en la misma proporcion y pega igual. Y cada bala alumbra el piso debajo de ella
     // con un charco de su color (el shader de los faroles, aditivo y sin textura), que crece con
-    // el tramo: el chorro de balas pinta el piso por donde pasa. Un material por tramo,
-    // compartido, como los de la bala.
+    // la bala: el chorro de balas pinta el piso por donde pasa. El rifle no lleva (tira muy
+    // seguido), y la escopeta uno solo por tiro, mas grande y tenue (Proyectiles.LlevaLuz): con
+    // uno por perdigon el piso se llenaba de transparencias. Un material por tramo, compartido,
+    // como los de la bala.
     public const float EscalaVisual = 0.7f;
-    public const float LadoDeLaLuz = 1.3f;      // metros, con la bala del primer tramo
+    public const float LadoDeLaLuz = 1.3f;      // metros, con la bala de la pistola
     public const float AlturaDeLaLuz = 0.2f;    // por encima de la vereda de la ciudad, como los charcos
+    public const float LadoDeLaLuzDeLaEscopeta = 2.6f;   // la del perdigon del medio: cubre la rafaga
+    public const float LuzTenue = 0.55f;                 // y mas apagada
 
     private static Material[] lucesPorTramo;
-    private static Material luzCritica;
+    private static Material[] lucesTenuesPorTramo;
     private Transform luz;
     private Renderer dibujoDeLaLuz;
+
+    private MeshFilter filtro;
+    private Mesh mallaBase;
+    private float recorridoDeLaEstela;
+    public int ArmaPuesta { get; private set; }
+    public bool LlevaLuz { get { return luz != null && luz.gameObject.activeSelf; } }
 
     private static Material[] materialesPorTramo;
     private static Material materialCritico;
@@ -93,7 +103,7 @@ public class BulletController : MonoBehaviour
         materialesPorTramo = null;
         materialCritico = null;
         lucesPorTramo = null;
-        luzCritica = null;
+        lucesTenuesPorTramo = null;
     }
 
     // El tramo de un daño por tiro: 0 hasta 2, 1 hasta 4, 2 hasta 8, 3 hasta 16 y 4 de ahi
@@ -106,38 +116,60 @@ public class BulletController : MonoBehaviour
         return tramo;
     }
 
-    // Viste la bala para el tiro: el color y el tamaño de su tramo, o los de la critica.
-    // 'danoPorTiro' es el de la mejora con la furia, sin la critica.
+    // Viste la bala de la pistola. 'danoPorTiro' es el de la mejora con la furia, sin la critica.
     public void Vestir(float danoPorTiro, bool esCritica)
     {
+        Vestir(danoPorTiro, esCritica, Proyectiles.Pistola, true, 1f);
+    }
+
+    // Viste la bala de un arma (Proyectiles): su forma y su tamaño ('escala' agranda la que lo
+    // pide, como el perdigon de atras), el color del tramo de su daño o, si es critica, blanca y
+    // la mitad mas grande, la malla redonda de la de energia y su charco de luz, si lo lleva.
+    public void Vestir(float danoPorTiro, bool esCritica, int arma, bool conLuz, float escala)
+    {
         Preparar();
+        arma = Proyectiles.Arma(arma);
+        ArmaPuesta = arma;
         int tramo = Tramo(danoPorTiro);
-        float tamanio = TamanioPorTramo[tramo] * (esCritica ? TamanioCritico : 1f);
-        transform.localScale = escalaBase * (tamanio * EscalaVisual);
-        if (caja != null) caja.size = cajaBase / (tamanio * EscalaVisual);
-        PonerLaLuz(tramo, tamanio, esCritica);
+        Vector3 forma = Proyectiles.Forma[arma] * (escala * (esCritica ? Proyectiles.TamanioCritico : 1f) * EscalaVisual);
+        transform.localScale = Vector3.Scale(escalaBase, forma);
+        if (caja != null) caja.size = new Vector3(cajaBase.x / forma.x, cajaBase.y / forma.y, cajaBase.z / forma.z);
+        if (filtro != null) filtro.sharedMesh = Proyectiles.Redonda[arma] && mallaRedonda != null ? mallaRedonda : mallaBase;
+        PonerLaLuz(tramo, arma, Mathf.Max(forma.x, forma.z) / EscalaVisual, conLuz);
+        recorridoDeLaEstela = 0f;
         if (dibujo == null) return;
         ArmarMateriales(dibujo.sharedMaterial);
         if (materialesPorTramo != null) dibujo.sharedMaterial = esCritica ? materialCritico : materialesPorTramo[tramo];
     }
 
-    // El charco del piso: debajo de la bala, acostado, del tamaño y el color de su tramo. Es
-    // hijo de la bala, asi la sigue sin costo; se mide en el mundo, que la bala cambia de escala.
-    private void PonerLaLuz(int tramo, float tamanio, bool esCritica)
+    // El charco del piso: debajo de la bala, acostado, del tamaño de la bala y el color de su
+    // tramo (tambien la critica). Es hijo de la bala, asi la sigue sin costo; se mide en el mundo
+    // en cada eje, que la bala cambia de escala y no siempre pareja (la trazadora del rifle).
+    private void PonerLaLuz(int tramo, int arma, float tamanio, bool conLuz)
     {
         if (luz == null || materialLuz == null) return;
+        if (luz.gameObject.activeSelf != conLuz) luz.gameObject.SetActive(conLuz);
+        if (!conLuz) return;
         Vector3 escala = transform.localScale;
-        if (escala.x <= 0f || escala.y <= 0f) return;
-        luz.localScale = Vector3.one * (LadoDeLaLuz * Mathf.Sqrt(tamanio) / escala.x);
+        if (escala.x <= 0f || escala.y <= 0f || escala.z <= 0f) return;
+        bool escopeta = arma == Proyectiles.Escopeta;
+        float lado = escopeta ? LadoDeLaLuzDeLaEscopeta : LadoDeLaLuz * Mathf.Sqrt(tamanio);
+        // Acostada (girada 90 grados en X): su alto va a lo largo de la bala.
+        luz.localScale = new Vector3(lado / escala.x, lado / escala.z, 1f);
         luz.localPosition = new Vector3(0f, (AlturaDeLaLuz - transform.position.y) / escala.y, 0f);
-        if (lucesPorTramo == null || lucesPorTramo[0] == null || luzCritica == null)
+        if (lucesPorTramo == null || lucesPorTramo[0] == null || lucesTenuesPorTramo == null || lucesTenuesPorTramo[0] == null)
         {
             lucesPorTramo = new Material[ColoresPorTramo.Length];
+            lucesTenuesPorTramo = new Material[ColoresPorTramo.Length];
             for (int i = 0; i < lucesPorTramo.Length; i++)
+            {
                 lucesPorTramo[i] = new Material(materialLuz) { name = "LuzTramo" + i, color = ColoresPorTramo[i] };
-            luzCritica = new Material(materialLuz) { name = "LuzCritica", color = ColorCritico };
+                Color tenue = ColoresPorTramo[i] * LuzTenue;
+                tenue.a = 1f;
+                lucesTenuesPorTramo[i] = new Material(materialLuz) { name = "LuzTenueTramo" + i, color = tenue };
+            }
         }
-        dibujoDeLaLuz.sharedMaterial = esCritica ? luzCritica : lucesPorTramo[tramo];
+        dibujoDeLaLuz.sharedMaterial = escopeta ? lucesTenuesPorTramo[tramo] : lucesPorTramo[tramo];
     }
 
     public Transform Luz { get { return luz; } }
@@ -154,6 +186,8 @@ public class BulletController : MonoBehaviour
         caja = GetComponent<BoxCollider>();
         if (caja != null) cajaBase = caja.size;
         dibujo = GetComponent<Renderer>();
+        filtro = GetComponent<MeshFilter>();
+        if (filtro != null) mallaBase = filtro.sharedMesh;
         if (materialLuz != null)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -178,7 +212,7 @@ public class BulletController : MonoBehaviour
         materialesPorTramo = new Material[ColoresPorTramo.Length];
         for (int i = 0; i < materialesPorTramo.Length; i++)
             materialesPorTramo[i] = new Material(baseDeLaBala) { name = "BalaTramo" + i, color = ColoresPorTramo[i] };
-        materialCritico = new Material(baseDeLaBala) { name = "BalaCritica", color = ColorCritico };
+        materialCritico = new Material(baseDeLaBala) { name = "BalaCritica", color = Proyectiles.ColorCritico };
     }
 
     public static BulletController Obtener(BulletController prefab, Vector3 posicion, Quaternion rotacion)
@@ -205,6 +239,7 @@ public class BulletController : MonoBehaviour
         bala.danoAplicado = prefab.dañoDar;
         bala.critico = false;
         bala.perforacionesRestantes = 0;
+        bala.perforacionesSinPerder = 0;
         bala.fraccionDeExplosion = 0f;
         bala.radioDeExplosion = 0f;
         bala.lentitudDelHielo = 0f;
@@ -242,7 +277,19 @@ public class BulletController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.Translate(Vector3.forward * velocidad * Time.deltaTime);
+        float paso = velocidad * Time.deltaTime;
+        transform.Translate(Vector3.forward * paso);
+
+        // La critica deja una estela de chispas (de las de la escena, con un techo por cuadro).
+        if (critico)
+        {
+            recorridoDeLaEstela += paso;
+            if (recorridoDeLaEstela >= Proyectiles.EstelaCadaMetros)
+            {
+                recorridoDeLaEstela = 0f;
+                Efectos.Estela(transform.position);
+            }
+        }
 
         lifeTime -= Time.deltaTime;
         if (lifeTime < 0)
@@ -296,6 +343,13 @@ public class BulletController : MonoBehaviour
         if (quemaduraPorSegundo > 0f) zombi.Quemar(quemaduraPorSegundo, PoderDeLaPartida.DuracionDeLaQuemadura);
         if (fraccionDeExplosion > 0f && radioDeExplosion > 0f) Explotar(zombi);
 
+        // La de energia atraviesa por su cuenta, sin perder daño; despues, las de la carta.
+        if (perforacionesSinPerder > 0)
+        {
+            perforacionesSinPerder--;
+            if (caja != null) caja.isTrigger = true;
+            return;
+        }
         if (perforacionesRestantes > 0)
         {
             perforacionesRestantes--;

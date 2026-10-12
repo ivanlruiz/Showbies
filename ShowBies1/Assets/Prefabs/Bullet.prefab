@@ -129,3 +129,4 @@ MonoBehaviour:
   lifeTime: 2
   "da\xF1oDar": 5
   materialLuz: {fileID: 2100000, guid: a1c1c121d98d267419a00d22c88b8bc5, type: 2}
+  mallaRedonda: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}

@@ -36,7 +36,9 @@ public static class PruebaArmas
     static readonly List<string> ques = new List<string>();
     static readonly StringBuilder notas = new StringBuilder();
 
-    static int fogonazosAntes, tirosAntes, armasNuevasAntes;
+    static int fogonazosAntes, tirosAntes, armasNuevasAntes, balasAntes;
+    static bool balaBien;
+    static string balaVista;
     static bool vioPrendido, fogonazoBien, vioPausa, vioRojo, vioSuColor;
     static float peorSalida, luzMasFuerte;
 
@@ -257,6 +259,9 @@ public static class PruebaArmas
                     control.cantBalas = 1000;
                     fogonazosAntes = mano.Fogonazos;
                     tirosAntes = arma.TirosDisparados;
+                    balasAntes = arma.BalasSacadas;
+                    balaBien = true;
+                    balaVista = "";
                     vioPrendido = false;
                     fogonazoBien = true;
                     peorSalida = 0f;
@@ -278,6 +283,13 @@ public static class PruebaArmas
                 }
                 var luz = mano.ColorDeLaLuz;
                 luzMasFuerte = Mathf.Max(luzMasFuerte, luz.r + luz.g + luz.b);
+                // La bala de esta arma (Proyectiles): su forma, su velocidad y su charco.
+                var ultima = arma.UltimaBala;
+                if (ultima != null && arma.TirosDisparados > tirosAntes)
+                {
+                    balaBien &= ultima.ArmaPuesta == tramo && ultima.velocidad == Proyectiles.Velocidad[tramo];
+                    balaVista = "arma " + ultima.ArmaPuesta + ", " + ultima.velocidad + " m/s";
+                }
                 // Desde el segundo tiro: el primero sale en el cuadro en que cambio el arma, antes de
                 // que la boca pase a la punta del cañon nuevo.
                 if (arma.TirosDisparados > tirosAntes + 1)
@@ -293,6 +305,10 @@ public static class PruebaArmas
                        nombre + " dispara, con su fogonazo en cada tiro");
                 Anotar(vioPrendido && fogonazoBien, nombre + ": el fogonazo es el suyo (puntas, anillo)");
                 Anotar(peorSalida < 0.3f, nombre + ": las balas salen de su boca");
+                int balas = arma.BalasSacadas - balasAntes;
+                Anotar(tiros > 0 && balas == tiros * Proyectiles.BalasAdelante(tramo, 0),
+                       nombre + ": " + Proyectiles.BalasAdelante(tramo, 0) + " bala(s) por tiro (" + balas + " en " + tiros + " tiros)");
+                Anotar(balaBien && balaVista.Length > 0, nombre + ": tira su proyectil (" + balaVista + ")");
                 var base_ = ArmaEnLaMano.ColorDelArma(tramo);
                 Anotar(luzMasFuerte > (base_.r + base_.g + base_.b) * 1.5f, nombre + ": la luz late con los tiros");
                 Sub();

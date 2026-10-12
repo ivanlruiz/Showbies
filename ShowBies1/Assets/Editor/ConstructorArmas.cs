@@ -29,7 +29,8 @@ public static class ConstructorArmas
 
     // La luz de la bala (BulletController.materialLuz, pedido de Ivan, 9/10): el material del
     // charco de los faroles, blanco (cada tramo lo tiñe con su color en runtime), puesto en el
-    // prefab de la bala. Se vuelve a correr si se cambia el material.
+    // prefab de la bala. Y la malla redonda de la onda del arma de energia (mallaRedonda: la
+    // esfera de Unity; las demas son el cubo del prefab). Se vuelve a correr si se cambian.
     public const string RutaLuzDeLaBala = "Assets/Materiales/BalaLuz.mat";
 
     [MenuItem("ShowBies/Armas/Armar la luz de la bala")]
@@ -44,6 +45,9 @@ public static class ConstructorArmas
             var bala = contenido.GetComponent<BulletController>();
             if (bala == null) { Debug.LogError("ConstructorArmas: el prefab de la bala no tiene BulletController"); return; }
             bala.materialLuz = material;
+            var esfera = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            bala.mallaRedonda = esfera.GetComponent<MeshFilter>().sharedMesh;
+            Object.DestroyImmediate(esfera);
             PrefabUtility.SaveAsPrefabAsset(contenido, rutaBala);
         }
         finally

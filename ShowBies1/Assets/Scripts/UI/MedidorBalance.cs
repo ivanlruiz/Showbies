@@ -225,7 +225,7 @@ public class MedidorBalance : MonoBehaviour
             armado.Append("Daño/bala ").Append(Numero(arma.DanoPorBala, "0.0"))
                 .Append(" (nivel ").Append(NivelDe(mejoraDano)).Append(")\n");
             armado.Append("Tiros/s ").Append(TirosMedidos()).Append(" medido | ")
-                .Append(Numero(arma.TirosPorSegundo, "0.0")).Append(" esperado (×")
+                .Append(Numero(arma.TirosPorSegundoDelArma, "0.0")).Append(" esperado (×")
                 .Append(Numero(arma.MultiplicadorCadencia, "0.0")).Append(" caja)\n");
         }
         else

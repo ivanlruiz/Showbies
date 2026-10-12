@@ -47,7 +47,7 @@ fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
 ## Layout del código
 
 ```
-Assets/Scripts/Armas/       ← GunController, BulletController, Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
+Assets/Scripts/Armas/       ← GunController, BulletController, Proyectiles (lo que tira cada arma), Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia, AspectoDelHeroe (la remera blanca, el aura y su sombra)
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro
 Assets/Scripts/Camara/      ← CamaraJugador
@@ -328,28 +328,35 @@ fijaban un intervalo, y con la cadencia al tope una caja de balas empeoraba el a
 furia multiplica aparte (`FijarFuria`), así una caja que llega durante la furia no la pisa.
 
 **Lo que se compra se ve en el tiro** (1.5.0, mejora 6 de la revisión del 9/10; sin el cartel de "¡MEJORADO!" al
-empezar, que Ivan no quiso). La bala cambia de color y crece por **tramos del daño de cada tiro** (`DanoPorTiro`: la
-mejora por la furia), que se duplican: blanca hasta 2, amarilla hasta 4, naranja hasta 8, magenta hasta 16 y violeta de
-ahí para arriba (`BulletController.Tramo`), del tamaño de siempre al doble. La primera compra ya cambia el color, y la
-furia, que pega ×2, sube justo un tramo. **La crítica sale roja** y 1,3 veces más grande que su tramo; por eso el cuarto
-tramo es magenta y no rojo, como decía el informe: una bala roja se lee como una sola cosa. Con muchos críticos
-comprados casi todas salen rojas, y es lo que pasa: el arma critica casi siempre. **Solo crece lo que se ve**: el
-`BoxCollider` se achica en la misma proporción (`Vestir`), así la bala pega igual que antes. **Un material por tramo**,
+empezar, que Ivan no quiso). La bala cambia de color por **tramos del daño de cada tiro** (`DanoPorTiro`: la mejora
+por la furia), que se duplican: blanca hasta 2, amarilla hasta 4, naranja hasta 8, magenta hasta 16 y violeta de ahí para
+arriba (`BulletController.Tramo`). La primera compra ya cambia el color, y la furia, que pega ×2, sube justo un tramo.
+**La forma, el tamaño, la velocidad y el alcance son del arma de la mano** (ver Lo que tira cada arma; hasta el 12/10
+todas eran el mismo cubo, que crecía con el tramo). **La crítica sale blanca**, la mitad más grande y con una estela de
+chispas (`Efectos.Estela`, con un techo de 6 por cuadro: con el crítico al tope casi todas las balas son críticas); hasta
+el 12/10 era roja, que se confundía con el magenta y el violeta de los tramos y con la sangre. El número de daño de la
+crítica sigue rojo. **Solo crece lo que se ve**: el `BoxCollider` se achica en la misma proporción, en cada eje
+(`Vestir`), así la bala pega igual con cualquier forma. **Un material por tramo**,
 armado una vez a partir del de la bala y compartido por todas, para no romper el batching; **`Bullet.mat` no se toca**,
 que también pinta el brillo de la caja de balas. Cada arma de la mano suena distinto (ver El arma cambia con el daño), y
 el disparo baja de tono con lo que la bala sube por encima de su arma, que es la furia (`GunController.TonoPorTramo`, de 1 a
 0,8, en proporción), y las chispas de la boca salen del color de la bala (`Efectos.Disparo(punto, color)`). **ShowBies > Armas >
 Fotos de las balas** (`FotosDeLasBalas`) saca un chorro de cada tramo y la crítica de noche en los tres capítulos, con la
 cámara y la calidad del teléfono (`Builds/balas/`), y la prueba de lógica mira los tramos, los colores, el collider, los
-materiales compartidos y que `Bullet.mat` no cambie.
+materiales compartidos y que `Bullet.mat` no cambie. Las fotos sacan una columna por arma (con el color de su tramo) y
+la crítica.
 
 **La bala es más chica que antes y alumbra el piso** (pedido de Ivan, 9/10). Se ve al 70 % (`EscalaVisual`; el collider
 se agranda en la misma proporción y pega igual), y cada una lleva debajo, en el piso, un charco de su color con el shader
 de los faroles (`ShowBies/CharcoDeLuz`, aditivo y sin textura): un hijo `Luz` acostado a 0,2 m (`AlturaDeLaLuz`, por
-encima de la vereda), de 1,3 m (`LadoDeLaLuz`) en el primer tramo y más grande con el tramo. El chorro de balas pinta el
-piso por donde pasa. Es hijo de la bala, así la sigue gratis, y se mide en el mundo en `Vestir`, que la bala cambia de
-escala. Un material por tramo, copiado en runtime del `BalaLuz.mat` (blanco) que lleva el prefab en
-`BulletController.materialLuz`, y lo pone **ShowBies > Armas > Armar la luz de la bala** (`ConstructorArmas`).
+encima de la vereda), de 1,3 m (`LadoDeLaLuz`) con la bala de la pistola y más grande con la bala. El chorro de balas
+pinta el piso por donde pasa. **El rifle no lleva** (tira muy seguido) **y la escopeta lleva uno solo por tiro**, en el
+perdigón del medio, más grande y tenue (`LadoDeLaLuzDeLaEscopeta`, `LuzTenue`; `Proyectiles.LlevaLuz`): con uno por
+perdigón el piso se llenaba de transparencias, y la Adreno 610 no las aguanta. Es hijo de la bala, así la sigue gratis, y
+se mide en el mundo en `Vestir`, en cada eje (la bala no siempre es pareja). Un material por tramo (y uno tenue),
+copiado en runtime del `BalaLuz.mat` (blanco) que lleva el prefab en `BulletController.materialLuz`, y lo pone
+**ShowBies > Armas > Armar la luz de la bala** (`ConstructorArmas`), que también le pone la malla redonda de la onda de la
+de energía (`mallaRedonda`, la esfera de Unity).
 
 **El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
 `intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,
@@ -438,6 +445,43 @@ cambiaría de arma en cada uso; la bala sí sube un tramo con ella.
   furia no la cambie y ponga la luz a parpadear en rojo, y que cada una dispare con su fogonazo (el giro fijo del rifle
   incluido) desde su boca y con la luz latiendo (`Builds/prueba_armas.txt`, con la foto del cartel). La prueba de lógica
   mira las tablas, el prefab (el gris, la luz que cubre el lomo), el salto del aviso y el tramo sin la furia.
+
+### Lo que tira cada arma
+
+Pedido de Ivan (12/10: "que no sean todos cubitos"; para la escopeta se imaginaba proyectiles muy chiquitos que recorren
+poca distancia), diseñado por Gemini en la revisión de arte y en `Proyectiles` (`Assets/Scripts/Armas/`):
+
+| arma | bala | velocidad | vida | alcance | cadencia |
+|---|---|---|---|---|---|
+| pistola | la de siempre | 15 m/s | 1,5 s | 22 m | ×1 |
+| revólver | un cubo 1,75× más grande | 25 | 1 | 25 | ×0,7 |
+| escopeta | cuatro perdigones de 0,75× a −12, −4, 4 y 12° | 12 | 0,6 | 7 | ×0,7 |
+| rifle | una trazadora: 4× de largo y 0,5× de ancho | 35 | 0,8 | 28 | ×1,2 |
+| energía | una onda: la esfera, 3× de ancho, que atraviesa dos zombis sin perder daño | 12 | 1,8 | 22 | ×1 |
+
+- **Las medidas son proporciones de la bala de la pistola** (0,09 m: Ivan las pidió más chicas el 9/10; Gemini proponía
+  0,2 m y aceptó las proporciones). La velocidad de las balas ya no sale de `GunController.velocidadBala` (quedó de
+  respaldo) sino de la tabla.
+- **El daño por segundo es el de las mejoras con cualquier arma** (de Gemini: "una compra nunca puede bajar el daño por
+  segundo"). La cadencia del arma (`TirosPorSegundoDelArma`, la que usa el disparo) se compensa en cada bala
+  (`CompensacionDelArma`, medida con el techo de 120, así el rifle al tope no pierde daño). `TirosPorSegundo` sigue siendo
+  la de las mejoras, la que miran el medidor y las pruebas. **La escopeta reparte el tiro a un tercio por perdigón**: con
+  los cuatro adentro pega el 133 %, con dos el 67 % (premia acercarse). Llegar a la escopeta (de 4 a 7 de daño, cuatro
+  compras al principio del juego) cambia cómo se juega: hay que acercarse.
+- **Las cartas van en cada perdigón** (el hielo, la quemadura, la explosiva y la perforante: como el perdigón pega un
+  tercio, se balancea solo). **El disparo doble le suma a la escopeta dos perdigones a los costados** (a ±20°, y 8° más por
+  carta) **y la de atrás tira uno solo, gordo** (1,5×), con el daño del tiro entero. Las demás armas tiran su bala en el
+  abanico de siempre. **Los drones tiran la bala de la pistola, con el daño entero**: `GunController.SacarBala` de cuatro
+  parámetros es la de la pistola, y la del arma tiene su propia sobrecarga.
+- **La perforación de la de energía es aparte de la carta** (`BulletController.perforacionesSinPerder`): se gasta antes y
+  sin bajar el daño; después vienen las de la carta, que sí lo bajan.
+- **El auto-apuntado llega hasta donde llega el arma** (`PlayerJS.AlcanceDelAutoApuntado`: con la escopeta, 7 m en vez de
+  16; tirarle a lo que no alcanza era gastar balas en el aire).
+- **Queda sin hacer** el "foco parpadeante bajo el jugador" que Gemini proponía para el rifle sin charco: el LED que late
+  con cada tiro ya hace ese trabajo.
+- **La prueba de lógica** mira la tabla, la forma de cada una con el collider igual, el charco donde va, la crítica, el
+  daño por segundo de cada arma (la escopeta en 133 %), la cadencia, el techo y el alcance del auto-apuntado, y **la
+  prueba del arma en play** que cada una tire su proyectil, a su velocidad y con sus balas por tiro (cuatro la escopeta).
 
 ## Granada
 
@@ -2381,7 +2425,8 @@ en el editor con target Android los joysticks se veían pero no respondían.
 
 **AUTO-APUNTAR** (10/10, de la revisión de Gemini: el twin-stick con las dos manos aleja al público casual): en el
 teléfono, sin el pulgar en el joystick de disparo, `PlayerJS` apunta solo al zombi vivo más cercano **que se ve en
-pantalla** (a menos de `AlcanceAutoApuntar`, 16 m) y dispara, por el mismo camino que el joystick (`FijarDisparo`, el
+pantalla** (a menos de `AlcanceAutoApuntar`, 16 m, o de lo que llega el arma si es menos: 7 m con la escopeta) y
+dispara, por el mismo camino que el joystick (`FijarDisparo`, el
 cuerpo girado hacia él y la dirección de la granada sin arrastrar). **El joystick sigue mandando**: tocarlo apunta a
 mano, para elegir al jefe o al tesoro, y al soltarlo vuelve el automático. No salta de un blanco a otro mientras el otro
 no esté bastante más cerca (`VentajaParaCambiar`). La lista de los vivos es `EnemyController.Vivos`, que se lleva donde

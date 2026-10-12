@@ -9,6 +9,7 @@ public class GunController : MonoBehaviour
     public bool isFiring;
     public PlayerController player;
     public BulletController bala;
+    // Respaldo: la velocidad de las balas sale del arma de la mano (Proyectiles.Velocidad).
     public int velocidadBala;
 
     // La cadencia de verdad sale de la mejora de cadencia, en tiros por segundo, y
@@ -91,6 +92,8 @@ public class GunController : MonoBehaviour
     // Cuántas balas salieron en toda la partida. Lo usan el medidor y las pruebas
     // para comparar la cadencia medida con la esperada.
     public int TirosDisparados { get; private set; }
+    // Las balas que salieron (los perdigones de la escopeta y las de las cartas cuentan cada una).
+    public int BalasSacadas { get; private set; }
 
     public float TirosPorSegundoBase
     {
@@ -111,6 +114,31 @@ public class GunController : MonoBehaviour
     public float TirosPorSegundo
     {
         get { return Mathf.Min(TirosPorSegundoBase * multiplicadorPickup * multiplicadorCadenciaFuria * PoderDeLaPartida.MultiplicadorCadencia, Mathf.Max(1f, maxTirosPorSegundo)) * multiplicadorAutomatico; }
+    }
+
+    // La que tira de verdad el arma de la mano: el revolver y la escopeta mas lento y el rifle mas
+    // rapido (Proyectiles.Cadencia), con el mismo techo. TirosPorSegundo sigue siendo la de las
+    // mejoras, la que miran el medidor y las pruebas.
+    public float TirosPorSegundoDelArma
+    {
+        get
+        {
+            float sinTecho = TirosPorSegundoBase * multiplicadorPickup * multiplicadorCadenciaFuria * PoderDeLaPartida.MultiplicadorCadencia;
+            float cadencia = Proyectiles.Cadencia[Proyectiles.Arma(TramoDelArma)];
+            return Mathf.Min(sinTecho * cadencia, Mathf.Max(1f, maxTirosPorSegundo)) * multiplicadorAutomatico;
+        }
+    }
+
+    // Lo que el arma le suma a cada bala para que el daño por segundo sea el de las mejoras: lo
+    // que la cadencia del arma le saca (o le da), medido con el techo, asi el rifle al tope no
+    // pierde daño por una cadencia que no gano.
+    public float CompensacionDelArma
+    {
+        get
+        {
+            float delArma = TirosPorSegundoDelArma;
+            return delArma > 0f ? TirosPorSegundo / delArma : 1f;
+        }
     }
 
     // El daño de la mejora, sin la furia: el que muestran el medidor y las pruebas.
@@ -253,7 +281,7 @@ public class GunController : MonoBehaviour
 
         if(isFiring && player.cantBalas>0)
         {
-            float intervalo = 1f / TirosPorSegundo;
+            float intervalo = 1f / TirosPorSegundoDelArma;
             float atraso;
             int tiros = Mathf.Min(TirosDelFrame(ref contadorDisp, Time.deltaTime, intervalo, maxTirosPorFrame, out atraso), player.cantBalas);
 
@@ -298,7 +326,7 @@ public class GunController : MonoBehaviour
             AudioSource.pitch = TonoPorTramo[tramo] / TonoPorTramo[tramoDelArma];
             AudioSource.PlayOneShot(sonido);
             proximoSonido = Time.time + intervaloMinimoSonido * IntervaloDeSonidoPorArma[tramoDelArma] / IntervaloDeSonidoPorArma[0];
-            Efectos.Disparo(salida, critico ? BulletController.ColorCritico : BulletController.ColoresPorTramo[tramo]);
+            Efectos.Disparo(salida, critico ? Proyectiles.ColorCritico : BulletController.ColoresPorTramo[tramo]);
         }
 
         // Antes era un Instantiate por disparo. Ahora las balas se reusan.
@@ -308,13 +336,38 @@ public class GunController : MonoBehaviour
         // Salen del mismo tiro: no gastan otra bala del cargador (si no, la carta seria un
         // castigo) ni cuentan en TirosDisparados, que es la cadencia que miden el medidor y las
         // pruebas.
+        //
+        // Cada arma tira lo suyo (Proyectiles): la escopeta, cuatro perdigones de un tercio del
+        // daño, y el disparo doble le suma dos a los costados; la de atras, uno gordo con el tiro
+        // entero.
+        int arma = Proyectiles.Arma(tramoDelArma);
+        float compensacion = CompensacionDelArma;
         int extra = PoderDeLaPartida.BalasExtraAdelante;
-        float abanico = PoderDeLaPartida.AbanicoDelDisparoDoble;
-        Quaternion primera = Quaternion.AngleAxis(-extra * 0.5f * abanico, Vector3.up) * firePoint.rotation;
-        for (int i = 0; i <= extra; i++)
-            SacarBala(salida, Quaternion.AngleAxis(i * abanico, Vector3.up) * primera, atraso, critico);
+        if (arma == Proyectiles.Escopeta)
+        {
+            var angulos = Proyectiles.AngulosDeLaEscopeta;
+            for (int i = 0; i < angulos.Length; i++)
+                SacarBala(salida, Quaternion.AngleAxis(angulos[i], Vector3.up) * firePoint.rotation, atraso, critico,
+                          arma, compensacion * Proyectiles.PartePorPerdigon, i, 1f);
+            for (int k = 0; k < extra; k++)
+            {
+                float angulo = Proyectiles.AnguloDelDobleEnLaEscopeta + k * Proyectiles.AnguloPorCartaDeMas;
+                SacarBala(salida, Quaternion.AngleAxis(-angulo, Vector3.up) * firePoint.rotation, atraso, critico,
+                          arma, compensacion * Proyectiles.PartePorPerdigon, -1, 1f);
+                SacarBala(salida, Quaternion.AngleAxis(angulo, Vector3.up) * firePoint.rotation, atraso, critico,
+                          arma, compensacion * Proyectiles.PartePorPerdigon, -1, 1f);
+            }
+        }
+        else
+        {
+            float abanico = PoderDeLaPartida.AbanicoDelDisparoDoble;
+            Quaternion primera = Quaternion.AngleAxis(-extra * 0.5f * abanico, Vector3.up) * firePoint.rotation;
+            for (int i = 0; i <= extra; i++)
+                SacarBala(salida, Quaternion.AngleAxis(i * abanico, Vector3.up) * primera, atraso, critico, arma, compensacion, i, 1f);
+        }
         for (int i = 0; i < PoderDeLaPartida.BalasAtras; i++)
-            SacarBala(salida, Quaternion.AngleAxis(180f, Vector3.up) * firePoint.rotation, atraso, critico);
+            SacarBala(salida, Quaternion.AngleAxis(180f, Vector3.up) * firePoint.rotation, atraso, critico, arma, compensacion,
+                      0, arma == Proyectiles.Escopeta ? Proyectiles.GordoDeAtras : 1f);
     }
 
     // La ultima bala que salio (las pruebas y el abanico).
@@ -322,21 +375,35 @@ public class GunController : MonoBehaviour
 
     // Una bala con lo de este tiro: el daño (y el critico), el tramo, y lo que le ponen las cartas
     // de la partida. Por aca salen todas: las del tiro, las de mas de las cartas y las del dron.
+    // Esta es la de la pistola, con el daño entero: la usan los drones y las pruebas.
     public BulletController SacarBala(Vector3 salida, Quaternion rumbo, float atraso, bool critico)
     {
-        float dano = DanoPorTiro;
+        return SacarBala(salida, rumbo, atraso, critico, Proyectiles.Pistola, 1f, 0, 1f);
+    }
+
+    // La de un arma: su forma, su velocidad, su alcance y su parte del daño ("factor": la
+    // compensacion de su cadencia, y el tercio de cada perdigon). "perdigon" decide si lleva el
+    // charco de luz (Proyectiles.LlevaLuz) y "escala" agranda la que lo pide (el perdigon de atras).
+    public BulletController SacarBala(Vector3 salida, Quaternion rumbo, float atraso, bool critico, int arma, float factor, int perdigon, float escala)
+    {
+        arma = Proyectiles.Arma(arma);
+        float dano = DanoPorTiro * factor;
         BulletController nueva = BulletController.Obtener(bala, salida, rumbo);
-        nueva.velocidad = velocidadBala;
+        BalasSacadas++;
+        nueva.velocidad = Proyectiles.Velocidad[arma];
+        nueva.lifeTime = Proyectiles.Vida[arma];
         nueva.critico = critico;
         nueva.danoAplicado = critico ? dano * multiplicadorCritico : dano;
         nueva.perforacionesRestantes = PoderDeLaPartida.Perforaciones;
+        nueva.perforacionesSinPerder = Proyectiles.PerforacionesPropias[arma];
         nueva.fraccionDeExplosion = PoderDeLaPartida.FraccionDeLaExplosion;
         nueva.radioDeExplosion = PoderDeLaPartida.RadioDeLaExplosion;
         nueva.lentitudDelHielo = PoderDeLaPartida.LentitudDelHielo;
         // La quemadura se sortea bala por bala: con una carta, una de cada cuatro.
         float quema = PoderDeLaPartida.ProbabilidadDeQuemadura;
         nueva.quemaduraPorSegundo = quema > 0f && Random.value < quema ? nueva.danoAplicado * PoderDeLaPartida.QuemaduraPorSegundo : 0f;
-        nueva.Vestir(dano, critico);
+        // El color, del daño del tiro entero (con la furia sube un tramo), no del perdigon.
+        nueva.Vestir(DanoPorTiro, critico, arma, Proyectiles.LlevaLuz(arma, perdigon), escala);
         nueva.Adelantar(atraso);
         UltimaBala = nueva;
         return nueva;

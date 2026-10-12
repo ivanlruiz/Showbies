@@ -552,6 +552,38 @@ public class Efectos : MonoBehaviour
         chispas.Emit(parametros, cantidad);
     }
 
+    // La estela de la bala critica (Proyectiles, de la revision de Gemini del 12/10): una chispa
+    // chica que casi no se mueve cada 0,4 m, del sistema de chispas de la escena. Con el critico
+    // al tope casi todas las balas son criticas: un techo por cuadro para que el telefono no
+    // cargue cientos de particulas.
+    public const int EstelasPorCuadro = 6;
+    public static readonly Color ColorDeLaEstela = new Color(1f, 0.92f, 0.65f);
+    private int cuadroDeLasEstelas = -1;
+    private int estelasDelCuadro;
+
+    public static void Estela(Vector3 punto)
+    {
+        var e = instance;
+        if (e == null || e.chispas == null) return;
+        if (Time.frameCount != e.cuadroDeLasEstelas)
+        {
+            e.cuadroDeLasEstelas = Time.frameCount;
+            e.estelasDelCuadro = 0;
+        }
+        if (e.estelasDelCuadro >= EstelasPorCuadro) return;
+        e.estelasDelCuadro++;
+        var parametros = new ParticleSystem.EmitParams
+        {
+            position = punto,
+            velocity = Vector3.up * 0.3f,
+            startSize = 0.14f,
+            startLifetime = 0.3f,
+            startColor = ColorDeLaEstela,
+            applyShapeToPosition = false,
+        };
+        e.chispas.Emit(parametros, 1);
+    }
+
     private void Emitir(Vector3 punto, int cantidad, Color color)
     {
         if (chispas == null || cantidad <= 0) return;
