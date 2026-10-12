@@ -843,6 +843,10 @@ public class EnemyController : MonoBehaviour
         monedaPrefab = null;
         multiplicadorVida = 1f;
         multiplicadorDano = 1f;
+        congeladoHasta = 0f;
+        lentitudDelHielo = 0f;
+        quemaduraHasta = 0f;
+        PintarHielo(false);
 
         // Uno que sale del pool puede venir de desplomarse: colliders de vuelta y
         // fisica de vuelta.
@@ -1159,6 +1163,9 @@ public class EnemyController : MonoBehaviour
        // Un cadaver no persigue a nadie ni se aplasta: solo se esta cayendo.
        if (desplomandose) return;
 
+       ActualizarCartas();
+       if (!enUso) return;   // lo mato la quemadura en este paso
+
        ResolverGolpe();
 
        if (thePlayer == null) return;
@@ -1196,7 +1203,7 @@ public class EnemyController : MonoBehaviour
        objetivo = Esquive(transform.position, objetivo, CapitulosDeEscenario.Redondos, radioDelCuerpo, EsJefe);
        objetivo.y = transform.position.y;
        if ((objetivo - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(objetivo);
-       Vector3 velocidad = transform.forward * enemyType.velocidad;
+       Vector3 velocidad = transform.forward * (enemyType.velocidad * (1f - LentitudActual));
        velocidad.y = rb.linearVelocity.y;
        rb.linearVelocity = velocidad;
     }
@@ -1212,7 +1219,11 @@ public class EnemyController : MonoBehaviour
 
     // "empuje" es hacia donde iba el golpe, para que el cadaver caiga hacia alla.
     // Es opcional: quien no la sabe (el medidor, las pruebas) lo deja caer donde esta.
-    public void DanoZombi(float daño, bool critico = false, Vector3 empuje = default(Vector3))
+    //
+    // "colorDeCarta" es para el daño de una carta que pega sola (la quemadura, la explosion
+    // de la explosiva): el numero sale de ese color y sin el destello ni el aplastado, que con
+    // quince zombis quemandose serian quince cambios de material por tick.
+    public void DanoZombi(float daño, bool critico = false, Vector3 empuje = default(Vector3), Color? colorDeCarta = null)
     {
         // Dos golpes en el mismo paso de fisica llaman a esto dos veces con la vida
         // ya en cero (los eventos de colision del paso se despachan aunque el zombi
@@ -1233,13 +1244,15 @@ public class EnemyController : MonoBehaviour
 
         // El numero flotante va redondeado y nunca en 0: un 5,75 se lee como 6, y
         // una bala que pega tiene que mostrar algo.
-        Efectos.Golpe(transform.position + Vector3.up * (1f + escalaBase.y), Mathf.Max(1, Mathf.RoundToInt(daño)), critico);
+        Vector3 numero = transform.position + Vector3.up * (1f + escalaBase.y);
+        if (colorDeCarta.HasValue) Efectos.GolpeDeCarta(numero, Mathf.Max(1, Mathf.RoundToInt(daño)), colorDeCarta.Value);
+        else Efectos.Golpe(numero, Mathf.Max(1, Mathf.RoundToInt(daño)), critico);
 
         // La barra aparece recien con el primer golpe que no mata.
         if (vidaActual > VidaResidual)
         {
             MostrarBarraDeVida();
-            GolpeVisual();
+            if (!colorDeCarta.HasValue) GolpeVisual();
         }
         else
         {
@@ -1261,6 +1274,8 @@ public class EnemyController : MonoBehaviour
             // jefe deja ademas la carta dorada para la proxima eleccion.
             PoderDeLaPartida.Sumar(enemyType.experiencia);
             if (EsJefe) PoderDeLaPartida.MarcarDorada();
+            if (PoderDeLaPartida.ContarBajaDelVampiro() && PlayerHealth.instance != null)
+                PlayerHealth.instance.CurarPorVampiro(PoderDeLaPartida.CuraDelVampiro);
             EleccionDeCartas.Chispa(transform.position, enemyType.experiencia);
 
             SoltarMonedas();
@@ -1335,6 +1350,103 @@ public class EnemyController : MonoBehaviour
         {
             materialesOriginales[i] = renderersVisibles[i].sharedMaterials;
         }
+    }
+
+    // --- Lo que le dejan las cartas de la partida (1.6.0, etapa 2) ---------------------------
+    //
+    // El hielo frena la persecucion un rato (no los patrones del jefe: mueven por su cuenta antes),
+    // con el paso de las piernas al mismo ritmo y la piel celeste; la quemadura le saca un poco
+    // cada medio segundo. Los dos con tiempo escalado: la pausa los congela. Arrancan de cero en
+    // cada aparicion.
+    public static readonly Color ColorDelHielo = new Color(0.55f, 0.88f, 1f);
+    public static readonly Color ColorDeLaQuemadura = new Color(1f, 0.55f, 0.12f);
+    public const float CadaTickDeQuemadura = 0.5f;
+    private static readonly int idColor = Shader.PropertyToID("_Color");
+
+    private float congeladoHasta;
+    private float lentitudDelHielo;
+    private bool pintadoDeHielo;
+    private MaterialPropertyBlock propiedadesDelHielo;
+    private float quemaduraHasta;
+    private float quemaduraPorTick;
+    private float proximoTickDeQuemadura;
+
+    public bool Congelado { get { return enUso && Time.time < congeladoHasta; } }
+    public bool Quemandose { get { return enUso && Time.time < quemaduraHasta; } }
+    public float LentitudActual { get { return Congelado ? lentitudDelHielo : 0f; } }
+
+    // "lentitud" es cuanto frena (0,4 es un 40 %); si ya estaba congelado, gana el mas fuerte
+    // y el reloj vuelve a empezar.
+    public void Congelar(float lentitud, float duracion)
+    {
+        if (!enUso || estaMuerto || !(lentitud > 0f)) return;
+        lentitudDelHielo = Congelado ? Mathf.Max(lentitudDelHielo, lentitud) : Mathf.Clamp01(lentitud);
+        congeladoHasta = Time.time + duracion;
+        PintarHielo(true);
+        AjustarPaso();
+    }
+
+    // "porSegundo" es el daño por segundo; si ya se quemaba, gana el mas fuerte.
+    public void Quemar(float porSegundo, float duracion)
+    {
+        if (!enUso || estaMuerto || !(porSegundo > 0f)) return;
+        float porTick = porSegundo * CadaTickDeQuemadura;
+        if (!Quemandose)
+        {
+            quemaduraPorTick = porTick;
+            proximoTickDeQuemadura = Time.time + CadaTickDeQuemadura;
+        }
+        else quemaduraPorTick = Mathf.Max(quemaduraPorTick, porTick);
+        quemaduraHasta = Time.time + duracion;
+    }
+
+    private void ActualizarCartas()
+    {
+        if (pintadoDeHielo && !Congelado)
+        {
+            PintarHielo(false);
+            AjustarPaso();
+        }
+        if (quemaduraHasta > 0f && Time.time >= proximoTickDeQuemadura)
+        {
+            if (Time.time > quemaduraHasta + 0.01f) { quemaduraHasta = 0f; return; }
+            proximoTickDeQuemadura += CadaTickDeQuemadura;
+            DanoZombi(quemaduraPorTick, false, Vector3.zero, ColorDeLaQuemadura);
+        }
+    }
+
+    // La piel celeste, por encima del material (un MaterialPropertyBlock: sobrevive al cambio de
+    // material del destello y no crea materiales).
+    private void PintarHielo(bool pintar)
+    {
+        if (pintar == pintadoDeHielo || renderersVisibles == null) return;
+        pintadoDeHielo = pintar;
+        if (pintar && propiedadesDelHielo == null)
+        {
+            propiedadesDelHielo = new MaterialPropertyBlock();
+            propiedadesDelHielo.SetColor(idColor, ColorDelHielo);
+        }
+        foreach (var r in renderersVisibles)
+            if (r != null) r.SetPropertyBlock(pintar ? propiedadesDelHielo : null);
+    }
+
+    // El escudo de la carta, al romperse, corre a los que estan pegados al jugador. Al jefe no:
+    // es un gigante.
+    public void Empujar(Vector3 desplazamiento)
+    {
+        if (!enUso || estaMuerto || EsJefe) return;
+        rb.position += desplazamiento;
+        transform.position += desplazamiento;
+    }
+
+    // Las piernas al ritmo de lo que avanza: congelado, mas lento. El que se mueve por su cuenta
+    // (el jefe, el tesoro) maneja su Paso, y el hielo no lo frena.
+    private void AjustarPaso()
+    {
+        if (animadores == null || movimientoPropio != null) return;
+        float paso = velocidadDeAnimacion * (1f - LentitudActual);
+        foreach (var animador in animadores)
+            if (animador != null) animador.SetFloat(idPaso, paso);
     }
 
     // Blanco un instante y aplastado: se nota cada bala que entra.

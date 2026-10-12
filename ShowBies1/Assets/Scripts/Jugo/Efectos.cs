@@ -143,6 +143,28 @@ public class Efectos : MonoBehaviour
         else Sonidos.Tocar(e.golpe, 0.35f, 1f, 0.15f, 0.05f);
     }
 
+    // El daño de una carta que pega sola (la quemadura, la explosiva): el numero de su color y
+    // unas pocas chispas, sin el tic, que con quince zombis quemandose seria un redoble.
+    public static void GolpeDeCarta(Vector3 punto, int daño, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+
+        e.Emitir(punto, Mathf.Max(1, e.chispasPorGolpe / 2), color);
+        e.MostrarNumero(punto, daño, false, color);
+    }
+
+    // La explosion chica de la bala explosiva: chispas de su color y un golpe sordo, sin el
+    // temblor ni la pausa de la granada (sale en cada bala que pega).
+    public static void ExplosionChica(Vector3 punto, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+
+        e.Emitir(punto, e.chispasPorGolpe * 2, color);
+        Sonidos.Tocar(e.explosion, 0.22f, 1.7f, 0.15f, 0.08f);
+    }
+
     // Un zombi que muere. Las muertes grandes (tanque y jefe) sacuden la camara y
     // frenan el tiempo un instante; las de los chicos apenas suman temblor, porque
     // mueren de a muchos por segundo. La grande lleva su propia separacion: comparte
@@ -625,7 +647,7 @@ public class Efectos : MonoBehaviour
 
     // Los numeros salen de un pool con techo: si ya hay maxNumeros en pantalla,
     // el golpe nuevo no muestra numero en vez de crear otro.
-    private void MostrarNumero(Vector3 punto, int valor, bool critico)
+    private void MostrarNumero(Vector3 punto, int valor, bool critico, Color? colorPropio = null)
     {
         if (numeroPrefab == null) return;
 
@@ -637,7 +659,8 @@ public class Efectos : MonoBehaviour
             numero = Instantiate(numeroPrefab, transform);
             numero.alTerminar = numerosLibres.Push;
         }
-        numero.Mostrar(punto, valor, critico);
+        if (colorPropio.HasValue) numero.Mostrar(punto, valor, colorPropio.Value);
+        else numero.Mostrar(punto, valor, critico);
     }
 
     // Del mismo pool que los numeros de daño, sin el techo: el cartel de una caja no se pierde

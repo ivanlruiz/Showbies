@@ -15,6 +15,21 @@ public class BulletController : MonoBehaviour
     [System.NonSerialized] public float danoAplicado;
     [System.NonSerialized] public bool critico;   // lo decide el arma al dispararla; cambia el numero que se ve
 
+    // Lo que le ponen las cartas de la partida (1.6.0, etapa 2), decidido al dispararla
+    // (GunController.SacarBala): cuantos zombis mas atraviesa, la explosion al pegar, y si
+    // congela o quema al que toca. Como el daño y el critico, vuelve a cero en Obtener.
+    [System.NonSerialized] public int perforacionesRestantes;
+    [System.NonSerialized] public float fraccionDeExplosion;
+    [System.NonSerialized] public float radioDeExplosion;
+    [System.NonSerialized] public float lentitudDelHielo;
+    [System.NonSerialized] public float quemaduraPorSegundo;
+
+    // A quien ya toco: los tres colliders del mismo zombi, o el que acaba de atravesar, no
+    // cuentan dos veces.
+    private readonly List<EnemyController> tocados = new List<EnemyController>(4);
+    private static readonly Collider[] enLaExplosion = new Collider[64];
+    private static readonly HashSet<EnemyController> danadosPorLaExplosion = new HashSet<EnemyController>();
+
     // Pool de balas.
     //
     // Son de 4 a 20 tiros por segundo con la mejora, hasta 60 con la caja de arma
@@ -189,6 +204,15 @@ public class BulletController : MonoBehaviour
         // El del prefab por si quien la pide no pone otro; GunController lo pisa.
         bala.danoAplicado = prefab.dañoDar;
         bala.critico = false;
+        bala.perforacionesRestantes = 0;
+        bala.fraccionDeExplosion = 0f;
+        bala.radioDeExplosion = 0f;
+        bala.lentitudDelHielo = 0f;
+        bala.quemaduraPorSegundo = 0f;
+        bala.tocados.Clear();
+        // La que perforo en su vida anterior quedo como trigger: vuelve a chocar.
+        bala.Preparar();
+        if (bala.caja != null) bala.caja.isTrigger = false;
         bala.enUso = true;
         return bala;
     }
@@ -229,6 +253,19 @@ public class BulletController : MonoBehaviour
 
     void OnCollisionEnter(Collision other)
     {
+        Pegar(other.gameObject);
+    }
+
+    // La que perfora pasa a trigger despues del primer zombi: chocando, la fisica empujaria a
+    // cada zombi que atraviesa mientras esta adentro de el. El trigger llega igual, porque el
+    // zombi tiene Rigidbody.
+    void OnTriggerEnter(Collider other)
+    {
+        Pegar(other.gameObject);
+    }
+
+    private void Pegar(GameObject otro)
+    {
         // Los eventos de un mismo paso de fisica se despachan todos aunque el
         // primero apague la bala: sin esta guarda, una bala que toca a dos
         // zombis superpuestos daña a los dos.
@@ -245,12 +282,49 @@ public class BulletController : MonoBehaviour
         // Con includeInactive: un zombi que murio en este mismo paso ya volvio
         // apagado al pool, y sin eso la bala no lo encontraba y seguia de largo
         // hasta el de atras. Choca y se gasta como antes; el daño lo ignora su guarda.
-        EnemyController zombi = other.gameObject.GetComponentInParent<EnemyController>(true);
+        EnemyController zombi = otro.GetComponentInParent<EnemyController>(true);
         if (zombi == null) return;
+        // Uno ya tocado (otro de sus colliders, o el que acaba de atravesar) no cuenta. Un cadaver
+        // de este mismo paso si: la bala se gasta igual, y tambien una perforacion.
+        if (tocados.Contains(zombi)) return;
+        tocados.Add(zombi);
 
         // La direccion de la bala, para que el cadaver salga despedido hacia donde
         // iba el tiro y no siempre igual.
         zombi.DanoZombi(danoAplicado, critico, transform.forward);
+        if (lentitudDelHielo > 0f) zombi.Congelar(lentitudDelHielo, PoderDeLaPartida.DuracionDelHielo);
+        if (quemaduraPorSegundo > 0f) zombi.Quemar(quemaduraPorSegundo, PoderDeLaPartida.DuracionDeLaQuemadura);
+        if (fraccionDeExplosion > 0f && radioDeExplosion > 0f) Explotar(zombi);
+
+        if (perforacionesRestantes > 0)
+        {
+            perforacionesRestantes--;
+            danoAplicado *= PoderDeLaPartida.DanoAlPerforar;
+            if (caja != null) caja.isTrigger = true;
+            return;
+        }
         Devolver();
     }
+
+    // La explosiva: una parte del daño a los que estan cerca del que toco, una vez a cada uno,
+    // sin critico y empujando para afuera, como la granada.
+    private void Explotar(EnemyController tocado)
+    {
+        Vector3 centro = tocado.transform.position;
+        float dano = danoAplicado * fraccionDeExplosion;
+        Efectos.ExplosionChica(centro + Vector3.up, ColorDeLaExplosion);
+        int n = Physics.OverlapSphereNonAlloc(centro, radioDeExplosion, enLaExplosion);
+        danadosPorLaExplosion.Clear();
+        danadosPorLaExplosion.Add(tocado);
+        for (int i = 0; i < n; i++)
+        {
+            var zombi = enLaExplosion[i].GetComponentInParent<EnemyController>();
+            if (zombi == null || !danadosPorLaExplosion.Add(zombi)) continue;
+            Vector3 afuera = zombi.transform.position - centro;
+            afuera.y = 0f;
+            zombi.DanoZombi(dano, false, afuera.sqrMagnitude > 1e-4f ? afuera.normalized : Vector3.zero, ColorDeLaExplosion);
+        }
+    }
+
+    public static readonly Color ColorDeLaExplosion = new Color(1f, 0.62f, 0.2f);
 }

@@ -155,6 +155,9 @@ public class EleccionDeCartas : MonoBehaviour
         // Una partida retomada con cartas de vida arranca con el maximo de las cartas.
         if (PoderDeLaPartida.MultiplicadorVida > 1f && PlayerHealth.instance != null)
             PlayerHealth.instance.AplicarCartasDeVida();
+        // El anillo del escudo y los drones van en el jugador.
+        if (PlayerHealth.instance != null && PlayerHealth.instance.GetComponent<CartasEnElJugador>() == null)
+            PlayerHealth.instance.gameObject.AddComponent<CartasEnElJugador>();
 
         ArmarBarra();
         armada = true;

@@ -269,12 +269,44 @@ public class GunController : MonoBehaviour
         }
 
         // Antes era un Instantiate por disparo. Ahora las balas se reusan.
-        BulletController newBullet = BulletController.Obtener(bala, salida, firePoint.rotation);
-        newBullet.velocidad = velocidadBala;
-        newBullet.critico = critico;
-        newBullet.danoAplicado = critico ? DanoPorTiro * multiplicadorCritico : DanoPorTiro;
-        newBullet.Vestir(DanoPorTiro, critico);
-        newBullet.Adelantar(atraso);
+        //
+        // Las cartas de mas balas (1.6.0, etapa 2): el abanico del disparo doble, de a 8° entre
+        // bala y bala y centrado en el tiro (con una de mas, las dos van a ±4°), y la de atras.
+        // Salen del mismo tiro: no gastan otra bala del cargador (si no, la carta seria un
+        // castigo) ni cuentan en TirosDisparados, que es la cadencia que miden el medidor y las
+        // pruebas.
+        int extra = PoderDeLaPartida.BalasExtraAdelante;
+        float abanico = PoderDeLaPartida.AbanicoDelDisparoDoble;
+        Quaternion primera = Quaternion.AngleAxis(-extra * 0.5f * abanico, Vector3.up) * firePoint.rotation;
+        for (int i = 0; i <= extra; i++)
+            SacarBala(salida, Quaternion.AngleAxis(i * abanico, Vector3.up) * primera, atraso, critico);
+        for (int i = 0; i < PoderDeLaPartida.BalasAtras; i++)
+            SacarBala(salida, Quaternion.AngleAxis(180f, Vector3.up) * firePoint.rotation, atraso, critico);
+    }
+
+    // La ultima bala que salio (las pruebas y el abanico).
+    public BulletController UltimaBala { get; private set; }
+
+    // Una bala con lo de este tiro: el daño (y el critico), el tramo, y lo que le ponen las cartas
+    // de la partida. Por aca salen todas: las del tiro, las de mas de las cartas y las del dron.
+    public BulletController SacarBala(Vector3 salida, Quaternion rumbo, float atraso, bool critico)
+    {
+        float dano = DanoPorTiro;
+        BulletController nueva = BulletController.Obtener(bala, salida, rumbo);
+        nueva.velocidad = velocidadBala;
+        nueva.critico = critico;
+        nueva.danoAplicado = critico ? dano * multiplicadorCritico : dano;
+        nueva.perforacionesRestantes = PoderDeLaPartida.Perforaciones;
+        nueva.fraccionDeExplosion = PoderDeLaPartida.FraccionDeLaExplosion;
+        nueva.radioDeExplosion = PoderDeLaPartida.RadioDeLaExplosion;
+        nueva.lentitudDelHielo = PoderDeLaPartida.LentitudDelHielo;
+        // La quemadura se sortea bala por bala: con una carta, una de cada cuatro.
+        float quema = PoderDeLaPartida.ProbabilidadDeQuemadura;
+        nueva.quemaduraPorSegundo = quema > 0f && Random.value < quema ? nueva.danoAplicado * PoderDeLaPartida.QuemaduraPorSegundo : 0f;
+        nueva.Vestir(dano, critico);
+        nueva.Adelantar(atraso);
+        UltimaBala = nueva;
+        return nueva;
     }
 
 }

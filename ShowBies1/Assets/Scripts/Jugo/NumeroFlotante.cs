@@ -71,6 +71,16 @@ public class NumeroFlotante : MonoBehaviour
         Animar(0f);
     }
 
+    // Un numero de otro color: el daño de una carta que pega sola (la quemadura, la explosiva).
+    public void Mostrar(Vector3 punto, int valor, Color colorPropio)
+    {
+        Mostrar(punto, valor, false);
+        color = colorPropio;
+        Color opaco = color;
+        opaco.a = 1f;
+        texto.color = opaco;
+    }
+
     public void MostrarCartel(Vector3 punto, string cartel, Color colorDelCartel)
     {
         color = colorDelCartel;

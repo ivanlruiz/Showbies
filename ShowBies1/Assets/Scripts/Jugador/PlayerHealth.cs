@@ -141,6 +141,48 @@ public class PlayerHealth : MonoBehaviour
         health = maxHealth;
     }
 
+    // --- Lo de las cartas de reglas (1.6.0, etapa 2) -----------------------------------------
+
+    // El escudo: para un golpe cada RecargaDelEscudo segundos (listo apenas se elige la carta), y
+    // al romperse corre medio metro a los zombis pegados (de Gemini: bloquear un golpe, solo, no
+    // sirve en la oleada 40 con cinco zombis encima). El anillo lo dibuja CartasEnElJugador.
+    public const float RadioDelEmpujeDelEscudo = 1.8f;
+    public const float EmpujeDelEscudo = 0.5f;
+    public static readonly Color ColorDelEscudo = new Color(0.55f, 0.8f, 1f);
+    public static readonly Color ColorDelVampiro = new Color(0.9f, 0.15f, 0.25f);
+    private float escudoListoEn;
+
+    public bool EscudoListo { get { return PoderDeLaPartida.ConEscudo && !estaMuerto && Time.time >= escudoListoEn; } }
+    public int GolpesBloqueados { get; private set; }
+    public int CurasDelVampiro { get; private set; }
+
+    private void RomperEscudo()
+    {
+        Vector3 yo = transform.position;
+        Efectos.Caja(yo + Vector3.up, Textos.De("carta_escudo_bloqueo"), ColorDelEscudo);
+        var vivos = EnemyController.Vivos;
+        for (int i = vivos.Count - 1; i >= 0; i--)
+        {
+            var zombi = vivos[i];
+            if (zombi == null || !zombi.Vivo) continue;
+            Vector3 afuera = zombi.transform.position - yo;
+            afuera.y = 0f;
+            if (afuera.sqrMagnitude > RadioDelEmpujeDelEscudo * RadioDelEmpujeDelEscudo) continue;
+            zombi.Empujar((afuera.sqrMagnitude > 1e-4f ? afuera.normalized : Vector3.forward) * EmpujeDelEscudo);
+        }
+    }
+
+    // El vampiro: cada 15 muertes, una parte de la vida maxima (desde DanoZombi).
+    public void CurarPorVampiro(float fraccion)
+    {
+        if (estaMuerto || !(fraccion > 0f)) return;
+        int antes = health;
+        health = Mathf.Min(maxHealth, health + Mathf.Max(1, Mathf.RoundToInt(maxHealth * fraccion)));
+        int curo = health - antes;
+        CurasDelVampiro++;
+        if (curo > 0) Efectos.Caja(transform.position + Vector3.up, Textos.Formato("powerup_vida", curo), ColorDelVampiro);
+    }
+
     // La carta de reserva (Curacion): la vida entera.
     public void CurarEntero()
     {
@@ -178,6 +220,17 @@ public class PlayerHealth : MonoBehaviour
         // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
         // veces con la vida ya en cero, y el bloque de muerte corria de nuevo.
         if (estaMuerto || Time.time < invulnerableHasta) return;
+        if (!(amount > 0f)) return;
+
+        // El escudo de la carta para el golpe entero (y no cuenta como golpe: la oleada sigue
+        // pudiendo salir perfecta). El salto del jefe tira por el aire igual.
+        if (EscudoListo)
+        {
+            escudoListoEn = Time.time + PoderDeLaPartida.RecargaDelEscudo;
+            GolpesBloqueados++;
+            RomperEscudo();
+            return;
+        }
 
         int dano = AcumularDano(ref danoPendiente, amount);
         if (dano <= 0) return;
