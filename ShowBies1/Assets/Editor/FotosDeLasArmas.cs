@@ -227,7 +227,8 @@ public static class FotosDeLasArmas
         if (fogonazo == null) return;
         fogonazo.gameObject.SetActive(true);
         ArmaEnLaMano.AcomodarFogonazo(fogonazo, boca, camara, tramo, metros);
-        ArmaEnLaMano.PintarFogonazo(fogonazo.GetComponent<Renderer>(), new MaterialPropertyBlock(), tramo, 0.4f, t);
+        float giro = ArmaEnLaMano.GiroPorArma[tramo] >= 0f ? ArmaEnLaMano.GiroPorArma[tramo] : 0.4f;
+        ArmaEnLaMano.PintarFogonazo(fogonazo.GetComponent<Renderer>(), new MaterialPropertyBlock(), tramo, giro, t);
     }
 
     // El centro de la foto, al doble y sin suavizar.

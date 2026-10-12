@@ -283,14 +283,19 @@ public class Efectos : MonoBehaviour
     private const float alturaDelCartelDeCaja = 2.2f;
 
     // El arma de la mano subio de tramo (ArmaEnLaMano, etapa 3 de las cartas): chispas de su color
-    // en la boca y su nombre ("¡ESCOPETA!"), del color de la bala, en la fila de avisos de debajo
-    // del jugador (AvisoDeMisiones, que suena y tiembla). Sin avisos en la escena, el jingle solo.
+    // en la boca, una pausa de impacto de 0,2 s (de la segunda revision de Gemini: es el subidon
+    // de la partida) y su nombre ("¡ESCOPETA!"), del color de la bala, saltando en la fila de
+    // avisos de debajo del jugador (AvisoDeMisiones, que suena y tiembla). Sin avisos en la
+    // escena, el jingle solo.
+    public const float PausaDelArmaNueva = 0.2f;
+
     public static void ArmaNueva(Vector3 boca, Color color, string nombre)
     {
         var e = instance;
         if (e == null) return;
 
         e.Emitir(boca, e.chispasPorExplosion, color);
+        e.PausaDeImpacto(PausaDelArmaNueva);
         if (!AvisoDeMisiones.ArmaNueva(nombre, color))
         {
             Sonidos.Tocar(e.cartelOleada, 0.8f, 1.25f);

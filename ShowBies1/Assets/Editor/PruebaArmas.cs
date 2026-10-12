@@ -37,8 +37,8 @@ public static class PruebaArmas
     static readonly StringBuilder notas = new StringBuilder();
 
     static int fogonazosAntes, tirosAntes, armasNuevasAntes;
-    static bool vioPrendido, fogonazoBien;
-    static float peorSalida;
+    static bool vioPrendido, fogonazoBien, vioPausa, vioRojo, vioSuColor;
+    static float peorSalida, luzMasFuerte;
 
     static PruebaArmas()
     {
@@ -189,12 +189,16 @@ public static class PruebaArmas
                 if (sub % 2 == 0)
                 {
                     arma.FijarDanoPorBala(DanoDelTramo(tramo));
+                    vioPausa = false;
                     Sub();
                     return;
                 }
+                // El festejo frena la partida un instante (la pausa de impacto de Efectos).
+                if (Time.timeScale < 0.5f) vioPausa = true;
                 if (t < 0.15f) return;
                 Anotar(mano.TramoPuesto == tramo && mano.ArmasNuevas == tramo,
                        "sube a " + Textos.De(ArmaEnLaMano.IdsDeLasArmas[tramo]) + " con un festejo (" + mano.ArmasNuevas + ")");
+                Anotar(vioPausa, "y la partida frena un instante (" + tramo + ")");
                 Anotar(BocaEnLaPunta(mano) && arma.boca == mano.Boca, "con la boca en la punta del cañon nuevo (" + tramo + ")");
                 if (tramo == 2) ScreenCapture.CaptureScreenshot(Path.GetFullPath(Foto));
                 Sub();
@@ -213,10 +217,15 @@ public static class PruebaArmas
                 {
                     if (t < 0.15f) return;
                     arma.FijarFuria(2f, 2f);
+                    vioRojo = vioSuColor = false;
                     Sub();
                     return;
                 }
-                if (t < 0.3f) return;
+                // Con la furia, la luz parpadea en rojo cada 0,2 s.
+                if (mano.ColorDeLaLuz == ArmaEnLaMano.RojoDeLaFuria) vioRojo = true;
+                if (mano.ColorDeLaLuz == ArmaEnLaMano.ColorDelArma(2)) vioSuColor = true;
+                if (t < 0.6f) return;
+                Anotar(vioRojo && vioSuColor, "con la furia la luz del arma parpadea en rojo");
                 Anotar(mano.TramoPuesto == 2 && BulletController.Tramo(arma.DanoPorTiro) == 3,
                        "con la furia la bala sube un tramo y el arma no (" + mano.TramoPuesto + ")");
                 Anotar(mano.ArmasNuevas == armasNuevasAntes, "ni bajar a la escopeta ni la furia festejan");
@@ -251,6 +260,7 @@ public static class PruebaArmas
                     vioPrendido = false;
                     fogonazoBien = true;
                     peorSalida = 0f;
+                    luzMasFuerte = 0f;
                     arma.isFiring = true;
                     Sub();
                     return;
@@ -263,7 +273,11 @@ public static class PruebaArmas
                     render.GetPropertyBlock(bloque);
                     fogonazoBien &= Mathf.Abs(bloque.GetFloat("_Puntas") - ArmaEnLaMano.PuntasPorArma[tramo]) < 1e-4f &&
                                     Mathf.Abs(bloque.GetFloat("_Anillo") - (ArmaEnLaMano.AnilloPorArma[tramo] ? 1f : 0f)) < 1e-4f;
+                    if (ArmaEnLaMano.GiroPorArma[tramo] >= 0f)
+                        fogonazoBien &= Mathf.Abs(bloque.GetFloat("_Giro") - ArmaEnLaMano.GiroPorArma[tramo]) < 1e-4f;
                 }
+                var luz = mano.ColorDeLaLuz;
+                luzMasFuerte = Mathf.Max(luzMasFuerte, luz.r + luz.g + luz.b);
                 // Desde el segundo tiro: el primero sale en el cuadro en que cambio el arma, antes de
                 // que la boca pase a la punta del cañon nuevo.
                 if (arma.TirosDisparados > tirosAntes + 1)
@@ -279,6 +293,8 @@ public static class PruebaArmas
                        nombre + " dispara, con su fogonazo en cada tiro");
                 Anotar(vioPrendido && fogonazoBien, nombre + ": el fogonazo es el suyo (puntas, anillo)");
                 Anotar(peorSalida < 0.3f, nombre + ": las balas salen de su boca");
+                var base_ = ArmaEnLaMano.ColorDelArma(tramo);
+                Anotar(luzMasFuerte > (base_.r + base_.g + base_.b) * 1.5f, nombre + ": la luz late con los tiros");
                 Sub();
                 return;
             }

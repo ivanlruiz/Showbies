@@ -62,6 +62,7 @@ public class AvisoDeMisiones : MonoBehaviour
         public string detalle;
         public Color color;
         public bool festejo;
+        public bool salto;   // entra de 0 a 1,3 y vuelve a 1 en 0,2 s: el arma nueva
     }
 
     private readonly HashSet<int> yaCumplidas = new HashSet<int>();
@@ -122,7 +123,7 @@ public class AvisoDeMisiones : MonoBehaviour
     {
         var aviso = FindAnyObjectByType<AvisoDeMisiones>();
         if (aviso == null || !aviso.isActiveAndEnabled) return false;
-        aviso.pendientes.Enqueue(new Aviso { titulo = nombre, detalle = Textos.De("arma_nueva"), color = color });
+        aviso.pendientes.Enqueue(new Aviso { titulo = nombre, detalle = Textos.De("arma_nueva"), color = color, salto = true });
         return true;
     }
 
@@ -377,9 +378,9 @@ public class AvisoDeMisiones : MonoBehaviour
         if (cartel == null) return;
 
         float edad = t - mostrandoDesde;
-        float entrada = Mathf.Clamp01(edad / 0.35f);
+        float entrada = saltoActual ? Salto(edad) : CurvasUI.SalidaAtras(Mathf.Clamp01(edad / 0.35f));
         float salida = Mathf.Clamp01((edad - (duracion - 0.3f)) / 0.3f);
-        cartel.rectTransform.localScale = Vector3.one * CurvasUI.SalidaAtras(entrada) * (1f - salida) * (1f + 0.04f * Mathf.Sin(t * 6f));
+        cartel.rectTransform.localScale = Vector3.one * entrada * (1f - salida) * (1f + 0.04f * Mathf.Sin(t * 6f));
         if (edad >= duracion)
         {
             Destroy(cartel.gameObject);
@@ -387,8 +388,19 @@ public class AvisoDeMisiones : MonoBehaviour
         }
     }
 
+    private bool saltoActual;
+
+    // De 0 a 1,3 en 0,12 s y de vuelta a 1 en 0,08: una entrada mas violenta que la de siempre.
+    public static float Salto(float edad)
+    {
+        if (edad <= 0f) return 0f;
+        if (edad < 0.12f) return 1.3f * CurvasUI.SalidaCubica(edad / 0.12f);
+        return Mathf.Lerp(1.3f, 1f, CurvasUI.SalidaCubica((edad - 0.12f) / 0.08f));
+    }
+
     private void Mostrar(Aviso aviso, float t)
     {
+        saltoActual = aviso.salto;
         var go = new GameObject("MisionCumplida", typeof(RectTransform), typeof(TextMeshProUGUI));
         var rt = (RectTransform)go.transform;
         rt.SetParent(canvas.transform, false);

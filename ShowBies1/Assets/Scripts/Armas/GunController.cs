@@ -103,6 +103,8 @@ public class GunController : MonoBehaviour
     // 1 y 1 sin furia.
     public float MultiplicadorCadenciaFuria { get { return multiplicadorCadenciaFuria; } }
     public float MultiplicadorDanoFuria { get { return multiplicadorDanoFuria; } }
+    // La furia prendida (la luz del arma de la mano parpadea en rojo).
+    public bool EnFuria { get { return multiplicadorDanoFuria > 1f || multiplicadorCadenciaFuria > 1f; } }
 
     // La cadencia vigente: la base por la caja, por la furia y por las cartas de la partida
     // (PoderDeLaPartida), con el techo, y la mitad con el auto-apuntado.

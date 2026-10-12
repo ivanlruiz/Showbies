@@ -5687,6 +5687,18 @@ public static class PruebasMejoras
                       ArmaEnLaMano.AnilloPorArma[4] && !ArmaEnLaMano.AnilloPorArma[0] && !ArmaEnLaMano.AnilloPorArma[1] && !ArmaEnLaMano.AnilloPorArma[2] && !ArmaEnLaMano.AnilloPorArma[3]);
         inf.Verdadero("armas: la pistola y el revolver, un disco; la escopeta y el rifle, con puntas",
                       ArmaEnLaMano.PuntasPorArma[0] == 0f && ArmaEnLaMano.PuntasPorArma[1] == 0f && ArmaEnLaMano.PuntasPorArma[2] > 0f && ArmaEnLaMano.PuntasPorArma[3] > 0f);
+        // El revolver, un ovalo a lo largo del cañon: mas largo y mas fino que el disco de la pistola.
+        inf.Verdadero("armas: el fogonazo del revolver es un ovalo, no el disco de la pistola",
+                      ArmaEnLaMano.LargoDelFogonazoPorArma[1] >= ArmaEnLaMano.LargoDelFogonazoPorArma[0] * 1.4f &&
+                      ArmaEnLaMano.LargoDelFogonazoPorArma[1] * ArmaEnLaMano.AnchoDelFogonazoPorArma[1] <= ArmaEnLaMano.LargoDelFogonazoPorArma[0] * 0.8f);
+        bool giros = Mathf.Abs(ArmaEnLaMano.GiroPorArma[3] - Mathf.PI * 0.25f) < 1e-4f;
+        for (int i = 0; i < n; i++) if (i != 3) giros &= ArmaEnLaMano.GiroPorArma[i] < 0f;
+        inf.Verdadero("armas: la cruz del rifle va en X, fija; las demas giran al azar", giros &&
+                      Mathf.Abs(ArmaEnLaMano.GiroDelFogonazo(3) - Mathf.PI * 0.25f) < 1e-4f);
+        inf.Verdadero("armas: el aviso del arma nueva salta de 0 a 1,3 y vuelve a 1 en 0,2 s",
+                      AvisoDeMisiones.Salto(0f) == 0f && Mathf.Abs(AvisoDeMisiones.Salto(0.12f) - 1.3f) < 0.01f &&
+                      Mathf.Abs(AvisoDeMisiones.Salto(0.2f) - 1f) < 0.01f && Mathf.Abs(AvisoDeMisiones.Salto(1f) - 1f) < 0.01f);
+        inf.Verdadero("armas: el arma nueva frena la partida un instante (0,2 s)", Mathf.Abs(Efectos.PausaDelArmaNueva - 0.2f) < 1e-4f);
         bool nombres = true;
         foreach (var id in ArmaEnLaMano.IdsDeLasArmas) nombres &= !Textos.De(id).StartsWith("[");
         inf.Verdadero("armas: cada una tiene su nombre en la tabla", nombres);
@@ -5719,8 +5731,13 @@ public static class PruebasMejoras
         inf.Verdadero("armas: la luz no recibe luz (Unlit/Color)", unlit);
         inf.Verdadero("armas: la pistola no tiene colliders", prefab.GetComponentsInChildren<Collider>(true).Length == 0);
         var metal = canonDelPrefab.GetComponent<Renderer>().sharedMaterial;
-        inf.Verdadero("armas: el cuerpo es gris oscuro (" + (metal != null ? metal.color.ToString() : "-") + ")",
-                      metal != null && metal.color.r < 0.3f && Mathf.Abs(metal.color.r - metal.color.b) < 0.05f);
+        inf.Verdadero("armas: el cuerpo es gris medio, #666666 (" + (metal != null ? metal.color.ToString() : "-") + ")",
+                      metal != null && Mathf.Abs(metal.color.r - 0.4f) < 0.02f && Mathf.Abs(metal.color.r - metal.color.b) < 0.02f);
+        var lomo = led.Find("Arriba");
+        var corredera = prefab.transform.Find("Corredera");
+        inf.Verdadero("armas: la luz de arriba cubre el lomo entero de la corredera",
+                      lomo != null && corredera != null && lomo.localScale.x >= corredera.localScale.x &&
+                      Mathf.Abs(lomo.localScale.x - ConstructorArmas.AnchoDelLedArriba) < 1e-4f);
 
         var vista = EditorSceneManager.NewPreviewScene();
         try

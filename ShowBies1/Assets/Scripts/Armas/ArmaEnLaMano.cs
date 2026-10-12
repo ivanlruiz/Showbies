@@ -75,11 +75,16 @@ public class ArmaEnLaMano : MonoBehaviour
     public static readonly float[] AnchoDelCanon = { 0.045f, 0.05f, 0.095f, 0.04f, 0.065f };
     // El fogonazo de cada una: su largo (por largoDelFogonazo), lo ancho que es, las puntas (0 es
     // un disco), lo que dura, y si es un anillo que crece (la de energia, sin fuego).
-    public static readonly float[] LargoDelFogonazoPorArma = { 0.6f, 0.75f, 1.05f, 1.15f, 0.95f };
-    public static readonly float[] AnchoDelFogonazoPorArma = { 1f, 1f, 1.25f, 0.6f, 1f };
+    // De la segunda revision de Gemini (12/10): el revolver es un ovalo a lo largo del cañon (1,5
+    // del largo de la pistola por la mitad de ancho: con el disco se leia como "la pistola con la
+    // bala mas grande") y la cruz del rifle va en X, a 45° del cañon, como los gases de un
+    // freno de boca (las demas giran al azar en cada tiro: GiroPorArma negativo).
+    public static readonly float[] LargoDelFogonazoPorArma = { 0.6f, 0.9f, 1.05f, 1.15f, 0.95f };
+    public static readonly float[] AnchoDelFogonazoPorArma = { 1f, 0.48f, 1.25f, 0.6f, 1f };
     public static readonly float[] PuntasPorArma = { 0f, 0f, 7f, 4f, 0f };
     public static readonly float[] DuracionPorArma = { 0.05f, 0.05f, 0.1f, 0.04f, 0.12f };
     public static readonly bool[] AnilloPorArma = { false, false, false, false, true };
+    public static readonly float[] GiroPorArma = { -1f, -1f, -1f, Mathf.PI * 0.25f, -1f };
     // Lo que dice el constructor de la pistola (ConstructorArmas): donde termina la corredera y
     // a que altura va el cañon.
     public const float FrenteDeLaCorredera = 0.225f;
@@ -90,9 +95,29 @@ public class ArmaEnLaMano : MonoBehaviour
     private int tramoPuesto = -1;
     private bool festejoPendiente;
     private MaterialPropertyBlock propiedadesDeLaLuz;
+    private Renderer[] lucesDelArma = new Renderer[0];
+    private Color luzPuesta = Color.clear;
+    private float latidoDesde = -1f;
+
+    // La luz late con cada tiro (de la segunda revision de Gemini: lo que se mueve llama al ojo
+    // hacia el arma): x2,5 en el tiro y de vuelta en 0,05 s. Con la furia parpadea en rojo cada
+    // 0,2 s: el estado del jugador se ve en lo que tiene en la mano.
+    public const float LatidoDeLaLuz = 2.5f;
+    public const float DuracionDelLatido = 0.05f;
+    public const float ParpadeoDeLaFuria = 0.2f;
+    public static readonly Color RojoDeLaFuria = new Color(1f, 0f, 0f);
 
     public int TramoPuesto { get { return tramoPuesto; } }
     public int ArmasNuevas { get; private set; }
+    // El color que tiene la luz ahora, con el latido y la furia. Para las pruebas.
+    public Color ColorDeLaLuz { get { return luzPuesta; } }
+
+    // El giro de las puntas del fogonazo: fijo para el rifle, al azar para las demas.
+    public static float GiroDelFogonazo(int tramo)
+    {
+        float giro = GiroPorArma[Mathf.Clamp(tramo, 0, Armas - 1)];
+        return giro >= 0f ? giro : Random.Range(0f, Mathf.PI * 2f);
+    }
 
     public static Color ColorDelArma(int tramo)
     {
@@ -162,6 +187,8 @@ public class ArmaEnLaMano : MonoBehaviour
         }
 
         propiedadesDeLaLuz = new MaterialPropertyBlock();
+        var led = instancia.Find("LED");
+        if (led != null) lucesDelArma = led.GetComponentsInChildren<Renderer>(true);
         antebrazo = animador.GetBoneTransform(HumanBodyBones.RightLowerArm);
         muñeco = animador.transform;
         tirosVistos = arma.TirosDisparados;
@@ -186,6 +213,7 @@ public class ArmaEnLaMano : MonoBehaviour
             festejoPendiente = tramoPuesto >= 0 && tramo > tramoPuesto;
             tramoPuesto = tramo;
             VestirArma(instancia, tramo, propiedadesDeLaLuz);
+            luzPuesta = Color.clear;
         }
         if (festejoPendiente && !MenuPausa.JuegoCongelado)
         {
@@ -198,8 +226,10 @@ public class ArmaEnLaMano : MonoBehaviour
         {
             tirosVistos = arma.TirosDisparados;
             patada = 1f;
+            latidoDesde = Time.unscaledTime;
             PrenderElFogonazo();
         }
+        PintarLaLuz();
         // Se apaga con exp(-k dt): tarda lo mismo a 30 FPS que a 120.
         patada *= Mathf.Exp(-recuperacion * Time.deltaTime);
         if (patada < 0.001f) patada = 0f;
@@ -222,7 +252,7 @@ public class ArmaEnLaMano : MonoBehaviour
         fogonazoDesde = Time.unscaledTime;
         fogonazoHasta = fogonazoDesde + duracionDelFogonazo * DuracionPorArma[tramo] / DuracionPorArma[0];
         tamañoDelFogonazo = Random.Range(0.8f, 1.15f);
-        giroDelFogonazo = Random.Range(0f, Mathf.PI * 2f);
+        giroDelFogonazo = GiroDelFogonazo(tramo);
         PintarFogonazo(renderDelFogonazo, propiedades, tramo, giroDelFogonazo, 0f);
         fogonazo.gameObject.SetActive(true);
     }
@@ -241,6 +271,23 @@ public class ArmaEnLaMano : MonoBehaviour
         // La de energia: el anillo crece mientras dura.
         if (AnilloPorArma[tramo])
             PintarFogonazo(renderDelFogonazo, propiedades, tramo, giroDelFogonazo, Mathf.InverseLerp(fogonazoDesde, fogonazoHasta, Time.unscaledTime));
+    }
+
+    // La luz del arma: el color del tramo, o el rojo de la furia a parpadeos, por el latido del
+    // ultimo tiro. Solo toca los renderers cuando cambia.
+    private void PintarLaLuz()
+    {
+        if (lucesDelArma.Length == 0) return;
+        Color color = ColorDelArma(tramoPuesto);
+        if (arma.EnFuria && Mathf.FloorToInt(Time.unscaledTime / ParpadeoDeLaFuria) % 2 == 0) color = RojoDeLaFuria;
+        float latido = latidoDesde < 0f ? 0f : Mathf.Clamp01(1f - (Time.unscaledTime - latidoDesde) / DuracionDelLatido);
+        color *= Mathf.Lerp(1f, LatidoDeLaLuz, latido);
+        color.a = 1f;
+        if (color == luzPuesta) return;
+        luzPuesta = color;
+        propiedadesDeLaLuz.SetColor(IdColor, color);
+        foreach (var render in lucesDelArma)
+            if (render != null) render.SetPropertyBlock(propiedadesDeLaLuz);
     }
 
     // El fogonazo de un arma: su color, sus puntas o su anillo (t es cuanto del fogonazo paso,

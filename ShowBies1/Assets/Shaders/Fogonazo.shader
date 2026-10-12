@@ -3,7 +3,8 @@
 // cualquier tamaño. El cuadrado se estira hacia donde apunta el cañon; _Giro cambia las
 // puntas en cada tiro para que no se vea siempre la misma. Con _Puntas en 0 es un disco
 // (la pistola y el revolver); con _Anillo en 1, un anillo de radio _RadioAnillo sin fuego,
-// el del arma de energia, que ArmaEnLaMano agranda mientras dura.
+// el del arma de energia, que ArmaEnLaMano agranda mientras dura, con un nucleo chico y
+// brillante en el medio (de la segunda revision de Gemini: el arma canaliza la energia).
 Shader "ShowBies/Fogonazo"
 {
     Properties
@@ -65,7 +66,10 @@ Shader "ShowBies/Fogonazo"
                 // El anillo: una banda fina en _RadioAnillo, que se apaga al crecer.
                 half d = (r - _RadioAnillo) * 9;
                 half anillo = exp(-d * d) * saturate(1.15 - r);
-                half3 colAnillo = (_Color.rgb + anillo * 0.35) * anillo * _Intensidad;
+                half nucleoDelAnillo = saturate(1 - r * 5.5);
+                nucleoDelAnillo *= nucleoDelAnillo;
+                half3 colAnillo = ((_Color.rgb + anillo * 0.35) * anillo
+                                  + lerp(_Color.rgb, half3(1, 1, 1), 0.6) * nucleoDelAnillo * 1.5) * _Intensidad;
                 col = lerp(col, colAnillo, _Anillo);
                 return fixed4(col, 1);
             }

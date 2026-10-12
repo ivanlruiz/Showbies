@@ -369,7 +369,8 @@ volvía a correr hasta soltar: se deslizaba en la pose).
 
 - **`ArmaEnLaMano`** (raíz de `Jugador.prefab`) al arrancar esconde el bate y el cubito, pone la pistola
   (`Prefabs/Pistola`, que arma **ShowBies > Armas > Armar la pistola**, `ConstructorArmas`, con formas simples, gris
-  oscuro desde el 12/10: con la remera blanca se recorta; era plateada por la remera negra) en la mano derecha y le pasa su **boca** al
+  medio desde el 12/10: era plateada por la remera negra, y el gris oscuro de la primera revisión de Gemini se fundía
+  con el piso de noche) en la mano derecha y le pasa su **boca** al
   arma (`GunController.boca`): las balas y las chispas salen de ahí, con la dirección de siempre, la de `firePoint`, que
   es hacia donde se apunta (la mano se mueve con la animación y no sirve para apuntar). **En cada tiro la pistola
   patea**: el antebrazo se levanta y el arma va hacia atrás, después del Animator (`retroceso`, `levantada` y
@@ -398,33 +399,45 @@ volvía a correr hasta soltar: se deslizaba en la pose).
 
 ### El arma cambia con el daño
 
-Etapa 3 de las cartas (1.6.0, `CARTAS.md`, con la revisión de arte de Gemini del 12/10 en `ARTE.md`): el arma de la mano
+Etapa 3 de las cartas (1.6.0, `CARTAS.md`, con las dos revisiones de arte de Gemini del 12/10 en `ARTE.md`): el arma de la mano
 sube con el **tramo del daño**, el mismo de la bala (`GunController.TramoDelArma`): **pistola, revólver, escopeta, rifle y
 arma de energía**. Es el daño de la mejora por las cartas, **sin la furia** (`DanoSinFuria`): la furia es un pico de 6 s, y
 cambiaría de arma en cada uso; la bala sí sube un tramo con ella.
 
 - **No son cinco modelos**: a 15 px desde arriba un revólver y una pistola son la misma mancha (Gemini). Es la misma
-  pistola, con el cañón más largo (y más ancho en la escopeta) y una **luz de neón del color del tramo** sobre la corredera
-  (el hijo `LED`, `Unlit/Color`, teñido con un `MaterialPropertyBlock`). La boca va a la punta de cada cañón, así las balas
-  salen de ahí. Lo hace `ArmaEnLaMano.VestirArma`, con las tablas del componente (`LargoDelCanon`, `AnchoDelCanon`).
+  pistola, gris medio (#666666: con el gris oscuro de la primera revisión, el cañón largo se fundía con el piso), con el
+  cañón más largo (y más ancho en la escopeta) y una **luz de neón del color del tramo** que cubre el lomo de la corredera
+  y sus costados (el hijo `LED`, `Unlit/Color`, teñido con un `MaterialPropertyBlock`; más fina, a la distancia de la
+  cámara era una línea de un píxel). La boca va a la punta de cada cañón, así las balas salen de ahí. Lo hace
+  `ArmaEnLaMano.VestirArma`, con las tablas del componente (`LargoDelCanon`, `AnchoDelCanon`).
+- **La luz late con cada tiro** (×2,5 y de vuelta en 0,05 s: lo que se mueve lleva el ojo al arma) **y con la furia
+  parpadea en rojo** cada 0,2 s (`GunController.EnFuria`): `ArmaEnLaMano.PintarLaLuz`, que toca los renderers solo cuando
+  cambia el color (`ColorDeLaLuz`).
 - **Lo que de verdad la distingue jugando es el fogonazo y el sonido.** El fogonazo (`PintarFogonazo` y
-  `AcomodarFogonazo`, estáticos): un disco la pistola (del color del fuego) y el revólver (más grande), una estrella de
-  siete puntas la escopeta (dura 0,1 s), una cruz larga y fina el rifle, y la de energía, sin fuego, **un anillo que crece**
+  `AcomodarFogonazo`, estáticos): un disco la pistola (del color del fuego), **un óvalo a lo largo del cañón el revólver**
+  (con un disco más grande se leía como "la pistola con la bala más grande"), una estrella de siete puntas la escopeta
+  (dura 0,1 s), una cruz larga y fina **en X** el rifle (`GiroPorArma`, a 45° del cañón, como un freno de boca; las demás
+  giran al azar en cada tiro), y la de energía, sin fuego, **un anillo que crece con un núcleo brillante en el medio**
   (`_Anillo` y `_RadioAnillo` en `ShowBies/Fogonazo`). El sonido (`GunController.SonidoDelArma`): la pistola con
-  `shot.mp3` y las otras con el suyo, de `otros/Resources/Disparos` (un BAM grave, un BOOM con perdigones, un chasquido
-  corto que la cadencia vuelve ráfaga y un zap), que sintetiza `sonidos/disparos.py` con la energía de `shot.mp3`; las de
-  cola larga dejan más aire entre sonido y sonido (`IntervaloDeSonidoPorArma`), que a 20 tiros por segundo se apilaban.
-- **Al subir de arma en la partida**, `Efectos.ArmaNueva`: chispas de su color en la boca y su nombre ("¡ESCOPETA!", ARMA
-  NUEVA) en la fila de `AvisoDeMisiones`, debajo del jugador, con su jingle y su temblor: arriba se metía en el cartel de
-  la oleada, que está en pantalla justo cuando se elige una carta de daño. **El festejo espera a que el juego ande**
+  `shot.mp3` y las otras con el suyo, de `otros/Resources/Disparos` (un BAM y un BOOM con perdigones, los dos con un
+  bombo grave saturado debajo, un chasquido corto con un clack de metal que la cadencia vuelve ráfaga, y un zap), que
+  sintetiza `sonidos/disparos.py` con la energía de `shot.mp3` (un poco más el revólver y la escopeta, un poco menos el
+  rifle); las de cola larga dejan más aire entre sonido y sonido (`IntervaloDeSonidoPorArma`), que a 20 tiros por segundo
+  se apilaban.
+- **Al subir de arma en la partida**, `Efectos.ArmaNueva`: chispas de su color en la boca, **una pausa de impacto de
+  0,2 s** (`PausaDelArmaNueva`) y su nombre ("¡ESCOPETA!", ARMA NUEVA) en la fila de `AvisoDeMisiones`, debajo del
+  jugador, **entrando de un salto** (de 0 a 1,3 y de vuelta a 1 en 0,2 s, `AvisoDeMisiones.Salto`), con su jingle y su
+  temblor: arriba se metía en el cartel de la oleada, que está en pantalla justo cuando se elige una carta de daño. Es el
+  subidón de la partida (Gemini). **El festejo espera a que el juego ande**
   (`MenuPausa.JuegoCongelado`): el arma se viste al elegir la carta, con la elección todavía congelando la pantalla. Al
   empezar o al retomar, nada; bajar (una partida nueva) tampoco.
 - **ShowBies > Armas > Fotos de las armas** (`FotosDeLasArmas`) saca las cinco de cerca y con el héroe de noche en cada
   capítulo, con la cámara y la calidad del teléfono (`Builds/armas/`, y al doble para ver los píxeles). **ShowBies >
   Pruebas > Armas por tramo (play)** (`PruebaArmas`): retomada con cartas de daño, que el arma arranque en su tramo sin
-  festejo, que bajar no festeje y subir sí, una vez por escalón, con la boca en la punta, que la furia no la cambie y que
-  cada una dispare con su fogonazo desde su boca (`Builds/prueba_armas.txt`, con la foto del cartel). La prueba de lógica
-  mira las tablas, el prefab y el tramo sin la furia.
+  festejo, que bajar no festeje y subir sí, una vez por escalón, con la pausa de impacto y la boca en la punta, que la
+  furia no la cambie y ponga la luz a parpadear en rojo, y que cada una dispare con su fogonazo (el giro fijo del rifle
+  incluido) desde su boca y con la luz latiendo (`Builds/prueba_armas.txt`, con la foto del cartel). La prueba de lógica
+  mira las tablas, el prefab (el gris, la luz que cubre el lomo), el salto del aviso y el tramo sin la furia.
 
 ## Granada
 

@@ -37,7 +37,7 @@ ficha, con contornos negros duros, compiten con el neón.
 **No modelar cinco armas**: a 15 px, desde arriba y disparando, un revólver y una pistola son la misma mancha. Lo que
 se tiene que ver es lo que el arma emite:
 
-- **El modelo**: siempre un bloque gris oscuro (#333333); solo cambia el largo del cañón: pistola 0,4 m, escopeta 0,6 m
+- **El modelo**: siempre un bloque gris oscuro (#333333, que la segunda revisión pasó a #666666); solo cambia el largo del cañón: pistola 0,4 m, escopeta 0,6 m
   (y más ancha), rifle 1,0 m.
 - **Un "LED" de neón**: un quad diminuto pegado al arma, `Unlit/Color`, del color del tramo del daño.
 - **El fogonazo**, que es donde va el esfuerzo (un quad de 0,05 s frente al cañón): la pistola y el revólver, un
@@ -45,6 +45,24 @@ se tiene que ver es lo que el arma emite:
   energía, sin fogonazo: anillos que se expanden.
 - **La cadencia y el sonido son el 80 % de la mejora que se siente**: pop… pop de la pistola, trrrr del rifle, ¡BAM! de
   la escopeta.
+
+**Hecho el 12/10**, y ese mismo día Gemini revisó el resultado (las cinco de cerca, en la partida al doble, el aviso y
+los sonidos): el fogonazo se distinguía jugando, pero el arma no (el gris oscuro se fundía con el piso, el LED era una
+línea de un píxel), el revólver parecía "la pistola con la bala más grande" y a los sonidos les faltaba peso. Su top 10,
+**hecho entero el 12/10** (ver El arma cambia con el daño en `CLAUDE.md`):
+
+1. El LED tres veces más ancho: cubre el lomo de la corredera.
+2. El LED late con cada tiro: ×2,5 y de vuelta en 0,05 s.
+3. El arma gris medio (#666666) en vez de #333333.
+4. El fogonazo del revólver, un óvalo a lo largo del cañón (1,5 de largo por 0,5 de ancho).
+5. El aviso de arma nueva entra de un salto (0 → 1,3 → 1 en 0,2 s) con una pausa de impacto de 0,2 s.
+6. Un bombo grave debajo del revólver y la escopeta.
+7. La cruz del rifle en X (girada 45°).
+8. Un clack de metal al principio del rifle.
+9. Un núcleo brillante en el medio del anillo de la de energía.
+10. Con la furia, el LED parpadea en rojo cada 0,2 s.
+
+Queda de esa revisión, fuera del top 10: un zumbido que quede sonando después del zap de la de energía.
 
 ### Las tarjetas de las cartas
 

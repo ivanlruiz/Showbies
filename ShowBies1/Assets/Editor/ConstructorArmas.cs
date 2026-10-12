@@ -16,14 +16,16 @@ using UnityEngine;
 public static class ConstructorArmas
 {
     public const string RutaPistola = "Assets/Prefabs/Pistola.prefab";
+    // El lomo de la corredera mide 0,07: la luz de arriba lo cubre entero (lo mira la prueba).
+    public const float AnchoDelLedArriba = 0.072f;
     const string CarpetaMateriales = "Assets/Materiales";
 
-    // Gris oscuro (#333333), de la revision de arte de Gemini (12/10): con la remera blanca del
-    // heroe (10/10) una pistola oscura se recorta, y lo que dice que arma es el color de la luz
-    // (LED) y el fogonazo. Hasta ahi era plateada con la empuñadura marron, porque la remera
-    // era negra.
-    static readonly Color ColorMetal = new Color(0.2f, 0.2f, 0.2f);
-    static readonly Color ColorMango = new Color(0.14f, 0.14f, 0.14f);
+    // Gris medio (#666666), de la segunda revision de arte de Gemini (12/10): el gris oscuro
+    // (#333333) de la primera se fundia con el piso de noche, y el cañon largo de la escopeta y
+    // del rifle no se veia. Hasta la etapa 3 era plateada con la empuñadura marron, porque la
+    // remera era negra.
+    static readonly Color ColorMetal = new Color(0.4f, 0.4f, 0.4f);
+    static readonly Color ColorMango = new Color(0.3f, 0.3f, 0.3f);
 
     // La luz de la bala (BulletController.materialLuz, pedido de Ivan, 9/10): el material del
     // charco de los faroles, blanco (cada tramo lo tiñe con su color en runtime), puesto en el
@@ -66,14 +68,17 @@ public static class ConstructorArmas
         Pieza(raiz, "Mango", PrimitiveType.Cube, new Vector3(0f, -0.035f, -0.03f), Quaternion.Euler(-14f, 0f, 0f), new Vector3(0.06f, 0.17f, 0.085f), mango);
         Pieza(raiz, "Guardamonte", PrimitiveType.Cube, new Vector3(0f, -0.005f, 0.05f), Quaternion.identity, new Vector3(0.03f, 0.015f, 0.09f), metal);
 
-        // La luz de neon (el "LED"): una tira arriba y una a cada costado de la corredera, asi se
-        // ve gire como gire la mano. Blanca: ArmaEnLaMano.VestirArma la tiñe del color del tramo.
+        // La luz de neon (el "LED"): el lomo entero de la corredera y una franja ancha a cada
+        // costado, asi se ve gire como gire la mano. Tres veces mas ancha que la primera (de la
+        // segunda revision de Gemini: a la distancia de la camara era una linea de un pixel).
+        // Blanca: ArmaEnLaMano la tiñe del color del tramo, la hace latir en cada tiro y la
+        // pone roja con la furia.
         var luz = MaterialDeLaLuz();
         var led = new GameObject("LED");
         led.transform.SetParent(raiz.transform, false);
-        Pieza(led, "Arriba", PrimitiveType.Cube, new Vector3(0f, 0.112f, 0.08f), Quaternion.identity, new Vector3(0.024f, 0.006f, 0.22f), luz);
-        Pieza(led, "Izquierda", PrimitiveType.Cube, new Vector3(-0.037f, 0.08f, 0.08f), Quaternion.identity, new Vector3(0.006f, 0.022f, 0.22f), luz);
-        Pieza(led, "Derecha", PrimitiveType.Cube, new Vector3(0.037f, 0.08f, 0.08f), Quaternion.identity, new Vector3(0.006f, 0.022f, 0.22f), luz);
+        Pieza(led, "Arriba", PrimitiveType.Cube, new Vector3(0f, 0.112f, 0.08f), Quaternion.identity, new Vector3(AnchoDelLedArriba, 0.006f, 0.22f), luz);
+        Pieza(led, "Izquierda", PrimitiveType.Cube, new Vector3(-0.037f, 0.078f, 0.08f), Quaternion.identity, new Vector3(0.006f, 0.05f, 0.22f), luz);
+        Pieza(led, "Derecha", PrimitiveType.Cube, new Vector3(0.037f, 0.078f, 0.08f), Quaternion.identity, new Vector3(0.006f, 0.05f, 0.22f), luz);
         foreach (var r in led.GetComponentsInChildren<MeshRenderer>())
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
