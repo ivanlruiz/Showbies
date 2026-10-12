@@ -264,7 +264,9 @@ public static class PruebaArmas
                     fogonazoBien &= Mathf.Abs(bloque.GetFloat("_Puntas") - ArmaEnLaMano.PuntasPorArma[tramo]) < 1e-4f &&
                                     Mathf.Abs(bloque.GetFloat("_Anillo") - (ArmaEnLaMano.AnilloPorArma[tramo] ? 1f : 0f)) < 1e-4f;
                 }
-                if (arma.TirosDisparados > tirosAntes)
+                // Desde el segundo tiro: el primero sale en el cuadro en que cambio el arma, antes de
+                // que la boca pase a la punta del cañon nuevo.
+                if (arma.TirosDisparados > tirosAntes + 1)
                     peorSalida = Mathf.Max(peorSalida, Vector3.Distance(arma.UltimaSalida, mano.Boca.position));
                 if (t < 0.6f) return;
                 arma.isFiring = false;

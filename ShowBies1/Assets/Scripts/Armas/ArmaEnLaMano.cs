@@ -88,6 +88,7 @@ public class ArmaEnLaMano : MonoBehaviour
     public static readonly Color FuegoDeLaPistola = new Color(1f, 0.72f, 0.25f);
 
     private int tramoPuesto = -1;
+    private bool festejoPendiente;
     private MaterialPropertyBlock propiedadesDeLaLuz;
 
     public int TramoPuesto { get { return tramoPuesto; } }
@@ -176,18 +177,21 @@ public class ArmaEnLaMano : MonoBehaviour
     {
         if (instancia == null) return;
 
-        // El arma del tramo de ahora; al subir en la partida, el festejo (al empezar, no).
+        // El arma del tramo de ahora; al subir en la partida, el festejo (al empezar, no). Se viste
+        // en el acto, pero el festejo espera a que el juego ande: el tramo sube al elegir una carta
+        // de daño, con la eleccion todavia congelando la pantalla.
         int tramo = arma.TramoDelArma;
         if (tramo != tramoPuesto)
         {
-            bool sube = tramoPuesto >= 0 && tramo > tramoPuesto;
+            festejoPendiente = tramoPuesto >= 0 && tramo > tramoPuesto;
             tramoPuesto = tramo;
             VestirArma(instancia, tramo, propiedadesDeLaLuz);
-            if (sube)
-            {
-                ArmasNuevas++;
-                Efectos.ArmaNueva(Boca != null ? Boca.position : transform.position, transform.position, ColorDelArma(tramo), Textos.De(IdsDeLasArmas[tramo]));
-            }
+        }
+        if (festejoPendiente && !MenuPausa.JuegoCongelado)
+        {
+            festejoPendiente = false;
+            ArmasNuevas++;
+            Efectos.ArmaNueva(Boca != null ? Boca.position : transform.position, ColorDelArma(tramo), Textos.De(IdsDeLasArmas[tramo]));
         }
 
         if (arma.TirosDisparados != tirosVistos)

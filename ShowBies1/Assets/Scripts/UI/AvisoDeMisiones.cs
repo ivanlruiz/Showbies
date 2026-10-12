@@ -114,6 +114,18 @@ public class AvisoDeMisiones : MonoBehaviour
                                           : PlayerPrefs.GetInt(PlayerHealth.ClaveRecord(gameObject.scene.buildIndex), 0);
     }
 
+    // El arma de la mano subio de tramo (ArmaEnLaMano, etapa 3 de las cartas): su nombre del color
+    // de su bala, en la fila de avisos, debajo del jugador. Encima, donde lo ponia el cartel de las
+    // cajas, se metia en el de la oleada, que esta en pantalla justo cuando se elige una carta de
+    // daño. Sin avisos en la escena (el tutorial), falso.
+    public static bool ArmaNueva(string nombre, Color color)
+    {
+        var aviso = FindAnyObjectByType<AvisoDeMisiones>();
+        if (aviso == null || !aviso.isActiveAndEnabled) return false;
+        aviso.pendientes.Enqueue(new Aviso { titulo = nombre, detalle = Textos.De("arma_nueva"), color = color });
+        return true;
+    }
+
     // Cuando lo juntado alcanza para mas compras que lo ya avisado. Se anota ahora y sale en
     // el descanso de la oleada, como mucho cada OleadasEntreAvisosDeMejora.
     private void AnotarMejoras()

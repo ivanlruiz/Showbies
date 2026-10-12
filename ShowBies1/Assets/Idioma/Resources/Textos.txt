@@ -80,6 +80,7 @@ arma_revolver	REVOLVER!	¡REVÓLVER!
 arma_escopeta	SHOTGUN!	¡ESCOPETA!
 arma_rifle	RIFLE!	¡RIFLE!
 arma_energia	ENERGY GUN!	¡ARMA DE ENERGÍA!
+arma_nueva	NEW WEAPON	ARMA NUEVA
 carta_curacion_nombre	FULL HEAL	CURACIÓN
 carta_curacion	Restores 100% health	Restaura el 100 % de la vida
 opciones_auto_apuntar	AUTO-AIM	AUTO-APUNTADO

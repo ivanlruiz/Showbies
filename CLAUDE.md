@@ -414,9 +414,11 @@ cambiaría de arma en cada uso; la bala sí sube un tramo con ella.
   `shot.mp3` y las otras con el suyo, de `otros/Resources/Disparos` (un BAM grave, un BOOM con perdigones, un chasquido
   corto que la cadencia vuelve ráfaga y un zap), que sintetiza `sonidos/disparos.py` con la energía de `shot.mp3`; las de
   cola larga dejan más aire entre sonido y sonido (`IntervaloDeSonidoPorArma`), que a 20 tiros por segundo se apilaban.
-- **Al subir de arma en la partida**, `Efectos.ArmaNueva`: chispas de su color en la boca, el jingle del cartel más agudo,
-  un temblor chico y su nombre arriba del jugador ("¡ESCOPETA!"). Al empezar o al retomar, nada; bajar (una partida
-  nueva) tampoco.
+- **Al subir de arma en la partida**, `Efectos.ArmaNueva`: chispas de su color en la boca y su nombre ("¡ESCOPETA!", ARMA
+  NUEVA) en la fila de `AvisoDeMisiones`, debajo del jugador, con su jingle y su temblor: arriba se metía en el cartel de
+  la oleada, que está en pantalla justo cuando se elige una carta de daño. **El festejo espera a que el juego ande**
+  (`MenuPausa.JuegoCongelado`): el arma se viste al elegir la carta, con la elección todavía congelando la pantalla. Al
+  empezar o al retomar, nada; bajar (una partida nueva) tampoco.
 - **ShowBies > Armas > Fotos de las armas** (`FotosDeLasArmas`) saca las cinco de cerca y con el héroe de noche en cada
   capítulo, con la cámara y la calidad del teléfono (`Builds/armas/`, y al doble para ver los píxeles). **ShowBies >
   Pruebas > Armas por tramo (play)** (`PruebaArmas`): retomada con cartas de daño, que el arma arranque en su tramo sin
