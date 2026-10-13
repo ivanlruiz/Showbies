@@ -169,6 +169,17 @@ public static class PruebaJoystickDinamico
             case Fase.Reposo:
             {
                 if (tReal < 0.5f) return;
+                // La foto sale al final de un cuadro del juego, y este banco corre en el update del editor,
+                // que puede pasar dos veces antes: el toque va unas decimas despues, o saldria en ella.
+                if (!primerCuadro)
+                {
+                    if (tReal < 0.9f) return;
+                    dondeEmpezo = control.transform.position;
+                    izquierdo.Apoyar(toqueIzquierdo, JoystickDinamico.DedoDePrueba);
+                    Pasar(Fase.Apoyar);
+                    return;
+                }
+                primerCuadro = false;
                 Ok("en reposo, el de mover no se ve (alfa " + joysticks.AlfaDelJoystickDeMover.ToString("0.00") + ")",
                    joysticks.AlfaDelJoystickDeMover < 0.01f);
                 Ok("en reposo, el de disparo espera al 40 % con el auto-apuntado (alfa " + joysticks.AlfaDelJoystickDeDisparo.ToString("0.00") + ")",
@@ -187,10 +198,6 @@ public static class PruebaJoystickDinamico
                 Ok("la guia dice que se arrastra en cualquier parte", cartel != null && cartel.text == Textos.De("guia_mover_dinamico"));
                 Ok("el cartel de la guia va debajo del joystick fantasma", cartel != null && cartel.rectTransform.anchoredPosition.y < 0f);
                 ScreenCapture.CaptureScreenshot(Path.GetFullPath("../Builds/joystick_dinamico_guia.png"));
-
-                dondeEmpezo = control.transform.position;
-                izquierdo.Apoyar(toqueIzquierdo, JoystickDinamico.DedoDePrueba);
-                Pasar(Fase.Apoyar);
                 return;
             }
 
