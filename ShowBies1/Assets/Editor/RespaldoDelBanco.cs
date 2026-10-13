@@ -28,9 +28,10 @@ public static class RespaldoDelBanco
     // Las claves de PlayerPrefs del juego (ver Persistencia en CLAUDE.md). Si se agrega una,
     // va aca tambien.
     static readonly string[] Enteros =
-        { "Score", "HighScore", "HighScore_1", "HighScore_3", "HighScore_4", "UltimoModo", "TutorialCompletado", "TemaOscuro" };
+        { "Score", "HighScore", "HighScore_1", "HighScore_3", "HighScore_4", "UltimoModo", "TutorialCompletado", "TemaOscuro",
+          "MostrarFps", "SombreroCalabaza", "AutoApuntar", "JoysticksDinamicos" };
     static readonly string[] Reales = { "VolumenEfectos", "VolumenMusica" };
-    static readonly string[] Cadenas = { "Idioma", "ResenaPedidaEn" };
+    static readonly string[] Cadenas = { "Idioma", "ResenaPedidaEn", "ActualizacionPostergada" };
 
     [System.Serializable]
     class Pref

@@ -8,6 +8,10 @@ using UnityEngine.UI;
 // el primer zombi, "COGE LAS MONEDAS": las monedas son el corazon del juego y nadie lo
 // explica en otro lado. No frena nada ni pide tocar "siguiente".
 //
+// Con los joysticks dinamicos (JoystickDinamico), que no se ven hasta que se los toca, el pulgar va
+// en el medio de la zona, con un joystick fantasma debajo, y el cartel dice que se arrastra en
+// cualquier parte (de Gemini, 12/10).
+//
 // Va en WaveMode (objeto GuiaPrimeraPartida), que es adonde PLAY manda la primera vez.
 // Solo aparece si el jugador no termino ninguna partida (PrimeraVez).
 public class GuiaPrimeraPartida : MonoBehaviour
@@ -52,10 +56,12 @@ public class GuiaPrimeraPartida : MonoBehaviour
 
         if (Plataforma.EsMovil && joysticks != null)
         {
-            mover = CrearGuia(joysticks.moveJoystick, Textos.De("guia_mover"), false);
+            var dinamico = joysticks.DinamicoDeMover;
+            mover = CrearGuia(joysticks.moveJoystick, dinamico,
+                              dinamico != null ? Textos.De("guia_mover_dinamico") : Textos.De("guia_mover"), false);
             // Con AUTO-APUNTAR dispara solo (PlayerJS): no hay que ensenarle el joystick derecho.
             if (PlayerJS.AutoApuntar) disparo = true;
-            else disparar = CrearGuia(joysticks.lookJoystick, Textos.De("guia_disparar"), true);
+            else disparar = CrearGuia(joysticks.lookJoystick, joysticks.DinamicoDeDisparo, Textos.De("guia_disparar"), true);
         }
         else if (canvas != null)
         {
@@ -71,19 +77,50 @@ public class GuiaPrimeraPartida : MonoBehaviour
         if (texturaPulgar != null) Destroy(texturaPulgar);
     }
 
-    private Guia CrearGuia(FixedJoystick joystick, string texto, bool empuja)
+    private Guia CrearGuia(FixedJoystick joystick, JoystickDinamico dinamico, string texto, bool empuja)
     {
         if (joystick == null) return null;
         var raiz = (RectTransform)joystick.transform;
+        var padre = dinamico != null ? raiz.parent as RectTransform : null;
 
         var go = new GameObject("GuiaPrimeraPartida", typeof(RectTransform), typeof(CanvasGroup));
         var rt = (RectTransform)go.transform;
-        rt.SetParent(raiz, false);
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        if (padre != null)
+        {
+            // El joystick dinamico no se ve (su CanvasGroup lo tiene en 0, y a sus hijos con el):
+            // la guia cuelga de su padre, en el medio de la zona. Antes que el joystick, para que
+            // el de verdad, al aparecer, quede encima del fantasma.
+            rt.SetParent(padre, false);
+            rt.SetSiblingIndex(raiz.GetSiblingIndex());
+            rt.anchorMin = rt.anchorMax = dinamico.Zona.center;
+            rt.anchoredPosition = Vector2.zero;
+        }
+        else
+        {
+            rt.SetParent(raiz, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        }
         rt.sizeDelta = raiz.rect.size;
         var grupo = go.GetComponent<CanvasGroup>();
         grupo.blocksRaycasts = false;
         grupo.interactable = false;
+
+        // El joystick fantasma: la base del de verdad, mas transparente, bajo el pulgar.
+        var baseDelJoystick = raiz.GetComponent<Image>();
+        if (padre != null && baseDelJoystick != null)
+        {
+            var fantasmaGo = new GameObject("JoystickFantasma", typeof(RectTransform), typeof(Image));
+            var fantasma = (RectTransform)fantasmaGo.transform;
+            fantasma.SetParent(rt, false);
+            fantasma.sizeDelta = raiz.rect.size;
+            var imagenFantasma = fantasmaGo.GetComponent<Image>();
+            imagenFantasma.sprite = baseDelJoystick.sprite;
+            imagenFantasma.type = baseDelJoystick.type;
+            Color color = baseDelJoystick.color;
+            color.a *= 0.45f;
+            imagenFantasma.color = color;
+            imagenFantasma.raycastTarget = false;
+        }
 
         float lado = Mathf.Min(raiz.rect.width, raiz.rect.height);
         var pulgarGo = new GameObject("Pulgar", typeof(RectTransform), typeof(Image));

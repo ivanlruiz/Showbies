@@ -65,6 +65,20 @@ public class PlayerJS : MonoBehaviour
     private bool enTutorial;
     private Camera camara;
 
+    // Los joysticks dinamicos (JoystickDinamico, 12/10): null con la opcion apagada o en PC.
+    private JoystickDinamico dinamicoDeMover;
+    private JoystickDinamico dinamicoDeDisparo;
+
+    public JoystickDinamico DinamicoDeMover
+    {
+        get { return dinamicoDeMover; }
+    }
+
+    public JoystickDinamico DinamicoDeDisparo
+    {
+        get { return dinamicoDeDisparo; }
+    }
+
     // A quien esta apuntando solo, o null (lo miran las pruebas).
     public EnemyController Blanco
     {
@@ -80,6 +94,14 @@ public class PlayerJS : MonoBehaviour
         return Time.time - ultimoApuntadoEn <= segundos;
     }
 
+    // En Awake y no en Start: la guia de la primera partida mira en su Start si son dinamicos.
+    void Awake()
+    {
+        if (!Plataforma.EsMovil || !JoystickDinamico.Activos) return;
+        dinamicoDeMover = JoystickDinamico.Instalar(moveJoystick, JoystickDinamico.ZonaIzquierda);
+        dinamicoDeDisparo = JoystickDinamico.Instalar(lookJoystick, JoystickDinamico.ZonaDerecha);
+    }
+
     void Start()
     {
         enTutorial = FindAnyObjectByType<TutorialManager>() != null;
@@ -88,7 +110,11 @@ public class PlayerJS : MonoBehaviour
 
     void Update()
     {
-        if (!Plataforma.EsMovil || MenuPausa.JuegoCongelado) return;
+        if (!Plataforma.EsMovil) return;
+        // Antes de mirar la pausa: un joystick soltado en plena eleccion de cartas vuelve a su
+        // rincon, y ahi se tiene que ver como en reposo.
+        MostrarJoysticks();
+        if (MenuPausa.JuegoCongelado) return;
         // Volando por el golpe del jefe no hay control (PlayerController.Lanzar): sin esto, con el
         // pulgar en el joystick de disparo, seguia girando y disparando en el aire.
         if (player != null && player.EnElAire)
@@ -116,7 +142,6 @@ public class PlayerJS : MonoBehaviour
         float ver = lookJoystick.Vertical;
 
         bool aMano = hoz != 0 || ver != 0;
-        MostrarJoystickDeDisparo(aMano);
         if (!aMano)
         {
             Vector3 haciaElBlanco;
@@ -143,23 +168,71 @@ public class PlayerJS : MonoBehaviour
     public const float AlfaDelJoystickEnAutomatico = 0.4f;
     private const float EscalaDelJoystickTocado = 1.08f;
     private CanvasGroup grupoDelJoystick;
+    private CanvasGroup grupoDeMover;
     private Vector3 escalaDelJoystick = Vector3.one;
     private float tocado;   // 0 suelto, 1 con el pulgar: se acerca de a poco
 
     public float AlfaDelJoystickDeDisparo { get { return grupoDelJoystick != null ? grupoDelJoystick.alpha : 1f; } }
+    public float AlfaDelJoystickDeMover { get { return grupoDeMover != null ? grupoDeMover.alpha : 1f; } }
+
+    // Cuanto se ve cada joystick sin el pulgar encima. Los dinamicos no se ven hasta que se los
+    // toca (de Gemini), salvo el de disparo con el auto-apuntado, que espera al 40 % en su rincon,
+    // y los dos en el tutorial: ahi los textos dicen "el joystick de la izquierda", y tienen que
+    // estar a la vista. Se pueden tomar igual desde cualquier lugar de su zona.
+    public float ReposoDelDeMover
+    {
+        get { return dinamicoDeMover != null && !enTutorial ? 0f : 1f; }
+    }
+
+    public float ReposoDelDeDisparo
+    {
+        get
+        {
+            if (AutoApuntar && !enTutorial) return AlfaDelJoystickEnAutomatico;
+            return dinamicoDeDisparo != null && !enTutorial ? 0f : 1f;
+        }
+    }
+
+    // Con el pulgar encima: el del dinamico, aunque la palanca este al medio, o la palanca movida
+    // (los fijos, y los bancos que le hablan al joystick directo).
+    static bool Tocado(Joystick joystick, JoystickDinamico dinamico)
+    {
+        return (dinamico != null && dinamico.Tocado) || joystick.Direction != Vector2.zero;
+    }
+
+    static CanvasGroup Grupo(Joystick joystick)
+    {
+        var grupo = joystick.GetComponent<CanvasGroup>();
+        if (grupo == null) grupo = joystick.gameObject.AddComponent<CanvasGroup>();
+        return grupo;
+    }
+
+    void MostrarJoysticks()
+    {
+        if (moveJoystick != null)
+        {
+            if (grupoDeMover == null) grupoDeMover = Grupo(moveJoystick);
+            float reposo = ReposoDelDeMover;
+            if (dinamicoDeMover != null) dinamicoDeMover.alfaEnReposo = reposo;
+            grupoDeMover.alpha = Tocado(moveJoystick, dinamicoDeMover) ? 1f : reposo;
+        }
+        if (lookJoystick != null) MostrarJoystickDeDisparo(Tocado(lookJoystick, dinamicoDeDisparo));
+    }
 
     void MostrarJoystickDeDisparo(bool aMano)
     {
         if (grupoDelJoystick == null)
         {
-            grupoDelJoystick = lookJoystick.GetComponent<CanvasGroup>();
-            if (grupoDelJoystick == null) grupoDelJoystick = lookJoystick.gameObject.AddComponent<CanvasGroup>();
+            grupoDelJoystick = Grupo(lookJoystick);
             escalaDelJoystick = lookJoystick.transform.localScale;
         }
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
         tocado = Mathf.MoveTowards(tocado, aMano ? 1f : 0f, dt / 0.12f);
-        bool apagable = AutoApuntar && !enTutorial;
-        grupoDelJoystick.alpha = apagable ? Mathf.Lerp(AlfaDelJoystickEnAutomatico, 1f, tocado) : 1f;
+        float reposo = ReposoDelDeDisparo;
+        if (dinamicoDeDisparo != null) dinamicoDeDisparo.alfaEnReposo = reposo;
+        // Si en reposo no se ve, aparece y se va de golpe: al soltarlo vuelve a su rincon, y
+        // apagandose de a poco se lo veria saltar hasta ahi.
+        grupoDelJoystick.alpha = reposo <= 0f ? (aMano ? 1f : 0f) : Mathf.Lerp(reposo, 1f, tocado);
         lookJoystick.transform.localScale = escalaDelJoystick * Mathf.Lerp(1f, EscalaDelJoystickTocado, CurvasUI.Campana(tocado) * 0.5f + tocado * 0.5f);
     }
 

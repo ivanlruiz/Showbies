@@ -265,6 +265,7 @@ public static class PruebasMejoras
                     ProbarArmasPorTramo(informe);
                     ProbarProyectiles(informe);
                     ProbarFlechasDelBorde(informe);
+                    ProbarJoystickDinamico(informe);
                     ProbarZombiDelTesoro(informe);
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
@@ -5938,6 +5939,72 @@ public static class PruebasMejoras
         inf.Verdadero("flechas: abajo, sobre la vida, pasa al costado mas cercano (" + vida + ")", Mathf.Abs(vida.x - 1100f) < 0.5f);
         Vector2 libre = FlechasDelBorde.FueraDelHud(new Vector2(1856f, 540f), pantalla, 64f, hud, 40f);
         inf.Verdadero("flechas: lejos del HUD no se mueve", (libre - new Vector2(1856f, 540f)).sqrMagnitude < 0.01f);
+    }
+
+    // Los joysticks dinamicos (JoystickDinamico, 12/10): la cuenta de las zonas y de como el
+    // joystick sigue al pulgar, y en las escenas de juego que cada joystick espere en su zona y que
+    // la granada y la furia, del lado del de disparo, atiendan sus toques: el joystick dinamico no
+    // toma un toque que empieza sobre algo que lo atiende, y asi quedan fuera de la zona.
+    static void ProbarJoystickDinamico(Informe inf)
+    {
+        var centro = new Vector2(500f, 300f);
+        inf.Verdadero("joystick dinamico: con el pulgar adentro del radio, el centro no se mueve",
+                      JoystickDinamico.CentroQueSigue(centro, new Vector2(560f, 340f), 128f) == centro);
+        Vector2 seguido = JoystickDinamico.CentroQueSigue(centro, new Vector2(900f, 300f), 128f);
+        inf.Verdadero("joystick dinamico: mas alla del radio, el centro lo sigue hasta dejar el pulgar en el borde (" + seguido + ")",
+                      Mathf.Abs(seguido.x - 772f) < 0.01f && Mathf.Abs(seguido.y - 300f) < 0.01f);
+        Vector2 pulgar = centro + new Vector2(300f, -400f);
+        Vector2 diagonal = JoystickDinamico.CentroQueSigue(centro, pulgar, 100f);
+        inf.Verdadero("joystick dinamico: en diagonal, sobre la recta y a un radio del pulgar (" + diagonal + ")",
+                      Mathf.Abs((pulgar - diagonal).magnitude - 100f) < 0.01f
+                      && ((diagonal - centro).normalized - new Vector2(0.6f, -0.8f)).sqrMagnitude < 1e-6f);
+
+        // Un 20:9 con la camara en la pantalla: el area segura empieza 90 px adentro.
+        var area = new Rect(90f, 0f, 2220f, 1080f);
+        Rect izquierda = JoystickDinamico.ZonaEnPantalla(area, JoystickDinamico.ZonaIzquierda);
+        Rect derecha = JoystickDinamico.ZonaEnPantalla(area, JoystickDinamico.ZonaDerecha);
+        inf.Verdadero("joystick dinamico: la zona de mover es la mitad izquierda, hasta el 70 % del alto (" + izquierda + ")",
+                      Mathf.Abs(izquierda.xMin - 90f) < 0.01f && Mathf.Abs(izquierda.xMax - 1200f) < 0.01f
+                      && Mathf.Abs(izquierda.yMin) < 0.01f && Mathf.Abs(izquierda.yMax - 756f) < 0.01f);
+        inf.Verdadero("joystick dinamico: la de disparo es la derecha, pegada a la otra sin pisarla (" + derecha + ")",
+                      Mathf.Abs(derecha.xMin - izquierda.xMax) < 0.01f && Mathf.Abs(derecha.xMax - 2310f) < 0.01f
+                      && Mathf.Abs(derecha.yMax - 756f) < 0.01f && !izquierda.Overlaps(derecha));
+
+        foreach (var ruta in new[] { "Assets/Escenas/WaveMode.unity", "Assets/Escenas/ShowBies1.unity", "Assets/Escenas/Tutorial.unity" })
+        {
+            string nombre = System.IO.Path.GetFileNameWithoutExtension(ruta);
+            bool tutorial = nombre == "Tutorial";
+            LeerEscena(ruta, escena =>
+            {
+                var js = Buscar<PlayerJS>(escena);
+                if (!inf.Verdadero("joystick dinamico: " + nombre + " tiene sus dos joysticks",
+                                   js != null && js.moveJoystick != null && js.lookJoystick != null)) return;
+                var mover = (RectTransform)js.moveJoystick.transform;
+                var disparo = (RectTransform)js.lookJoystick.transform;
+                var padre = mover.parent as RectTransform;
+                // La zona es una fraccion del padre: tiene que ser el mismo para los dos, y estirado.
+                inf.Verdadero("joystick dinamico: en " + nombre + " los dos cuelgan del mismo padre, estirado (el area segura)",
+                              padre != null && disparo.parent == padre && padre.anchorMin == Vector2.zero && padre.anchorMax == Vector2.one);
+                inf.Verdadero("joystick dinamico: en " + nombre + " cada joystick espera dentro de su zona (" + mover.anchorMin + ", " + disparo.anchorMin + ")",
+                              mover.anchorMin == mover.anchorMax && JoystickDinamico.ZonaIzquierda.Contains(mover.anchorMin)
+                              && disparo.anchorMin == disparo.anchorMax && JoystickDinamico.ZonaDerecha.Contains(disparo.anchorMin));
+
+                var granada = Buscar<JoystickGranada>(escena);
+                inf.Verdadero("joystick dinamico: en " + nombre + " la granada atiende sus toques",
+                              granada != null && RecibeToques(granada.gameObject));
+                var furia = Buscar<BotonFuria>(escena);
+                if (tutorial && furia == null) return;
+                inf.Verdadero("joystick dinamico: en " + nombre + " la furia atiende sus toques",
+                              furia != null && furia.boton != null && RecibeToques(furia.boton.gameObject));
+            });
+        }
+    }
+
+    static bool RecibeToques(GameObject go)
+    {
+        foreach (var grafico in go.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+            if (grafico.raycastTarget) return true;
+        return false;
     }
 
     // El zombi del tesoro (ZombiDelTesoro, mejora 8 de la revision del 9/10): su Enemy (no pega,

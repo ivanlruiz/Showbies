@@ -8,7 +8,8 @@ using UnityEngine.UI;
 // (ver Tema), y el interruptor de los FPS ocupa su lugar. Con anuncios de AdMob suma
 // PRIVACIDAD, para cambiar el consentimiento de Europa, solo cuando UMP lo pide, y el
 // interruptor del SOMBRERO DE CALABAZA, solo si ya se gano (EventoHalloween), y en el
-// telefono AUTO-APUNTAR (PlayerJS, desde el 10/10), que en PC no hace nada. No tiene
+// telefono AUTO-APUNTAR (PlayerJS, desde el 10/10) y JOYSTICKS DINAMICOS (JoystickDinamico,
+// desde el 12/10), que en PC no hacen nada. No tiene
 // objetos propios en la escena: al arrancar copia el globo y la ventana del idioma
 // (SelectorIdioma) y los adapta, asi se ven igual sin mantener dos copias a mano. El
 // engranaje queda a la derecha del globo.
@@ -41,6 +42,7 @@ public class OpcionesSonido : MonoBehaviour
     private const float CrecidaConPrivacidad = 130f;
     private const float DelSombreroAlFps = 120f;
     private const float DelAutoAlFps = 120f;
+    private const float DeLosJoysticksAlAuto = 120f;
 
     private GameObject panel;
     private RectTransform ventana;
@@ -52,7 +54,8 @@ public class OpcionesSonido : MonoBehaviour
     private RectTransform botonPrivacidad;
     private RectTransform controlSombrero;
     private RectTransform controlAuto;
-    private int acomodada = -1;   // -1 sin acomodar; si no, 1 con PRIVACIDAD + 2 con el SOMBRERO + 4 con AUTO-APUNTAR
+    private RectTransform controlJoysticks;
+    private int acomodada = -1;   // -1 sin acomodar; si no, 1 con PRIVACIDAD + 2 con el SOMBRERO + 4 con los del telefono
     private Texture2D texturaEngranaje;
     private Texture2D texturaPerilla;
     private Sprite spriteEngranaje;
@@ -185,6 +188,10 @@ public class OpcionesSonido : MonoBehaviour
         // con los volumenes, como MOSTRAR FPS.
         controlAuto = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_auto_apuntar", Vector2.zero, AnchoControl, fuente,
                                         () => PlayerJS.AutoApuntar, PlayerJS.FijarAutoApuntar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
+        // JOYSTICKS DINAMICOS: tambien solo en el telefono, debajo de AUTO-APUNTAR. Apagado, los
+        // joysticks esperan fijos en sus rincones, como hasta el 12/10.
+        controlJoysticks = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_joysticks_dinamicos", Vector2.zero, AnchoControl, fuente,
+                                             () => JoystickDinamico.Activos, JoystickDinamico.Fijar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
 
         CrearPrivacidad(fuente, pildora, sonidoClick);
         Acomodar(false, false, false);
@@ -222,8 +229,8 @@ public class OpcionesSonido : MonoBehaviour
     }
 
     // Sin los que pueden faltar, los tres controles de siempre; con cada uno, la ventana crece y
-    // todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: AUTO-APUNTAR, el SOMBRERO y abajo
-    // PRIVACIDAD.
+    // todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: los dos del telefono (AUTO-APUNTAR
+    // y JOYSTICKS DINAMICOS), el SOMBRERO y abajo PRIVACIDAD.
     private void Acomodar(bool conPrivacidad, bool conSombrero, bool conAuto)
     {
         int cual = (conPrivacidad ? 1 : 0) + (conSombrero ? 2 : 0) + (conAuto ? 4 : 0);
@@ -231,7 +238,7 @@ public class OpcionesSonido : MonoBehaviour
         acomodada = cual;
 
         float crecida = (conPrivacidad ? CrecidaConPrivacidad : 0f) + (conSombrero ? DelSombreroAlFps : 0f)
-                        + (conAuto ? DelAutoAlFps : 0f);
+                        + (conAuto ? DelAutoAlFps + DeLosJoysticksAlAuto : 0f);
         float subir = crecida * 0.5f;
         ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana + crecida);
         Poner(titulo, YTitulo + subir);
@@ -246,6 +253,12 @@ public class OpcionesSonido : MonoBehaviour
             Poner(controlAuto, y);
             controlAuto.gameObject.SetActive(conAuto);
         }
+        if (controlJoysticks != null)
+        {
+            if (conAuto) y -= DeLosJoysticksAlAuto;
+            Poner(controlJoysticks, y);
+            controlJoysticks.gameObject.SetActive(conAuto);
+        }
         if (controlSombrero != null)
         {
             if (conSombrero) y -= DelSombreroAlFps;
@@ -259,7 +272,7 @@ public class OpcionesSonido : MonoBehaviour
         }
     }
 
-    // Con los dos controles de mas mide 890 de alto, mas el halo: en 20:9 el canvas del menu
+    // Con todos los controles de mas mide 1.130 de alto, mas el halo: en 20:9 el canvas del menu
     // mide 864 y en 21:9, 823. Como las ventanas de las misiones, se achica lo justo.
     private float EscalaQueEntra()
     {

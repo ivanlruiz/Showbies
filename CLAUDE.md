@@ -48,7 +48,7 @@ fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
 
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Proyectiles (lo que tira cada arma), Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
-Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), Transitions, Furia, AspectoDelHeroe (la remera blanca, el aura y su sombra)
+Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), JoystickDinamico (el joystick que aparece bajo el pulgar), Transitions, Furia, AspectoDelHeroe (la remera blanca, el aura y su sombra)
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde
@@ -75,7 +75,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaCartas, PruebaCartasDeReglas, PruebaArmas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -163,7 +163,8 @@ retomarla es empezarla de cero), `NoTerminoPartidas` y `NuncaCompro`.
 
 - **PLAY va derecho a la oleada 1** (`MainMenu.TocarJugar`, que es el `onClick` del botón): después abre el panel de modos.
 - **La primera partida trae una guía** (`GuiaPrimeraPartida`, objeto propio en WaveMode, armada en código): en el
-  teléfono un pulgar fantasma sobre cada joystick con su cartel, que se va al usarlo; en PC un cartel con WASD y el clic.
+  teléfono un pulgar fantasma sobre cada joystick con su cartel, que se va al usarlo (con los joysticks dinámicos, en el
+  medio de la zona y sobre un joystick fantasma: ver Móvil); en PC un cartel con WASD y el clic.
   Con el primer zombi muerto, "¡COGE LAS MONEDAS!" hasta agarrar una. No frena nada. Sigue si se sale y se retoma
   (mira `NoTerminoPartidas`, porque `WaveManager` guarda la oleada en curso apenas empieza).
 - **La primera compra está señalada** (`GuiaPrimeraCompra`, en la raíz del prefab `Tienda`): si nunca compró y le alcanza
@@ -2269,6 +2270,7 @@ progreso):
 | `"MostrarFps"` | el interruptor MOSTRAR FPS de OPCIONES (`OpcionesSonido`), 1 o 0 | `ContadorFps`; sin nada guardado, apagado |
 | `"SombreroCalabaza"` | el interruptor SOMBRERO DE CALABAZA de OPCIONES, 1 o 0 | `EventoHalloween.SombreroPuesto`; sin nada guardado, puesto |
 | `"AutoApuntar"` | el interruptor AUTO-APUNTADO de OPCIONES (solo en el teléfono), 1 o 0 | `PlayerJS.AutoApuntar`; sin nada guardado, prendido |
+| `"JoysticksDinamicos"` | el interruptor JOYSTICKS DINÁMICOS de OPCIONES (solo en el teléfono), 1 o 0 | `JoystickDinamico.Activos`, al empezar cada partida; sin nada guardado, prendido |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.
@@ -2444,7 +2446,39 @@ eligió esto entre disparar solo quieto, la mitad, solo girar o un cono): `GunCo
 (`CadenciaDelAutomatico`, 0,5, después del techo de 120), y con el joystick vuelve la cadencia entera: el joystick pasa a
 ser "el botón de daño máximo". **El joystick de disparo se queda**, pero mientras tira el automático se ve al 40 %
 (`PlayerJS.AlfaDelJoystickEnAutomatico`, con un `CanvasGroup`) y al tocarlo se prende entero y salta un poco. Sin
-auto-apuntado, o en el tutorial, se ve siempre entero.
+auto-apuntado, o en el tutorial, se ve siempre entero (con los dinámicos, ver abajo).
+
+**Los joysticks son dinámicos** (12/10: lo pidieron en Discord, en #ideas, "el stick dinámico", y Gemini decidió cómo):
+el joystick aparece donde se apoya el pulgar, con la palanca al medio, y si el pulgar se va más allá del borde lo sigue;
+al soltar vuelve a su rincón. Cada uno tiene su zona: **la mitad de su lado del área segura, desde abajo hasta el 70 %
+del alto** (`JoystickDinamico.ZonaIzquierda` y `ZonaDerecha`; arriba está el HUD). **No se ven hasta que se los toca**,
+salvo el de disparo con el auto-apuntado, que espera al 40 % en su rincón como antes, y los dos en el tutorial, que los
+nombra ("el joystick de la izquierda"): ahí esperan enteros en su rincón, y se los toma igual desde cualquier lugar de la
+zona (`PlayerJS.ReposoDelDeMover` y `ReposoDelDeDisparo`). Es una preferencia del teléfono
+(`PlayerPrefs["JoysticksDinamicos"]`), **prendida de fábrica**, y se apaga en OPCIONES (JOYSTICKS DINÁMICOS, solo en el
+teléfono, debajo de AUTO-APUNTADO): apagados son los fijos de siempre.
+
+- **`JoystickDinamico`** va en la raíz de cada `FixedJoystick` (lo pone `PlayerJS` en su `Awake`) y le pasa los toques a
+  mano (`OnPointerDown`, `OnDrag`, `OnPointerUp` del pack, con la raíz movida primero bajo el pulgar). **No es una imagen
+  invisible que recibe toques**: cualquier gráfico del HUD con `raycastTarget` (la vida, los avisos, la barra del PODER,
+  que TMP prende de fábrica) se los comería. Lee los toques (`Input.touches`, y el ratón en el editor con el target en
+  Android) y para cada uno nuevo hace lo que el EventSystem: lo primero que toca (`RaycastAll`) se lo lleva, y si eso o
+  sus padres atienden toques (`AtiendeAlgo`: la granada, la furia, la pausa), es de eso; si no, y cae en la zona, es del
+  joystick. **Así la granada y la furia quedan fuera de la zona sin medirlas**, y un texto suelto no tapa nada. El
+  joystick no toma toques propios mientras tanto (`blocksRaycasts` en falso).
+- **Un dedo por joystick**: otro que cae en una zona ocupada no hace nada. **La pausa, una elección de cartas o morir lo
+  sueltan en el acto** (`MenuPausa.JuegoCongelado`, `EstaMuerto`), y también perder el foco: el toque puede terminar sin
+  que llegue. Al soltar queda con el alfa de reposo aunque `PlayerJS` ya no corra (se apaga al morir y la oferta de
+  revivir deja el HUD a la vista).
+- **La guía de la primera partida** pone el pulgar fantasma en el medio de la zona de mover, con un joystick fantasma
+  debajo (la base del de verdad, más transparente) y "ARRASTRA EN CUALQUIER PARTE PARA MOVERTE" (`guia_mover_dinamico`).
+- **ShowBies > Pruebas > Joysticks dinámicos (play)** (`PruebaJoystickDinamico`), en WaveMode de cero (para que salga la
+  guía) y con toques puestos a mano (`JoystickDinamico.DedoDePrueba`, que no se suelta por no estar en `Input.touches`):
+  el reposo de cada uno, la guía, que el centro quede bajo el pulgar con la palanca al medio, que mueva al jugador y siga
+  al pulgar, que al soltar vuelva invisible a su rincón, el de disparo entero al tocarlo y al 40 % al soltarlo, que la
+  granada y la furia se queden con sus toques y la vida no, que la pausa lo suelte y que, apagados, sean los fijos
+  (`Builds/prueba_joystick_dinamico.txt`). La prueba de lógica mira la cuenta de las zonas y del seguimiento, y en las
+  tres escenas de juego que cada joystick espere en su zona y que la granada y la furia atiendan sus toques.
 
 **Para jugar con teclado y mouse en el editor sin cambiar el target** (que reimporta todo): **ShowBies > Controles >
 Teclado y mouse en el editor**. Es una preferencia de la máquina (`EditorPrefs`), no del proyecto, y hace que
