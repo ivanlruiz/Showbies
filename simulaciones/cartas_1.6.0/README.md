@@ -203,9 +203,10 @@ parte de los pasos con un zombi al alcance en que el jugador no tiene balas, en 
   balas duran 15-20 segundos de fuego; una oleada de la 40 tarda un minuto en salir.
 - **La carta de cadencia sigue restando con el cargador lleno en cada oleada** (13/10, `modo=pesos recarga=1
   cartas=cadencia,dano`, medio): sola −7,9 / −7,8 (sin recarga, −10,1 / −7,9), y sacarla del mazo completo suma +9,7 /
-  +8,4. El bajo, mezclado: +3,2 / −11,4. O sea que no depende de que el cargador se llene: sale de que tirar más rápido
-  gasta las balas en los mismos zombis, y en el modelo las balas de más que llegan a un zombi que ya murió se pierden.
-  **Ese último punto es del modelo, no medido**: en el juego la bala atraviesa al cadáver y puede pegarle al de atrás.
+  +8,4. El bajo, mezclado: +3,2 / −11,4. O sea que no depende de que el cargador se llene. **La causa no está medida**: lo más
+  probable es cómo el modelo reparte las balas de un paso entre los zombis (las que sobran de uno que muere), y en el
+  juego la bala atraviesa al cadáver y puede pegarle al de atrás. Antes de cambiar la carta conviene mirarlo en el
+  teléfono.
 - **Llenar el cargador al terminar cada oleada** (la candidata `recarga`): con las cartas como están suma poco (bajo 57 →
   60, medio 86 → 88), pero con una curva más dura (las candidatas A → B) le devuelve al bajo 20 oleadas (32 → 52) y al
   medio 4 (55 → 59): **acerca a los perfiles** sin mover al alto.
