@@ -24,6 +24,11 @@
 # (como variante), el error de punteria como un angulo (los perdigones y el disparo doble), la
 # cura del vampiro en las oleadas faciles y el ancho de la bala del juego.
 #
+# Despues, la decision de Gemini (13/10, CARTAS.md), como variantes ('gemini' y sus piezas): un
+# tercer tramo de la curva desde la 31, la moneda de los zombis x2 en valor, la carta de cadencia
+# sin costo de balas por los tiros de mas y el rifle a cadencia x1. Lo que no las usa da lo mismo
+# que antes con las mismas semillas.
+#
 # El modelo de base es el de curva.py y se importa de ahi (los zombis, las mejoras, la tienda,
 # los perfiles, el iman y lo que pegan segun la velocidad); lo que cambia es la partida, que se
 # reescribe aca. Como en curva.py: los numeros absolutos no son confiables, la comparacion entre
@@ -80,6 +85,21 @@ def por_oleada(crece, oleada, desde=0, tardio=0.0):
     if desde <= 1 or tardio <= 0 or oleada < desde:
         return crece ** max(0, oleada - 1)
     return crece ** (desde - 2) * tardio ** (oleada - desde + 1)
+
+
+# El tercer tramo (la decision de Gemini del 13/10): desde la 31, la vida x1,15 y el golpe x1,08.
+# Con la misma convencion que Escalado.PorOleada (que todavia no tiene tres tramos: esto la define
+# para el juego): la 31 ya vale la 30 por el tercero, asi que hasta la 30 es la de dos tramos y la
+# oleada n >= 31 vale crece^(desde-2) x tardio^(desde3-desde) x tercero^(n-desde3+1).
+TERCER_TRAMO = 31
+CRECE_VIDA_TERCERO, CRECE_GOLPE_TERCERO = 1.15, 1.08
+
+
+def por_oleada3(crece, oleada, desde, tardio, desde3, tercero):
+    """Escalado.PorOleada en tres tramos; sin el tercero es la de dos."""
+    if desde3 <= 1 or tercero <= 0 or oleada < desde3:
+        return por_oleada(crece, oleada, desde, tardio)
+    return por_oleada(crece, desde3 - 1, desde, tardio) * tercero ** (oleada - desde3 + 1)
 
 
 # Las mejoras de la tienda, como las eligio la 1.5.2: danio 1 + nivel, cadencia 6 + nivel.
@@ -420,6 +440,16 @@ class Partida:
         # Cuanto se pasa sin balas con un zombi al alcance (los pasos de 0,1 s).
         self.pasos_con_blanco = 0
         self.pasos_sin_balas = 0
+        # La decision de Gemini (13/10): los tiros de mas de la carta de cadencia no gastan balas
+        # (cada tiro cuesta 1 / el multiplicador de cadencia de las cartas, con un acumulador), y
+        # cada moneda que sueltan los zombis vale 'valor_moneda' (el bono de la oleada no cambia).
+        self.cadencia_gratis = bool(var.get('cadencia_gratis'))
+        self.deuda_balas = 0.0
+        self.valor_moneda = var.get('valor_moneda', 1.0)
+        # Lo que va pasando en cada oleada que se termina: los minutos de partida hasta ahi
+        # (con las elecciones de cartas) y las monedas juntadas.
+        self.min_por_oleada = []
+        self.monedas_por_oleada = []
 
         self.veces = dict(var.get('fijas', {}))
         self.poder = 0
@@ -495,6 +525,9 @@ class Partida:
         else:
             self.alcance_arma, self.vel_bala = ALCANCE_ARMA[a], VEL_ARMA[a]
         self.cadencia_arma = CADENCIA_ARMA[a]
+        if a == RIFLE and self.var.get('cadencia_rifle') is not None:
+            # La decision de Gemini: el rifle a cadencia x1 (y la compensacion con ella).
+            self.cadencia_arma = self.var['cadencia_rifle']
         self.perf_libres = PERFORA_ARMA[a]
         # Las balas de cada tiro: (angulo con signo, en radianes, y parte del tiro).
         # GunController.Disparar: cada perdigon y cada bala del disparo doble, con su angulo.
@@ -761,7 +794,11 @@ class Partida:
             ocupado += t[7] / total * min(self.aparicion, golpes / p / tps + vuelo)
         # Las que llegan a un muerto y le pegan al que viene (reaprovecha) lo matan antes y
         # dejan huecos sin tirar: calibrado contra el paso a paso (+-10 %, validar_balas en el README).
-        return tps * cantidad * ocupado / (1 + 0.5 * (self.perfil['reaprovecha'] - 0.3))
+        tiros = tps * cantidad * ocupado / (1 + 0.5 * (self.perfil['reaprovecha'] - 0.3))
+        if self.cadencia_gratis:
+            # Cada tiro cuesta 1 / el multiplicador de cadencia de las cartas.
+            return tiros / self.m_cad
+        return tiros
 
     def dps(self):
         """El danio por segundo sin cajas ni furia (la compensacion lo hace igual con cualquier
@@ -805,10 +842,18 @@ class Partida:
             if var.get('como_curva'):
                 mv = curva.dos_tramos(CRECE_VIDA, 11, CRECE_VIDA_TARDIO, n)
                 md = curva.dos_tramos(CRECE_GOLPE, 11, CRECE_GOLPE_TARDIO, n)
+            elif var.get('tercer_tramo'):
+                mv = por_oleada3(CRECE_VIDA, n, SEGUNDO_TRAMO, var['vida_tardia'], var['tercer_tramo'],
+                                 var['vida_tercera'])
+                md = por_oleada3(CRECE_GOLPE, n, SEGUNDO_TRAMO, var['golpe_tardio'], var['tercer_tramo'],
+                                 var['golpe_tercero'])
             else:
                 mv = por_oleada(CRECE_VIDA, n, SEGUNDO_TRAMO, var['vida_tardia'])
                 md = por_oleada(CRECE_GOLPE, n, SEGUNDO_TRAMO, var['golpe_tardio'])
             self.mm = CRECE_MONEDAS ** (n - 1) * self.st['botin']
+            if self.valor_moneda != 1.0:
+                # La moneda de los zombis vale el doble (el multiplicadorMonedas del WaveManager).
+                self.mm *= self.valor_moneda
             cantidad = var['zombis_base'] + var['zombis_por_oleada'] * n
             jefe = n % 10 == 0
             self.avanzar(DESCANSO)
@@ -865,6 +910,8 @@ class Partida:
                     self.sumar_experiencia(EXPERIENCIA_TESORO)
                     self.resolver_elecciones()
             self.poder_por_oleada.append(self.poder)
+            self.min_por_oleada.append((self.t + self.elecciones * SEGUNDOS_POR_ELECCION) / 60.0)
+            self.monedas_por_oleada.append(self.monedas)
         return self.resultado(MAX_OLEADAS, None)
 
     def resultado(self, oleada, murio_en):
@@ -872,7 +919,8 @@ class Partida:
                     doradas=self.doradas, murio_en=murio_en, arma_inicio=self.arma_inicio, arma_fin=self.arma,
                     revivio=self.revivio,
                     sin_balas=self.pasos_sin_balas / max(1, self.pasos_con_blanco),
-                    veces=dict(self.veces), poder_por_oleada=self.poder_por_oleada)
+                    veces=dict(self.veces), poder_por_oleada=self.poder_por_oleada,
+                    min_por_oleada=self.min_por_oleada, monedas_por_oleada=self.monedas_por_oleada)
 
     def nuevo_zombi(self, tp, mv, md, d):
         """Un zombi con su rumbo al azar, que dice hasta donde se lo ve."""
@@ -1033,9 +1081,19 @@ class Partida:
                 n_horda = horda(len(en_alcance))
                 quema_p = self.quema_p
                 paquetes = {}
+                cadencia_gratis = self.cadencia_gratis
+                costo_tiro = 1.0 / self.m_cad
                 while acumulador >= 1 and self.balas > 0:
                     acumulador -= 1
-                    self.balas -= 1
+                    if cadencia_gratis:
+                        # Los tiros de mas de la carta de cadencia no gastan: cada tiro suma
+                        # 1 / m_cad a la deuda, y la bala se descuenta cuando llega a una entera.
+                        self.deuda_balas += costo_tiro
+                        if self.deuda_balas >= 1.0 - 1e-9:
+                            self.deuda_balas -= 1.0
+                            self.balas -= 1
+                    else:
+                        self.balas -= 1
                     dano = dano_tiro * (2.0 if (self.crit >= 1.0 or rng.random() < self.crit) else 1.0)
                     apunto = rng.random() < punteria
                     if abanico:
@@ -1210,6 +1268,26 @@ VARIANTES = {
     'combo_e': variante('candidata E: el PODER como esta, vida x1,15 y golpe x1,07, 10 + 2n cada 0,25 s, cargador lleno',
                         vida_tardia=1.15, golpe_tardio=1.07, zombis_por_oleada=2, aparicion=0.25, recarga=True),
 }
+# Lo que decidio Gemini (13/10, CARTAS.md): oleadas de 10 + 2n, uno cada 0,20 s, la moneda de los
+# zombis x2 en valor; la curva de la 1.5.2 hasta la 30 y un tercer tramo desde la 31 (vida x1,15,
+# golpe x1,08); el cargador lleno al terminar cada oleada, los tiros de mas de la carta de cadencia
+# sin costo de balas y el rifle a cadencia x1; el PODER como esta (12 x 1,15^L).
+GEMINI = dict(zombis_por_oleada=2, aparicion=0.20, valor_moneda=2.0,
+              tercer_tramo=TERCER_TRAMO, vida_tercera=CRECE_VIDA_TERCERO, golpe_tercero=CRECE_GOLPE_TERCERO,
+              recarga=True, cadencia_gratis=True, cadencia_rifle=1.0)
+VARIANTES.update({
+    'gemini': variante('gemini: la decision del 13/10, equilibrada', **GEMINI),
+    'gemini_base': variante('gemini sin cartas', cartas=False, politica=None, **GEMINI),
+    # Para ver cuanto pesa cada pieza (de a una, sacada de la decision): el tercer tramo, la
+    # cadencia sin costo y la moneda x2; y la decision con la curva de la candidata E (vida x1,15 y
+    # golpe x1,07 desde la 11, sin tercer tramo).
+    'gemini_sin_tercero': variante('gemini sin el tercer tramo, equilibrada', **dict(GEMINI, tercer_tramo=0)),
+    'gemini_cadencia_con_costo': variante('gemini con la cadencia gastando balas como hoy, equilibrada',
+                                          **dict(GEMINI, cadencia_gratis=False)),
+    'gemini_moneda_x1': variante('gemini con la moneda x1, equilibrada', **dict(GEMINI, valor_moneda=1.0)),
+    'gemini_curva_e': variante('gemini con la curva de la E (x1,15 y x1,07 desde la 11, sin tercer tramo), equilibrada',
+                               **dict(GEMINI, tercer_tramo=0, vida_tardia=1.15, golpe_tardio=1.07)),
+})
 
 
 # --- La campania: partida tras partida, comprando entre una y otra ----------------------------
@@ -1224,6 +1302,9 @@ def campana(args):
     fotos = {}
     poder_suma = [0] * (MAX_OLEADAS + 1)
     poder_cuenta = [0] * (MAX_OLEADAS + 1)
+    # Los minutos de partida al terminar cada oleada, de todas las partidas que la terminan.
+    minutos = [[] for _ in range(MAX_OLEADAS + 1)]
+    oro = [[] for _ in range(MAX_OLEADAS + 1)]
     segundos = 0.0
     for p in range(1, partidas + 1):
         if p in (10, 30) or p == partidas:
@@ -1234,11 +1315,15 @@ def campana(args):
         for i, poder in enumerate(r.pop('poder_por_oleada')):
             poder_suma[i + 1] += poder
             poder_cuenta[i + 1] += 1
+        for i, m in enumerate(r.pop('min_por_oleada')):
+            minutos[i + 1].append(m)
+        for i, m in enumerate(r.pop('monedas_por_oleada')):
+            oro[i + 1].append(m)
         r['partida'] = p
         r['dano'] = niv['dano']
         filas.append(r)
     return dict(clave=clave, perfil=perfil_nombre, semilla=semilla, filas=filas, fotos=fotos,
-                poder=[s / c if c else None for s, c in zip(poder_suma, poder_cuenta)])
+                poder=[s / c if c else None for s, c in zip(poder_suma, poder_cuenta)], minutos=minutos, oro=oro)
 
 
 # --- Los resumenes ----------------------------------------------------------------------------
@@ -1308,6 +1393,63 @@ def tabla_arranque(res, claves, perfil):
             ol = statistics.median(c['filas'][i]['oleada'] for c in camps)
             arma = statistics.median_low(c['filas'][i]['arma_inicio'] for c in camps)
             celdas.append('%d (%s)' % (ol, NOMBRE_ARMA[arma][:3]))
+        lineas.append('| %s | %s |' % (VARIANTES[clave]['nombre'], ' | '.join(celdas)))
+    return lineas
+
+
+def minutos_de(f):
+    """Lo que dura una partida de verdad: el tiempo de juego mas el de elegir las cartas."""
+    return (f['segundos'] + f['elecciones'] * SEGUNDOS_POR_ELECCION) / 60.0
+
+
+def oro_por_minuto(filas):
+    """Las monedas de esas partidas sobre sus minutos, juntas (no la media de los cocientes)."""
+    minutos = sum(minutos_de(f) for f in filas)
+    return sum(f['monedas'] for f in filas) / minutos if minutos > 0 else 0.0
+
+
+def tabla_oro(res, claves, perfil):
+    """El oro por minuto a la partida 10 (y alrededor), y en el muro."""
+    lineas = ['', '### Perfil %s' % perfil, '',
+              '| variante | oleada en la p10 | monedas en la p10 | min. de la p10 | oro/min en la p10 | oro/min p8-p12 '
+              '| oro/min en el muro (ult. 20) | monedas por partida en el muro |',
+              '|---|' + '---|' * 7]
+    for clave in claves:
+        camps = [c for c in res if c['clave'] == clave and c['perfil'] == perfil]
+        if not camps or any(len(c['filas']) < 12 for c in camps):
+            continue
+        p10 = [c['filas'][9] for c in camps]
+        ventana = [f for c in camps for f in c['filas'][7:12]]
+        ult = ultimas(camps, 20)
+        celdas = [mediana([f['oleada'] for f in p10]), mediana([f['monedas'] for f in p10]),
+                  mediana([minutos_de(f) for f in p10], '%.1f'),
+                  '%.0f' % oro_por_minuto(p10), '%.0f' % oro_por_minuto(ventana), '%.0f' % oro_por_minuto(ult),
+                  mediana([f['monedas'] for f in ult])]
+        lineas.append('| %s | %s |' % (VARIANTES[clave]['nombre'], ' | '.join(celdas)))
+    return lineas
+
+
+OLEADAS_TABLA_MINUTOS = [10, 20, 30, 40, 50, 55, 60, 70]
+
+
+def tabla_minutos(res, claves, perfil):
+    """Los minutos de partida (con las elecciones) y el oro juntado al terminar cada oleada, de las
+    partidas que la terminan (la mediana de todas las de todas las semillas)."""
+    lineas = ['', '### Perfil %s' % perfil, '',
+              '| variante | ' + ' | '.join('min. hasta la %d' % o for o in OLEADAS_TABLA_MINUTOS) + ' | '
+              + ' | '.join('oro hasta la %d' % o for o in (10, 30, 50)) + ' |',
+              '|---|' + '---|' * (len(OLEADAS_TABLA_MINUTOS) + 3)]
+    for clave in claves:
+        camps = [c for c in res if c['clave'] == clave and c['perfil'] == perfil]
+        if not camps:
+            continue
+        celdas = []
+        for o in OLEADAS_TABLA_MINUTOS:
+            vals = [m for c in camps for m in c['minutos'][o]]
+            celdas.append(mediana(vals, '%.1f') if len(vals) >= 10 else '—')
+        for o in (10, 30, 50):
+            vals = [m for c in camps for m in c['oro'][o]]
+            celdas.append(mediana(vals) if len(vals) >= 10 else '—')
         lineas.append('| %s | %s |' % (VARIANTES[clave]['nombre'], ' | '.join(celdas)))
     return lineas
 
@@ -1627,8 +1769,19 @@ def main():
     lineas += ['', '## El arranque']
     for perfil in perfiles:
         lineas += tabla_arranque(res, claves, perfil)
+    lineas += ['', '## El oro por minuto', '',
+               'Las monedas de la partida (las juntadas, el bono de cada oleada y el tesoro) sobre sus minutos (con '
+               '%.0f s por eleccion de carta), sumadas las de todas las semillas.' % SEGUNDOS_POR_ELECCION]
+    for perfil in perfiles:
+        lineas += tabla_oro(res, claves, perfil)
+    lineas += ['', '## Los minutos y el oro hasta cada oleada', '',
+               'Al terminar la oleada N, en las partidas que la terminan (mediana de todas, de todas las semillas; '
+               '"—" con menos de 10).']
+    for perfil in perfiles:
+        lineas += tabla_minutos(res, claves, perfil)
     lineas += ['', '## Las cartas']
-    lineas += tabla_cartas_por_oleada(res, [c for c in claves if c in ('c_equil', 'c_dano', 'costo125', 'suaves')], perfiles)
+    lineas += tabla_cartas_por_oleada(res, [c for c in claves if c in ('c_equil', 'c_dano', 'costo125', 'suaves',
+                                                                       'gemini')], perfiles)
     for perfil in perfiles:
         lineas += tabla_cartas_elegidas(res, claves, perfil)
     texto = '\n'.join(lineas)

@@ -11,6 +11,46 @@ no son confiables y la comparación entre variantes sí**: todas corren con las 
 balas gratis al jugador entre oleadas** y **solo se le tira a lo que se ve en la pantalla**. Los números de abajo son
 los nuevos; los de la primera versión de este archivo quedaron viejos.
 
+## La decisión de Gemini (13/10), simulada
+
+Gemini decidió sin simular (`CARTAS.md`, "Lo que decidió Gemini"): oleadas de 10 + 2n, uno cada 0,20 s, cada moneda de
+los zombis ×2 en valor, la curva de la 1.5.2 hasta la 30 y un tercer tramo desde la 31 (vida ×1,15, golpe ×1,08), el
+cargador lleno al terminar cada oleada, los tiros de más de la carta de cadencia sin costo de balas y el rifle a cadencia
+×1, con el PODER como está. Prometía **el muro en la 50-55 y partidas de 20-25 minutos en la oleada 50**. Puesto entero
+en el modelo (`gemini`, y `gemini_base` sin cartas; todo en `resultados_gemini.md`), 100 partidas × 5 semillas:
+
+| | bajo | medio | alto |
+|---|---|---|---|
+| **`gemini`**: muro (minutos de una partida ahí) | **69** (36) | **74** (39) | **82** (47) |
+| se aparta de la 50-55 | +14 a +19 | +19 a +24 | +27 a +32 |
+| minutos hasta terminar la 50 | 18,7 | 17,0 | 16,8 |
+| `gemini_base` (sin cartas) | 38 (14) | 43 (15) | 49 (16) |
+| 1.5.2 sin cartas (`base`) | 28 (15) | 56 (52) | 69 (76) |
+| 1.6.0 antes de la decisión (`c_equil`) | 57 (58) | 86 (122) | 100+ (156) |
+
+- **El muro no coincide**: queda 14 a 32 oleadas más allá de lo prometido (al medio le sobran unas 20). Las cartas
+  siguen corriendo el muro ~31 oleadas, como antes de la decisión. El del bajo es el jefe de la 70 (el 88 % de sus
+  muertes en el muro son en un jefe).
+- **El tiempo sí, un poco de menos**: la 50 se termina en 17-19 minutos (los 20-25 caen entre la 54 y la 60). Pero con
+  el muro más lejos, **una partida cerca del récord dura 36-47 minutos**.
+- **Una carta por oleada hasta la 4** (1, 2, 3, 4), **ninguna en la 5** (la quinta llega en la 6) y 9,6-9,7 hasta la 10
+  (eran 12).
+- **El oro por oleada queda igual, el oro por minuto no**: hasta la misma oleada se junta lo mismo que en la 1.5.2 (+30 %
+  hasta la 10, +13 % hasta la 30, +7 % hasta la 50), en un tercio del tiempo: **a la misma oleada, 2,0-2,6 veces el oro
+  por minuto de la 1.5.2**. A la partida 10, sin cartas: 5.000, 16.600 y 31.400 por minuto (1.5.2: 520, 9.200 y 34.000);
+  con cartas, 93.000, 140.000 y 262.000.
+- **Lo que pesa cada pieza** (sacando una por vez): sin el tercer tramo los tres pasan la 100 (le saca ~30 oleadas); la
+  cadencia sin costo suma 9-14 (con la cadencia gastando como hoy: 58, 60 y 73); la moneda ×2, 0-2 (con ×1: 69, 73 y
+  80). Con la curva de la candidata E en lugar de los tres tramos: 59, 68 y 76. **Ninguna pieza sola deja el muro en la
+  50-55**: con la cadencia sin costo hace falta una curva más dura que las simuladas, y conviene simularla antes de
+  pasarla al juego.
+- **Al pasarlo al juego**: `Escalado.PorOleada` no tiene tres tramos (el modelo usa su convención: la 31 ya vale la 30
+  por el tercero), y `Economia` está escrita para 10 + 4n y 2 monedas por zombi (`12m + 2m²`): con 10 + 2n y sin la
+  moneda ×2 los premios pagarían la mitad, y `SegundosPorPartida` cuenta 0,35 s por zombi.
+
+Las filas de `base` y `c_equil` salen idénticas a las de `resultados_cartas.md`, y la versión nueva de `cartas.py` da
+partida por partida lo mismo que la de antes en diez variantes viejas: lo nuevo no cambió nada de lo que ya corría.
+
 ## Lo que encontró
 
 En corto:
@@ -325,6 +365,18 @@ python cartas.py modo=xp salida=resultados_xp.md
 python cartas.py modo=balas salida=resultados_balas.md
 ```
 
+La decisión de Gemini (13/10; 10 min la primera línea y 11 la segunda, con 12 procesos), las dos en `resultados_gemini.md`
+(la segunda se corrió aparte, con las mismas semillas, y sus tablas se sumaron al final):
+
+```
+python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 variantes=base,c_equil,gemini,gemini_base salida=resultados_gemini.md
+python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 salida=<aparte> variantes=gemini_sin_tercero,gemini_cadencia_con_costo,gemini_moneda_x1,gemini_curva_e
+```
+
+- Desde el 13/10 el `modo=curva` saca también **el oro por minuto** (a la partida 10, de la 8 a la 12 y en el muro: las
+  monedas de esas partidas sobre sus minutos, con las elecciones) y **los minutos y el oro hasta terminar cada oleada**
+  (la mediana de las partidas que la terminan).
+
 - `modo=curva` (el de siempre; la primera línea tardó 88 min con 12 procesos): las variantes, partida por partida. Deja
   también `fotos.json`, los niveles de las mejoras de la semilla 1000 a la partida 10, 30 y al final de cada variante y
   perfil (con `fotos=0` no lo pisa).
@@ -358,6 +410,9 @@ simulación son varios segundos cada una.
 | `calibracion` | sin cartas, sin armas, sin auto-apuntado, sin nada de la revisión y con la curva y las balas de `curva.py`: tiene que dar lo de `c11_v108_d104` |
 | `suaves`, `costo125`, `curva112`, `recarga`, `olas_cortas`, `combo_a` a `combo_e` | las candidatas (ver arriba), todas con la equilibrada |
 | `base_recarga` | la `base` con el cargador lleno al terminar cada oleada: aísla lo que pesan las balas sin cartas |
+| `gemini` | **la decisión de Gemini del 13/10**, con cartas y la equilibrada: 10 + 2n cada 0,20 s, la moneda ×2 en valor (`valor_moneda`; el bono no cambia), el tercer tramo desde la 31 (vida ×1,15 y golpe ×1,08: `tercer_tramo`, `vida_tercera`, `golpe_tercero`), el cargador lleno al terminar cada oleada, la carta de cadencia sin costo (`cadencia_gratis`: cada tiro cuesta 1 / el multiplicador de cadencia de las cartas, con un acumulador, también en las oleadas fáciles) y el rifle a ×1 (`cadencia_rifle`) |
+| `gemini_base` | la `gemini` sin el PODER |
+| `gemini_sin_tercero`, `gemini_cadencia_con_costo`, `gemini_moneda_x1`, `gemini_curva_e` | la `gemini` con una pieza cambiada: sin el tercer tramo, con la cadencia gastando balas como hoy, con la moneda ×1, y con la curva de la candidata E (vida ×1,15 y golpe ×1,07 desde la 11) en lugar de los tres tramos |
 
 Las políticas:
 
@@ -453,4 +508,5 @@ sobran después de matar al blanco le pegan a otro con la probabilidad de `curva
 oleada 100** (`MAX_OLEADAS`). En las tablas, "al tope" es el porcentaje de partidas que llegaron.
 
 **La curva** es la del juego (`Escalado.PorOleada`, con la 11 que ya vale la 10 por el tardío); en `curva.py` el tardío
-empezaba en la 12, un 3 % de diferencia. La `calibracion` usa la de `curva.py`.
+empezaba en la 12, un 3 % de diferencia. La `calibracion` usa la de `curva.py`. El tercer tramo de las variantes `gemini` sigue la misma
+convención (la 31 ya vale la 30 por el tercero: `por_oleada3`), que el juego todavía no tiene.
