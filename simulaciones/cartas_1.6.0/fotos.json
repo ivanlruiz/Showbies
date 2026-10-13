@@ -1,0 +1,2060 @@
+{
+ "base": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 3,
+    "cadencia": 6,
+    "criticos": 1,
+    "dano": 8,
+    "furia": 0,
+    "granada": 1,
+    "iman": 5,
+    "vida": 6
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 22,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 20
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 28,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 27
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 23,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 22
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  }
+ },
+ "base_30fps": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 29,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 37
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 3,
+    "cadencia": 6,
+    "criticos": 1,
+    "dano": 8,
+    "furia": 0,
+    "granada": 1,
+    "iman": 5,
+    "vida": 6
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 21,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 19
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 28,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 26
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 21,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 20
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  }
+ },
+ "base_revivir": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 6,
+    "cadencia": 10,
+    "criticos": 6,
+    "dano": 11,
+    "furia": 1,
+    "granada": 1,
+    "iman": 8,
+    "vida": 10
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 25,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 23
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 25,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 23
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 32,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 31
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 35
+   }
+  }
+ },
+ "base_sin_armas": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 29,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 27
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 37
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 2,
+    "cadencia": 5,
+    "criticos": 1,
+    "dano": 7,
+    "furia": 0,
+    "granada": 1,
+    "iman": 5,
+    "vida": 5
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 22,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 21
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 28,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 27
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 12,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 18,
+    "furia": 1,
+    "granada": 1,
+    "iman": 12,
+    "vida": 16
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  }
+ },
+ "base_sin_escopeta": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 29,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 2,
+    "cadencia": 5,
+    "criticos": 0,
+    "dano": 7,
+    "furia": 0,
+    "granada": 1,
+    "iman": 5,
+    "vida": 5
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 22,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 21
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 28,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 27
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 13,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 19,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 18
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 30
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  }
+ },
+ "c_azar": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 21,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 19
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 29,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 34,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 34,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 32
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "c_dano": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 39
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 11,
+    "cadencia": 15,
+    "criticos": 8,
+    "dano": 16,
+    "furia": 1,
+    "granada": 1,
+    "iman": 12,
+    "vida": 15
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 44,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "c_equil": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 22,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 21
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 44,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "c_equil_30fps": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 39
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 24,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 22
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 30
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 44,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "c_equil_revivir": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 39
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 44,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 27,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 25
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 32,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 30
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 37,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 35
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 35
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 41,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 39
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 45,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 43
+   }
+  }
+ },
+ "calibracion": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 28,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 27
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 34,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 37
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 6,
+    "cadencia": 9,
+    "criticos": 6,
+    "dano": 11,
+    "furia": 0,
+    "granada": 1,
+    "iman": 7,
+    "vida": 9
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 27,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 25
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 32,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 31
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 24,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 22
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  }
+ },
+ "d115_dano": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 22,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 21
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 29,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 34,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 32
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "d115_equil": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 14,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 21,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 19
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "d120_dano": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 39
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 21,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 19
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 29,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "d120_equil": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 13,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 19,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 18
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 44,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "pc": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 14,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 21,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 19
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 34,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 32
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 37
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "pc_base": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 4,
+    "cadencia": 8,
+    "criticos": 5,
+    "dano": 10,
+    "furia": 0,
+    "granada": 1,
+    "iman": 7,
+    "vida": 8
+   },
+   "30": {
+    "botin": 13,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 19,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 18
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 24,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 23
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 23,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 22
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  }
+ },
+ "sin_armas": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 12,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 18,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 17
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "sin_escopeta": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 46
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 11,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 17,
+    "furia": 1,
+    "granada": 1,
+    "iman": 12,
+    "vida": 15
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 31,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 36,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 44,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "tel_manual": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 40,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 47,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 45
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 13,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 20,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 18
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 29,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 32,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 31
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 37
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 43,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 42
+   }
+  }
+ },
+ "tel_manual_base": {
+  "alto": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 28
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 34
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 39,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 38
+   }
+  },
+  "bajo": {
+   "10": {
+    "botin": 6,
+    "cadencia": 10,
+    "criticos": 6,
+    "dano": 11,
+    "furia": 1,
+    "granada": 1,
+    "iman": 8,
+    "vida": 10
+   },
+   "30": {
+    "botin": 13,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 19,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 17
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 24,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 23
+   }
+  },
+  "medio": {
+   "10": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 22,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 21
+   },
+   "30": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 30,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 29
+   },
+   "final": {
+    "botin": 15,
+    "cadencia": 16,
+    "criticos": 8,
+    "dano": 35,
+    "furia": 1,
+    "granada": 1,
+    "iman": 13,
+    "vida": 33
+   }
+  }
+ }
+}
