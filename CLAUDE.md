@@ -353,11 +353,23 @@ de los faroles (`ShowBies/CharcoDeLuz`, aditivo y sin textura): un hijo `Luz` ac
 encima de la vereda), de 1,3 m (`LadoDeLaLuz`) con la bala de la pistola y más grande con la bala. El chorro de balas
 pinta el piso por donde pasa. **El rifle no lleva** (tira muy seguido) **y la escopeta lleva uno solo por tiro**, en el
 perdigón del medio, más grande y tenue (`LadoDeLaLuzDeLaEscopeta`, `LuzTenue`; `Proyectiles.LlevaLuz`): con uno por
-perdigón el piso se llenaba de transparencias, y la Adreno 610 no las aguanta. Es hijo de la bala, así la sigue gratis, y
+perdigón el piso se llenaba de transparencias, y la Adreno 610 no las aguanta. **Con el disparo doble, solo la bala del
+medio lleva charco, y la de atrás ninguna** (`Proyectiles.PerdigonDelAbanico` y `SinLuz`, 13/10), y el charco no pasa de
+1,8 m (`LadoMaximoDeLaLuz`: el de la onda de energía medía 2,25). Es hijo de la bala, así la sigue gratis, y
 se mide en el mundo en `Vestir`, en cada eje (la bala no siempre es pareja). Un material por tramo (y uno tenue),
 copiado en runtime del `BalaLuz.mat` (blanco) que lleva el prefab en `BulletController.materialLuz`, y lo pone
 **ShowBies > Armas > Armar la luz de la bala** (`ConstructorArmas`), que también le pone la malla redonda de la onda de la
-de energía (`mallaRedonda`, la esfera de Unity).
+de energía (`mallaRedonda`, la esfera baja de Halloween, de 150 vértices: la de Unity tiene 515) y la base de los
+materiales de cada tramo (`materialPlano`, ver abajo).
+
+**Las balas y sus charcos van con instancing** (13/10, la auditoría de rendimiento de la etapa 4): en Android no hay
+batching dinámico (`m_DynamicBatching: 0`), y cada bala viva eran dos llamadas de dibujo, la bala y su charco; con la
+cadencia alta y las cartas de más balas eran cientos. Los materiales de cada tramo salen de `BalaPlana.mat`
+(`ShowBies/ColorPlano`: lo mismo que `Unlit/Color`, que no tiene variantes de instancing, pero con ellas) y no de
+`Bullet.mat`, que sigue igual porque pinta también el brillo de la caja de balas; `ShowBies/CharcoDeLuz` tiene ahora
+`multi_compile_instancing`, y con eso también se juntan los charcos de los faroles, las flores, las cajas y las calabazas,
+que ya tenían el instancing prendido en el material sin que el shader lo usara. La prueba de lógica lo mira (el shader,
+los materiales, la esfera baja, un charco por tiro y el tope del charco).
 
 **El sonido del disparo tiene techo.** `GunController` usa `PlayOneShot` y deja al menos
 `intervaloMinimoSonido` (0.04 s) entre sonidos. Con `Play()` el mismo sonido se reiniciaba en cada tiro y,

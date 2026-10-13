@@ -74,10 +74,22 @@ public static class Proyectiles
         return Arma(arma) == Escopeta ? AngulosDeLaEscopeta.Length + 2 * cartasDeMas : 1 + cartasDeMas;
     }
 
+    // El "perdigon" de las balas que no llevan charco: las de mas del disparo doble y la de atras.
+    public const int SinLuz = -1;
+
+    // El de la bala i del abanico del disparo doble (0 a "extra"): la del medio lleva el charco.
+    public static int PerdigonDelAbanico(int i, int extra)
+    {
+        return i == extra / 2 ? 0 : SinLuz;
+    }
+
     // Si la bala lleva el charco de luz: el rifle, que tira muy seguido, no; la escopeta, en un
-    // solo perdigon.
+    // solo perdigon; y de un tiro con las cartas de mas balas, solo la del medio (13/10, la
+    // auditoria de rendimiento: con el disparo doble y la de atras eran cuatro charcos por tiro,
+    // y con la cadencia alta el piso se llenaba de transparencias, como con la escopeta).
     public static bool LlevaLuz(int arma, int perdigon)
     {
+        if (perdigon < 0) return false;
         arma = Arma(arma);
         if (arma == Rifle) return false;
         if (arma == Escopeta) return perdigon == PerdigonConLuz;

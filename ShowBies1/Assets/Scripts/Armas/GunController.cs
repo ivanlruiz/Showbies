@@ -362,12 +362,14 @@ public class GunController : MonoBehaviour
         {
             float abanico = PoderDeLaPartida.AbanicoDelDisparoDoble;
             Quaternion primera = Quaternion.AngleAxis(-extra * 0.5f * abanico, Vector3.up) * firePoint.rotation;
+            // El charco de luz, solo en la del medio (Proyectiles.LlevaLuz).
             for (int i = 0; i <= extra; i++)
-                SacarBala(salida, Quaternion.AngleAxis(i * abanico, Vector3.up) * primera, atraso, critico, arma, compensacion, i, 1f);
+                SacarBala(salida, Quaternion.AngleAxis(i * abanico, Vector3.up) * primera, atraso, critico, arma, compensacion,
+                          Proyectiles.PerdigonDelAbanico(i, extra), 1f);
         }
         for (int i = 0; i < PoderDeLaPartida.BalasAtras; i++)
             SacarBala(salida, Quaternion.AngleAxis(180f, Vector3.up) * firePoint.rotation, atraso, critico, arma, compensacion,
-                      0, arma == Proyectiles.Escopeta ? Proyectiles.GordoDeAtras : 1f);
+                      Proyectiles.SinLuz, arma == Proyectiles.Escopeta ? Proyectiles.GordoDeAtras : 1f);
     }
 
     // La ultima bala que salio (las pruebas y el abanico).

@@ -29,9 +29,14 @@ public static class ConstructorArmas
 
     // La luz de la bala (BulletController.materialLuz, pedido de Ivan, 9/10): el material del
     // charco de los faroles, blanco (cada tramo lo tiñe con su color en runtime), puesto en el
-    // prefab de la bala. Y la malla redonda de la onda del arma de energia (mallaRedonda: la
-    // esfera de Unity; las demas son el cubo del prefab). Se vuelve a correr si se cambian.
+    // prefab de la bala. La malla redonda de la onda del arma de energia (mallaRedonda: la
+    // esfera baja de Halloween, de 150 vertices; la de Unity tiene 515, y con la cadencia alta
+    // hay decenas en pantalla); las demas son el cubo del prefab. Y la base de los materiales de
+    // cada tramo (materialPlano: ShowBies/ColorPlano, con instancing, 13/10). Se vuelve a correr
+    // si se cambian.
     public const string RutaLuzDeLaBala = "Assets/Materiales/BalaLuz.mat";
+    public const string RutaBalaPlana = "Assets/Materiales/BalaPlana.mat";
+    public const string RutaEsferaBaja = "Assets/Halloween/EsferaBaja.asset";
 
     [MenuItem("ShowBies/Armas/Armar la luz de la bala")]
     public static void ArmarLuzDeLaBala()
@@ -45,9 +50,10 @@ public static class ConstructorArmas
             var bala = contenido.GetComponent<BulletController>();
             if (bala == null) { Debug.LogError("ConstructorArmas: el prefab de la bala no tiene BulletController"); return; }
             bala.materialLuz = material;
-            var esfera = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            bala.mallaRedonda = esfera.GetComponent<MeshFilter>().sharedMesh;
-            Object.DestroyImmediate(esfera);
+            var esfera = AssetDatabase.LoadAssetAtPath<Mesh>(RutaEsferaBaja);
+            if (esfera == null) { Debug.LogError("ConstructorArmas: falta " + RutaEsferaBaja + " (la arma ShowBies > Halloween)"); return; }
+            bala.mallaRedonda = esfera;
+            bala.materialPlano = MaterialPlanoDeLaBala();
             PrefabUtility.SaveAsPrefabAsset(contenido, rutaBala);
         }
         finally
@@ -55,7 +61,24 @@ public static class ConstructorArmas
             PrefabUtility.UnloadPrefabContents(contenido);
         }
         AssetDatabase.SaveAssets();
-        Debug.Log("ConstructorArmas: la bala tiene su luz (" + RutaLuzDeLaBala + ")");
+        Debug.Log("ConstructorArmas: la bala tiene su luz (" + RutaLuzDeLaBala + ") y su material plano (" + RutaBalaPlana + ")");
+    }
+
+    // Blanco: cada tramo lo tiñe con su color en runtime (BulletController.ArmarMateriales).
+    static Material MaterialPlanoDeLaBala()
+    {
+        var shader = Shader.Find("ShowBies/ColorPlano");
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(RutaBalaPlana);
+        if (mat == null)
+        {
+            mat = new Material(shader);
+            AssetDatabase.CreateAsset(mat, RutaBalaPlana);
+        }
+        mat.shader = shader;
+        mat.color = Color.white;
+        mat.enableInstancing = true;
+        EditorUtility.SetDirty(mat);
+        return mat;
     }
 
     [MenuItem("ShowBies/Armas/Armar la pistola")]

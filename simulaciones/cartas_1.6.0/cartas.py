@@ -1356,10 +1356,10 @@ def tabla_cartas_elegidas(res, claves, perfil):
 def jugar_fijo(args):
     """Partidas con las mejoras de una foto, sin comprar: la carta 'fija' al tope desde el
     principio y ninguna otra (o ninguna, o todas)."""
-    nombre, niv, perfil_nombre, semilla, partidas, fijas = args
+    nombre, niv, perfil_nombre, semilla, partidas, fijas, recarga = args
     rng = random.Random(semilla)
     perfil = perfil_de(perfil_nombre)
-    var = variante('fijo', cartas=False, politica=None, fijas=fijas)
+    var = variante('fijo', cartas=False, politica=None, fijas=fijas, recarga=recarga)
     oleadas = [Partida(niv, perfil, var, rng).jugar()['oleada'] for _ in range(partidas)]
     return nombre, perfil_nombre, semilla, oleadas
 
@@ -1373,11 +1373,17 @@ def modo_pesos(op, hilos, salida):
     semillas = int(op.get('semillas', 3))
     momentos = op.get('momentos', '10,final').split(',')
     origen = op.get('origen', 'base')
+    # recarga=1: el cargador lleno al terminar cada oleada (la candidata 'recarga'), para ver si el
+    # signo de una carta depende de las balas. cartas=a,b: solo esas cartas, sola y todas menos ella.
+    recarga = op.get('recarga', '0') == '1'
+    solo = [c for c in op.get('cartas', '').split(',') if c]
     todas = {c: CARTAS[c][0] for c in ORDEN_CARTAS}
     configs = [('ninguna', {}), ('todas', todas),
                ('las de numeros (danio, cadencia, critico, vida)', {'dano': 4, 'cadencia': 4, 'critico': 3, 'vida': 3}),
                ('las de reglas (perforante a dron)', {c: CARTAS[c][0] for c in ORDEN_CARTAS if CARTAS[c][1] == 'reglas'})]
     for c in ORDEN_CARTAS:
+        if solo and c not in solo:
+            continue
         configs.append(('sola: ' + c, {c: CARTAS[c][0]}))
         configs.append(('todas menos: ' + c, {k: n for k, n in todas.items() if k != c}))
     trabajos = []
@@ -1386,7 +1392,7 @@ def modo_pesos(op, hilos, salida):
             niv = fotos[origen][perfil][momento]
             for nombre, fijas in configs:
                 for s in range(semillas):
-                    trabajos.append(((nombre, momento), niv, perfil, 5000 + s, partidas, fijas))
+                    trabajos.append(((nombre, momento), niv, perfil, 5000 + s, partidas, fijas, recarga))
     inicio = time.time()
     with Pool(hilos) as pool:
         res = pool.map(jugar_fijo, trabajos)
@@ -1412,6 +1418,8 @@ def modo_pesos(op, hilos, salida):
                    '|---|' + '---|' * (2 * len(momentos))]
         filas = []
         for c in ORDEN_CARTAS:
+            if solo and c not in solo:
+                continue
             sola = [media('sola: ' + c, m, perfil) - ref[m][0] for m in momentos]
             menos = [media('todas menos: ' + c, m, perfil) - ref[m][1] for m in momentos]
             filas.append((sum(sola), c, sola, menos))

@@ -5673,6 +5673,16 @@ public static class PruebasMejoras
                       prefab.GetComponent<Renderer>().sharedMaterial == materialDelPrefab && materialDelPrefab.color == colorDelPrefab);
     }
 
+    // Si el shader (uno del proyecto) declara las variantes de instancing. ShaderUtil.HasInstancing es
+    // interno: se mira el codigo.
+    static bool TieneInstancing(Shader shader)
+    {
+        if (shader == null) return false;
+        string ruta = AssetDatabase.GetAssetPath(shader);
+        if (string.IsNullOrEmpty(ruta) || !ruta.EndsWith(".shader")) return false;
+        return File.ReadAllText(ruta).Contains("#pragma multi_compile_instancing");
+    }
+
     // Lo que tira cada arma (Proyectiles, 12/10: "que no sean todos cubitos"): la forma, la
     // velocidad y el alcance de cada una, el daño por segundo igual con cualquier arma (la
     // cadencia del arma compensada en cada bala), la escopeta de cuatro perdigones de un tercio,
@@ -5699,6 +5709,18 @@ public static class PruebasMejoras
                       !Proyectiles.LlevaLuz(Proyectiles.Escopeta, 0) && !Proyectiles.LlevaLuz(Proyectiles.Escopeta, 3) &&
                       !Proyectiles.LlevaLuz(Proyectiles.Escopeta, -1) && Proyectiles.LlevaLuz(Proyectiles.Pistola, 0) &&
                       Proyectiles.LlevaLuz(Proyectiles.Revolver, 0) && Proyectiles.LlevaLuz(Proyectiles.Energia, 0));
+        // Un charco por tiro (13/10, la auditoria de rendimiento): del abanico del disparo doble,
+        // solo la del medio, y la de atras ninguno.
+        bool unCharco = true;
+        for (int extra = 0; extra <= 3; extra++)
+        {
+            int charcos = 0;
+            for (int i = 0; i <= extra; i++) if (Proyectiles.LlevaLuz(Proyectiles.Pistola, Proyectiles.PerdigonDelAbanico(i, extra))) charcos++;
+            unCharco &= charcos == 1;
+        }
+        inf.Verdadero("proyectiles: con el disparo doble, un solo charco por tiro, y la de atras ninguno",
+                      unCharco && !Proyectiles.LlevaLuz(Proyectiles.Pistola, Proyectiles.SinLuz) &&
+                      !Proyectiles.LlevaLuz(Proyectiles.Energia, Proyectiles.SinLuz) && !Proyectiles.LlevaLuz(Proyectiles.Escopeta, Proyectiles.SinLuz));
         inf.Verdadero("proyectiles: solo la de energia atraviesa por su cuenta (2)",
                       Proyectiles.PerforacionesPropias[Proyectiles.Energia] == 2 && Proyectiles.PerforacionesPropias[Proyectiles.Rifle] == 0);
 
@@ -5707,6 +5729,16 @@ public static class PruebasMejoras
         var balaDelPrefab = prefab.GetComponent<BulletController>();
         inf.Verdadero("proyectiles: la bala trae la malla redonda de la onda", balaDelPrefab.mallaRedonda != null &&
                       balaDelPrefab.mallaRedonda != prefab.GetComponent<MeshFilter>().sharedMesh);
+        // La esfera baja, no la de Unity (515 vertices): con la cadencia alta hay decenas en pantalla.
+        inf.Verdadero("proyectiles: la onda es la esfera baja (" + (balaDelPrefab.mallaRedonda != null ? balaDelPrefab.mallaRedonda.vertexCount : 0) + " vertices)",
+                      balaDelPrefab.mallaRedonda != null && balaDelPrefab.mallaRedonda.vertexCount <= 200);
+        // El instancing (13/10): en Android no hay batching dinamico, y cada bala y cada charco eran una
+        // llamada de dibujo. La base de los tramos es ShowBies/ColorPlano; el charco, CharcoDeLuz.
+        var plano = balaDelPrefab.materialPlano;
+        inf.Verdadero("proyectiles: la bala trae su material plano con instancing (" + (plano != null ? plano.shader.name : "sin material") + ")",
+                      plano != null && plano.shader.name == "ShowBies/ColorPlano" && TieneInstancing(plano.shader) && plano.enableInstancing);
+        inf.Verdadero("proyectiles: el charco de luz tiene instancing",
+                      balaDelPrefab.materialLuz != null && TieneInstancing(balaDelPrefab.materialLuz.shader) && balaDelPrefab.materialLuz.enableInstancing);
         Vector3 hitbox = Vector3.Scale(prefab.GetComponent<BoxCollider>().size, prefab.transform.localScale);
 
         var vista = EditorSceneManager.NewPreviewScene();
@@ -5731,6 +5763,11 @@ public static class PruebasMejoras
             b.Vestir(1f, false, Proyectiles.Energia, true, 1f);
             inf.Verdadero("proyectiles: la de energia, una onda ancha y redonda",
                           b.GetComponent<MeshFilter>().sharedMesh == balaDelPrefab.mallaRedonda && b.transform.localScale.x / pistola.x > 2.9f && b.LlevaLuz);
+            inf.Verdadero("proyectiles: su charco no pasa de " + BulletController.LadoMaximoDeLaLuz + " m (" + b.Luz.lossyScale.x.ToString("0.00") + ")",
+                          b.Luz.lossyScale.x <= BulletController.LadoMaximoDeLaLuz + 1e-3f && b.Luz.lossyScale.y <= BulletController.LadoMaximoDeLaLuz + 1e-3f);
+            inf.Verdadero("proyectiles: los materiales de los tramos y sus charcos, con instancing",
+                          b.MaterialPuesto != null && b.MaterialPuesto.enableInstancing && b.MaterialPuesto.shader.name == "ShowBies/ColorPlano" &&
+                          b.Luz.GetComponent<Renderer>().sharedMaterial.enableInstancing);
             b.Vestir(1f, false, Proyectiles.Revolver, true, 1f);
             inf.Verdadero("proyectiles: el revolver, mas grande y con el cubo de vuelta",
                           Mathf.Abs(b.transform.localScale.x / pistola.x - 1.75f) < 1e-3f &&

@@ -8,7 +8,11 @@ public class BulletController : MonoBehaviour
     public float lifeTime;
     public int dañoDar;   // respaldo del prefab: el daño de verdad lo pone el arma en cada tiro
     public Material materialLuz;   // el charco de luz del piso (ShowBies/CharcoDeLuz): lo pone ConstructorArmas
-    public Mesh mallaRedonda;      // la de la onda del arma de energia (la esfera): la pone ConstructorArmas
+    public Mesh mallaRedonda;      // la de la onda del arma de energia (la esfera baja): la pone ConstructorArmas
+    // La base de los materiales de cada tramo: ShowBies/ColorPlano, con instancing (Unlit/Color no
+    // lo tiene, y en Android no hay batching dinamico: cada bala era una llamada de dibujo). Lo
+    // pone ConstructorArmas. Sin el, la base es el material del prefab (Bullet.mat), como antes.
+    public Material materialPlano;
 
     // El daño de esta bala, puesto en cada tiro por GunController desde la mejora
     // de daño. No se serializa: si se guardara en el prefab, el primer tiro de la
@@ -74,6 +78,10 @@ public class BulletController : MonoBehaviour
     public const float AlturaDeLaLuz = 0.2f;    // por encima de la vereda de la ciudad, como los charcos
     public const float LadoDeLaLuzDeLaEscopeta = 2.6f;   // la del perdigon del medio: cubre la rafaga
     public const float LuzTenue = 0.55f;                 // y mas apagada
+    // El charco crece con la bala hasta aca: el de la onda de energia (3 veces la pistola) media
+    // 2,25 m, y con muchas en pantalla el aditivo pasaba de una pantalla entera de relleno en el
+    // Redmi (auditoria de rendimiento de la etapa 4, 13/10). El revolver (1,72 m) queda igual.
+    public const float LadoMaximoDeLaLuz = 1.8f;
 
     private static Material[] lucesPorTramo;
     private static Material[] lucesTenuesPorTramo;
@@ -138,7 +146,7 @@ public class BulletController : MonoBehaviour
         PonerLaLuz(tramo, arma, Mathf.Max(forma.x, forma.z) / EscalaVisual, conLuz);
         recorridoDeLaEstela = 0f;
         if (dibujo == null) return;
-        ArmarMateriales(dibujo.sharedMaterial);
+        ArmarMateriales(materialPlano != null ? materialPlano : dibujo.sharedMaterial);
         if (materialesPorTramo != null) dibujo.sharedMaterial = esCritica ? materialCritico : materialesPorTramo[tramo];
     }
 
@@ -153,7 +161,7 @@ public class BulletController : MonoBehaviour
         Vector3 escala = transform.localScale;
         if (escala.x <= 0f || escala.y <= 0f || escala.z <= 0f) return;
         bool escopeta = arma == Proyectiles.Escopeta;
-        float lado = escopeta ? LadoDeLaLuzDeLaEscopeta : LadoDeLaLuz * Mathf.Sqrt(tamanio);
+        float lado = escopeta ? LadoDeLaLuzDeLaEscopeta : Mathf.Min(LadoDeLaLuz * Mathf.Sqrt(tamanio), LadoMaximoDeLaLuz);
         // Acostada (girada 90 grados en X): su alto va a lo largo de la bala.
         luz.localScale = new Vector3(lado / escala.x, lado / escala.z, 1f);
         luz.localPosition = new Vector3(0f, (AlturaDeLaLuz - transform.position.y) / escala.y, 0f);
@@ -163,10 +171,10 @@ public class BulletController : MonoBehaviour
             lucesTenuesPorTramo = new Material[ColoresPorTramo.Length];
             for (int i = 0; i < lucesPorTramo.Length; i++)
             {
-                lucesPorTramo[i] = new Material(materialLuz) { name = "LuzTramo" + i, color = ColoresPorTramo[i] };
+                lucesPorTramo[i] = new Material(materialLuz) { name = "LuzTramo" + i, color = ColoresPorTramo[i], enableInstancing = true };
                 Color tenue = ColoresPorTramo[i] * LuzTenue;
                 tenue.a = 1f;
-                lucesTenuesPorTramo[i] = new Material(materialLuz) { name = "LuzTenueTramo" + i, color = tenue };
+                lucesTenuesPorTramo[i] = new Material(materialLuz) { name = "LuzTenueTramo" + i, color = tenue, enableInstancing = true };
             }
         }
         dibujoDeLaLuz.sharedMaterial = escopeta ? lucesTenuesPorTramo[tramo] : lucesPorTramo[tramo];
@@ -210,9 +218,10 @@ public class BulletController : MonoBehaviour
         if (materialesPorTramo != null && materialesPorTramo[0] != null && materialCritico != null) return;
         if (baseDeLaBala == null) return;
         materialesPorTramo = new Material[ColoresPorTramo.Length];
+        // Con instancing: todas las balas de un tramo salen en pocas llamadas de dibujo.
         for (int i = 0; i < materialesPorTramo.Length; i++)
-            materialesPorTramo[i] = new Material(baseDeLaBala) { name = "BalaTramo" + i, color = ColoresPorTramo[i] };
-        materialCritico = new Material(baseDeLaBala) { name = "BalaCritica", color = Proyectiles.ColorCritico };
+            materialesPorTramo[i] = new Material(baseDeLaBala) { name = "BalaTramo" + i, color = ColoresPorTramo[i], enableInstancing = true };
+        materialCritico = new Material(baseDeLaBala) { name = "BalaCritica", color = Proyectiles.ColorCritico, enableInstancing = true };
     }
 
     public static BulletController Obtener(BulletController prefab, Vector3 posicion, Quaternion rotacion)

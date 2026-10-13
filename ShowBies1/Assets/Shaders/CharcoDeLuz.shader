@@ -6,6 +6,10 @@
 // Medium, con una sola luz por pixel, que se lleva la luna; las luces puntuales caen a
 // luz por vertice, y el piso es un plano con un vertice cada diez metros. En el editor,
 // en Ultra, se veian bien. Con esto se ven igual en las dos (ver ConstructorEscenarios).
+//
+// Con instancing (13/10): en Android no hay batching dinamico, y cada charco era una llamada
+// de dibujo aparte. Los de las balas son uno por bala viva; los de un mismo material (uno por
+// tramo) salen ahora juntos. El color va por material, no por instancia.
 Shader "ShowBies/CharcoDeLuz"
 {
     Properties
@@ -29,12 +33,20 @@ Shader "ShowBies/CharcoDeLuz"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
+            #pragma multi_compile_instancing
             #include "UnityCG.cginc"
 
             fixed4 _Color;
             half _Intensidad;
             half _Altura;
             half _Caida;
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                float4 texcoord : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
 
             struct v2f
             {
@@ -43,9 +55,10 @@ Shader "ShowBies/CharcoDeLuz"
                 UNITY_FOG_COORDS(1)
             };
 
-            v2f vert (appdata_base v)
+            v2f vert (appdata v)
             {
                 v2f o;
+                UNITY_SETUP_INSTANCE_ID(v);
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.texcoord.xy * 2 - 1;
                 UNITY_TRANSFER_FOG(o, o.pos);
