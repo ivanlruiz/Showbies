@@ -151,6 +151,22 @@ suma un jugador que elige cartas, para ver dónde queda el muro y si las cartas 
 Las partidas más largas mueven también lo que se mide con la mejor oleada (las misiones, la diaria, el bestiario,
 Halloween), pero eso se mide siempre de menos y no se rompe.
 
+### Lo que decidió Gemini (13/10)
+
+Con la simulación de `simulaciones/cartas_1.6.0` (las cartas corrían el muro del medio de la 56 a la 86, con partidas de
+dos horas en el muro, y ya sin cartas llegar a la 50 llevaba 35 minutos) y lo que dijo Ivan (se queda sin balas "a
+veces"; una partida cerca de su récord le dura 20-40 minutos), Gemini decidió, sin simular más:
+
+1. **Oleadas más cortas y más frenéticas**: 10 + 2n zombis (eran 10 + 4n), uno cada 0,20 s (era 0,35). Una partida de
+   50 oleadas pasa a unos 20-25 minutos. **Cada zombi suelta el doble de monedas** (en valor), así el oro por minuto
+   queda igual y no hay que rehacer los premios.
+2. **La promesa de la 1.5.2 se mantiene** (desde la 11, vida ×1,08 y golpe ×1,04), y **desde la 31 hay un tercer tramo**:
+   vida ×1,15 y golpe ×1,08. Las cartas llevan fácil hasta la 30, y el tercer tramo pone el muro en la 50-55, para el
+   renacer de la 1.8.0.
+3. **El cargador se llena al terminar cada oleada.** **Los tiros de más de la carta de cadencia no gastan balas** (una
+   mejora nunca tiene que castigar un recurso). **El rifle tira a cadencia ×1.**
+4. **La curva del PODER queda como está** (12 × 1,15^L): retrasar la segunda carta arruina la primera partida.
+
 ## Rendimiento
 
 Las explosiones, los rayos y los drones salen de pools y de `Efectos`, nunca de `Instantiate` por tiro. Con 35 zombis
