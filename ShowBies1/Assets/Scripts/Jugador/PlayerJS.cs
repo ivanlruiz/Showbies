@@ -228,6 +228,9 @@ public class PlayerJS : MonoBehaviour
         }
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
         tocado = Mathf.MoveTowards(tocado, aMano ? 1f : 0f, dt / 0.12f);
+        // El dinamico, al soltarlo, salta a su rincon: ahi aparece ya en reposo, sin apagarse de a
+        // poco (se lo veria prenderse un cuadro en el rincon).
+        if (dinamicoDeDisparo != null && !aMano) tocado = 0f;
         float reposo = ReposoDelDeDisparo;
         if (dinamicoDeDisparo != null) dinamicoDeDisparo.alfaEnReposo = reposo;
         // Si en reposo no se ve, aparece y se va de golpe: al soltarlo vuelve a su rincon, y

@@ -2471,7 +2471,9 @@ teléfono, debajo de AUTO-APUNTADO): apagados son los fijos de siempre.
   que llegue. Al soltar queda con el alfa de reposo aunque `PlayerJS` ya no corra (se apaga al morir y la oferta de
   revivir deja el HUD a la vista).
 - **La guía de la primera partida** pone el pulgar fantasma en el medio de la zona de mover, con un joystick fantasma
-  debajo (la base del de verdad, más transparente) y "ARRASTRA EN CUALQUIER PARTE PARA MOVERTE" (`guia_mover_dinamico`).
+  debajo (la base del de verdad, más transparente) y "ARRASTRA EN CUALQUIER PARTE PARA MOVERTE" (`guia_mover_dinamico`)
+  **debajo del joystick**: el medio de la zona está a un tercio del alto, y arriba caía en la franja del cartel de la
+  oleada, que sale a la vez.
 - **ShowBies > Pruebas > Joysticks dinámicos (play)** (`PruebaJoystickDinamico`), en WaveMode de cero (para que salga la
   guía) y con toques puestos a mano (`JoystickDinamico.DedoDePrueba`, que no se suelta por no estar en `Input.touches`):
   el reposo de cada uno, la guía, que el centro quede bajo el pulgar con la palanca al medio, que mueva al jugador y siga

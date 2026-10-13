@@ -21,7 +21,9 @@ using UnityEngine.SceneManagement;
 //  - la granada y la pausa se quedan con sus toques; la vida, que no atiende nada, no;
 //  - la pausa suelta el joystick;
 //  - con la opcion apagada (y la escena recargada) son los fijos de siempre.
-// Escribe Builds/prueba_joystick_dinamico.txt.
+// Escribe Builds/prueba_joystick_dinamico.txt, con dos fotos: la guia y el joystick bajo el pulgar.
+// La furia no se compra (el progreso es de cero): que se quede con sus toques lo mira la prueba
+// de logica, no este banco.
 [InitializeOnLoad]
 public static class PruebaJoystickDinamico
 {
@@ -183,6 +185,8 @@ public static class PruebaJoystickDinamico
                 Ok("la guia esta en el medio de la zona de mover, con el joystick fantasma",
                    guia != null && fantasma && ((RectTransform)guia).anchorMin == JoystickDinamico.ZonaIzquierda.center);
                 Ok("la guia dice que se arrastra en cualquier parte", cartel != null && cartel.text == Textos.De("guia_mover_dinamico"));
+                Ok("el cartel de la guia va debajo del joystick fantasma", cartel != null && cartel.rectTransform.anchoredPosition.y < 0f);
+                ScreenCapture.CaptureScreenshot(Path.GetFullPath("../Builds/joystick_dinamico_guia.png"));
 
                 dondeEmpezo = control.transform.position;
                 izquierdo.Apoyar(toqueIzquierdo, JoystickDinamico.DedoDePrueba);
@@ -202,6 +206,7 @@ public static class PruebaJoystickDinamico
                 }
                 if (tReal < 0.1f) return;
                 Ok("con el pulgar encima se ve entero", joysticks.AlfaDelJoystickDeMover > 0.99f);
+                ScreenCapture.CaptureScreenshot(Path.GetFullPath("../Builds/joystick_dinamico_tocado.png"));
                 izquierdo.Arrastrar(toqueIzquierdo + new Vector2(60f, 0f));
                 Pasar(Fase.Arrastrar);
                 return;

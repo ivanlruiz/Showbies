@@ -134,7 +134,10 @@ public class GuiaPrimeraPartida : MonoBehaviour
         imagen.color = new Color(1f, 1f, 1f, 0.6f);
         imagen.raycastTarget = false;
 
-        var cartel = CrearTexto(rt, texto, 44f, new Vector2(0.5f, 0.5f), new Vector2(0f, lado * 0.5f + 55f), new Vector2(560f, 110f));
+        // Con los dinamicos, debajo del joystick fantasma: el medio de la zona esta a un tercio del
+        // alto, y el cartel arriba caia en la franja del cartel de la oleada, que sale a la vez.
+        float alto = (lado * 0.5f + 55f) * (padre != null ? -1f : 1f);
+        var cartel = CrearTexto(rt, texto, 44f, new Vector2(0.5f, 0.5f), new Vector2(0f, alto), new Vector2(560f, 110f));
 
         return new Guia { pulgar = pulgar, cartel = cartel, grupo = grupo, radio = lado * (empuja ? 0.32f : 0.22f) };
     }
