@@ -46,10 +46,11 @@ WaveMode:
 
 | hasta la oleada | 1 | 2 | 3 | 5 | 10 | 15 | 20 | 30 | 40 | 50 | 60 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| cartas | 1 | 2 | 3 | 4 | 9 | 13 | 16 | 20 | 24 | 27 | 29 |
+| cartas | 0 | 1 | 2 | 4 | 9 | 12 | 15 | 19 | 23 | 26 | 28 |
 
-Con las oleadas de 10 + 2n de la 1.6.0 (ver Lo que decidió Gemini, abajo); con las de 10 + 4n, para las que se eligió la
-curva, eran 1, 2, 3, 6, 12, 16, 19, 24, 28, 31 y 33.
+Con las oleadas de 10 + 2n y el PODER en 14 × 1,15^L de la 1.6.0 (ver La segunda vuelta, abajo): la primera carta al
+empezar la oleada 2. Con el PODER en 12 eran 1, 2, 3, 4, 9, 13, 16, 20, 24, 27 y 29, y con las oleadas de 10 + 4n, para
+las que se eligió la curva, 1, 2, 3, 6, 12, 16, 19, 24, 28, 31 y 33.
 
 Gemini pedía 12-15 hasta la 10. **Hasta el 12/10 arrancaba en 8** (1, 3, 5, 8, 14...): en el teléfono Ivan tenía tres cartas
 a mitad de la oleada 2 ("el poder es muy fácil de conseguir"), y Gemini eligió esta entre cinco curvas simuladas (8, 12 y
@@ -83,16 +84,16 @@ Cada una con su tope. Las de números (las del diseño anterior) y las que cambi
 
 | carta | qué hace por vez | tope | dónde se engancha |
 |---|---|---|---|
-| Daño | daño ×1,25 | 4 | `GunController`, un multiplicador aparte como `FijarFuria` |
-| Cadencia | tiros/s ×1,2 | 4 | `GunController`, respeta `maxTirosPorSegundo` |
+| Daño | daño ×1,20 (×1,25 hasta el 14/10) | 4 | `GunController`, un multiplicador aparte como `FijarFuria` |
+| Cadencia | tiros/s ×1,15 (×1,2 hasta el 14/10) | 4 | `GunController`, respeta `maxTirosPorSegundo` |
 | Crítico | +10 % de crítico | 3 | `GunController.EsCritico` |
-| Vida | vida máxima ×1,2 y cura entera | 3 | `PlayerHealth` |
+| Vida | vida máxima ×1,2, y cura solo lo que suma (hasta el 14/10, entera) | 3 | `PlayerHealth` |
 | Velocidad | +10 % | 2 | `PlayerController.multiplicadorVelocidad` (se multiplica con la furia) |
 | Imán | +2 m (sin imán comprado, da 2 m) | 2 | `Moneda.FijarRadioIman` |
 | Granada rápida | recarga −30 % | 2 | `PlayerController.granadaCooldown` (si está comprada) |
 | Furia larga | la furia dura +2 s | 2 | `Furia` (si está comprada) |
 | **Perforante** | la bala sigue después de pegar, con la mitad del daño, 1 zombi más | 2 | `BulletController.OnCollisionEnter` (hoy vuelve al pool al pegar) |
-| **Disparo doble** | +1 bala por tiro, en abanico de 8° | 2 | `GunController`, al sacar cada bala del pool |
+| **Disparo doble** | +1 bala por tiro, en abanico de 8°, todas al 70 % (desde el 14/10) | 2 | `GunController`, al sacar cada bala del pool |
 | **Hacia atrás** | una bala más por la espalda | 1 | `GunController` |
 | **Explosiva** | daño en área chico al pegar (1,5 m, 30 % del daño) | 2 | `BulletController`, con las chispas de `Efectos` y el dedup por componente de la granada |
 | **Hielo** | el zombi que recibe un tiro va 40 % más lento 2 s, teñido de celeste | 2 | `EnemyController`, un multiplicador de velocidad con su reloj |
@@ -189,6 +190,39 @@ y `resultados_tercer_tramo.md`). Lo que quedó:
   mitad**; **el oro del logro de combo, de x100 a x75** (con 10 + 2n recién la oleada 45 tiene 100 zombis); los
   intersticiales siguen cada 3 partidas; **el zombi del tesoro también ×1,4**; el modo libre no cambia; las oleadas
   perfectas más frecuentes se dejan.
+
+### La segunda vuelta (14/10)
+
+Ivan probó la APK en el teléfono con lo de arriba: "el autoapuntado está muy roto, o el juego está muy desbalanceado, yo
+quiero que haya más chances de que el jugador muera". En la simulación, el medio llegaba a la 9, la 29 y la 49 en sus tres
+primeras partidas sin haber perdido nunca, y nadie se quedaba sin balas (el cargador lleno en cada oleada y la cadencia
+sin costo). Argon propuso tres versiones, todas corridas en `simulaciones/cartas_1.6.0` (`resultados_arranque.md`, `_v2`
+y `_v3`):
+
+| | medio, partidas 1 a 6 | bajo, partidas 1 a 6 | muro (bajo / medio / alto) |
+|---|---|---|---|
+| hoy (13/10) | 9, 29, 49, 56, 59, 58 | 3, 9, 9, 31, 39, 49 | 57 / 59 / 67 |
+| V1: auto-apuntado corto, cargador +25 %, golpe ×1,25, curva más dura, PODER 14 × 1,20^L, curas más chicas | 3, 9, 24, 37, 39, 49 | 1, 2, 2, 2, 4, 4 | 43 / 52 / 57 |
+| V2: la V1 con menos oro (×0,75, ×1,05 por oleada, bono 2n), PODER 24 × 1,11^L, cartas más chicas | 2, 3, 7, 8, 12, 18 | 1, 1, 1, 2, 2, 2 | 49 / 59 / 72 |
+| **V3, la que quedó** | **3, 6, 8, 14, 23, 29** | **2, 2, 2, 2, 3, 5** | **48 / 59 / 69** |
+
+La V1 bajó el muro de más; sin cartas daba justo el ritmo que Argon quería, así que el acelerador eran las cartas. La V2
+dejó el muro en su lugar pero trabó al bajo nueve partidas en la oleada 1-2, que es donde se va el jugador nuevo. **La
+V3**:
+
+- **El auto-apuntado, defensa personal**: hasta 7,5 m (era 16), se tuerce hasta 6° en cada tiro y tarda 0,25 s en
+  enganchar al siguiente después de cada muerte; a la mitad de la cadencia, como antes. El giro limitado a 240°/s de la
+  V1 no quedó.
+- **El cargador recarga un cuarto por oleada, y entero después de un jefe.**
+- **Las cartas**: daño ×1,20, cadencia ×1,15 (sin gastar balas), disparo doble a 70 % por bala, la de vida cura solo lo
+  que suma, el vampiro 3 % cada 20 muertes. **El PODER en 14 × 1,15^L**: la primera carta al empezar la oleada 2.
+- **La curva**: ×1,13 / ×1,09 hasta la 10, **×1,145 / ×1,085 hasta la 30** (lo duro, donde se arma el mazo) y ×1,12 /
+  ×1,065 desde la 31. El golpe de los zombis, como siempre (el +25 % de la V1 y la V2 trababa al bajo).
+- **El oro**: la moneda ×1 que crece ×1,03 por oleada, el bono de la oleada de 2n, y la caja de vida cura el 35 % de la
+  vida máxima.
+- **Lo que queda abierto**: de la 10 a la 50 el medio todavía va rápido (la 50 en la partida 10; Argon quería 25-35), y
+  el piso del día 7 de la recompensa diaria (2.000) vale más de tres partidas hasta la oleada 12. Se prueba primero en el
+  teléfono.
 
 ## Rendimiento
 

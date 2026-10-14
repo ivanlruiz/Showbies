@@ -486,7 +486,8 @@ poca distancia), diseñado por Gemini en la revisión de arte y en `Proyectiles`
 - **Las cartas van en cada perdigón** (el hielo, la quemadura, la explosiva y la perforante: como el perdigón pega un
   tercio, se balancea solo). **El disparo doble le suma a la escopeta dos perdigones a los costados** (a ±20°, y 8° más por
   carta) **y la de atrás tira uno solo, gordo** (1,5×), con el daño del tiro entero. Las demás armas tiran su bala en el
-  abanico de siempre. **Los drones tiran la bala de la pistola, con el daño entero**: `GunController.SacarBala` de cuatro
+  abanico de siempre. **Con el disparo doble, cada bala (o perdigón) de adelante pega el 70 %** del tiro
+  (`PoderDeLaPartida.ParteDelDisparoDoble`, 14/10: ver El balance de la 1.6.0); la de atrás, entera. **Los drones tiran la bala de la pistola, con el daño entero**: `GunController.SacarBala` de cuatro
   parámetros es la de la pistola, y la del arma tiene su propia sobrecarga.
 - **La perforación de la de energía es aparte de la carta** (`BulletController.perforacionesSinPerder`): se gasta antes y
   sin bajar el daño; después vienen las de la carta, que sí lo bajan.
@@ -562,10 +563,10 @@ balance** (ver El balance de la 1.6.0, abajo).
 
 - **La experiencia** sale de `Enemy.experiencia`, en el bloque de la muerte de `DanoZombi` (la regla de siempre), y
   vuela como una chispa celeste del zombi al jugador (`EleccionDeCartas.Chispa`, un pool de 24 sprites). Pasar del
-  PODER L al siguiente cuesta `round(12 × 1,15^L)` (`PoderDeLaPartida.Costo`): una por oleada al principio, 9 cartas
-  hasta la oleada 10, 16 hasta la 20 y 24 hasta la 40, con la mezcla de WaveMode (eran 12, 19 y 28 con las oleadas de
-  10 + 4n: la curva no se tocó en el balance, ver abajo). Arrancaba en 8 hasta el 12/10, y Ivan
-  tenía tres cartas a mitad de la oleada 2; Gemini eligió esta entre cinco curvas (ver `CARTAS.md`). Una granada puede
+  PODER L al siguiente cuesta `round(14 × 1,15^L)` (`PoderDeLaPartida.Costo`): la primera carta al empezar la oleada 2 y
+  después una por oleada, 9 hasta la oleada 10, 15 hasta la 20 y 23 hasta la 40, con la mezcla de WaveMode. Arrancaba en 8
+  hasta el 12/10 (Ivan tenía tres cartas a mitad de la oleada 2, y Gemini eligió 12 entre cinco curvas: ver `CARTAS.md`)
+  y en 12 hasta el 14/10 (ver El balance de la 1.6.0). Una granada puede
   subir dos de golpe: quedan dos elecciones.
 - **`PoderDeLaPartida` es estático y nadie lo "aplica"**: el arma (`TirosPorSegundo`, `DanoPorTiro`,
   `ProbabilidadCriticoEnLaPartida`), el jugador (la velocidad, `RecargaGranada`), `Furia.DuracionEnLaPartida` y el imán
@@ -589,22 +590,22 @@ balance** (ver El balance de la 1.6.0, abajo).
 
 | carta | por vez | tope |
 |---|---|---|
-| Daño | daño ×1,25 | 4 |
-| Cadencia | tiros/s ×1,2 (respeta el techo de 120), sin gastar más balas | 4 |
+| Daño | daño ×1,20 | 4 |
+| Cadencia | tiros/s ×1,15 (respeta el techo de 120), sin gastar más balas | 4 |
 | Crítico | +10 % de crítico | 3 |
-| Vida | vida máxima ×1,2 y la llena | 3 |
+| Vida | vida máxima ×1,2, y cura solo lo que suma | 3 |
 | Velocidad | +10 % | 2 |
 | Imán | +2 m | 2 |
 | Granada rápida | recarga ×0,7 (con la granada comprada) | 2 |
 | Furia larga | +2 s de furia (con la furia comprada) | 2 |
 | Perforante | la bala sigue, con la mitad del daño, un zombi más | 2 |
-| Disparo doble | una bala más, en abanico de 8° | 2 |
+| Disparo doble | una bala más, en abanico de 8°, todas al 70 % | 2 |
 | Hacia atrás | una bala por la espalda | 1 |
 | Explosiva | el 30 % del daño en 1,5 m (2 m con dos) | 2 |
 | Hielo | frena un 40 % 2 s (64 % con dos) | 2 |
 | Quemadura | una de cada cuatro balas quema: 10 % del daño por segundo, 3 s | 2 |
 | Dron | un dron que tira solo una vez por segundo | 2 |
-| Vampiro | cura el 5 % cada 15 muertes | 2 |
+| Vampiro | cura el 3 % cada 20 muertes | 2 |
 | Escudo | para un golpe cada 15 s | 1 |
 | Curación | vida entera; solo con todo lo demás al tope | — |
 
@@ -665,7 +666,7 @@ balance** (ver El balance de la 1.6.0, abajo).
 ## Las cajas (power-ups)
 
 Tres cajas que nacen solas por el mapa (`PowerUp`, cada 8 s las de balas y vida y cada 20 la del arma) y vencen a los 30 s
-(`PickupCaducidad`): **vida** (cura `CuraPorCaja`), **balas** (llena el cargador y cadencia ×1,5 por 10 s) y **arma**
+(`PickupCaducidad`): **vida** (cura `CuraPorCaja`, el 35 % de la vida máxima), **balas** (llena el cargador y cadencia ×1,5 por 10 s) y **arma**
 (el cargador sube a 1.000 para siempre, lo llena, y cadencia ×3 por 10 s). Se agarran con su etiqueta (`PUVida`, `PUBalas`,
 `PUArma`) en `PlayerController` y `PlayerHealth`.
 
@@ -753,8 +754,9 @@ consultando `EnemyController.ZombisVivos`:
      la 3, tanque desde la 6 y FASTER desde la 9. Si se llegó al techo, espera.
   4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos. Si el
      jugador murió en el mismo paso, espera a ver si revive: si no, la partida termina en esa oleada y no se
-     completa ni se guarda la siguiente. **Al terminar, el cargador queda lleno** (`WaveManager.LlenarElCargador`,
-     1.6.0, de Gemini: Ivan se quedaba sin balas "a veces", y con las cartas de cadencia una partida dura más).
+     completa ni se guarda la siguiente. **Al terminar, se recarga un cuarto del cargador, y entero después de un
+     jefe** (`WaveManager.RecargarAlTerminar` y `BalasAlRecargar`, 14/10, de Argon: desde el 13/10 se llenaba entero, y
+     nadie se quedaba nunca sin balas).
 
   **La partida de oleadas se retoma** (pedido de Ivan): al empezar cada oleada, `WaveManager` guarda en el progreso la
   oleada y los puntos (`Progreso.GuardarOleadaEnCurso`) y escribe el archivo. Si se sale al menú o se cierra la app,
@@ -865,15 +867,16 @@ después de aparecer, así que `OnEnable` no sirve) y la mira la barra de arriba
 despeja, y volver justo cuando terminaba de avisar la carga es morir de nuevo sin llegar a jugar.
 
 **Los zombis escalan con la oleada.** `WaveManager.Aparecer` pone `multiplicadorVida` = `crecimientoVida`^(o−1)
-(1,11) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,07) apenas sale el zombi, antes de su primer golpe, jefe
-incluido. La vida
+(1,13 desde el 14/10; era 1,11) y `multiplicadorDano` = `crecimientoDano`^(o−1) (1,09; era 1,07) apenas sale el zombi,
+antes de su primer golpe, jefe incluido (con los tramos de abajo). La vida
 crece más rápido que el daño a propósito: lo que frena es no llegar a matarlos, no que dos golpes liquiden al
 jugador. **La vida era 1,15 y las monedas 1,05** hasta el 19/9: una simulación mostró un muro en la oleada 35 (el daño
 comprable crece con el logaritmo de las monedas y la vida, exponencial), y con 1,11 y 1,08 (Ivan lo probó en la 35 y
 lo notó bien) se corre a la 45-48. La solución de fondo (hitos de daño multiplicativos, renacer) está en TAREAS. `EnemyController` inicializa la vida perezosa (en el primer golpe o al consultarla, una vez por aparición) y muere con vida ≤ 0,01;
 el daño al jugador acumula las fracciones (`PlayerHealth.AcumularDano`) y resta enteros.
 
-**Desde la oleada 11 la curva va en un segundo tramo** (1.5.2, del plan de Gemini): la vida crece ×1,08 y el golpe ×1,04
+**Desde la oleada 11 la curva va en un segundo tramo** (1.5.2, del plan de Gemini; con otros números desde la 1.6.0, ver
+abajo): la vida crecía ×1,08 y el golpe ×1,04
 (`oleadaDelSegundoTramo`, `crecimientoVidaTardio` y `crecimientoDanoTardio`, con `Escalado.PorOleada` de dos tramos:
 la 11 ya vale la 10 por el tardío, y el jefe de la 10 queda en el primero). Ivan eligió empezar después del primer jefe,
 y entre tres candidatas simuladas Gemini eligió esta. **Lo simulado está en `simulaciones/curva_1.5.2`**, con el
@@ -886,9 +889,17 @@ script y sus tablas (la del 19/9 quedó en un scratchpad y se perdió):
 - **Con el segundo tramo**, el medio llega a la 40 en la partida 7 y a la 55 en la 18, y se frena cerca de la 60:
   el muro queda para el renacer (1.8.0), y las cartas (1.6.0) lo van a correr un poco.
 
-**Desde la oleada 26 va en un tercer tramo** (1.6.0: vida ×1,20 y golpe ×1,10, `oleadaDelTercerTramo`,
-`crecimientoVidaTercerTramo` y `crecimientoDanoTercerTramo`, con `Escalado.PorOleada` de tres tramos: la 26 ya vale la 25
-por el tercero). Las cartas no lo corrieron un poco: lo corrieron unas 30 oleadas (ver El balance de la 1.6.0).
+**Y desde la 31 va en un tercer tramo** (1.6.0: `oleadaDelTercerTramo`, `crecimientoVidaTercerTramo` y
+`crecimientoDanoTercerTramo`, con `Escalado.PorOleada` de tres tramos: la 31 ya vale la 30 por el tercero). Las cartas no
+corrieron el muro un poco: lo corrieron unas 30 oleadas, y la curva quedó así (ver El balance de la 1.6.0):
+
+| tramo | oleadas | vida | golpe |
+|---|---|---|---|
+| primero | 1 a 10 | ×1,13 | ×1,09 |
+| segundo | 11 a 30 (hasta el tercer jefe) | ×1,145 | ×1,085 |
+| tercero | desde la 31 | ×1,12 | ×1,065 |
+
+El segundo tramo es el más duro a propósito: es donde se arma el mazo de cartas.
 
 Los valores están guardados en la escena (desde la 1.6.0; iguales al valor por defecto del script), y la prueba de lógica
 los lee de `WaveMode.unity`. El modo libre sigue con un solo tramo (`GeneradorZombis`, 1,15 por nivel).
@@ -902,20 +913,38 @@ Ivan contó que se queda sin balas "a veces" y que una partida cerca de su réco
 Gemini (13/10, revisado con Argon en el razonamiento máximo, después de correr en la simulación la primera respuesta):
 
 - **Oleadas más cortas y más frenéticas**: 10 + 2n zombis, uno cada 0,2 s (ver arriba).
-- **El tercer tramo desde la 26** (ver arriba): el muro en la 57 / 59 / 67 (bajo, medio, alto), con 26-33 minutos de
-  partida en el muro. El medio llega a la 50 en la partida 4: la progresión se comprime, y se aceptó.
-- **Cada moneda de las oleadas vale ×1,4** (`WaveManager.valorDeLaMoneda`, en `MultiplicadorMonedasEn`, también para el
-  zombi del tesoro; igual en `Economia.MultiplicadorMonedasOleadas`, que la prueba compara con la escena): hasta la 10,
-  10 + 2n son el 65 % de los zombis de 10 + 4n, y con ×1,4 la primera partida vuelve a comprar 1-2 mejoras. Con ×2 el oro
-  por minuto se duplicaba y el medio entraba al muro en 3-4 partidas.
-- **El cargador se llena al terminar cada oleada** (ver arriba).
 - **Los tiros de más de la carta de cadencia no gastan balas** (`GunController.CostoPorTiro`, 1 / su multiplicador, y
   `BalasDelTiro`, que lleva la deuda de las fracciones): ninguna carta puede empeorar la partida. La caja y la furia sí
   gastan, como siempre.
 - **El rifle tira a ×1** (ver Lo que tira cada arma).
-- **La curva del PODER queda como está**: retrasar la segunda carta arruina la primera partida.
-- **Lo que mide con la vara de `Economia` se recalculó solo** (las misiones, la diaria, el nivel, el video de monedas)
-  y queda cerca de lo de antes: menos zombis, que valen más. **A la mitad, las muertes de las estrellas del bestiario
+
+**La segunda vuelta, el 14/10.** Con eso (un tercer tramo desde la 26 ×1,20/×1,10, la moneda ×1,4, el cargador lleno en
+cada oleada y el PODER en 12) Ivan probó la APK en el teléfono: "el autoapuntado está muy roto, o el juego está muy
+desbalanceado, yo quiero que haya más chances de que el jugador muera". La simulación le daba la razón: el medio llegaba a
+la 9, la 29 y la 49 en sus tres primeras partidas, sin perder nunca antes del muro, y nadie se quedaba sin balas. Argon
+propuso tres versiones, cada una corrida en la simulación (`resultados_arranque.md`, `_v2` y `_v3`); la primera bajaba
+el muro de más y la segunda trababa al bajo nueve partidas en la oleada 1-2. Quedó la tercera:
+
+- **El automático pasa a defensa personal**: hasta 7,5 m, se tuerce hasta 6° en cada tiro y tarda 0,25 s en enganchar
+  al siguiente después de cada muerte (ver Móvil). El giro limitado que proponía Argon al principio no se hizo: no está
+  en la versión final ni en la simulación.
+- **El cargador recarga un cuarto por oleada, y entero después de un jefe** (ver arriba).
+- **Las cartas, más chicas**: daño ×1,20, cadencia ×1,15 (sin gastar balas, como antes), el disparo doble a 70 % por
+  bala, la de vida cura solo lo que suma, el vampiro 3 % cada 20 muertes. **El PODER arranca en 14**: la primera carta al
+  empezar la oleada 2.
+- **La curva de arriba**: lo duro, en las oleadas 11 a 30.
+- **Menos oro**: cada moneda de las oleadas vale ×1 y crece ×1,03 por oleada (`valorDeLaMoneda`, `crecimientoMonedas`;
+  `Economia` los copia y la prueba los compara), y el bono de la oleada es de 2n: con ×1,08 y ×1,4, el que pasaba la 10
+  juntaba media tienda de un tirón y la partida siguiente llegaba quince oleadas más lejos. **La caja de vida cura el
+  35 % de la vida máxima** (era la mitad).
+- **Resultado en la simulación**: el muro en la 48 / 59 / 69 (bajo, medio, alto), con 22-40 minutos de partida ahí. El
+  medio muere en las oleadas 3, 6, 8, 14 y 23 de sus primeras cinco partidas (antes, 9, 29, 49, 56 y 59), llega a la 10 en
+  la partida 4 y a la 50 en la 10; el bajo arranca como en la 1.5.2 (2, 2, 2, 2, 3, 5...). De la 10 a la 50 todavía va
+  rápido (Argon quería la 50 en la partida 25-35), y se aceptó para probarlo en el teléfono.
+- **Lo que mide con la vara de `Economia` se recalculó solo** (las misiones, la diaria, el nivel, el video de monedas),
+  y baja con el oro: el video de monedas paga 120 en la oleada 10 (era 220), la misión difícil 730 (1.300). **El piso del
+  día 7 de la diaria (2.000) vale más de tres partidas hasta la oleada 12**, donde una partida deja unas 660: la prueba lo
+  mira desde la 13. **A la mitad, las muertes de las estrellas del bestiario
   (50, 500 y 5.000; las del jefe no) y del logro Exterminador (500, 5.000 y 50.000)**, y **el oro del combo en x75**
   (era x100: con 10 + 2n recién la oleada 45 tiene 100 zombis). Se aceptaron: el nivel del jugador sube ~30 % más lento
   (el 10 cae en la partida 12 y el 50 en la 71), el récord en puntos de las oleadas queda alto, los umbrales de
@@ -1265,12 +1294,12 @@ partida en curso). No usa PlayerPrefs a propósito: es estado estructurado.
   todas juntas: los caramelos de Halloween son monedas con otro modelo y `caramelo` prendido (ver Evento de
   Halloween). Con la pila única de antes, un caramelo guardado volvía a salir como moneda.
 - **El único cobro directo es el bono de la oleada** (`WaveManager`, `bonoPorOleada × oleada`, el doble si la oleada
-  salió sin un golpe, que se festeja en el cartel de la oleada superada, con sus monedas volando al contador). `bonoPorOleada` vale 4 en WaveMode, el doble del plan, porque las monedas
-  que sueltan los zombis ya son ≈2× las que simuló; el botín no lo multiplica. **Al terminar la oleada las monedas
+  salió sin un golpe, que se festeja en el cartel de la oleada superada, con sus monedas volando al contador). `bonoPorOleada` vale 2 en WaveMode (fue 4 hasta el 14/10: ver El
+  balance de la 1.6.0); el botín no lo multiplica. **Al terminar la oleada las monedas
   se quedan donde cayeron**: no hay imán global (antes `Moneda.AtraerTodas` las traía todas), juntarlas es parte del
   juego y la mejora de imán es la que ayuda. Siguen desapareciendo a los 20 s.
 - **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
-  `crecimientoMonedas^(oleada − 1)` (1,08) por `valorDeLaMoneda` (1,4, desde la 1.6.0: ver El balance de la 1.6.0) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
+  `crecimientoMonedas^(oleada − 1)` (1,03) por `valorDeLaMoneda` (1; ver El balance de la 1.6.0) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
   la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
   0,5 no mueve el contador al agarrarla. Un zombi sin `monedaPrefab`, como los del tutorial, no suelta nada.
 - **Las monedas no tienen Rigidbody ni collider**, no proyectan ni reciben sombra (con el material instanciado,
@@ -1343,8 +1372,8 @@ terminada: ver Primera vez).
   (`MonedasPorDia`), y del día 7 en adelante sigue pagando lo del 7 mientras no se corte.
 - **Crece con la mejor oleada, con la vara de `Economia`**: paga las partidas que dice `PartidasPorDia` (de un cuarto
   de partida el primer día a dos el séptimo), y **los montos de arriba quedan como piso**. Así en el arranque —donde 150
-  monedas son la primera mejora— paga lo mismo de siempre, y en la oleada 45 pasa de 825 monedas a unas 9.950 el primer
-  día (12.950 hasta la 1.6.0, con 10 + 4n y la moneda ×1): con el +10 % lineal de antes quedaba en calderilla justo cuando más hace falta la razón para volver.
+  monedas son la primera mejora— paga lo mismo de siempre, y en la oleada 45 pasa de 825 monedas a unas 2.450 el primer
+  día (12.950 en la 1.5.2: el oro de las partidas bajó con la 1.6.0): con el +10 % lineal de antes quedaba en calderilla justo cuando más hace falta la razón para volver.
 - **Paga con la mejor oleada del día, congelada** (`Progreso.OleadaDeLaRecompensa(hoy)`, campos
   `diaOleadaRecompensa` y `oleadaRecompensa`, que se anotan la primera vez que se pregunta ese día), igual que las
   misiones y el desafío semanal y por la misma razón: con la marca de ahora, dejar la ventana sin cobrar, jugar hasta
@@ -1456,7 +1485,7 @@ completada en el día y la lista).
   mejor oleada (o los puntos del récord en el libre) que había al empezar, con el arpegio doble (`Efectos.Festejo`);
   sin marca previa, nada. Sin esto el MEJORAS de la pausa casi no se iba a usar, y el récord se sabía recién en la
   derrota. **ShowBies > Pruebas > Fin de oleada y avisos (play)** (`PruebaFinDeOleada`) lo mira junto con el final de
-  oleada, y que el cargador quede lleno (lo deja en 7 balas a mitad de la oleada).
+  oleada, y que al terminar se recargue un cuarto del cargador (lo deja en 7 balas a mitad de la oleada).
 
 ## Desafío semanal
 
@@ -1693,7 +1722,8 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
   su `Awake` fija daño por bala, tiros por segundo, vida máxima (con la vida llena), el multiplicador de cura y el
   alcance del imán (`Moneda.FijarRadioIman`, estático porque las monedas salen de un pool): fija valores, nunca
   multiplica los actuales, así reintentar no aplica dos veces. La caja de vida cura
-  `curaPorPickup × multiplicador de vida` (40 × el multiplicador: sigue siendo la mitad de la vida máxima). El
+  el 35 % de la vida máxima (`PlayerHealth.FraccionDeCuraPorCaja`, con las cartas de vida; hasta el 14/10 curaba
+  `curaPorPickup × multiplicador de vida`, la mitad). El
   botín lo leen los dos generadores en su `Start`.
 - **La tienda es un panel del menú**, no una escena: `Prefabs/UI/Tienda.prefab` instanciado en `Menu.unity`, con
   canvas propio (1920x1080, match 0,5, `sortingOrder` 5, área segura). Las tarjetas (`Prefabs/UI/TarjetaMejora`)
@@ -1806,7 +1836,7 @@ debajo del de las misiones** (`BotonVideoDeMonedas`, una copia del globo como lo
 de la oferta de revivir en el naranja del video), para mirar un video y cobrar monedas.
 
 - **Paga un cuarto de partida** en la mejor oleada (`VideoDeMonedas.Premio`, con la vara de `Economia`), con piso de 50:
-  50 al principio, 220 en la oleada 10, 2.750 en la 30 (240 y 3.450 hasta la 1.6.0). Entra por `CobrarPremio`.
+  50 al principio, 120 en la oleada 10, 960 en la 30 (240 y 3.450 en la 1.5.2). Entra por `CobrarPremio`.
 - **Uno cada 10 minutos** (`SegundosEntreVideos`), con la hora del teléfono guardada en el progreso
   (`ultimoVideoDeMonedas`, segundos Unix, sin cambiar la versión). Adelantar el reloj da otro video antes, que es mirar
   más anuncios; atrasarlo no deja esperando.
@@ -2483,7 +2513,8 @@ en el editor con target Android los joysticks se veían pero no respondían.
 
 **AUTO-APUNTAR** (10/10, de la revisión de Gemini: el twin-stick con las dos manos aleja al público casual): en el
 teléfono, sin el pulgar en el joystick de disparo, `PlayerJS` apunta solo al zombi vivo más cercano **que se ve en
-pantalla** (a menos de `AlcanceAutoApuntar`, 16 m, o de lo que llega el arma si es menos: 7 m con la escopeta) y
+pantalla** (a menos de `AlcanceAutoApuntar`, 7,5 m desde el 14/10 —era 16—, o de lo que llega el arma si es menos: 7 m
+con la escopeta) y
 dispara, por el mismo camino que el joystick (`FijarDisparo`, el
 cuerpo girado hacia él y la dirección de la granada sin arrastrar). **El joystick sigue mandando**: tocarlo apunta a
 mano, para elegir al jefe o al tesoro, y al soltarlo vuelve el automático. No salta de un blanco a otro mientras el otro
@@ -2501,6 +2532,13 @@ eligió esto entre disparar solo quieto, la mitad, solo girar o un cono): `GunCo
 ser "el botón de daño máximo". **El joystick de disparo se queda**, pero mientras tira el automático se ve al 40 %
 (`PlayerJS.AlfaDelJoystickEnAutomatico`, con un `CanvasGroup`) y al tocarlo se prende entero y salta un poco. Sin
 auto-apuntado, o en el tutorial, se ve siempre entero (con los dinámicos, ver abajo).
+
+**Y desde el 14/10 es defensa personal** (Ivan lo probó en el teléfono con la 1.6.0: "el autoapuntado está muy roto";
+lo decidió Argon, ver El balance de la 1.6.0): llega hasta 7,5 m (media pantalla: lo de más lejos, con el joystick),
+**cada tiro sale torcido hasta 6°** para un lado o el otro (`GunController.DesvioDelAutomatico` y `DesvioDelTiro`; todo
+el tiro junto, el abanico y la de atrás; a mano y los drones, derechos), y **después de cada muerte tarda 0,25 s en
+enganchar al siguiente** sin tirar (`PlayerJS.PausaAlCambiarDeBlanco`; la muerte se mira con `SigueVivo` y el número de
+aparición, porque un zombi del pool vuelve como otro).
 
 **Los joysticks son dinámicos** (12/10: lo pidieron en Discord, en #ideas, "el stick dinámico", y Gemini decidió cómo):
 el joystick aparece donde se apoya el pulgar, con la palanca al medio, y si el pulgar se va más allá del borde lo sigue;

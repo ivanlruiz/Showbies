@@ -1,16 +1,16 @@
 # Notas de la versión 1.6.0 (13) para Play
 
-Las que van en "Novedades" de la versión de producción. Máximo 500 caracteres por idioma (contados: en-US 497,
-es-ES 496, es-419 497). Como siempre, la de Latinoamérica (es-419) escribe "zombies".
+Las que van en "Novedades" de la versión de producción. Máximo 500 caracteres por idioma (contados: en-US 489,
+es-ES 491, es-419 492). Como siempre, la de Latinoamérica (es-419) escribe "zombies".
 
 ## en-US
 ```
 What's new in 1.6.0
 • POWER cards: zombies give you power, and each level lets you pick 1 of 3 cards for the run: damage, drones, frost, piercing and explosive bullets, and more
 • Your gun evolves with your damage: revolver, shotgun, rifle and energy gun, each with its own shots and sound
-• Shorter, wilder waves, and a full magazine after each one
+• Shorter, wilder waves, and ammo after each one
 • Dynamic joysticks: they appear wherever you touch (turn off in Options)
-• Auto-aim shoots slower: aim by hand for full firepower
+• Auto-aim only covers you up close: aim by hand to hit far
 • New menu music
 ```
 
@@ -19,9 +19,9 @@ What's new in 1.6.0
 Novedades de la 1.6.0
 • Cartas de PODER: los zombis te dan poder y en cada nivel eliges 1 de 3 cartas para la partida: daño, drones, hielo, balas explosivas y más
 • Tu arma evoluciona con tu daño: revólver, escopeta, rifle y arma de energía, cada una con su disparo y sonido
-• Oleadas más cortas y frenéticas, y cargador lleno tras cada una
+• Oleadas más cortas y frenéticas, y munición tras cada una
 • Joysticks dinámicos: aparecen donde tocas (se apagan en Opciones)
-• Auto-apuntado más lento: apunta a mano para disparar a tope
+• Auto-apuntado solo de cerca: apunta a mano para llegar lejos
 • Música nueva en el menú
 ```
 
@@ -30,9 +30,9 @@ Novedades de la 1.6.0
 Novedades de la 1.6.0
 • Cartas de PODER: los zombies te dan poder y en cada nivel eliges 1 de 3 cartas para la partida: daño, drones, hielo, balas explosivas y más
 • Tu arma evoluciona con tu daño: revólver, escopeta, rifle y arma de energía, cada una con su disparo y sonido
-• Oleadas más cortas y frenéticas, y cargador lleno tras cada una
+• Oleadas más cortas y frenéticas, y munición tras cada una
 • Joysticks dinámicos: aparecen donde tocas (se apagan en Opciones)
-• Auto-apuntado más lento: apunta a mano para disparar a tope
+• Auto-apuntado solo de cerca: apunta a mano para llegar lejos
 • Música nueva en el menú
 ```
 
@@ -49,13 +49,15 @@ Casi todo sale de las revisiones de Gemini del 10/10 y el 12/10 (`CARTAS.md`, `A
 - **Cada arma tira su proyectil** (`Proyectiles`): la escopeta, cuatro perdigones que llegan a 7 m; el rifle, una
   trazadora; la de energía, una onda que atraviesa dos zombis. El daño por segundo es el de las mejoras con cualquiera.
   La crítica sale blanca con estela.
-- **El auto-apuntado tira a la mitad de la cadencia**; con el joystick, entera.
+- **El auto-apuntado tira a la mitad de la cadencia**, hasta 7,5 m, torcido hasta 6° y con 0,25 s entre blanco y
+  blanco; con el joystick, entera y a donde se apunte.
 - **Los joysticks dinámicos**, prendidos de fábrica (OPCIONES > JOYSTICKS DINÁMICOS).
 - **Kingball**, el tema de Ivan, de música del menú.
-- **El balance** (13/10, de Gemini con la simulación: `CARTAS.md` y CLAUDE.md, El balance de la 1.6.0): oleadas de
-  10 + 2n zombis, uno cada 0,2 s; un tercer tramo de la curva desde la 26 (vida ×1,20 y golpe ×1,10); cada moneda de las
-  oleadas ×1,4; el cargador lleno al terminar cada oleada; los tiros de más de la carta de cadencia no gastan balas; el
-  rifle a cadencia ×1. Las estrellas del bestiario y el logro Exterminador piden la mitad de muertes, y el oro del combo,
+- **El balance** (13 y 14/10, de Gemini con la simulación: `CARTAS.md` y CLAUDE.md, El balance de la 1.6.0): oleadas
+  de 10 + 2n zombis, uno cada 0,2 s; la curva en tres tramos (lo duro, de la 11 a la 30); menos oro (la moneda ×1 que
+  crece ×1,03 por oleada, el bono de 2n); un cuarto del cargador al terminar cada oleada (entero después de un jefe); las
+  cartas más chicas y el PODER en 14; la caja de vida cura el 35 %; los tiros de más de la carta de cadencia no gastan
+  balas; el rifle a cadencia ×1. Las estrellas del bestiario y el logro Exterminador piden la mitad de muertes, y el oro del combo,
   x75.
 
 ## Antes de enviarla
