@@ -202,6 +202,7 @@ public static class PruebasMejoras
             ProbarLugaresDelTutorial(informe);
             ProbarAcumuladorDeDisparo(informe);
             ProbarCostoDeLosTiros(informe);
+            ProbarArranqueDeLa160(informe);
             ProbarDanoAlJugador(informe);
             ProbarCajasYMonedas(informe);
             ProbarFaroles(informe);
@@ -1263,7 +1264,7 @@ public static class PruebasMejoras
         float vida10 = float.NaN, vida11 = float.NaN, golpe10 = float.NaN, golpe11 = float.NaN;
         int desde3 = -1;
         float vidaTercera = float.NaN, golpeTercero = float.NaN;
-        float vida25 = float.NaN, vida26 = float.NaN, golpe25 = float.NaN, golpe26 = float.NaN, vida20 = float.NaN;
+        float vida30 = float.NaN, vida31 = float.NaN, golpe30 = float.NaN, golpe31 = float.NaN, vida20 = float.NaN;
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
             oleadas = Buscar<WaveManager>(escena);
@@ -1272,10 +1273,10 @@ public static class PruebasMejoras
             vidaTercera = oleadas.crecimientoVidaTercerTramo;
             golpeTercero = oleadas.crecimientoDanoTercerTramo;
             vida20 = oleadas.MultiplicadorVidaEn(20);
-            vida25 = oleadas.MultiplicadorVidaEn(25);
-            vida26 = oleadas.MultiplicadorVidaEn(26);
-            golpe25 = oleadas.MultiplicadorDanoEn(25);
-            golpe26 = oleadas.MultiplicadorDanoEn(26);
+            vida30 = oleadas.MultiplicadorVidaEn(30);
+            vida31 = oleadas.MultiplicadorVidaEn(31);
+            golpe30 = oleadas.MultiplicadorDanoEn(30);
+            golpe31 = oleadas.MultiplicadorDanoEn(31);
             desde = oleadas.oleadaDelSegundoTramo;
             vida = oleadas.crecimientoVida;
             golpe = oleadas.crecimientoDano;
@@ -1288,22 +1289,49 @@ public static class PruebasMejoras
         });
         if (!inf.Verdadero("curva: WaveMode tiene su WaveManager", desde >= 0)) return;
         inf.Igual("curva: el segundo tramo empieza en la 11, despues del primer jefe", 11, desde);
-        inf.Verdadero("curva: en el segundo tramo la vida crece, mas despacio que en el primero",
-                      vidaTardia > 1f && vidaTardia < vida);
-        inf.Verdadero("curva: en el segundo tramo el golpe crece, mas despacio que en el primero",
-                      golpeTardio > 1f && golpeTardio < golpe);
+        // La V3 de Argon (14/10, simulaciones/cartas_1.6.0/resultados_arranque_v3.md): x1,13 y x1,09
+        // hasta la 10, x1,145 y x1,085 hasta la 30 (lo duro, donde se arma el mazo) y x1,12 y
+        // x1,065 desde la 31.
+        inf.Cerca("curva: en el primer tramo la vida crece x1,13", 1.13, vida, 1e-6);
+        inf.Cerca("curva: y el golpe x1,09", 1.09, golpe, 1e-6);
+        inf.Cerca("curva: en el segundo tramo la vida crece x1,145", 1.145, vidaTardia, 1e-6);
+        inf.Cerca("curva: y el golpe x1,085", 1.085, golpeTardio, 1e-6);
         inf.Cerca("curva: el jefe de la 10 sale con la vida del primer tramo", Math.Pow(vida, 9), vida10, 1e-3);
         inf.Cerca("curva: la 11 ya crece con el segundo tramo (vida)", vida10 * vidaTardia, vida11, 1e-3);
         inf.Cerca("curva: la 11 ya crece con el segundo tramo (golpe)", golpe10 * golpeTardio, golpe11, 1e-3);
 
-        // El tercer tramo (1.6.0, lo cerro Gemini con la simulacion): desde la 26, vida x1,20 y golpe
-        // x1,10, el muro para el renacer. El jefe de la 20 todavia en el segundo.
-        inf.Igual("curva: el tercer tramo empieza en la 26", 26, desde3);
-        inf.Cerca("curva: en el tercer tramo la vida crece x1,20", 1.20, vidaTercera, 1e-6);
-        inf.Cerca("curva: y el golpe x1,10", 1.10, golpeTercero, 1e-6);
-        inf.Cerca("curva: el jefe de la 20 sale con el segundo tramo", Math.Pow(vida, 9) * Math.Pow(vidaTardia, 10), vida20, 1e-2);
-        inf.Cerca("curva: la 26 ya crece con el tercer tramo (vida)", vida25 * vidaTercera, vida26, 1e-2);
-        inf.Cerca("curva: la 26 ya crece con el tercer tramo (golpe)", golpe25 * golpeTercero, golpe26, 1e-3);
+        // El tercer tramo, desde la 31, despues del tercer jefe: el muro para el renacer. Los jefes
+        // de la 20 y la 30 todavia en el segundo.
+        inf.Igual("curva: el tercer tramo empieza en la 31", 31, desde3);
+        inf.Cerca("curva: en el tercer tramo la vida crece x1,12", 1.12, vidaTercera, 1e-6);
+        inf.Cerca("curva: y el golpe x1,065", 1.065, golpeTercero, 1e-6);
+        inf.Cerca("curva: el jefe de la 20 sale con el segundo tramo", Math.Pow(vida, 9) * Math.Pow(vidaTardia, 10), vida20, 1e-1);
+        inf.Cerca("curva: el jefe de la 30 sale con el segundo tramo", Math.Pow(vida, 9) * Math.Pow(vidaTardia, 20), vida30, 1e-1);
+        inf.Cerca("curva: la 31 ya crece con el tercer tramo (vida)", vida30 * vidaTercera, vida31, 1e-1);
+        inf.Cerca("curva: la 31 ya crece con el tercer tramo (golpe)", golpe30 * golpeTercero, golpe31, 1e-3);
+    }
+
+    // El arranque de la 1.6.0 (14/10, la V3 de Argon): lo que se recarga al terminar una oleada,
+    // el desvio del automatico, la parte de cada bala del disparo doble, el primer costo del
+    // PODER y el vampiro.
+    static void ProbarArranqueDeLa160(Informe inf)
+    {
+        inf.Igual("arranque: al terminar una oleada se recarga un cuarto del cargador (7 de 500)", 132, WaveManager.BalasAlRecargar(7, 500, false));
+        inf.Igual("arranque: sin pasar del tope", 500, WaveManager.BalasAlRecargar(450, 500, false));
+        inf.Igual("arranque: con jefe, el cargador entero", 500, WaveManager.BalasAlRecargar(7, 500, true));
+        inf.Igual("arranque: con el cargador de 1.000, un cuarto de eso", 260, WaveManager.BalasAlRecargar(10, 1000, false));
+        inf.Igual("arranque: nunca saca balas (con mas que el tope)", 1000, WaveManager.BalasAlRecargar(1000, 500, false));
+        inf.Cerca("arranque: el automatico se tuerce hasta 6 grados a un lado", -GunController.DesvioDelAutomatico, GunController.DesvioDelTiro(0f), 1e-5);
+        inf.Cerca("arranque: y al otro", GunController.DesvioDelAutomatico, GunController.DesvioDelTiro(1f), 1e-5);
+        inf.Cerca("arranque: y por el medio, derecho", 0.0, GunController.DesvioDelTiro(0.5f), 1e-5);
+        inf.Cerca("arranque: el desvio es de 6 grados", 6.0, GunController.DesvioDelAutomatico, 1e-6);
+        inf.Cerca("arranque: el automatico llega hasta 7,5 m", 7.5, PlayerJS.AlcanceAutoApuntar, 1e-6);
+        inf.Cerca("arranque: y tarda 0,25 s en cambiar de blanco", 0.25, PlayerJS.PausaAlCambiarDeBlanco, 1e-6);
+        inf.Cerca("arranque: con el disparo doble cada bala pega el 70 %", 0.7, PoderDeLaPartida.ParteDelDisparoDoble, 1e-6);
+        inf.Igual("arranque: el PODER arranca en 14", 14, PoderDeLaPartida.Costo(0));
+        inf.Igual("arranque: y crece x1,15 (el segundo, 16)", 16, PoderDeLaPartida.Costo(1));
+        inf.Igual("arranque: el vampiro cura cada 20 muertes", 20, PoderDeLaPartida.BajasParaElVampiro);
+        inf.Cerca("arranque: la caja de vida cura el 35 % de la vida maxima", 0.35, PlayerHealth.FraccionDeCuraPorCaja, 1e-6);
     }
 
     // Lo que cuesta cada tiro en balas (1.6.0, de Gemini): 1, y con la carta de cadencia sus tiros
@@ -2746,7 +2774,7 @@ public static class PruebasMejoras
         inf.Cerca("economia: el crecimiento de las monedas es el del WaveManager de WaveMode",
                   crecimiento, Economia.CrecimientoMonedasOleadas, 1e-6);
 
-        // Y lo que vale de base cada moneda de las oleadas (x1,4 desde la 1.6.0), igual en Economia.
+        // Y lo que vale de base cada moneda de las oleadas (x1 desde el 14/10), igual en Economia.
         float valor = float.NaN, enLaUno = float.NaN;
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
@@ -5110,9 +5138,10 @@ public static class PruebasMejoras
     static void ProbarVideoDeMonedas(Informe inf)
     {
         inf.Cerca("video de monedas: al principio paga el piso", 50.0, VideoDeMonedas.Premio(0), Tolerancia);
-        // Con las oleadas de la 1.6.0 (10 + 2n, la moneda x1,4): eran 240 y 3.450.
-        inf.Cerca("video de monedas: en la oleada 10, un cuarto de partida", 220.0, VideoDeMonedas.Premio(10), Tolerancia);
-        inf.Cerca("video de monedas: en la oleada 30", 2750.0, VideoDeMonedas.Premio(30), Tolerancia);
+        // Con el oro de la 1.6.0 (14/10: 10 + 2n, la moneda x1 que crece x1,03): eran 240 y 3.450
+        // en la 1.5.2.
+        inf.Cerca("video de monedas: en la oleada 10, un cuarto de partida", 120.0, VideoDeMonedas.Premio(10), Tolerancia);
+        inf.Cerca("video de monedas: en la oleada 30", 960.0, VideoDeMonedas.Premio(30), Tolerancia);
         bool crece = true;
         for (int o = 1; o <= 60; o++) crece &= VideoDeMonedas.Premio(o) >= VideoDeMonedas.Premio(o - 1);
         inf.Verdadero("video de monedas: nunca paga menos con una oleada mas alta", crece);
@@ -5288,9 +5317,9 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: todos los objetivos son positivos", objetivosBien);
         inf.Cerca("economia: numeros redondos", 1250, Economia.Redondo(1234), 1e-9);
         // Con la suma de zombis corregida (Economia.ZombisPorPartida, 23/9): eran 15 y 1300. Con
-        // las oleadas de la 1.6.0 (10 + 2n, la moneda x1,4) la dificil de la 10 era 1.400.
-        inf.Cerca("misiones: premio facil sin oleadas", 20, MisionesDiarias.Monto(0, 0), 1e-9);
-        inf.Cerca("misiones: premio dificil con oleada 10", 1300, MisionesDiarias.Monto(2, 10), 1e-9);
+        // el oro de la 1.6.0 (14/10) la dificil de la 10 era 1.400.
+        inf.Cerca("misiones: premio facil sin oleadas", 15, MisionesDiarias.Monto(0, 0), 1e-9);
+        inf.Cerca("misiones: premio dificil con oleada 10", 730, MisionesDiarias.Monto(2, 10), 1e-9);
         ProbarPremiosDeMisiones(inf);
 
         // Con el progreso: una de matar 3, se matan 3, se cobra una sola vez y se guarda.
@@ -5333,7 +5362,7 @@ public static class PruebasMejoras
         inf.Cerca("cofre: no paga dos veces", 0, MisionesDiarias.CobrarCofre(), 1e-9);
         inf.Verdadero("cofre: queda cobrado", MisionesDiarias.CofreCobrado && MisionesDiarias.PorCobrar == 0);
         // Era 940 hasta que la suma de zombis se corrigio (23/9).
-        inf.Cerca("cofre: con oleada 10 paga mas", 940, MisionesDiarias.MontoCofre(10), 1e-9);
+        inf.Cerca("cofre: con oleada 10 paga mas", 520, MisionesDiarias.MontoCofre(10), 1e-9);
 
         int diaGuardado = estado.dia;
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
@@ -6212,9 +6241,9 @@ public static class PruebasMejoras
         }
 
         // La curva: 8 la primera, x1,15 cada una.
-        inf.Igual("cartas: la primera carta cuesta 12", 12, PoderDeLaPartida.Costo(0));
-        inf.Igual("cartas: la segunda cuesta 14", 14, PoderDeLaPartida.Costo(1));
-        inf.Igual("cartas: la del PODER 5 cuesta 24", 24, PoderDeLaPartida.Costo(5));
+        inf.Igual("cartas: la primera carta cuesta 14", 14, PoderDeLaPartida.Costo(0));
+        inf.Igual("cartas: la segunda cuesta 16", 16, PoderDeLaPartida.Costo(1));
+        inf.Igual("cartas: la del PODER 5 cuesta 28", 28, PoderDeLaPartida.Costo(5));
 
         // Con la mezcla de zombis del WaveManager de WaveMode y la experiencia de los assets: una
         // carta por oleada al principio (Ivan tenia tres a mitad de la oleada 2, con la curva de
@@ -6257,8 +6286,10 @@ public static class PruebasMejoras
         // 10 y 16 hasta la 20 (eran 12 y 19 con 10 + 4n).
         inf.Verdadero("cartas: hasta la oleada 10 salen unas 9 (" + hasta10 + ")", hasta10 >= 8 && hasta10 <= 10);
         inf.Verdadero("cartas: hasta la oleada 20 salen unas 16 (" + hasta20 + ")", hasta20 >= 14 && hasta20 <= 18);
-        inf.Verdadero("cartas: al principio, una por oleada (" + hasta1 + ", " + hasta2 + ", " + hasta3 + ")",
-                      hasta1 == 1 && hasta2 == 2 && hasta3 == 3);
+        // Con el PODER en 14 x 1,15^L (14/10, de Argon): la primera carta al empezar la oleada 2, y
+        // despues una por oleada.
+        inf.Verdadero("cartas: la primera en la oleada 2, y despues una por oleada (" + hasta1 + ", " + hasta2 + ", " + hasta3 + ")",
+                      hasta1 == 0 && hasta2 == 1 && hasta3 == 2);
 
         // El catalogo: en Resources, sin ids repetidos, con su texto en los dos idiomas.
         var catalogo = CatalogoCartas.Instancia;
@@ -6292,10 +6323,10 @@ public static class PruebasMejoras
                                    PoderDeLaPartida.Quemadura, PoderDeLaPartida.Dron, PoderDeLaPartida.Vampiro,
                                    PoderDeLaPartida.Escudo, PoderDeLaPartida.Curacion })
             inf.Verdadero("cartas: esta la de " + id, ids.Contains(id));
-        inf.Cerca("cartas: la de daño dice +25 %", 25, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Dano)), 1e-9);
+        inf.Cerca("cartas: la de daño dice +20 %", 20, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Dano)), 1e-9);
         inf.Cerca("cartas: la de la granada dice 30 % mas rapido", 30, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.GranadaRapida)), 1e-9);
         inf.Cerca("cartas: la de criticos dice +10 %", 10, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Critico)), 1e-9);
-        inf.Igual("cartas: la descripcion de la de daño", "+25 % base", EleccionDeCartas.Descripcion(PoderDeLaPartida.Dano));
+        inf.Igual("cartas: la descripcion de la de daño", "+20 % base", EleccionDeCartas.Descripcion(PoderDeLaPartida.Dano));
 
         // Fuera de una partida, todo neutro y no suma.
         PoderDeLaPartida.Terminar();
@@ -6353,14 +6384,14 @@ public static class PruebasMejoras
         PoderDeLaPartida.Sumar(1000);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.Dano, true);
         inf.Igual("cartas: la dorada no pasa del tope (4)", 4, PoderDeLaPartida.Veces(PoderDeLaPartida.Dano));
-        inf.Cerca("cartas: daño x1,25^4", Math.Pow(1.25, 4), PoderDeLaPartida.MultiplicadorDano, 1e-4);
+        inf.Cerca("cartas: daño x1,20^4", Math.Pow(1.2, 4), PoderDeLaPartida.MultiplicadorDano, 1e-4);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.Cadencia, false);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.Critico, false);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.Velocidad, false);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.Iman, false);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.GranadaRapida, false);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.FuriaLarga, false);
-        inf.Cerca("cartas: cadencia x1,2", 1.2, PoderDeLaPartida.MultiplicadorCadencia, 1e-5);
+        inf.Cerca("cartas: cadencia x1,15", 1.15, PoderDeLaPartida.MultiplicadorCadencia, 1e-5);
         inf.Cerca("cartas: critico +10 %", 0.1, PoderDeLaPartida.CriticoExtra, 1e-5);
         inf.Cerca("cartas: velocidad +10 %", 1.1, PoderDeLaPartida.MultiplicadorVelocidad, 1e-5);
         inf.Cerca("cartas: iman +2 m", 2, PoderDeLaPartida.ImanExtra, 1e-5);
@@ -6376,10 +6407,10 @@ public static class PruebasMejoras
             arma.FijarDanoPorBala(2f);
             arma.FijarProbabilidadCritico(0.5f);
             inf.Cerca("cartas en el arma: el daño de la mejora no cambia", 2, arma.DanoPorBala, Tolerancia);
-            inf.Cerca("cartas en el arma: el daño por tiro lleva las cartas", 2 * Math.Pow(1.25, 4), arma.DanoPorTiro, 1e-3);
-            inf.Cerca("cartas en el arma: la cadencia lleva las cartas", 12, arma.TirosPorSegundo, 1e-3);
+            inf.Cerca("cartas en el arma: el daño por tiro lleva las cartas", 2 * Math.Pow(1.2, 4), arma.DanoPorTiro, 1e-3);
+            inf.Cerca("cartas en el arma: la cadencia lleva las cartas", 11.5, arma.TirosPorSegundo, 1e-3);
             arma.FijarFuria(2f, 2f);
-            inf.Cerca("cartas en el arma: se multiplican con la furia", 4 * Math.Pow(1.25, 4), arma.DanoPorTiro, 1e-3);
+            inf.Cerca("cartas en el arma: se multiplican con la furia", 4 * Math.Pow(1.2, 4), arma.DanoPorTiro, 1e-3);
             arma.PotenciarCadencia(3f);
             arma.FijarTirosPorSegundo(20f);
             inf.Cerca("cartas en el arma: con caja y furia, el techo de 120", 120, arma.TirosPorSegundo, Tolerancia);
@@ -6416,7 +6447,7 @@ public static class PruebasMejoras
         inf.Cerca("cartas de reglas: quema uno de cada cuatro tiros", 0.25, PoderDeLaPartida.ProbabilidadDeQuemadura, 1e-5);
         inf.Igual("cartas de reglas: un dron", 1, PoderDeLaPartida.Drones);
         inf.Cerca("cartas de reglas: que tira una vez por segundo", 1, PoderDeLaPartida.TirosPorSegundoDelDron, 1e-5);
-        inf.Cerca("cartas de reglas: el vampiro cura el 5 %", 0.05, PoderDeLaPartida.CuraDelVampiro, 1e-5);
+        inf.Cerca("cartas de reglas: el vampiro cura el 3 %", 0.03, PoderDeLaPartida.CuraDelVampiro, 1e-5);
         inf.Verdadero("cartas de reglas: escudo cada 15 s", PoderDeLaPartida.ConEscudo && Math.Abs(PoderDeLaPartida.RecargaDelEscudo - 15f) < 1e-4);
         foreach (var id in deReglas) PoderDeLaPartida.Elegir(id, false);
         PoderDeLaPartida.Elegir(PoderDeLaPartida.Escudo, false);
@@ -6428,7 +6459,7 @@ public static class PruebasMejoras
         inf.Cerca("cartas de reglas: con dos, el hielo frena un 64 % (se compone)", 0.64, PoderDeLaPartida.LentitudDelHielo, 1e-5);
         inf.Cerca("cartas de reglas: con dos, quema la mitad de los tiros", 0.5, PoderDeLaPartida.ProbabilidadDeQuemadura, 1e-5);
         inf.Igual("cartas de reglas: con dos, dos drones", 2, PoderDeLaPartida.Drones);
-        inf.Cerca("cartas de reglas: con dos, el vampiro cura el 10 %", 0.1, PoderDeLaPartida.CuraDelVampiro, 1e-5);
+        inf.Cerca("cartas de reglas: con dos, el vampiro cura el 6 %", 0.06, PoderDeLaPartida.CuraDelVampiro, 1e-5);
         bool antesDeQuince = false;
         for (int i = 0; i < PoderDeLaPartida.BajasParaElVampiro - 1; i++) antesDeQuince |= PoderDeLaPartida.ContarBajaDelVampiro();
         inf.Verdadero("cartas de reglas: el vampiro no cura antes de 15 bajas", !antesDeQuince);
@@ -6439,7 +6470,7 @@ public static class PruebasMejoras
         inf.Cerca("cartas de reglas: la explosiva dice 30 %", 30, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Explosiva)), 1e-9);
         inf.Cerca("cartas de reglas: el hielo dice 40 %", 40, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Hielo)), 1e-9);
         inf.Cerca("cartas de reglas: la quemadura dice 25 %", 25, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Quemadura)), 1e-9);
-        inf.Cerca("cartas de reglas: el vampiro dice 5 %", 5, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Vampiro)), 1e-9);
+        inf.Cerca("cartas de reglas: el vampiro dice 3 %", 3, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Vampiro)), 1e-9);
         inf.Cerca("cartas de reglas: el escudo dice 15 s", 15, EleccionDeCartas.NumeroDeLaCarta(catalogo.Buscar(PoderDeLaPartida.Escudo)), 1e-9);
         inf.Igual("cartas de reglas: la descripcion de la explosiva", "Daño en área 30 %", EleccionDeCartas.Descripcion(PoderDeLaPartida.Explosiva));
 
@@ -6629,9 +6660,9 @@ public static class PruebasMejoras
         inf.Igual("bestiario: 5.000, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Tanque, 5000));
         inf.Igual("bestiario: un jefe ya es una estrella", 1, Bestiario.AlcanzadasCon(Bestiario.Jefe, 1));
         inf.Igual("bestiario: 50 jefes, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Jefe, 50));
-        // La mitad de las muertes, a x1,4 la moneda: eran 110 y 14.700.
-        inf.Cerca("bestiario: premio de la primera del caminante sin oleadas", 80, Bestiario.Premio(Bestiario.Normal, 0, 0), 1e-9);
-        inf.Cerca("bestiario: premio de la tercera del caminante con oleada 10", 10300, Bestiario.Premio(Bestiario.Normal, 2, 10), 1e-9);
+        // La mitad de las muertes, con el oro de la 1.6.0 (14/10): eran 110 y 14.700.
+        inf.Cerca("bestiario: premio de la primera del caminante sin oleadas", 50, Bestiario.Premio(Bestiario.Normal, 0, 0), 1e-9);
+        inf.Cerca("bestiario: premio de la tercera del caminante con oleada 10", 5800, Bestiario.Premio(Bestiario.Normal, 2, 10), 1e-9);
         ProbarPremiosDelBestiario(inf);
 
         EmpezarCaso("{\"version\":4,\"monedas\":0,\"estadisticas\":{\"matados\":[{\"id\":\"ZombiNormal\",\"cantidad\":1500},{\"id\":\"ZombiBOSS\",\"cantidad\":1}]}}", null);
@@ -6725,10 +6756,10 @@ public static class PruebasMejoras
         inf.Verdadero("nivel: NivelCon acierta justo en el borde de los 3.000 primeros" + cual, bordes);
 
         // El premio: un 15 % de una partida con la mejor oleada, y el triple cada cinco.
-        inf.Cerca("nivel: premio del 2 sin oleadas", 20, NivelJugador.Premio(2, 0), 1e-9);
-        // Con las oleadas de la 1.6.0 (10 + 2n, la moneda x1,4): eran 140 y 420.
-        inf.Cerca("nivel: premio del 6 con la oleada 10", 130, NivelJugador.Premio(6, 10), 1e-9);
-        inf.Cerca("nivel: el 5 es grande, el triple", 390, NivelJugador.Premio(5, 10), 1e-9);
+        inf.Cerca("nivel: premio del 2 sin oleadas", 15, NivelJugador.Premio(2, 0), 1e-9);
+        // Con el oro de la 1.6.0 (14/10): eran 140 y 420.
+        inf.Cerca("nivel: premio del 6 con la oleada 10", 75, NivelJugador.Premio(6, 10), 1e-9);
+        inf.Cerca("nivel: el 5 es grande, el triple", 220, NivelJugador.Premio(5, 10), 1e-9);
         inf.Verdadero("nivel: el premio crece con la mejor oleada", NivelJugador.Premio(7, 40) > NivelJugador.Premio(7, 20));
     }
 
@@ -7034,7 +7065,7 @@ public static class PruebasMejoras
         inf.Cerca("diaria: monto dia 7", 2000, RecompensaDiaria.Monto(7, 0), 1e-9);
         inf.Cerca("diaria: monto dia 12 queda en el 7", 2000, RecompensaDiaria.Monto(12, 0), 1e-9);
         // Era 440 hasta que la suma de zombis se corrigio (23/9).
-        inf.Cerca("diaria: monto con mejor oleada 10", 430, RecompensaDiaria.Monto(3, 10), 1e-9);
+        inf.Cerca("diaria: monto con mejor oleada 10", 400, RecompensaDiaria.Monto(3, 10), 1e-9);
         ProbarMontosDeLaDiaria(inf);
 
         EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);
@@ -7072,7 +7103,7 @@ public static class PruebasMejoras
 
         bool creceConLaRacha = true, creceConLaOleada = true, seNota = true, noSePasa = true;
         double anteriorPorOleada = 0;
-        foreach (int m in new[] { 0, 5, 11, 20, 30, 45 })
+        foreach (int m in new[] { 0, 5, 11, 13, 20, 30, 45 })
         {
             double anterior = 0;
             for (int racha = 1; racha <= RecompensaDiaria.DiasDelCiclo; racha++)
@@ -7088,7 +7119,9 @@ public static class PruebasMejoras
             if (m >= 11 && dia7 < partida) seNota = false;
             // En el arranque manda el piso (2.000 contra una partida de 108) y eso es a
             // proposito: el tope vale desde que el premio lo decide lo que da jugar.
-            if (m >= 11 && dia7 > partida * 3.0) noSePasa = false;
+            // Desde la 13: con el oro de la 1.6.0 (14/10, la moneda x1 que crece x1,03) el piso
+            // del dia 7 (2.000) manda hasta la 12, donde una partida deja unas 660.
+            if (m >= 13 && dia7 > partida * 3.0) noSePasa = false;
             if (m > 0 && RecompensaDiaria.Monto(7, m) < anteriorPorOleada) creceConLaOleada = false;
             anteriorPorOleada = RecompensaDiaria.Monto(7, m);
         }

@@ -16,7 +16,7 @@ using UnityEngine;
 //     cuenten en TirosDisparados;
 //   - hielo: frena un 40 % y pinta, y a los 2 s vuelve;
 //   - quemadura: la mitad de las balas quema, y la quemadura saca el 10 % por segundo, 3 s;
-//   - vampiro: cura el 5 % a las 15 muertes, no antes;
+//   - vampiro: cura el 3 % a las 20 muertes, no antes (14/10; era el 5 % a las 15);
 //   - escudo: el anillo, para un golpe sin contarlo y corre al zombi pegado; el siguiente entra;
 //   - dron: dos drones que le tiran al que se ve.
 // Y en cada cuadro, que ZombisVivos coincida con la lista de vivos. Los bancos no abren la
@@ -453,11 +453,13 @@ public static class PruebaCartasDeReglas
                 curasAntes = vida.CurasDelVampiro;
                 for (int i = 0; i < PoderDeLaPartida.BajasParaElVampiro - 1; i++)
                     PonerZombi(PrefabNormal, 9f + i * 0.2f, 4f).DanoZombi(1e9f);
-                Anotar(vida.health == mitad && vida.CurasDelVampiro == curasAntes, "vampiro: antes de 15 muertes no cura");
+                Anotar(vida.health == mitad && vida.CurasDelVampiro == curasAntes,
+                       "vampiro: antes de " + PoderDeLaPartida.BajasParaElVampiro + " muertes no cura");
                 PonerZombi(PrefabNormal, 9f, -4f).DanoZombi(1e9f);
-                int esperada = Mathf.Min(vida.maxHealth, mitad + Mathf.Max(1, Mathf.RoundToInt(vida.maxHealth * 0.05f)));
+                int esperada = Mathf.Min(vida.maxHealth, mitad + Mathf.Max(1, Mathf.RoundToInt(vida.maxHealth * 0.03f)));
                 notas.AppendLine("Vampiro: de " + mitad + " a " + vida.health + " (esperado " + esperada + ")");
-                Anotar(vida.health == esperada && vida.CurasDelVampiro == curasAntes + 1, "vampiro: a las 15 cura el 5 % de la vida maxima");
+                Anotar(vida.health == esperada && vida.CurasDelVampiro == curasAntes + 1,
+                       "vampiro: a las " + PoderDeLaPartida.BajasParaElVampiro + " cura el 3 % de la vida maxima");
                 vida.health = vida.maxHealth;
                 Despejar();
                 Pasar(Paso.Escudo);

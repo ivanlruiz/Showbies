@@ -29,8 +29,13 @@ public class PlayerJS : MonoBehaviour
     // telefono (PlayerPrefs, como MOSTRAR FPS) y viene prendido. En el tutorial no anda: ahi se
     // ensenia el joystick.
     public const string ClaveAutoApuntar = "AutoApuntar";
-    // Mas lejos que esto no se elige aunque se vea (la camara ve unos 12 m a los costados).
-    public const float AlcanceAutoApuntar = 16f;
+    // Mas lejos que esto no se elige aunque se vea. Era 16 (la camara ve unos 12 m a los
+    // costados) hasta el 14/10: Ivan lo probo en el telefono y "mata todo solo", y Argon (Gemini)
+    // lo paso de francotirador a defensa personal, hasta media pantalla. Lo que esta mas lejos se
+    // le tira con el joystick.
+    public const float AlcanceAutoApuntar = 7.5f;
+    // Y despues de cada muerte tarda esto en enganchar al siguiente (14/10, de Argon), sin tirar.
+    public const float PausaAlCambiarDeBlanco = 0.25f;
     // El blanco de ahora se cambia por otro solo si el otro esta bastante mas cerca: con dos a la
     // misma distancia, el jugador giraba de uno al otro en cada cuadro.
     public const float VentajaParaCambiar = 0.75f;
@@ -62,6 +67,10 @@ public class PlayerJS : MonoBehaviour
     }
 
     private EnemyController blanco;
+    // La aparicion del blanco (EnemyController.SigueVivo: un zombi del pool vuelve como otro) y
+    // hasta cuando no tira despues de perderlo.
+    private int aparicionDelBlanco;
+    private float sinTirarHasta = float.NegativeInfinity;
     private bool enTutorial;
     private Camera camara;
 
@@ -144,8 +153,14 @@ public class PlayerJS : MonoBehaviour
         bool aMano = hoz != 0 || ver != 0;
         if (!aMano)
         {
+            // Murio (o se fue) el que tenia: un rato sin tirar antes de buscar al siguiente.
+            if (blanco != null && !EnemyController.SigueVivo(blanco, aparicionDelBlanco))
+            {
+                blanco = null;
+                sinTirarHasta = Time.time + PausaAlCambiarDeBlanco;
+            }
             Vector3 haciaElBlanco;
-            if (AutoApuntar && !enTutorial && BuscarBlanco(out haciaElBlanco))
+            if (AutoApuntar && !enTutorial && Time.time >= sinTirarHasta && BuscarBlanco(out haciaElBlanco))
             {
                 thegun.FijarAutomatico(true);
                 Apuntar(haciaElBlanco);
@@ -296,6 +311,7 @@ public class PlayerJS : MonoBehaviour
             if (actual2 <= alcance2 && mejorDistancia2 >= actual2 * VentajaParaCambiar * VentajaParaCambiar) mejor = blanco;
         }
 
+        if (mejor != null && mejor != blanco) aparicionDelBlanco = mejor.NumeroDeAparicion;
         blanco = mejor;
         if (mejor == null) return false;
         hacia = mejor.transform.position - yo;

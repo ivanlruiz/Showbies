@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Carta
   id: cadencia
   tope: 4
-  valor: 1.2
+  valor: 1.15
   requiere: 0
   color: {r: 1, g: 0.86, b: 0.2, a: 1}
   icono: {fileID: 21300000, guid: bc84c9d345f92f14b90c7e4d93867a5a, type: 3}

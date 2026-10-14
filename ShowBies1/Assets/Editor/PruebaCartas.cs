@@ -50,7 +50,7 @@ public static class PruebaCartas
     static string elegida;
     static int vecesAntes;
     static float danoAntes, cadenciaAntes, criticoAntes, velocidadAntes, imanAntes, granadaAntes, furiaAntes;
-    static int vidaAntes;
+    static int vidaAntes, saludAntes;
     static int oleadaAlElegir;
 
     static PruebaCartas()
@@ -341,7 +341,8 @@ public static class PruebaCartas
         int esperada = Mathf.RoundToInt(deLaMejora * PoderDeLaPartida.MultiplicadorVida);
         Anotar(deLaMejora > 0 && vida.maxHealth == esperada && vida.health == vida.maxHealth,
                "la vida maxima lleva la carta de vida y arranca llena (" + deLaMejora + " -> " + vida.maxHealth + ", vida " + vida.health + ")");
-        Anotar(Mathf.Abs(gun.DanoPorTiro - gun.DanoPorBala * gun.MultiplicadorDanoFuria * 1.25f) < 1e-3f,
+        // Una carta de daño: x1,20 (14/10; era x1,25).
+        Anotar(Mathf.Abs(gun.DanoPorTiro - gun.DanoPorBala * gun.MultiplicadorDanoFuria * 1.2f) < 1e-3f,
                "el daño de cada tiro lleva la carta de daño (" + gun.DanoPorBala + " -> " + gun.DanoPorTiro + ")");
 
         var guardado = Progreso.PoderEnCurso;
@@ -407,6 +408,7 @@ public static class PruebaCartas
         cadenciaAntes = gun.TirosPorSegundo;
         criticoAntes = gun.ProbabilidadCriticoEnLaPartida;
         vidaAntes = vida.maxHealth;
+        saludAntes = vida.health;
         velocidadAntes = PoderDeLaPartida.MultiplicadorVelocidad;
         imanAntes = PoderDeLaPartida.ImanExtra;
         granadaAntes = PoderDeLaPartida.MultiplicadorRecargaGranada;
@@ -417,10 +419,12 @@ public static class PruebaCartas
     {
         switch (id)
         {
-            case PoderDeLaPartida.Dano: return gun.DanoPorTiro > danoAntes * 1.2f;
+            case PoderDeLaPartida.Dano: return gun.DanoPorTiro > danoAntes * 1.1f;
             case PoderDeLaPartida.Cadencia: return gun.TirosPorSegundo > cadenciaAntes * 1.1f || gun.TirosPorSegundo >= gun.maxTirosPorSegundo - 0.01f;
             case PoderDeLaPartida.Critico: return gun.ProbabilidadCriticoEnLaPartida > criticoAntes + 0.05f || gun.ProbabilidadCriticoEnLaPartida >= 1f;
-            case PoderDeLaPartida.Vida: return vida.maxHealth > vidaAntes && vida.health == vida.maxHealth;
+            case PoderDeLaPartida.Vida:
+                // Cura solo lo que suma (14/10, de Argon): hasta el 14/10 llenaba la barra.
+                return vida.maxHealth > vidaAntes && vida.health == Mathf.Min(vida.maxHealth, saludAntes + vida.maxHealth - vidaAntes);
             case PoderDeLaPartida.Velocidad: return PoderDeLaPartida.MultiplicadorVelocidad > velocidadAntes;
             case PoderDeLaPartida.Iman: return PoderDeLaPartida.ImanExtra > imanAntes;
             case PoderDeLaPartida.GranadaRapida: return PoderDeLaPartida.MultiplicadorRecargaGranada < granadaAntes;

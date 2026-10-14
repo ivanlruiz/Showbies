@@ -2042,18 +2042,18 @@ MonoBehaviour:
   descansoEntreOleadas: 3
   maxZombisVivos: 60
   maxZombisVivosMovil: 35
-  crecimientoVida: 1.11
-  crecimientoDano: 1.07
+  crecimientoVida: 1.13
+  crecimientoDano: 1.09
   oleadaDelSegundoTramo: 11
-  crecimientoVidaTardio: 1.08
-  crecimientoDanoTardio: 1.04
-  oleadaDelTercerTramo: 26
-  crecimientoVidaTercerTramo: 1.2
-  crecimientoDanoTercerTramo: 1.1
+  crecimientoVidaTardio: 1.145
+  crecimientoDanoTardio: 1.085
+  oleadaDelTercerTramo: 31
+  crecimientoVidaTercerTramo: 1.12
+  crecimientoDanoTercerTramo: 1.065
   monedaPrefab: {fileID: 209914667697901589, guid: 2a7ca24049b93874db76077fb4e20d20, type: 3}
-  crecimientoMonedas: 1.08
-  valorDeLaMoneda: 1.4
-  bonoPorOleada: 4
+  crecimientoMonedas: 1.03
+  valorDeLaMoneda: 1
+  bonoPorOleada: 2
   textoOleada: {fileID: 794040599}
   cartelOleada: {fileID: 1290508352}
 --- !u!1 &1068242050

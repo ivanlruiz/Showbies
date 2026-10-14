@@ -64,39 +64,39 @@ public class WaveManager : MonoBehaviour
     public int maxZombisVivosMovil = 35;     // en movil cada zombi cuesta mas; ver GeneradorZombis
 
     // Con las mejoras compradas el jugador pega mas y aguanta mas: sin esto, a las
-    // pocas compras las oleadas dejaban de ser un desafio. La vida crece 11 % por
-    // oleada, compuesto, y el daño de bala suma 1 por nivel: las primeras compras le
-    // ganan al escalado, y mas adelante hace falta sumarles la cadencia.
+    // pocas compras las oleadas dejaban de ser un desafio. La vida y el golpe crecen
+    // compuestos por oleada, en tres tramos (Escalado.PorOleada).
+    //
+    // La curva de la 1.6.0 la cerro Argon (Gemini) el 14/10 con la simulacion
+    // (simulaciones/cartas_1.6.0, resultados_arranque_v3.md), despues de que Ivan la probo en el
+    // telefono: con las cartas el jugador medio llegaba a la 49 en su tercera partida sin haber
+    // perdido nunca. Lo duro paso a las oleadas 11-30, donde se arma el mazo de cartas, y el
+    // tercer tramo es mas suave: el muro queda en la 48 / 59 / 69 (bajo, medio, alto), y el medio
+    // muere en las oleadas 3, 6, 8, 14 y 23 de sus primeras cinco partidas. Antes: x1,11/x1,07,
+    // desde la 11 x1,08/x1,04 (la 1.5.2) y desde la 26 x1,20/x1,10 (13/10).
     [Header("Dificultad")]
-    public float crecimientoVida = 1.11f;    // la vida de cada zombi es hp * crecimientoVida^(oleada - 1)
-    public float crecimientoDano = 1.07f;    // su golpe es daño * crecimientoDano^(oleada - 1)
-    // Desde esta oleada la vida y el golpe crecen mas despacio (10/10: Ivan eligio empezar
-    // despues del primer jefe, y entre las tres candidatas simuladas Gemini eligio x1,08 y
-    // x1,04, que dejan el muro entre la 50 y la 60 para cuando llegue el renacer). Con todo
-    // creciendo igual hasta el final el jugador se frenaba en la 40-45, casi siempre en un
-    // jefe, y suavizar solo la vida dejaba de muro el golpe: lo simulado esta en
-    // simulaciones/curva_1.5.2. 0 = sin segundo tramo.
+    public float crecimientoVida = 1.13f;    // la vida de cada zombi es hp * crecimientoVida^(oleada - 1)
+    public float crecimientoDano = 1.09f;    // su golpe es daño * crecimientoDano^(oleada - 1)
+    // Desde esta oleada, el segundo tramo, hasta el tercer jefe. 0 = sin segundo tramo.
     public int oleadaDelSegundoTramo = 11;
-    public float crecimientoVidaTardio = 1.08f;
-    public float crecimientoDanoTardio = 1.04f;
-    // Y desde esta, un tercer tramo que pone el muro para el renacer de la 1.8.0 (13/10: con las
-    // cartas de la 1.6.0 el medio llegaba a la 86, con partidas de dos horas). Lo cerro Gemini
-    // (Argon) con la simulacion: desde la 26, vida x1,20 y golpe x1,10, el muro en la 57 / 59 /
-    // 68 (bajo, medio, alto) con partidas de 26-35 minutos (simulaciones/cartas_1.6.0). Las
-    // cartas llevan facil hasta la 25. 0 = sin tercer tramo.
-    public int oleadaDelTercerTramo = 26;
-    public float crecimientoVidaTercerTramo = 1.20f;
-    public float crecimientoDanoTercerTramo = 1.10f;
+    public float crecimientoVidaTardio = 1.145f;
+    public float crecimientoDanoTardio = 1.085f;
+    // Y desde esta, el tercero, que pone el muro para el renacer de la 1.8.0. 0 = sin tercer tramo.
+    public int oleadaDelTercerTramo = 31;
+    public float crecimientoVidaTercerTramo = 1.12f;
+    public float crecimientoDanoTercerTramo = 1.065f;
 
     [Header("Monedas")]
     public Moneda monedaPrefab;              // la que sueltan los zombis al morir
-    public float crecimientoMonedas = 1.08f; // cada moneda vale crecimientoMonedas^(oleada - 1)
-    // Y de base, esto: con la mitad de zombis por oleada (10 + 2n), cada moneda vale x1,4 (13/10,
-    // de Gemini; x2 duplicaba el oro por minuto y metia al jugador en el muro en tres partidas).
-    // Es el valor, no la cantidad: el telefono tiene un techo de 80 monedas. Economia lo copia
-    // (MultiplicadorMonedasOleadas) y la prueba los compara.
-    public float valorDeLaMoneda = 1.4f;
-    public int bonoPorOleada = 4;            // al completar la oleada N se cobran bonoPorOleada * N
+    // Cada moneda vale crecimientoMonedas^(oleada - 1) por valorDeLaMoneda. Desde el 14/10 (de
+    // Argon) crece x1,03 y vale x1 de base, y el bono es de 2 por oleada: con x1,08, x1,4 y 4 por
+    // oleada, el que pasaba la 10 juntaba media tienda de un tiron y la partida siguiente llegaba
+    // quince oleadas mas lejos. Es el valor, no la cantidad: el telefono tiene un techo de 80
+    // monedas. Economia copia el crecimiento y el valor (CrecimientoMonedasOleadas y
+    // MultiplicadorMonedasOleadas) y la prueba los compara.
+    public float crecimientoMonedas = 1.03f;
+    public float valorDeLaMoneda = 1f;
+    public int bonoPorOleada = 2;            // al completar la oleada N se cobran bonoPorOleada * N
 
     [Header("HUD")]
     public TMP_Text textoOleada;             // "Oleada N" y "Zombis muertos/total" en el HUD
@@ -281,9 +281,10 @@ public class WaveManager : MonoBehaviour
                 yield return null;
             }
 
-            // El cargador, lleno (13/10, de Gemini): el que junta pocas cajas pasaba un cuarto del
-            // tiempo sin balas, y buscar cajas entre oleadas era tiempo muerto.
-            LlenarElCargador();
+            // Una parte del cargador, y lleno despues de un jefe (14/10, de Argon: lleno en cada
+            // oleada, como desde el 13/10, nadie se quedaba nunca sin balas; antes, el que juntaba
+            // pocas cajas pasaba un cuarto del tiempo sin balas).
+            RecargarAlTerminar(conJefe);
 
             // Sin un solo golpe en toda la oleada: el bono doble y el logro INTOCABLE.
             bool perfecta = golpesAlEmpezar >= 0 && PlayerHealth.instance != null && PlayerHealth.instance.GolpesRecibidos == golpesAlEmpezar;
@@ -486,14 +487,25 @@ public class WaveManager : MonoBehaviour
         zombisEnLaOleada++;
     }
 
-    // El cargador hasta su tope (500, o 1.000 con la caja del arma), al terminar cada oleada. Solo
-    // en las oleadas: el modo libre y el tutorial no tienen WaveManager. Publico para el banco.
-    public static void LlenarElCargador()
+    // Lo que se recarga al terminar cada oleada: esta parte del cargador (de 500, o 1.000 con la
+    // caja del arma), o el cargador entero si la oleada tenia jefe. Solo en las oleadas: el modo
+    // libre y el tutorial no tienen WaveManager.
+    public const float RecargaPorOleada = 0.25f;
+
+    // Las balas despues de recargar: puro, para la prueba de logica.
+    public static int BalasAlRecargar(int balas, int maximo, bool conJefe)
+    {
+        if (conJefe) return Mathf.Max(balas, maximo);
+        return Mathf.Max(balas, Mathf.Min(maximo, balas + Mathf.RoundToInt(maximo * RecargaPorOleada)));
+    }
+
+    // Publico para el banco.
+    public static void RecargarAlTerminar(bool conJefe)
     {
         var jugador = PlayerHealth.instance;
         if (jugador == null || jugador.EstaMuerto) return;
         var control = jugador.GetComponent<PlayerController>();
-        if (control != null && control.cantBalas < control.maxBalas) control.cantBalas = control.maxBalas;
+        if (control != null) control.cantBalas = BalasAlRecargar(control.cantBalas, control.maxBalas, conJefe);
     }
 
     // Saca el zombi del tesoro a DistanciaDelTesoro del jugador, a un costado (en la pantalla

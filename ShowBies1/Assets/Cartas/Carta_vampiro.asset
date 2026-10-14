@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Carta
   id: vampiro
   tope: 2
-  valor: 0.05
+  valor: 0.03
   requiere: 0
   color: {r: 0.72, g: 0.06, b: 0.14, a: 1}
   icono: {fileID: 21300000, guid: 4792efec47a3f834b940df9d3c0c002f, type: 3}

@@ -35,8 +35,19 @@ public class GunController : MonoBehaviour
     // El auto-apuntado del teléfono tira a la mitad de la cadencia (12/10, de Gemini: tiraba
     // entero y mataba todo solo); apuntar con el joystick de disparo da la cadencia entera.
     public const float CadenciaDelAutomatico = 0.5f;
+    // Y erra: cada tiro del automatico sale torcido hasta esto, para un lado o el otro (14/10, de
+    // Argon; a 7 m son unos 70 cm). A mano no. Los drones tampoco: salen por SacarBala.
+    public const float DesvioDelAutomatico = 6f;
 
     public float MultiplicadorAutomatico { get { return multiplicadorAutomatico; } }
+    public bool EnAutomatico { get { return multiplicadorAutomatico < 1f; } }
+
+    // El desvio de un tiro del automatico, de un numero al azar entre 0 y 1: parejo entre
+    // -DesvioDelAutomatico y +DesvioDelAutomatico. Publico y puro para la prueba de logica.
+    public static float DesvioDelTiro(float azar)
+    {
+        return (Mathf.Clamp01(azar) * 2f - 1f) * DesvioDelAutomatico;
+    }
 
     public void FijarAutomatico(bool automatico)
     {
@@ -365,32 +376,37 @@ public class GunController : MonoBehaviour
         int arma = Proyectiles.Arma(tramoDelArma);
         float compensacion = CompensacionDelArma;
         int extra = PoderDeLaPartida.BalasExtraAdelante;
+        // Con el disparo doble, cada bala de adelante pega una parte del tiro (ParteDelDisparoDoble).
+        float adelante = extra > 0 ? compensacion * PoderDeLaPartida.ParteDelDisparoDoble : compensacion;
+        // El automatico erra: todo el tiro sale torcido junto, el abanico y la de atras.
+        Quaternion rumbo = firePoint.rotation;
+        if (EnAutomatico) rumbo = Quaternion.AngleAxis(DesvioDelTiro(Random.value), Vector3.up) * rumbo;
         if (arma == Proyectiles.Escopeta)
         {
             var angulos = Proyectiles.AngulosDeLaEscopeta;
             for (int i = 0; i < angulos.Length; i++)
-                SacarBala(salida, Quaternion.AngleAxis(angulos[i], Vector3.up) * firePoint.rotation, atraso, critico,
-                          arma, compensacion * Proyectiles.PartePorPerdigon, i, 1f);
+                SacarBala(salida, Quaternion.AngleAxis(angulos[i], Vector3.up) * rumbo, atraso, critico,
+                          arma, adelante * Proyectiles.PartePorPerdigon, i, 1f);
             for (int k = 0; k < extra; k++)
             {
                 float angulo = Proyectiles.AnguloDelDobleEnLaEscopeta + k * Proyectiles.AnguloPorCartaDeMas;
-                SacarBala(salida, Quaternion.AngleAxis(-angulo, Vector3.up) * firePoint.rotation, atraso, critico,
-                          arma, compensacion * Proyectiles.PartePorPerdigon, -1, 1f);
-                SacarBala(salida, Quaternion.AngleAxis(angulo, Vector3.up) * firePoint.rotation, atraso, critico,
-                          arma, compensacion * Proyectiles.PartePorPerdigon, -1, 1f);
+                SacarBala(salida, Quaternion.AngleAxis(-angulo, Vector3.up) * rumbo, atraso, critico,
+                          arma, adelante * Proyectiles.PartePorPerdigon, -1, 1f);
+                SacarBala(salida, Quaternion.AngleAxis(angulo, Vector3.up) * rumbo, atraso, critico,
+                          arma, adelante * Proyectiles.PartePorPerdigon, -1, 1f);
             }
         }
         else
         {
             float abanico = PoderDeLaPartida.AbanicoDelDisparoDoble;
-            Quaternion primera = Quaternion.AngleAxis(-extra * 0.5f * abanico, Vector3.up) * firePoint.rotation;
+            Quaternion primera = Quaternion.AngleAxis(-extra * 0.5f * abanico, Vector3.up) * rumbo;
             // El charco de luz, solo en la del medio (Proyectiles.LlevaLuz).
             for (int i = 0; i <= extra; i++)
-                SacarBala(salida, Quaternion.AngleAxis(i * abanico, Vector3.up) * primera, atraso, critico, arma, compensacion,
+                SacarBala(salida, Quaternion.AngleAxis(i * abanico, Vector3.up) * primera, atraso, critico, arma, adelante,
                           Proyectiles.PerdigonDelAbanico(i, extra), 1f);
         }
         for (int i = 0; i < PoderDeLaPartida.BalasAtras; i++)
-            SacarBala(salida, Quaternion.AngleAxis(180f, Vector3.up) * firePoint.rotation, atraso, critico, arma, compensacion,
+            SacarBala(salida, Quaternion.AngleAxis(180f, Vector3.up) * rumbo, atraso, critico, arma, compensacion,
                       Proyectiles.SinLuz, arma == Proyectiles.Escopeta ? Proyectiles.GordoDeAtras : 1f);
     }
 

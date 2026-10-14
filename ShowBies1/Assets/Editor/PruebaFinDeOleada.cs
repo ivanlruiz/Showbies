@@ -14,7 +14,8 @@ using UnityEngine;
 // despues venga el cartel de la oleada 6, que salgan "¡NUEVO RECORD!" y "¡TE LLEGA PARA..."
 // y que el MEJORAS de la pausa tenga su insignia. Como los zombis se despejan antes de
 // llegar, la oleada sale sin un golpe: PERFECTA, con el bono doble (mejora 4). Y que al terminar
-// la oleada el cargador quede lleno (1.6.0, de Gemini): a mitad de la oleada se deja en 7 balas.
+// la oleada se recargue un cuarto del cargador (14/10, de Argon; la 5 no tiene jefe): a mitad de la
+// oleada se deja en 7 balas.
 // Escribe Builds/prueba_fin_de_oleada.txt.
 [InitializeOnLoad]
 public static class PruebaFinDeOleada
@@ -116,7 +117,7 @@ public static class PruebaFinDeOleada
         {
             sumoMonedas = true;
             Progreso.Sumar(5000);
-            // Casi sin balas: al terminar la oleada el cargador tiene que quedar lleno.
+            // Casi sin balas: al terminar la oleada se recarga un cuarto del cargador.
             if (control != null) control.cantBalas = 7;
         }
 
@@ -216,7 +217,7 @@ public static class PruebaFinDeOleada
             avisos.Exists(a => a.Contains(Textos.De("aviso_record"))),
             avisos.Exists(EsElDeLaMejora),
             insigniaPrendida && numeroDeLaInsignia.Length > 0 && numeroDeLaInsignia != "0",
-            cargador > 0 && balasAlTerminar == cargador,
+            cargador > 0 && balasAlTerminar == WaveManager.BalasAlRecargar(7, cargador, false),
         };
         var que = new List<string>
         {
@@ -229,7 +230,7 @@ public static class PruebaFinDeOleada
             "sale ¡NUEVO RECORD! al pasar la mejor marca",
             "sale el aviso de que alcanza para una mejora",
             "el MEJORAS de la pausa tiene su insignia",
-            "al terminar la oleada el cargador queda lleno (" + balasAlTerminar + " de " + cargador + ")",
+            "al terminar la oleada se recarga un cuarto del cargador (de 7 a " + balasAlTerminar + ", de " + cargador + ")",
         };
         bool todo = true;
         for (int i = 0; i < ok.Count; i++)

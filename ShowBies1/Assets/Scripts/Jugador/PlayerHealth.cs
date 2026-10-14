@@ -43,7 +43,13 @@ public class PlayerHealth : MonoBehaviour
     private float empezoEn;
 
     public float MultiplicadorCura { get { return multiplicadorCura; } }
-    public int CuraPorCaja { get { return Mathf.RoundToInt(curaPorPickup * multiplicadorCura); } }
+
+    // La caja de vida cura esta parte de la vida maxima, con las cartas de vida (14/10, de Argon:
+    // curaba 40 por el multiplicador de la mejora, la mitad de la barra, y el jugador se curaba
+    // mas rapido de lo que le pegaban). curaPorPickup y el multiplicador quedaron para una escena
+    // sin AplicarMejoras y el medidor.
+    public const float FraccionDeCuraPorCaja = 0.35f;
+    public int CuraPorCaja { get { return Mathf.Max(1, Mathf.RoundToInt(maxHealth * FraccionDeCuraPorCaja)); } }
 
     // Update is called once per frame
     void Update()
@@ -132,13 +138,16 @@ public class PlayerHealth : MonoBehaviour
     private int vidaMaximaDeLaMejora = -1;
 
     // Las cartas de vida de la partida (PoderDeLaPartida) multiplican el maximo de la mejora. Al
-    // elegir una se llena la vida; al retomar una partida, tambien, que arranca la oleada de cero.
-    public void AplicarCartasDeVida()
+    // elegir una se cura solo lo que sumo (soloLoSumado; hasta el 14/10 llenaba la barra, y con
+    // tres en el mazo eran tres curas enteras gratis: de Argon); al retomar una partida se llena,
+    // que arranca la oleada de cero.
+    public void AplicarCartasDeVida(bool soloLoSumado)
     {
         if (estaMuerto) return;
+        int antes = maxHealth;
         int base0 = vidaMaximaDeLaMejora > 0 ? vidaMaximaDeLaMejora : maxHealth;
         maxHealth = Mathf.Max(1, Mathf.RoundToInt(base0 * PoderDeLaPartida.MultiplicadorVida));
-        health = maxHealth;
+        health = soloLoSumado ? Mathf.Clamp(health + Mathf.Max(0, maxHealth - antes), 0, maxHealth) : maxHealth;
     }
 
     // --- Lo de las cartas de reglas (1.6.0, etapa 2) -----------------------------------------
@@ -384,9 +393,8 @@ public class PlayerHealth : MonoBehaviour
             other.gameObject.SetActive(false);
             Destroy(other.gameObject);
 
-            // El tope es maxHealth, que fija AplicarMejoras con la mejora de vida.
-            // La cura escala con la misma mejora y cura siempre la mitad: 40 sin
-            // mejora, 80 con 160 de vida.
+            // El tope es maxHealth, que fija AplicarMejoras con la mejora de vida (y
+            // las cartas). La cura es una parte de ese maximo (FraccionDeCuraPorCaja).
             int antes = health;
             health = Mathf.Min(health + CuraPorCaja, maxHealth);
             // Lo que curo de verdad: con la vida llena, "+0 VIDA" parecia una caja rota.

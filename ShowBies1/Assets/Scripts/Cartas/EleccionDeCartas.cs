@@ -154,7 +154,7 @@ public class EleccionDeCartas : MonoBehaviour
 
         // Una partida retomada con cartas de vida arranca con el maximo de las cartas.
         if (PoderDeLaPartida.MultiplicadorVida > 1f && PlayerHealth.instance != null)
-            PlayerHealth.instance.AplicarCartasDeVida();
+            PlayerHealth.instance.AplicarCartasDeVida(false);
         // El anillo del escudo y los drones van en el jugador.
         if (PlayerHealth.instance != null && PlayerHealth.instance.GetComponent<CartasEnElJugador>() == null)
             PlayerHealth.instance.gameObject.AddComponent<CartasEnElJugador>();
@@ -613,7 +613,8 @@ public class EleccionDeCartas : MonoBehaviour
         var jugador = PlayerHealth.instance;
         if (jugador != null)
         {
-            if (t.id == PoderDeLaPartida.Vida && sumadas > 0) jugador.AplicarCartasDeVida();
+            // La de vida cura solo lo que suma (14/10, de Argon).
+            if (t.id == PoderDeLaPartida.Vida && sumadas > 0) jugador.AplicarCartasDeVida(true);
             else if (t.id == PoderDeLaPartida.Curacion) jugador.CurarEntero();
         }
         elegida = t;

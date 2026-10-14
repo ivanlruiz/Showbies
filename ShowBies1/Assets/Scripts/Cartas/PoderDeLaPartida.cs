@@ -78,14 +78,21 @@ public static class PoderDeLaPartida
     public const float DuracionDeLaQuemadura = 3f;
     public const float QuemaduraPorSegundo = 0.1f;     // del daño de la bala que la prendio
     public const float AlcanceDelDron = 12f;
-    public const int BajasParaElVampiro = 15;
+    // El vampiro cura cada 20 muertes (era 15 hasta el 14/10: con la cura de las cajas y la
+    // carta de vida, el jugador se curaba mas rapido de lo que le pegaban; de Argon).
+    public const int BajasParaElVampiro = 20;
+    // Con el disparo doble cada bala adelante pega esto del tiro (14/10, de Argon): una bala de
+    // mas al 100 % duplicaba el daño con una sola carta en la oleada 2. Con una carta, 2 x 0,7;
+    // con dos, 3 x 0,7. Tambien los perdigones de la escopeta.
+    public const float ParteDelDisparoDoble = 0.7f;
 
-    // La curva: pasar del PODER L al siguiente cuesta round(12 x 1,15^L). Con la mezcla de zombis
-    // de WaveMode da una carta por oleada al principio (la primera en la 1, la segunda en la 2 y la
-    // tercera en la 3), 12 hasta la oleada 10, 19 hasta la 20 y 28 hasta la 40. Hasta el 12/10
-    // arrancaba en 8, y en el teléfono Ivan tenia tres cartas a mitad de la oleada 2: lo eligio
-    // Gemini entre cinco curvas simuladas.
-    public const int PrimerCosto = 12;
+    // La curva: pasar del PODER L al siguiente cuesta round(14 x 1,15^L). Con la mezcla de zombis
+    // de WaveMode y oleadas de 10 + 2n, la primera carta sale al empezar la oleada 2, y hay 9
+    // hasta la oleada 10, 15 hasta la 20 y 23 hasta la 40. Arrancaba en 8 hasta el 12/10 (en el
+    // telefono Ivan tenia tres cartas a mitad de la oleada 2) y en 12 hasta el 14/10, cuando la
+    // 1.6.0 quedo demasiado facil en las primeras partidas: lo cerro Argon (Gemini) con la
+    // simulacion (simulaciones/cartas_1.6.0, resultados_arranque_v3.md).
+    public const int PrimerCosto = 14;
     public const double CrecimientoDelCosto = 1.15;
     public const int CartasPorEleccion = 3;
 
@@ -212,8 +219,8 @@ public static class PoderDeLaPartida
         return n > 0 ? Valor(id, porDefecto) * n : 0f;
     }
 
-    public static float MultiplicadorDano { get { return Multiplica(Dano, 1.25f); } }
-    public static float MultiplicadorCadencia { get { return Multiplica(Cadencia, 1.2f); } }
+    public static float MultiplicadorDano { get { return Multiplica(Dano, 1.2f); } }
+    public static float MultiplicadorCadencia { get { return Multiplica(Cadencia, 1.15f); } }
     public static float CriticoExtra { get { return Suma(Critico, 0.1f); } }
     public static float MultiplicadorVida { get { return Multiplica(Vida, 1.2f); } }
     public static float MultiplicadorVelocidad { get { return 1f + Suma(Velocidad, 0.1f); } }
@@ -238,7 +245,7 @@ public static class PoderDeLaPartida
     public static float ProbabilidadDeQuemadura { get { return Mathf.Clamp01(Suma(Quemadura, 0.25f)); } }
     public static int Drones { get { return Activo ? Veces(Dron) : 0; } }
     public static float TirosPorSegundoDelDron { get { return Drones > 0 ? Valor(Dron, 1f) : 0f; } }
-    public static float CuraDelVampiro { get { return Suma(Vampiro, 0.05f); } }
+    public static float CuraDelVampiro { get { return Suma(Vampiro, 0.03f); } }
     public static bool ConEscudo { get { return Activo && Veces(Escudo) > 0; } }
     public static float RecargaDelEscudo { get { return Valor(Escudo, 15f); } }
 

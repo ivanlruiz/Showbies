@@ -14,12 +14,13 @@ public static class Economia
     // MonedasPorPartida y el Bestiario, y la prueba de logica lo compara con la escena: si se
     // cambia uno y no el otro, todos los premios pasan a medirse con otra vara sin que nada
     // lo avise.
-    public const double CrecimientoMonedasOleadas = 1.08;
+    // x1,03 desde el 14/10 (era x1,08: de Argon, con la simulacion de la 1.6.0).
+    public const double CrecimientoMonedasOleadas = 1.03;
 
     // Y lo que vale de base cada moneda en las oleadas: el valorDeLaMoneda del WaveManager de
-    // WaveMode (x1,4 desde la 1.6.0, con la mitad de zombis por oleada), copiado por lo mismo.
-    // Lo usan MonedasPorPartida y el Bestiario, y la prueba lo compara con la escena.
-    public const double MultiplicadorMonedasOleadas = 1.4;
+    // WaveMode (x1 desde el 14/10; fue x1,4 un dia, el 13/10), copiado por lo mismo. Lo usan
+    // MonedasPorPartida y el Bestiario, y la prueba lo compara con la escena.
+    public const double MultiplicadorMonedasOleadas = 1.0;
 
     // Lo que suelta cada zombi, en promedio. De menos a proposito, como todo aca: desde que
     // salen los tanques y los veloces la mezcla de WaveMode suelta mas (unas 2,4 desde la

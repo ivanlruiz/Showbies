@@ -47,7 +47,7 @@ carta_cadencia	+{0}% shots	+{0} % disparos
 carta_critico_nombre	CRITICAL	CRÍTICO
 carta_critico	+{0}% chance	+{0} % probabilidad
 carta_vida_nombre	MAX HEALTH	VIDA
-carta_vida	+{0}% and heal	+{0} % vida y cura
+carta_vida	+{0}% max health	+{0} % de vida máxima
 carta_velocidad_nombre	SPEED	MOVIMIENTO
 carta_velocidad	+{0}% move speed	+{0} % velocidad
 carta_iman_nombre	MAGNET	IMÁN
@@ -59,7 +59,7 @@ carta_furia_larga	Duration +{0} s	Duración +{0} s
 carta_perforante_nombre	PIERCING	PERFORANTE
 carta_perforante	Pierces {0} zombie	Atraviesa {0} zombi
 carta_disparo_doble_nombre	MULTISHOT	MÚLTIPLE
-carta_disparo_doble	+{0} front bullet	+{0} bala frontal
+carta_disparo_doble	+{0} bullet, all at 70%	+{0} bala, todas al 70 %
 carta_hacia_atras_nombre	REAR SHOT	RETAGUARDIA
 carta_hacia_atras	+{0} rear bullet	+{0} bala trasera
 carta_explosiva_nombre	EXPLOSIVE	EXPLOSIVA
@@ -71,7 +71,7 @@ carta_quemadura	{0}% of shots burn (3 s)	{0} % de tiros queman (3 s)
 carta_dron_nombre	DRONE	DRON
 carta_dron	Support fire, {0} shot/s	Fuego de apoyo, {0} tiro/s
 carta_vampiro_nombre	VAMPIRE	VAMPIRISMO
-carta_vampiro	Heals {0}% every 15 kills	Cura {0} % cada 15 bajas
+carta_vampiro	Heals {0}% every 20 kills	Cura {0} % cada 20 bajas
 carta_escudo_nombre	SHIELD	ESCUDO
 carta_escudo	Blocks 1 hit every {0} s	Bloquea 1 golpe cada {0} s
 carta_escudo_bloqueo	BLOCKED!	¡BLOQUEADO!
