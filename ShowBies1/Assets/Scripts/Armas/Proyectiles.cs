@@ -27,7 +27,9 @@ public static class Proyectiles
 
     public static readonly int[] Velocidad = { 15, 25, 12, 35, 12 };
     public static readonly float[] Vida = { 1.5f, 1f, 0.6f, 0.8f, 1.8f };
-    public static readonly float[] Cadencia = { 1f, 0.7f, 0.7f, 1.2f, 1f };
+    // El rifle tira a x1 desde el 13/10 (de Gemini): a x1,2, compensado en el daño, gastaba un 20 %
+    // mas de balas por el mismo daño.
+    public static readonly float[] Cadencia = { 1f, 0.7f, 0.7f, 1f, 1f };
     // Lo que se ve, en proporcion a la bala de la pistola (x el ancho, y el alto, z el largo).
     public static readonly Vector3[] Forma =
     {

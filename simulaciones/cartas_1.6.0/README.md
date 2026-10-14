@@ -51,6 +51,40 @@ en el modelo (`gemini`, y `gemini_base` sin cartas; todo en `resultados_gemini.m
 Las filas de `base` y `c_equil` salen idénticas a las de `resultados_cartas.md`, y la versión nueva de `cartas.py` da
 partida por partida lo mismo que la de antes en diez variantes viejas: lo nuevo no cambió nada de lo que ya corría.
 
+## El tercer tramo y lo que cerró Argon (13/10)
+
+Con el muro de la decisión 14-32 oleadas más allá de lo prometido, se probó mover el tercer tramo
+(`resultados_tercer_tramo.md`, la decisión entera con el tramo cambiado):
+
+| tercer tramo | bajo | medio | alto |
+|---|---|---|---|
+| desde la 31, ×1,15 y ×1,08 (la decisión) | 69 (36) | 74 (39) | 82 (47) |
+| desde la 21, ×1,15 y ×1,08 | 59 (29) | 69 (35) | 78 (42) |
+| **desde la 26, ×1,20 y ×1,10** | **57 (27)** | **59 (26)** | **68 (35)** |
+| desde la 31, ×1,25 y ×1,12 | 54 (24) | 58 (25) | 61 (29) |
+| desde la 21, con la cadencia gastando balas | 56 (25) | 58 (24) | 69 (34) |
+
+Argon (Gemini en el razonamiento máximo, `CARTAS.md`) eligió **desde la 26 con ×1,20 y ×1,10**, porque deja que el que
+juega bien llegue más lejos (el de la 31 ×1,25 pega a los tres contra el mismo muro), con **la moneda ×1,4 y no ×2**, y lo
+demás de la decisión. Es la variante `final_1_6_0` (`resultados_final.md`), la que está en el juego:
+
+| | bajo | medio | alto |
+|---|---|---|---|
+| **`final_1_6_0`**: muro (minutos de una partida ahí) | **57** (26) | **59** (27) | **67** (33) |
+| partida en que llega a la 50 | 8 | 4 | 3 |
+| minutos hasta terminar la 50 | 20,3 | 18,0 | 17,5 |
+| oro hasta terminar la 10 (1.5.2 sin cartas) | 3.146 (3.188) | 3.145 (3.323) | 3.220 (3.429) |
+| `final_1_6_0_base` (sin cartas) | 33 (11) | 37 (12) | 41 (13) |
+
+- **El oro del principio empata con la 1.5.2**: hasta la 10 se junta lo mismo (−1 a −6 %), en menos minutos.
+- **La progresión se comprime**: el medio llega a la 50 en la partida 4 y al muro enseguida. Se aceptó: el muro es para
+  el renacer de la 1.8.0.
+- **Sin balas con un blanco a la vista: 0 %** en los tres (era 27 % para el bajo en la 1.5.2): el cargador lleno en cada
+  oleada y la cadencia sin costo.
+- **Al pasarlo al juego** se hizo lo que faltaba: `Escalado.PorOleada` de tres tramos (con la misma convención: la 26 ya
+  vale la 25 por el tercero) y `Economia` con 10 + 2n y la moneda ×1,4 (`ZombisBase`, `ZombisPorOleada` y
+  `MultiplicadorMonedasOleadas`, que la prueba de lógica compara con WaveMode).
+
 ## Lo que encontró
 
 En corto:
@@ -373,6 +407,13 @@ python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos
 python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 salida=<aparte> variantes=gemini_sin_tercero,gemini_cadencia_con_costo,gemini_moneda_x1,gemini_curva_e
 ```
 
+El tercer tramo (10 min) y lo que cerró Argon (4 min), con las mismas semillas:
+
+```
+python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 variantes=gemini,gemini_t21,gemini_t26_fuerte,gemini_t31_fuerte,gemini_t21_costo salida=resultados_tercer_tramo.md
+python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 variantes=base,final_1_6_0,final_1_6_0_base salida=resultados_final.md
+```
+
 - Desde el 13/10 el `modo=curva` saca también **el oro por minuto** (a la partida 10, de la 8 a la 12 y en el muro: las
   monedas de esas partidas sobre sus minutos, con las elecciones) y **los minutos y el oro hasta terminar cada oleada**
   (la mediana de las partidas que la terminan).
@@ -413,6 +454,8 @@ simulación son varios segundos cada una.
 | `gemini` | **la decisión de Gemini del 13/10**, con cartas y la equilibrada: 10 + 2n cada 0,20 s, la moneda ×2 en valor (`valor_moneda`; el bono no cambia), el tercer tramo desde la 31 (vida ×1,15 y golpe ×1,08: `tercer_tramo`, `vida_tercera`, `golpe_tercero`), el cargador lleno al terminar cada oleada, la carta de cadencia sin costo (`cadencia_gratis`: cada tiro cuesta 1 / el multiplicador de cadencia de las cartas, con un acumulador, también en las oleadas fáciles) y el rifle a ×1 (`cadencia_rifle`) |
 | `gemini_base` | la `gemini` sin el PODER |
 | `gemini_sin_tercero`, `gemini_cadencia_con_costo`, `gemini_moneda_x1`, `gemini_curva_e` | la `gemini` con una pieza cambiada: sin el tercer tramo, con la cadencia gastando balas como hoy, con la moneda ×1, y con la curva de la candidata E (vida ×1,15 y golpe ×1,07 desde la 11) en lugar de los tres tramos |
+| `gemini_t21`, `gemini_t26_fuerte`, `gemini_t31_fuerte`, `gemini_t21_costo` | la `gemini` con el tercer tramo cambiado: desde la 21 (×1,15 y ×1,08), desde la 26 (×1,20 y ×1,10), desde la 31 (×1,25 y ×1,12), y desde la 21 con la cadencia gastando balas |
+| `final_1_6_0`, `final_1_6_0_base` | **lo que cerró Argon y está en el juego**: la `gemini` con el tercer tramo desde la 26 (×1,20 y ×1,10) y la moneda ×1,4; con cartas (equilibrada) y sin |
 
 Las políticas:
 

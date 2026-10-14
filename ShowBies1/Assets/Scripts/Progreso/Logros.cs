@@ -59,8 +59,11 @@ public static class Logros
     public static readonly Familia[] Familias =
     {
         new Familia(Superviviente, () => Progreso.MejorOleada, 10, 25, 50),        // la 10 es el primer jefe
-        new Familia(Exterminador, () => Progreso.MatadosEnTotal, 1000, 10000, 100000),
-        new Familia(Imparable, () => Progreso.MejorCombo, 25, 50, 100),
+        // Desde la 1.6.0 (13/10, de Gemini), con oleadas de 10 + 2n: las muertes, a la mitad (eran
+        // 1.000, 10.000 y 100.000), y el oro del combo en x75 (era x100: el combo se corta entre
+        // oleadas, y recien la 45 tiene 100 zombis).
+        new Familia(Exterminador, () => Progreso.MatadosEnTotal, 500, 5000, 50000),
+        new Familia(Imparable, () => Progreso.MejorCombo, 25, 50, 75),
         new Familia(Critico, () => PorcentajeDeCritico, 30, 50, 100),
         new Familia(Millonario, () => Progreso.MonedasGanadasJugando, 10000, 100000, 1000000),
         new Familia(Granadero, () => Progreso.MejorGranada, 5, 10, 15),

@@ -201,6 +201,7 @@ public static class PruebasMejoras
             ProbarSegundoTramo(informe);
             ProbarLugaresDelTutorial(informe);
             ProbarAcumuladorDeDisparo(informe);
+            ProbarCostoDeLosTiros(informe);
             ProbarDanoAlJugador(informe);
             ProbarCajasYMonedas(informe);
             ProbarFaroles(informe);
@@ -1236,6 +1237,18 @@ public static class PruebasMejoras
                   Escalado.PorOleada(1.11f, 30), Escalado.PorOleada(1.11f, 30, 0, 1.07f), 1e-6);
         inf.Cerca("escalado en dos tramos: un tardio sin cargar es un tramo",
                   Escalado.PorOleada(1.11f, 30), Escalado.PorOleada(1.11f, 30, 11, 0f), 1e-6);
+
+        // Tres tramos (1.6.0): hasta la anterior a 'desde3' es la de dos, y 'desde3' ya crece con el tercero.
+        inf.Cerca("escalado en tres tramos: antes de 'desde3' es la de dos",
+                  Escalado.PorOleada(1.11f, 25, 11, 1.08f), Escalado.PorOleada(1.11f, 25, 11, 1.08f, 26, 1.2f), 1e-4);
+        inf.Cerca("escalado en tres tramos: 'desde3' vale la anterior por el tercero",
+                  Escalado.PorOleada(1.11f, 25, 11, 1.08f) * 1.2, Escalado.PorOleada(1.11f, 26, 11, 1.08f, 26, 1.2f), 1e-3);
+        inf.Cerca("escalado en tres tramos: la oleada 40",
+                  Math.Pow(1.11, 9) * Math.Pow(1.08, 15) * Math.Pow(1.2, 15), Escalado.PorOleada(1.11f, 40, 11, 1.08f, 26, 1.2f), 1e-1);
+        inf.Cerca("escalado en tres tramos: 'desde3' 0 es la de dos",
+                  Escalado.PorOleada(1.11f, 40, 11, 1.08f), Escalado.PorOleada(1.11f, 40, 11, 1.08f, 0, 1.2f), 1e-6);
+        inf.Cerca("escalado en tres tramos: un tercero sin cargar es la de dos",
+                  Escalado.PorOleada(1.11f, 40, 11, 1.08f), Escalado.PorOleada(1.11f, 40, 11, 1.08f, 26, 0f), 1e-6);
     }
 
     // La curva de WaveMode (10/10): desde la oleada 11, despues del primer jefe, la vida y el
@@ -1248,10 +1261,21 @@ public static class PruebasMejoras
         int desde = -1;
         float vida = float.NaN, golpe = float.NaN, vidaTardia = float.NaN, golpeTardio = float.NaN;
         float vida10 = float.NaN, vida11 = float.NaN, golpe10 = float.NaN, golpe11 = float.NaN;
+        int desde3 = -1;
+        float vidaTercera = float.NaN, golpeTercero = float.NaN;
+        float vida25 = float.NaN, vida26 = float.NaN, golpe25 = float.NaN, golpe26 = float.NaN, vida20 = float.NaN;
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
             oleadas = Buscar<WaveManager>(escena);
             if (oleadas == null) return;
+            desde3 = oleadas.oleadaDelTercerTramo;
+            vidaTercera = oleadas.crecimientoVidaTercerTramo;
+            golpeTercero = oleadas.crecimientoDanoTercerTramo;
+            vida20 = oleadas.MultiplicadorVidaEn(20);
+            vida25 = oleadas.MultiplicadorVidaEn(25);
+            vida26 = oleadas.MultiplicadorVidaEn(26);
+            golpe25 = oleadas.MultiplicadorDanoEn(25);
+            golpe26 = oleadas.MultiplicadorDanoEn(26);
             desde = oleadas.oleadaDelSegundoTramo;
             vida = oleadas.crecimientoVida;
             golpe = oleadas.crecimientoDano;
@@ -1271,6 +1295,35 @@ public static class PruebasMejoras
         inf.Cerca("curva: el jefe de la 10 sale con la vida del primer tramo", Math.Pow(vida, 9), vida10, 1e-3);
         inf.Cerca("curva: la 11 ya crece con el segundo tramo (vida)", vida10 * vidaTardia, vida11, 1e-3);
         inf.Cerca("curva: la 11 ya crece con el segundo tramo (golpe)", golpe10 * golpeTardio, golpe11, 1e-3);
+
+        // El tercer tramo (1.6.0, lo cerro Gemini con la simulacion): desde la 26, vida x1,20 y golpe
+        // x1,10, el muro para el renacer. El jefe de la 20 todavia en el segundo.
+        inf.Igual("curva: el tercer tramo empieza en la 26", 26, desde3);
+        inf.Cerca("curva: en el tercer tramo la vida crece x1,20", 1.20, vidaTercera, 1e-6);
+        inf.Cerca("curva: y el golpe x1,10", 1.10, golpeTercero, 1e-6);
+        inf.Cerca("curva: el jefe de la 20 sale con el segundo tramo", Math.Pow(vida, 9) * Math.Pow(vidaTardia, 10), vida20, 1e-2);
+        inf.Cerca("curva: la 26 ya crece con el tercer tramo (vida)", vida25 * vidaTercera, vida26, 1e-2);
+        inf.Cerca("curva: la 26 ya crece con el tercer tramo (golpe)", golpe25 * golpeTercero, golpe26, 1e-3);
+    }
+
+    // Lo que cuesta cada tiro en balas (1.6.0, de Gemini): 1, y con la carta de cadencia sus tiros
+    // de mas no gastan (GunController.BalasDelTiro, con una deuda).
+    static void ProbarCostoDeLosTiros(Informe inf)
+    {
+        float deuda = 0f;
+        bool siempreUna = true;
+        for (int i = 0; i < 1000; i++) siempreUna &= GunController.BalasDelTiro(ref deuda, 1f) == 1;
+        inf.Verdadero("balas: sin la carta de cadencia, cada tiro gasta una bala", siempreUna && Math.Abs(deuda) < 1e-3f);
+        foreach (int cartas in new[] { 1, 2, 4 })
+        {
+            float multiplicador = Mathf.Pow(1.2f, cartas);
+            deuda = 0f;
+            int balas = 0;
+            const int tiros = 10000;
+            for (int i = 0; i < tiros; i++) balas += GunController.BalasDelTiro(ref deuda, 1f / multiplicador);
+            inf.Cerca("balas: con " + cartas + " cartas de cadencia, " + tiros + " tiros gastan las balas de la cadencia sin la carta",
+                      tiros / multiplicador, balas, 2.0);
+        }
     }
 
     // 5. El acumulador de disparo: la cadencia promedio no depende de los FPS
@@ -2693,6 +2746,19 @@ public static class PruebasMejoras
         inf.Cerca("economia: el crecimiento de las monedas es el del WaveManager de WaveMode",
                   crecimiento, Economia.CrecimientoMonedasOleadas, 1e-6);
 
+        // Y lo que vale de base cada moneda de las oleadas (x1,4 desde la 1.6.0), igual en Economia.
+        float valor = float.NaN, enLaUno = float.NaN;
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (oleadas == null) return;
+            valor = oleadas.valorDeLaMoneda;
+            enLaUno = oleadas.MultiplicadorMonedasEn(1);
+        });
+        inf.Cerca("economia: la moneda de las oleadas vale lo de Economia (x" + valor + ")",
+                  valor, Economia.MultiplicadorMonedasOleadas, 1e-6);
+        inf.Cerca("economia: y cada zombi de la oleada 1 la suelta asi", Economia.MultiplicadorMonedasOleadas, enLaUno, 1e-6);
+
         // Y MonedasPorPartida lo usa: de la oleada 20 a la 22, lo que deja cada zombi crece
         // exactamente eso, porque el multiplicador se toma a mitad de camino.
         double porZombi20 = Economia.MonedasPorPartida(20) / Economia.ZombisPorPartida(20);
@@ -2715,6 +2781,8 @@ public static class PruebasMejoras
             zombisPorOleada = oleadas.zombisPorOleada;
         });
         if (!inf.Verdadero("economia: WaveMode tiene su WaveManager", zombisBase >= 0)) return;
+        inf.Verdadero("economia: los zombis por oleada de Economia son los de WaveMode (" + zombisBase + " + " + zombisPorOleada + "n)",
+                      zombisBase == Economia.ZombisBase && zombisPorOleada == Economia.ZombisPorOleada);
 
         bool iguales = true;
         string cual = "";
@@ -5042,8 +5110,9 @@ public static class PruebasMejoras
     static void ProbarVideoDeMonedas(Informe inf)
     {
         inf.Cerca("video de monedas: al principio paga el piso", 50.0, VideoDeMonedas.Premio(0), Tolerancia);
-        inf.Cerca("video de monedas: en la oleada 10, un cuarto de partida", 240.0, VideoDeMonedas.Premio(10), Tolerancia);
-        inf.Cerca("video de monedas: en la oleada 30", 3450.0, VideoDeMonedas.Premio(30), Tolerancia);
+        // Con las oleadas de la 1.6.0 (10 + 2n, la moneda x1,4): eran 240 y 3.450.
+        inf.Cerca("video de monedas: en la oleada 10, un cuarto de partida", 220.0, VideoDeMonedas.Premio(10), Tolerancia);
+        inf.Cerca("video de monedas: en la oleada 30", 2750.0, VideoDeMonedas.Premio(30), Tolerancia);
         bool crece = true;
         for (int o = 1; o <= 60; o++) crece &= VideoDeMonedas.Premio(o) >= VideoDeMonedas.Premio(o - 1);
         inf.Verdadero("video de monedas: nunca paga menos con una oleada mas alta", crece);
@@ -5218,9 +5287,10 @@ public static class PruebasMejoras
         inf.Verdadero("misiones: con la furia comprada alguna la pide", hayFuria);
         inf.Verdadero("misiones: todos los objetivos son positivos", objetivosBien);
         inf.Cerca("economia: numeros redondos", 1250, Economia.Redondo(1234), 1e-9);
-        // Con la suma de zombis corregida (Economia.ZombisPorPartida, 23/9): eran 15 y 1300.
+        // Con la suma de zombis corregida (Economia.ZombisPorPartida, 23/9): eran 15 y 1300. Con
+        // las oleadas de la 1.6.0 (10 + 2n, la moneda x1,4) la dificil de la 10 era 1.400.
         inf.Cerca("misiones: premio facil sin oleadas", 20, MisionesDiarias.Monto(0, 0), 1e-9);
-        inf.Cerca("misiones: premio dificil con oleada 10", 1400, MisionesDiarias.Monto(2, 10), 1e-9);
+        inf.Cerca("misiones: premio dificil con oleada 10", 1300, MisionesDiarias.Monto(2, 10), 1e-9);
         ProbarPremiosDeMisiones(inf);
 
         // Con el progreso: una de matar 3, se matan 3, se cobra una sola vez y se guarda.
@@ -5263,7 +5333,7 @@ public static class PruebasMejoras
         inf.Cerca("cofre: no paga dos veces", 0, MisionesDiarias.CobrarCofre(), 1e-9);
         inf.Verdadero("cofre: queda cobrado", MisionesDiarias.CofreCobrado && MisionesDiarias.PorCobrar == 0);
         // Era 940 hasta que la suma de zombis se corrigio (23/9).
-        inf.Cerca("cofre: con oleada 10 paga mas", 1000, MisionesDiarias.MontoCofre(10), 1e-9);
+        inf.Cerca("cofre: con oleada 10 paga mas", 940, MisionesDiarias.MontoCofre(10), 1e-9);
 
         int diaGuardado = estado.dia;
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
@@ -6183,8 +6253,10 @@ public static class PruebasMejoras
                 if (n == 20) hasta20 = poder;
             }
         });
-        inf.Verdadero("cartas: hasta la oleada 10 salen entre 12 y 15 (" + hasta10 + ")", hasta10 >= 12 && hasta10 <= 15);
-        inf.Verdadero("cartas: hasta la oleada 20 salen unas 19 (" + hasta20 + ")", hasta20 >= 17 && hasta20 <= 22);
+        // Con las oleadas de la 1.6.0 (10 + 2n, la curva del PODER sin tocar, de Gemini): 9 hasta la
+        // 10 y 16 hasta la 20 (eran 12 y 19 con 10 + 4n).
+        inf.Verdadero("cartas: hasta la oleada 10 salen unas 9 (" + hasta10 + ")", hasta10 >= 8 && hasta10 <= 10);
+        inf.Verdadero("cartas: hasta la oleada 20 salen unas 16 (" + hasta20 + ")", hasta20 >= 14 && hasta20 <= 18);
         inf.Verdadero("cartas: al principio, una por oleada (" + hasta1 + ", " + hasta2 + ", " + hasta3 + ")",
                       hasta1 == 1 && hasta2 == 2 && hasta3 == 3);
 
@@ -6550,18 +6622,21 @@ public static class PruebasMejoras
     // El bestiario: las estrellas por muertes de cada tipo, que se cobran una vez cada una.
     static void ProbarBestiario(Informe inf)
     {
-        inf.Igual("bestiario: 99 normales, ninguna estrella", 0, Bestiario.AlcanzadasCon(Bestiario.Normal, 99));
-        inf.Igual("bestiario: 100 normales, una", 1, Bestiario.AlcanzadasCon(Bestiario.Normal, 100));
-        inf.Igual("bestiario: 10.000, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Tanque, 10000));
+        // Las muertes a la mitad desde la 1.6.0 (eran 100, 1.000 y 10.000); las del jefe no.
+        inf.Igual("bestiario: 49 normales, ninguna estrella", 0, Bestiario.AlcanzadasCon(Bestiario.Normal, 49));
+        inf.Igual("bestiario: 50 normales, una", 1, Bestiario.AlcanzadasCon(Bestiario.Normal, 50));
+        inf.Igual("bestiario: 4.999, dos", 2, Bestiario.AlcanzadasCon(Bestiario.Tanque, 4999));
+        inf.Igual("bestiario: 5.000, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Tanque, 5000));
         inf.Igual("bestiario: un jefe ya es una estrella", 1, Bestiario.AlcanzadasCon(Bestiario.Jefe, 1));
         inf.Igual("bestiario: 50 jefes, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Jefe, 50));
-        inf.Cerca("bestiario: premio de la primera del caminante sin oleadas", 110, Bestiario.Premio(Bestiario.Normal, 0, 0), 1e-9);
-        inf.Cerca("bestiario: premio de la tercera del caminante con oleada 10", 14700, Bestiario.Premio(Bestiario.Normal, 2, 10), 1e-9);
+        // La mitad de las muertes, a x1,4 la moneda: eran 110 y 14.700.
+        inf.Cerca("bestiario: premio de la primera del caminante sin oleadas", 80, Bestiario.Premio(Bestiario.Normal, 0, 0), 1e-9);
+        inf.Cerca("bestiario: premio de la tercera del caminante con oleada 10", 10300, Bestiario.Premio(Bestiario.Normal, 2, 10), 1e-9);
         ProbarPremiosDelBestiario(inf);
 
         EmpezarCaso("{\"version\":4,\"monedas\":0,\"estadisticas\":{\"matados\":[{\"id\":\"ZombiNormal\",\"cantidad\":1500},{\"id\":\"ZombiBOSS\",\"cantidad\":1}]}}", null);
         inf.Igual("bestiario: dos normales y un jefe para cobrar", 3, Bestiario.PorCobrar);
-        inf.Igual("bestiario: el siguiente de los normales es 10.000", 10000, Bestiario.Siguiente(Bestiario.Normal));
+        inf.Igual("bestiario: el siguiente de los normales es 5.000", 5000, Bestiario.Siguiente(Bestiario.Normal));
         // Lo que paga es lo que muestra la tarjeta para ese tipo y esa estrella.
         double primera = Bestiario.Premio(Bestiario.Normal, 0, Progreso.MejorOleada);
         double segunda = Bestiario.Premio(Bestiario.Normal, 1, Progreso.MejorOleada);
@@ -6651,8 +6726,9 @@ public static class PruebasMejoras
 
         // El premio: un 15 % de una partida con la mejor oleada, y el triple cada cinco.
         inf.Cerca("nivel: premio del 2 sin oleadas", 20, NivelJugador.Premio(2, 0), 1e-9);
-        inf.Cerca("nivel: premio del 6 con la oleada 10", 140, NivelJugador.Premio(6, 10), 1e-9);
-        inf.Cerca("nivel: el 5 es grande, el triple", 420, NivelJugador.Premio(5, 10), 1e-9);
+        // Con las oleadas de la 1.6.0 (10 + 2n, la moneda x1,4): eran 140 y 420.
+        inf.Cerca("nivel: premio del 6 con la oleada 10", 130, NivelJugador.Premio(6, 10), 1e-9);
+        inf.Cerca("nivel: el 5 es grande, el triple", 390, NivelJugador.Premio(5, 10), 1e-9);
         inf.Verdadero("nivel: el premio crece con la mejor oleada", NivelJugador.Premio(7, 40) > NivelJugador.Premio(7, 20));
     }
 
@@ -6808,7 +6884,7 @@ public static class PruebasMejoras
             // ProbarCrecimientoDeMonedas compara con la escena: escrito a mano aca no notaba
             // que el Bestiario se quedara con uno viejo.
             double esperado = (enemigo.monedasMin + enemigo.monedasMax) * 0.5 * (tipo == Bestiario.Jefe ? 6.0 : 1.0)
-                            * Math.Pow(Economia.CrecimientoMonedasOleadas, 1.5);
+                            * Economia.MultiplicadorMonedasOleadas * Math.Pow(Economia.CrecimientoMonedasOleadas, 1.5);
             inf.Cerca("zombis: las monedas de " + tipo + " en el Bestiario", esperado, Bestiario.MonedasQueDeja(tipo, 0), 1e-9);
         }
     }
@@ -6958,7 +7034,7 @@ public static class PruebasMejoras
         inf.Cerca("diaria: monto dia 7", 2000, RecompensaDiaria.Monto(7, 0), 1e-9);
         inf.Cerca("diaria: monto dia 12 queda en el 7", 2000, RecompensaDiaria.Monto(12, 0), 1e-9);
         // Era 440 hasta que la suma de zombis se corrigio (23/9).
-        inf.Cerca("diaria: monto con mejor oleada 10", 470, RecompensaDiaria.Monto(3, 10), 1e-9);
+        inf.Cerca("diaria: monto con mejor oleada 10", 430, RecompensaDiaria.Monto(3, 10), 1e-9);
         ProbarMontosDeLaDiaria(inf);
 
         EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);
@@ -7386,7 +7462,7 @@ public static class PruebasMejoras
             par.conEsperado = true;
             par.vidaEsperada = zombi.enemyType.hp * m.oleadas.MultiplicadorVidaEn(oleada);
             par.danoEsperado = zombi.enemyType.daño * m.oleadas.MultiplicadorDanoEn(oleada);
-            par.monedasEsperadas = Escalado.PorOleada(m.oleadas.crecimientoMonedas, oleada) * m.botin;
+            par.monedasEsperadas = m.oleadas.MultiplicadorMonedasEn(oleada) * m.botin;
         }
         else if (m.generador != null)
         {

@@ -25,7 +25,9 @@ public static class Bestiario
     public static readonly string[] Tipos = { Normal, Rapido, Faster, Tanque, Jefe };
     public const int Estrellas = 3;
 
-    private static readonly int[] EscalonesComunes = { 100, 1000, 10000 };
+    // A la mitad desde la 1.6.0 (13/10, de Gemini): con oleadas de 10 + 2n, cada estrella costaba
+    // 1,5-1,8 veces mas partidas. Las del jefe no cambian: sale uno cada diez oleadas, como antes.
+    private static readonly int[] EscalonesComunes = { 50, 500, 5000 };
     private static readonly int[] EscalonesJefe = { 1, 10, 50 };
 
     // Lo que suelta cada tipo al morir, el promedio de monedasMin y monedasMax de su
@@ -90,7 +92,8 @@ public static class Bestiario
         int i = Array.IndexOf(Tipos, tipo);
         double monedas = i >= 0 ? MonedasPorTipo[i] : 2.0;
         if (tipo == Jefe) monedas *= EsfuerzoDelJefe;
-        return monedas * Math.Pow(Economia.CrecimientoMonedasOleadas, Math.Max(3, mejorOleada) * 0.5);
+        return monedas * Economia.MultiplicadorMonedasOleadas
+             * Math.Pow(Economia.CrecimientoMonedasOleadas, Math.Max(3, mejorOleada) * 0.5);
     }
 
     // La mitad de lo que dejan las muertes del escalon, en numeros redondos.

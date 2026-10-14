@@ -24,4 +24,15 @@ public static class Escalado
         double primero = crecimiento <= 0f ? 1.0 : System.Math.Pow(crecimiento, desde - 2);
         return (float)(primero * System.Math.Pow(tardio, oleada - desde + 1));
     }
+
+    // En tres tramos: como la de dos, y desde 'desde3' crece 'tercero' (la oleada 'desde3' ya
+    // vale la anterior por 'tercero'). Con 'desde3' en 0 o antes del segundo tramo, o un
+    // 'tercero' sin cargar, es la de dos. Lo usan las oleadas desde la 1.6.0 (13/10, ver
+    // WaveManager.oleadaDelTercerTramo): el muro para el renacer.
+    public static float PorOleada(float crecimiento, int oleada, int desde, float tardio, int desde3, float tercero)
+    {
+        if (desde3 <= desde || tercero <= 0f || oleada < desde3) return PorOleada(crecimiento, oleada, desde, tardio);
+        double hastaElTercero = PorOleada(crecimiento, desde3 - 1, desde, tardio);
+        return (float)(hastaElTercero * System.Math.Pow(tercero, oleada - desde3 + 1));
+    }
 }

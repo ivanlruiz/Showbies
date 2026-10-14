@@ -1297,6 +1297,12 @@ VARIANTES.update({
                                   **dict(GEMINI, vida_tercera=1.25, golpe_tercero=1.12)),
     'gemini_t21_costo': variante('gemini con el tercer tramo desde la 21 y la cadencia gastando balas, equilibrada',
                                  **dict(GEMINI, tercer_tramo=21, cadencia_gratis=False)),
+    # Lo que cerro Argon (13/10, CARTAS.md): el tercer tramo desde la 26 con x1,20 y x1,10, y la moneda
+    # x1,4 en vez de x2. Lo demas, como la decision de Gemini.
+    'final_1_6_0': variante('1.6.0 final: tercer tramo desde la 26 (x1,20 y x1,10), moneda x1,4, equilibrada',
+                            **dict(GEMINI, tercer_tramo=26, vida_tercera=1.20, golpe_tercero=1.10, valor_moneda=1.4)),
+    'final_1_6_0_base': variante('1.6.0 final sin cartas', cartas=False, politica=None,
+                                 **dict(GEMINI, tercer_tramo=26, vida_tercera=1.20, golpe_tercero=1.10, valor_moneda=1.4)),
 })
 
 

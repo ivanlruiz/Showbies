@@ -16,26 +16,36 @@ public static class Economia
     // lo avise.
     public const double CrecimientoMonedasOleadas = 1.08;
 
+    // Y lo que vale de base cada moneda en las oleadas: el valorDeLaMoneda del WaveManager de
+    // WaveMode (x1,4 desde la 1.6.0, con la mitad de zombis por oleada), copiado por lo mismo.
+    // Lo usan MonedasPorPartida y el Bestiario, y la prueba lo compara con la escena.
+    public const double MultiplicadorMonedasOleadas = 1.4;
+
     // Lo que suelta cada zombi, en promedio. De menos a proposito, como todo aca: desde que
     // salen los tanques y los veloces la mezcla de WaveMode suelta mas (unas 2,4 desde la
     // oleada 9), y eso sin contar al jefe.
     private const double MonedasPorZombi = 2.0;
 
-    // Los zombis que se matan en una partida que llega a la oleada m: la oleada n saca
-    // 10 + 4n, y esto es la suma hasta m, 12m + 2m². Hasta el 23/9 devolvia 10m + 2m²: le
-    // faltaban 2m (6 de 54 en la oleada 3). La prueba la compara con la suma hecha con los
-    // numeros del WaveManager de WaveMode, asi no se desincroniza si se tocan.
+    // Los zombis de cada oleada: ZombisBase + ZombisPorOleada x n, los del WaveManager de
+    // WaveMode (10 + 2n desde la 1.6.0; eran 10 + 4n). La prueba los compara con la escena.
+    public const int ZombisBase = 10;
+    public const int ZombisPorOleada = 2;
+
+    // Los zombis que se matan en una partida que llega a la oleada m: la suma hasta m, que con
+    // 10 + 2n es 11m + m². Hasta el 23/9 le faltaban 2m (con 10 + 4n devolvia 10m + 2m²). La
+    // prueba la compara con la suma hecha con los numeros del WaveManager de WaveMode.
     public static double ZombisPorPartida(int mejorOleada)
     {
         int m = Math.Max(3, mejorOleada);
-        return 12.0 * m + 2.0 * m * m;
+        return ZombisBase * (double)m + ZombisPorOleada * (double)m * (m + 1) * 0.5;
     }
 
-    // Lo que deja de monedas esa partida: cada zombi suelta unas 2 y el multiplicador de
-    // la oleada (CrecimientoMonedasOleadas por oleada) se toma a mitad de camino.
+    // Lo que deja de monedas esa partida: cada zombi suelta unas 2, que valen
+    // MultiplicadorMonedasOleadas, y el multiplicador de la oleada (CrecimientoMonedasOleadas
+    // por oleada) se toma a mitad de camino.
     public static double MonedasPorPartida(int mejorOleada)
     {
-        return ZombisPorPartida(mejorOleada) * MonedasPorZombi
+        return ZombisPorPartida(mejorOleada) * MonedasPorZombi * MultiplicadorMonedasOleadas
              * Math.Pow(CrecimientoMonedasOleadas, Math.Max(3, mejorOleada) * 0.5);
     }
 
@@ -44,8 +54,11 @@ public static class Economia
     // cuantas entran depende del tiempo y no del numero de oleada.
     //
     // La cuenta: cada zombi se tarda un tercio de segundo largo en promedio (aparecer,
-    // acercarse y morir), mas el descanso de 3 s entre oleadas. Da unos 1.400 s para una
-    // partida que llega a la 40, que es lo que dura de verdad.
+    // acercarse y morir), mas el descanso de 3 s entre oleadas. Es lo que se tarda de verdad,
+    // no el intervalo entre apariciones: con 10 + 2n cada 0,20 s (1.6.0) da unos 840 s para una
+    // partida que llega a la 40 y 1.220 para la 50, algo de mas contra la simulacion (17-19
+    // minutos para terminar la 50, simulaciones/cartas_1.6.0): de mas es pedir menos furias y
+    // granadas de las que entran.
     public static double SegundosPorPartida(int mejorOleada)
     {
         int m = Math.Max(3, mejorOleada);

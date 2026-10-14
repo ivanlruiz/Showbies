@@ -172,6 +172,11 @@ MonoBehaviour:
   contenido: {fileID: 2013558330}
   relleno: {fileID: 2060215475}
   segundos: {fileID: 600565066}
+  colorBalas: {r: 1, g: 0.78, b: 0.22, a: 1}
+  colorRayo: {r: 0.1, g: 0.9, b: 1, a: 1}
+  multiplicadorDelRayo: 2
+  duracionSalto: 0.35
+  escalaDelSalto: 1.45
 --- !u!1 &105591338
 GameObject:
   m_ObjectHideFlags: 0
@@ -2031,16 +2036,23 @@ MonoBehaviour:
   - {fileID: 360960685}
   distanciaMinimaAlJugador: 8
   zombisBase: 10
-  zombisPorOleada: 4
-  intervaloEntreApariciones: 0.35
+  zombisPorOleada: 2
+  intervaloEntreApariciones: 0.2
   esperaTrasElJefe: 1.5
   descansoEntreOleadas: 3
   maxZombisVivos: 60
   maxZombisVivosMovil: 35
   crecimientoVida: 1.11
   crecimientoDano: 1.07
+  oleadaDelSegundoTramo: 11
+  crecimientoVidaTardio: 1.08
+  crecimientoDanoTardio: 1.04
+  oleadaDelTercerTramo: 26
+  crecimientoVidaTercerTramo: 1.2
+  crecimientoDanoTercerTramo: 1.1
   monedaPrefab: {fileID: 209914667697901589, guid: 2a7ca24049b93874db76077fb4e20d20, type: 3}
   crecimientoMonedas: 1.08
+  valorDeLaMoneda: 1.4
   bonoPorOleada: 4
   textoOleada: {fileID: 794040599}
   cartelOleada: {fileID: 1290508352}
@@ -3527,6 +3539,8 @@ MonoBehaviour:
   colorEstrella: {r: 1, g: 0.8, b: 0.2, a: 1}
   colorNivel: {r: 0.4, g: 0.85, b: 1, a: 1}
   colorHalloween: {r: 1, g: 0.55, b: 0.1, a: 1}
+  colorMejora: {r: 1, g: 0.882, b: 0.302, a: 1}
+  colorRecord: {r: 1, g: 0.43, b: 0.85, a: 1}
 --- !u!4 &1585359846
 Transform:
   m_ObjectHideFlags: 0

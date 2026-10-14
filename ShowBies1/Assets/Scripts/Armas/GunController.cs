@@ -141,6 +141,26 @@ public class GunController : MonoBehaviour
         }
     }
 
+    // Lo que cuesta cada tiro en balas del cargador: 1, salvo con la carta de cadencia, cuyos
+    // tiros de mas no gastan (13/10, de Gemini: una carta nunca puede castigar un recurso; en la
+    // simulacion, con el cargador de 500, elegirla hacia perder oleadas). La caja, la furia y el
+    // arma si gastan. Se cobra con una deuda: sin la carta, cada tiro paga una bala entera.
+    public float CostoPorTiro
+    {
+        get { return 1f / Mathf.Max(1f, PoderDeLaPartida.MultiplicadorCadencia); }
+    }
+    private float deudaDeBalas;
+
+    // Las balas enteras que paga un tiro que cuesta "costo", con lo que se venia debiendo. Publica
+    // y pura para la prueba de logica.
+    public static int BalasDelTiro(ref float deuda, float costo)
+    {
+        deuda += costo;
+        int balas = Mathf.FloorToInt(deuda + 1e-4f);
+        if (balas > 0) deuda -= balas;
+        return balas;
+    }
+
     // El daño de la mejora, sin la furia: el que muestran el medidor y las pruebas.
     public float DanoPorBala
     {
@@ -283,9 +303,10 @@ public class GunController : MonoBehaviour
         {
             float intervalo = 1f / TirosPorSegundoDelArma;
             float atraso;
-            int tiros = Mathf.Min(TirosDelFrame(ref contadorDisp, Time.deltaTime, intervalo, maxTirosPorFrame, out atraso), player.cantBalas);
+            int tiros = TirosDelFrame(ref contadorDisp, Time.deltaTime, intervalo, maxTirosPorFrame, out atraso);
 
-            for (int i = 0; i < tiros; i++)
+            // Sin balas se corta: con la carta de cadencia una bala alcanza para mas de un tiro.
+            for (int i = 0; i < tiros && player.cantBalas > 0; i++)
             {
                 Disparar(Mathf.Max(0f, atraso - i * intervalo));
             }
@@ -307,7 +328,8 @@ public class GunController : MonoBehaviour
     // escalonadas en un chorro y no apiladas en la boca del arma.
     private void Disparar(float atraso)
     {
-        player.cantBalas--;
+        int balas = BalasDelTiro(ref deudaDeBalas, CostoPorTiro);
+        if (balas > 0) player.cantBalas = Mathf.Max(0, player.cantBalas - balas);
         TirosDisparados++;
         Vector3 salida = boca != null ? boca.position : firePoint.position;
         UltimaSalida = salida;

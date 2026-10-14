@@ -52,9 +52,12 @@ public class WaveManager : MonoBehaviour
     public float distanciaMinimaAlJugador = 8f; // ninguno nace mas cerca que esto, si se puede
 
     [Header("Ritmo")]
+    // 10 + 2n, uno cada 0,20 s, desde la 1.6.0 (13/10, de Gemini: eran 10 + 4n cada 0,35 s, y
+    // llegar a la 50 llevaba 35 minutos; ahora unos 20). Economia los lee de aca (ZombisBase y
+    // ZombisPorOleadaDeWaveMode), y la prueba de logica compara con WaveMode.unity.
     public int zombisBase = 10;              // zombis por oleada = zombisBase + zombisPorOleada * oleada
-    public int zombisPorOleada = 4;
-    public float intervaloEntreApariciones = 0.35f;
+    public int zombisPorOleada = 2;
+    public float intervaloEntreApariciones = 0.2f;
     public float esperaTrasElJefe = 1.5f;    // entre el jefe y el primer zombi de su oleada
     public float descansoEntreOleadas = 3f;
     public int maxZombisVivos = 60;          // techo de poblacion: si esta lleno, la oleada espera
@@ -76,10 +79,23 @@ public class WaveManager : MonoBehaviour
     public int oleadaDelSegundoTramo = 11;
     public float crecimientoVidaTardio = 1.08f;
     public float crecimientoDanoTardio = 1.04f;
+    // Y desde esta, un tercer tramo que pone el muro para el renacer de la 1.8.0 (13/10: con las
+    // cartas de la 1.6.0 el medio llegaba a la 86, con partidas de dos horas). Lo cerro Gemini
+    // (Argon) con la simulacion: desde la 26, vida x1,20 y golpe x1,10, el muro en la 57 / 59 /
+    // 68 (bajo, medio, alto) con partidas de 26-35 minutos (simulaciones/cartas_1.6.0). Las
+    // cartas llevan facil hasta la 25. 0 = sin tercer tramo.
+    public int oleadaDelTercerTramo = 26;
+    public float crecimientoVidaTercerTramo = 1.20f;
+    public float crecimientoDanoTercerTramo = 1.10f;
 
     [Header("Monedas")]
     public Moneda monedaPrefab;              // la que sueltan los zombis al morir
     public float crecimientoMonedas = 1.08f; // cada moneda vale crecimientoMonedas^(oleada - 1)
+    // Y de base, esto: con la mitad de zombis por oleada (10 + 2n), cada moneda vale x1,4 (13/10,
+    // de Gemini; x2 duplicaba el oro por minuto y metia al jugador en el muro en tres partidas).
+    // Es el valor, no la cantidad: el telefono tiene un techo de 80 monedas. Economia lo copia
+    // (MultiplicadorMonedasOleadas) y la prueba los compara.
+    public float valorDeLaMoneda = 1.4f;
     public int bonoPorOleada = 4;            // al completar la oleada N se cobran bonoPorOleada * N
 
     [Header("HUD")]
@@ -144,16 +160,24 @@ public class WaveManager : MonoBehaviour
     // pruebas, que comparan contra esto lo que de verdad le pusieron a cada zombi.
     public float MultiplicadorVidaEn(int oleada)
     {
-        return Escalado.PorOleada(crecimientoVida, oleada, oleadaDelSegundoTramo, crecimientoVidaTardio);
+        return Escalado.PorOleada(crecimientoVida, oleada, oleadaDelSegundoTramo, crecimientoVidaTardio,
+                                  oleadaDelTercerTramo, crecimientoVidaTercerTramo);
     }
 
     public float MultiplicadorDanoEn(int oleada)
     {
-        return Escalado.PorOleada(crecimientoDano, oleada, oleadaDelSegundoTramo, crecimientoDanoTardio);
+        return Escalado.PorOleada(crecimientoDano, oleada, oleadaDelSegundoTramo, crecimientoDanoTardio,
+                                  oleadaDelTercerTramo, crecimientoDanoTercerTramo);
     }
 
-    // Incluye el botin: es lo que vale cada moneda de un zombi de la oleada actual.
-    public float MultiplicadorMonedasActual => Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
+    // Lo que vale cada moneda de un zombi de una oleada, sin el botin (las pruebas).
+    public float MultiplicadorMonedasEn(int oleada)
+    {
+        return Escalado.PorOleada(crecimientoMonedas, oleada) * valorDeLaMoneda;
+    }
+
+    // Incluye el botin: es lo que vale cada moneda de un zombi de la oleada actual (y del tesoro).
+    public float MultiplicadorMonedasActual => MultiplicadorMonedasEn(OleadaActual) * botin;
 
     // La mejora de botin se lee una vez al empezar: no se puede comprar en medio
     // de la partida. El bono de la oleada no la usa.
@@ -256,6 +280,10 @@ public class WaveManager : MonoBehaviour
             {
                 yield return null;
             }
+
+            // El cargador, lleno (13/10, de Gemini): el que junta pocas cajas pasaba un cuarto del
+            // tiempo sin balas, y buscar cajas entre oleadas era tiempo muerto.
+            LlenarElCargador();
 
             // Sin un solo golpe en toda la oleada: el bono doble y el logro INTOCABLE.
             bool perfecta = golpesAlEmpezar >= 0 && PlayerHealth.instance != null && PlayerHealth.instance.GolpesRecibidos == golpesAlEmpezar;
@@ -440,7 +468,7 @@ public class WaveManager : MonoBehaviour
         // tocan: son los stats de la oleada 1.
         enemigo.multiplicadorVida = MultiplicadorVidaActual;
         enemigo.multiplicadorDano = MultiplicadorDanoActual;
-        enemigo.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
+        enemigo.multiplicadorMonedas = MultiplicadorMonedasActual;
         enemigo.monedaPrefab = monedaPrefab;
         enemigo.EsJefe = prefab == jefe;
         zombisDeLaOleada.Add(new ZombiAnotado { zombi = enemigo, aparicion = enemigo.NumeroDeAparicion });
@@ -456,6 +484,16 @@ public class WaveManager : MonoBehaviour
         if (zombi == null) return;
         zombisDeLaOleada.Add(new ZombiAnotado { zombi = zombi, aparicion = zombi.NumeroDeAparicion });
         zombisEnLaOleada++;
+    }
+
+    // El cargador hasta su tope (500, o 1.000 con la caja del arma), al terminar cada oleada. Solo
+    // en las oleadas: el modo libre y el tutorial no tienen WaveManager. Publico para el banco.
+    public static void LlenarElCargador()
+    {
+        var jugador = PlayerHealth.instance;
+        if (jugador == null || jugador.EstaMuerto) return;
+        var control = jugador.GetComponent<PlayerController>();
+        if (control != null && control.cantBalas < control.maxBalas) control.cantBalas = control.maxBalas;
     }
 
     // Saca el zombi del tesoro a DistanciaDelTesoro del jugador, a un costado (en la pantalla
@@ -474,7 +512,7 @@ public class WaveManager : MonoBehaviour
         if (tesoro == null) return null;
         tesoro.multiplicadorVida = MultiplicadorVidaActual;
         tesoro.multiplicadorDano = MultiplicadorDanoActual;
-        tesoro.multiplicadorMonedas = Escalado.PorOleada(crecimientoMonedas, OleadaActual) * botin;
+        tesoro.multiplicadorMonedas = MultiplicadorMonedasActual;
         tesoro.monedaPrefab = monedaPrefab;
         Efectos.TesoroAparece(tesoro.transform.position);
         return tesoro;
