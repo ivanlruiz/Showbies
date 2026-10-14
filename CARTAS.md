@@ -167,6 +167,26 @@ veces"; una partida cerca de su récord le dura 20-40 minutos), Gemini decidió,
    mejora nunca tiene que castigar un recurso). **El rifle tira a cadencia ×1.**
 4. **La curva del PODER queda como está** (12 × 1,15^L): retrasar la segunda carta arruina la primera partida.
 
+**Con Argon en Máx., revisado el mismo día** (Ivan lo cambió de modelo: la primera respuesta fue de Pro en el razonamiento
+mínimo). Corrida en la simulación, la decisión de arriba dejaba el muro en la 69 / 74 / 82 (bajo, medio, alto) y no en la
+50-55, con partidas de 36-47 minutos cerca del récord: la cadencia sin costo le sumaba 9-14 oleadas, y la moneda ×2
+duplicaba el oro por minuto y metía al medio en el muro en 3-4 partidas (`simulaciones/cartas_1.6.0/resultados_gemini.md`
+y `resultados_tercer_tramo.md`). Lo que quedó:
+
+- **El tercer tramo, desde la 26: vida ×1,20 y golpe ×1,10.** En la simulación, el muro en la 57 / 59 / 68 con 27 / 26 / 35
+  minutos de partida. No el de la 31 con ×1,25 y ×1,12 (54 / 58 / 61), que pegaba a todos contra el mismo muro: este deja
+  que el que juega bien llegue más lejos.
+- **La carta de cadencia sigue sin costo de balas**: ninguna carta puede ser una trampa que empeore la partida.
+- **La moneda ×1,4, no ×2**: el oro del principio empata con la 1.5.2 (hasta la 10, 10 + 2n son el 65 % de los zombis de
+  10 + 4n, y el bono de la oleada no bajó), la primera partida vuelve a comprar 1-2 mejoras y el oro por minuto queda un
+  ~70 % más ágil. El ×2 casi no movía el muro.
+- **Lo que no se había decidido**: el nivel del jugador sube ~30 % más lento (se deja: las partidas duran menos); el
+  récord en puntos de las oleadas queda alto para lo que da una oleada nueva (se acepta); los umbrales de Halloween bajan
+  35-45 % al actualizar (se acepta); **las metas de matar del logro Exterminador y de las estrellas del bestiario, a la
+  mitad**; **el oro del logro de combo, de x100 a x75** (con 10 + 2n recién la oleada 45 tiene 100 zombis); los
+  intersticiales siguen cada 3 partidas; **el zombi del tesoro también ×1,4**; el modo libre no cambia; las oleadas
+  perfectas más frecuentes se dejan.
+
 ## Rendimiento
 
 Las explosiones, los rayos y los drones salen de pools y de `Efectos`, nunca de `Instantiate` por tiro. Con 35 zombis
