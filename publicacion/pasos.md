@@ -73,7 +73,7 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       `en/` en en-US y las de `es/` en es-ES y es-419 (en la biblioteca de la consola, `showbies_1_6_<idioma>_*.png`).
       El borrador de la descripción en inglés traía, sin que nadie lo pidiera, la línea "• English and Spanish" de
       menos: se le devolvió para que quedara igual a la publicada y no entrara en el envío. El gráfico de funciones
-      (1024x500) sigue siendo el de día. **Después del 9/11**: el ícono de base en en-US (las traducciones lo
+      (1024x500) sigue siendo el de septiembre, de antes de la noche y del neón. **Después del 9/11**: el ícono de base en en-US (las traducciones lo
       heredan) y sacar la captura del evento (`01_halloween`) de las tres fichas.
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido

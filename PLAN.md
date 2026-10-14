@@ -324,7 +324,9 @@ que proyectan). Va con las maquetas de 6a.
 
 - **Las capturas con textos cortos ya están** (`Builds/ficha_final_corta`, español e inglés). Se pueden acortar más,
   a 1 o 2 palabras ("¡SOBREVIVE!", "¡JEFES ÉPICOS!"). Se suben con el OK de Ivan.
-- **Falta el gráfico destacado** de 1024 × 500: Nano Banana Pro con el logo.
+- **Falta el gráfico destacado** de 1024 × 500: Nano Banana Pro con el logo. Argon lo vio el 14/10: rehacerlo, uno
+  solo permanente, el héroe y la horda en la ciudad de noche y solo el logo del juego (pedido y detalle en
+  `publicacion/grafico_de_funciones.md`).
 - **El texto de la ficha:** reescribirlo para búsquedas ("zombie shooter offline", "survivor", "horde"), en
   `publicacion/ficha.md`, y cargarlo con su OK.
 - **Clips de 15-20 s** (furia, jefe, horda muriendo en cadena) para TikTok y Shorts, con un banco que graba como
