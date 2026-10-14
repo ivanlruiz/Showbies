@@ -1287,6 +1287,16 @@ VARIANTES.update({
     'gemini_moneda_x1': variante('gemini con la moneda x1, equilibrada', **dict(GEMINI, valor_moneda=1.0)),
     'gemini_curva_e': variante('gemini con la curva de la E (x1,15 y x1,07 desde la 11, sin tercer tramo), equilibrada',
                                **dict(GEMINI, tercer_tramo=0, vida_tardia=1.15, golpe_tardio=1.07)),
+    # Con el muro de la decision en la 69-82 y no en la 50-55 (resultados_gemini.md), cuanto hay que
+    # mover el tercer tramo para llegar: mas temprano, mas fuerte, y con la cadencia gastando balas.
+    'gemini_t21': variante('gemini con el tercer tramo desde la 21 (x1,15 y x1,08), equilibrada',
+                           **dict(GEMINI, tercer_tramo=21)),
+    'gemini_t26_fuerte': variante('gemini con el tercer tramo desde la 26 (x1,20 y x1,10), equilibrada',
+                                  **dict(GEMINI, tercer_tramo=26, vida_tercera=1.20, golpe_tercero=1.10)),
+    'gemini_t31_fuerte': variante('gemini con el tercer tramo desde la 31 (x1,25 y x1,12), equilibrada',
+                                  **dict(GEMINI, vida_tercera=1.25, golpe_tercero=1.12)),
+    'gemini_t21_costo': variante('gemini con el tercer tramo desde la 21 y la cadencia gastando balas, equilibrada',
+                                 **dict(GEMINI, tercer_tramo=21, cadencia_gratis=False)),
 })
 
 
