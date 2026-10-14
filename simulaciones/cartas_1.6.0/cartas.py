@@ -352,9 +352,9 @@ CURACION = 'curacion'
 PRIMER_COSTO, CRECE_COSTO = 12, 1.15
 
 
-def costo(poder, crece=CRECE_COSTO):
+def costo(poder, crece=CRECE_COSTO, primero=PRIMER_COSTO):
     """PoderDeLaPartida.Costo: round(12 x 1,15^L). Math.Round de C# redondea al par, como round."""
-    return int(round(PRIMER_COSTO * crece ** max(0, poder)))
+    return int(round(primero * crece ** max(0, poder)))
 
 
 # Lo que prefiere cada politica dentro de cada familia.
@@ -424,12 +424,20 @@ class Partida:
         self.manual = 1.0 if not var['auto'] else perfil['manual']
         self.ciclo_manual = int(round(10 * self.manual))
         self.cura_caja = round(40 * self.st['mult_vida'])
+        # Lo que propuso Argon el 14/10 para el arranque (todo con el valor de hoy por defecto): el
+        # auto-apuntado mas corto, que erra mas y que tarda en enganchar al siguiente despues de
+        # cada muerte; la caja de vida como una fraccion de la vida maxima.
+        self.alcance_auto = var.get('alcance_auto', ALCANCE_AUTOMATICO)
+        self.punteria_auto = var.get('punteria_auto', PUNTERIA_AUTOMATICA)
+        self.pausa_auto = var.get('pausa_auto', 0.0)
+        self.ultima_muerte = -1.0
+        self.cura_caja_frac = var.get('cura_caja_frac')
         # Lo de la revision del 13/10; la calibracion (como_curva) vuelve a lo de curva.py.
         self.como_curva = bool(var.get('como_curva'))
         self.pantalla = None if self.como_curva else var['pantalla']
         self.techo = var['techo']
         self.sigma_mano = sigma_de(perfil['punteria'])
-        self.sigma_auto = sigma_de(PUNTERIA_AUTOMATICA)
+        self.sigma_auto = sigma_de(self.punteria_auto)
         self.fps = var.get('fps')
         self.segundos_previos = segundos_previos
         self.revivio = False
@@ -511,7 +519,7 @@ class Partida:
         self.drones = v('dron', 0)
         while len(self.dron_prox) < self.drones:
             self.dron_prox.append(self.t + 0.5)
-        self.vampiro = 0.05 * v('vampiro', 0)
+        self.vampiro = var.get('vampiro_cura', 0.05) * v('vampiro', 0)
         self.escudo = v('escudo', 0) > 0
 
         # El arma de la mano: el tramo del danio de la mejora por las cartas, sin la furia. Sin
@@ -539,6 +547,9 @@ class Partida:
         else:
             patron = [(math.radians(-self.extra * 0.5 * ABANICO_DOBLE + i * ABANICO_DOBLE), 1.0)
                       for i in range(self.extra + 1)]
+        parte = self.var.get('parte_doble')
+        if parte is not None and self.extra > 0:
+            patron = [(angulo, p * parte) for angulo, p in patron]
         self.patron = patron
         self.abanico = len(patron) > 1
 
@@ -564,8 +575,9 @@ class Partida:
             return
         self.experiencia += xp
         crece = self.var['crece_costo']
-        while self.experiencia >= costo(self.poder, crece):
-            self.experiencia -= costo(self.poder, crece)
+        primero = self.var.get('primer_costo', PRIMER_COSTO)
+        while self.experiencia >= costo(self.poder, crece, primero):
+            self.experiencia -= costo(self.poder, crece, primero)
             self.poder += 1
             self.pendientes += 1
 
@@ -587,15 +599,21 @@ class Partida:
         if carta == CURACION:
             self.vida = float(self.vida_max)
             return
+        antes = self.vida_max
         self.veces[carta] = min(self.tope(carta), self.veces.get(carta, 0) + (2 if es_dorada else 1))
         self.recalcular()
         if carta == 'vida':
-            self.vida = float(self.vida_max)
+            if self.var.get('vida_cura_lo_sumado'):
+                # Argon (14/10): suma vida maxima y cura solo lo que sumo.
+                self.vida = min(float(self.vida_max), self.vida + (self.vida_max - antes))
+            else:
+                self.vida = float(self.vida_max)
 
     # --- Los golpes --------------------------------------------------------------------------
 
     def matar(self, z):
         z.vivo = False
+        self.ultima_muerte = self.t
         rng = self.rng
         pal = rng.randint(z.mmin, z.mmax)
         frac = self.frac_monedas
@@ -606,7 +624,7 @@ class Partida:
                 self.dorada = True
         if self.vampiro > 0:
             self.bajas_vampiro += 1
-            if self.bajas_vampiro >= 15:
+            if self.bajas_vampiro >= self.var.get('vampiro_cada', 15):
                 self.bajas_vampiro = 0
                 self.vida = min(float(self.vida_max), self.vida + max(1, round(self.vida_max * self.vampiro)))
         if self.pendientes:
@@ -712,7 +730,9 @@ class Partida:
             while self.prox_caja[tipo] <= t:
                 if self.rng.random() < self.perfil['cajas']:
                     if tipo == 'vida':
-                        self.vida = min(float(self.vida_max), self.vida + self.cura_caja)
+                        cura = (self.cura_caja if self.cura_caja_frac is None
+                                else round(self.cura_caja_frac * self.vida_max))
+                        self.vida = min(float(self.vida_max), self.vida + cura)
                     elif tipo == 'balas':
                         self.balas = self.max_balas
                         self.potencia, self.potencia_hasta = 1.5, self.prox_caja[tipo] + 10
@@ -730,7 +750,7 @@ class Partida:
 
     def punteria_media(self):
         f = self.manual
-        return f * self.perfil['punteria'] + (1 - f) * PUNTERIA_AUTOMATICA
+        return f * self.perfil['punteria'] + (1 - f) * self.punteria_auto
 
     def cadencia_media(self):
         f = self.manual
@@ -745,7 +765,7 @@ class Partida:
         a_mano = alcance_medio_tipo(tipo, self.pantalla, 'ver', self.alcance_arma)
         if f >= 1.0:
             return a_mano
-        a_auto = alcance_medio_tipo(tipo, self.pantalla, 'auto', min(ALCANCE_AUTOMATICO, self.alcance_arma))
+        a_auto = alcance_medio_tipo(tipo, self.pantalla, 'auto', min(self.alcance_auto, self.alcance_arma))
         return f * a_mano + (1 - f) * a_auto
 
     def error_angular(self, sigma, alfa, apunto):
@@ -817,7 +837,8 @@ class Partida:
         dps_arma, dps_dron = self.dps()
         dano_tiro = self.st['dano'] * self.m_dano * (1 + self.crit)
         necesario = sum(t[7] / total * max(dano_tiro, t[1] * mv) for t in hab)
-        rho = (1.0 / self.aparicion) * necesario / max(1e-9, dps_arma + dps_dron)
+        pausa = (1 - self.manual) * self.pausa_auto
+        rho = (1.0 / self.aparicion) * (necesario / max(1e-9, dps_arma + dps_dron) + pausa)
         alcance = self.alcance_medio()
         if rho >= 0.6 * min(1.0, alcance / ALCANCE_CURVA):
             return False, rho
@@ -828,7 +849,7 @@ class Partida:
             punteria *= sum(t[7] / total * self.no_atraviesa(t[0], t[3], self.vel_bala) for t in hab)
         dps_real = dps_arma * punteria + dps_dron
         for t in hab:
-            if t[1] * mv / max(1e-9, dps_real) >= self.alcance_medio(t[0]) / t[3]:
+            if t[1] * mv / max(1e-9, dps_real) + pausa >= self.alcance_medio(t[0]) / t[3]:
                 return False, rho
         return True, rho
 
@@ -843,14 +864,16 @@ class Partida:
                 mv = curva.dos_tramos(CRECE_VIDA, 11, CRECE_VIDA_TARDIO, n)
                 md = curva.dos_tramos(CRECE_GOLPE, 11, CRECE_GOLPE_TARDIO, n)
             elif var.get('tercer_tramo'):
-                mv = por_oleada3(CRECE_VIDA, n, SEGUNDO_TRAMO, var['vida_tardia'], var['tercer_tramo'],
-                                 var['vida_tercera'])
-                md = por_oleada3(CRECE_GOLPE, n, SEGUNDO_TRAMO, var['golpe_tardio'], var['tercer_tramo'],
-                                 var['golpe_tercero'])
+                mv = por_oleada3(var.get('vida_temprana', CRECE_VIDA), n, SEGUNDO_TRAMO, var['vida_tardia'],
+                                 var['tercer_tramo'], var['vida_tercera'])
+                md = por_oleada3(var.get('golpe_temprano', CRECE_GOLPE), n, SEGUNDO_TRAMO, var['golpe_tardio'],
+                                 var['tercer_tramo'], var['golpe_tercero'])
             else:
                 mv = por_oleada(CRECE_VIDA, n, SEGUNDO_TRAMO, var['vida_tardia'])
                 md = por_oleada(CRECE_GOLPE, n, SEGUNDO_TRAMO, var['golpe_tardio'])
-            self.mm = CRECE_MONEDAS ** (n - 1) * self.st['botin']
+            # Argon (14/10): el golpe de todos los zombis, de base, por 'golpe_base'.
+            md *= var.get('golpe_base', 1.0)
+            self.mm = var.get('crece_monedas', CRECE_MONEDAS) ** (n - 1) * self.st['botin']
             if self.valor_moneda != 1.0:
                 # La moneda de los zombis vale el doble (el multiplicadorMonedas del WaveManager).
                 self.mm *= self.valor_moneda
@@ -881,7 +904,7 @@ class Partida:
                     if self.vampiro > 0:
                         # Como en matar: cura cada 15 muertes en cualquier oleada.
                         self.bajas_vampiro += 1
-                        if self.bajas_vampiro >= 15:
+                        if self.bajas_vampiro >= self.var.get('vampiro_cada', 15):
                             self.bajas_vampiro = 0
                             self.vida = min(float(self.vida_max),
                                             self.vida + max(1, round(self.vida_max * self.vampiro)))
@@ -902,7 +925,13 @@ class Partida:
             if var.get('recarga'):
                 # Candidata: el cargador se llena al terminar cada oleada (hoy no: solo las cajas).
                 self.balas = self.max_balas
-            self.monedas += 4 * n * (1 if self.golpeado else 2)
+            elif var.get('recarga_parcial'):
+                # Argon (14/10): una parte del cargador por oleada, y lleno despues de un jefe.
+                if jefe:
+                    self.balas = self.max_balas
+                else:
+                    self.balas = min(self.max_balas, self.balas + int(round(var['recarga_parcial'] * self.max_balas)))
+            self.monedas += var.get('bono_por_oleada', 4) * n * (1 if self.golpeado else 2)
             if n >= 3 and rng.random() < 0.25 and rng.random() < self.perfil['tesoro']:
                 pal = rng.randint(14, 20)
                 self.monedas += sum(1 for _ in range(pal) if rng.random() < self.frac_monedas) * self.mm
@@ -1050,7 +1079,7 @@ class Partida:
             if manual:
                 en_alcance = [z for z in vivos if z.d <= alcance and z.d <= z.r_mano]
             else:
-                alcance = min(ALCANCE_AUTOMATICO, alcance)
+                alcance = min(self.alcance_auto, alcance)
                 en_alcance = [z for z in vivos if z.d <= alcance and z.d <= z.r_auto]
             # Los que estan al alcance en este paso: a los que puede pasar una bala que sigue.
             self.cerca = en_alcance
@@ -1058,7 +1087,8 @@ class Partida:
                 self.pasos_con_blanco += 1
                 if self.balas <= 0:
                     self.pasos_sin_balas += 1
-            if en_alcance and self.balas > 0:
+            pausado = not manual and self.pausa_auto > 0 and t - self.ultima_muerte < self.pausa_auto
+            if en_alcance and self.balas > 0 and not pausado:
                 pot = self.potencia if t < self.potencia_hasta else 1.0
                 sin_techo = self.st['tiros'] * pot * furia * self.m_cad
                 tps = min(TECHO_TIROS, sin_techo)
@@ -1069,7 +1099,7 @@ class Partida:
                 acumulador += tps_arma * DT
                 objetivo = min(en_alcance, key=lambda z: z.d)
                 d_ef = max(objetivo.d, DISTANCIA_PEGADO)
-                punteria = perfil['punteria'] if manual else PUNTERIA_AUTOMATICA
+                punteria = perfil['punteria'] if manual else self.punteria_auto
                 abanico = self.abanico
                 if abanico:
                     sigma = self.sigma_mano if manual else self.sigma_auto
@@ -1303,6 +1333,56 @@ VARIANTES.update({
                             **dict(GEMINI, tercer_tramo=26, vida_tercera=1.20, golpe_tercero=1.10, valor_moneda=1.4)),
     'final_1_6_0_base': variante('1.6.0 final sin cartas', cartas=False, politica=None,
                                  **dict(GEMINI, tercer_tramo=26, vida_tercera=1.20, golpe_tercero=1.10, valor_moneda=1.4)),
+})
+
+# Lo que propuso Argon el 14/10, despues de que Ivan probo la 1.6.0 en el telefono ("el autoapuntado
+# esta muy roto, o el juego esta muy desbalanceado"): el automatico hasta 7,5 m, con punteria 0,65 y
+# 0,25 s sin tirar despues de cada muerte (el giro a 240 grados/s no se modela: la pausa hace ese
+# trabajo); el cargador +25 % por oleada y lleno despues de un jefe; la carta de cadencia vuelve a
+# gastar; el golpe de los zombis x1,25; la curva x1,12/x1,08 hasta la 10, x1,11/x1,07 hasta la 25 y
+# x1,17/x1,09 desde la 26; el PODER 14 x 1,20^L; la carta de vida cura solo lo que suma; el vampiro
+# 3 % cada 20; la caja de vida el 35 % de la vida maxima. Lo demas, como la final.
+FINAL = dict(GEMINI, tercer_tramo=26, vida_tercera=1.20, golpe_tercero=1.10, valor_moneda=1.4)
+ARGON_ARRANQUE = dict(FINAL, alcance_auto=7.5, punteria_auto=0.65, pausa_auto=0.25,
+                      recarga=False, recarga_parcial=0.25, cadencia_gratis=False, golpe_base=1.25,
+                      vida_temprana=1.12, golpe_temprano=1.08, vida_tardia=1.11, golpe_tardio=1.07,
+                      vida_tercera=1.17, golpe_tercero=1.09, primer_costo=14, crece_costo=1.20,
+                      vida_cura_lo_sumado=True, vampiro_cura=0.03, vampiro_cada=20, cura_caja_frac=0.35)
+# La segunda version de Argon (14/10), despues de ver la primera: el oro mas lento (la moneda x0,75,
+# x1,05 por oleada y el bono de 2n), el PODER 24 x 1,11^L, el disparo doble a 70 % por bala, el danio
+# x1,20 y la cadencia x1,15 sin costo de balas, y la curva x1,14/x1,09 hasta la 10, x1,12/x1,08
+# hasta la 25 y x1,13/x1,065 desde la 26, con el golpe x1,25. El automatico, el cargador y las
+# curas, como la primera.
+ARGON_V2 = dict(ARGON_ARRANQUE, valor_moneda=0.75, crece_monedas=1.05, bono_por_oleada=2,
+                primer_costo=24, crece_costo=1.11, parte_doble=0.7, valor_dano=1.20,
+                valor_cadencia=1.15, cadencia_gratis=True,
+                vida_temprana=1.14, golpe_temprano=1.09, vida_tardia=1.12, golpe_tardio=1.08,
+                vida_tercera=1.13, golpe_tercero=1.065)
+# La tercera (y final) de Argon (14/10): el golpe de los zombis como siempre, el automatico con
+# punteria 0,75, el PODER 12 -> 14 x 1,15^L, la curva x1,13/x1,09 hasta la 10, x1,145/x1,085 hasta la
+# 30 (el segundo tramo se estira hasta el tercer jefe) y x1,12/x1,065 desde la 31, y la moneda x1 que
+# crece x1,03 por oleada, con el bono de 2n. Lo demas, como la V2.
+ARGON_V3 = dict(ARGON_V2, golpe_base=1.0, punteria_auto=0.75, primer_costo=14, crece_costo=1.15,
+                vida_temprana=1.13, golpe_temprano=1.09, vida_tardia=1.145, golpe_tardio=1.085,
+                tercer_tramo=31, vida_tercera=1.12, golpe_tercero=1.065,
+                valor_moneda=1.0, crece_monedas=1.03, bono_por_oleada=2)
+VARIANTES.update({
+    'argon_v3': variante('V3 de Argon (14/10), equilibrada', **ARGON_V3),
+    'argon_v3_base': variante('V3 de Argon sin cartas', cartas=False, politica=None, **ARGON_V3),
+})
+VARIANTES.update({
+    'argon_v2': variante('V2 de Argon (14/10), equilibrada', **ARGON_V2),
+    'argon_v2_base': variante('V2 de Argon sin cartas', cartas=False, politica=None, **ARGON_V2),
+})
+VARIANTES.update({
+    'argon_arranque': variante('arranque de Argon (14/10), equilibrada', **ARGON_ARRANQUE),
+    'argon_arranque_base': variante('arranque de Argon sin cartas', cartas=False, politica=None, **ARGON_ARRANQUE),
+    # Para ver cuanto pesa cada parte: solo el automatico, y todo menos el automatico.
+    'argon_solo_auto': variante('la final con el automatico de Argon, equilibrada',
+                                **dict(FINAL, alcance_auto=7.5, punteria_auto=0.65, pausa_auto=0.25)),
+    'argon_sin_auto': variante('arranque de Argon con el automatico de hoy, equilibrada',
+                               **dict(ARGON_ARRANQUE, alcance_auto=ALCANCE_AUTOMATICO,
+                                      punteria_auto=PUNTERIA_AUTOMATICA, pausa_auto=0.0)),
 })
 
 
