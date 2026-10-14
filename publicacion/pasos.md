@@ -65,6 +65,16 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       (endless, furia, jefe, premio diario, tienda, menú, oleada 10), en teléfono y tablets de 7" y 10", en
       `Builds/ficha/v5/`. Se mandaron a revisión junto con la versión 5 y la descripción completa de los tres idiomas:
       Play no deja revisiones separadas, un envío nuevo reinicia la que está en curso.
+- [x] **Ficha de noche y de Halloween** (14/10/2026, enviada a revisión sola, sin ninguna versión): Ivan vio desde
+      otro teléfono el ícono y las capturas viejas. Las traducciones (es-ES y es-419) tenían **su propio ícono, el
+      naranja de antes** (un gráfico localizado pisa al de la ficha principal), y las tres fichas, las 7 capturas de
+      día del 18/9. Se sacó el ícono propio de las dos traducciones, que ahora **heredan el de en-US** (el de
+      Halloween), y se pusieron las 8 capturas de `Builds/ficha_final_corta` en teléfono y tablets de 7" y 10": las de
+      `en/` en en-US y las de `es/` en es-ES y es-419 (en la biblioteca de la consola, `showbies_1_6_<idioma>_*.png`).
+      El borrador de la descripción en inglés traía, sin que nadie lo pidiera, la línea "• English and Spanish" de
+      menos: se le devolvió para que quedara igual a la publicada y no entrara en el envío. El gráfico de funciones
+      (1024x500) sigue siendo el de día. **Después del 9/11**: el ícono de base en en-US (las traducciones lo
+      heredan) y sacar la captura del evento (`01_halloween`) de las tres fichas.
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
