@@ -46,7 +46,10 @@ WaveMode:
 
 | hasta la oleada | 1 | 2 | 3 | 5 | 10 | 15 | 20 | 30 | 40 | 50 | 60 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| cartas | 1 | 2 | 3 | 6 | 12 | 16 | 19 | 24 | 28 | 31 | 33 |
+| cartas | 1 | 2 | 3 | 4 | 9 | 13 | 16 | 20 | 24 | 27 | 29 |
+
+Con las oleadas de 10 + 2n de la 1.6.0 (ver Lo que decidió Gemini, abajo); con las de 10 + 4n, para las que se eligió la
+curva, eran 1, 2, 3, 6, 12, 16, 19, 24, 28, 31 y 33.
 
 Gemini pedía 12-15 hasta la 10. **Hasta el 12/10 arrancaba en 8** (1, 3, 5, 8, 14...): en el teléfono Ivan tenía tres cartas
 a mitad de la oleada 2 ("el poder es muy fácil de conseguir"), y Gemini eligió esta entre cinco curvas simuladas (8, 12 y
@@ -211,7 +214,7 @@ en el teléfono se mide con el contador de FPS (el peor cuadro y los tirones), e
 | 1 | Primero el interruptor de los bancos y el tutorial; después la experiencia (en los assets), el PODER, la barra, la elección y las 8 cartas de números, con el guardado (v8) y las pruebas | 3-4 días |
 | 2 | Las 9 cartas que cambian las reglas, con su banco, y los íconos (**hecha el 12/10**) | 4-5 días |
 | 3 | El arma que cambia con el daño: maquetas, y después el constructor (**hecha el 12/10**: el cañón, la luz, el fogonazo y el sonido de cada una; ver CLAUDE.md) | 1-2 días |
-| 4 | El balance con la simulación, el Redmi, la APK de prueba y el AAB | 1-2 días |
+| 4 | El balance con la simulación, el Redmi, la APK de prueba y el AAB (**el balance, hecho el 13/10**: ver Lo que decidió Gemini y CLAUDE.md) | 1-2 días |
 
 Cada etapa termina con la prueba de lógica en TODO OK y una APK de prueba para el teléfono.
 

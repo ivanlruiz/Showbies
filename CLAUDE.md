@@ -469,9 +469,11 @@ poca distancia), diseñado por Gemini en la revisión de arte y en `Proyectiles`
 | pistola | la de siempre | 15 m/s | 1,5 s | 22 m | ×1 |
 | revólver | un cubo 1,75× más grande | 25 | 1 | 25 | ×0,7 |
 | escopeta | cuatro perdigones de 0,75× a −12, −4, 4 y 12° | 12 | 0,6 | 7 | ×0,7 |
-| rifle | una trazadora: 4× de largo y 0,5× de ancho | 35 | 0,8 | 28 | ×1,2 |
+| rifle | una trazadora: 4× de largo y 0,5× de ancho | 35 | 0,8 | 28 | ×1 |
 | energía | una onda: la esfera, 3× de ancho, que atraviesa dos zombis sin perder daño | 12 | 1,8 | 22 | ×1 |
 
+- **El rifle tiraba a ×1,2 hasta el 13/10**: compensado en el daño, gastaba un 20 % más de balas por el mismo daño
+  (Gemini lo bajó con el balance de la 1.6.0, ver El balance de la 1.6.0).
 - **Las medidas son proporciones de la bala de la pistola** (0,09 m: Ivan las pidió más chicas el 9/10; Gemini proponía
   0,2 m y aceptó las proporciones). La velocidad de las balas ya no sale de `GunController.velocidadBala` (quedó de
   respaldo) sino de la tabla.
@@ -555,12 +557,14 @@ El corazón de la 1.6.0 (de la revisión de Gemini del 10/10; el diseño entero 
 **matar zombis da experiencia, al llenar la barra se sube un PODER, el juego se congela y se elige una de tres
 cartas**, que dura toda la partida. La tienda es lo permanente y las cartas son la partida: morir o REINICIAR las
 pierde. Va en los dos modos, no en el tutorial. **Etapa 1 (12/10): las ocho de números y la de reserva. Etapa 2 (12/10):
-las nueve que cambian las reglas** (ver abajo). Faltan el arma que cambia con el daño y el balance.
+las nueve que cambian las reglas** (ver abajo). **Etapa 3 (12/10): el arma que cambia con el daño. Etapa 4 (13/10): el
+balance** (ver El balance de la 1.6.0, abajo).
 
 - **La experiencia** sale de `Enemy.experiencia`, en el bloque de la muerte de `DanoZombi` (la regla de siempre), y
   vuela como una chispa celeste del zombi al jugador (`EleccionDeCartas.Chispa`, un pool de 24 sprites). Pasar del
-  PODER L al siguiente cuesta `round(12 × 1,15^L)` (`PoderDeLaPartida.Costo`): una por oleada al principio, 12 cartas
-  hasta la oleada 10, 19 hasta la 20 y 28 hasta la 40, con la mezcla de WaveMode. Arrancaba en 8 hasta el 12/10, y Ivan
+  PODER L al siguiente cuesta `round(12 × 1,15^L)` (`PoderDeLaPartida.Costo`): una por oleada al principio, 9 cartas
+  hasta la oleada 10, 16 hasta la 20 y 24 hasta la 40, con la mezcla de WaveMode (eran 12, 19 y 28 con las oleadas de
+  10 + 4n: la curva no se tocó en el balance, ver abajo). Arrancaba en 8 hasta el 12/10, y Ivan
   tenía tres cartas a mitad de la oleada 2; Gemini eligió esta entre cinco curvas (ver `CARTAS.md`). Una granada puede
   subir dos de golpe: quedan dos elecciones.
 - **`PoderDeLaPartida` es estático y nadie lo "aplica"**: el arma (`TirosPorSegundo`, `DanoPorTiro`,
@@ -586,7 +590,7 @@ las nueve que cambian las reglas** (ver abajo). Faltan el arma que cambia con el
 | carta | por vez | tope |
 |---|---|---|
 | Daño | daño ×1,25 | 4 |
-| Cadencia | tiros/s ×1,2 (respeta el techo de 120) | 4 |
+| Cadencia | tiros/s ×1,2 (respeta el techo de 120), sin gastar más balas | 4 |
 | Crítico | +10 % de crítico | 3 |
 | Vida | vida máxima ×1,2 y la llena | 3 |
 | Velocidad | +10 % | 2 |
@@ -741,14 +745,16 @@ consultando `EnemyController.ZombisVivos`:
   2. Si la oleada es múltiplo de `jefeCadaOleadas` (10), saca un `jefe`, y el primero de los demás sale
      `esperaTrasElJefe` (1,5 s) después y en otro punto: salían en el mismo cuadro, a veces en el mismo punto, con el
      chico adentro del jefe.
-  3. Saca `zombisBase + zombisPorOleada × oleada` zombis (10 + 4n: 14 en la 1, 50 en la 10; pedido de Ivan antes de
-     la prueba cerrada, antes eran 6 + 2n), de a uno cada `intervaloEntreApariciones` (0,35 s, antes 0,8 s), en un punto al azar de `spawnPoints` a más de `distanciaMinimaAlJugador` (8 m) del jugador y fuera de la vista (si todos
+  3. Saca `zombisBase + zombisPorOleada × oleada` zombis (10 + 2n: 12 en la 1, 30 en la 10, desde la 1.6.0; eran
+     10 + 4n, pedido de Ivan antes de la prueba cerrada, y antes 6 + 2n), de a uno cada `intervaloEntreApariciones`
+     (0,2 s desde la 1.6.0; eran 0,35 s, y antes 0,8 s), en un punto al azar de `spawnPoints` a más de `distanciaMinimaAlJugador` (8 m) del jugador y fuera de la vista (si todos
      están cerca, el más lejano: antes nacían encima y pegaban en el acto; si los lejanos se ven, uno de esos). El tipo sale por sorteo
      entre los `tipos` ya habilitados (`desdeOleada`), con `peso` relativo: normal desde la 1, rápido desde
      la 3, tanque desde la 6 y FASTER desde la 9. Si se llegó al techo, espera.
   4. **Termina cuando mueren todos los zombis que sacó**; los que caen por el kill-Z cuentan como muertos. Si el
      jugador murió en el mismo paso, espera a ver si revive: si no, la partida termina en esa oleada y no se
-     completa ni se guarda la siguiente.
+     completa ni se guarda la siguiente. **Al terminar, el cargador queda lleno** (`WaveManager.LlenarElCargador`,
+     1.6.0, de Gemini: Ivan se quedaba sin balas "a veces", y con las cartas de cadencia una partida dura más).
 
   **La partida de oleadas se retoma** (pedido de Ivan): al empezar cada oleada, `WaveManager` guarda en el progreso la
   oleada y los puntos (`Progreso.GuardarOleadaEnCurso`) y escribe el archivo. Si se sale al menú o se cierra la app,
@@ -880,8 +886,42 @@ script y sus tablas (la del 19/9 quedó en un scratchpad y se perdió):
 - **Con el segundo tramo**, el medio llega a la 40 en la partida 7 y a la 55 en la 18, y se frena cerca de la 60:
   el muro queda para el renacer (1.8.0), y las cartas (1.6.0) lo van a correr un poco.
 
-Los valores van con el valor por defecto del script y no con un override en la escena, y la prueba de lógica los lee de
-`WaveMode.unity`. El modo libre sigue con un solo tramo (`GeneradorZombis`, 1,15 por nivel).
+**Desde la oleada 26 va en un tercer tramo** (1.6.0: vida ×1,20 y golpe ×1,10, `oleadaDelTercerTramo`,
+`crecimientoVidaTercerTramo` y `crecimientoDanoTercerTramo`, con `Escalado.PorOleada` de tres tramos: la 26 ya vale la 25
+por el tercero). Las cartas no lo corrieron un poco: lo corrieron unas 30 oleadas (ver El balance de la 1.6.0).
+
+Los valores están guardados en la escena (desde la 1.6.0; iguales al valor por defecto del script), y la prueba de lógica
+los lee de `WaveMode.unity`. El modo libre sigue con un solo tramo (`GeneradorZombis`, 1,15 por nivel).
+
+### El balance de la 1.6.0
+
+Las cartas hacían al jugador mucho más fuerte dentro de la partida: en la simulación (`simulaciones/cartas_1.6.0`, con
+el script y sus tablas, un jugador bajo, uno medio y uno alto que eligen cartas, compran mejoras y retoman) el muro del
+medio pasaba de la 56 a la 86, con partidas de dos horas en el muro, y ya sin cartas llegar a la 50 llevaba 35 minutos.
+Ivan contó que se queda sin balas "a veces" y que una partida cerca de su récord le dura 20-40 minutos, y lo decidió
+Gemini (13/10, revisado con Argon en el razonamiento máximo, después de correr en la simulación la primera respuesta):
+
+- **Oleadas más cortas y más frenéticas**: 10 + 2n zombis, uno cada 0,2 s (ver arriba).
+- **El tercer tramo desde la 26** (ver arriba): el muro en la 57 / 59 / 67 (bajo, medio, alto), con 26-33 minutos de
+  partida en el muro. El medio llega a la 50 en la partida 4: la progresión se comprime, y se aceptó.
+- **Cada moneda de las oleadas vale ×1,4** (`WaveManager.valorDeLaMoneda`, en `MultiplicadorMonedasEn`, también para el
+  zombi del tesoro; igual en `Economia.MultiplicadorMonedasOleadas`, que la prueba compara con la escena): hasta la 10,
+  10 + 2n son el 65 % de los zombis de 10 + 4n, y con ×1,4 la primera partida vuelve a comprar 1-2 mejoras. Con ×2 el oro
+  por minuto se duplicaba y el medio entraba al muro en 3-4 partidas.
+- **El cargador se llena al terminar cada oleada** (ver arriba).
+- **Los tiros de más de la carta de cadencia no gastan balas** (`GunController.CostoPorTiro`, 1 / su multiplicador, y
+  `BalasDelTiro`, que lleva la deuda de las fracciones): ninguna carta puede empeorar la partida. La caja y la furia sí
+  gastan, como siempre.
+- **El rifle tira a ×1** (ver Lo que tira cada arma).
+- **La curva del PODER queda como está**: retrasar la segunda carta arruina la primera partida.
+- **Lo que mide con la vara de `Economia` se recalculó solo** (las misiones, la diaria, el nivel, el video de monedas)
+  y queda cerca de lo de antes: menos zombis, que valen más. **A la mitad, las muertes de las estrellas del bestiario
+  (50, 500 y 5.000; las del jefe no) y del logro Exterminador (500, 5.000 y 50.000)**, y **el oro del combo en x75**
+  (era x100: con 10 + 2n recién la oleada 45 tiene 100 zombis). Se aceptaron: el nivel del jugador sube ~30 % más lento
+  (el 10 cae en la partida 12 y el 50 en la 71), el récord en puntos de las oleadas queda alto, los umbrales de
+  Halloween bajan 35-45 % al actualizar en pleno evento, las oleadas perfectas salen más seguido, los intersticiales
+  siguen cada 3 partidas y el modo libre no cambia. Las misiones y el desafío ya armados siguen con su objetivo hasta
+  que cambian.
 
 Sin el techo son ~350 zombis en el primer minuto y sigue creciendo lineal.
 
@@ -1230,7 +1270,7 @@ partida en curso). No usa PlayerPrefs a propósito: es estado estructurado.
   se quedan donde cayeron**: no hay imán global (antes `Moneda.AtraerTodas` las traía todas), juntarlas es parte del
   juego y la mejora de imán es la que ayuda. Siguen desapareciendo a los 20 s.
 - **`multiplicadorMonedas` y `monedaPrefab` los pone quien hace aparecer al zombi.** `WaveManager` usa
-  `crecimientoMonedas^(oleada − 1)` (1,08) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
+  `crecimientoMonedas^(oleada − 1)` (1,08) por `valorDeLaMoneda` (1,4, desde la 1.6.0: ver El balance de la 1.6.0) y `GeneradorZombis` 0,5 × el crecimiento de su nivel (el modo libre da
   la mitad y no tiene bono), los dos multiplicados por el botín de la mejora: con un multiplicador menor a 1 cada moneda sale con esa probabilidad y vale 1, porque una moneda de
   0,5 no mueve el contador al agarrarla. Un zombi sin `monedaPrefab`, como los del tutorial, no suelta nada.
 - **Las monedas no tienen Rigidbody ni collider**, no proyectan ni reciben sombra (con el material instanciado,
@@ -1337,10 +1377,11 @@ terminada: ver Primera vez).
 
 Los tres premios que no se ganan jugando —las misiones del día, las estrellas del bestiario y la recompensa diaria— se
 miden contra **lo que deja jugar**, y esa cuenta vive en un solo lugar (`Economia`): `ZombisPorPartida` (los zombis que
-se matan llegando a la oleada m, que son 10 + 4n por oleada) y `MonedasPorPartida` (esos zombis por las ~2 monedas que
-suelta cada uno, con el multiplicador de la oleada a mitad de camino). Para los objetivos que no se cumplen matando
+se matan llegando a la oleada m, que son 10 + 2n por oleada, `ZombisBase` y `ZombisPorOleada`, que la prueba compara con
+WaveMode) y `MonedasPorPartida` (esos zombis por las ~2 monedas que suelta cada uno, por lo que vale cada moneda,
+`MultiplicadorMonedasOleadas`, y con el multiplicador de la oleada a mitad de camino). Para los objetivos que no se cumplen matando
 están además `SegundosPorPartida` (cuánto dura esa partida: un tercio de segundo largo por zombi más los 3 s de
-descanso entre oleadas, ~1.400 s para una que llega a la 40) y `BalasPorPartida` (los zombis por lo que cuesta
+descanso entre oleadas, ~840 s para una que llega a la 40) y `BalasPorPartida` (los zombis por lo que cuesta
 matarlos, que **no** es constante: el daño comprable crece con el logaritmo de las monedas y la vida de los zombis,
 exponencial, así que cada vez hacen falta más balas por zombi). Es **de menos a propósito**: no suma el bono de
 cada oleada ni el botín, así un premio calculado con esto nunca se pasa de lo que da jugarlo. `Redondo` está ahí también,
@@ -1415,7 +1456,7 @@ completada en el día y la lista).
   mejor oleada (o los puntos del récord en el libre) que había al empezar, con el arpegio doble (`Efectos.Festejo`);
   sin marca previa, nada. Sin esto el MEJORAS de la pausa casi no se iba a usar, y el récord se sabía recién en la
   derrota. **ShowBies > Pruebas > Fin de oleada y avisos (play)** (`PruebaFinDeOleada`) lo mira junto con el final de
-  oleada.
+  oleada, y que el cargador quede lleno (lo deja en 7 balas a mitad de la oleada).
 
 ## Desafío semanal
 
@@ -1469,8 +1510,8 @@ mide el cartel contra los botones de las esquinas y MEJORAS, que se vaya solo y 
 
 ## Bestiario
 
-Una tarjeta por tipo de zombi (`Bestiario`, `Assets/Scripts/Progreso/`) con tres estrellas: 100, 1.000 y 10.000 muertes de
-ese tipo (el jefe: 1, 10 y 50), contadas con los contadores de por vida por el nombre del asset `Enemy`. Cada estrella se
+Una tarjeta por tipo de zombi (`Bestiario`, `Assets/Scripts/Progreso/`) con tres estrellas: 50, 500 y 5.000 muertes de
+ese tipo (el jefe: 1, 10 y 50; las demás eran 100, 1.000 y 10.000 hasta la 1.6.0, que hizo las oleadas más cortas), contadas con los contadores de por vida por el nombre del asset `Enemy`. Cada estrella se
 cobra una vez y **paga la mitad de lo que dejan esas muertes** (`MonedasQueDeja`: lo que suelta ese tipo por el
 multiplicador de la oleada, a mitad de camino, como en las misiones), por `CobrarPremio`. Eran 200, 1.000 y 5.000 fijos
 × (1 + 0,1 × oleada): 100 caminantes pagaban lo mismo que 100 tanques, que cuestan tres veces más, las primeras
@@ -1495,13 +1536,14 @@ pinta a la horda, elegido por Ivan), las gemas y las armas (ver TAREAS).
   suma el puntaje. Los logros dan más, de a golpes.
 - **La curva** (`NivelJugador`): pasar del nivel L al siguiente cuesta `100L − 75` (25, 125, 225… 925 el décimo). Una
   partida da más experiencia cuanto más lejos se llega, así que con esta curva se sube más o menos **un nivel por
-  partida** en todo el juego: con el modelo de `Economia`, el 10 cae cerca de la partida 10 y el 50 cerca de la 55. La
+  partida** en todo el juego: con el modelo de `Economia`, el 10 cae cerca de la partida 12 y el 50 cerca de la 71 (eran 10 y 55 hasta la
+  1.6.0: las oleadas son más cortas y se dejó así). La
   prueba lo mide con la mezcla de zombis, los pesos y los puntos del `WaveManager` de WaveMode.
 - **El premio de cada nivel**: el 15 % de lo que deja una partida (`Economia.MonedasPorPartida`), y el triple cada 5
   niveles, **con la mejor oleada del momento en que se sube** (`PremioDeNivel.oleada`), no la de cuando se cobra: si no,
   convendría no cobrarlo nunca. Queda pendiente y se cobra en el menú, por `CobrarPremio`.
 - **Doce familias de logros con tres monedas** (bronce, plata y oro) en `Logros`: completa la oleada 10/25/50 (la 10 es
-  el primer jefe), mata 1.000/10.000/100.000 zombis, combo x25/x50/x100, crítico al 30/50/100 %, gana
+  el primer jefe), mata 500/5.000/50.000 zombis, combo x25/x50/x75 (eran 1.000/10.000/100.000 y x100 hasta la 1.6.0), crítico al 30/50/100 %, gana
   10.000/100.000/1.000.000 monedas jugando, mata 5/10/15 con una granada, usa la furia 1/25/100 veces, termina la
   oleada 5/10/20 sin que te toquen, racha diaria de 3/7/30 días, cobra 10/50/200 misiones, 5/10/15 estrellas del
   bestiario y llega al nivel 5/10/20 del modo libre. **Los ids de las familias se guardan en el JSON: no se renombran.**

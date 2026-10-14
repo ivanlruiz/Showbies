@@ -1,14 +1,15 @@
 # Notas de la versión 1.6.0 (13) para Play
 
-Las que van en "Novedades" de la versión de producción. Máximo 500 caracteres por idioma (contados: en-US 444,
-es-ES 470, es-419 471). Como siempre, la de Latinoamérica (es-419) escribe "zombies".
+Las que van en "Novedades" de la versión de producción. Máximo 500 caracteres por idioma (contados: en-US 497,
+es-ES 496, es-419 497). Como siempre, la de Latinoamérica (es-419) escribe "zombies".
 
 ## en-US
 ```
 What's new in 1.6.0
 • POWER cards: zombies give you power, and each level lets you pick 1 of 3 cards for the run: damage, drones, frost, piercing and explosive bullets, and more
 • Your gun evolves with your damage: revolver, shotgun, rifle and energy gun, each with its own shots and sound
-• Dynamic joysticks: they appear wherever you touch (switch them off in Options)
+• Shorter, wilder waves, and a full magazine after each one
+• Dynamic joysticks: they appear wherever you touch (turn off in Options)
 • Auto-aim shoots slower: aim by hand for full firepower
 • New menu music
 ```
@@ -16,20 +17,22 @@ What's new in 1.6.0
 ## es-ES
 ```
 Novedades de la 1.6.0
-• Cartas de PODER: los zombis te dan poder, y cada nivel te deja elegir 1 de 3 cartas para la partida: daño, drones, hielo, balas perforantes y explosivas, y más
-• Tu arma evoluciona con tu daño: revólver, escopeta, rifle y arma de energía, cada una con sus disparos y su sonido
+• Cartas de PODER: los zombis te dan poder y en cada nivel eliges 1 de 3 cartas para la partida: daño, drones, hielo, balas explosivas y más
+• Tu arma evoluciona con tu daño: revólver, escopeta, rifle y arma de energía, cada una con su disparo y sonido
+• Oleadas más cortas y frenéticas, y cargador lleno tras cada una
 • Joysticks dinámicos: aparecen donde tocas (se apagan en Opciones)
-• El auto-apuntado dispara más lento: apunta a mano para la cadencia entera
+• Auto-apuntado más lento: apunta a mano para disparar a tope
 • Música nueva en el menú
 ```
 
 ## es-419
 ```
 Novedades de la 1.6.0
-• Cartas de PODER: los zombies te dan poder, y cada nivel te deja elegir 1 de 3 cartas para la partida: daño, drones, hielo, balas perforantes y explosivas, y más
-• Tu arma evoluciona con tu daño: revólver, escopeta, rifle y arma de energía, cada una con sus disparos y su sonido
+• Cartas de PODER: los zombies te dan poder y en cada nivel eliges 1 de 3 cartas para la partida: daño, drones, hielo, balas explosivas y más
+• Tu arma evoluciona con tu daño: revólver, escopeta, rifle y arma de energía, cada una con su disparo y sonido
+• Oleadas más cortas y frenéticas, y cargador lleno tras cada una
 • Joysticks dinámicos: aparecen donde tocas (se apagan en Opciones)
-• El auto-apuntado dispara más lento: apunta a mano para la cadencia entera
+• Auto-apuntado más lento: apunta a mano para disparar a tope
 • Música nueva en el menú
 ```
 
@@ -49,6 +52,11 @@ Casi todo sale de las revisiones de Gemini del 10/10 y el 12/10 (`CARTAS.md`, `A
 - **El auto-apuntado tira a la mitad de la cadencia**; con el joystick, entera.
 - **Los joysticks dinámicos**, prendidos de fábrica (OPCIONES > JOYSTICKS DINÁMICOS).
 - **Kingball**, el tema de Ivan, de música del menú.
+- **El balance** (13/10, de Gemini con la simulación: `CARTAS.md` y CLAUDE.md, El balance de la 1.6.0): oleadas de
+  10 + 2n zombis, uno cada 0,2 s; un tercer tramo de la curva desde la 26 (vida ×1,20 y golpe ×1,10); cada moneda de las
+  oleadas ×1,4; el cargador lleno al terminar cada oleada; los tiros de más de la carta de cadencia no gastan balas; el
+  rifle a cadencia ×1. Las estrellas del bestiario y el logro Exterminador piden la mitad de muertes, y el oro del combo,
+  x75.
 
 ## Antes de enviarla
 
