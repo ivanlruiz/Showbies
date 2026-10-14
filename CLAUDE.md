@@ -1343,8 +1343,8 @@ terminada: ver Primera vez).
   (`MonedasPorDia`), y del día 7 en adelante sigue pagando lo del 7 mientras no se corte.
 - **Crece con la mejor oleada, con la vara de `Economia`**: paga las partidas que dice `PartidasPorDia` (de un cuarto
   de partida el primer día a dos el séptimo), y **los montos de arriba quedan como piso**. Así en el arranque —donde 150
-  monedas son la primera mejora— paga lo mismo de siempre, y en la oleada 45 pasa de 825 monedas a unas 12.700 el primer
-  día: con el +10 % lineal de antes quedaba en calderilla justo cuando más hace falta la razón para volver.
+  monedas son la primera mejora— paga lo mismo de siempre, y en la oleada 45 pasa de 825 monedas a unas 9.950 el primer
+  día (12.950 hasta la 1.6.0, con 10 + 4n y la moneda ×1): con el +10 % lineal de antes quedaba en calderilla justo cuando más hace falta la razón para volver.
 - **Paga con la mejor oleada del día, congelada** (`Progreso.OleadaDeLaRecompensa(hoy)`, campos
   `diaOleadaRecompensa` y `oleadaRecompensa`, que se anotan la primera vez que se pregunta ese día), igual que las
   misiones y el desafío semanal y por la misma razón: con la marca de ahora, dejar la ventana sin cobrar, jugar hasta
@@ -1806,7 +1806,7 @@ debajo del de las misiones** (`BotonVideoDeMonedas`, una copia del globo como lo
 de la oferta de revivir en el naranja del video), para mirar un video y cobrar monedas.
 
 - **Paga un cuarto de partida** en la mejor oleada (`VideoDeMonedas.Premio`, con la vara de `Economia`), con piso de 50:
-  50 al principio, 240 en la oleada 10, 3.450 en la 30. Entra por `CobrarPremio`.
+  50 al principio, 220 en la oleada 10, 2.750 en la 30 (240 y 3.450 hasta la 1.6.0). Entra por `CobrarPremio`.
 - **Uno cada 10 minutos** (`SegundosEntreVideos`), con la hora del teléfono guardada en el progreso
   (`ultimoVideoDeMonedas`, segundos Unix, sin cambiar la versión). Adelantar el reloj da otro video antes, que es mirar
   más anuncios; atrasarlo no deja esperando.

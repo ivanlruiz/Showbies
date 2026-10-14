@@ -177,7 +177,7 @@ duplicaba el oro por minuto y metía al medio en el muro en 3-4 partidas (`simul
 y `resultados_tercer_tramo.md`). Lo que quedó:
 
 - **El tercer tramo, desde la 26: vida ×1,20 y golpe ×1,10.** En la simulación, el muro en la 57 / 59 / 68 con 27 / 26 / 35
-  minutos de partida. No el de la 31 con ×1,25 y ×1,12 (54 / 58 / 61), que pegaba a todos contra el mismo muro: este deja
+  minutos de partida (con la moneda ×2; con la ×1,4 que quedó, 57 / 59 / 67 con 26 / 27 / 33: `resultados_final.md`). No el de la 31 con ×1,25 y ×1,12 (54 / 58 / 61), que pegaba a todos contra el mismo muro: este deja
   que el que juega bien llegue más lejos.
 - **La carta de cadencia sigue sin costo de balas**: ninguna carta puede ser una trampa que empeore la partida.
 - **La moneda ×1,4, no ×2**: el oro del principio empata con la 1.5.2 (hasta la 10, 10 + 2n son el 65 % de los zombis de
