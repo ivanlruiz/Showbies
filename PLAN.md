@@ -332,6 +332,50 @@ que proyectan). Va con las maquetas de 6a.
 
 ---
 
+## 7. El camino de nivel (1.8.0, con el renacer)
+
+Ivan preguntó (13/10) si se podía hacer algo con el nivel del jugador, "tipo pase de batalla". Lo decidió Argon (Gemini en
+el razonamiento máximo, en el chat del análisis de diseño), en dos vueltas: la segunda corrigió tres premios que chocaban
+con lo que el juego ya decidió.
+
+- **No un pase por temporadas**: obliga a hacer premios nuevos cada mes, reiniciar el nivel frustra, y cuando una
+  temporada termina sin otra lista el juego parece abandonado. **Un camino permanente de 50 niveles**, como el Trophy
+  Road de Brawl Stars: se programa una vez. No se reinicia nunca, tampoco al renacer: es el progreso de la cuenta.
+- **La curva queda** (100L − 75: el 50 cerca de la partida 71). Del 51 en adelante, un casillero sin fin que paga el
+  15 % de una partida por nivel, como hoy.
+- **Los niveles comunes** (los 40 que no son múltiplos de 5) pagan el 15 % de siempre. **Los hitos** (cada 5) pagan el
+  triple y **un cosmético permanente**, con **x2 de las monedas por video**; quien compró quitar anuncios o el paquete de
+  inicio de la 1.7.0 cobra el x2 sin video. No hay un pase pago aparte.
+- **Conviven**: los logros quedan como están (sus niveles de golpe pasan a ser el atajo a los cosméticos), y los eventos
+  siguen siendo filas cortas de 5 premios en su botón.
+- **Cuatro ranuras, una cosa por ranura**: cabeza, aura, cuerpo del arma y remera. **La cabeza es una sola**: el sombrero de
+  calabaza pasa a ser una opción más (`AccesorioCabeza`: ninguno, calabaza, aureola, cuernos, corona), y apilar
+  atravesaría polígonos. El sombrero ganado sale como una casilla de "Evento" al principio del camino, y el interruptor
+  de OPCIONES se va.
+- **Ningún cosmético toca lo que se lee jugando**: el color de cada tipo de zombi ni el de la bala (el tramo del daño).
+  Por eso no van las hordas teñidas ni una estela de color que Argon proponía primero.
+
+| nivel | premio (más el triple de monedas) | ranura |
+|---|---|---|
+| 5 | el menú completo (lo que hoy destapa `Desbloqueo.Todo`) | — |
+| 10 | aura celeste | aura |
+| 15 | remera amarillo flúor | remera |
+| 20 | aureola de neón | cabeza |
+| 25 | arma de oro: el cuerpo dorado, con la luz del tramo intacta | arma |
+| 30 | aura violeta | aura |
+| 35 | cuernos de neón (dos conos `Unlit`) | cabeza |
+| 40 | arma blanca, con la luz del tramo intacta | arma |
+| 45 | marco dorado de la píldora del nivel | menú |
+| 50 | corona de neón y aura dorada | cabeza y aura |
+
+- **En el menú, sin otro botón**: la píldora del nivel (arriba a la izquierda) abre el camino, una fila horizontal centrada
+  en el nivel actual, hecha como la de Halloween; late y lleva la insignia roja cuando hay premios por cobrar. En la ventana
+  de los logros, el cobro del nivel pasa a ser "VER CAMINO DE NIVEL". En la casilla de un cosmético ya cobrado, COBRAR
+  pasa a ser USAR / EN USO: no hay inventario aparte.
+- **Va en la 1.8.0, con el renacer**: el camino es lo que sigue subiendo cuando el renacer devuelve las monedas y las
+  mejoras a cero.
+- **Para decidir al hacerlo**: Argon pone el renacer en el hito del 30, y este plan lo destapaba al llegar a la oleada 30.
+
 ## Orden propuesto
 
 | cuándo | qué | versión |
@@ -341,7 +385,7 @@ que proyectan). Va con las maquetas de 6a.
 | Semana 1-2 | reescribir `CARTAS.md` y hacer las cartas por experiencia | 1.6.0 |
 | En paralelo | Ivan arranca el perfil de pagos; gráfico destacado; clips | — |
 | Después | compras | 1.7.0 |
-| Después | renacer (con simulación) | 1.8.0 |
+| Después | renacer (con simulación) y el camino de nivel (7) | 1.8.0 |
 | Cuando toque | la fuente secundaria (maquetas primero) | cualquiera |
 | **Después del 9/11** | volver al ícono de base (va en la versión que salga en esas fechas) | — |
 
