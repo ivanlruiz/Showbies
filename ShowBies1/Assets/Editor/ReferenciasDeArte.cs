@@ -10,9 +10,17 @@ using UnityEngine;
 // pistola y el sombrero de calabaza; cada zombi con su disfraz; la calabaza farol, la chica, el
 // caramelo y la moneda. Todo en una escena vacia, posado con AnimationMode como ArteDeHalloween,
 // y cada foto encuadrada sobre lo que mide. Va a Builds/referencias/.
+//
+// Sin disfraz (14/10, para el grafico de funciones permanente de la ficha): el heroe como se ve
+// fuera del evento, con la remera blanca y sin el sombrero, y los zombis sin calabazas ni
+// sombreros. Va a Builds/referencias/sin_disfraz/.
 public static class ReferenciasDeArte
 {
-    const string Carpeta = "../Builds/referencias";
+    const string CarpetaConDisfraz = "../Builds/referencias";
+    const string CarpetaSinDisfraz = "../Builds/referencias/sin_disfraz";
+
+    static bool sinDisfraz;
+    static string Carpeta => sinDisfraz ? CarpetaSinDisfraz : CarpetaConDisfraz;
     const string Zombi = "Assets/Prefabs/Personajes/Zombi.prefab";
     const string Rapido = "Assets/Prefabs/Personajes/ZombiRapido.prefab";
     const string Faster = "Assets/Prefabs/Personajes/ZombiFASTER.prefab";
@@ -57,7 +65,19 @@ public static class ReferenciasDeArte
     [MenuItem("ShowBies/Halloween/Referencias para arte")]
     public static void Sacar()
     {
+        Sacar(false);
+    }
+
+    [MenuItem("ShowBies/Arte/Referencias sin disfraz")]
+    public static void SacarSinDisfraz()
+    {
+        Sacar(true);
+    }
+
+    static void Sacar(bool sinDisfrazAhora)
+    {
         if (EditorApplication.isPlayingOrWillChangePlaymode || EscenasSinGuardar.Hay("Referencias de arte")) return;
+        sinDisfraz = sinDisfrazAhora;
         var abiertas = EscenasSinGuardar.Recordar();
         int calidad = QualitySettings.GetQualityLevel();
         Directory.CreateDirectory(Path.GetFullPath(Carpeta));
@@ -111,9 +131,12 @@ public static class ReferenciasDeArte
 
             var cosas = new GameObject("Cosas");
             cosas.transform.position = new Vector3(400f, 0f, 0f);
-            Suelto(cosas.transform, DecoradoHalloween.RutaCalabaza, new Vector3(400f, 0f, 0f), 180f, 1.2f);
-            Suelto(cosas.transform, DecoradoHalloween.RutaCalabazaChica, new Vector3(401.6f, 0f, 0.2f), 160f, 1.3f);
-            Suelto(cosas.transform, "Halloween/Caramelo", new Vector3(402.9f, 0.35f, 0f), 180f, 2f);
+            if (!sinDisfraz)
+            {
+                Suelto(cosas.transform, DecoradoHalloween.RutaCalabaza, new Vector3(400f, 0f, 0f), 180f, 1.2f);
+                Suelto(cosas.transform, DecoradoHalloween.RutaCalabazaChica, new Vector3(401.6f, 0f, 0.2f), 160f, 1.3f);
+                Suelto(cosas.transform, "Halloween/Caramelo", new Vector3(402.9f, 0.35f, 0f), 180f, 2f);
+            }
             var moneda = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Moneda.prefab");
             if (moneda != null)
             {
@@ -124,11 +147,21 @@ public static class ReferenciasDeArte
 
             Hoja("heroe", (p, donde, rumbo) => Jugador(p, donde, rumbo, "m_pistol_idle_A", 0.3f));
             Hoja("heroe_disparando", (p, donde, rumbo) => Jugador(p, donde, rumbo, "m_pistol_shoot", 0.35f));
-            Hoja("zombi_calabaza", (p, donde, rumbo) => Horda(p, Zombi, donde.x, 0.1f, 0.3f, false, rumbo, "Z_idle_A"));
-            Hoja("zombi_bruja", (p, donde, rumbo) => Horda(p, Rapido, donde.x, 0.45f, 0.3f, false, rumbo, "Z_idle_A"));
-            Hoja("zombi_veloz", (p, donde, rumbo) => Horda(p, Faster, donde.x, 0.9f, 0.3f, false, rumbo, "Z_idle_A"));
-            Hoja("zombi_grandote_calabaza", (p, donde, rumbo) => Horda(p, Tanque, donde.x, 0.1f, 0.3f, false, rumbo, "Z_idle_A"));
-            Hoja("zombi_grandote", (p, donde, rumbo) => Horda(p, Tanque, donde.x, 0.9f, 0.3f, false, rumbo, "Z_idle_A"));
+            if (sinDisfraz)
+            {
+                Hoja("zombi_normal", (p, donde, rumbo) => Horda(p, Zombi, donde.x, 0f, 0.3f, false, rumbo, "Z_idle_A"));
+                Hoja("zombi_rapido", (p, donde, rumbo) => Horda(p, Rapido, donde.x, 0f, 0.3f, false, rumbo, "Z_idle_A"));
+                Hoja("zombi_veloz", (p, donde, rumbo) => Horda(p, Faster, donde.x, 0f, 0.3f, false, rumbo, "Z_idle_A"));
+                Hoja("zombi_tanque", (p, donde, rumbo) => Horda(p, Tanque, donde.x, 0f, 0.3f, false, rumbo, "Z_idle_A"));
+            }
+            else
+            {
+                Hoja("zombi_calabaza", (p, donde, rumbo) => Horda(p, Zombi, donde.x, 0.1f, 0.3f, false, rumbo, "Z_idle_A"));
+                Hoja("zombi_bruja", (p, donde, rumbo) => Horda(p, Rapido, donde.x, 0.45f, 0.3f, false, rumbo, "Z_idle_A"));
+                Hoja("zombi_veloz", (p, donde, rumbo) => Horda(p, Faster, donde.x, 0.9f, 0.3f, false, rumbo, "Z_idle_A"));
+                Hoja("zombi_grandote_calabaza", (p, donde, rumbo) => Horda(p, Tanque, donde.x, 0.1f, 0.3f, false, rumbo, "Z_idle_A"));
+                Hoja("zombi_grandote", (p, donde, rumbo) => Horda(p, Tanque, donde.x, 0.9f, 0.3f, false, rumbo, "Z_idle_A"));
+            }
             Hoja("jefe", (p, donde, rumbo) => Horda(p, Jefe, donde.x, 0f, 0.3f, true, rumbo, "Z_idle_A"));
             if (prefabTesoro != null)
                 Hoja("tesoro", (p, donde, rumbo) => Horda(p, AssetDatabase.GetAssetPath(prefabTesoro), donde.x, 0.9f, 0.3f, false, rumbo, "Z_idle_A"));
@@ -153,7 +186,7 @@ public static class ReferenciasDeArte
             Foto(camara, tesoro, Vector3.back, 0.1f, 1200, 1200, "zombi_tesoro");
             Foto(camara, cajas, -(ConstructorEscenarios.GiroDeLaCamara * Vector3.forward), 0.15f, 1800, 900, "cajas");
             foreach (var v in vistas) Foto(camara, v.grupo, Vector3.back, 0.08f, 900, 900, v.archivo);
-            Foto(camara, cosas, (Vector3.back + Vector3.up * 0.35f).normalized, 0.1f, 2000, 1000, "calabazas_caramelo_moneda");
+            Foto(camara, cosas, (Vector3.back + Vector3.up * 0.35f).normalized, 0.1f, 2000, 1000, sinDisfraz ? "moneda" : "calabazas_caramelo_moneda");
         }
         finally
         {
@@ -223,7 +256,32 @@ public static class ReferenciasDeArte
             p.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
             p.transform.localScale = Vector3.one;
         }
-        Disfraces.PonerSombrero(Disfraces.Cabeza(modelo.transform));
+        if (sinDisfraz) PonerLaRemeraBlanca(modelo.transform);
+        else Disfraces.PonerSombrero(Disfraces.Cabeza(modelo.transform));
+    }
+
+    // La remera blanca del heroe, como la pone AspectoDelHeroe en la partida: el material del
+    // pack (TT_demo) cambia por la copia con la remera pintada. Sin el aura, que es para la noche.
+    static void PonerLaRemeraBlanca(Transform modelo)
+    {
+        var remera = Resources.Load<Material>("HeroeRemeraBlanca");
+        if (remera == null)
+        {
+            Debug.LogWarning("ReferenciasDeArte: no esta el material HeroeRemeraBlanca");
+            return;
+        }
+        foreach (var r in modelo.GetComponentsInChildren<Renderer>(true))
+        {
+            var mats = r.sharedMaterials;
+            bool cambio = false;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                if (mats[i] == null || mats[i].name != "TT_demo") continue;
+                mats[i] = remera;
+                cambio = true;
+            }
+            if (cambio) r.sharedMaterials = mats;
+        }
     }
 
     // Un zombi en el piso, mirando hacia la izquierda de la foto. Devuelve donde termina.
@@ -247,7 +305,7 @@ public static class ReferenciasDeArte
             radio = capsula.radius * Mathf.Abs(zombi.transform.lossyScale.x);
         }
 
-        Disfraces.Vestir(zombi, jefe, disfraz);
+        if (!sinDisfraz) Disfraces.Vestir(zombi, jefe, disfraz);
         var enemigo = zombi.GetComponent<EnemyController>();
         float ritmo = 1f;
         if (enemigo != null)
