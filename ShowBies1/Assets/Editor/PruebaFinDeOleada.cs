@@ -37,6 +37,8 @@ public static class PruebaFinDeOleada
     static bool insigniaPrendida;
     static string numeroDeLaInsignia = "";
     static int balasAlTerminar = -1, cargador = -1;
+    // El bono por oleada de la escena (el WaveManager de WaveMode): 2 desde el 14/10, era 4.
+    static int bonoDeLaEscena = -1;
 
     static PruebaFinDeOleada()
     {
@@ -85,6 +87,7 @@ public static class PruebaFinDeOleada
             monedasVolando = 0;
             textoSuperada = textoSiguiente = numeroDeLaInsignia = "";
             balasAlTerminar = cargador = -1;
+            bonoDeLaEscena = -1;
             avisos.Clear();
             inicio = EditorApplication.timeSinceStartup;
             return;
@@ -131,6 +134,7 @@ public static class PruebaFinDeOleada
                 vioSuperada = true;
                 superadaEn = t;
                 perfecta = oleadas.UltimaFuePerfecta;
+                bonoDeLaEscena = oleadas.bonoPorOleada;
                 textoSuperada = cartel.text.Replace("\n", " / ");
                 if (control != null) { balasAlTerminar = control.cantBalas; cargador = control.maxBalas; }
             }
@@ -209,8 +213,8 @@ public static class PruebaFinDeOleada
         var ok = new List<bool>
         {
             error == null,
-            vioSuperada && textoSuperada.Contains("+" + WaveManager.Bono(4, Oleada, perfecta)),
-            vioSuperada && perfecta && textoSuperada.Contains("+" + WaveManager.Bono(4, Oleada, true)) && textoSuperada.Contains("PERFECTA"),
+            vioSuperada && bonoDeLaEscena > 0 && textoSuperada.Contains("+" + WaveManager.Bono(bonoDeLaEscena, Oleada, perfecta)),
+            vioSuperada && perfecta && bonoDeLaEscena > 0 && textoSuperada.Contains("+" + WaveManager.Bono(bonoDeLaEscena, Oleada, true)) && textoSuperada.Contains("PERFECTA"),
             menorEscalaDeTiempo <= 0.1f,
             monedasVolando > 0,
             vioSiguiente && siguienteEn - superadaEn > 1f && siguienteEn - superadaEn < 2.5f,
