@@ -19,9 +19,14 @@ using UnityEngine.EventSystems;
 // guion: por donde camina el heroe, a quien apunta, cuando prende la furia y cuando muere. Antes
 // de grabar corre una previa con el heroe inmortal, para que la horda llegue.
 //
-// Desde la linea de comandos (con el editor de ShowBies cerrado), sin -quit, que cerraria Unity
+// Con el editor abierto y al frente (ShowBies > Clips; con Unity atras el play se traba en el
+// primer cuadro), o desde la linea de comandos con el editor cerrado, sin -quit, que cerraria Unity
 // antes de entrar en play: al terminar sale solo.
 //   Unity.exe -batchmode -projectPath ShowBies1 -executeMethod GrabarClips.Clip1Debil -logFile ...
+// La primera version (15/10, en -batchmode) salio "re bugeada" (Ivan): las balas se iban para otro
+// lado por el rumbo viejo del cuerpo del heroe, que era un bug del juego (ver GunController.FijarRumbo),
+// el blanco a mano podia estar fuera del cuadro o encima del heroe, y el zoom de 1,8 agrandaba de mas
+// los numeros, las barras y la onda de energia.
 //
 // OJO: entrar y salir de play vuelve a serializar ProjectSettings (ver la trampa en CLAUDE.md).
 [InitializeOnLoad]
@@ -51,6 +56,7 @@ public static class GrabarClips
         public string recorrido = "circulo";   // circulo, quieto, norte
         public float paso = 1f;            // cuanto empuja el joystick de mover (0 a 1)
         public bool apuntarAMano;          // con el joystick de disparo, al mas cercano: cadencia entera y derecho
+        public bool quietoEnLaPrevia;      // en la previa ni camina ni dispara: la horda lo rodea
         public float furiaEn = -1f;        // segundos de la toma
         public float morirEn = -1f;        // segundos de la toma; hasta ahi la vida baja sola
         // La vida maxima durante la toma: con la de verdad (80), en la oleada 25 dos zarpazos en el
@@ -83,24 +89,43 @@ public static class GrabarClips
     }
 
     // Clip 1 de Argon, "nivel 1 contra nivel maximo": la toma del debil, que muere acorralado.
+    // El zoom, cerca del del juego: con 1,8 (la primera version, 15/10) los numeros de dano, las
+    // barras, las monedas y la onda de energia salian gigantes y tapaban al heroe.
+    [MenuItem("ShowBies/Clips/Clip 1: el debil")]
     public static void Clip1Debil()
     {
         Arrancar(new Toma
         {
-            nombre = "clip1_debil", oleada = 25, previa = 9f, cuadros = 150, zoom = 1.8f, vidaMaxima = 400,
+            nombre = "clip1_debil", oleada = 25, previa = 9f, cuadros = 150, zoom = 1.15f, vidaMaxima = 400,
             recorrido = "quieto", morirEn = 3.5f, ponerEnInicio = true, inicio = new Vector3(0f, 0f, -6f)
         });
     }
 
-    // Y la del fuerte: el arma de energia, la furia, las cartas vistosas, subiendo por la calle.
+    // Y la del fuerte: el arma de energia, la furia, las cartas vistosas. En la previa deja que la
+    // horda lo rodee en el cruce y despues gira despacio barriendola. Subiendo por la calle (la
+    // primera version) se trababa contra un auto y casi no habia zombis en cuadro.
+    [MenuItem("ShowBies/Clips/Clip 1: el fuerte")]
     public static void Clip1Fuerte()
     {
         Arrancar(new Toma
         {
-            nombre = "clip1_fuerte", oleada = 25, alTope = true, previa = 9f, cuadros = 330, zoom = 1.8f,
+            nombre = "clip1_fuerte", oleada = 25, alTope = true, previa = 9f, cuadros = 330, zoom = 1.15f,
             cartas = new[] { "disparo_doble:2", "perforante:2", "explosiva:2", "quemadura:2", "hielo:2", "dron:2", "iman:2" },
-            recorrido = "norte", paso = 0.4f, apuntarAMano = true, furiaEn = 0.1f,
-            ponerEnInicio = true, inicio = new Vector3(0f, 0f, -24f)
+            recorrido = "circulo", paso = 0.3f, apuntarAMano = true, furiaEn = 0.1f, quietoEnLaPrevia = true,
+            ponerEnInicio = true, inicio = new Vector3(0f, 0f, -6f)
+        });
+    }
+
+    // La toma del fuerte, mas corta y en otra carpeta, para medir a donde apunta (AnotarPunteria).
+    [MenuItem("ShowBies/Clips/Probar la punteria")]
+    public static void ProbarPunteria()
+    {
+        Arrancar(new Toma
+        {
+            nombre = "prueba_punteria", oleada = 25, alTope = true, previa = 9f, cuadros = 150, zoom = 1.15f,
+            cartas = new[] { "disparo_doble:2", "perforante:2", "explosiva:2", "quemadura:2", "hielo:2", "dron:2", "iman:2" },
+            recorrido = "circulo", paso = 0.3f, apuntarAMano = true, furiaEn = 0.1f, quietoEnLaPrevia = true,
+            ponerEnInicio = true, inicio = new Vector3(0f, 0f, -6f)
         });
     }
 
@@ -170,6 +195,7 @@ public static class GrabarClips
             toma = JsonUtility.FromJson<Toma>(SessionState.GetString(Clave + ".toma", "{}"));
             cuadro = 0;
             furiaPrendida = murio = false;
+            blancoAMano = null;
             baseFov = -1f;
             grabandoSonido = false;
             sonido = new List<float>();
@@ -182,9 +208,10 @@ public static class GrabarClips
         var joysticks = vida.GetComponent<PlayerJS>();
         var cuerpo = vida.GetComponent<Rigidbody>();
         if (joysticks == null || cuerpo == null) return;
-        PlayerJS.FijarAutoApuntar(true);
 
         float t = Time.timeSinceLevelLoad - toma.previa;   // segundos de la toma (negativo en la previa)
+        bool quieto = toma.quietoEnLaPrevia && t < 0f;
+        PlayerJS.FijarAutoApuntar(!quieto);
 
         // Al principio de la previa, al lugar de inicio.
         if (toma.ponerEnInicio && Time.timeSinceLevelLoad < 0.5f)
@@ -216,7 +243,12 @@ public static class GrabarClips
             }
         }
 
-        if (!vida.EstaMuerto)
+        if (!vida.EstaMuerto && quieto)
+        {
+            if (joysticks.moveJoystick != null) PruebaDisparo.Soltar(joysticks.moveJoystick);
+            if (joysticks.lookJoystick != null) PruebaDisparo.Soltar(joysticks.lookJoystick);
+        }
+        else if (!vida.EstaMuerto)
         {
             Mover(joysticks, t);
             if (toma.apuntarAMano) ApuntarAlMasCercano(joysticks, vida.transform.position);
@@ -232,6 +264,11 @@ public static class GrabarClips
         if (camara == null) { Terminar("no hay camara principal"); return; }
         if (baseFov < 0f) baseFov = camara.fieldOfView;
         camara.fieldOfView = 2f * Mathf.Atan(Mathf.Tan(baseFov * 0.5f * Mathf.Deg2Rad) / Mathf.Max(0.1f, toma.zoom)) * Mathf.Rad2Deg;
+        // En vertical tambien para el juego, no solo para la foto: lo que decide si algo se ve
+        // (donde nacen los zombis, si el jefe esta en pantalla para atacar, a quien apunta el
+        // automatico) mira la camara principal, que con la vista Game es horizontal. Con eso, los
+        // zombis nacian "fuera de la vista" adentro del cuadro vertical.
+        camara.aspect = Ancho / (float)Alto;
 
         if (t < 0f) return;
 
@@ -242,6 +279,7 @@ public static class GrabarClips
         }
         GrabarSonido();
         Grabar(camara, Path.GetFullPath(Path.Combine(Carpeta, toma.nombre)));
+        if (toma.apuntarAMano && cuadro % 30 == 0) AnotarPunteria(joysticks, camara, vida.transform.position);
         if (cuadro % 30 == 0)
             Debug.Log("GrabarClips: cuadro " + cuadro + ", t " + t.ToString("0.00") + ", vivos " + EnemyController.ZombisVivos
                       + ", dispara " + (joysticks.thegun != null && joysticks.thegun.isFiring)
@@ -279,20 +317,76 @@ public static class GrabarClips
         joystick.OnPointerDown(dedo);
     }
 
+    // El blanco a mano: el mas cercano que se ve en el cuadro vertical y no esta encima del heroe, y
+    // se queda con el que tiene mientras otro no este bastante mas cerca (como el automatico,
+    // PlayerJS.VentajaParaCambiar). Con el mas cercano a secas (15/10) el blanco solia estar fuera
+    // del cuadro, que en vertical mide pocos metros de ancho, o pegado al heroe, donde la direccion
+    // no esta definida: la mira saltaba de un lado al otro y el chorro se iba al vacio.
+    const float DistanciaMinimaAlBlanco = 1.2f;
+    const float AlcanceAMano = 22f;
+    const float VentajaParaCambiar = 0.7f;
+
     static void ApuntarAlMasCercano(PlayerJS joysticks, Vector3 desde)
     {
         if (joysticks.lookJoystick == null) return;
+        var camara = Camera.main;
         EnemyController mejor = null;
-        float mejorDistancia = 22f * 22f;
+        float mejorDistancia = AlcanceAMano * AlcanceAMano;
         foreach (var z in EnemyController.Vivos)
         {
-            if (z == null) continue;
-            float d = (z.transform.position - desde).sqrMagnitude;
+            if (!SirveDeBlanco(z, camara, desde)) continue;
+            float d = EnElPiso2(z.transform.position - desde);
             if (d < mejorDistancia) { mejorDistancia = d; mejor = z; }
         }
+        if (blancoAMano != null && blancoAMano != mejor && EnemyController.SigueVivo(blancoAMano, numeroDelBlanco)
+            && SirveDeBlanco(blancoAMano, camara, desde)
+            && mejorDistancia >= EnElPiso2(blancoAMano.transform.position - desde) * VentajaParaCambiar * VentajaParaCambiar)
+            mejor = blancoAMano;
+        if (mejor != null && mejor != blancoAMano) numeroDelBlanco = mejor.NumeroDeAparicion;
+        blancoAMano = mejor;
         if (mejor == null) { PruebaDisparo.Soltar(joysticks.lookJoystick); return; }
         Vector3 hacia = mejor.transform.position - desde;
-        PruebaDisparo.Apretar(joysticks.lookJoystick, new Vector2(hacia.x, hacia.z).normalized);
+        pedidoAMano = new Vector2(hacia.x, hacia.z).normalized;
+        PruebaDisparo.Apretar(joysticks.lookJoystick, pedidoAMano);
+    }
+
+    static bool SirveDeBlanco(EnemyController z, Camera camara, Vector3 desde)
+    {
+        if (z == null || !z.Vivo) return false;
+        float d = EnElPiso2(z.transform.position - desde);
+        if (d < DistanciaMinimaAlBlanco * DistanciaMinimaAlBlanco || d > AlcanceAMano * AlcanceAMano) return false;
+        if (camara == null) return true;
+        Vector3 v = camara.WorldToViewportPoint(z.transform.position);
+        return v.z > 0f && v.x > 0.06f && v.x < 0.94f && v.y > 0.06f && v.y < 0.94f;
+    }
+
+    static float EnElPiso2(Vector3 v)
+    {
+        return v.x * v.x + v.z * v.z;
+    }
+
+    static EnemyController blancoAMano;
+    static int numeroDelBlanco;
+    static Vector2 pedidoAMano;
+
+    // Para medir hacia donde tira: el blanco elegido, donde cae en el cuadro vertical, lo que se le
+    // pidio al joystick, lo que leyo PlayerJS y hacia donde mira el arma.
+    static void AnotarPunteria(PlayerJS joysticks, Camera camara, Vector3 yo)
+    {
+        string blanco = "ninguno";
+        if (blancoAMano != null)
+        {
+            Vector3 v = camara.WorldToViewportPoint(blancoAMano.transform.position);
+            Vector3 rel = blancoAMano.transform.position - yo;
+            blanco = blancoAMano.name + " #" + blancoAMano.NumeroDeAparicion + " vida " + blancoAMano.VidaActual.ToString("0") + "/"
+                     + blancoAMano.VidaMaxima.ToString("0") + " a (" + rel.x.ToString("0.0") + ", " + rel.z.ToString("0.0") + ") en cuadro ("
+                     + v.x.ToString("0.00") + ", " + v.y.ToString("0.00") + ")";
+        }
+        Vector3 arma = joysticks.thegun != null ? joysticks.thegun.transform.forward : Vector3.zero;
+        Debug.Log("GrabarClips punteria: cuadro " + cuadro + ", blanco " + blanco + ", pedido " + pedidoAMano
+                  + ", joystick " + (joysticks.lookJoystick != null ? joysticks.lookJoystick.Direction.ToString() : "-")
+                  + ", PlayerJS " + joysticks.UltimaDireccionApuntada + ", arma (" + arma.x.ToString("0.00") + ", " + arma.z.ToString("0.00") + ")"
+                  + ", automatico " + (joysticks.Blanco != null ? joysticks.Blanco.name : "no"));
     }
 
     static void GrabarSonido()
@@ -366,6 +460,7 @@ public static class GrabarClips
         EditorPrefs.SetBool(EventoHalloween.ClaveApagarEnElEditor, SessionState.GetBool(Clave + ".apagarHalloween", false));
         if (textura != null) { textura.Release(); Object.DestroyImmediate(textura); textura = null; }
         if (lectura != null) { Object.DestroyImmediate(lectura); lectura = null; }
+        if (Camera.main != null) Camera.main.ResetAspect();
         if (EditorApplication.isPlaying) EditorApplication.ExitPlaymode();
         else if (SessionState.GetBool(Clave + ".salir", false)) Salir(error != null ? 1 : 0);
     }
