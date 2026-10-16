@@ -1328,8 +1328,8 @@ public static class PruebasMejoras
         inf.Cerca("arranque: el automatico llega hasta 7,5 m", 7.5, PlayerJS.AlcanceAutoApuntar, 1e-6);
         inf.Cerca("arranque: y tarda 0,25 s en cambiar de blanco", 0.25, PlayerJS.PausaAlCambiarDeBlanco, 1e-6);
         inf.Cerca("arranque: con el disparo doble cada bala pega el 70 %", 0.7, PoderDeLaPartida.ParteDelDisparoDoble, 1e-6);
-        inf.Igual("arranque: el PODER arranca en 14", 14, PoderDeLaPartida.Costo(0));
-        inf.Igual("arranque: y crece x1,15 (el segundo, 16)", 16, PoderDeLaPartida.Costo(1));
+        inf.Igual("arranque: el PODER arranca en 28", 28, PoderDeLaPartida.Costo(0));
+        inf.Igual("arranque: y crece x1,12 (el segundo, 31)", 31, PoderDeLaPartida.Costo(1));
         inf.Igual("arranque: el vampiro cura cada 20 muertes", 20, PoderDeLaPartida.BajasParaElVampiro);
         inf.Cerca("arranque: la caja de vida cura el 35 % de la vida maxima", 0.35, PlayerHealth.FraccionDeCuraPorCaja, 1e-6);
     }
@@ -6240,15 +6240,15 @@ public static class PruebasMejoras
             inf.Igual("cartas: la experiencia de " + par.Key, par.Value, enemigo != null ? enemigo.experiencia : -1);
         }
 
-        // La curva: 8 la primera, x1,15 cada una.
-        inf.Igual("cartas: la primera carta cuesta 14", 14, PoderDeLaPartida.Costo(0));
-        inf.Igual("cartas: la segunda cuesta 16", 16, PoderDeLaPartida.Costo(1));
-        inf.Igual("cartas: la del PODER 5 cuesta 28", 28, PoderDeLaPartida.Costo(5));
+        // La curva: 28 la primera, x1,12 cada una (16/10, de Argon).
+        inf.Igual("cartas: la primera carta cuesta 28", 28, PoderDeLaPartida.Costo(0));
+        inf.Igual("cartas: la segunda cuesta 31", 31, PoderDeLaPartida.Costo(1));
+        inf.Igual("cartas: la del PODER 5 cuesta 49", 49, PoderDeLaPartida.Costo(5));
 
         // Con la mezcla de zombis del WaveManager de WaveMode y la experiencia de los assets: una
         // carta por oleada al principio (Ivan tenia tres a mitad de la oleada 2, con la curva de
         // antes), entre 12 y 15 hasta la oleada 10 (lo que pidio Gemini) y unas 19 hasta la 20.
-        int hasta10 = -1, hasta20 = -1, hasta1 = -1, hasta2 = -1, hasta3 = -1;
+        int hasta10 = -1, hasta20 = -1, hasta1 = -1, hasta2 = -1, hasta3 = -1, hasta5 = -1, hasta8 = -1;
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
             var oleadas = Buscar<WaveManager>(escena);
@@ -6278,18 +6278,21 @@ public static class PruebasMejoras
                 if (n == 1) hasta1 = poder;
                 if (n == 2) hasta2 = poder;
                 if (n == 3) hasta3 = poder;
+                if (n == 5) hasta5 = poder;
+                if (n == 8) hasta8 = poder;
                 if (n == 10) hasta10 = poder;
                 if (n == 20) hasta20 = poder;
             }
         });
-        // Con las oleadas de la 1.6.0 (10 + 2n, la curva del PODER sin tocar, de Gemini): 9 hasta la
-        // 10 y 16 hasta la 20 (eran 12 y 19 con 10 + 4n).
-        inf.Verdadero("cartas: hasta la oleada 10 salen unas 9 (" + hasta10 + ")", hasta10 >= 8 && hasta10 <= 10);
-        inf.Verdadero("cartas: hasta la oleada 20 salen unas 16 (" + hasta20 + ")", hasta20 >= 14 && hasta20 <= 18);
-        // Con el PODER en 14 x 1,15^L (14/10, de Argon): la primera carta al empezar la oleada 2, y
-        // despues una por oleada.
-        inf.Verdadero("cartas: la primera en la oleada 2, y despues una por oleada (" + hasta1 + ", " + hasta2 + ", " + hasta3 + ")",
-                      hasta1 == 0 && hasta2 == 1 && hasta3 == 2);
+        // Con el PODER en 28 x 1,12^L (16/10, de Argon; Ivan tenia cuatro cartas sin llegar al minuto
+        // con 14 x 1,15^L, que daba la primera al empezar la oleada 2 y una por oleada): ninguna en las
+        // dos primeras oleadas, la primera en la 3 y cuatro recien hacia la 8.
+        inf.Verdadero("cartas: ninguna en las dos primeras oleadas, la primera en la 3 (" + hasta1 + ", " + hasta2 + ", " + hasta3 + ")",
+                      hasta1 == 0 && hasta2 == 0 && hasta3 == 1);
+        inf.Verdadero("cartas: hasta la oleada 5 salen dos o tres (" + hasta5 + ")", hasta5 >= 2 && hasta5 <= 3);
+        inf.Verdadero("cartas: hasta la oleada 8 salen cuatro o cinco (" + hasta8 + ")", hasta8 >= 4 && hasta8 <= 5);
+        inf.Verdadero("cartas: hasta la oleada 10 salen unas 5 o 6 (" + hasta10 + ")", hasta10 >= 5 && hasta10 <= 6);
+        inf.Verdadero("cartas: hasta la oleada 20 salen unas 10 a 13 (" + hasta20 + ")", hasta20 >= 10 && hasta20 <= 13);
 
         // El catalogo: en Resources, sin ids repetidos, con su texto en los dos idiomas.
         var catalogo = CatalogoCartas.Instancia;

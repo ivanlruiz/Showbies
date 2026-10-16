@@ -86,14 +86,17 @@ public static class PoderDeLaPartida
     // con dos, 3 x 0,7. Tambien los perdigones de la escopeta.
     public const float ParteDelDisparoDoble = 0.7f;
 
-    // La curva: pasar del PODER L al siguiente cuesta round(14 x 1,15^L). Con la mezcla de zombis
-    // de WaveMode y oleadas de 10 + 2n, la primera carta sale al empezar la oleada 2, y hay 9
-    // hasta la oleada 10, 15 hasta la 20 y 23 hasta la 40. Arrancaba en 8 hasta el 12/10 (en el
-    // telefono Ivan tenia tres cartas a mitad de la oleada 2) y en 12 hasta el 14/10, cuando la
-    // 1.6.0 quedo demasiado facil en las primeras partidas: lo cerro Argon (Gemini) con la
-    // simulacion (simulaciones/cartas_1.6.0, resultados_arranque_v3.md).
-    public const int PrimerCosto = 14;
-    public const double CrecimientoDelCosto = 1.15;
+    // La curva: pasar del PODER L al siguiente cuesta round(28 x 1,12^L). Con la mezcla de zombis
+    // de WaveMode y oleadas de 10 + 2n, la primera carta sale en la oleada 3 y las cuatro primeras
+    // hasta la 8 (un minuto y medio). Arrancaba en 8 hasta el 12/10 (en el telefono Ivan tenia tres
+    // cartas a mitad de la oleada 2), en 12 hasta el 14/10, cuando la 1.6.0 quedo demasiado facil
+    // en las primeras partidas, y en 14 x 1,15^L hasta el 16/10 (Ivan: "no jugue ni un minuto de
+    // partida y ya tengo 4 cartas"). Las tres las cerro Argon (Gemini) con la simulacion
+    // (simulaciones/cartas_1.6.0, resultados_arranque_v3.md y resultados_poder.md): esta espacia el
+    // principio y deja casi igual el juego largo (27 cartas por partida, el muro en 59 y 69 para el
+    // jugador medio y el alto).
+    public const int PrimerCosto = 28;
+    public const double CrecimientoDelCosto = 1.12;
     public const int CartasPorEleccion = 3;
 
     private static EstadoPoder estado = new EstadoPoder();

@@ -1370,6 +1370,15 @@ VARIANTES.update({
     'argon_v3': variante('V3 de Argon (14/10), equilibrada', **ARGON_V3),
     'argon_v3_base': variante('V3 de Argon sin cartas', cartas=False, politica=None, **ARGON_V3),
 })
+# El PODER mas lento (16/10): Ivan probo la 1.6.0 y "no jugue ni un minuto de partida y ya tengo 4
+# cartas". Con la V3 la primera cae al empezar la oleada 2 y despues una por oleada. Bajar la
+# experiencia a la mitad es lo mismo que duplicar el costo, asi que alcanza con variar el costo.
+VARIANTES.update({
+    'poder_24_115': variante('V3 con el PODER 24 x 1,15^L', **dict(ARGON_V3, primer_costo=24, crece_costo=1.15)),
+    'poder_20_120': variante('V3 con el PODER 20 x 1,20^L', **dict(ARGON_V3, primer_costo=20, crece_costo=1.20)),
+    'poder_28_112': variante('V3 con el PODER 28 x 1,12^L', **dict(ARGON_V3, primer_costo=28, crece_costo=1.12)),
+    'poder_18_125': variante('V3 con el PODER 18 x 1,25^L', **dict(ARGON_V3, primer_costo=18, crece_costo=1.25)),
+})
 VARIANTES.update({
     'argon_v2': variante('V2 de Argon (14/10), equilibrada', **ARGON_V2),
     'argon_v2_base': variante('V2 de Argon sin cartas', cartas=False, politica=None, **ARGON_V2),
