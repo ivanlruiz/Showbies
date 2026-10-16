@@ -74,7 +74,14 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       El borrador de la descripción en inglés traía, sin que nadie lo pidiera, la línea "• English and Spanish" de
       menos: se le devolvió para que quedara igual a la publicada y no entrara en el envío. El gráfico de funciones
       (1024x500) sigue siendo el de septiembre, de antes de la noche y del neón. **Después del 9/11**: el ícono de base en en-US (las traducciones lo
-      heredan) y sacar la captura del evento (`01_halloween`) de las tres fichas.
+      heredan) y sacar la captura del evento (`01_halloween`) de las tres fichas. **Publicada el 14/10.**
+- [x] **Versión 13 (1.6.0)** enviada a revisión el 16/10/2026 (producción, lanzamiento completo, 178 países,
+      publicación gestionada apagada: sale sola al aprobarse), con las notas de `notas_1.6.0.md`. Las cartas, el arma
+      que cambia con el daño, el balance de la V3 y la versión nueva de Kingball. La única advertencia, la de siempre
+      (sin archivo de desofuscación); ningún dispositivo deja de ser compatible. Si el AAB se arrastra dos veces, la
+      segunda sale con "El código de versión 13 ya se ha usado": la primera ya está en la biblioteca, y se agrega con
+      "Añadir de la biblioteca" (a veces tarda unos segundos en aparecer ahí). Las notas de un borrador sin guardar se
+      pierden al recargar la página: guardar el borrador antes de ir a otra.
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
