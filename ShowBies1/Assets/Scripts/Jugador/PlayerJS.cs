@@ -14,11 +14,6 @@ using UnityEngine;
 // Ahora el codigo compila igual en las dos plataformas y quien decide es
 // Application.isMobilePlatform en runtime. Ademas de arreglar el guardado, eso
 // hace que compilar en Windows valide tambien la build de Android.
-//
-// Corre antes que el arma (GunController), asi el tiro de este cuadro sale con la mira de este
-// cuadro (16/10: con el orden librado al azar, el arma a veces disparaba antes; ver
-// GunController.FijarRumbo), y despues de los joysticks dinamicos, que le pasan los toques.
-[DefaultExecutionOrder(-10)]
 public class PlayerJS : MonoBehaviour
 {
     public PlayerController player;

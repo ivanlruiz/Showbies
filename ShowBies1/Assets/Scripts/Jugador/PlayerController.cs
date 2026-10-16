@@ -2,9 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Corre antes que el arma, como PlayerJS: en PC el giro hacia el mouse es la mira del tiro de este
-// cuadro (ver GunController.FijarRumbo).
-[DefaultExecutionOrder(-10)]
 public class PlayerController : MonoBehaviour
 {
     public Transitions trans;

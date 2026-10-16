@@ -2,6 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Corre despues de quien apunta (PlayerJS, PlayerController y el EventSystem que mueve los
+// joysticks, todos en 0): el tiro de este cuadro sale con la mira de este cuadro. Con el orden
+// librado al azar, a veces disparaba antes (16/10, ver FijarRumbo). Atrasar el arma y no adelantar
+// a PlayerJS: adelantado, leeria el joystick fijo un cuadro tarde.
+[DefaultExecutionOrder(10)]
 public class GunController : MonoBehaviour
 {
 
