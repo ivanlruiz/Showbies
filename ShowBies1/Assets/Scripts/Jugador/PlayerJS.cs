@@ -14,6 +14,11 @@ using UnityEngine;
 // Ahora el codigo compila igual en las dos plataformas y quien decide es
 // Application.isMobilePlatform en runtime. Ademas de arreglar el guardado, eso
 // hace que compilar en Windows valide tambien la build de Android.
+//
+// Corre antes que el arma (GunController), asi el tiro de este cuadro sale con la mira de este
+// cuadro (16/10: con el orden librado al azar, el arma a veces disparaba antes; ver
+// GunController.FijarRumbo), y despues de los joysticks dinamicos, que le pasan los toques.
+[DefaultExecutionOrder(-10)]
 public class PlayerJS : MonoBehaviour
 {
     public PlayerController player;
@@ -268,6 +273,8 @@ public class PlayerJS : MonoBehaviour
         // La direccion pura, y no un LookAt a un punto a un metro del centro: con el arma a
         // otra altura que el jugador, el LookAt la inclinaba y las balas pasaban por arriba.
         thegun.transform.rotation = Quaternion.LookRotation(UltimaDireccionApuntada);
+        // Y el tiro sale con esta, no con la del transform, que la interpolacion del cuerpo pisa.
+        thegun.FijarRumbo(UltimaDireccionApuntada);
 
         // Por el mismo camino que el clic de PC, que ademas prende la animacion de
         // disparo: aca solo se prendia el arma y el muñeco no disparaba nunca.

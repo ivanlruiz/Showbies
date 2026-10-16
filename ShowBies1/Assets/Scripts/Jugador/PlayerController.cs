@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Corre antes que el arma, como PlayerJS: en PC el giro hacia el mouse es la mira del tiro de este
+// cuadro (ver GunController.FijarRumbo).
+[DefaultExecutionOrder(-10)]
 public class PlayerController : MonoBehaviour
 {
     public Transitions trans;
@@ -326,6 +329,9 @@ public class PlayerController : MonoBehaviour
             Debug.DrawLine(cameraRay.origin, pointToLook, Color.blue);
 
             transform.LookAt(new Vector3(pointToLook.x, transform.position.y, pointToLook.z));
+            // El tiro sale hacia aca aunque la interpolacion del cuerpo le devuelva al transform
+            // otra rotacion (GunController.FijarRumbo).
+            if (theGun != null) theGun.FijarRumbo(pointToLook - transform.position);
         }
     }
 

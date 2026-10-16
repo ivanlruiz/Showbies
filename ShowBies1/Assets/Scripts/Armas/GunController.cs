@@ -100,6 +100,27 @@ public class GunController : MonoBehaviour
     // De donde salio la ultima bala. Para las pruebas.
     public Vector3 UltimaSalida { get; private set; }
 
+    // Hacia donde se apunta, en el piso: lo fijan PlayerJS y PlayerController en cada cuadro en que
+    // apuntan, y el tiro sale con esto y no con firePoint.rotation. El jugador tiene el Rigidbody con
+    // interpolacion (10/10, los tirones del Redmi), que al empezar cada cuadro le devuelve a la raiz
+    // la rotacion del cuerpo fisico, y ese cuerpo no se entera del giro de la mira (va al transform).
+    // Si este Update corria antes que el de PlayerJS, el tiro salia hacia esa rotacion vieja: segun
+    // la sesion, todas las balas a un rumbo fijo mientras el muñeco apuntaba bien (16/10, lo vio Ivan
+    // en los clips; PruebaImpactos lo mide). Sin rumbo fijado (una escena sin quien apunte), el de
+    // siempre.
+    private Vector3 rumboFijado;
+
+    public void FijarRumbo(Vector3 direccion)
+    {
+        direccion.y = 0f;
+        if (direccion.sqrMagnitude > 1e-6f) rumboFijado = direccion.normalized;
+    }
+
+    public Quaternion RumboDelTiro
+    {
+        get { return rumboFijado.sqrMagnitude > 0.5f ? Quaternion.LookRotation(rumboFijado) : firePoint.rotation; }
+    }
+
     // Cuántas balas salieron en toda la partida. Lo usan el medidor y las pruebas
     // para comparar la cadencia medida con la esperada.
     public int TirosDisparados { get; private set; }
@@ -379,7 +400,7 @@ public class GunController : MonoBehaviour
         // Con el disparo doble, cada bala de adelante pega una parte del tiro (ParteDelDisparoDoble).
         float adelante = extra > 0 ? compensacion * PoderDeLaPartida.ParteDelDisparoDoble : compensacion;
         // El automatico erra: todo el tiro sale torcido junto, el abanico y la de atras.
-        Quaternion rumbo = firePoint.rotation;
+        Quaternion rumbo = RumboDelTiro;
         if (EnAutomatico) rumbo = Quaternion.AngleAxis(DesvioDelTiro(Random.value), Vector3.up) * rumbo;
         if (arma == Proyectiles.Escopeta)
         {

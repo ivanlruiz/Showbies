@@ -116,7 +116,11 @@ public static class GrabarAnimaciones
             {
                 Vector3 hacia = elegido.transform.position - jugador.transform.position;
                 hacia.y = 0f;
-                if (hacia.sqrMagnitude > 0.001f) jugador.transform.rotation = Quaternion.LookRotation(hacia);
+                if (hacia.sqrMagnitude > 0.001f)
+                {
+                    jugador.transform.rotation = Quaternion.LookRotation(hacia);
+                    control.theGun.FijarRumbo(hacia);
+                }
             }
             // A rafagas: disparando sin parar los mata a diez metros y nunca se ve
             // uno pegando.

@@ -19,6 +19,10 @@ using UnityEngine.EventSystems;
 //
 // Que se vea o no lo decide PlayerJS: invisible hasta que se lo toca, salvo el de disparo con el
 // auto-apuntado, que espera al 40 % en su rincon, y los dos en el tutorial, que los nombra.
+//
+// Corre antes que PlayerJS (que va antes que el arma): el toque de este cuadro llega a la mira de
+// este cuadro.
+[DefaultExecutionOrder(-20)]
 public class JoystickDinamico : MonoBehaviour
 {
     public const string Clave = "JoysticksDinamicos";
