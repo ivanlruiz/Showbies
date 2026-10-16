@@ -75,7 +75,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes: renderiza la cámara a 1080 × 1920 con el tiempo fijo y graba el sonido con AudioRenderer, así corre en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -301,8 +301,19 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
    salieran balas, y en PC el arma se prendía sólo al apretar y si había balas: apretar sin balas y agarrar una caja
    sin soltar no disparaba. Corriendo también se ve (ver La pistola en la mano).
 2. `GunController.Update` calcula cuántos tiros tocan en el frame con `TirosDelFrame` y por cada uno pide una
-   bala al pool: `BulletController.Obtener(bala, salida, firePoint.rotation)`, donde `salida` es la boca de la pistola
-   (`GunController.boca`) o, sin pistola, `firePoint`.
+   bala al pool: `BulletController.Obtener(bala, salida, RumboDelTiro)`, donde `salida` es la boca de la pistola
+   (`GunController.boca`) o, sin pistola, `firePoint`, y el rumbo es **el de la mira** (`FijarRumbo`, que llaman
+   `PlayerJS.Apuntar` y, en PC, `PlayerController.HandleCamera`; sin mira fijada, `firePoint.rotation`). **El arma
+   corre después de quien apunta** (`[DefaultExecutionOrder(10)]`; `JoystickDinamico` va en −20). Hasta el 16/10 el
+   tiro salía con `firePoint.rotation`, y el Rigidbody del jugador interpola (los tirones del Redmi, 10/10): al empezar
+   cada cuadro le devuelve a la raíz la rotación del cuerpo físico, que no se entera del giro de la mira (va al
+   transform). Con el orden librado al azar, en algunas sesiones el arma disparaba antes que PlayerJS y **todas las
+   balas salían a un rumbo fijo mientras el muñeco apuntaba bien** (lo vio Ivan en los clips para redes; con el
+   joystick al este, la pistola tiraba al norte). **ShowBies > Pruebas > Impactos de cerca (play, 30 fps)**
+   (`PruebaImpactos`) lo mide: un zombi quieto a 0,4–8 m, un segundo de fuego por el joystick con cada arma, y que de
+   0,7 a 5 m le llegue al menos la mitad (`Builds/prueba_impactos_30.txt`). Quedan dos cosas sin arreglar que el banco
+   muestra: a quemarropa (0,4 m) el rifle no pega y la energía la mitad, y a 30 cuadros por segundo el rifle (1,17 m por
+   cuadro, más que el ancho de un zombi) a veces lo atraviesa sin tocarlo.
 3. `BulletController.Update` se mueve con `transform.Translate` y descuenta `lifeTime`.
 4. Al vencer el tiempo o al chocar, la bala **se apaga y vuelve al pool**, no se destruye.
 
@@ -563,11 +574,13 @@ balance** (ver El balance de la 1.6.0, abajo).
 
 - **La experiencia** sale de `Enemy.experiencia`, en el bloque de la muerte de `DanoZombi` (la regla de siempre), y
   vuela como una chispa celeste del zombi al jugador (`EleccionDeCartas.Chispa`, un pool de 24 sprites). Pasar del
-  PODER L al siguiente cuesta `round(14 × 1,15^L)` (`PoderDeLaPartida.Costo`): la primera carta al empezar la oleada 2 y
-  después una por oleada, 9 hasta la oleada 10, 15 hasta la 20 y 23 hasta la 40, con la mezcla de WaveMode. Arrancaba en 8
-  hasta el 12/10 (Ivan tenía tres cartas a mitad de la oleada 2, y Gemini eligió 12 entre cinco curvas: ver `CARTAS.md`)
-  y en 12 hasta el 14/10 (ver El balance de la 1.6.0). Una granada puede
-  subir dos de golpe: quedan dos elecciones.
+  PODER L al siguiente cuesta `round(28 × 1,12^L)` (`PoderDeLaPartida.Costo`): ninguna carta en las dos primeras
+  oleadas, la primera en la 3, cuatro hacia la 8 (un minuto y medio), 6 hasta la 10 y 12 hasta la 20, con la mezcla de
+  WaveMode. Arrancaba en 8 hasta el 12/10 (Ivan tenía tres cartas a mitad de la oleada 2, y Gemini eligió 12 entre cinco
+  curvas: ver `CARTAS.md`), en 12 hasta el 14/10 (ver El balance de la 1.6.0) y en 14 × 1,15^L hasta el 16/10 (Ivan:
+  "no jugué ni un minuto de partida y ya tengo 4 cartas"; Argon eligió esta entre cuatro curvas simuladas,
+  `simulaciones/cartas_1.6.0/resultados_poder.md`: el juego largo queda casi igual, 27 cartas por partida y el muro en 59
+  y 69 para el jugador medio y el alto). Una granada puede subir dos de golpe: quedan dos elecciones.
 - **`PoderDeLaPartida` es estático y nadie lo "aplica"**: el arma (`TirosPorSegundo`, `DanoPorTiro`,
   `ProbabilidadCriticoEnLaPartida`), el jugador (la velocidad, `RecargaGranada`), `Furia.DuracionEnLaPartida` y el imán
   de `Moneda` leen sus multiplicadores, así retomar no depende del orden en que arranca cada cosa. Solo la vida se
@@ -930,8 +943,8 @@ el muro de más y la segunda trababa al bajo nueve partidas en la oleada 1-2. Qu
   en la versión final ni en la simulación.
 - **El cargador recarga un cuarto por oleada, y entero después de un jefe** (ver arriba).
 - **Las cartas, más chicas**: daño ×1,20, cadencia ×1,15 (sin gastar balas, como antes), el disparo doble a 70 % por
-  bala, la de vida cura solo lo que suma, el vampiro 3 % cada 20 muertes. **El PODER arranca en 14**: la primera carta al
-  empezar la oleada 2.
+  bala, la de vida cura solo lo que suma, el vampiro 3 % cada 20 muertes. **El PODER arrancaba en 14**: la primera carta al
+  empezar la oleada 2 (desde el 16/10, 28 × 1,12^L: ver Las cartas de la partida).
 - **La curva de arriba**: lo duro, en las oleadas 11 a 30.
 - **Menos oro**: cada moneda de las oleadas vale ×1 y crece ×1,03 por oleada (`valorDeLaMoneda`, `crecimientoMonedas`;
   `Economia` los copia y la prueba los compara), y el bono de la oleada es de 2n: con ×1,08 y ×1,4, el que pasaba la 10

@@ -1,4 +1,9 @@
-# Notas de la versión 1.6.0 (13) para Play
+# Notas de la versión 1.6.0 (13 y 14) para Play
+
+La 13 se mandó a revisión el 16/10 y la 14 la reemplaza (o sale después como actualización) con dos arreglos que no
+cambian las notas: las balas salen hacia la mira (con el orden de los Update librado al azar, a veces salían todas a un
+rumbo fijo) y el PODER pasa a 28 × 1,12^L (la primera carta en la oleada 3; con 14 × 1,15^L Ivan tenía cuatro cartas sin
+llegar al minuto).
 
 Las que van en "Novedades" de la versión de producción. Máximo 500 caracteres por idioma (contados: en-US 489,
 es-ES 491, es-419 492). Como siempre, la de Latinoamérica (es-419) escribe "zombies".

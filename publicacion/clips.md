@@ -34,6 +34,18 @@ magenta y cian es lo que mejor rinde en vertical y sin interfaz.
    Texto: WHICH WEAPON DO YOU PICK? 🔫🎃 / ¿QUÉ ARMA ELEGÍS? 🔫🎃, con REVOLVER → SHOTGUN → RIFLE → ENERGY abajo; al final,
    HALLOWEEN EVENT LIVE NOW / EVENTO DE HALLOWEEN ACTIVO.
 
+## Dónde están
+
+- **Clip 1** (16/10): `Builds/clips/salida/clip1_en.mp4` y `clip1_es.mp4`, regrabado con el editor abierto. La primera
+  versión (15/10, en -batchmode) Ivan la vio "re bugeada": las balas se iban para otro lado (un bug del juego, ya
+  arreglado: ver Pipeline de disparo en CLAUDE.md), el blanco a mano podía estar fuera del cuadro o encima del héroe y
+  el zoom de 1,8 agrandaba de más los números y la onda de energía. El golpe de la versión nueva de Kingball sigue a los
+  29,3 s: `musica_desde` 25,5 vale.
+- **Clips 2, 3 y 4**: sin grabar. Hace falta sumarle a `GrabarClips` el guion del jefe (esquivar el salto y la carga
+  leyendo el estado de `JefePatrones`, la furia al aturdirse y su vida llevada a mano), el del tesoro (sacarlo al norte,
+  perseguirlo, la granada) y las tomas de Halloween por arma (el daño de cada tramo: revólver 2, escopeta 5, rifle 10 y
+  energía 16 niveles, sin críticos para que se vea el color, y el sombrero).
+
 ## Formato
 
 - **Dos versiones de cada clip**: inglés para YouTube Shorts e Instagram Reels (Shorts reparte por el idioma del video,
