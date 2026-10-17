@@ -41,10 +41,19 @@ magenta y cian es lo que mejor rinde en vertical y sin interfaz.
   arreglado: ver Pipeline de disparo en CLAUDE.md), el blanco a mano podía estar fuera del cuadro o encima del héroe y
   el zoom de 1,8 agrandaba de más los números y la onda de energía. El golpe de la versión nueva de Kingball sigue a los
   29,3 s: `musica_desde` 25,5 vale.
-- **Clips 2, 3 y 4**: sin grabar. Hace falta sumarle a `GrabarClips` el guion del jefe (esquivar el salto y la carga
-  leyendo el estado de `JefePatrones`, la furia al aturdirse y su vida llevada a mano), el del tesoro (sacarlo al norte,
-  perseguirlo, la granada) y las tomas de Halloween por arma (el daño de cada tramo: revólver 2, escopeta 5, rifle 10 y
-  energía 16 niveles, sin críticos para que se vea el color, y el sombrero).
+- **Clips 2, 3 y 4** (17/10): `clip2_*.mp4` (13,8 s), `clip3_*.mp4` (11 s) y `clip4_*.mp4` (15 s), en la misma carpeta,
+  grabados con el editor abierto (`GrabarClips`, ShowBies > Clips). Lo que se hizo a mano para que entre en un video:
+  - **El jefe** (oleada 30, sin la horda: la oleada se para y se despejan los demás): aparece a 6,5 m al norte y ataca
+    cada 0,4 s en vez de 5; la carga dura 0,45 s en vez de 1 (de 16 m terminaba fuera del cuadro vertical) y, cuando la
+    carga lo deja aturdido, queda aturdido hasta morir. El héroe esquiva leyendo el estado de `JefePatrones` (sale del
+    anillo hacia atrás y de la línea de costado, a último momento) y recién ahí prende la furia y tira, desde 3,5 m al
+    sur del jefe. La vida del jefe va de llena a cero en 5 s (la de la oleada 30, 22.500, aguanta más que el clip).
+  - **El tesoro** (oleada 24, la calle del medio de sur a norte): sale 6 m al norte del héroe, que lo sigue desde 3 m al
+    sur entre la horda; granada al grupo más grande (no al tesoro), furia, y su vida baja a mano en 6 s.
+  - **Las armas** (oleadas 9, 16, 24 y 28, Halloween forzado y el sombrero): la horda lo rodea 10 s y empieza a tirar
+    4 s antes de grabar; con 1,5 s, quedaba tapado.
+  - Mientras se grababan apareció el bug de los zombis que se subían encima del jugador quieto y salían volando: se
+    arregló (la altura congelada, ver CLAUDE.md) y el 3 se regrabó con el arreglo.
 
 ## Formato
 

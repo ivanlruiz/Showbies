@@ -5,7 +5,7 @@
 # fondo oscurecido, el logo grande y "FREE ON GOOGLE PLAY") y el audio: los efectos del juego al 100 %
 # y Kingball, el tema de Ivan, al 60 %. Lo que decidio Argon esta en publicacion/clips.md.
 #
-#   python armar_clip.py clip1        -> Builds/clips/salida/clip1_en.mp4 y clip1_es.mp4
+#   python armar_clip.py clip1        -> Builds/clips/salida/clip1_en.mp4 y clip1_es.mp4 (y clip2 a clip4)
 import os
 import subprocess
 import sys
@@ -32,9 +32,12 @@ AMARILLO = (255, 214, 64)
 BLANCO = (255, 255, 255)
 MAGENTA = (255, 60, 200)
 CIAN = (40, 220, 255)
+NARANJA = (255, 140, 40)
+VIOLETA = (175, 95, 255)
 
 # Cada clip: las tomas (carpeta, primer cuadro, cuantos cuadros), los textos de cada tramo en los dos
-# idiomas (desde, hasta, texto, color, brillo) y el cierre.
+# idiomas (desde, hasta, texto, color, brillo, y opcionalmente la altura en fraccion de la pantalla y
+# el tamano) y el cierre. musica_desde pone el golpe de Kingball (a los 29,4 s) en el momento fuerte.
 CLIPS = {
     'clip1': {
         'tomas': [('clip1_debil', 0, 120), ('clip1_fuerte', 0, 330)],
@@ -45,6 +48,62 @@ CLIPS = {
                    (4.0, 12.0, 'MAX UPGRADES\n+ FULL CARDS', AMARILLO, MAGENTA)],
             'es': [(0.0, 4.0, 'NIVEL 1: NOVATO', BLANCO, MAGENTA),
                    (4.0, 12.0, 'MEJORAS\nAL MÁXIMO', AMARILLO, MAGENTA)],
+        },
+        'cierre': {
+            'en': ('FREE ON GOOGLE PLAY', 'Search: ShowBies'),
+            'es': ('GRATIS EN GOOGLE PLAY', 'Buscalo como: ShowBies'),
+        },
+    },
+    # El jefe salta (0,7-2 s), carga (3,7-5 s), queda aturdido y la furia lo castiga hasta que revienta
+    # (10 s); despues, las monedas. El golpe de la musica, con la furia.
+    'clip2': {
+        'tomas': [('clip2_jefe', 0, 413)],
+        'musica_desde': 24.4,
+        'textos': {
+            'en': [(0.0, 4.95, 'WAIT FOR\nTHE MISTAKE...', BLANCO, MAGENTA),
+                   (4.95, 10.0, 'RAGE MODE:\n2X DAMAGE', AMARILLO, MAGENTA)],
+            'es': [(0.0, 4.95, 'ESPERA\nEL ERROR...', BLANCO, MAGENTA),
+                   (4.95, 10.0, '¡MODO FURIA:\nDAÑO X2!', AMARILLO, MAGENTA)],
+        },
+        'cierre': {
+            'en': ('FREE ON GOOGLE PLAY', 'Search: ShowBies'),
+            'es': ('GRATIS EN GOOGLE PLAY', 'Buscalo como: ShowBies'),
+        },
+    },
+    # El tesoro sale a los 0,2 s y huye; la granada (3 s), la furia (4 s) y revienta a los 6,8 s. Va
+    # justo arriba del heroe, a un 20 % del borde de arriba: el texto, mas arriba y mas chico.
+    'clip3': {
+        'tomas': [('clip3_tesoro', 0, 329)],
+        'musica_desde': 25.4,
+        'textos': {
+            'en': [(0.2, 3.2, '12 SECONDS BEFORE\nHE ESCAPES', AMARILLO, MAGENTA, 0.075, 96),
+                   (3.2, 6.8, "DON'T LET\nHIM GO!", BLANCO, MAGENTA, 0.075, 96)],
+            'es': [(0.2, 3.2, '12 SEGUNDOS ANTES\nDE QUE ESCAPE', AMARILLO, MAGENTA, 0.075, 96),
+                   (3.2, 6.8, '¡QUE NO\nSE ESCAPE!', BLANCO, MAGENTA, 0.075, 96)],
+        },
+        'cierre': {
+            'en': ('FREE ON GOOGLE PLAY', 'Search: ShowBies'),
+            'es': ('GRATIS EN GOOGLE PLAY', 'Buscalo como: ShowBies'),
+        },
+    },
+    # Cuatro cortes de 3 s con el sombrero de calabaza: el nombre de cada arma en el color de su bala.
+    # El de energia dura 6 s: los ultimos 3 son el fondo del cierre. El golpe, con la de energia.
+    'clip4': {
+        'tomas': [('clip4_revolver', 0, 90), ('clip4_escopeta', 0, 90), ('clip4_rifle', 0, 90), ('clip4_energia', 0, 180)],
+        'musica_desde': 20.4,
+        'textos': {
+            'en': [(0.0, 9.0, 'WHICH WEAPON\nDO YOU PICK?', BLANCO, MAGENTA),
+                   (9.0, 12.0, 'HALLOWEEN EVENT\nLIVE NOW', NARANJA, MAGENTA),
+                   (0.0, 3.0, 'REVOLVER', AMARILLO, MAGENTA, 0.265, 104),
+                   (3.0, 6.0, 'SHOTGUN', NARANJA, MAGENTA, 0.265, 104),
+                   (6.0, 9.0, 'RIFLE', MAGENTA, VIOLETA, 0.265, 104),
+                   (9.0, 12.0, 'ENERGY GUN', VIOLETA, MAGENTA, 0.265, 104)],
+            'es': [(0.0, 9.0, '¿QUÉ ARMA\nELEGÍS?', BLANCO, MAGENTA),
+                   (9.0, 12.0, 'EVENTO DE\nHALLOWEEN ACTIVO', NARANJA, MAGENTA),
+                   (0.0, 3.0, 'REVÓLVER', AMARILLO, MAGENTA, 0.265, 104),
+                   (3.0, 6.0, 'ESCOPETA', NARANJA, MAGENTA, 0.265, 104),
+                   (6.0, 9.0, 'RIFLE', MAGENTA, VIOLETA, 0.265, 104),
+                   (9.0, 12.0, 'ARMA DE ENERGÍA', VIOLETA, MAGENTA, 0.265, 104)],
         },
         'cierre': {
             'en': ('FREE ON GOOGLE PLAY', 'Search: ShowBies'),
@@ -137,9 +196,12 @@ def armar_video(nombre, idioma):
         lienzo = img.convert('RGBA')
         if en_cierre:
             lienzo.alpha_composite(franja_del_cierre())
-        for desde, hasta, texto, relleno, brillo in clip['textos'][idioma]:
+        for tramo in clip['textos'][idioma]:
+            desde, hasta, texto, relleno, brillo = tramo[:5]
+            y = int(H * tramo[5]) if len(tramo) > 5 else Y_TEXTO
+            tam = tramo[6] if len(tramo) > 6 else 120
             if desde <= t < hasta and not en_cierre:
-                lienzo.alpha_composite(capa_de_texto(texto, Y_TEXTO, 120, relleno, brillo, X_DER - X_IZQ))
+                lienzo.alpha_composite(capa_de_texto(texto, y, tam, relleno, brillo, X_DER - X_IZQ))
         if en_cierre:
             # El logo entra con un salto en un cuarto de segundo y queda.
             entra = min(1.0, (t - (total - CIERRE)) / 0.25)
