@@ -762,6 +762,13 @@ public class EnemyController : MonoBehaviour
         // La rotacion la pone FixedUpdate, mirando al jugador: que los choques no
         // lo inclinen entre un paso y otro.
         rb.freezeRotation = true;
+        // Y la altura, como la del jugador: el piso es plano en todas las escenas. Con la
+        // horda apretada contra el jugador quieto, la fisica sacaba a los de adentro para
+        // arriba (las capsulas no tienen friccion, ver abajo): se le subian encima, se
+        // apilaban hasta 6 m y salian volando, porque la velocidad vertical la dejaba
+        // libre FixedUpdate (lo reporto Ivan el 17/10). Asi la horda solo se empuja de
+        // costado. La gravedad ya no hace falta: nacen sobre el piso (SubirSobreElPiso).
+        rb.constraints |= RigidbodyConstraints.FreezePositionY;
         escalaBase = transform.localScale;
         animadores = ConControlador(GetComponentsInChildren<Animator>(true));
         colliders = GetComponentsInChildren<Collider>(true);
@@ -1094,12 +1101,13 @@ public class EnemyController : MonoBehaviour
     // centro de su capsula. Los puntos de aparicion de WaveMode estan en el piso,
     // asi que cada zombi nacia con media capsula enterrada en un piso sin espesor
     // (un plano), y dependia de la fisica que lo sacara para arriba y no para
-    // abajo. Se lo sube antes del primer paso de fisica, lo haga aparecer quien lo
-    // haga aparecer.
+    // abajo. Se lo apoya antes del primer paso de fisica, lo haga aparecer quien lo
+    // haga aparecer. Tambien si nace mas arriba: con la altura congelada (ver Awake)
+    // no caeria, y quedaria flotando.
     private void SubirSobreElPiso()
     {
         float fondo;
-        if (FondoDeLaCapsula(out fondo) && fondo < AlturaDelPiso)
+        if (FondoDeLaCapsula(out fondo) && Mathf.Abs(fondo - (AlturaDelPiso + MargenSobreElPiso)) > 0.001f)
         {
             transform.position += Vector3.up * (AlturaDelPiso - fondo + MargenSobreElPiso);
         }

@@ -2836,12 +2836,15 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   que los livianos se aparten y el jugador los pase, que el tanque ceda poco y que de costado no arrastre a nadie
   (`Builds/prueba_arrastre.txt`); la prueba de lógica mira que la masa de cada prefab caiga del lado que corresponde.
 
-- **Los zombis caminan en horizontal y la gravedad es de la física.** `EnemyController` mira al jugador a su propia
-  altura y sólo pisa la velocidad horizontal. Antes miraba al centro del jugador y pisaba la velocidad entera en cada
-  paso: la gravedad nunca actuaba, y un zombi que terminaba bajo el piso (que es un plano sin espesor) se quedaba
-  ahí persiguiendo al jugador. Además los puntos de aparición de WaveMode están en Y = 0 y el pivote del zombi es el
-  centro de su cápsula: `SubirSobreElPiso` lo levanta cada vez que aparece (`OnEnable`) para que no nazca medio
-enterrado.
+- **Los zombis caminan en horizontal y con la altura congelada.** `EnemyController` mira al jugador a su propia
+  altura y sólo pisa la velocidad horizontal, y desde el 17/10 el Rigidbody congela la Y (`FreezePositionY`, en
+  `Awake`), como el del jugador: con la horda apretada contra el jugador quieto, la física sacaba a los de adentro para
+  arriba (las cápsulas no tienen fricción), se le subían encima, se apilaban hasta 6 m y salían volando, porque la
+  velocidad vertical quedaba libre (lo reportó Ivan; medido con la toma del rifle de los clips: 9 de 35 con los pies a
+  más de 0,3 m, ninguno con el arreglo). El piso es plano en todas las escenas. Los puntos de aparición están en Y = 0 y
+  el pivote del zombi es el centro de su cápsula: `SubirSobreElPiso` lo apoya en el piso cada vez que aparece
+  (`OnEnable`), también si nace más arriba, que con la Y congelada no caería. Antes de congelarla, la gravedad era de
+  la física y el kill-Z sacaba a los que terminaban bajo el piso; el kill-Z sigue, por las dudas.
 
 - **El "zombi invisible" era el rápido, que no tenía malla.** `ToonyTinyPeople/TT_demo/models/zombiRapido.FBX` es en
   realidad un glTF binario con extensión `.FBX`: Unity no le encuentra mallas y el prefab quedaba con el
