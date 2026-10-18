@@ -6214,6 +6214,15 @@ public static class PruebasMejoras
             inf.Cerca("bate: empuja 3 m", 3, bate.empuje, 1e-6);
             inf.Cerca("bate: frena al pesado 1 s", 1, bate.frenadoDelPesado, 1e-6);
             inf.Cerca("bate: recarga en 4 s", 4, bate.enfriamiento, 1e-6);
+            // La tarjeta de la tienda dice cada cuanto: si se toca el prefab y no el texto, miente.
+            var numero = new System.Text.RegularExpressions.Regex(@"\d+(?:[.,]\d+)?");
+            foreach (var lengua in new[] { Lengua.Ingles, Lengua.Espanol })
+            {
+                string texto = Textos.Crudo("mejora_bate_unidad", lengua) ?? "";
+                var m = numero.Match(texto);
+                double dice = m.Success ? double.Parse(m.Value.Replace(',', '.'), Invariante) : double.NaN;
+                inf.Cerca("bate: \"" + texto + "\" (" + Idioma.Codigo(lengua) + ") dice la recarga del prefab", bate.enfriamiento, dice, 1e-3);
+            }
         }
 
         // A quien empuja: lo liviano (cede la mitad o mas). Al tanque lo frena; al jefe y al tesoro,
@@ -6288,6 +6297,9 @@ public static class PruebasMejoras
             foreach (var x in AssetDatabase.LoadAllAssetsAtPath("Assets/ToonyTinyPeople/TT_demo/animation/male/m_melee_combat_attack_A.FBX"))
                 if (x is AnimationClip && !x.name.StartsWith("__preview__")) hachazo = (AnimationClip)x;
             var malla = palo != null ? palo.GetComponentInChildren<MeshFilter>(true) : null;
+            var bateDeLaEscena = control != null ? control.GetComponent<Bate>() : null;
+            inf.Verdadero("bate: el jugador de WaveMode tiene el bate del prefab, sin cambiarle la recarga",
+                          bateDeLaEscena != null && bate != null && Mathf.Approximately(bateDeLaEscena.enfriamiento, bate.enfriamiento));
             if (!inf.Verdadero("bate: el muñeco de WaveMode tiene el bate en la mano y esta el clip", palo != null && hachazo != null && malla != null && malla.sharedMesh != null)) return;
             // La punta es la otra punta del mango, que esta en el origen del bate.
             Bounds b = malla.sharedMesh.bounds;
