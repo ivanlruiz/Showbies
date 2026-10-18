@@ -87,3 +87,26 @@ el 12/10** (la tabla y los detalles, en Lo que tira cada arma de `CLAUDE.md`):
 Hecho el 12/10, junto con el 6 y el 7 de la lista: **sin el círculo relleno** (el fondo ya es oscuro y el círculo era
 un agujero; parecían señales de tránsito), **el ícono de neón** del color de la carta, con su brillo, dentro de **un
 anillo fino** del mismo color.
+
+### Las armas, cada una con su diseño
+
+18/10, pedido de Ivan ("que las armas tengan diseño, que no sean todas iguales"; las veía como la misma pistola con el
+cañón más largo, que es lo que eran). Las diseñó Argon en el chat de diseño, pieza por pieza (forma, medidas en cm,
+posición respecto de la mano y color), pensando en la silueta vista desde arriba a 15-20 px y de costado para los clips:
+
+- **Pistola**: un ladrillo corto de acero (#5A6270) con una placa de neón encima.
+- **Revólver**: plateado (#A8B2C0) con cacha de madera, un tambor de neón de 11,5 cm que sobresale a los costados y un
+  cañón plano con un puente de neón.
+- **Escopeta**: báscula de bronce, culata y guardamanos de madera (#8C4A27), dos cañones gruesos lado a lado y dos tiras
+  de neón paralelas: el doble de ancha en la punta.
+- **Rifle**: verde táctico (#33403A), con culata, cargador inclinado, mira de neón, tira de neón y freno de boca: el más
+  largo.
+- **Energía**: una horquilla de titanio blanco (#DCE4EC) con una esfera de neón en el medio, que crece con cada tiro, y
+  dos bobinas de neón: la más ancha.
+
+Las empuñaduras y los cañones van en carbón (#26282E). Están tal cual en `ConstructorArmas.Piezas`, con dos cambios: todo
+agrandado 1,65 veces (`Cm`; Argon dio medidas de armas reales, y lo del muñeco va exagerado para leerse a 15 px: así la
+pistola mide lo de antes) y el tambor del revólver parado (acostado, como lo pidió, desde arriba se vería un rectángulo, y
+lo que buscaba era "un círculo amarillo inconfundible"). La luz es del color del tramo de la bala y no del suyo, que era
+casi el mismo. Argon dejó anotado que en la 1.8.0 un arma cosmética del camino de nivel ("de oro", "de titanio") puede
+pisar solo el color del cuerpo y conservar la forma.
