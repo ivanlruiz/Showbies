@@ -48,12 +48,18 @@ magenta y cian es lo que mejor rinde en vertical y sin interfaz.
     carga lo deja aturdido, queda aturdido hasta morir. El héroe esquiva leyendo el estado de `JefePatrones` (sale del
     anillo hacia atrás y de la línea de costado, a último momento) y recién ahí prende la furia y tira, desde 3,5 m al
     sur del jefe. La vida del jefe va de llena a cero en 5 s (la de la oleada 30, 22.500, aguanta más que el clip).
-  - **El tesoro** (oleada 24, la calle del medio de sur a norte): sale 6 m al norte del héroe, que lo sigue desde 3 m al
-    sur entre la horda; granada al grupo más grande (no al tesoro), furia, y su vida baja a mano en 6 s.
+  - **El tesoro** (oleada 24, la calle del medio de sur a norte): sale 6 m al norte del héroe, que lo sigue desde 2,5 m
+    al sur entre la horda tirándole a los zombis y no a él (ni a lo que está en su dirección); granada al grupo más grande,
+    furia a los 4 s, y recién ahí le tira: su vida baja a mano en 2,8 s. La primera versión le tiraba desde el principio,
+    se le apilaban los números de daño y no se lo veía escapar (Ivan, 18/10).
   - **Las armas** (oleadas 9, 16, 24 y 28, Halloween forzado y el sombrero): la horda lo rodea 10 s y empieza a tirar
     4 s antes de grabar; con 1,5 s, quedaba tapado.
   - Mientras se grababan apareció el bug de los zombis que se subían encima del jugador quieto y salían volando: se
     arregló (la altura congelada, ver CLAUDE.md) y el 3 se regrabó con el arreglo.
+
+- **La mezcla** (18/10, pedido de Ivan): Kingball al 90 % y los efectos al 75 %, con un limitador (eran 60 y 100 %: los
+  efectos tapaban la música). **Cada clip sale también limpio** (`clipN_limpio.mp4`, sin textos ni cierre, con el mismo
+  audio), para decorarlo con otra herramienta.
 
 ## Formato
 
@@ -66,8 +72,8 @@ magenta y cian es lo que mejor rinde en vertical y sin interfaz.
 - **El cierre, en los últimos 3 s, sin placa negra** (la gente pasa al siguiente antes de leer): la lluvia de monedas
   sigue de fondo oscurecida un 25 %, el logo grande arriba al centro y abajo FREE ON GOOGLE PLAY / Search: ShowBies
   (GRATIS EN GOOGLE PLAY / Buscalo como: ShowBies).
-- **El audio**: Kingball al 60 % y los efectos del juego al 100 %, sobre todo los disparos pesados, las explosiones y la
-  escalera de notas de las monedas.
+- **El audio**: Kingball y los efectos del juego, sobre todo los disparos pesados, las explosiones y la escalera de notas
+  de las monedas (Argon pedía la música al 60 % y los efectos al 100 %; Ivan la prefirió más alta: ver arriba).
 
 ## Cómo publicar
 

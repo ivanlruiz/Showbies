@@ -2,10 +2,12 @@
 # (Builds/clips/<toma>/f0000.jpg..., sonido.wav). Pega las tomas, pone el texto de cada momento
 # (en ingles y en espanol, como las capturas de la ficha: Bangers en mayusculas, relleno blanco o
 # amarillo, trazo negro grueso y brillo de neon), el cierre de los ultimos 3 s (el video sigue de
-# fondo oscurecido, el logo grande y "FREE ON GOOGLE PLAY") y el audio: los efectos del juego al 100 %
-# y Kingball, el tema de Ivan, al 60 %. Lo que decidio Argon esta en publicacion/clips.md.
+# fondo oscurecido, el logo grande y "FREE ON GOOGLE PLAY") y el audio: Kingball, el tema de Ivan, y los
+# efectos del juego (ver VOLUMEN_MUSICA). Lo que decidio Argon esta en publicacion/clips.md. Arma tambien
+# una version limpia, sin textos ni cierre, para decorarla con otra herramienta.
 #
-#   python armar_clip.py clip1        -> Builds/clips/salida/clip1_en.mp4 y clip1_es.mp4 (y clip2 a clip4)
+#   python armar_clip.py clip1        -> Builds/clips/salida/clip1_en.mp4, clip1_es.mp4 y clip1_limpio.mp4
+#                                        (y clip2 a clip4)
 import os
 import subprocess
 import sys
@@ -27,6 +29,10 @@ W, H, FPS = 1080, 1920, 30
 X_IZQ, X_DER = 60, int(W * 0.85) - 20
 Y_TEXTO = int(H * 0.13)
 CIERRE = 3.0
+# La musica arriba y los efectos un poco abajo (Ivan, 18/10: con 0,6 y 1 los efectos tapaban la musica;
+# medidos, los efectos andan en -19 dB de media y Kingball en -16). El limitador evita que la suma recorte.
+VOLUMEN_MUSICA = 0.9
+VOLUMEN_EFECTOS = 0.75
 
 AMARILLO = (255, 214, 64)
 BLANCO = (255, 255, 255)
@@ -73,7 +79,7 @@ CLIPS = {
     # El tesoro sale a los 0,2 s y huye; la granada (3 s), la furia (4 s) y revienta a los 6,8 s. Va
     # justo arriba del heroe, a un 20 % del borde de arriba: el texto, mas arriba y mas chico.
     'clip3': {
-        'tomas': [('clip3_tesoro', 0, 329)],
+        'tomas': [('clip3_tesoro', 0, 325)],
         'musica_desde': 25.4,
         'textos': {
             'en': [(0.2, 3.2, '12 SECONDS BEFORE\nHE ESCAPES', AMARILLO, MAGENTA, 0.075, 96),
@@ -186,9 +192,13 @@ def armar_video(nombre, idioma):
     logo = logo.resize((ancho_logo, round(ancho_logo * logo.height / logo.width)), Image.LANCZOS)
     carpeta = os.path.join(SALIDA, nombre + '_' + idioma)
     os.makedirs(carpeta, exist_ok=True)
+    limpio = idioma == 'limpio'
     for n, ruta in enumerate(rutas):
         t = n / FPS
         img = Image.open(ruta).convert('RGB')
+        if limpio:
+            img.save(os.path.join(carpeta, 'f%04d.jpg' % n), quality=93)
+            continue
         en_cierre = t >= total - CIERRE
         if en_cierre:
             # El video sigue de fondo, oscurecido un 25 % (sin placa negra: la gente pasa de largo).
@@ -247,17 +257,17 @@ def main():
     nombre = sys.argv[1] if len(sys.argv) > 1 else 'clip1'
     os.makedirs(SALIDA, exist_ok=True)
     efectos = armar_sonido(nombre)
-    for idioma in ('en', 'es'):
+    for idioma in ('en', 'es', 'limpio'):
         carpeta, total = armar_video(nombre, idioma)
         mp4 = os.path.join(SALIDA, '%s_%s.mp4' % (nombre, idioma))
         cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(FPS), '-i', os.path.join(carpeta, 'f%04d.jpg'),
                '-ss', str(CLIPS[nombre]['musica_desde']), '-i', MUSICA]
         if efectos:
             cmd += ['-i', efectos,
-                    '-filter_complex', '[1:a]volume=0.6,atrim=0:%.3f[m];[2:a]volume=1.0[e];[m][e]amix=inputs=2:duration=first:normalize=0,afade=t=out:st=%.3f:d=0.5[a]' % (total, total - 0.5),
+                    '-filter_complex', '[1:a]volume=%.2f,atrim=0:%.3f[m];[2:a]volume=%.2f[e];[m][e]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=disabled,afade=t=out:st=%.3f:d=0.5[a]' % (VOLUMEN_MUSICA, total, VOLUMEN_EFECTOS, total - 0.5),
                     '-map', '0:v', '-map', '[a]']
         else:
-            cmd += ['-filter_complex', '[1:a]volume=0.6,atrim=0:%.3f,afade=t=out:st=%.3f:d=0.5[a]' % (total, total - 0.5),
+            cmd += ['-filter_complex', '[1:a]volume=%.2f,atrim=0:%.3f,afade=t=out:st=%.3f:d=0.5[a]' % (VOLUMEN_MUSICA, total, total - 0.5),
                     '-map', '0:v', '-map', '[a]']
         cmd += ['-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'slow', '-c:a', 'aac', '-b:a', '192k',
                 '-t', '%.3f' % total, '-movflags', '+faststart', mp4]

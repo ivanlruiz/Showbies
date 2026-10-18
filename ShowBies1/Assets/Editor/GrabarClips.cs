@@ -183,7 +183,8 @@ public static class GrabarClips
 
     // Clip 3, "la codicia mata": la oleada 24 en la ciudad, el zombi del tesoro sale al norte y el
     // heroe lo persigue entre la horda con el rifle, la perforante y el hielo; una granada, la furia,
-    // y lo revienta antes de que se escape. Su vida baja de a poco (llevada a mano, como la del jefe).
+    // y lo revienta antes de que se escape. Hasta la furia le tira a la horda y no a el, para que se lo
+    // vea escapar; despues su vida baja en 2,8 s (llevada a mano, como la del jefe).
     // Por la calle del medio, de sur a norte, y en 7 s: mas largo, el tesoro (a 7 m/s) llegaba a los
     // edificios de las afueras y el heroe se trababa contra uno. Con el zoom de cerca: es chico.
     [MenuItem("ShowBies/Clips/Clip 3: el tesoro")]
@@ -196,7 +197,7 @@ public static class GrabarClips
             previa = 10f, cuadros = 450, zoom = 1.35f,
             ponerEnInicio = true, inicio = new Vector3(0f, 0f, -22f),
             objetivo = "tesoro", recorrido = "objetivo", paso = 0.85f, tesoroEn = 0.2f, quietoEnLaPrevia = true,
-            apuntarAMano = true, granadaEn = 3f, furiaEn = 4f, matarDesde = 0.8f, matarEn = 6.2f, seguirTrasMatar = 4f
+            apuntarAMano = true, granadaEn = 3f, furiaEn = 4f, matarDesde = 4f, matarEn = 2.8f, seguirTrasMatar = 4f
         });
     }
 
@@ -349,7 +350,8 @@ public static class GrabarClips
         float t = Time.timeSinceLevelLoad - toma.previa;   // segundos de la toma (negativo en la previa)
         bool quieto = toma.quietoEnLaPrevia && t < -toma.dispararAntes;
         if (toma.objetivo != "") Guion(vida, joysticks, t);
-        PlayerJS.FijarAutoApuntar(!quieto && !SinDisparar);
+        // Con el tesoro tampoco: el automatico le tiraria a el, y apunta el guion (Apuntar).
+        PlayerJS.FijarAutoApuntar(!quieto && !SinDisparar && toma.objetivo != "tesoro");
 
         // Al principio de la previa, al lugar de inicio.
         if (toma.ponerEnInicio && Time.timeSinceLevelLoad < 0.5f)
@@ -522,10 +524,10 @@ public static class GrabarClips
             }
             if (ObjetivoVivo)
             {
-                // Lo persigue desde 3 m al sur: en el cuadro vertical queda arriba del heroe, debajo
+                // Lo persigue desde 2,5 m al sur: en el cuadro vertical queda arriba del heroe, debajo
                 // del texto del clip. Persiguiendolo derecho se iba en diagonal y quedaba en la
-                // esquina de arriba, cortado.
-                Vector3 hacia = objetivo.transform.position - Vector3.forward * 3f - yo;
+                // esquina de arriba, cortado; desde 3 m quedaba pegado al texto.
+                Vector3 hacia = objetivo.transform.position - Vector3.forward * 2.5f - yo;
                 hacia.y = 0f;
                 float d = hacia.magnitude;
                 if (d > 0.3f) pasoDelGuion = new Vector2(hacia.x, hacia.z) / d * toma.paso * Mathf.Clamp01(d / 1.5f);
@@ -695,8 +697,9 @@ public static class GrabarClips
         Debug.Log("GrabarClips: granada a " + mejorCuenta + " zombis, a " + hacia.magnitude.ToString("0.0") + " m");
     }
 
-    // A quien le tira: el jefe en la ventana (y a nadie antes), el tesoro si se ve, y si no, el mas
-    // cercano que se vea.
+    // A quien le tira: el jefe en la ventana (y a nadie antes); el tesoro en la suya, si se ve, y antes
+    // a la horda, sin tirar para su lado; y si no, el mas cercano que se vea. Tirandole al tesoro desde
+    // el principio (17/10) se le apilaban los numeros de dano encima y no se lo veia escapar (Ivan).
     static void Apuntar(PlayerJS joysticks, Vector3 yo)
     {
         if (joysticks.lookJoystick == null) return;
@@ -706,12 +709,15 @@ public static class GrabarClips
             else PruebaDisparo.Soltar(joysticks.lookJoystick);
             return;
         }
-        if (toma.objetivo == "tesoro" && ObjetivoVivo && SirveDeBlanco(objetivo, Camera.main, yo, Alcance(joysticks)))
+        if (toma.objetivo == "tesoro" && ObjetivoVivo)
         {
-            ApuntarA(joysticks, yo, objetivo.transform.position);
+            float t = Time.timeSinceLevelLoad - toma.previa;
+            if (t >= toma.matarDesde && SirveDeBlanco(objetivo, Camera.main, yo, Alcance(joysticks)))
+                ApuntarA(joysticks, yo, objetivo.transform.position);
+            else ApuntarAlMasCercano(joysticks, yo, objetivo);
             return;
         }
-        if (toma.apuntarAMano) ApuntarAlMasCercano(joysticks, yo);
+        if (toma.apuntarAMano) ApuntarAlMasCercano(joysticks, yo, null);
     }
 
     static void ApuntarA(PlayerJS joysticks, Vector3 yo, Vector3 blanco)
@@ -804,21 +810,25 @@ public static class GrabarClips
     const float AlcanceAMano = 22f;
     const float VentajaParaCambiar = 0.7f;
 
-    static void ApuntarAlMasCercano(PlayerJS joysticks, Vector3 desde)
+    // "evitar": uno al que no hay que tirarle, ni a lo que esta en su direccion (a 35 grados o menos),
+    // que la bala que pasa o perfora le pegaria igual.
+    static void ApuntarAlMasCercano(PlayerJS joysticks, Vector3 desde, EnemyController evitar)
     {
         if (joysticks.lookJoystick == null) return;
         var camara = Camera.main;
         float alcance = Alcance(joysticks);
         EnemyController mejor = null;
         float mejorDistancia = alcance * alcance;
+        Vector3 haciaElQueNo = evitar != null ? evitar.transform.position - desde : Vector3.zero;
+        haciaElQueNo.y = 0f;
         foreach (var z in EnemyController.Vivos)
         {
-            if (!SirveDeBlanco(z, camara, desde, alcance)) continue;
+            if (!SirveDeBlanco(z, camara, desde, alcance) || !LejosDe(z, desde, evitar, haciaElQueNo)) continue;
             float d = EnElPiso2(z.transform.position - desde);
             if (d < mejorDistancia) { mejorDistancia = d; mejor = z; }
         }
         if (blancoAMano != null && blancoAMano != mejor && EnemyController.SigueVivo(blancoAMano, numeroDelBlanco)
-            && SirveDeBlanco(blancoAMano, camara, desde, alcance)
+            && SirveDeBlanco(blancoAMano, camara, desde, alcance) && LejosDe(blancoAMano, desde, evitar, haciaElQueNo)
             && mejorDistancia >= EnElPiso2(blancoAMano.transform.position - desde) * VentajaParaCambiar * VentajaParaCambiar)
             mejor = blancoAMano;
         if (mejor != null && mejor != blancoAMano) numeroDelBlanco = mejor.NumeroDeAparicion;
@@ -827,6 +837,15 @@ public static class GrabarClips
         Vector3 hacia = mejor.transform.position - desde;
         pedidoAMano = new Vector2(hacia.x, hacia.z).normalized;
         PruebaDisparo.Apretar(joysticks.lookJoystick, pedidoAMano);
+    }
+
+    static bool LejosDe(EnemyController z, Vector3 desde, EnemyController evitar, Vector3 haciaElQueNo)
+    {
+        if (evitar == null) return true;
+        if (z == evitar) return false;
+        Vector3 hacia = z.transform.position - desde;
+        hacia.y = 0f;
+        return haciaElQueNo.sqrMagnitude < 0.01f || hacia.sqrMagnitude < 0.01f || Vector3.Angle(hacia, haciaElQueNo) > 35f;
     }
 
     static bool SirveDeBlanco(EnemyController z, Camera camara, Vector3 desde, float alcance)
