@@ -257,6 +257,8 @@ mejora_furia_nombre	RAGE	FURIA
 mejora_furia_unidad	seconds of rage	segundos de furia
 mejora_granada_nombre	GRENADE	GRANADA
 mejora_granada_unidad	grenade every 5 s	granada cada 5 s
+mejora_bate_nombre	BAT	BATE
+mejora_bate_unidad	bat swing every 4 s	batazo cada 4 s
 mejora_criticos_nombre	CRITICAL HITS	GOLPES CRÍTICOS
 mejora_criticos_unidad	chance of double damage	probabilidad de daño doble
 
@@ -286,6 +288,8 @@ tesoro_escapo	IT GOT AWAY!	¡SE ESCAPÓ!
 furia_boton	RAGE	FURIA
 furia_boton_pc	RAGE\n<size=55%>(F)</size>	FURIA\n<size=55%>(F)</size>
 furia_cartel	RAGE!	¡FURIA!
+bate_boton	BAT	BATE
+bate_boton_pc	BAT\n<size=50%>RIGHT CLICK</size>	BATE\n<size=50%>CLIC DERECHO</size>
 
 # --- Pausa
 pausa_titulo	PAUSED	PAUSA

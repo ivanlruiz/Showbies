@@ -268,6 +268,7 @@ public static class PruebasMejoras
                     ProbarProyectiles(informe);
                     ProbarFlechasDelBorde(informe);
                     ProbarJoystickDinamico(informe);
+                    ProbarBate(informe);
                     ProbarZombiDelTesoro(informe);
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
@@ -650,10 +651,11 @@ public static class PruebasMejoras
         completo &= ProbarId(inf, "furia", catalogo.furia, "furia");
         completo &= ProbarId(inf, "granada", catalogo.granada, "granada");
         completo &= ProbarId(inf, "criticos", catalogo.criticos, "criticos");
+        completo &= ProbarId(inf, "bate", catalogo.bate, "bate");
 
-        string[] orden = { "dano_bala", "cadencia", "criticos", "vida_maxima", "granada", "iman", "botin", "furia" };
+        string[] orden = { "dano_bala", "cadencia", "criticos", "vida_maxima", "granada", "iman", "botin", "bate", "furia" };
         int largo = catalogo.enTienda == null ? -1 : catalogo.enTienda.Length;
-        inf.Igual("catalogo: enTienda tiene 8 mejoras", 8, largo);
+        inf.Igual("catalogo: enTienda tiene 9 mejoras", 9, largo);
         for (int i = 0; i < orden.Length; i++)
         {
             string obtenido = i < largo ? Id(catalogo.enTienda[i]) : "(falta)";
@@ -739,6 +741,11 @@ public static class PruebasMejoras
         ChequearPrecios(inf, "precio granada", c.granada, new double[] { 250 });
         inf.Verdadero("tope granada: EnTope(0) es falso", !c.granada.EnTope(0));
         inf.Verdadero("tope granada: EnTope(1) es verdadero", c.granada.EnTope(1));
+
+        // El bate tambien (1.7.0, de Gemini: 1.500 monedas).
+        ChequearPrecios(inf, "precio bate", c.bate, new double[] { 1500 });
+        inf.Verdadero("tope bate: EnTope(0) es falso", !c.bate.EnTope(0));
+        inf.Verdadero("tope bate: EnTope(1) es verdadero", c.bate.EnTope(1));
 
         // Los criticos: ocho compras con los porcentajes de la tabla.
         ChequearPrecios(inf, "precio criticos", c.criticos, new double[] { 150, 270, 486, 875, 1575, 2834, 5102, 9183 });
@@ -4080,6 +4087,10 @@ public static class PruebasMejoras
         Progreso.DepurarFijarNivel(c.granada.id, 1);
         inf.Verdadero("getters granada 1: GranadaDesbloqueada", CatalogoMejoras.GranadaDesbloqueada);
         Progreso.DepurarFijarNivel(c.granada.id, 0);
+        inf.Verdadero("getters nivel 0: BateDesbloqueado es falso", !CatalogoMejoras.BateDesbloqueado);
+        Progreso.DepurarFijarNivel(c.bate.id, 1);
+        inf.Verdadero("getters bate 1: BateDesbloqueado", CatalogoMejoras.BateDesbloqueado);
+        Progreso.DepurarFijarNivel(c.bate.id, 0);
 
         // Volumen: la cuenta de cada fuente y los topes.
         inf.Cerca("volumen: base por jugador", 0.13f, FuenteConVolumen.Calcular(0.26f, 0.5f, 1f), Tolerancia);
@@ -6167,6 +6178,179 @@ public static class PruebasMejoras
                 if (tutorial && furia == null) return;
                 inf.Verdadero("joystick dinamico: en " + nombre + " la furia atiende sus toques",
                               furia != null && furia.boton != null && RecibeToques(furia.boton.gameObject));
+            });
+        }
+    }
+
+    // El bate (Bate, 1.7.0, de Gemini): el cono, la animacion medida del clip, el componente en el
+    // prefab del jugador, la capa del Animator, a quien empuja y a quien frena, los sonidos y el lugar
+    // del boton en el HUD. El golpe de verdad lo mira el banco en play (PruebaBate).
+    static void ProbarBate(Informe inf)
+    {
+        // El cono: 120 grados y 2,5 m adelante, medido en el piso; lo pegado entra siempre.
+        Vector3 o = Vector3.zero, norte = Vector3.forward;
+        inf.Verdadero("bate: adelante a 2 m entra", Bate.EnElCono(o, norte, new Vector3(0f, 0f, 2f), 2.5f, 120f));
+        inf.Verdadero("bate: a 2,6 m no", !Bate.EnElCono(o, norte, new Vector3(0f, 0f, 2.6f), 2.5f, 120f));
+        inf.Verdadero("bate: a 59 grados entra", Bate.EnElCono(o, norte, Quaternion.Euler(0f, 59f, 0f) * Vector3.forward * 2f, 2.5f, 120f));
+        inf.Verdadero("bate: a 61 grados no", !Bate.EnElCono(o, norte, Quaternion.Euler(0f, -61f, 0f) * Vector3.forward * 2f, 2.5f, 120f));
+        inf.Verdadero("bate: detras no", !Bate.EnElCono(o, norte, new Vector3(0f, 0f, -1.5f), 2.5f, 120f));
+        inf.Verdadero("bate: pegado entra aunque este detras", Bate.EnElCono(o, norte, new Vector3(0f, 0f, -0.6f), 2.5f, 120f));
+        inf.Verdadero("bate: la altura no cuenta", Bate.EnElCono(o, norte, new Vector3(0f, 3f, 2f), 2.5f, 120f));
+
+        // El daño entra cuando la punta llega adelante, a tiempo contra un veloz (el zarpazo de los
+        // zombis anticipa 0,2 s), y la pistola vuelve antes de poder pegar de nuevo.
+        inf.Verdadero("bate: el golpe conecta a los " + Bate.DemoraDelImpacto.ToString("0.000") + " s de apretar (0,15 a 0,22)",
+                      Bate.DemoraDelImpacto >= 0.15f && Bate.DemoraDelImpacto <= 0.22f);
+        inf.Verdadero("bate: el bate en la mano dura menos de medio segundo (" + Bate.DuracionDelGolpe.ToString("0.00") + ")",
+                      Bate.DuracionDelGolpe > Bate.DemoraDelImpacto && Bate.DuracionDelGolpe < 0.5f);
+
+        var jugador = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/Jugador.prefab");
+        var bate = jugador != null ? jugador.GetComponent<Bate>() : null;
+        if (inf.Verdadero("bate: esta en el prefab del jugador, con su PlayerController", bate != null && bate.jugador == jugador.GetComponent<PlayerController>()))
+        {
+            inf.Cerca("bate: el daño de la bala por 3", 3, bate.multiplicadorDano, 1e-6);
+            inf.Cerca("bate: 2,5 m", 2.5, bate.alcance, 1e-6);
+            inf.Cerca("bate: 120 grados", 120, bate.angulo, 1e-6);
+            inf.Cerca("bate: empuja 3 m", 3, bate.empuje, 1e-6);
+            inf.Cerca("bate: frena al pesado 1 s", 1, bate.frenadoDelPesado, 1e-6);
+            inf.Cerca("bate: recarga en 4 s", 4, bate.enfriamiento, 1e-6);
+        }
+
+        // A quien empuja: lo liviano (cede la mitad o mas). Al tanque lo frena; al jefe y al tesoro,
+        // que se mueven por su cuenta, nada.
+        foreach (var nombre in new[] { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque" })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/" + nombre + ".prefab");
+            var cuerpo = prefab != null ? prefab.GetComponent<Rigidbody>() : null;
+            if (!inf.Verdadero("bate: " + nombre + " tiene su cuerpo", cuerpo != null)) continue;
+            bool liviano = EnemyController.Ceder(cuerpo.mass) >= 0.5f;
+            bool propio = prefab.GetComponent<IMovimientoPropio>() != null;
+            inf.Verdadero("bate: al " + nombre + " lo " + (nombre == "ZombiTanque" ? "frena" : "empuja") + " (masa " + cuerpo.mass + ")",
+                          !propio && liviano == (nombre != "ZombiTanque"));
+        }
+        var jefe = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiBOSS.prefab");
+        inf.Verdadero("bate: el jefe se mueve por su cuenta (no se lo empuja)", jefe != null && jefe.GetComponent<IMovimientoPropio>() != null);
+        var tesoro = Resources.Load<GameObject>(WaveManager.RutaTesoro);
+        inf.Verdadero("bate: el tesoro tambien", tesoro != null && tesoro.GetComponent<IMovimientoPropio>() != null);
+
+        inf.Verdadero("bate: estan sus dos sonidos", Resources.Load<AudioClip>("Bate/Silbido") != null && Resources.Load<AudioClip>("Bate/Golpe") != null);
+
+        // La capa del Animator: encima del brazo que apunta, de la cintura para arriba, con el hachazo
+        // del pack a la velocidad y desde el punto que dice Bate.
+        var ctrl = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(ConstructorAnimaciones.RutaControladorJugador);
+        int capa = -1, disparo = -1;
+        if (ctrl != null)
+            for (int i = 0; i < ctrl.layers.Length; i++)
+            {
+                if (ctrl.layers[i].name == Bate.CapaDelBate) capa = i;
+                if (ctrl.layers[i].name == ConstructorAnimaciones.CapaDisparo) disparo = i;
+            }
+        if (inf.Verdadero("bate: el controller del jugador tiene la capa del bate, encima de la del disparo", capa >= 0 && capa > disparo && disparo >= 0))
+        {
+            var l = ctrl.layers[capa];
+            var m = l.avatarMask;
+            inf.Verdadero("bate: la capa pisa de la cintura para arriba y deja correr las piernas",
+                          l.defaultWeight == 1f && l.blendingMode == UnityEditor.Animations.AnimatorLayerBlendingMode.Override && m != null
+                          && m.GetHumanoidBodyPartActive(AvatarMaskBodyPart.Body) && m.GetHumanoidBodyPartActive(AvatarMaskBodyPart.RightArm)
+                          && m.GetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftArm) && !m.GetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftLeg)
+                          && !m.GetHumanoidBodyPartActive(AvatarMaskBodyPart.RightLeg) && !m.GetHumanoidBodyPartActive(AvatarMaskBodyPart.Root));
+            UnityEditor.Animations.AnimatorState nada = null, batazo = null;
+            foreach (var s in l.stateMachine.states)
+            {
+                if (s.state.name == "Nada") nada = s.state;
+                if (s.state.name == "Batazo") batazo = s.state;
+            }
+            var clip = batazo != null ? batazo.motion as AnimationClip : null;
+            if (inf.Verdadero("bate: el estado Batazo tira el hachazo del pack, y se arranca desde Nada",
+                              nada != null && clip != null && clip.name == "m_melee_combat_attack_A" && l.stateMachine.defaultState == nada))
+            {
+                inf.Cerca("bate: a la velocidad de Bate", Bate.VelocidadDelClip, batazo.speed, 1e-5);
+                UnityEditor.Animations.AnimatorStateTransition ida = null, vuelta = null;
+                foreach (var t in nada.transitions) if (t.destinationState == batazo) ida = t;
+                foreach (var t in batazo.transitions) if (t.destinationState == nada) vuelta = t;
+                inf.Verdadero("bate: entra con su gatillo, pasado el reposo del clip",
+                              ida != null && !ida.hasExitTime && ida.conditions.Length == 1 && ida.conditions[0].parameter == Bate.GatilloDelBate
+                              && Mathf.Abs(ida.offset - Bate.InicioDelClip / clip.length) < 1e-4f);
+                inf.Verdadero("bate: vuelve a la pistola apenas baja el bate",
+                              vuelta != null && vuelta.hasExitTime && Mathf.Abs(vuelta.exitTime - Bate.SalidaDelClip / clip.length) < 1e-4f);
+            }
+        }
+
+        // La punta del bate llega adelante justo en el momento del golpe: medido sobre el muñeco de
+        // WaveMode, con el clip (antes, el bate esta arriba y detras de la cabeza).
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var control = Buscar<PlayerController>(escena);
+            var anim = control != null ? control.GetComponentInChildren<Animator>(true) : null;
+            var mano = anim != null && anim.isHuman ? anim.GetBoneTransform(HumanBodyBones.RightHand) : null;
+            var palo = mano != null ? mano.Find("R_hand_container/" + ArmaEnLaMano.NombreDelBate) : null;
+            AnimationClip hachazo = null;
+            foreach (var x in AssetDatabase.LoadAllAssetsAtPath("Assets/ToonyTinyPeople/TT_demo/animation/male/m_melee_combat_attack_A.FBX"))
+                if (x is AnimationClip && !x.name.StartsWith("__preview__")) hachazo = (AnimationClip)x;
+            var malla = palo != null ? palo.GetComponentInChildren<MeshFilter>(true) : null;
+            if (!inf.Verdadero("bate: el muñeco de WaveMode tiene el bate en la mano y esta el clip", palo != null && hachazo != null && malla != null && malla.sharedMesh != null)) return;
+            // La punta es la otra punta del mango, que esta en el origen del bate.
+            Bounds b = malla.sharedMesh.bounds;
+            Vector3 punta = Mathf.Abs(b.min.x) > Mathf.Abs(b.max.x) ? new Vector3(b.min.x, 0f, 0f) : new Vector3(b.max.x, 0f, 0f);
+            float enElGolpe, arriba;
+            AnimationMode.StartAnimationMode();
+            try
+            {
+                AnimationMode.BeginSampling();
+                AnimationMode.SampleAnimationClip(anim.gameObject, hachazo, Bate.ImpactoEnElClip);
+                AnimationMode.EndSampling();
+                enElGolpe = anim.transform.InverseTransformPoint(palo.TransformPoint(punta)).z;
+                AnimationMode.BeginSampling();
+                AnimationMode.SampleAnimationClip(anim.gameObject, hachazo, 0.25f);
+                AnimationMode.EndSampling();
+                arriba = anim.transform.InverseTransformPoint(palo.TransformPoint(punta)).z;
+            }
+            finally
+            {
+                AnimationMode.StopAnimationMode();
+            }
+            inf.Verdadero("bate: en el golpe la punta esta adelante (" + enElGolpe.ToString("0.00") + ") y antes, detras (" + arriba.ToString("0.00") + ")",
+                          enElGolpe > 0.9f && arriba < 0f);
+        });
+
+        // El boton: a la izquierda de la granada, mas chico, sin pisarla con su brillo, ni a la
+        // furia ni al joystick de disparo, y por encima del numero de la vida. Los cuatro cuelgan del
+        // mismo punto (el 90 % del ancho y el 10 % del alto del area segura), asi que se miden desde
+        // ahi y vale en cualquier proporcion.
+        foreach (var ruta in new[] { "Assets/Escenas/WaveMode.unity", "Assets/Escenas/ShowBies1.unity" })
+        {
+            string nombre = System.IO.Path.GetFileNameWithoutExtension(ruta);
+            LeerEscena(ruta, escena =>
+            {
+                var furia = Buscar<BotonFuria>(escena);
+                var granada = Buscar<JoystickGranada>(escena);
+                var js = Buscar<PlayerJS>(escena);
+                if (!inf.Verdadero("bate: en " + nombre + " estan la furia, la granada y el joystick de disparo",
+                                   furia != null && furia.boton != null && granada != null && js != null && js.lookJoystick != null)) return;
+                var rFuria = (RectTransform)furia.boton.transform;
+                var rGranada = (RectTransform)granada.transform;
+                var rDisparo = (RectTransform)js.lookJoystick.transform;
+                inf.Verdadero("bate: en " + nombre + " la furia, la granada y el joystick cuelgan del mismo punto",
+                              rFuria.anchorMin == rGranada.anchorMin && rFuria.anchorMax == rFuria.anchorMin && rGranada.anchorMax == rGranada.anchorMin
+                              && rDisparo.anchorMin == rGranada.anchorMin && rDisparo.anchorMax == rGranada.anchorMin);
+                Vector2 lado = rFuria.sizeDelta * BotonBate.Escala;
+                Rect boton = new Rect(BotonBate.LugarEnElTelefono - lado * 0.5f, lado);
+                var neon = rFuria.Find("Neon") as RectTransform;
+                Vector2 ladoNeon = (neon != null ? neon.sizeDelta : rFuria.sizeDelta) * BotonBate.Escala;
+                Rect brillo = new Rect(BotonBate.LugarEnElTelefono - ladoNeon * 0.5f, ladoNeon);
+                Rect g = new Rect(rGranada.anchoredPosition - rGranada.sizeDelta * 0.5f, rGranada.sizeDelta);
+                Rect f = new Rect(rFuria.anchoredPosition - rFuria.sizeDelta * 0.5f, rFuria.sizeDelta);
+                Rect d = new Rect(rDisparo.anchoredPosition - rDisparo.sizeDelta * 0.5f, rDisparo.sizeDelta);
+                inf.Verdadero("bate: en " + nombre + " el boton es mas chico que la granada (" + lado.x + " contra " + g.width + ")", lado.x < g.width);
+                inf.Verdadero("bate: en " + nombre + " va a la izquierda de la granada, a su altura (" + boton + ")",
+                              boton.xMax < g.xMin && Mathf.Abs(boton.center.y - g.center.y) < g.height * 0.5f);
+                inf.Verdadero("bate: en " + nombre + " su brillo no toca la granada", brillo.xMax <= g.xMin);
+                inf.Verdadero("bate: en " + nombre + " no pisa la furia ni el joystick de disparo", !boton.Overlaps(f) && !boton.Overlaps(d));
+                // La vida: abajo al centro, hasta 77 u del piso con "1250/1250" en 16:9 (medido). El
+                // punto de los botones esta al 10 % del alto: 108 u en 16:9 y 97 en 20:9.
+                inf.Verdadero("bate: en " + nombre + " queda por encima del numero de la vida", 97f + boton.yMin > 77f + 10f);
+                // Y del lado del pulgar que dispara: a la derecha del medio, en 16:9 (lo mas angosto).
+                inf.Verdadero("bate: en " + nombre + " queda del lado derecho de la pantalla", 0.9f * 1920f + boton.xMin > 960f);
             });
         }
     }

@@ -160,6 +160,24 @@ public class ArmaEnLaMano : MonoBehaviour
 
     public Transform Boca { get; private set; }
 
+    // El bate que traia el modelo en la mano, que saca el golpe cuerpo a cuerpo (Bate): mientras
+    // dura, el bate a la vista y la pistola escondida (sus renderers, no el objeto: la boca sigue
+    // siendo la del arma).
+    public const string NombreDelBate = "w_baseballbat";
+    private GameObject bateDelModelo;
+    private Renderer[] rendersDeLaPistola;
+
+    public bool BateALaVista { get { return bateDelModelo != null && bateDelModelo.activeSelf; } }
+
+    public void MostrarBate(bool mostrar)
+    {
+        if (bateDelModelo == null || instancia == null) return;
+        bateDelModelo.SetActive(mostrar);
+        if (rendersDeLaPistola == null) rendersDeLaPistola = instancia.GetComponentsInChildren<Renderer>(true);
+        foreach (var render in rendersDeLaPistola)
+            if (render != null) render.enabled = !mostrar;
+    }
+
     // Cuantos fogonazos salieron y si hay uno prendido. Para las pruebas.
     public int Fogonazos { get; private set; }
     public bool FogonazoPrendido { get { return fogonazo != null && fogonazo.gameObject.activeSelf; } }
@@ -176,6 +194,13 @@ public class ArmaEnLaMano : MonoBehaviour
         if (contenedor == null) contenedor = mano;
         foreach (Transform hijo in contenedor)
             hijo.gameObject.SetActive(false);
+        // El bate vuelve con el golpe cuerpo a cuerpo (Bate, MostrarBate): queda guardado, apagado.
+        var bate = contenedor.Find(NombreDelBate);
+        if (bate != null)
+        {
+            bateDelModelo = bate.gameObject;
+            Personajes.PonerEnLaCapa(bateDelModelo);
+        }
 
         foreach (var render in arma.GetComponentsInChildren<Renderer>(true))
             render.enabled = false;

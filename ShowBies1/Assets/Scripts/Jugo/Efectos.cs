@@ -561,6 +561,42 @@ public class Efectos : MonoBehaviour
     private int cuadroDeLasEstelas = -1;
     private int estelasDelCuadro;
 
+    // El bate (Bate, 1.7.0). Al apretar, el silbido del bate cortando el aire; cuando conecta, si
+    // le pego a alguno, el golpe de madera, chispas del color del bate en cada uno, un temblor y una
+    // pausa de impacto corta, mas grandes cuantos mas agarro. Los dos sonidos son de
+    // otros/Resources/Bate (los sintetiza sonidos/bate.py) y se cargan la primera vez: asi no hay
+    // que tocar el prefab.
+    public const float PausaDelBate = 0.05f;
+    private AudioClip silbidoDelBate, golpeDelBate;
+    private bool sonidosDelBateBuscados;
+
+    private void BuscarSonidosDelBate()
+    {
+        if (sonidosDelBateBuscados) return;
+        sonidosDelBateBuscados = true;
+        silbidoDelBate = Resources.Load<AudioClip>("Bate/Silbido");
+        golpeDelBate = Resources.Load<AudioClip>("Bate/Golpe");
+    }
+
+    public static void SilbidoDelBate()
+    {
+        var e = instance;
+        if (e == null) return;
+        e.BuscarSonidosDelBate();
+        Sonidos.Tocar(e.silbidoDelBate, 0.9f, 1f, 0.08f, 0.05f, Sonidos.Aparte);
+    }
+
+    public static void GolpeDelBate(Vector3 punto, int tocados)
+    {
+        var e = instance;
+        if (e == null || tocados <= 0) return;
+        e.BuscarSonidosDelBate();
+        e.Emitir(punto, Mathf.Min(40, 10 + 6 * tocados), Bate.ColorDelBate);
+        Sonidos.Tocar(e.golpeDelBate, 1f, 1f, 0.06f, 0.05f, Sonidos.Aparte);
+        CamaraJugador.Temblar(Mathf.Min(0.5f, 0.2f + 0.05f * tocados));
+        e.PausaDeImpacto(PausaDelBate);
+    }
+
     public static void Estela(Vector3 punto)
     {
         var e = instance;

@@ -207,6 +207,7 @@ public static class ConstructorAnimaciones
     const string RutaJugadorEnElPack = "Assets/ToonyTinyPeople/TT_demo/animation/male/TT_demo_male_A.controller";
     public const string RutaControladorJugador = Carpeta + "/Jugador.controller";
     public const string RutaMascaraBrazo = Carpeta + "/BrazoDerecho.mask";
+    public const string RutaMascaraTorso = Carpeta + "/TorsoYBrazos.mask";
     const string ClipsJugador = "Assets/ToonyTinyPeople/TT_demo/animation/male/";
 
     // Los nombres los comparte PlayerController (vienen del controller del pack).
@@ -220,9 +221,10 @@ public static class ConstructorAnimaciones
     // correr hasta soltar: en el telefono, donde se corre y se dispara a la vez, casi no se
     // veia, y el muñeco se deslizaba en la pose de disparo.
     //
-    // Ahora son dos capas. La de abajo es el cuerpo: quieto o corriendo. La de arriba es
+    // Ahora son tres capas. La de abajo es el cuerpo: quieto o corriendo. La del medio es
     // solo el brazo derecho (la mascara BrazoDerecho), que apunta la pistola mientras se
     // dispara, corra o no. El tiron de cada tiro lo pone ArmaEnLaMano, despues del Animator.
+    // La de arriba es el bate (1.7.0): de la cintura para arriba (TorsoYBrazos), el hachazo.
     //
     // Como el de los zombis, sale de la carpeta del pack con MoveAsset, que conserva el
     // guid: las tres escenas de juego, que lo tienen en el Animator del modelo, siguen
@@ -256,7 +258,8 @@ public static class ConstructorAnimaciones
         AnimationClip correr = ClipEn(ClipsJugador, "m_pistol_run");
         AnimationClip disparar = ClipEn(ClipsJugador, "m_pistol_shoot");
         AnimationClip morir = ClipEn(ClipsJugador, "m_death_A");
-        if (quieto == null || correr == null || disparar == null || morir == null)
+        AnimationClip batazo = ClipEn(ClipsJugador, "m_melee_combat_attack_A");
+        if (quieto == null || correr == null || disparar == null || morir == null || batazo == null)
         {
             Debug.LogError("Faltan clips del jugador en " + ClipsJugador);
             return;
@@ -274,6 +277,21 @@ public static class ConstructorAnimaciones
             mascara.SetHumanoidBodyPartActive(parte, parte == AvatarMaskBodyPart.RightArm || parte == AvatarMaskBodyPart.RightFingers);
         EditorUtility.SetDirty(mascara);
 
+        // La del bate: de la cintura para arriba (el torso, la cabeza, los dos brazos y sus
+        // dedos), sin la raiz ni las piernas, que siguen corriendo mientras se pega.
+        var mascaraTorso = AssetDatabase.LoadAssetAtPath<AvatarMask>(RutaMascaraTorso);
+        if (mascaraTorso == null)
+        {
+            mascaraTorso = new AvatarMask();
+            AssetDatabase.CreateAsset(mascaraTorso, RutaMascaraTorso);
+        }
+        for (var parte = AvatarMaskBodyPart.Root; parte < AvatarMaskBodyPart.LastBodyPart; parte++)
+            mascaraTorso.SetHumanoidBodyPartActive(parte,
+                parte == AvatarMaskBodyPart.Body || parte == AvatarMaskBodyPart.Head ||
+                parte == AvatarMaskBodyPart.LeftArm || parte == AvatarMaskBodyPart.RightArm ||
+                parte == AvatarMaskBodyPart.LeftFingers || parte == AvatarMaskBodyPart.RightFingers);
+        EditorUtility.SetDirty(mascaraTorso);
+
         // De cero, como el de los zombis.
         while (ctrl.layers.Length > 1) ctrl.RemoveLayer(ctrl.layers.Length - 1);
         var capas = ctrl.layers;
@@ -290,6 +308,7 @@ public static class ConstructorAnimaciones
         ctrl.AddParameter(ParametroCorrer, AnimatorControllerParameterType.Bool);
         ctrl.AddParameter(ParametroDisparar, AnimatorControllerParameterType.Bool);
         ctrl.AddParameter(ParametroMuerto, AnimatorControllerParameterType.Bool);
+        ctrl.AddParameter(Bate.GatilloDelBate, AnimatorControllerParameterType.Trigger);
 
         // El cuerpo. Sin tiempo de salida en ninguna de las dos: el del pack esperaba al 63 %
         // del paso para frenar, y el muñeco seguia corriendo en el lugar un rato.
@@ -333,9 +352,38 @@ public static class ConstructorAnimaciones
         aApuntar.offset = 0.2f;
         Transicion(eApuntar, eNada, ParametroDisparar, false, 0.2f);
 
+        // El bate (Bate, 1.7.0): encima del brazo que apunta, de la cintura para arriba. El hachazo
+        // del pack, arrancado pasado su reposo y acelerado, para que la punta llegue adelante cuando
+        // Bate aplica el daño; vuelve a "Nada" (lo de abajo: la pistola) apenas termina de bajar,
+        // con tiempo de salida. Lo arranca el gatillo, y Bate lo corta si el jugador muere.
+        ctrl.AddLayer(Bate.CapaDelBate);
+        capas = ctrl.layers;
+        capas[2].defaultWeight = 1f;
+        capas[2].avatarMask = mascaraTorso;
+        capas[2].blendingMode = AnimatorLayerBlendingMode.Override;
+        ctrl.layers = capas;
+        var torso = ctrl.layers[2].stateMachine;
+        var eNadaBate = torso.AddState("Nada", new Vector3(260, 0, 0));
+        var eBatazo = torso.AddState("Batazo", new Vector3(520, 0, 0));
+        eBatazo.motion = batazo;
+        eBatazo.speed = Bate.VelocidadDelClip;
+        torso.defaultState = eNadaBate;
+        var aBatazo = eNadaBate.AddTransition(eBatazo);
+        aBatazo.AddCondition(AnimatorConditionMode.If, 0f, Bate.GatilloDelBate);
+        aBatazo.hasExitTime = false;
+        aBatazo.hasFixedDuration = true;
+        aBatazo.duration = 0.05f;
+        aBatazo.offset = Bate.InicioDelClip / batazo.length;
+        var aVuelta = eBatazo.AddTransition(eNadaBate);
+        aVuelta.hasExitTime = true;
+        aVuelta.exitTime = Bate.SalidaDelClip / batazo.length;
+        aVuelta.hasFixedDuration = true;
+        aVuelta.duration = Bate.VueltaALaPistola;
+
         EditorUtility.SetDirty(ctrl);
         AssetDatabase.SaveAssets();
-        Debug.Log("Controller del jugador armado en " + RutaControladorJugador + ": Quieto <-> Correr, y el brazo derecho apunta con " + ParametroDisparar + ".");
+        Debug.Log("Controller del jugador armado en " + RutaControladorJugador + ": Quieto <-> Correr, el brazo derecho apunta con " + ParametroDisparar
+            + " y el torso tira el batazo con " + Bate.GatilloDelBate + " (" + batazo.length.ToString("0.00") + " s a x" + Bate.VelocidadDelClip + ").");
     }
 
     static AnimatorStateTransition Transicion(AnimatorState desde, AnimatorState hasta, string parametro, bool prendido, float duracion)

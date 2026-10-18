@@ -20,7 +20,7 @@ Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
 **El modo libre se desbloquea** al llegar a la oleada 12 del modo oleadas (`ModoLibre`, ver Menú y modos).
 
 Es un **incremental**: las monedas que se juntan en las partidas se gastan en la **tienda de mejoras** del menú
-(daño de bala, cadencia, críticos, vida máxima, granada, imán, botín y la furia), y las mejoras se aplican al empezar cada partida. Del otro lado,
+(daño de bala, cadencia, críticos, vida máxima, granada, imán, botín, el bate y la furia), y las mejoras se aplican al empezar cada partida. Del otro lado,
 los zombis se ponen más duros con cada oleada, y en el modo libre, con los minutos. Además, jugar y ganar logros da
 experiencia para el **nivel del jugador**, y cada nivel da monedas (ver Nivel del jugador y logros).
 
@@ -48,10 +48,10 @@ fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
 
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Proyectiles (lo que tira cada arma), Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
-Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), JoystickDinamico (el joystick que aparece bajo el pulgar), Transitions, Furia, AspectoDelHeroe (la remera blanca, el aura y su sombra)
+Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), JoystickDinamico (el joystick que aparece bajo el pulgar), Transitions, Furia, Bate (el golpe cuerpo a cuerpo), AspectoDelHeroe (la remera blanca, el aura y su sombra)
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde, BotonBate
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros, Desbloqueo
 Assets/Scripts/Cartas/      ← PoderDeLaPartida (el PODER y las cartas de la partida), EleccionDeCartas (la barra, las chispas y la elección), CartasEnElJugador (el anillo del escudo y los drones), Carta, CatalogoCartas
@@ -69,13 +69,13 @@ Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial
 Assets/Prefabs/             ← Bullet, Gun, Pistola (la de la mano), Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
 Assets/Zombies/*.asset      ← los seis Enemy (los cinco de siempre y el del tesoro): stats POR TIPO, editables sin recompilar
-Assets/Mejoras/             ← las ocho Mejora (.asset) y Resources/CatalogoMejoras
+Assets/Mejoras/             ← las nueve Mejora (.asset) y Resources/CatalogoMejoras
 Assets/Cartas/              ← las Carta de la partida (.asset) y Resources/CatalogoCartas: los crea ConstructorCartas
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
-Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py)
-Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y su máscara BrazoDerecho
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py), y en Resources/Bate, los del bate (sonidos/bate.py)
+Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y sus máscaras BrazoDerecho y TorsoYBrazos (la del bate)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -92,7 +92,7 @@ CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 e
 ARTE.md                     ← la dirección de arte: las revisiones de Gemini, lo hecho y lo que falta (el top 10, el arma que cambia con el daño)
 PLAN.md                     ← el plan a partir de la revisión de Gemini (10/10): de la 1.5.2 a la 1.8.0, con las decisiones de Ivan
 simulaciones/               ← las simulaciones de la economía, con su script y sus tablas (curva_1.5.2: la curva de las oleadas)
-sonidos/                    ← disparos.py: sintetiza el sonido de cada arma de la mano (ver La pistola en la mano)
+sonidos/                    ← disparos.py: sintetiza el sonido de cada arma de la mano (ver La pistola en la mano); bate.py, los del bate (ver El bate)
 ```
 
 **Código nuevo va en `Assets/Scripts/<Subsistema>/`**, nunca suelto en la raíz de `Assets/`.
@@ -570,6 +570,61 @@ en la partida. `Furia` (`Assets/Scripts/Jugador/`, en la raíz de `Jugador.prefa
 - `GunController.DanoPorBala` sigue siendo el de la mejora (lo miran el medidor y las pruebas); lo que lleva cada bala
   es `DanoPorTiro`.
 - **Es un desbloqueo permanente:** cuando entre el renacer de la fase 5, no tiene que reiniciarla.
+
+## El bate
+
+Un golpe cuerpo a cuerpo para sacarse la horda de encima cuando acorrala (1.7.0; lo preguntó Ivan el 12/10, con Nex
+Machina de referencia, y lo diseñó Gemini: `PLAN.md` 4d). **Es una herramienta defensiva, no una fuente de daño**: el
+botón de pánico. Se compra **una sola vez** en la tienda (la mejora `bate`, 1.500 monedas, tope 1, antes de la furia en
+la fila), como la granada y la furia. `Bate` (`Assets/Scripts/Jugador/`, en la raíz de `Jugador.prefab`) lee la compra
+en su `Awake` y lleva los relojes con tiempo escalado.
+
+- **Se usa** con su botón del HUD (`BotonBate`) o, en PC, con el **clic derecho o Shift**. **Nada de golpe automático
+  de cerca** (de Gemini): le sacaría al jugador la decisión de cuándo usar su salvavidas.
+- **Los números** (en el componente del prefab, de Gemini): daño = el de la bala **sin la furia** × 3
+  (`GunController.DanoSinFuria`: crece con la mejora de daño y las cartas), sin críticos; **un cono de 120° y 2,5 m**
+  delante del muñeco, más el radio de cada zombi (`Bate.EnElCono`, en el piso; lo pegado a menos de 0,8 m entra
+  aunque esté a un costado); **4 s de recarga**, contados desde que se aprieta.
+- **Cada zombi reacciona según su peso** (`EnemyController.RecibirBatazo`, después del daño): lo liviano (lo que le cede
+  al jugador la mitad o más, `Ceder`: el normal, el rápido y el veloz) **sale despedido 3 m** hacia afuera en 0,3 s,
+  frenando, **por la física** (una pared lo para; el `Empujar` del escudo lo teletransporta), y **el tanque se queda
+  quieto 1 s** sin moverse, con las piernas paradas. **Al jefe le pega pero no lo mueve** (es un gigante, como con el
+  escudo), y tampoco al tesoro, que se mueve por su cuenta (`IMovimientoPropio`): mandarlo tres metros más lejos era
+  ayudarlo a escapar. A todos les corta el zarpazo que venían tirando. El empujón y el frenado van en `FixedUpdate`
+  antes de todo lo que persigue (`MoverPorElBatazo`), y se olvidan en `OnEnable`. El que muere del golpe sale despedido
+  como cadáver hacia afuera (el `empuje` de `DanoZombi`).
+- **La animación** es el hachazo del pack (`m_melee_combat_attack_A`, 1 s), de la cintura para arriba: la capa `Bate` de
+  `Jugador.controller`, encima de la del disparo, con la máscara `TorsoYBrazos` (sin la raíz ni las piernas, que siguen
+  corriendo). La arma `ConstructorAnimaciones.ArmarJugador`, con los números de `Bate`. **Medido del clip**: el bate sube
+  hasta los 0,27 s y la punta llega adelante a los 0,33 (`ImpactoEnElClip`). Arranca en el 0,1 (pasado el reposo) y va a
+  ×1,25 (`InicioDelClip`, `VelocidadDelClip`), así **el daño entra 0,19 s después de apretar** (`DemoraDelImpacto`), cuando
+  el bate baja, no al apretar (como el zarpazo de los zombis); más lento, un veloz a 2 m pegaba antes. Vuelve a la
+  pistola en el 0,55 del clip (`SalidaDelClip`): de ahí en adelante es la guardia de pelea.
+- **El bate que traía el modelo vuelve a la mano** (`ArmaEnLaMano.MostrarBate`, el `w_baseballbat` que esconde al
+  empezar) y la pistola se esconde (sus renderers, no el objeto: la boca sigue siendo la del arma) mientras dura
+  (`DuracionDelGolpe`, 0,36 s). **Mientras dura no se dispara**: lo corta `PlayerController.FijarDisparo`, el embudo
+  de las dos plataformas y del auto-apuntado. Si el jugador muere a mitad del golpe, `Bate` lo corta.
+- **Jugo**: el silbido al apretar (`Efectos.SilbidoDelBate`) y, si le pegó a alguno, el golpe de madera, chispas del
+  color del bate, temblor y una pausa de impacto corta, más grandes cuantos más agarró (`Efectos.GolpeDelBate`). Los dos
+  sonidos están en `otros/Resources/Bate` y los sintetiza `sonidos/bate.py`. Y **un arco en el piso** (una media luna
+  rosa con el material del anillo de la granada, a la altura de los anillos) muestra un instante hasta dónde pegó: la
+  punta del bate llega a 0,75 m y el golpe a 2,5, y sin eso no se leía.
+- **El botón** (`BotonBate`) no está en las escenas: lo arma `Bate` al empezar, como copia del botón de la furia (el
+  anillo, la sombra radial, los textos y el lugar en el área segura) en el rosa del bate, al 80 % (120 u; la granada
+  mide 140), **a la izquierda de la granada y a su altura** (`LugarEnElTelefono`; en PC, donde no hay granada, en su
+  lugar, debajo de la furia, con "CLIC DERECHO"). **Pega al apoyar el dedo, no al soltarlo** (`IPointerDownHandler`:
+  es un botón de pánico), y como atiende toques el joystick dinámico no se lo lleva. Cuenta los segundos de la recarga,
+  respira listo y salta al volver a estarlo, sin sonido (cada cuatro segundos sería ruido). Donde no hay botón de la
+  furia (el tutorial) no hay botón del bate.
+- **Es un desbloqueo permanente**, como la furia.
+- **ShowBies > Pruebas > Bate (play)** (`PruebaBate`): WaveMode sin oleadas, el jugador mirando al norte y seis zombis
+  puestos a mano y congelados del todo (el hielo al 100 %, así lo que se mueven es el empujón); toca el botón por el
+  raycast del EventSystem y mide que el daño entre cuando baja el bate, que pegue a los cuatro del cono con el daño × 3
+  y no al de atrás ni al lejano, que el normal y el veloz se alejen unos 3 m y el tanque no se mueva y se suelte al
+  segundo, el bate a la vista sin disparar, la pistola de vuelta, la recarga con el botón contando, al jefe sin moverlo
+  y que el botón no pise la granada, la furia ni los joysticks (`Builds/prueba_bate.txt`, con `bate.png`). La prueba de
+  lógica mira el cono, los tiempos, el componente, a quién empuja y a quién frena, la capa del Animator, que en el golpe
+  la punta del bate esté adelante (muestreando el clip sobre el muñeco de WaveMode) y el lugar del botón.
 
 ## Las cartas de la partida
 
@@ -1720,6 +1775,7 @@ las junta (un campo tipado por mejora y `enTienda`, el orden de las tarjetas). *
 | Granada | `granada` | 250 | — | 1 | desbloquea la granada (ver Granada) |
 | Imán | `iman` | 30 | ×1,5 | 13 | sin comprar no hay; 2 × (1 + 0,25 × (nivel − 1)) m (de 2 a 8) |
 | Botín | `botin` | 120 | ×1,55 | 15 | monedas × (1 + 0,1 × nivel) |
+| Bate | `bate` | 1.500 | — | 1 | desbloquea el bate: un golpe cuerpo a cuerpo cada 4 s (ver El bate) |
 | Furia | `furia` | 5.000 | — | 1 | desbloquea el botón de furia: 6 s de cadencia y daño ×2 (ver Furia) |
 
 - **El jugador arranca flojo a propósito** (fase 4, pedido de Ivan después de jugar en el teléfono): pega 1, tiene 80 de

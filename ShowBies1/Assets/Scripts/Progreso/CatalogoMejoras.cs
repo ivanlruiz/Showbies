@@ -34,6 +34,7 @@ public class CatalogoMejoras : ScriptableObject
     public Mejora furia;
     public Mejora granada;
     public Mejora criticos;
+    public Mejora bate;
 
     [Header("Las tarjetas de la tienda, en orden")]
     public Mejora[] enTienda;
@@ -166,6 +167,16 @@ public class CatalogoMejoras : ScriptableObject
         }
     }
 
+    // El bate tambien se compra una sola vez (1.7.0): con el nivel 1 aparece su boton en la partida.
+    public static bool BateDesbloqueado
+    {
+        get
+        {
+            CatalogoMejoras catalogo = Instancia;
+            return catalogo != null && catalogo.bate != null && Progreso.Nivel(catalogo.bate.id) >= 1;
+        }
+    }
+
     public static float DuracionFuria
     {
         get
@@ -260,6 +271,7 @@ public class CatalogoMejoras : ScriptableObject
         RevisarTipada(furia, "furia", problemas);
         RevisarTipada(granada, "granada", problemas);
         RevisarTipada(criticos, "criticos", problemas);
+        RevisarTipada(bate, "bate", problemas);
 
         // Ids vacios o repetidos entre todas las mejoras distintas del catalogo:
         // dos mejoras con el mismo id compartirian el nivel guardado.
@@ -272,6 +284,7 @@ public class CatalogoMejoras : ScriptableObject
         SumarSiFalta(revisadas, furia);
         SumarSiFalta(revisadas, granada);
         SumarSiFalta(revisadas, criticos);
+        SumarSiFalta(revisadas, bate);
         if (enTienda != null)
         {
             for (int i = 0; i < enTienda.Length; i++) SumarSiFalta(revisadas, enTienda[i]);

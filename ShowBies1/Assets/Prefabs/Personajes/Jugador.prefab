@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 6253859910329683683}
   - component: {fileID: 497599620843726464}
   - component: {fileID: 7234699121980140405}
+  - component: {fileID: 267295183020807735}
   m_Layer: 0
   m_Name: Jugador
   m_TagString: Player
@@ -257,6 +258,26 @@ MonoBehaviour:
   desde: 0.25
   maximo: 0.5
   seguimiento: 5
+--- !u!114 &267295183020807735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3275518440274919472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b176a77181584e741946e7d67c321c5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Bate
+  jugador: {fileID: 3275518440274919473}
+  multiplicadorDano: 3
+  alcance: 2.5
+  angulo: 120
+  empuje: 3
+  duracionDelEmpuje: 0.3
+  frenadoDelPesado: 1
+  enfriamiento: 4
 --- !u!1001 &2889558694542059521
 PrefabInstance:
   m_ObjectHideFlags: 0

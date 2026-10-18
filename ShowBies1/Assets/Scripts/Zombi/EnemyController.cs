@@ -129,6 +129,7 @@ public class EnemyController : MonoBehaviour
     // Lo que mide de radio el cuerpo en el piso (la capsula de la raiz, con su escala): lo que
     // deja de margen al rodear un edificio de la ciudad (ver Rodeo).
     private float radioDelCuerpo = 0.5f;
+    public float RadioDeSuCuerpo { get { return radioDelCuerpo; } }
 
     // Hasta cuando (en tiempo de fisica) cuenta que esta tocando al jugador: lo anota cada
     // OnCollisionStay, y lo mira Apartarse en el paso siguiente.
@@ -854,6 +855,9 @@ public class EnemyController : MonoBehaviour
         lentitudDelHielo = 0f;
         ticksDeQuemadura = 0;
         PintarHielo(false);
+        empujonHasta = -1f;
+        frenadoHasta = -1f;
+        pasoFrenado = false;
 
         // Uno que sale del pool puede venir de desplomarse: colliders de vuelta y
         // fisica de vuelta.
@@ -1186,6 +1190,10 @@ public class EnemyController : MonoBehaviour
            return;
        }
 
+       // El batazo (Bate): mientras dura el empujon, va para atras frenando, y el frenado se queda
+       // quieto. Antes de todo lo que lo mueve hacia el jugador.
+       if (MoverPorElBatazo()) return;
+
        if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform)) return;
 
        // Si el jugador se le viene encima corriendo, el liviano se corre de costado, mirandolo.
@@ -1415,6 +1423,11 @@ public class EnemyController : MonoBehaviour
             PintarHielo(false);
             AjustarPaso();
         }
+        if (pasoFrenado && !Frenado)
+        {
+            pasoFrenado = false;
+            AjustarPaso();
+        }
         if (ticksDeQuemadura > 0 && Time.time >= proximoTickDeQuemadura)
         {
             ticksDeQuemadura--;
@@ -1447,12 +1460,67 @@ public class EnemyController : MonoBehaviour
         transform.position += desplazamiento;
     }
 
+    // El batazo (Bate, 1.7.0, de Gemini): un golpe para sacarse la horda de encima, no para matar.
+    // Lo liviano (lo que le cede al jugador la mitad o mas: el normal, el rapido y el veloz) sale
+    // despedido 'distancia' metros hacia 'direccion' en 'duracion' segundos, frenando, y por la
+    // fisica: una pared lo para (Empujar, el del escudo, lo teletransporta). Lo pesado (el tanque)
+    // no se mueve, pero se queda quieto 'frenado' segundos, sin perseguir. Al jefe no le hace nada
+    // (es un gigante, como con el escudo), y tampoco al que se mueve por su cuenta: el tesoro huye,
+    // y mandarlo tres metros mas lejos era ayudarlo. Corta el zarpazo que venia tirando: el que
+    // levantaba el brazo no lo baja. El daño lo pone Bate antes, por DanoZombi.
+    public ReaccionAlBatazo RecibirBatazo(Vector3 direccion, float distancia, float duracion, float frenado)
+    {
+        if (!enUso || estaMuerto || EsJefe || movimientoPropio != null) return ReaccionAlBatazo.Nada;
+        CortarZarpazo();
+        if (Ceder(rb.mass) >= 0.5f)
+        {
+            direccion.y = 0f;
+            if (direccion.sqrMagnitude < 1e-6f || !(distancia > 0f) || !(duracion > 0f)) return ReaccionAlBatazo.Nada;
+            // La velocidad baja de a poco hasta cero: recorre la mitad de lo que haria a la de salida.
+            empujonDuracion = duracion;
+            empujonVelocidad = direccion.normalized * (2f * distancia / duracion);
+            empujonHasta = Time.time + duracion;
+            return ReaccionAlBatazo.Empujado;
+        }
+        if (!(frenado > 0f)) return ReaccionAlBatazo.Nada;
+        frenadoHasta = Mathf.Max(frenadoHasta, Time.time + frenado);
+        pasoFrenado = true;
+        AjustarPaso();
+        return ReaccionAlBatazo.Frenado;
+    }
+
+    public bool Empujado { get { return enUso && Time.time < empujonHasta; } }
+    public bool Frenado { get { return enUso && Time.time < frenadoHasta; } }
+
+    private float empujonHasta = -1f;
+    private float empujonDuracion;
+    private Vector3 empujonVelocidad;
+    private float frenadoHasta = -1f;
+    private bool pasoFrenado;
+
+    private bool MoverPorElBatazo()
+    {
+        if (Empujado)
+        {
+            Vector3 v = empujonVelocidad * Mathf.Clamp01((empujonHasta - Time.time) / Mathf.Max(0.01f, empujonDuracion));
+            v.y = rb.linearVelocity.y;
+            rb.linearVelocity = v;
+            return true;
+        }
+        if (Frenado)
+        {
+            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
+            return true;
+        }
+        return false;
+    }
+
     // Las piernas al ritmo de lo que avanza: congelado, mas lento. El que se mueve por su cuenta
     // (el jefe, el tesoro) maneja su Paso, y el hielo no lo frena.
     private void AjustarPaso()
     {
         if (animadores == null || movimientoPropio != null) return;
-        float paso = velocidadDeAnimacion * (1f - LentitudActual);
+        float paso = Frenado ? 0f : velocidadDeAnimacion * (1f - LentitudActual);
         foreach (var animador in animadores)
             if (animador != null) animador.SetFloat(idPaso, paso);
     }
@@ -1910,3 +1978,5 @@ public class EnemyController : MonoBehaviour
         return buenos;
     }
 }
+
+public enum ReaccionAlBatazo { Nada, Empujado, Frenado }

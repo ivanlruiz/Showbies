@@ -359,6 +359,10 @@ public class PlayerController : MonoBehaviour
     // tira sin municion; la animacion, lo mismo.
     public void FijarDisparo(bool quiere)
     {
+        // Con el bate en la mano (Bate) no se dispara: la pistola esta escondida, y el fogonazo
+        // saldria de la mano que baja el bate. Aca, que es por donde pasan las dos plataformas y
+        // el auto-apuntado.
+        if (Bate.Instancia != null && Bate.Instancia.EnCurso) quiere = false;
         if (theGun != null) theGun.isFiring = quiere;
         if (trans != null && trans.anim != null) trans.anim.SetBool("shoot", quiere && cantBalas > 0);
     }

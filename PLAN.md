@@ -228,6 +228,10 @@ dejando la estilizada para los títulos.
 
 ## 4d. El bate: un golpe cuerpo a cuerpo (1.7.0)
 
+**Hecho el 18/10**, como lo diseñó Gemini (ver "El bate" en CLAUDE.md). Lo que se agregó: el daño entra cuando el bate
+baja (0,19 s después de apretar), mientras dura no se dispara, al jefe le pega sin moverlo, al tesoro tampoco lo empuja
+(huye), y un arco rosa en el piso muestra hasta dónde llegó el golpe.
+
 Ivan preguntó si se podía (12/10, con Nex Machina de referencia de jugabilidad), y Gemini lo diseñó en "Análisis de diseño
 para ShowBies":
 
