@@ -596,6 +596,17 @@ public class Efectos : MonoBehaviour
         Sonidos.Tocar(e.golpe, 0.6f, 0.5f, 0.08f, 0.08f, Sonidos.Aparte);
     }
 
+    // El saltador (ZombiSaltador) sale disparado: el silbido del bate, mas agudo, y unas chispas del color de su aviso
+    // donde arranca.
+    public static void SaltoDelSaltador(Vector3 punto, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.BuscarSonidosDelBate();
+        e.Emitir(punto, 8, color);
+        Sonidos.Tocar(e.silbidoDelBate, 0.7f, 1.35f, 0.08f, 0.05f, Sonidos.Aparte);
+    }
+
     public static void SilbidoDelBate()
     {
         var e = instance;

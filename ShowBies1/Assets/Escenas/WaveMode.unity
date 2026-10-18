@@ -2045,6 +2045,18 @@ MonoBehaviour:
     peso: 0.15
     maxVivos: 3
     especial: 1
+  - prefab: {fileID: 3140591236830657714, guid: 3c301fee45f7356479abdccedc4e41b6, type: 3}
+    desdeOleada: 15
+    hastaOleada: 20
+    peso: 0.15
+    maxVivos: 4
+    especial: 1
+  - prefab: {fileID: 3140591236830657714, guid: 3c301fee45f7356479abdccedc4e41b6, type: 3}
+    desdeOleada: 31
+    hastaOleada: 0
+    peso: 0.15
+    maxVivos: 4
+    especial: 1
   jefe: {fileID: 208933554839980591, guid: be2b0c9c0c14cd041a980759b79e2433, type: 3}
   jefeCadaOleadas: 10
   spawnPoints:

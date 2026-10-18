@@ -148,6 +148,9 @@ Obliga a elegir blanco con el joystick en vez de dispararle siempre al de adelan
 4. **Blindado**: una pieza delante y un producto escalar para saber si la bala entra de frente.
 5. **Chamán**: el último, porque mira hasta 4 vecinos cada 4 s.
 
+**Hechos (18/10):** el escupidor y el saltador, en el orden de los capítulos que eligió Ivan (los dos estrenan en el
+cementerio). Siguen el chamán (18), el blindado (21) y el hinchado (24).
+
 ## Lo que hay que resolver en el código (de Claude)
 
 - **El tope por tipo y el de especiales**: hoy `WaveManager.ElegirTipo` sortea por peso sin mirar cuántos hay vivos;

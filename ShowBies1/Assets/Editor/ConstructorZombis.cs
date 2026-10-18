@@ -117,8 +117,118 @@ public static class ConstructorZombis
         AssetDatabase.SaveAssets();
 
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaEscupidor);
-        SumarALaMezcla(prefab, EscupidorDesde, EscupidorPeso, EscupidorMaxVivos);
+        SumarALaMezcla(prefab, new[] { new Vector2Int(EscupidorDesde, 0) }, EscupidorPeso, EscupidorMaxVivos);
         Debug.Log("ConstructorZombis: el escupidor, listo en " + RutaEscupidor);
+    }
+
+    // --- El saltador ------------------------------------------------------------------------------
+
+    public const string RutaSaltador = "Assets/Prefabs/Personajes/ZombiSaltador.prefab";
+    public const string RutaEnemigoSaltador = "Assets/Zombies/ZombiSaltador.asset";
+    public const string RutaPielSaltador = "Assets/Materiales/ZombiSaltadorPiel.mat";
+    const string RutaParticulasSaltador = "Assets/Prefabs/Particulas/ExplosionAzul.prefab";
+
+    public static readonly Color AzulNoche = new Color(0.157f, 0.165f, 0.42f);   // #282A6B, de Argon
+    public static readonly Color CremaDelSaltador = new Color(0.98f, 0.93f, 0.78f);   // los ojos, las crestas y el aviso
+    public static readonly Vector3 FormaDelSaltador = new Vector3(0.85f, 1.15f, 1.15f);
+    // El cementerio (15 a 20); descansa en la ciudad y vuelve en la horda total, desde la 31.
+    public static readonly Vector2Int[] TramosDelSaltador = { new Vector2Int(15, 20), new Vector2Int(31, 0) };
+    public const float SaltadorPeso = 0.15f;
+    public const int SaltadorMaxVivos = 4;
+
+    [MenuItem("ShowBies/Zombis/Armar el saltador")]
+    public static void ArmarSaltador()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogError("ConstructorZombis: no en play"); return; }
+
+        // Del normal: vida x1,4, el golpe del salto x1,2 (en el componente), velocidad x1,1, 10 puntos, monedas x2,5, 2 de
+        // PODER.
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(RutaEnemigoSaltador);
+        if (enemigo == null)
+        {
+            enemigo = ScriptableObject.CreateInstance<Enemy>();
+            enemigo.hp = 7;
+            enemigo.daño = 1;
+            enemigo.velocidad = 5.5f;
+            enemigo.puntos = 10;
+            enemigo.monedasMin = 4;
+            enemigo.monedasMax = 6;
+            enemigo.experiencia = 2;
+            AssetDatabase.CreateAsset(enemigo, RutaEnemigoSaltador);
+        }
+
+        var piel = Piel(RutaPielSaltador, AzulNoche);
+        if (piel == null) return;
+        var crema = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "CremaSaltador", CremaDelSaltador);
+        var jefe = AssetDatabase.LoadAssetAtPath<GameObject>(RutaJefe);
+        var aviso = jefe != null && jefe.GetComponent<JefePatrones>() != null ? jefe.GetComponent<JefePatrones>().materialAviso : null;
+        var esfera = AssetDatabase.LoadAssetAtPath<Mesh>(ConstructorArmas.RutaEsferaBaja);
+        var cubo = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        if (aviso == null || esfera == null || cubo == null) { Debug.LogError("ConstructorZombis: falta la linea del jefe, la esfera baja o el cubo"); return; }
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var go = DesdeElNormal(vista, "ZombiSaltador", enemigo, piel, RutaParticulasSaltador);
+            if (go == null) return;
+            var modelo = Modelo(go);
+            modelo.localScale = Vector3.Scale(modelo.localScale, FormaDelSaltador);
+
+            // Los ojos grandes, adelante de la cabeza, y dos crestas hacia atras arriba: medidos de la cabeza del modelo.
+            var cabeza = Hueso(go.transform, "Bip001 Head");
+            Renderer dibujoDeLaCabeza = null;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+                if (r.name.StartsWith("Z_head")) dibujoDeLaCabeza = r;
+            if (cabeza == null || dibujoDeLaCabeza == null) { Debug.LogError("ConstructorZombis: no encontre la cabeza del modelo"); return; }
+            Bounds caja = dibujoDeLaCabeza.bounds;
+            Vector3 adelante = go.transform.forward, arriba = Vector3.up, costado = go.transform.right;
+            for (int i = 0; i < 2; i++)
+            {
+                float lado = i == 0 ? -1f : 1f;
+                Pieza(cabeza, "Ojo" + (i == 0 ? "Izquierdo" : "Derecho"), esfera, crema,
+                      caja.center + adelante * caja.extents.z * 0.8f + arriba * caja.extents.y * 0.15f + costado * lado * caja.extents.x * 0.45f,
+                      Quaternion.identity, Vector3.one * 0.11f);
+                // Un cubo girado 45 grados y medio hundido en la cabeza: asoma un triangulo hacia atras.
+                Pieza(cabeza, "Cresta" + (i == 0 ? "Izquierda" : "Derecha"), cubo, crema,
+                      caja.center + arriba * caja.extents.y * 0.85f - adelante * caja.extents.z * 0.35f + costado * lado * caja.extents.x * 0.35f,
+                      Quaternion.LookRotation(adelante, arriba) * Quaternion.Euler(-55f, 0f, 45f), new Vector3(0.05f, 0.16f, 0.16f));
+            }
+
+            var saltador = go.GetComponent<ZombiSaltador>();
+            if (saltador == null) saltador = go.AddComponent<ZombiSaltador>();
+            saltador.materialAviso = aviso;
+            saltador.colorAviso = CremaDelSaltador;
+
+            PrefabUtility.SaveAsPrefabAsset(go, RutaSaltador);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
+        AssetDatabase.SaveAssets();
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaSaltador);
+        SumarALaMezcla(prefab, TramosDelSaltador, SaltadorPeso, SaltadorMaxVivos);
+        Debug.Log("ConstructorZombis: el saltador, listo en " + RutaSaltador);
+    }
+
+    // Una pieza colgada de un hueso, puesta en el mundo con el modelo en reposo y con el tamaño en el mundo (sin la escala
+    // que hereda del hueso), en la capa de los personajes y sin sombra.
+    static Transform Pieza(Transform hueso, string nombre, Mesh malla, Material material, Vector3 donde, Quaternion giro, Vector3 tamano)
+    {
+        var go = new GameObject(nombre);
+        go.AddComponent<MeshFilter>().sharedMesh = malla;
+        var render = go.AddComponent<MeshRenderer>();
+        render.sharedMaterial = material;
+        render.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        render.receiveShadows = false;
+        go.transform.SetParent(hueso, true);
+        go.transform.position = donde;
+        go.transform.rotation = giro;
+        Vector3 heredada = hueso.lossyScale;
+        go.transform.localScale = new Vector3(tamano.x / Mathf.Abs(heredada.x), tamano.y / Mathf.Abs(heredada.y), tamano.z / Mathf.Abs(heredada.z));
+        go.layer = Personajes.Capa;
+        return go.transform;
     }
 
     // --- Lo de todos ------------------------------------------------------------------------------
@@ -193,9 +303,10 @@ public static class ConstructorZombis
         return null;
     }
 
-    // Lo suma a los tipos del WaveManager de WaveMode (o le pone los numeros si ya estaba) y guarda la escena. Se niega si
-    // la escena tiene cambios sin guardar: no los guarda por accidente.
-    static void SumarALaMezcla(GameObject prefab, int desde, float peso, int maxVivos)
+    // Lo pone en los tipos del WaveManager de WaveMode, una entrada por tramo de oleadas (x desde, y hasta; 0 sin fin: un
+    // tipo que descansa un capitulo va dos veces), sacando las que tenia, y guarda la escena. Se niega si la escena tiene
+    // cambios sin guardar: no los guarda por accidente.
+    static void SumarALaMezcla(GameObject prefab, Vector2Int[] tramos, float peso, int maxVivos)
     {
         var escena = EditorSceneManager.GetSceneByPath(EscenaOleadas);
         bool abierta = escena.isLoaded;
@@ -212,20 +323,19 @@ public static class ConstructorZombis
             if (oleadas == null) { Debug.LogError("ConstructorZombis: WaveMode no tiene WaveManager"); return; }
             var so = new SerializedObject(oleadas);
             var tipos = so.FindProperty("tipos");
-            int indice = -1;
-            for (int i = 0; i < tipos.arraySize; i++)
-                if (tipos.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue == prefab) indice = i;
-            if (indice < 0)
+            for (int i = tipos.arraySize - 1; i >= 0; i--)
+                if (tipos.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue == prefab) tipos.DeleteArrayElementAtIndex(i);
+            foreach (var tramo in tramos)
             {
-                indice = tipos.arraySize;
                 tipos.arraySize++;
+                var tipo = tipos.GetArrayElementAtIndex(tipos.arraySize - 1);
+                tipo.FindPropertyRelative("prefab").objectReferenceValue = prefab;
+                tipo.FindPropertyRelative("desdeOleada").intValue = tramo.x;
+                tipo.FindPropertyRelative("hastaOleada").intValue = tramo.y;
+                tipo.FindPropertyRelative("peso").floatValue = peso;
+                tipo.FindPropertyRelative("maxVivos").intValue = maxVivos;
+                tipo.FindPropertyRelative("especial").boolValue = true;
             }
-            var tipo = tipos.GetArrayElementAtIndex(indice);
-            tipo.FindPropertyRelative("prefab").objectReferenceValue = prefab;
-            tipo.FindPropertyRelative("desdeOleada").intValue = desde;
-            tipo.FindPropertyRelative("peso").floatValue = peso;
-            tipo.FindPropertyRelative("maxVivos").intValue = maxVivos;
-            tipo.FindPropertyRelative("especial").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorSceneManager.MarkSceneDirty(escena);
             EditorSceneManager.SaveScene(escena);

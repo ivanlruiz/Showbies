@@ -6439,6 +6439,69 @@ public static class PruebasMejoras
                           suyo != null && suyo.desdeOleada == ConstructorZombis.EscupidorDesde && ConstructorZombis.EscupidorDesde == 12
                           && Mathf.Approximately(suyo.peso, 0.15f) && suyo.maxVivos == 3 && suyo.especial && suyo.hastaOleada == 0);
         });
+
+        ProbarSaltador(inf);
+    }
+
+    // El saltador (ZombiSaltador, ZOMBIS.md): su Enemy, el prefab con los ojos y las crestas, los numeros del salto y sus
+    // dos tramos en la mezcla de WaveMode (el cementerio y la horda total). Lo que hace en play lo mira PruebaSaltador.
+    static void ProbarSaltador(Informe inf)
+    {
+        inf.Cerca("saltador: el salto dura 0,4 s", 0.4, ZombiSaltador.DuracionDelSalto(false, 0.4f, 3.2f, 14f), 1e-6);
+        inf.Cerca("saltador: congelado, lo que tarda en hacer 3,2 m a 14 m/s", 3.2 / 14.0, ZombiSaltador.DuracionDelSalto(true, 0.4f, 3.2f, 14f), 1e-6);
+        inf.Cerca("saltador: congelado nunca salta mas que sin congelar", 0.4, ZombiSaltador.DuracionDelSalto(true, 0.4f, 9f, 14f), 1e-6);
+
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(ConstructorZombis.RutaEnemigoSaltador);
+        if (inf.Verdadero("saltador: esta su Enemy", enemigo != null))
+        {
+            inf.Verdadero("saltador: vida x1,4 del normal, velocidad x1,1, 10 puntos, monedas x2,5 y 2 de PODER (" + enemigo.hp + ", " + enemigo.velocidad + ", "
+                          + enemigo.puntos + ", " + enemigo.monedasMin + "-" + enemigo.monedasMax + ", " + enemigo.experiencia + ")",
+                          enemigo.hp == 7 && Mathf.Approximately(enemigo.velocidad, 5.5f) && enemigo.puntos == 10 && enemigo.monedasMin == 4
+                          && enemigo.monedasMax == 6 && enemigo.experiencia == 2 && enemigo.daño == 1);
+        }
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaSaltador);
+        var saltador = prefab != null ? prefab.GetComponent<ZombiSaltador>() : null;
+        if (inf.Verdadero("saltador: esta su prefab, con su componente", saltador != null && prefab.GetComponent<EnemyController>().enemyType == enemigo))
+        {
+            inf.Verdadero("saltador: con la linea de aviso del jefe", saltador.materialAviso != null);
+            int ojos = 0, crestas = 0;
+            bool sinCollider = true;
+            foreach (var t in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.StartsWith("Ojo")) ojos++;
+                else if (t.name.StartsWith("Cresta")) crestas++;
+                else continue;
+                sinCollider &= t.GetComponent<Collider>() == null && t.GetComponent<Renderer>() != null && t.gameObject.layer == Personajes.Capa;
+            }
+            inf.Verdadero("saltador: dos ojos y dos crestas, sin collider y en la capa de los personajes (" + ojos + ", " + crestas + ")",
+                          ojos == 2 && crestas == 2 && sinCollider);
+            inf.Verdadero("saltador: se agacha a 6 m, avisa 0,6 s, salta a 14 m/s 0,4 s (5,6 m, mas que la franja de 5,5) y pega x1,2",
+                          Mathf.Approximately(saltador.distanciaParaSaltar, 6f) && Mathf.Approximately(saltador.aviso, 0.6f)
+                          && Mathf.Approximately(saltador.velocidadDelSalto, 14f) && Mathf.Approximately(saltador.duracionDelSalto, 0.4f)
+                          && saltador.velocidadDelSalto * saltador.duracionDelSalto >= saltador.largoDeLaFranja
+                          && Mathf.Approximately(saltador.golpeDelSalto, 1.2f));
+            inf.Verdadero("saltador: se recupera 0,8 s (1,6 congelado), recarga 5 s y congelado salta 3,2 m",
+                          Mathf.Approximately(saltador.recuperacion, 0.8f) && Mathf.Approximately(saltador.recuperacionCongelado, 1.6f)
+                          && Mathf.Approximately(saltador.recarga, 5f) && Mathf.Approximately(saltador.largoDelSaltoCongelado, 3.2f));
+            // Un golpe por salto: el intervalo de golpe del cuerpo tiene que ser mas largo que el salto.
+            inf.Verdadero("saltador: pega una sola vez por salto (el intervalo de golpe es mas largo que el salto)",
+                          new SerializedObject(prefab.GetComponent<EnemyController>()).FindProperty("intervaloDeGolpe").floatValue > saltador.duracionDelSalto);
+            inf.Verdadero("saltador: el bate lo empuja (liviano)", EnemyController.Ceder(prefab.GetComponent<Rigidbody>().mass) >= 0.5f);
+        }
+
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            var suyos = new List<TipoEnOleada>();
+            if (oleadas != null && oleadas.tipos != null)
+                foreach (var t in oleadas.tipos) if (t != null && t.prefab == prefab) suyos.Add(t);
+            bool bien = suyos.Count == 2;
+            foreach (var t in suyos) bien &= Mathf.Approximately(t.peso, 0.15f) && t.maxVivos == 4 && t.especial;
+            inf.Verdadero("saltador: WaveMode lo saca en el cementerio (15 a 20) y desde la 31, no en la ciudad (peso 0,15, como mucho 4, especial)",
+                          bien && suyos[0].desdeOleada == 15 && suyos[0].hastaOleada == 20 && suyos[1].desdeOleada == 31 && suyos[1].hastaOleada == 0
+                          && WaveManager.Elegible(suyos[0], 15, 0, 0) && !WaveManager.Elegible(suyos[0], 14, 0, 0)
+                          && !WaveManager.Elegible(suyos[0], 25, 0, 0) && !WaveManager.Elegible(suyos[1], 25, 0, 0) && WaveManager.Elegible(suyos[1], 31, 0, 0));
+        });
     }
 
     static bool RecibeToques(GameObject go)
