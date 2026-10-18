@@ -77,8 +77,13 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
     // acercarse y plantarse justo en el borde.
     public static Estado QueHacer(float distancia, Estado ahora, float plantarse)
     {
-        if (ahora != Estado.Plantado) return distancia <= plantarse ? Estado.Plantado : Estado.Acercandose;
-        return distancia > plantarse + 0.5f ? Estado.Acercandose : Estado.Plantado;
+        return SePlanta(distancia, ahora == Estado.Plantado, plantarse) ? Estado.Plantado : Estado.Acercandose;
+    }
+
+    // Lo mismo para cualquiera que se planta a una distancia (tambien el chaman).
+    public static bool SePlanta(float distancia, bool plantado, float plantarse)
+    {
+        return plantado ? distancia <= plantarse + 0.5f : distancia <= plantarse;
     }
 
     private void Awake()
@@ -175,18 +180,25 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
     private void Rodear(Rigidbody rb, Vector3 hacia, float distancia)
     {
         if (hacia.sqrMagnitude < 1e-4f) return;
+        Vector3 rumbo = RumboDelRodeo(transform.position, hacia, distancia, distanciaParaPlantarse, borde);
+        transform.rotation = Quaternion.LookRotation(hacia);
+        Vector3 v = rumbo * (zombi.enemyType.velocidad * (1f - zombi.LentitudActual));
+        v.y = rb.linearVelocity.y;
+        rb.linearVelocity = v;
+    }
+
+    // Hacia donde rodea: de costado, hacia la linea este-oeste del jugador (donde la pantalla apaisada es mas ancha), sin
+    // salirse del mapa y corrigiendo de a poco la distancia. Estatico: lo usa tambien el chaman.
+    public static Vector3 RumboDelRodeo(Vector3 posicion, Vector3 hacia, float distancia, float plantarse, float borde)
+    {
         Vector3 alJugador = hacia.normalized;
         Vector3 costado = Vector3.Cross(Vector3.up, alJugador);
         // Desde el jugador, el zombi esta en -hacia: hacia los costados es achicar esa diferencia norte-sur.
         if (costado.z * -hacia.z > 0f) costado = -costado;
-        Vector3 adelante = transform.position + costado * 2f;
+        Vector3 adelante = posicion + costado * 2f;
         if (Mathf.Abs(adelante.x) > borde || Mathf.Abs(adelante.z) > borde) costado = -costado;
-        float corregir = Mathf.Clamp((distancia - distanciaParaPlantarse) * 0.5f, -0.5f, 0.5f);
-        Vector3 rumbo = (costado + alJugador * corregir).normalized;
-        transform.rotation = Quaternion.LookRotation(alJugador);
-        Vector3 v = rumbo * (zombi.enemyType.velocidad * (1f - zombi.LentitudActual));
-        v.y = rb.linearVelocity.y;
-        rb.linearVelocity = v;
+        float corregir = Mathf.Clamp((distancia - plantarse) * 0.5f, -0.5f, 0.5f);
+        return (costado + alJugador * corregir).normalized;
     }
 
     // Para atras, mirando al jugador. Contra el borde del mapa, de costado hacia adentro.

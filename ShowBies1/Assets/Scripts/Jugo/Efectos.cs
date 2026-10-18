@@ -607,6 +607,16 @@ public class Efectos : MonoBehaviour
         Sonidos.Tocar(e.silbidoDelBate, 0.7f, 1.35f, 0.08f, 0.05f, Sonidos.Aparte);
     }
 
+    // El chaman (ZombiChaman) potencia a los suyos: chispas rubi desde el cristal, mas cuantos mas agarro, y un golpe
+    // sordo agudo, bajito (con dos chamanes, uno cada 4 s cada uno).
+    public static void PulsoDelChaman(Vector3 punto, Color color, int potenciados)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto, 6 + 2 * Mathf.Max(0, potenciados), color);
+        Sonidos.Tocar(e.explosion, 0.3f, 1.7f, 0.06f, 0.1f, Sonidos.Aparte);
+    }
+
     public static void SilbidoDelBate()
     {
         var e = instance;

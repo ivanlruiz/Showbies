@@ -49,7 +49,7 @@ fila de premios con el sombrero de calabaza al final (ver Evento de Halloween).
 ```
 Assets/Scripts/Armas/       ← GunController, BulletController, Proyectiles (lo que tira cada arma), Granade, Balas (UI), ArmaEnLaMano (la pistola del muñeco)
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), JoystickDinamico (el joystick que aparece bajo el pulgar), Transitions, Furia, Bate (el golpe cuerpo a cuerpo), AspectoDelHeroe (la remera blanca, el aura y su sombra)
-Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro, ZombiEscupidor (y su AcidoDelEscupidor), ZombiSaltador
+Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro, ZombiEscupidor (y su AcidoDelEscupidor), ZombiSaltador, ZombiChaman
 Assets/Scripts/Camara/      ← CamaraJugador
 Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde, BotonBate
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
@@ -75,7 +75,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py), y en Resources/Bate, los del bate (sonidos/bate.py)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y sus máscaras BrazoDerecho y TorsoYBrazos (la del bate)
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador, PruebaChaman y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -269,8 +269,9 @@ Los cinco assets viven en `Assets/Zombies/`, con el del tesoro, que es aparte (v
 | ZombiTesoro | 15 | 0 | 7 | 15 | 14–20 | 15 |
 | ZombiEscupidor | 9 | 1 (el charco pega la mitad) | 4,75 | 8 | 5–7 | 9 |
 | ZombiSaltador | 7 | 1 (el salto pega 1,2) | 5,5 | 10 | 4–6 | 7 |
+| ZombiChaman | 11 | 1 | 4,5 | 15 | 7–9 | 11 |
 
-La experiencia de las cartas es 1 para el normal, el rápido y el FASTER, 2 el escupidor y el saltador, 3 el tanque, 5 el tesoro y 15 el jefe.
+La experiencia de las cartas es 1 para el normal, el rápido y el FASTER, 2 el escupidor y el saltador, 3 el tanque y el chamán, 5 el tesoro y 15 el jefe.
 
 La vida y el daño **de cada zombi** se calculan como float en `EnemyController`: el valor del `.asset` por
 `multiplicadorVida` y `multiplicadorDano`, que pone quien lo hace aparecer antes de su primer golpe (ver Generación de
@@ -599,7 +600,7 @@ en su `Awake` y lleva los relojes con tiempo escalado.
   frenando, **por la física** (una pared lo para; el `Empujar` del escudo lo teletransporta), y **el tanque se queda
   quieto 1 s** sin moverse, con las piernas paradas. **Al jefe le pega pero no lo mueve** (es un gigante, como con el
   escudo), y tampoco al tesoro: huye, y mandarlo tres metros más lejos era ayudarlo a escapar. A los zombis con habilidad
-  que se mueven por su cuenta sí (el escupidor y el saltador: el empujón corre antes que su movimiento). A todos les corta el zarpazo que venían tirando. El empujón y el frenado van en `FixedUpdate`
+  que se mueven por su cuenta sí (el escupidor, el saltador y el chamán: el empujón corre antes que su movimiento). A todos les corta el zarpazo que venían tirando. El empujón y el frenado van en `FixedUpdate`
   antes de todo lo que persigue (`MoverPorElBatazo`), y se olvidan en `OnEnable`. El que muere del golpe sale despedido
   como cadáver hacia afuera (el `empuje` de `DanoZombi`).
 - **La animación** es el hachazo del pack (`m_melee_combat_attack_A`, 1 s), de la cintura para arriba: la capa `Bate` de
@@ -1085,13 +1086,13 @@ en el borde (ver Las flechas del borde).
 Ivan (18/10): "habría que generar distintos tipos de zombi con habilidades diferentes". Los diseñó Argon con lo que hay
 (el mismo modelo, sin clips nuevos, de noche y desde arriba a 40 px, con casi todos los colores ya tomados), y están en
 `ZOMBIS.md`: el escupidor, el saltador, el chamán, el blindado y el hinchado, **cada capítulo con los suyos** (el
-cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, todos). Hoy están hechos el escupidor y el saltador.
+cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, todos). Hoy están hechos el escupidor, el saltador y el chamán.
 
 - **En la mezcla de WaveMode** cada uno es un `TipoEnOleada` con su tope de vivos (`maxVivos`) y marcado `especial`:
   entre todos, como mucho `WaveManager.MaxEspecialesVivos` (8) a la vez, así de los 35 del teléfono siempre quedan 27
   comunes. `hastaOleada` deja que uno descanse un capítulo (va dos veces en la mezcla). `WaveManager.Elegible` decide,
   y `EnemyController.VivosDe` cuenta los vivos de un prefab. El modo libre todavía no los saca.
-- **Los arman ShowBies > Zombis > Armar el escupidor** y **Armar el saltador** (`ConstructorZombis`), desde el normal: el Enemy (una sola vez:
+- **Los arman ShowBies > Zombis > Armar el escupidor**, **Armar el saltador** y **Armar el chaman** (`ConstructorZombis`), desde el normal: el Enemy (una sola vez:
   después es balance), la piel (`ShowBies/PielDeZombi` con su color y el borde aclarado), las piezas y el prefab, y los
   suma a la mezcla de WaveMode. No se editan a mano.
 - **El escupidor** (`ZombiEscupidor`, desde la 12, peso 0,15, como mucho 3): amarillo ácido, inclinado hacia adelante y
@@ -1121,13 +1122,37 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   para pegarle. Recarga 5 s, contados desde que salta. El bate, mientras se agacha o en el aire, le corta el salto y lo
   empuja (y la recarga queda a la mitad); también lo corta la derrota, que si no lo dejaba congelado en el aire. Congelado
   salta 3,2 m y se recupera el doble. Al saltar suena el silbido del bate, más agudo (`Efectos.SaltoDelSaltador`).
-  **En Halloween va sin disfraz** (`Disfraces.Vestir`): la cabeza de calabaza esconde todo lo que cuelga de la cabeza, y
-  con eso los ojos y las crestas.
+  **En Halloween va sin disfraz**: la cabeza de calabaza esconde todo lo que cuelga de la cabeza, y con eso los ojos y
+  las crestas, y el sombrero los taparía. La regla es de todos (`Disfraces.TienePiezasEnLaCabeza`): el que ya lleva algo
+  propio colgado de la cabeza, que no sea la malla `Z_head` del pack, no se disfraza.
 - **ShowBies > Pruebas > Saltador (play)** (`PruebaSaltador`): que se agache a 6 m con la franja apuntando al jugador y
   sin zarpazos, que salte al terminar el aviso, a 14 m/s, y le pegue una vez ×1,2 al que se queda, que se recupere quieto
   y sin zarpazos, la recarga, que al que sale de la franja no le pegue y que salte el largo entero, el bate y el hielo
   (`Builds/prueba_saltador.txt`, con la foto). La prueba de lógica mira la duración del salto, el asset, el prefab (los
   ojos y las crestas, sin collider), sus números y sus dos tramos en WaveMode.
+- **El chamán** (`ZombiChaman`, en el cementerio, de la 18 a la 20, y desde la 31, peso 0,10, como mucho 2): hueso
+  pálido, alto y flaco, con un tótem en T sobre la cabeza y un cubo rubí que gira arriba (más grande que el de Argon: a
+  40 px uno de 14 cm era un punto), y un aro rubí fino en los pies. Camina hasta quedar a **7 m** del jugador y se planta
+  (a la vista, con el `SePlanta` y el `RumboDelRodeo` del escupidor); **si hay un pesado vivo (el tanque) a menos de 5 m
+  de él, se pone 1,6 m detrás**, visto desde el jugador, mientras ese lugar quede entre 5,5 y 9 m del jugador (más
+  cerca, el tanque lo llevaría a sus pies). **Cada 4 s, aviso incluido, se frena**, se arquea hacia atrás 0,5 s con el
+  cristal girando y creciendo y el aro de los pies abriéndose hasta 4,5 m, y **potencia a los 4 aliados más cercanos
+  que quedaron adentro durante 3 s: corren ×1,25 y les entra ×0,75 de daño** (de todo: balas, granada, bate y cartas;
+  el número flotante muestra lo que entró), con un cubito rubí girando sobre la cabeza de cada uno. Se frena también
+  mientras se acerca. Solo pulsa a la vista y con al menos un aliado al alcance. **No potencia a los que se mueven por
+  su cuenta** (`EnemyController.SeMuevePorSuCuenta`: el jefe, el tesoro y los otros con habilidad, otros chamanes
+  incluidos): su movimiento no pasa por la persecución y el bono les quedaría a medias. El bono vive en el zombi
+  (`EnemyController.Potenciar`, `Potenciado`, `MultiplicadorDeVelocidad`, que también lleva el hielo) y **se apaga en
+  todos en el acto cuando el chamán muere**: `Potenciado` mira si el que se lo dio sigue vivo, con su número de
+  aparición. El aro y las marcas son objetos aparte que lo siguen, como la barra de vida. El bate lo empuja y le corta
+  el pulso; congelado no pulsa. En Halloween va sin disfraz (lo que cuelga de su cabeza es el tótem).
+- **ShowBies > Pruebas > Chaman (play)** (`PruebaChaman`): que se plante a 7 m a la vista, que con aliados quietos
+  alrededor (y uno que camina, frenado a la mitad) se frene y avise con el aro creciendo, que potencie a los 4 más
+  cercanos y no al quinto ni al de afuera, el daño (3 de 4) y la velocidad (×1,25) medidos, las marcas, que dure 3 s,
+  que pulse cada 4 s, el bate, el hielo, que al matarlo el bono se apague en todos en el mismo cuadro, y que se ponga
+  detrás de un tanque (`Builds/prueba_chaman.txt`, con `chaman_aviso.png` y `chaman_marcas.png`). La prueba de lógica
+  mira dónde se planta, el lugar detrás del pesado, el asset, el tótem, sus números, que los demás sigan disfrazándose y
+  sus dos tramos en WaveMode.
 
 ### Las animaciones de los zombis
 
@@ -1786,7 +1811,7 @@ para siempre.
 - **Los disfraces** (`Disfraces`) cuelgan del hueso de la cabeza (`Bip001 Head`, buscado por nombre: el menú los viste
   antes de prenderlos, con el Animator sin arrancar): de cada diez zombis, tres con **cabeza de calabaza** (la cabeza del
   zombi se esconde, que es una malla rígida colgada del hueso) y tres con **sombrero de bruja**; el jefe, siempre con
-  sombrero, y el saltador, nunca (se lee por lo que le cuelga de la cabeza). Cada prefab trae en su raíz la posición, el giro y la escala respecto del hueso, que el constructor mide
+  sombrero, y el que ya lleva algo propio colgado de la cabeza (el saltador, el chamán), nunca: se lee por eso. Cada prefab trae en su raíz la posición, el giro y la escala respecto del hueso, que el constructor mide
   sobre el modelo (los vértices que mueve la cabeza): los cinco zombis usan el mismo modelo con otra escala. Se visten
   después de `BuscarElModelo` (un sombrero agrandaría `altoDelModelo`, y con él las poses del jefe) y antes del destello.
 - **Las calabazas** (`DecoradoHalloween`): la grande es un farol, con la cara tallada que brilla hacia la cámara, su halo

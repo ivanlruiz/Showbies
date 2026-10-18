@@ -148,8 +148,17 @@ Obliga a elegir blanco con el joystick en vez de dispararle siempre al de adelan
 4. **Blindado**: una pieza delante y un producto escalar para saber si la bala entra de frente.
 5. **Chamán**: el último, porque mira hasta 4 vecinos cada 4 s.
 
-**Hechos (18/10):** el escupidor y el saltador, en el orden de los capítulos que eligió Ivan (los dos estrenan en el
-cementerio). Siguen el chamán (18), el blindado (21) y el hinchado (24).
+**Hechos (18/10):** el escupidor, el saltador y el chamán, en el orden de los capítulos que eligió Ivan (los tres del
+cementerio). Siguen el blindado (21) y el hinchado (24).
+
+Lo que se decidió al hacer el chamán, que Argon no dijo:
+
+- **No potencia a los que se mueven por su cuenta** (el jefe, el tesoro y los otros con habilidad, otros chamanes
+  incluidos): su movimiento no pasa por la persecución de siempre, y el bono de velocidad les quedaría a medias.
+- **"Detrás de los tanques"**: si hay un pesado vivo a menos de 5 m del chamán, se pone 1,6 m detrás de él (visto desde
+  el jugador), mientras ese lugar quede entre 5,5 y 9 m del jugador; más cerca, el tanque lo llevaría a sus pies, y ahí
+  se queda donde está. El blindado, si es pesado, va a contar solo.
+- **El cristal y las marcas miden 22-24 cm**, no 14: a 40 px un cubo de 14 cm era un punto.
 
 ## Lo que hay que resolver en el código (de Claude)
 

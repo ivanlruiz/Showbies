@@ -29,7 +29,7 @@ public static class FotosDeLaHorda
     const int Ancho = 1920, Alto = 1080;
     const int Recorte = 220;   // el cuadrado de cada zombi, en pixeles de la foto
 
-    static readonly string[] Zombis = { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS", "ZombiEscupidor", "ZombiSaltador" };
+    static readonly string[] Zombis = { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS", "ZombiEscupidor", "ZombiSaltador", "ZombiChaman" };
 
     // Donde corre cada uno, alrededor del jugador (en el centro), dentro de cuadro.
     static readonly Vector3[] Lugares =
@@ -40,6 +40,8 @@ public static class FotosDeLaHorda
         new Vector3(-6.5f, 0f, -1.5f),
         // El saltador, azul noche: el que mas cuesta ver de noche.
         new Vector3(5.5f, 0f, 1f),
+        // El chaman, hueso palido, cerca del heroe: los dos son claros.
+        new Vector3(2.2f, 0f, 2.5f),
     };
 
     [MenuItem("ShowBies/Escenarios/Fotos de la horda de noche")]

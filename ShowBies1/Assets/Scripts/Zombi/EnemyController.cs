@@ -131,6 +131,12 @@ public class EnemyController : MonoBehaviour
     private float radioDelCuerpo = 0.5f;
     public float RadioDeSuCuerpo { get { return radioDelCuerpo; } }
 
+    // Si se mueve por su cuenta (IMovimientoPropio: el jefe, el tesoro y los zombis con habilidad).
+    public bool SeMuevePorSuCuenta { get { return movimientoPropio != null; } }
+
+    // Si le cede al jugador menos de la mitad (el tanque, el jefe): se planta en vez de apartarse.
+    public bool EsPesado { get { return rb != null && Ceder(rb.mass) < 0.5f; } }
+
     // Hasta cuando (en tiempo de fisica) cuenta que esta tocando al jugador: lo anota cada
     // OnCollisionStay, y lo mira Apartarse en el paso siguiente.
     private float tocaAlJugadorHasta = -1f;
@@ -868,6 +874,9 @@ public class EnemyController : MonoBehaviour
         empujonHasta = -1f;
         frenadoHasta = -1f;
         pasoFrenado = false;
+        potenciadoHasta = -1f;
+        potenciadoPor = null;
+        pasoPotenciado = false;
 
         // Uno que sale del pool puede venir de desplomarse: colliders de vuelta y
         // fisica de vuelta.
@@ -1229,7 +1238,7 @@ public class EnemyController : MonoBehaviour
        objetivo = Esquive(transform.position, objetivo, CapitulosDeEscenario.Redondos, radioDelCuerpo, EsJefe);
        objetivo.y = transform.position.y;
        if ((objetivo - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(objetivo);
-       Vector3 velocidad = transform.forward * (enemyType.velocidad * (1f - LentitudActual));
+       Vector3 velocidad = transform.forward * (enemyType.velocidad * MultiplicadorDeVelocidad);
        velocidad.y = rb.linearVelocity.y;
        rb.linearVelocity = velocidad;
     }
@@ -1258,6 +1267,10 @@ public class EnemyController : MonoBehaviour
         // Un daño de cero, negativo o NaN no hace nada: no hay numero que mostrar.
         // Uno apagado en el pool tampoco: el que cayo por el kill-Z no llego a morir.
         if (estaMuerto || !enUso || !(daño > 0f)) return;
+
+        // El bono del chaman le saca una parte a todo lo que le pega: balas, granada, bate y cartas. El numero
+        // flotante muestra lo que entro de verdad.
+        if (Potenciado) daño *= danoRecibidoPotenciado;
 
         // Con el jugador muerto nada le pega a un zombi: la partida sigue andando detras
         // de la derrota, y las balas y la granada que quedaron en el aire seguian
@@ -1391,6 +1404,15 @@ public class EnemyController : MonoBehaviour
 
     private float congeladoHasta;
     private float lentitudDelHielo;
+
+    // El bono del chaman (ZombiChaman, ZOMBIS.md): corre y aguanta mas por un rato, mientras viva el chaman que se lo
+    // dio. No hace falta sacarselo a nadie cuando el chaman muere: Potenciado lo mira con su numero de aparicion.
+    private float potenciadoHasta;
+    private EnemyController potenciadoPor;
+    private int potenciadoPorAparicion;
+    private float velocidadPotenciada = 1f;
+    private float danoRecibidoPotenciado = 1f;
+    private bool pasoPotenciado;
     private bool pintadoDeHielo;
     private MaterialPropertyBlock propiedadesDelHielo;
     private int ticksDeQuemadura;   // los que faltan: la duracion entera, contada en ticks
@@ -1400,6 +1422,34 @@ public class EnemyController : MonoBehaviour
     public bool Congelado { get { return enUso && Time.time < congeladoHasta; } }
     public bool Quemandose { get { return enUso && ticksDeQuemadura > 0; } }
     public float LentitudActual { get { return Congelado ? lentitudDelHielo : 0f; } }
+
+    public bool Potenciado
+    {
+        get { return enUso && Time.time < potenciadoHasta && SigueVivo(potenciadoPor, potenciadoPorAparicion); }
+    }
+
+    // El chaman que le dio el bono, mientras le dure.
+    public EnemyController PotenciadoPor { get { return Potenciado ? potenciadoPor : null; } }
+
+    // Lo que camina de lo suyo: menos con el hielo y mas con el bono del chaman.
+    public float MultiplicadorDeVelocidad
+    {
+        get { return (1f - LentitudActual) * (Potenciado ? velocidadPotenciada : 1f); }
+    }
+
+    // "velocidad" multiplica lo que corre (1,25) y "danoRecibido", lo que le entra (0,75). El ultimo que se lo da
+    // pisa al anterior, con su reloj.
+    public void Potenciar(EnemyController chaman, float duracion, float velocidad, float danoRecibido)
+    {
+        if (!enUso || estaMuerto || chaman == null || !(duracion > 0f)) return;
+        potenciadoPor = chaman;
+        potenciadoPorAparicion = chaman.NumeroDeAparicion;
+        potenciadoHasta = Time.time + duracion;
+        velocidadPotenciada = velocidad;
+        danoRecibidoPotenciado = danoRecibido;
+        pasoPotenciado = true;
+        AjustarPaso();
+    }
 
     // "lentitud" es cuanto frena (0,4 es un 40 %); si ya estaba congelado, gana el mas fuerte
     // y el reloj vuelve a empezar.
@@ -1436,6 +1486,11 @@ public class EnemyController : MonoBehaviour
         if (pasoFrenado && !Frenado)
         {
             pasoFrenado = false;
+            AjustarPaso();
+        }
+        if (pasoPotenciado && !Potenciado)
+        {
+            pasoPotenciado = false;
             AjustarPaso();
         }
         if (ticksDeQuemadura > 0 && Time.time >= proximoTickDeQuemadura)
@@ -1531,7 +1586,7 @@ public class EnemyController : MonoBehaviour
     private void AjustarPaso()
     {
         if (animadores == null || movimientoPropio != null) return;
-        float paso = Frenado ? 0f : velocidadDeAnimacion * (1f - LentitudActual);
+        float paso = Frenado ? 0f : velocidadDeAnimacion * MultiplicadorDeVelocidad;
         foreach (var animador in animadores)
             if (animador != null) animador.SetFloat(idPaso, paso);
     }

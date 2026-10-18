@@ -4,10 +4,10 @@ using UnityEngine;
 
 // Arma los zombis con habilidad (ZOMBIS.md, de Argon): su Enemy, la piel, las piezas que los distinguen desde arriba y
 // el prefab, que sale del zombi normal (el mismo modelo del pack, sin clips nuevos), y los suma a la mezcla del
-// WaveManager de WaveMode con su oleada, su peso y su tope. Hoy, el escupidor.
+// WaveManager de WaveMode con su oleada, su peso y su tope. Hoy, el escupidor, el saltador y el chaman.
 //
 // El Enemy se crea una sola vez: despues es balance y se toca en el asset, como los otros. Lo demas se rehace cada vez.
-// No se edita a mano: se vuelve a correr ShowBies > Zombis > Armar el escupidor.
+// No se edita a mano: se vuelve a correr ShowBies > Zombis > Armar el escupidor (o el que sea).
 public static class ConstructorZombis
 {
     const string RutaNormal = "Assets/Prefabs/Personajes/Zombi.prefab";
@@ -210,6 +210,100 @@ public static class ConstructorZombis
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaSaltador);
         SumarALaMezcla(prefab, TramosDelSaltador, SaltadorPeso, SaltadorMaxVivos);
         Debug.Log("ConstructorZombis: el saltador, listo en " + RutaSaltador);
+    }
+
+    // --- El chaman --------------------------------------------------------------------------------
+
+    public const string RutaChaman = "Assets/Prefabs/Personajes/ZombiChaman.prefab";
+    public const string RutaEnemigoChaman = "Assets/Zombies/ZombiChaman.asset";
+    public const string RutaPielChaman = "Assets/Materiales/ZombiChamanPiel.mat";
+    const string RutaParticulasChaman = "Assets/Prefabs/Particulas/ExplosionBlanca.prefab";
+
+    public static readonly Color HuesoPalido = new Color(0.902f, 0.875f, 0.827f);   // #E6DFD3, de Argon
+    public static readonly Color Rubi = new Color(1f, 0.09f, 0.27f);                 // #FF1744, de Argon
+    public static readonly Color MaderaDelTotem = new Color(0.42f, 0.27f, 0.15f);
+    public static readonly Vector3 FormaDelChaman = new Vector3(0.9f, 1.25f, 0.9f);
+    // El cementerio (18 a 20); descansa en la ciudad y vuelve en la horda total, desde la 31.
+    public static readonly Vector2Int[] TramosDelChaman = { new Vector2Int(18, 20), new Vector2Int(31, 0) };
+    public const float ChamanPeso = 0.10f;
+    public const int ChamanMaxVivos = 2;
+    // El totem, de lo que mide en el mundo: un palo que sale de la cabeza, el travesaño de la T y el cristal arriba.
+    // Mas grande que lo de Argon: a 40 px un cubo de 14 cm es un punto.
+    public static readonly Vector3 PaloDelTotem = new Vector3(0.05f, 0.34f, 0.05f);
+    public static readonly Vector3 TravesanoDelTotem = new Vector3(0.34f, 0.06f, 0.06f);
+    public const float LadoDelCristal = 0.24f;
+
+    [MenuItem("ShowBies/Zombis/Armar el chaman")]
+    public static void ArmarChaman()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogError("ConstructorZombis: no en play"); return; }
+
+        // Del normal: vida x2,2, golpe x1, velocidad x0,9, 15 puntos, monedas x4, 3 de PODER.
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(RutaEnemigoChaman);
+        if (enemigo == null)
+        {
+            enemigo = ScriptableObject.CreateInstance<Enemy>();
+            enemigo.hp = 11;
+            enemigo.daño = 1;
+            enemigo.velocidad = 4.5f;
+            enemigo.puntos = 15;
+            enemigo.monedasMin = 7;
+            enemigo.monedasMax = 9;
+            enemigo.experiencia = 3;
+            AssetDatabase.CreateAsset(enemigo, RutaEnemigoChaman);
+        }
+
+        var piel = Piel(RutaPielChaman, HuesoPalido);
+        if (piel == null) return;
+        var rubi = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "RubiChaman", Rubi);
+        var madera = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "MaderaChaman", MaderaDelTotem);
+        var jefe = AssetDatabase.LoadAssetAtPath<GameObject>(RutaJefe);
+        var aviso = jefe != null && jefe.GetComponent<JefePatrones>() != null ? jefe.GetComponent<JefePatrones>().materialAviso : null;
+        var cubo = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        if (aviso == null || cubo == null) { Debug.LogError("ConstructorZombis: falta la linea del jefe o el cubo"); return; }
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var go = DesdeElNormal(vista, "ZombiChaman", enemigo, piel, RutaParticulasChaman);
+            if (go == null) return;
+            var modelo = Modelo(go);
+            modelo.localScale = Vector3.Scale(modelo.localScale, FormaDelChaman);
+
+            // El totem en T sobre la cabeza, medido de la cabeza del modelo, con el cristal que gira arriba.
+            var cabeza = Hueso(go.transform, "Bip001 Head");
+            Renderer dibujoDeLaCabeza = null;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+                if (r.name.StartsWith(Disfraces.MallaDeLaCabeza)) dibujoDeLaCabeza = r;
+            if (cabeza == null || dibujoDeLaCabeza == null) { Debug.LogError("ConstructorZombis: no encontre la cabeza del modelo"); return; }
+            Bounds caja = dibujoDeLaCabeza.bounds;
+            Vector3 arriba = Vector3.up;
+            Quaternion derecho = Quaternion.LookRotation(go.transform.forward, arriba);
+            Vector3 baseDelPalo = new Vector3(caja.center.x, caja.max.y - 0.04f, caja.center.z) - go.transform.forward * caja.extents.z * 0.2f;
+            Pieza(cabeza, "PaloDelTotem", cubo, madera, baseDelPalo + arriba * (PaloDelTotem.y * 0.5f), derecho, PaloDelTotem);
+            Pieza(cabeza, "TravesanoDelTotem", cubo, madera, baseDelPalo + arriba * PaloDelTotem.y, derecho, TravesanoDelTotem);
+            var cristal = Pieza(cabeza, "CristalDelTotem", cubo, rubi, baseDelPalo + arriba * (PaloDelTotem.y + LadoDelCristal * 0.85f),
+                                Quaternion.Euler(45f, 0f, 35f), Vector3.one * LadoDelCristal);
+
+            var chaman = go.GetComponent<ZombiChaman>();
+            if (chaman == null) chaman = go.AddComponent<ZombiChaman>();
+            chaman.materialAviso = aviso;
+            chaman.materialRubi = rubi;
+            chaman.mallaDeLaMarca = cubo;
+            chaman.colorRubi = Rubi;
+            chaman.cristal = cristal;
+
+            PrefabUtility.SaveAsPrefabAsset(go, RutaChaman);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
+        AssetDatabase.SaveAssets();
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaChaman);
+        SumarALaMezcla(prefab, TramosDelChaman, ChamanPeso, ChamanMaxVivos);
+        Debug.Log("ConstructorZombis: el chaman, listo en " + RutaChaman);
     }
 
     // Una pieza colgada de un hueso, puesta en el mundo con el modelo en reposo y con el tamaño en el mundo (sin la escala

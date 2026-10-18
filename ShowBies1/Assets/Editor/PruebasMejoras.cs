@@ -6441,6 +6441,76 @@ public static class PruebasMejoras
         });
 
         ProbarSaltador(inf);
+        ProbarChaman(inf);
+    }
+
+    // El chaman (ZombiChaman, ZOMBIS.md): donde se planta, el lugar detras de un pesado, su Enemy, el prefab con el
+    // totem, sus numeros, que no se disfrace y sus dos tramos en la mezcla de WaveMode. Lo que hace en play (el pulso, el
+    // bono, el bate, el hielo, morir y el tanque) lo mira PruebaChaman.
+    static void ProbarChaman(Informe inf)
+    {
+        inf.Verdadero("chaman: se planta a 7 m, y plantado no se mueve por medio metro",
+                      ZombiEscupidor.SePlanta(7f, false, 7f) && !ZombiEscupidor.SePlanta(7.4f, false, 7f)
+                      && ZombiEscupidor.SePlanta(7.4f, true, 7f) && !ZombiEscupidor.SePlanta(7.6f, true, 7f));
+        Vector3 detras = ZombiChaman.DetrasDe(new Vector3(5f, 0f, 2f), new Vector3(0f, 0f, 2f), 1.6f);
+        inf.Verdadero("chaman: el lugar detras de un pesado, visto desde el jugador (" + detras + ")",
+                      (detras - new Vector3(6.6f, 0f, 2f)).sqrMagnitude < 1e-6f);
+
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(ConstructorZombis.RutaEnemigoChaman);
+        if (inf.Verdadero("chaman: esta su Enemy", enemigo != null))
+        {
+            inf.Verdadero("chaman: vida x2,2 del normal, velocidad x0,9, 15 puntos, monedas x4 y 3 de PODER (" + enemigo.hp + ", " + enemigo.velocidad + ", "
+                          + enemigo.puntos + ", " + enemigo.monedasMin + "-" + enemigo.monedasMax + ", " + enemigo.experiencia + ")",
+                          enemigo.hp == 11 && Mathf.Approximately(enemigo.velocidad, 4.5f) && enemigo.puntos == 15 && enemigo.monedasMin == 7
+                          && enemigo.monedasMax == 9 && enemigo.experiencia == 3 && enemigo.daño == 1);
+        }
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaChaman);
+        var chaman = prefab != null ? prefab.GetComponent<ZombiChaman>() : null;
+        if (inf.Verdadero("chaman: esta su prefab, con su componente", chaman != null && prefab.GetComponent<EnemyController>().enemyType == enemigo))
+        {
+            inf.Verdadero("chaman: con la linea de aviso, el rubi y el cubo de las marcas",
+                          chaman.materialAviso != null && chaman.materialRubi != null && chaman.mallaDeLaMarca != null);
+            var cabeza = Disfraces.Cabeza(prefab.transform);
+            int piezas = 0;
+            bool sinCollider = true;
+            foreach (var t in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (!t.name.EndsWith("DelTotem")) continue;
+                piezas++;
+                sinCollider &= t.GetComponent<Collider>() == null && t.GetComponent<Renderer>() != null && t.gameObject.layer == Personajes.Capa
+                               && cabeza != null && t.IsChildOf(cabeza);
+            }
+            inf.Verdadero("chaman: el totem en T con el cristal, colgado de la cabeza y sin collider (" + piezas + " piezas)",
+                          piezas == 3 && sinCollider && chaman.cristal != null && chaman.cristal.name == "CristalDelTotem");
+            inf.Verdadero("chaman: en Halloween va sin disfraz (lo que cuelga de su cabeza es el totem)", Disfraces.TienePiezasEnLaCabeza(cabeza));
+            inf.Verdadero("chaman: cada 4 s avisa 0,5 s y potencia a 4 adentro de 4,5 m por 3 s: corren x1,25 y reciben x0,75",
+                          Mathf.Approximately(chaman.distanciaParaPlantarse, 7f) && Mathf.Approximately(chaman.cadaCuanto, 4f)
+                          && Mathf.Approximately(chaman.aviso, 0.5f) && Mathf.Approximately(chaman.radioDelPulso, 4.5f) && chaman.aliadosPorPulso == 4
+                          && Mathf.Approximately(chaman.duracionDelBono, 3f) && Mathf.Approximately(chaman.velocidadConElBono, 1.25f)
+                          && Mathf.Approximately(chaman.danoRecibidoConElBono, 0.75f) && chaman.duracionDelBono < chaman.cadaCuanto);
+            inf.Verdadero("chaman: el bate lo empuja (liviano)", EnemyController.Ceder(prefab.GetComponent<Rigidbody>().mass) >= 0.5f);
+        }
+
+        // Los demas zombis siguen disfrazandose: lo que cuelga de sus cabezas es solo la cabeza del modelo.
+        bool losDemas = true;
+        foreach (var n in new[] { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS", "ZombiEscupidor" })
+        {
+            var otro = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/" + n + ".prefab");
+            losDemas &= otro != null && !Disfraces.TienePiezasEnLaCabeza(Disfraces.Cabeza(otro.transform));
+        }
+        inf.Verdadero("disfraces: los zombis sin piezas propias en la cabeza se siguen disfrazando", losDemas);
+
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            var suyos = new List<TipoEnOleada>();
+            if (oleadas != null && oleadas.tipos != null)
+                foreach (var t in oleadas.tipos) if (t != null && t.prefab == prefab) suyos.Add(t);
+            bool bien = suyos.Count == 2;
+            foreach (var t in suyos) bien &= Mathf.Approximately(t.peso, 0.1f) && t.maxVivos == 2 && t.especial;
+            inf.Verdadero("chaman: WaveMode lo saca en el cementerio (18 a 20) y desde la 31, no en la ciudad (peso 0,10, como mucho 2, especial)",
+                          bien && suyos[0].desdeOleada == 18 && suyos[0].hastaOleada == 20 && suyos[1].desdeOleada == 31 && suyos[1].hastaOleada == 0);
+        });
     }
 
     // El saltador (ZombiSaltador, ZOMBIS.md): su Enemy, el prefab con los ojos y las crestas, los numeros del salto y sus

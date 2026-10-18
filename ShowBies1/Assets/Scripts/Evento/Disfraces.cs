@@ -53,11 +53,11 @@ public static class Disfraces
     public static GameObject Vestir(GameObject zombi, bool jefe, float azar)
     {
         if (zombi == null) return null;
-        // El saltador se lee por los ojos y las crestas, que cuelgan de la cabeza: la calabaza los esconderia con ella y
-        // el sombrero los taparia. Va sin disfraz.
-        if (zombi.GetComponent<ZombiSaltador>() != null) return null;
         var cabeza = Cabeza(zombi.transform);
         if (cabeza == null || cabeza.Find(NombreDelDisfraz) != null) return null;
+        // El que ya lleva algo propio colgado de la cabeza (las crestas del saltador, el totem del chaman) se lee por eso:
+        // la calabaza lo esconderia con la cabeza y el sombrero lo taparia. Va sin disfraz.
+        if (TienePiezasEnLaCabeza(cabeza)) return null;
 
         if (jefe || (azar >= ConCalabaza && azar < ConCalabaza + ConSombrero))
             return Colgar(Cargar(ref sombreroDeBruja, RutaSombreroDeBruja), cabeza);
@@ -69,6 +69,17 @@ public static class Disfraces
         foreach (var r in cabeza.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
         return Colgar(Cargar(ref cabezaDeCalabaza, RutaCabezaDeCalabaza), cabeza);
     }
+
+    // Si de la cabeza cuelga algo que se dibuja y no es la cabeza del modelo (las mallas "Z_head..." del pack).
+    public static bool TienePiezasEnLaCabeza(Transform cabeza)
+    {
+        if (cabeza == null) return false;
+        foreach (var r in cabeza.GetComponentsInChildren<Renderer>(true))
+            if (!r.name.StartsWith(MallaDeLaCabeza, System.StringComparison.Ordinal)) return true;
+        return false;
+    }
+
+    public const string MallaDeLaCabeza = "Z_head";
 
     // El sombrero de calabaza del jugador, en la cabeza de su modelo.
     public static GameObject PonerSombrero(Transform cabeza)
