@@ -27,6 +27,9 @@ public static class ConstructorZombis
     public static readonly Vector3 FormaDelEscupidor = new Vector3(0.9f, 0.9f, 1.15f);
     // El cementerio estrena al escupidor (el reparto por capitulo de Argon, que eligio Ivan el 18/10).
     public const int EscupidorDesde = 12;
+    // Como mucho 3 en el cementerio y la ciudad, y 2 desde la 31, donde convive con los otros cuatro especiales (de Argon,
+    // 18/10). x desde, y hasta (0, sin fin), z el tope de vivos.
+    public static readonly Vector3Int[] TramosDelEscupidor = { new Vector3Int(EscupidorDesde, 30, 3), new Vector3Int(31, 0, 2) };
     public const float EscupidorPeso = 0.15f;
     public const int EscupidorMaxVivos = 3;
     // Los sacos de acido: sobre los hombros, a los costados de la cabeza, de lo que miden en el mundo. En la espalda o
@@ -117,7 +120,7 @@ public static class ConstructorZombis
         AssetDatabase.SaveAssets();
 
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaEscupidor);
-        SumarALaMezcla(prefab, new[] { new Vector2Int(EscupidorDesde, 0) }, EscupidorPeso, EscupidorMaxVivos);
+        SumarALaMezcla(prefab, TramosDelEscupidor, EscupidorPeso);
         Debug.Log("ConstructorZombis: el escupidor, listo en " + RutaEscupidor);
     }
 
@@ -419,6 +422,14 @@ public static class ConstructorZombis
     // cambios sin guardar: no los guarda por accidente.
     static void SumarALaMezcla(GameObject prefab, Vector2Int[] tramos, float peso, int maxVivos)
     {
+        var conTope = new Vector3Int[tramos.Length];
+        for (int i = 0; i < tramos.Length; i++) conTope[i] = new Vector3Int(tramos[i].x, tramos[i].y, maxVivos);
+        SumarALaMezcla(prefab, conTope, peso);
+    }
+
+    // Lo mismo, con un tope de vivos por tramo (z).
+    static void SumarALaMezcla(GameObject prefab, Vector3Int[] tramos, float peso)
+    {
         var escena = EditorSceneManager.GetSceneByPath(EscenaOleadas);
         bool abierta = escena.isLoaded;
         if (abierta && escena.isDirty) { Debug.LogError("ConstructorZombis: WaveMode tiene cambios sin guardar; guardala o descartalos y volve a correrlo"); return; }
@@ -444,7 +455,7 @@ public static class ConstructorZombis
                 tipo.FindPropertyRelative("desdeOleada").intValue = tramo.x;
                 tipo.FindPropertyRelative("hastaOleada").intValue = tramo.y;
                 tipo.FindPropertyRelative("peso").floatValue = peso;
-                tipo.FindPropertyRelative("maxVivos").intValue = maxVivos;
+                tipo.FindPropertyRelative("maxVivos").intValue = tramo.z;
                 tipo.FindPropertyRelative("especial").boolValue = true;
             }
             so.ApplyModifiedPropertiesWithoutUndo();

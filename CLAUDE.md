@@ -713,7 +713,9 @@ balance** (ver El balance de la 1.6.0, abajo).
     quemadura pega en ticks contados (seis de 0,5 s) por `DanoZombi` con `colorDeCarta`: el número naranja
     (`Efectos.GolpeDeCarta`) y sin el destello ni el aplastado.
   - **El escudo** lo para `PlayerHealth.TakeDamage` antes de todo: no cuenta como golpe (la oleada sigue pudiendo salir
-    perfecta), y al romperse corre medio metro a los zombis pegados (`EnemyController.Empujar`; al jefe no). **El
+    perfecta), y al romperse corre medio metro a los zombis pegados (`EnemyController.Empujar`; al jefe no). **El charco
+    del escupidor no lo gasta** (`TakeDamage(dano, delPiso: true)`, de Argon, 18/10: es para salvarse de un golpe de
+    verdad, no para quemarse rozando un charco). **El
     vampiro** cuenta en el bloque de la muerte; la cuenta va con la foto de la oleada (`EstadoPoder.bajasDelVampiro`).
   - **`CartasEnElJugador`** (lo agrega `EleccionDeCartas` al jugador) dibuja el anillo del escudo mientras está listo y
     lleva los drones: esferas rosas que orbitan y le tiran al zombi más cercano que se ve, a 12 m, con las balas del arma
@@ -1105,7 +1107,8 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
 - **Los arman ShowBies > Zombis > Armar el escupidor**, **Armar el saltador** y **Armar el chaman** (`ConstructorZombis`), desde el normal: el Enemy (una sola vez:
   después es balance), la piel (`ShowBies/PielDeZombi` con su color y el borde aclarado), las piezas y el prefab, y los
   suma a la mezcla de WaveMode. No se editan a mano.
-- **El escupidor** (`ZombiEscupidor`, desde la 12, peso 0,15, como mucho 3): amarillo ácido, inclinado hacia adelante y
+- **El escupidor** (`ZombiEscupidor`, desde la 12, peso 0,15, como mucho 3, y 2 desde la 31, donde convive con los
+  otros cuatro: va dos veces en la mezcla, `ConstructorZombis.TramosDelEscupidor`): amarillo ácido, inclinado hacia adelante y
   con dos sacos de ácido que brillan sobre los hombros (en la espalda la cabeza grande del modelo los tapaba). Camina
   hasta quedar a **9,5 m** del jugador, afuera de los 7,5 m del auto-apuntado, y se planta (con medio metro de margen
   para no temblar); si el jugador se le acerca a menos de 4,5 m, retrocede despacio. **Solo se planta donde se lo ve,
@@ -1116,7 +1119,11 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   a 11 m/s. **El charco** (`AcidoDelEscupidor`, aparte porque sobrevive al que lo tiró) dura 4 s, da 0,25 s de gracia y
   pega la mitad del golpe cada 0,5 s al que lo pisa, con un borde que marca justo hasta dónde; como mucho 3 en el mapa.
   Un charco que quedó de la oleada anterior no le quita la perfecta a la siguiente: `WaveManager` toma los golpes del
-  jugador recién después del descanso.
+  jugador recién después del descanso. **El charco cuenta como golpe** (para la perfecta y el logro INTOCABLE) **pero no
+  gasta el escudo ni sacude la cámara**: solo el borde rojo y un chisporroteo corto (`Efectos.DanioDelPiso`, de Argon,
+  18/10). **Al final de la oleada se acerca a 6,5 m**, adentro del auto-apuntado (`distanciaAlFinal`): cuando ya
+  salieron todos y quedan 3 vivos o menos, o solo escupidores (`WaveManager.FinalDeLaOleada`, una vez por paso de
+  física; en el libre, nunca). Con el automático solo, la oleada no terminaba hasta salir a cazarlo a mano (Argon).
   El globo y el charco no tienen collider (parábola calculada y distancia al jugador, como la granada y las monedas) y se
   reusan. El bate lo empuja y le corta el escupitajo; congelado tarda 5 s entre uno y otro.
 - **ShowBies > Pruebas > Escupidor (play)** (`PruebaEscupidor`): que se plante a 9,5 m, a la vista y sin que el
@@ -1149,11 +1156,14 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   de él, se pone 1,6 m detrás**, visto desde el jugador, mientras ese lugar quede entre 5,5 y 9 m del jugador (más
   cerca, el tanque lo llevaría a sus pies). **Cada 4 s, aviso incluido, se frena**, se arquea hacia atrás 0,5 s con el
   cristal girando y creciendo y el aro de los pies abriéndose hasta 4,5 m, y **potencia a los 4 aliados más cercanos
-  que quedaron adentro durante 3 s: corren ×1,25 y les entra ×0,75 de daño** (de todo: balas, granada, bate y cartas;
+  que quedaron adentro durante 3 s: corren ×1,25, sin pasar de 11 m/s, y les entra ×0,75 de daño** (de todo: balas, granada, bate y cartas;
   el número flotante muestra lo que entró), con un cubito rubí girando sobre la cabeza de cada uno. Se frena también
   mientras se acerca. Solo pulsa a la vista y con al menos un aliado al alcance. **No potencia a los que se mueven por
   su cuenta** (`EnemyController.SeMuevePorSuCuenta`: el jefe, el tesoro y los otros con habilidad, otros chamanes
-  incluidos): su movimiento no pasa por la persecución y el bono les quedaría a medias. El bono vive en el zombi
+  incluidos): su movimiento no pasa por la persecución y el bono les quedaría a medias. **El tope de 11 m/s**
+  (`velocidadMaximaConElBono`, `EnemyController.FactorDelBono`, de Argon, 18/10) es por el jugador, que corre a 11,5 y
+  siempre se tiene que poder escapar corriendo derecho: con ×1,25 el FASTER llegaba a 13,1. El que ya corre más que el
+  tope no se frena. El bono vive en el zombi
   (`EnemyController.Potenciar`, `Potenciado`, `MultiplicadorDeVelocidad`, que también lleva el hielo) y **se apaga en
   todos en el acto cuando el chamán muere**: `Potenciado` mira si el que se lo dio sigue vivo, con su número de
   aparición. El aro y las marcas son objetos aparte que lo siguen, como la barra de vida. El bate lo empuja y le corta

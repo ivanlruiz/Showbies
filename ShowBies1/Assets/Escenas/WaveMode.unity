@@ -2039,12 +2039,6 @@ MonoBehaviour:
     peso: 0.25
     maxVivos: 0
     especial: 0
-  - prefab: {fileID: 4367927843779111661, guid: ae53d257c07174f46a0c384907088d40, type: 3}
-    desdeOleada: 12
-    hastaOleada: 0
-    peso: 0.15
-    maxVivos: 3
-    especial: 1
   - prefab: {fileID: 3140591236830657714, guid: 3c301fee45f7356479abdccedc4e41b6, type: 3}
     desdeOleada: 15
     hastaOleada: 20
@@ -2067,6 +2061,18 @@ MonoBehaviour:
     desdeOleada: 31
     hastaOleada: 0
     peso: 0.1
+    maxVivos: 2
+    especial: 1
+  - prefab: {fileID: 4367927843779111661, guid: ae53d257c07174f46a0c384907088d40, type: 3}
+    desdeOleada: 12
+    hastaOleada: 30
+    peso: 0.15
+    maxVivos: 3
+    especial: 1
+  - prefab: {fileID: 4367927843779111661, guid: ae53d257c07174f46a0c384907088d40, type: 3}
+    desdeOleada: 31
+    hastaOleada: 0
+    peso: 0.15
     maxVivos: 2
     especial: 1
   jefe: {fileID: 208933554839980591, guid: be2b0c9c0c14cd041a980759b79e2433, type: 3}

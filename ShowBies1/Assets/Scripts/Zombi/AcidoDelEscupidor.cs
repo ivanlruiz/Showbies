@@ -241,7 +241,7 @@ public class AcidoDelEscupidor : MonoBehaviour
             if (!Pega(d.magnitude, c.datos.radio, ahora, c.cayo, c.datos.gracia, c.datos.duracion)) continue;
             c.proximoGolpe = ahora + c.datos.cadaCuanto;
             GolpesDados++;
-            vida.TakeDamage(c.datos.dano);
+            vida.TakeDamage(c.datos.dano, true);
         }
     }
 

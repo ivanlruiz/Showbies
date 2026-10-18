@@ -40,6 +40,7 @@ public class ZombiChaman : MonoBehaviour, IMovimientoPropio
     public int aliadosPorPulso = 4;
     public float duracionDelBono = 3f;
     public float velocidadConElBono = 1.25f;
+    public float velocidadMaximaConElBono = 11f;   // m/s: el jugador corre a 11,5 y siempre se tiene que poder escapar
     public float danoRecibidoConElBono = 0.75f;
 
     [Header("Lo que se ve")]
@@ -323,7 +324,7 @@ public class ZombiChaman : MonoBehaviour, IMovimientoPropio
         for (int i = 0; i < n; i++)
         {
             var aliado = candidatos[i].zombi;
-            aliado.Potenciar(zombi, duracionDelBono, velocidadConElBono, danoRecibidoConElBono);
+            aliado.Potenciar(zombi, duracionDelBono, velocidadConElBono, velocidadMaximaConElBono, danoRecibidoConElBono);
             marcados[i] = aliado;
         }
         candidatos.Clear();

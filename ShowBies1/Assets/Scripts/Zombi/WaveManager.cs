@@ -145,6 +145,55 @@ public class WaveManager : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         SinTesoroAutomatico = false;
+        actual = null;
+    }
+
+    // El de la escena (uno solo, el de WaveMode), para lo que pregunta por la oleada sin cablearlo: el escupidor.
+    private static WaveManager actual;
+
+    private void OnEnable() { actual = this; }
+    private void OnDisable() { if (actual == this) actual = null; }
+
+    // El final de la oleada (de Argon, 18/10): ya salieron todos sus zombis y quedan 'pocos' o menos vivos, o los que
+    // quedan son todos escupidores. Ahi el escupidor deja de plantarse lejos y se acerca al alcance del auto-apuntado:
+    // el jugador casual no tiene que salir a cazar a mano al ultimo para cerrar la oleada. Se calcula una vez por paso
+    // de fisica (lo pregunta cada escupidor en cada uno). Sin WaveManager (el modo libre), nunca.
+    public static bool FinalDeLaOleada(int pocos)
+    {
+        var w = actual;
+        if (w == null || !w.isActiveAndEnabled) return false;
+        if (w.finalCalculadoEn != Time.fixedTime || w.finalCalculadoCon != pocos)
+        {
+            w.finalCalculadoEn = Time.fixedTime;
+            w.finalCalculadoCon = pocos;
+            w.esFinal = EsFinal(w.zombisEnLaOleada, w.zombisDeLaOleada, pocos);
+        }
+        return w.esFinal;
+    }
+
+    private float finalCalculadoEn = -1f;
+    private int finalCalculadoCon = -1;
+    private bool esFinal;
+
+    private static bool EsFinal(int enLaOleada, List<ZombiAnotado> salieron, int pocos)
+    {
+        if (enLaOleada <= 0 || salieron.Count < enLaOleada) return false;
+        int vivos = 0;
+        bool soloEscupidores = true;
+        for (int i = 0; i < salieron.Count; i++)
+        {
+            if (!EnemyController.SigueVivo(salieron[i].zombi, salieron[i].aparicion)) continue;
+            vivos++;
+            if (!(salieron[i].zombi.MovimientoPropio is ZombiEscupidor)) soloEscupidores = false;
+        }
+        return EsFinalCon(enLaOleada, salieron.Count, vivos, soloEscupidores, pocos);
+    }
+
+    // La cuenta, sin escena, para la prueba: salieron todos, y quedan pocos o solo escupidores.
+    public static bool EsFinalCon(int enLaOleada, int salieron, int vivos, bool soloEscupidores, int pocos)
+    {
+        if (enLaOleada <= 0 || salieron < enLaOleada) return false;
+        return vivos <= pocos || soloEscupidores;
     }
     public bool UltimaFuePerfecta { get; private set; }
 

@@ -203,6 +203,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombiEscupidor
   distanciaParaPlantarse: 9.5
+  distanciaAlFinal: 6.5
+  pocosAlFinal: 3
   distanciaParaRetroceder: 4.5
   velocidadAlRetroceder: 0.6
   borde: 45

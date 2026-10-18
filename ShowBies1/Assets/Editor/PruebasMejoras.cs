@@ -6408,6 +6408,15 @@ public static class PruebasMejoras
                       ZombiEscupidor.QueHacer(12f, E, 9.5f) == E && ZombiEscupidor.QueHacer(9.4f, E, 9.5f) == P
                       && ZombiEscupidor.QueHacer(9.4f, ZombiEscupidor.Estado.Rodeando, 9.5f) == P);
         inf.Verdadero("escupidor: plantado no se mueve por medio metro", ZombiEscupidor.QueHacer(9.9f, P, 9.5f) == P && ZombiEscupidor.QueHacer(10.1f, P, 9.5f) == E);
+        // Sin oleada en curso (la prueba de logica, el modo libre) nunca es el final: se planta a 9,5.
+        inf.Verdadero("escupidor: sin oleada en curso no es el final de la oleada", !WaveManager.FinalDeLaOleada(3));
+        inf.Verdadero("escupidor: es el final de la oleada cuando salieron todos y quedan 3 o menos, o solo escupidores",
+                      !WaveManager.EsFinalCon(12, 10, 1, false, 3) && WaveManager.EsFinalCon(12, 12, 3, false, 3)
+                      && !WaveManager.EsFinalCon(12, 12, 5, false, 3) && WaveManager.EsFinalCon(12, 12, 5, true, 3));
+        // El bono del chaman no pasa de 11 m/s (el jugador corre a 11,5), y nunca frena.
+        inf.Cerca("chaman: el bono del normal es el entero (5 m/s x1,25)", 1.25, EnemyController.FactorDelBono(5f, 1.25f, 11f), 1e-6);
+        inf.Cerca("chaman: el FASTER potenciado no pasa de 11 m/s", 11.0, 10.5 * EnemyController.FactorDelBono(10.5f, 1.25f, 11f), 1e-5);
+        inf.Cerca("chaman: el que ya corre mas que el tope no se frena", 1.0, EnemyController.FactorDelBono(12f, 1.25f, 11f), 1e-6);
         inf.Verdadero("escupidor: se planta adentro de la pantalla y lejos del HUD de arriba",
                       ZombiEscupidor.SeVeEn(new Vector3(0.5f, 0.5f, 5f)) && !ZombiEscupidor.SeVeEn(new Vector3(0.5f, 0.9f, 5f))
                       && !ZombiEscupidor.SeVeEn(new Vector3(0.98f, 0.5f, 5f)) && !ZombiEscupidor.SeVeEn(new Vector3(0.5f, 0.5f, -1f)));
@@ -6450,12 +6459,14 @@ public static class PruebasMejoras
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
             var oleadas = Buscar<WaveManager>(escena);
-            TipoEnOleada suyo = null;
+            var suyos = new List<TipoEnOleada>();
             if (oleadas != null && oleadas.tipos != null)
-                foreach (var t in oleadas.tipos) if (t != null && t.prefab == prefab) suyo = t;
-            inf.Verdadero("escupidor: WaveMode lo saca desde la oleada 12, el cementerio (peso 0,15, como mucho 3, especial)",
-                          suyo != null && suyo.desdeOleada == ConstructorZombis.EscupidorDesde && ConstructorZombis.EscupidorDesde == 12
-                          && Mathf.Approximately(suyo.peso, 0.15f) && suyo.maxVivos == 3 && suyo.especial && suyo.hastaOleada == 0);
+                foreach (var t in oleadas.tipos) if (t != null && t.prefab == prefab) suyos.Add(t);
+            bool bien = suyos.Count == 2;
+            foreach (var t in suyos) bien &= Mathf.Approximately(t.peso, 0.15f) && t.especial;
+            inf.Verdadero("escupidor: WaveMode lo saca desde la 12 con 3 como mucho, y desde la 31 con 2 (peso 0,15, especial)",
+                          bien && ConstructorZombis.EscupidorDesde == 12 && suyos[0].desdeOleada == 12 && suyos[0].hastaOleada == 30 && suyos[0].maxVivos == 3
+                          && suyos[1].desdeOleada == 31 && suyos[1].hastaOleada == 0 && suyos[1].maxVivos == 2);
         });
 
         ProbarSaltador(inf);

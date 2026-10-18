@@ -22,6 +22,8 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
 {
     [Header("Distancias (de Argon)")]
     public float distanciaParaPlantarse = 9.5f;
+    public float distanciaAlFinal = 6.5f;        // al final de la oleada: adentro de los 7,5 m del auto-apuntado
+    public int pocosAlFinal = 3;                 // vivos de la oleada (ver WaveManager.FinalDeLaOleada)
     public float distanciaParaRetroceder = 4.5f;
     public float velocidadAlRetroceder = 0.6f;   // de la suya
     public float borde = 45f;                    // del centro: las paredes invisibles estan en 49
@@ -138,7 +140,10 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
             return true;
         }
 
-        var siguiente = QueHacer(distancia, EstadoActual, distanciaParaPlantarse);
+        // Al final de la oleada (ya salieron todos y quedan pocos, o solo escupidores) se acerca al alcance del
+        // auto-apuntado, de Argon (18/10): con el automatico solo, la oleada no terminaba hasta salir a cazarlo a mano.
+        float plantarse = WaveManager.FinalDeLaOleada(pocosAlFinal) ? distanciaAlFinal : distanciaParaPlantarse;
+        var siguiente = QueHacer(distancia, EstadoActual, plantarse);
         // Desde afuera de la pantalla no se planta: rodea hacia los costados (TopeDelRodeo), y si no, se acerca.
         if (siguiente == Estado.Plantado && !SeVe())
         {
@@ -146,7 +151,7 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
             if (ahora - rodeandoDesde < TopeDelRodeo)
             {
                 EstadoActual = Estado.Rodeando;
-                Rodear(rb, hacia, distancia);
+                Rodear(rb, hacia, distancia, plantarse);
                 return true;
             }
             siguiente = Estado.Acercandose;
@@ -177,10 +182,10 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
     }
 
     // De costado alrededor del jugador, hacia su misma linea este-oeste, sin dejar la distancia de plantarse, y mirandolo.
-    private void Rodear(Rigidbody rb, Vector3 hacia, float distancia)
+    private void Rodear(Rigidbody rb, Vector3 hacia, float distancia, float plantarse)
     {
         if (hacia.sqrMagnitude < 1e-4f) return;
-        Vector3 rumbo = RumboDelRodeo(transform.position, hacia, distancia, distanciaParaPlantarse, borde);
+        Vector3 rumbo = RumboDelRodeo(transform.position, hacia, distancia, plantarse, borde);
         transform.rotation = Quaternion.LookRotation(hacia);
         Vector3 v = rumbo * (zombi.enemyType.velocidad * (1f - zombi.LentitudActual));
         v.y = rb.linearVelocity.y;

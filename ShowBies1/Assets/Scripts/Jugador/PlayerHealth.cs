@@ -224,7 +224,10 @@ public class PlayerHealth : MonoBehaviour
     // terminar cada oleada: si no cambio, la oleada salio sin un rasguño (logro INTOCABLE).
     public int GolpesRecibidos { get; private set; }
 
-    public void TakeDamage(float amount)
+    // 'delPiso' es el daño de un charco (el acido del escupidor, de Argon, 18/10): cuenta como golpe para la perfecta y el
+    // logro INTOCABLE, pero no gasta el escudo de la carta (es para salvarse de un golpe de verdad, no para quemarse
+    // rozando un charco) ni sacude la camara.
+    public void TakeDamage(float amount, bool delPiso = false)
     {
         // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
         // veces con la vida ya en cero, y el bloque de muerte corria de nuevo.
@@ -233,7 +236,7 @@ public class PlayerHealth : MonoBehaviour
 
         // El escudo de la carta para el golpe entero (y no cuenta como golpe: la oleada sigue
         // pudiendo salir perfecta). El salto del jefe tira por el aire igual.
-        if (EscudoListo)
+        if (!delPiso && EscudoListo)
         {
             escudoListoEn = Time.time + PoderDeLaPartida.RecargaDelEscudo;
             GolpesBloqueados++;
@@ -249,8 +252,12 @@ public class PlayerHealth : MonoBehaviour
         // el HUD mostraba "-17" en rojo durante los diez segundos del ¡HAS MUERTO!.
         health = Mathf.Max(0, health - dano);
         GolpesRecibidos++;
-        if (health > 0) Efectos.DanioJugador();
-        if (health > 0) return;
+        if (health > 0)
+        {
+            if (delPiso) Efectos.DanioDelPiso();
+            else Efectos.DanioJugador();
+            return;
+        }
 
         estaMuerto = true;
 

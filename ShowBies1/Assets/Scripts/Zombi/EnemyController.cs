@@ -133,6 +133,7 @@ public class EnemyController : MonoBehaviour
 
     // Si se mueve por su cuenta (IMovimientoPropio: el jefe, el tesoro y los zombis con habilidad).
     public bool SeMuevePorSuCuenta { get { return movimientoPropio != null; } }
+    public IMovimientoPropio MovimientoPropio { get { return movimientoPropio; } }
 
     // Si le cede al jugador menos de la mitad (el tanque, el jefe): se planta en vez de apartarse.
     public bool EsPesado { get { return rb != null && Ceder(rb.mass) < 0.5f; } }
@@ -1436,6 +1437,7 @@ public class EnemyController : MonoBehaviour
     private EnemyController potenciadoPor;
     private int potenciadoPorAparicion;
     private float velocidadPotenciada = 1f;
+    private float topeDeVelocidadPotenciada;
     private float danoRecibidoPotenciado = 1f;
     private bool pasoPotenciado;
     private bool pintadoDeHielo;
@@ -1459,18 +1461,32 @@ public class EnemyController : MonoBehaviour
     // Lo que camina de lo suyo: menos con el hielo y mas con el bono del chaman.
     public float MultiplicadorDeVelocidad
     {
-        get { return (1f - LentitudActual) * (Potenciado ? velocidadPotenciada : 1f); }
+        get
+        {
+            float bono = Potenciado ? FactorDelBono(enemyType != null ? enemyType.velocidad : 0f, velocidadPotenciada, topeDeVelocidadPotenciada) : 1f;
+            return (1f - LentitudActual) * bono;
+        }
     }
 
-    // "velocidad" multiplica lo que corre (1,25) y "danoRecibido", lo que le entra (0,75). El ultimo que se lo da
-    // pisa al anterior, con su reloj.
-    public void Potenciar(EnemyController chaman, float duracion, float velocidad, float danoRecibido)
+    // Lo que suma el bono de velocidad, sin pasar del tope en m/s (de Argon, 18/10: 11, por debajo de los 11,5 del
+    // jugador, que siempre tiene que poder escaparse corriendo derecho; con x1,25 el FASTER llegaba a 13,1). Nunca frena:
+    // el que ya corre mas que el tope se queda en lo suyo. Estatico para probarlo.
+    public static float FactorDelBono(float velocidadBase, float bono, float tope)
+    {
+        if (!(tope > 0f) || !(velocidadBase > 0f)) return bono;
+        return Mathf.Max(1f, Mathf.Min(bono, tope / velocidadBase));
+    }
+
+    // "velocidad" multiplica lo que corre (1,25), sin pasar de "tope" m/s, y "danoRecibido", lo que le entra (0,75). El
+    // ultimo que se lo da pisa al anterior, con su reloj.
+    public void Potenciar(EnemyController chaman, float duracion, float velocidad, float tope, float danoRecibido)
     {
         if (!enUso || estaMuerto || chaman == null || !(duracion > 0f)) return;
         potenciadoPor = chaman;
         potenciadoPorAparicion = chaman.NumeroDeAparicion;
         potenciadoHasta = Time.time + duracion;
         velocidadPotenciada = velocidad;
+        topeDeVelocidadPotenciada = tope;
         danoRecibidoPotenciado = danoRecibido;
         pasoPotenciado = true;
         AjustarPaso();

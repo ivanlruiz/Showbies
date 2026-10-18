@@ -229,6 +229,18 @@ public class Efectos : MonoBehaviour
         Sonidos.Tocar(e.danioJugador, Mathf.Lerp(0.8f, 1f, t), Sonidos.PitchDe(-4f * t), 0.1f, grande ? 0f : 0.12f);
     }
 
+    // Lo que pica un charco (el acido del escupidor): el borde rojo y un chisporroteo corto, sin temblor (de Argon, 18/10).
+    // Con la misma separacion que el daño comun, asi parado en el charco no queda prendido.
+    public static void DanioDelPiso()
+    {
+        var e = instance;
+        if (e == null) return;
+        if (Time.unscaledTime < e.proximoDanioVisual) return;
+        e.proximoDanioVisual = Time.unscaledTime + e.separacionDanioVisual;
+        VinetaDanio.Pulso();
+        Sonidos.Tocar(e.caja, 0.45f, 1.7f, 0.12f, 0.12f, Sonidos.Aparte);
+    }
+
     // De 0 (un rasguño, o no se sabe cuanto) a 1 (un golpe de un tercio de la vida o mas).
     // Estatica para probarla sin escena.
     public static float IntensidadDelDanio(float fraccion)

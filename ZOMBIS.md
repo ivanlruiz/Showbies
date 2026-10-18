@@ -18,7 +18,7 @@ Referencia: el normal (vida 5, golpe 1, velocidad 5, 1 punto, 1-3 monedas, 1 de 
 
 | zombi | rol | desde | peso | máx. vivos | vida / golpe / velocidad | puntos / monedas / PODER |
 |---|---|---|---|---|---|---|
-| **Escupidor** (Spitter) | artillería: niega zonas y saca del auto-apuntado | 12 | 0,15 | 3 | 1,8× / 0,5× (el charco) / 0,95× | 8 / 3× / 2 |
+| **Escupidor** (Spitter) | artillería: niega zonas y saca del auto-apuntado | 12 | 0,15 | 3 (2 desde la 31) | 1,8× / 0,5× (el charco) / 0,95× | 8 / 3× / 2 |
 | **Saltador** (Leaper) | emboscada en línea recta | 15 a 20, y desde 31 | 0,15 | 4 | 1,4× / 1,2× / 1,1× | 10 / 2,5× / 2 |
 | **Chamán** (Totem Bearer) | apoyo de la horda, desde atrás | 18 a 20, y desde 31 | 0,10 | 2 | 2,2× / 1× / 0,9× | 15 / 4× / 3 |
 | **Blindado** (Riot Shielder) | bloqueo de frente contra la ráfaga | 21 | 0,15 | 3 | 3,2× / 1,4× / 0,75× | 12 / 3× / 2 |
@@ -52,6 +52,8 @@ arriba ya son esos):
   los tres muros caen desde la 31, donde los especiales son el 11-19 % de lo que sale; por punto de vida dan +16 % de
   monedas y +7 % de experiencia, pero el bono del chamán y el escupidor fuera del auto-apuntado empujan para el otro
   lado. Neto en el medio, entre −1,5 y +1 oleada: hay que correr `simulaciones/cartas_1.6.0` con los especiales.
+  **Argon (18/10): correrla cuando estén el blindado y el hinchado**, y si el jugador bajo cae por debajo de la 35, darle
+  +1 de PODER a los cinco especiales (de 2 a 3, y el chamán de 3 a 4).
 
 ### 1. El escupidor (Spitter)
 
@@ -74,7 +76,12 @@ auto-apuntado.
 - **El charco:** al caer deja un disco de ácido de 2,2 m de diámetro durante **4 s**; como mucho **3 charcos** en el mapa
   (el cuarto borra el más viejo). Da **0,25 s de gracia** y después pega **la mitad del golpe de un normal cada 0,5 s**
   mientras el jugador lo pise.
-- **El auto-apuntado** lo ignora (se planta a 9,5 m): hay que estirar el tiro con el joystick o acercarse.
+- **El auto-apuntado** lo ignora (se planta a 9,5 m): hay que estirar el tiro con el joystick o acercarse. **Al final de
+  la oleada** (ya salieron todos y quedan 3 vivos o menos, o solo escupidores) se acerca a **6,5 m**, adentro del
+  auto-apuntado: si no, el que juega con el automático no terminaba la oleada sin salir a cazarlo (Argon, después de la
+  auditoría).
+- **El charco cuenta como golpe** para la oleada perfecta y el logro INTOCABLE, **pero no gasta el escudo** de la carta
+  ni sacude la cámara: solo el borde rojo y un chisporroteo corto (Argon).
 - **El bate:** es liviano (lo empuja 3 m), y si le pega mientras infla los sacos, le corta el escupitajo.
 - **El hielo:** lo frena y estira el tiempo entre escupitajos de 3,5 s a 5 s.
 
@@ -88,6 +95,11 @@ Se pone adelante de la fila y absorbe las balas comunes: premia el bate, la perf
 - **Habilidad:** camina a 0,75 de velocidad mirando siempre al jugador, girando a **120°/s** como mucho. Con el escudo,
   todo tiro común que le entra de frente (un arco de 90° adelante) pega un **80 % menos** y no lo empuja: suena metálico y
   saca chispas blancas en lugar de sangre.
+- **Qué es "tiro común"** (Argon, después de la auditoría): la pistola, el revólver, los perdigones de la escopeta, el
+  rifle, las balas de más del disparo doble, la de hacia atrás y los drones (el ángulo se mide desde donde salió el tiro,
+  no desde el jugador). **Ignoran el escudo:** el bate (que además lo rompe), la granada, el arma de energía, la explosión
+  del hinchado, la quemadura, el área de la explosiva y **toda bala si el jugador tiene al menos una perforante**.
+- **Es pesado, como el tanque:** no se aparta del jugador, y el chamán se refugia detrás de él.
 - **Aviso:** a 1,5 m abre el brazo del escudo hacia el costado 0,5 s antes del zarpazo, y deja el pecho descubierto.
 - **El bate** (su contra): un batazo le arranca el escudo para siempre (se apaga la placa), lo frena 1 s y lo deja como
   uno común.
@@ -95,6 +107,13 @@ Se pone adelante de la fila y absorbe las balas comunes: premia el bate, la perf
 - **El hielo** baja su giro de 120°/s a 50°/s: se lo puede rodear para pegarle por la espalda.
 - **El auto-apuntado**, si es el más cercano, gasta balas contra la placa al 20 % hasta que el jugador use el bate o
   apunte a otro.
+- **Cómo se arma** (Argon, 18/10, con la hoja de Nano Banana en `Marketing/zombis/blindado_hoja_nano_banana.png`): escala
+  (1,20, 1,05, 1,05), piel #4A525D, ropa azul policial oscuro #1E2631 y borde de luz gris azulado frío. Un casco (cubo de
+  36 × 22 × 38 cm en la cabeza, a +8 cm, #1A1D24) con la visera ámbar sin luz (#FFB300, 38 × 8 × 6 cm a +4 cm y +18 cm
+  adelante). El escudo cuelga de un pivote hijo del torso, 38 cm adelante del pecho (no de la mano: los brazos se
+  balancean): la placa de 75 × 90 × 8 cm #1A1D24, el borde de arriba ámbar (78 × 10 × 10 cm a +42 cm) y una mirilla ámbar
+  (50 × 14 × 9 cm a +18 cm). Para abrir la guardia, el pivote gira 65° hacia la izquierda. Desde la cámara, la barra
+  ámbar gruesa y recta delante de la cabeza lo hace inconfundible.
 
 ### 3. El saltador (Leaper)
 
@@ -128,6 +147,13 @@ horda.
   horda, y les explota a los demás.
 - **El auto-apuntado**, si lo mata a 7,5 m, lo hace explotar lejos y limpia gratis a los que venían pegados a él.
 - **El hielo** estira la cuenta antes de explotar de 0,75 s a 1,1 s.
+- **Contra el jefe** la explosión le saca el **4 %** de su vida máxima, no el 35 % (Argon, después de la auditoría).
+- **Respeta el −25 % del chamán**: al potenciado le saca el 26,25 %.
+- **Lo que mata paga entero**: puntos, monedas, PODER, misiones, bestiario, combo y vampiro, como si lo hubiera matado el
+  jugador.
+- **En cadena:** un hinchado alcanzado por otra explosión (que lo deja en 0, o que lo pilla con menos del 35 %) entra en
+  su cuenta de 0,75 s y estalla también. El que ya se está inflando ignora las otras explosiones (para que no haya
+  bucles).
 
 ### 5. El chamán (Totem Bearer)
 
@@ -163,6 +189,18 @@ Lo que se decidió al hacer el chamán, que Argon no dijo:
   el jugador), mientras ese lugar quede entre 5,5 y 9 m del jugador; más cerca, el tanque lo llevaría a sus pies, y ahí
   se queda donde está. El blindado, si es pesado, va a contar solo.
 - **El cristal y las marcas miden 22-24 cm**, no 14: a 40 px un cubo de 14 cm era un punto.
+
+## Lo que decidió Argon después de la auditoría (18/10)
+
+La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a Argon:
+
+1. **El bono del chamán no pasa de 11 m/s** (el jugador corre a 11,5 y siempre se tiene que poder escapar corriendo
+   derecho; con ×1,25 el veloz llegaba a 13,1). El normal y el tanque llevan el +25 % entero. Hecho.
+2. **El charco del escupidor** cuenta para la perfecta y el INTOCABLE, no gasta el escudo y no sacude. Hecho.
+3. **El escupidor** se acerca a 6,5 m al final de la oleada, y como mucho son 2 desde la 31. Hecho. La simulación, con
+   el blindado y el hinchado (ver arriba).
+4. **El blindado y el hinchado**: lo de sus secciones (qué atraviesa el escudo, el 4 % al jefe, la cadena).
+5. **Cómo se arma el blindado**: en su sección, con la hoja de Nano Banana.
 
 ## Lo que hay que resolver en el código (de Claude)
 
