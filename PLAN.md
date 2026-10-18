@@ -382,6 +382,55 @@ con lo que el juego ya decidió.
   mejoras a cero.
 - **Para decidir al hacerlo**: Argon pone el renacer en el hito del 30, y este plan lo destapaba al llegar a la oleada 30.
 
+## 8. La ronda de ideas del 18/10 (Argon y cinco agentes)
+
+Ivan: "hay que pensar de qué podrían servir los niveles, otro sistema de tiro, no sé, preguntale a Argon". Se le preguntó
+a Argon (Gemini en el razonamiento máximo, en el chat del análisis de diseño) y, a la vez, cinco agentes leyeron el
+código y buscaron qué hace el género, cada uno con un ángulo: los niveles, el tiro, el mercado, la variedad dentro de la
+partida y volver cada día. Después Argon decidió con todo junto. Esto es su plan, **para que lo decida Ivan**.
+
+**Lo que dijeron todos:** el nivel tiene que dar opciones, no poder (lo que suma poder corre el muro de las oleadas 48 /
+59 / 69, que costó tres simulaciones); los zombis comunes hacen todos lo mismo (caminar derecho y pegar), y de la oleada
+10 a la 60 la mezcla no cambia; y las cartas piden combinaciones, como las evoluciones de Vampire Survivors.
+
+**Los dos choques, resueltos por Argon:**
+
+- **Armas que se eligen antes de jugar: no.** Argon las proponía primero (con el daño alto ya no se ve ninguna otra
+  arma), pero dos agentes mostraron que el arma es el tramo del daño (`GunController.TramoDelArma`), que todas tienen el
+  mismo daño por segundo y que el festejo de ¡ARMA NUEVA! en plena partida es el subidón del juego. El arma sigue atada
+  al daño, y la variedad de tiro la dan las armas temporales de la caja (abajo).
+- **Clases con el mismo muñeco: sí.** Argon dijo que no a personajes, pero por los modelos y las animaciones nuevas. El
+  mismo muñeco con otra remera y otra aura, una carta inicial y un más y un menos no cuesta arte.
+
+| versión | qué | por qué (de Argon) |
+|---|---|---|
+| **1.7.0** | las compras (quitar anuncios y el paquete de inicio, ver 5) | la base comercial, para el tráfico de los clips |
+| 1.7.0 | **empezar desde el capítulo alcanzado** (la oleada 1, 11 o 21), con las cartas y las monedas que tocarían a esa altura, y un cartel de ¡CAPÍTULO SUPERADO! cada 10 | baja la sesión a los 8-12 minutos que pide el mercado (GameAnalytics 2025: 8-9 en los mejores; acá, 20-40 cerca del récord y siempre desde la 1); ya estaba en `REVISION.md` como candidato número uno a desinstalación |
+| 1.7.0 | **la tienda y el mazo se destapan por nivel**: la granada en el 3, el bate en el 8, la furia en el 12; seis cartas de reglas entre el 2 y el 15; un cambio de cartas (reroll) por partida en el 10 | cada nivel trae algo jugable y la primera partida tiene menos ruido |
+| 1.7.0 | **el cofre de patrulla**: se llena solo hasta 8 h y se cobra con x2 por video (o sin video con quitar anuncios); reemplaza al botón de video cada 10 minutos | el hábito de abrir el juego dos veces por día, y algo más que da quitar anuncios |
+| 1.7.0 | **notificaciones locales** (la racha, las misiones y el cofre lleno; el permiso, después de la primera partida) y un **escudo de racha** que se gana y nunca se vende | lo más barato para que vuelvan al otro día |
+| **1.7.5** | **el escupidor**: un zombi que se queda a 10 m, avisa con una línea en el piso y tira ácido que deja un charco | queda fuera de los 7,5 m del auto-apuntado: obliga a moverse y a usar el joystick; recicla el aviso del jefe |
+| 1.7.5 | **armas temporales en la caja de arma**: 10 s de minigun (cadencia ×4), cohetes (la explosiva), lanzallamas (corto y quema) o láser (perfora, rapidísimo), en vez de las 1.000 balas y la cadencia ×3 | variedad de tiro sin tocar el tramo, armada con lo que ya hacen las cartas |
+| 1.7.5 | **cinco evoluciones de cartas**: dos cartas compatibles al tope destraban una dorada (explosiva + quemadura = napalm, perforante + hielo, dron + cadencia = enjambre, escudo + furia larga, doble + atrás) | el momento de descubrir una combinación, sin subir el techo de ~27 cartas por partida |
+| 1.7.5 | **eventos sorpresa de oleada**, cada 6-7: solo veloces, doble tesoro, lluvia de cajas | rompen la meseta entre jefes, sin arte nuevo |
+| 1.7.5 | **compartir la partida** en la derrota: una tarjeta con la oleada, el arma y las cartas, y un código (la semilla) para que un amigo juegue la misma | promoción orgánica por WhatsApp y Discord |
+| **1.8.0** | el renacer (ver 2) y el camino de nivel con sus cosméticos (ver 7) | el juego largo |
+| 1.8.0 | **tres clases** en los niveles 10, 20 y 30 (pirómano, ingeniero, el del bate) | otros arranques para el que ya domina el de siempre |
+| 1.8.0 | **un jefe por capítulo** (el mismo modelo con otro color y escala, y sus ataques repartidos) | la identidad de cada capítulo |
+
+**Lo que Argon descarta:** las armas elegibles (arriba); **la oleada del día** con su tabla (compite con las misiones y
+el desafío semanal y pide otra interfaz: queda solo la semilla en la tarjeta para compartir); **el tiro de descarga** que
+él mismo proponía al soltar el joystick (con el bate, la granada, la furia, las evoluciones y las armas de la caja ya
+alcanza); **el zombi explosivo** (el escupidor hace lo mismo y además saca del auto-apuntado); el cooperativo, disparar
+solo quieto (como Archero: con los veloces, frenarse es morir) y los personajes con modelos propios.
+
+**Lo que vio de la 1.6.1:** las cuatro decisiones del bate, bien ("no cambies ninguna"); y con el barrido de las balas el
+jugador pega un 20-30 % más con el revólver y el rifle: no tocar los números todavía, pero mirarlo si llegan más lejos.
+
+**Para decidir Ivan:** si va todo esto, y sobre todo cuatro cosas que cambian lo que él pidió o lo que ya está: empezar
+desde el capítulo; que el cofre reemplace al botón de video cada 10 minutos (lo pidió él el 10/10); que la granada, el
+bate y la furia se destapen por nivel; y que la 1.7.0 crezca de las compras solas (~3 días) a unas dos semanas.
+
 ## Orden propuesto
 
 | cuándo | qué | versión |
