@@ -266,10 +266,75 @@ public class BulletController : MonoBehaviour
     // y el chorro queda parejo en vez de amontonado en la boca del arma.
     public void Adelantar(float segundos)
     {
-        if (!(segundos > 0f)) return;
+        if (!(segundos > 0f) || !enUso) return;
 
-        transform.Translate(Vector3.forward * velocidad * segundos);
+        float paso = velocidad * segundos;
+        if (Barrer(paso)) return;
+        transform.Translate(Vector3.forward * paso);
         lifeTime -= segundos;
+    }
+
+    // La bala no tiene Rigidbody y se mueve a saltos, uno por cuadro: lo que hay en el medio de dos
+    // saltos la fisica no lo ve. A 30 cuadros por segundo el rifle (35 m/s) salta 1,17 m, mas que
+    // el ancho de un zombi, y a veces lo atravesaba sin tocarlo; la pistola, a 8 m, erraba un tiro
+    // de cada tres (PruebaImpactos). Por eso, antes de cada salto, se barre el tramo con la caja de
+    // la bala: lo que toca en el camino lo toca de verdad, en orden, y la que no perfora se queda
+    // en el primero. Los choques de la fisica siguen: lo que ya toco no cuenta dos veces (tocados).
+    // Devuelve si la bala se gasto en el camino.
+    private static readonly RaycastHit[] enElCamino = new RaycastHit[16];
+    private static int capasQueToca = -1;
+    private static int capaDeLaMascara = -1;
+
+    private bool Barrer(float distancia)
+    {
+        if (!enUso || caja == null || !(distancia > 0f)) return !enUso;
+        if (capaDeLaMascara != gameObject.layer)
+        {
+            // Lo que la bala toca segun la matriz de fisica del proyecto (no al jugador).
+            capaDeLaMascara = gameObject.layer;
+            capasQueToca = 0;
+            for (int i = 0; i < 32; i++)
+                if (!Physics.GetIgnoreLayerCollision(capaDeLaMascara, i)) capasQueToca |= 1 << i;
+        }
+        Vector3 escala = transform.lossyScale;
+        Vector3 mitad = Vector3.Scale(caja.size, new Vector3(Mathf.Abs(escala.x), Mathf.Abs(escala.y), Mathf.Abs(escala.z))) * 0.5f;
+        Vector3 centro = transform.TransformPoint(caja.center);
+        int n = Physics.BoxCastNonAlloc(centro, mitad, transform.forward, enElCamino, transform.rotation, distancia,
+                                        capasQueToca, QueryTriggerInteraction.Ignore);
+        // En orden, del mas cercano al mas lejano (NonAlloc no los ordena).
+        for (int i = 1; i < n; i++)
+        {
+            var esta = enElCamino[i];
+            int j = i - 1;
+            while (j >= 0 && enElCamino[j].distance > esta.distance)
+            {
+                enElCamino[j + 1] = enElCamino[j];
+                j--;
+            }
+            enElCamino[j + 1] = esta;
+        }
+        for (int i = 0; i < n && enUso; i++)
+            if (enElCamino[i].collider != null) Pegar(enElCamino[i].collider.gameObject);
+        return !enUso;
+    }
+
+    // Al salir: lo que esta entre el cuerpo de quien tira y la boca del arma. Con un zombi pegado,
+    // la boca del rifle (y la de la de energia) queda del otro lado de el, y la bala nacia ahi y
+    // seguia de largo: a quemarropa el rifle no pegaba nunca. 'cuerpo' es el centro del que tira;
+    // se barre a lo largo del tiro, desde donde la recta del tiro pasa a su altura hasta la boca.
+    public void BarrerDesde(Vector3 cuerpo)
+    {
+        if (!enUso) return;
+        Vector3 adelante = transform.forward;
+        adelante.y = 0f;
+        Vector3 hastaLaBoca = transform.position - cuerpo;
+        hastaLaBoca.y = 0f;
+        float atras = adelante.sqrMagnitude > 1e-6f ? Vector3.Dot(hastaLaBoca, adelante.normalized) : 0f;
+        if (!(atras > 0.01f)) return;
+        Vector3 boca = transform.position;
+        transform.position = boca - transform.forward * atras;
+        bool gastada = Barrer(atras);
+        if (!gastada) transform.position = boca;
     }
 
     private void Devolver()
@@ -287,6 +352,7 @@ public class BulletController : MonoBehaviour
     void Update()
     {
         float paso = velocidad * Time.deltaTime;
+        if (Barrer(paso)) return;
         transform.Translate(Vector3.forward * paso);
 
         // La critica deja una estela de chispas (de las de la escena, con un techo por cuadro).

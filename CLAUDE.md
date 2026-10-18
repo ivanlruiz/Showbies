@@ -311,10 +311,16 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
    balas salían a un rumbo fijo mientras el muñeco apuntaba bien** (lo vio Ivan en los clips para redes; con el
    joystick al este, la pistola tiraba al norte). **ShowBies > Pruebas > Impactos de cerca (play, 30 fps)**
    (`PruebaImpactos`) lo mide: un zombi quieto a 0,4–8 m, un segundo de fuego por el joystick con cada arma, y que de
-   0,7 a 5 m le llegue al menos la mitad (`Builds/prueba_impactos_30.txt`). Quedan dos cosas sin arreglar que el banco
-   muestra: a quemarropa (0,4 m) el rifle no pega y la energía la mitad, y a 30 cuadros por segundo el rifle (1,17 m por
-   cuadro, más que el ancho de un zombi) a veces lo atraviesa sin tocarlo.
-3. `BulletController.Update` se mueve con `transform.Translate` y descuenta `lifeTime`.
+   0,4 a 5 m le llegue al menos el 80 % (`Builds/prueba_impactos_30.txt`, y `_60` a 60).
+3. `BulletController.Update` **barre el tramo antes de moverse** (`Barrer`: un `BoxCast` con la caja de la bala, contra
+   las capas que la bala toca en la matriz de física, y lo que encuentra lo toca en orden, como un choque), después se
+   mueve con `transform.Translate` y descuenta `lifeTime`. La bala se mueve a saltos, uno por cuadro, y la física no ve
+   lo del medio: a 30 cuadros por segundo el rifle (35 m/s) salta 1,17 m, más que el ancho de un zombi, y lo
+   atravesaba; el revólver erraba uno de cada cuatro tiros y la pistola, a 8 m, uno de cada tres. **Al salir, además,
+   barre desde el cuerpo del que tira hasta la boca** (`BarrerDesde`, desde `GunController.SacarBala` en las balas del
+   tiro; las del dron no): con un zombi pegado, la boca del rifle queda del otro lado de él, y a quemarropa no pegaba
+   nunca. Hasta el 18/10 no había barrido; ahora todas pegan el 100 % de 0,4 a 5 m, a 30 y a 60 cuadros. Los choques
+   de la física siguen, y lo que ya tocó no cuenta dos veces (`tocados`).
 4. Al vencer el tiempo o al chocar, la bala **se apaga y vuelve al pool**, no se destruye.
 
 **Nunca hagas `Instantiate`/`Destroy` de balas directo.** El pool convierte 500 disparos en 49 objetos.

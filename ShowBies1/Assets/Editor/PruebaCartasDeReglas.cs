@@ -308,7 +308,9 @@ public static class PruebaCartasDeReglas
                 {
                     Vector3 f = b.transform.forward;
                     f.y = 0f;
-                    angulos.Add(Vector3.SignedAngle(frente, f, Vector3.up));
+                    // Para atras da -180 o 180 segun el redondeo: va primera siempre.
+                    float girado = Vector3.SignedAngle(frente, f, Vector3.up);
+                    angulos.Add(Mathf.Abs(girado) > 179f ? -180f : girado);
                 }
                 angulos.Sort();
                 notas.AppendLine("Disparo doble y hacia atras: " + nuevas.Count + " balas, a " + string.Join(", ", angulos.ConvertAll(a => a.ToString("0.#"))) + " grados");
@@ -326,7 +328,9 @@ public static class PruebaCartasDeReglas
                 {
                     Vector3 f = b.transform.forward;
                     f.y = 0f;
-                    angulos.Add(Vector3.SignedAngle(frente, f, Vector3.up));
+                    // Para atras da -180 o 180 segun el redondeo: va primera siempre.
+                    float girado = Vector3.SignedAngle(frente, f, Vector3.up);
+                    angulos.Add(Mathf.Abs(girado) > 179f ? -180f : girado);
                 }
                 angulos.Sort();
                 Anotar(angulos.Count == 3 && Mathf.Abs(angulos[0] + 8f) < 0.5f && Mathf.Abs(angulos[1]) < 0.5f && Mathf.Abs(angulos[2] - 8f) < 0.5f,

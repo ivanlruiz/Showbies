@@ -370,6 +370,10 @@ public class GunController : MonoBehaviour
         TirosDisparados++;
         Vector3 salida = boca != null ? boca.position : firePoint.position;
         UltimaSalida = salida;
+        // Las balas de este tiro barren desde el cuerpo hasta la boca (BulletController.BarrerDesde):
+        // las del dron, que salen de el, no.
+        cuerpoDelTiro = player != null ? player.transform.position : transform.position;
+        tiroDelCuerpo = true;
 
         // PlayOneShot y no Play: Play reinicia el mismo sonido, y a esta
         // cadencia lo cortaba en cada tiro antes de que llegara a oirse. El
@@ -434,7 +438,11 @@ public class GunController : MonoBehaviour
         for (int i = 0; i < PoderDeLaPartida.BalasAtras; i++)
             SacarBala(salida, Quaternion.AngleAxis(180f, Vector3.up) * rumbo, atraso, critico, arma, compensacion,
                       Proyectiles.SinLuz, arma == Proyectiles.Escopeta ? Proyectiles.GordoDeAtras : 1f);
+        tiroDelCuerpo = false;
     }
+
+    private Vector3 cuerpoDelTiro;
+    private bool tiroDelCuerpo;
 
     // La ultima bala que salio (las pruebas y el abanico).
     public BulletController UltimaBala { get; private set; }
@@ -470,6 +478,8 @@ public class GunController : MonoBehaviour
         nueva.quemaduraPorSegundo = quema > 0f && Random.value < quema ? nueva.danoAplicado * PoderDeLaPartida.QuemaduraPorSegundo : 0f;
         // El color, del daño del tiro entero (con la furia sube un tramo), no del perdigon.
         nueva.Vestir(DanoPorTiro, critico, arma, Proyectiles.LlevaLuz(arma, perdigon), escala);
+        // Despues de vestirla, que le da el tamaño a la caja con que barre.
+        if (tiroDelCuerpo) nueva.BarrerDesde(cuerpoDelTiro);
         nueva.Adelantar(atraso);
         UltimaBala = nueva;
         return nueva;

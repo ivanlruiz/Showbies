@@ -244,14 +244,17 @@ public static class PruebaImpactos
                                + "  " + (esperado > 0f ? f[3] / esperado : 0f).ToString("0.00").PadLeft(20) + "  " + f[5].ToString("0.0") + " m");
         }
         // Lo que se exige: con cada arma que no reparte (la escopeta abre en abanico y empuja al zombi
-        // con sus perdigones), de 0,7 a 5 m, que le llegue al menos la mitad de lo tirado. Con el rumbo
-        // viejo del cuerpo (antes del 16/10) la pistola, primera en la sesion, no le pegaba nada.
+        // con sus perdigones), de 0,4 a 5 m, que le llegue al menos el 80 % de lo tirado (el revolver
+        // pasa de 1: cada bala lleva la compensacion de su cadencia). Con el rumbo viejo del cuerpo
+        // (antes del 16/10) la pistola, primera en la sesion, no le pegaba nada; y hasta el 18/10, sin
+        // el barrido de la bala (BulletController.Barrer), a quemarropa el rifle no pegaba nunca y el
+        // revolver erraba uno de cada cuatro. A 8 m las lentas no llegan todas antes de medir.
         int fallas = 0;
         foreach (var f in filas)
         {
-            if ((int)f[0] == 2 || f[1] < 0.69f || f[1] > 5.01f) continue;
+            if ((int)f[0] == 2 || f[1] < 0.39f || f[1] > 5.01f) continue;
             float esperado = f[2] * f[4];
-            if (esperado <= 0f || f[3] / esperado < 0.5f)
+            if (esperado <= 0f || f[3] / esperado < 0.8f)
             {
                 fallas++;
                 informe.AppendLine("FALLA: " + NombreDelArma[(int)f[0]] + " a " + f[1].ToString("0.0") + " m le llega " + (esperado > 0f ? f[3] / esperado : 0f).ToString("0.00"));
