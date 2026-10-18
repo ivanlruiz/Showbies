@@ -6487,6 +6487,21 @@ public static class PruebasMejoras
             inf.Verdadero("saltador: pega una sola vez por salto (el intervalo de golpe es mas largo que el salto)",
                           new SerializedObject(prefab.GetComponent<EnemyController>()).FindProperty("intervaloDeGolpe").floatValue > saltador.duracionDelSalto);
             inf.Verdadero("saltador: el bate lo empuja (liviano)", EnemyController.Ceder(prefab.GetComponent<Rigidbody>().mass) >= 0.5f);
+
+            // Halloween: la calabaza esconde todo lo que cuelga de la cabeza, y con eso los ojos y las crestas.
+            var vista = UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+            try
+            {
+                var copia = (GameObject)PrefabUtility.InstantiatePrefab(prefab, vista);
+                bool sinDisfraz = Disfraces.Vestir(copia, false, 0f) == null && Disfraces.Vestir(copia, true, 0.5f) == null;
+                foreach (var t in copia.GetComponentsInChildren<Transform>(true))
+                    if (t.name.StartsWith("Ojo") || t.name.StartsWith("Cresta")) sinDisfraz &= t.GetComponent<Renderer>().enabled;
+                inf.Verdadero("saltador: en Halloween va sin disfraz, con los ojos y las crestas a la vista", sinDisfraz);
+            }
+            finally
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(vista);
+            }
         }
 
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>

@@ -53,6 +53,9 @@ public static class Disfraces
     public static GameObject Vestir(GameObject zombi, bool jefe, float azar)
     {
         if (zombi == null) return null;
+        // El saltador se lee por los ojos y las crestas, que cuelgan de la cabeza: la calabaza los esconderia con ella y
+        // el sombrero los taparia. Va sin disfraz.
+        if (zombi.GetComponent<ZombiSaltador>() != null) return null;
         var cabeza = Cabeza(zombi.transform);
         if (cabeza == null || cabeza.Find(NombreDelDisfraz) != null) return null;
 

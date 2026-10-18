@@ -1121,6 +1121,8 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   para pegarle. Recarga 5 s, contados desde que salta. El bate, mientras se agacha o en el aire, le corta el salto y lo
   empuja (y la recarga queda a la mitad); también lo corta la derrota, que si no lo dejaba congelado en el aire. Congelado
   salta 3,2 m y se recupera el doble. Al saltar suena el silbido del bate, más agudo (`Efectos.SaltoDelSaltador`).
+  **En Halloween va sin disfraz** (`Disfraces.Vestir`): la cabeza de calabaza esconde todo lo que cuelga de la cabeza, y
+  con eso los ojos y las crestas.
 - **ShowBies > Pruebas > Saltador (play)** (`PruebaSaltador`): que se agache a 6 m con la franja apuntando al jugador y
   sin zarpazos, que salte al terminar el aviso, a 14 m/s, y le pegue una vez ×1,2 al que se queda, que se recupere quieto
   y sin zarpazos, la recarga, que al que sale de la franja no le pegue y que salte el largo entero, el bate y el hielo
@@ -1784,7 +1786,7 @@ para siempre.
 - **Los disfraces** (`Disfraces`) cuelgan del hueso de la cabeza (`Bip001 Head`, buscado por nombre: el menú los viste
   antes de prenderlos, con el Animator sin arrancar): de cada diez zombis, tres con **cabeza de calabaza** (la cabeza del
   zombi se esconde, que es una malla rígida colgada del hueso) y tres con **sombrero de bruja**; el jefe, siempre con
-  sombrero. Cada prefab trae en su raíz la posición, el giro y la escala respecto del hueso, que el constructor mide
+  sombrero, y el saltador, nunca (se lee por lo que le cuelga de la cabeza). Cada prefab trae en su raíz la posición, el giro y la escala respecto del hueso, que el constructor mide
   sobre el modelo (los vértices que mueve la cabeza): los cinco zombis usan el mismo modelo con otra escala. Se visten
   después de `BuscarElModelo` (un sombrero agrandaría `altoDelModelo`, y con él las poses del jefe) y antes del destello.
 - **Las calabazas** (`DecoradoHalloween`): la grande es un farol, con la cara tallada que brilla hacia la cámara, su halo
