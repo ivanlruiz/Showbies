@@ -269,6 +269,7 @@ public static class PruebasMejoras
                     ProbarFlechasDelBorde(informe);
                     ProbarJoystickDinamico(informe);
                     ProbarBate(informe);
+                    ProbarZombisNuevos(informe);
                     ProbarZombiDelTesoro(informe);
                     ProbarBestiario(informe);
                     ProbarNivelDelJugador(informe);
@@ -6365,6 +6366,79 @@ public static class PruebasMejoras
                 inf.Verdadero("bate: en " + nombre + " queda del lado derecho de la pantalla", 0.9f * 1920f + boton.xMin > 960f);
             });
         }
+    }
+
+    // Los zombis con habilidad (ZOMBIS.md, de Argon): el tope por tipo y de especiales en la mezcla, y el escupidor (lo
+    // que decide, su arco, su charco, su asset, su prefab y su lugar en WaveMode). Lo de verdad lo mira PruebaEscupidor.
+    static void ProbarZombisNuevos(Informe inf)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaEscupidor);
+        var tipo = new TipoEnOleada { prefab = prefab, desdeOleada = 12, peso = 0.15f, maxVivos = 3, especial = true };
+        inf.Verdadero("zombis nuevos: sale desde su oleada", WaveManager.Elegible(tipo, 12, 0, 0) && !WaveManager.Elegible(tipo, 11, 0, 0));
+        inf.Verdadero("zombis nuevos: con su tope de vivos no sale", !WaveManager.Elegible(tipo, 20, 3, 3) && WaveManager.Elegible(tipo, 20, 2, 2));
+        inf.Verdadero("zombis nuevos: con " + WaveManager.MaxEspecialesVivos + " especiales vivos no sale ninguno",
+                      !WaveManager.Elegible(tipo, 20, 0, WaveManager.MaxEspecialesVivos) && WaveManager.Elegible(tipo, 20, 0, WaveManager.MaxEspecialesVivos - 1));
+        var conFin = new TipoEnOleada { prefab = prefab, desdeOleada = 15, hastaOleada = 20, peso = 0.15f };
+        inf.Verdadero("zombis nuevos: con su ultima oleada, despues descansa", WaveManager.Elegible(conFin, 20, 0, 0) && !WaveManager.Elegible(conFin, 21, 0, 0));
+        var comun = new TipoEnOleada { prefab = prefab, desdeOleada = 1, peso = 1f };
+        inf.Verdadero("zombis nuevos: los comunes no miran el tope de especiales", WaveManager.Elegible(comun, 5, 50, 99));
+
+        // Lo que decide: lejos se acerca, a 9,5 se planta (con medio metro de margen para no temblar).
+        var E = ZombiEscupidor.Estado.Acercandose;
+        var P = ZombiEscupidor.Estado.Plantado;
+        inf.Verdadero("escupidor: lejos se acerca, a 9,5 m se planta",
+                      ZombiEscupidor.QueHacer(12f, E, 9.5f) == E && ZombiEscupidor.QueHacer(9.4f, E, 9.5f) == P
+                      && ZombiEscupidor.QueHacer(9.4f, ZombiEscupidor.Estado.Rodeando, 9.5f) == P);
+        inf.Verdadero("escupidor: plantado no se mueve por medio metro", ZombiEscupidor.QueHacer(9.9f, P, 9.5f) == P && ZombiEscupidor.QueHacer(10.1f, P, 9.5f) == E);
+        inf.Verdadero("escupidor: se planta adentro de la pantalla y lejos del HUD de arriba",
+                      ZombiEscupidor.SeVeEn(new Vector3(0.5f, 0.5f, 5f)) && !ZombiEscupidor.SeVeEn(new Vector3(0.5f, 0.9f, 5f))
+                      && !ZombiEscupidor.SeVeEn(new Vector3(0.98f, 0.5f, 5f)) && !ZombiEscupidor.SeVeEn(new Vector3(0.5f, 0.5f, -1f)));
+
+        // El globo y el charco.
+        Vector3 a = new Vector3(0f, 1f, 0f), b = new Vector3(10f, 0.2f, 0f);
+        inf.Verdadero("escupidor: el globo sale de la boca y cae donde marco",
+                      (AcidoDelEscupidor.EnElArco(a, b, 1.6f, 0f) - a).sqrMagnitude < 1e-6f && (AcidoDelEscupidor.EnElArco(a, b, 1.6f, 1f) - b).sqrMagnitude < 1e-6f);
+        inf.Cerca("escupidor: en el medio del vuelo va 1,6 m por encima de la recta", 0.6 + 1.6, AcidoDelEscupidor.EnElArco(a, b, 1.6f, 0.5f).y, 1e-5);
+        inf.Verdadero("escupidor: el charco pega adentro, pasada la gracia y antes de secarse",
+                      AcidoDelEscupidor.Pega(1f, 1.1f, 10.3f, 10f, 0.25f, 4f) && !AcidoDelEscupidor.Pega(1f, 1.1f, 10.2f, 10f, 0.25f, 4f)
+                      && !AcidoDelEscupidor.Pega(1.2f, 1.1f, 11f, 10f, 0.25f, 4f) && !AcidoDelEscupidor.Pega(0.5f, 1.1f, 14.1f, 10f, 0.25f, 4f));
+
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(ConstructorZombis.RutaEnemigoEscupidor);
+        if (inf.Verdadero("escupidor: esta su Enemy", enemigo != null))
+        {
+            inf.Verdadero("escupidor: vida x1,8 del normal, velocidad x0,95, 8 puntos, monedas x3 y 2 de PODER (" + enemigo.hp + ", " + enemigo.velocidad + ", "
+                          + enemigo.puntos + ", " + enemigo.monedasMin + "-" + enemigo.monedasMax + ", " + enemigo.experiencia + ")",
+                          enemigo.hp == 9 && Mathf.Approximately(enemigo.velocidad, 4.75f) && enemigo.puntos == 8 && enemigo.monedasMin == 5
+                          && enemigo.monedasMax == 7 && enemigo.experiencia == 2 && enemigo.daño == 1);
+        }
+        var escupidor = prefab != null ? prefab.GetComponent<ZombiEscupidor>() : null;
+        if (inf.Verdadero("escupidor: esta su prefab, con su componente", escupidor != null && prefab.GetComponent<EnemyController>().enemyType == enemigo))
+        {
+            inf.Verdadero("escupidor: con la linea de aviso, el charco y el acido", escupidor.materialAviso != null && escupidor.materialCharco != null
+                          && escupidor.materialCharco.shader.name == "ShowBies/CharcoDeLuz" && escupidor.materialAcido != null);
+            bool sacos = escupidor.sacos != null && escupidor.sacos.Length == 2;
+            if (sacos)
+                foreach (var saco in escupidor.sacos)
+                    sacos &= saco != null && saco.GetComponent<Renderer>() != null && saco.GetComponent<Collider>() == null;
+            inf.Verdadero("escupidor: los dos sacos de acido, sin collider", sacos);
+            inf.Verdadero("escupidor: el bate lo empuja (liviano, y no es el jefe ni el tesoro)",
+                          EnemyController.Ceder(prefab.GetComponent<Rigidbody>().mass) >= 0.5f && prefab.GetComponent<JefePatrones>() == null && prefab.GetComponent<ZombiDelTesoro>() == null);
+            inf.Verdadero("escupidor: escupe cada 3,5 s (5 congelado), con 0,65 s de aviso, y el charco dura 4 s y pega la mitad",
+                          Mathf.Approximately(escupidor.cadaCuanto, 3.5f) && Mathf.Approximately(escupidor.cadaCuantoCongelado, 5f) && Mathf.Approximately(escupidor.aviso, 0.65f)
+                          && Mathf.Approximately(escupidor.duracionDelCharco, 4f) && Mathf.Approximately(escupidor.parteDelGolpe, 0.5f)
+                          && Mathf.Approximately(escupidor.distanciaParaPlantarse, 9.5f) && escupidor.distanciaParaPlantarse > PlayerJS.AlcanceAutoApuntar);
+        }
+
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            TipoEnOleada suyo = null;
+            if (oleadas != null && oleadas.tipos != null)
+                foreach (var t in oleadas.tipos) if (t != null && t.prefab == prefab) suyo = t;
+            inf.Verdadero("escupidor: WaveMode lo saca desde la oleada 12, el cementerio (peso 0,15, como mucho 3, especial)",
+                          suyo != null && suyo.desdeOleada == ConstructorZombis.EscupidorDesde && ConstructorZombis.EscupidorDesde == 12
+                          && Mathf.Approximately(suyo.peso, 0.15f) && suyo.maxVivos == 3 && suyo.especial && suyo.hastaOleada == 0);
+        });
     }
 
     static bool RecibeToques(GameObject go)

@@ -10,7 +10,13 @@ public class TipoEnOleada
 {
     public GameObject prefab;
     public int desdeOleada = 1;
+    [Tooltip("La ultima oleada en que sale; 0 sin fin. Para que un tipo descanse un capitulo, va dos veces (ZOMBIS.md).")]
+    public int hastaOleada;
     public float peso = 1f;
+    [Tooltip("Cuantos vivos a la vez como mucho; 0 sin tope.")]
+    public int maxVivos;
+    [Tooltip("Los de habilidad (ZOMBIS.md): entre todos, como mucho WaveManager.MaxEspecialesVivos a la vez.")]
+    public bool especial;
 }
 
 // Oleadas de verdad: cada una termina cuando mueren todos sus zombis, y antes de
@@ -401,19 +407,37 @@ public class WaveManager : MonoBehaviour
         monedasDelBono.MonedasVolando(cartelOleada.rectTransform, contador.Rect, cantidad, Efectos.MonedaDelBono);
     }
 
+    // Los zombis con habilidad (ZOMBIS.md, de Argon): cada tipo tiene su tope de vivos, y entre todos no pasan de 8 a
+    // la vez, asi de los 35 del telefono siempre quedan al menos 27 comunes haciendo bulto.
+    public const int MaxEspecialesVivos = 8;
+
+    // Si ese tipo puede salir ahora. Estatico para probarlo sin escena.
+    public static bool Elegible(TipoEnOleada tipo, int oleada, int vivosDelTipo, int especialesVivos)
+    {
+        if (tipo == null || tipo.prefab == null || oleada < tipo.desdeOleada || !(tipo.peso > 0f)) return false;
+        if (tipo.hastaOleada > 0 && oleada > tipo.hastaOleada) return false;
+        if (tipo.maxVivos > 0 && vivosDelTipo >= tipo.maxVivos) return false;
+        if (tipo.especial && especialesVivos >= MaxEspecialesVivos) return false;
+        return true;
+    }
+
     private GameObject ElegirTipo()
     {
+        int especiales = 0;
+        foreach (var tipo in tipos)
+            if (tipo != null && tipo.especial) especiales += EnemyController.VivosDe(tipo.prefab);
+
         float total = 0f;
         foreach (var tipo in tipos)
         {
-            if (tipo.prefab != null && OleadaActual >= tipo.desdeOleada) total += tipo.peso;
+            if (Elegible(tipo, OleadaActual, EnemyController.VivosDe(tipo != null ? tipo.prefab : null), especiales)) total += tipo.peso;
         }
         if (total <= 0f) return null;
 
         float sorteo = Random.value * total;
         foreach (var tipo in tipos)
         {
-            if (tipo.prefab == null || OleadaActual < tipo.desdeOleada) continue;
+            if (!Elegible(tipo, OleadaActual, EnemyController.VivosDe(tipo != null ? tipo.prefab : null), especiales)) continue;
             sorteo -= tipo.peso;
             if (sorteo <= 0f) return tipo.prefab;
         }

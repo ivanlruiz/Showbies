@@ -392,6 +392,16 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    // Cuantos vivos salieron de ese prefab: WaveManager no saca mas de los que el tipo admite (ZOMBIS.md).
+    public static int VivosDe(GameObject prefab)
+    {
+        if (prefab == null) return 0;
+        int n = 0;
+        for (int i = 0; i < vivos.Count; i++)
+            if (vivos[i] != null && vivos[i].prefabDeOrigen == prefab) n++;
+        return n;
+    }
+
     public static IReadOnlyList<EnemyController> Vivos
     {
         get { return vivos; }
@@ -1465,12 +1475,13 @@ public class EnemyController : MonoBehaviour
     // despedido 'distancia' metros hacia 'direccion' en 'duracion' segundos, frenando, y por la
     // fisica: una pared lo para (Empujar, el del escudo, lo teletransporta). Lo pesado (el tanque)
     // no se mueve, pero se queda quieto 'frenado' segundos, sin perseguir. Al jefe no le hace nada
-    // (es un gigante, como con el escudo), y tampoco al que se mueve por su cuenta: el tesoro huye,
-    // y mandarlo tres metros mas lejos era ayudarlo. Corta el zarpazo que venia tirando: el que
-    // levantaba el brazo no lo baja. El daño lo pone Bate antes, por DanoZombi.
+    // (es un gigante, como con el escudo), y tampoco al tesoro: huye, y mandarlo tres metros mas
+    // lejos era ayudarlo. A los nuevos que se mueven por su cuenta (el escupidor) si: el empujon
+    // corre antes que su movimiento. Corta el zarpazo que venia tirando: el que levantaba el brazo
+    // no lo baja. El daño lo pone Bate antes, por DanoZombi.
     public ReaccionAlBatazo RecibirBatazo(Vector3 direccion, float distancia, float duracion, float frenado)
     {
-        if (!enUso || estaMuerto || EsJefe || movimientoPropio != null) return ReaccionAlBatazo.Nada;
+        if (!enUso || estaMuerto || EsJefe || movimientoPropio is JefePatrones || tesoro != null) return ReaccionAlBatazo.Nada;
         CortarZarpazo();
         if (Ceder(rb.mass) >= 0.5f)
         {

@@ -29,13 +29,15 @@ public static class FotosDeLaHorda
     const int Ancho = 1920, Alto = 1080;
     const int Recorte = 220;   // el cuadrado de cada zombi, en pixeles de la foto
 
-    static readonly string[] Zombis = { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS" };
+    static readonly string[] Zombis = { "Zombi", "ZombiRapido", "ZombiFASTER", "ZombiTanque", "ZombiBOSS", "ZombiEscupidor" };
 
     // Donde corre cada uno, alrededor del jugador (en el centro), dentro de cuadro.
     static readonly Vector3[] Lugares =
     {
         new Vector3(-7f, 0f, 3f), new Vector3(-3.5f, 0f, -2f), new Vector3(0f, 0f, 5f),
         new Vector3(3.5f, 0f, -2f), new Vector3(7.5f, 0f, 4f),
+        // El escupidor (ZOMBIS.md), al lado del rapido: los dos son verde amarillento.
+        new Vector3(-6.5f, 0f, -1.5f),
     };
 
     [MenuItem("ShowBies/Escenarios/Fotos de la horda de noche")]

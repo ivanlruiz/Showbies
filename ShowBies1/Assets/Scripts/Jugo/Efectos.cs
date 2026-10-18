@@ -578,6 +578,24 @@ public class Efectos : MonoBehaviour
         golpeDelBate = Resources.Load<AudioClip>("Bate/Golpe");
     }
 
+    // El escupidor (ZombiEscupidor): el escupitajo, un pop grave con unas gotas de su color, y el globo al caer, un
+    // golpe sordo con chispas del acido. Sin temblor: con tres escupidores serian tres sacudidas cada pocos segundos.
+    public static void Escupitajo(Vector3 punto, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto, 6, color);
+        Sonidos.Tocar(e.caja, 0.6f, 0.65f, 0.1f, 0.08f, Sonidos.Aparte);
+    }
+
+    public static void CharcoDeAcido(Vector3 punto, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto, 14, color);
+        Sonidos.Tocar(e.golpe, 0.6f, 0.5f, 0.08f, 0.08f, Sonidos.Aparte);
+    }
+
     public static void SilbidoDelBate()
     {
         var e = instance;
