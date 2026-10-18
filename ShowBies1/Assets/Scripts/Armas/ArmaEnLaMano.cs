@@ -62,17 +62,19 @@ public class ArmaEnLaMano : MonoBehaviour
     // --- El arma que cambia con el daño (1.6.0, etapa 3 de las cartas) ----------------------
     //
     // Un arma por tramo del daño (el de GunController.TramoDelArma, sin la furia), como la bala:
-    // pistola, revolver, escopeta, rifle y arma de energia. No son cinco modelos (de la revision
-    // de arte de Gemini, 12/10: a 15 px, desde arriba, un revolver y una pistola son la misma
-    // mancha): es la misma pistola gris con el cañon mas largo (y mas ancho en la escopeta), una
-    // luz del color del tramo encima, y sobre todo el fogonazo y el sonido de cada una. Al subir de
-    // arma en la partida, un festejo con su nombre (Efectos.ArmaNueva); al empezar, no.
+    // pistola, revolver, escopeta, rifle y arma de energia. Desde el 18/10 son cinco modelos, cada
+    // uno con su silueta vista desde arriba, su color y su luz de neon (los diseño Argon a pedido de
+    // Ivan, "que no sean todas iguales"; ver ConstructorArmas). Hasta ahi era la misma pistola gris
+    // con el cañon mas largo, porque en la revision de arte del 12/10 Gemini habia dicho que a 15 px
+    // un revolver y una pistola son la misma mancha: con siluetas exageradas no lo son. Lo que mas
+    // las distingue jugando sigue siendo el fogonazo y el sonido de cada una. Al subir de arma en la
+    // partida, un festejo con su nombre (Efectos.ArmaNueva); al empezar, no.
     public const int Armas = 5;
     public static readonly string[] IdsDeLasArmas = { "arma_pistola", "arma_revolver", "arma_escopeta", "arma_rifle", "arma_energia" };
-    // El cañon, desde el frente de la corredera, y su ancho, en unidades de la mano (la corredera
-    // mide 0,3). La pistola es la de siempre.
-    public static readonly float[] LargoDelCanon = { 0.04f, 0.13f, 0.26f, 0.5f, 0.34f };
-    public static readonly float[] AnchoDelCanon = { 0.045f, 0.05f, 0.095f, 0.04f, 0.065f };
+    // Los hijos del prefab (ConstructorArmas), uno por arma, cada uno con su "LED" y su "Punta".
+    public static readonly string[] ModelosDeLasArmas = { "ModeloPistola", "ModeloRevolver", "ModeloEscopeta", "ModeloRifle", "ModeloEnergia" };
+    // La esfera de la de energia late mas grande con cada tiro.
+    public const float LatidoDelNucleo = 0.2f;
     // El fogonazo de cada una: su largo (por largoDelFogonazo), lo ancho que es, las puntas (0 es
     // un disco), lo que dura, y si es un anillo que crece (la de energia, sin fuego).
     // De la segunda revision de Gemini (12/10): el revolver es un ovalo a lo largo del cañon (1,5
@@ -85,10 +87,6 @@ public class ArmaEnLaMano : MonoBehaviour
     public static readonly float[] DuracionPorArma = { 0.05f, 0.05f, 0.1f, 0.04f, 0.12f };
     public static readonly bool[] AnilloPorArma = { false, false, false, false, true };
     public static readonly float[] GiroPorArma = { -1f, -1f, -1f, Mathf.PI * 0.25f, -1f };
-    // Lo que dice el constructor de la pistola (ConstructorArmas): donde termina la corredera y
-    // a que altura va el cañon.
-    public const float FrenteDeLaCorredera = 0.225f;
-    public const float AlturaDelCanon = 0.075f;
     // El fuego de la pistola es el de siempre; las demas, del color de su bala.
     public static readonly Color FuegoDeLaPistola = new Color(1f, 0.72f, 0.25f);
 
@@ -96,6 +94,8 @@ public class ArmaEnLaMano : MonoBehaviour
     private bool festejoPendiente;
     private MaterialPropertyBlock propiedadesDeLaLuz;
     private Renderer[] lucesDelArma = new Renderer[0];
+    private Transform nucleo;
+    private Vector3 escalaDelNucleo;
     private Color luzPuesta = Color.clear;
     private float latidoDesde = -1f;
 
@@ -124,29 +124,38 @@ public class ArmaEnLaMano : MonoBehaviour
         return BulletController.ColoresPorTramo[Mathf.Clamp(tramo, 0, Armas - 1)];
     }
 
-    // Viste la pistola para un tramo: el largo y el ancho del cañon, la boca en la punta y la luz
-    // de su color. Estatico: lo usan la partida y las fotos (FotosDeLasArmas).
+    // Viste el arma de un tramo: prende su modelo (y apaga los otros), lleva la boca a su punta y
+    // pinta su luz del color del tramo. Estatico: lo usan la partida y las fotos (FotosDeLasArmas).
     public static void VestirArma(Transform pistola, int tramo, MaterialPropertyBlock propiedades)
     {
         if (pistola == null) return;
         tramo = Mathf.Clamp(tramo, 0, Armas - 1);
-        float largo = LargoDelCanon[tramo], ancho = AnchoDelCanon[tramo];
-        var canon = pistola.Find("Canon");
-        if (canon != null)
+        Transform modelo = null;
+        for (int i = 0; i < Armas; i++)
         {
-            // Un cilindro acostado: su alto (2 unidades) va a lo largo del cañon.
-            canon.localPosition = new Vector3(0f, AlturaDelCanon, FrenteDeLaCorredera + largo * 0.5f);
-            canon.localScale = new Vector3(ancho, largo * 0.5f, ancho);
+            var m = pistola.Find(ModelosDeLasArmas[i]);
+            if (m == null) continue;
+            m.gameObject.SetActive(i == tramo);
+            if (i == tramo) modelo = m;
         }
+        if (modelo == null) return;
         var boca = pistola.Find("Boca");
-        if (boca != null) boca.localPosition = new Vector3(0f, AlturaDelCanon, FrenteDeLaCorredera + largo + 0.005f);
-        var luz = pistola.Find("LED");
-        if (luz != null && propiedades != null)
+        var punta = modelo.Find("Punta");
+        if (boca != null && punta != null) boca.localPosition = modelo.localPosition + modelo.localRotation * punta.localPosition;
+        if (propiedades != null)
         {
             propiedades.SetColor(IdColor, ColorDelArma(tramo));
-            foreach (var render in luz.GetComponentsInChildren<Renderer>(true))
+            foreach (var render in LucesDe(pistola, tramo))
                 render.SetPropertyBlock(propiedades);
         }
+    }
+
+    // La luz de neon de un arma: lo que cuelga de su "LED".
+    public static Renderer[] LucesDe(Transform pistola, int tramo)
+    {
+        var modelo = pistola != null ? pistola.Find(ModelosDeLasArmas[Mathf.Clamp(tramo, 0, Armas - 1)]) : null;
+        var led = modelo != null ? modelo.Find("LED") : null;
+        return led != null ? led.GetComponentsInChildren<Renderer>(true) : new Renderer[0];
     }
 
     public Transform Boca { get; private set; }
@@ -187,8 +196,6 @@ public class ArmaEnLaMano : MonoBehaviour
         }
 
         propiedadesDeLaLuz = new MaterialPropertyBlock();
-        var led = instancia.Find("LED");
-        if (led != null) lucesDelArma = led.GetComponentsInChildren<Renderer>(true);
         antebrazo = animador.GetBoneTransform(HumanBodyBones.RightLowerArm);
         muñeco = animador.transform;
         tirosVistos = arma.TirosDisparados;
@@ -212,7 +219,12 @@ public class ArmaEnLaMano : MonoBehaviour
         {
             festejoPendiente = tramoPuesto >= 0 && tramo > tramoPuesto;
             tramoPuesto = tramo;
+            if (nucleo != null) nucleo.localScale = escalaDelNucleo;
             VestirArma(instancia, tramo, propiedadesDeLaLuz);
+            lucesDelArma = LucesDe(instancia, tramo);
+            nucleo = null;
+            foreach (var render in lucesDelArma)
+                if (render != null && render.name == "Nucleo") { nucleo = render.transform; escalaDelNucleo = nucleo.localScale; }
             luzPuesta = Color.clear;
         }
         if (festejoPendiente && !MenuPausa.JuegoCongelado)
@@ -281,6 +293,8 @@ public class ArmaEnLaMano : MonoBehaviour
         Color color = ColorDelArma(tramoPuesto);
         if (arma.EnFuria && Mathf.FloorToInt(Time.unscaledTime / ParpadeoDeLaFuria) % 2 == 0) color = RojoDeLaFuria;
         float latido = latidoDesde < 0f ? 0f : Mathf.Clamp01(1f - (Time.unscaledTime - latidoDesde) / DuracionDelLatido);
+        // La esfera de la de energia, ademas, crece con el tiro (de Argon).
+        if (nucleo != null) nucleo.localScale = escalaDelNucleo * (1f + LatidoDelNucleo * latido);
         color *= Mathf.Lerp(1f, LatidoDeLaLuz, latido);
         color.a = 1f;
         if (color == luzPuesta) return;

@@ -435,12 +435,18 @@ sube con el **tramo del daño**, el mismo de la bala (`GunController.TramoDelArm
 arma de energía**. Es el daño de la mejora por las cartas, **sin la furia** (`DanoSinFuria`): la furia es un pico de 6 s, y
 cambiaría de arma en cada uso; la bala sí sube un tramo con ella.
 
-- **No son cinco modelos**: a 15 px desde arriba un revólver y una pistola son la misma mancha (Gemini). Es la misma
-  pistola, gris medio (#666666: con el gris oscuro de la primera revisión, el cañón largo se fundía con el piso), con el
-  cañón más largo (y más ancho en la escopeta) y una **luz de neón del color del tramo** que cubre el lomo de la corredera
-  y sus costados (el hijo `LED`, `Unlit/Color`, teñido con un `MaterialPropertyBlock`; más fina, a la distancia de la
-  cámara era una línea de un píxel). La boca va a la punta de cada cañón, así las balas salen de ahí. Lo hace
-  `ArmaEnLaMano.VestirArma`, con las tablas del componente (`LargoDelCanon`, `AnchoDelCanon`).
+- **Son cinco modelos, cada uno con su silueta vista desde arriba** (18/10, pedido de Ivan: "que no sean todas iguales";
+  los diseñó Argon pieza por pieza). La **pistola** es un ladrillo corto de acero con una placa de neón; el **revólver**,
+  plateado con cacha de madera, con un tambor de neón redondo que sobresale a los costados (parado: acostado, como lo
+  pidió, desde arriba se vería un rectángulo); la **escopeta**, de madera y bronce, con dos cañones lado a lado y dos
+  tiras de neón paralelas; el **rifle**, verde táctico, con culata, cargador, mira de neón y freno de boca, el más largo;
+  la de **energía**, una horquilla blanca con una esfera de neón en el medio, que crece un 20 % con cada tiro
+  (`LatidoDelNucleo`). Hasta ahí eran la misma pistola gris con el cañón más largo (en la revisión del 12/10 Gemini
+  había dicho que a 15 px un revólver y una pistola son la misma mancha: con siluetas exageradas no lo son). Las arma
+  **ShowBies > Armas > Armar la pistola** (`ConstructorArmas`: un prefab con los cinco `ModeloX` adentro, sus medidas en
+  centímetros por `Cm`, que las agranda 1,65 veces como todo lo del muñeco), y `ArmaEnLaMano.VestirArma` prende el del
+  tramo, lleva la `Boca` a su `Punta` y pinta su **luz de neón del color del tramo** (el hijo `LED` de cada modelo,
+  `Unlit/Color`, teñido con un `MaterialPropertyBlock`). Las balas salen de la punta de cada una.
 - **La luz late con cada tiro** (×2,5 y de vuelta en 0,05 s: lo que se mueve lleva el ojo al arma) **y con la furia
   parpadea en rojo** cada 0,2 s (`GunController.EnFuria`): `ArmaEnLaMano.PintarLaLuz`, que toca los renderers solo cuando
   cambia el color (`ColorDeLaLuz`).
@@ -468,7 +474,9 @@ cambiaría de arma en cada uso; la bala sí sube un tramo con ella.
   festejo, que bajar no festeje y subir sí, una vez por escalón, con la pausa de impacto y la boca en la punta, que la
   furia no la cambie y ponga la luz a parpadear en rojo, y que cada una dispare con su fogonazo (el giro fijo del rifle
   incluido) desde su boca y con la luz latiendo (`Builds/prueba_armas.txt`, con la foto del cartel). La prueba de lógica
-  mira las tablas, el prefab (el gris, la luz que cubre el lomo), el salto del aviso y el tramo sin la furia.
+  mira las tablas, el prefab (los cinco modelos con su luz y su punta, un color de cuerpo propio cada uno, la silueta
+  desde arriba: el rifle el más largo, la pistola la más corta, la de energía la más ancha), el salto del aviso y el tramo
+  sin la furia.
 
 ### Lo que tira cada arma
 

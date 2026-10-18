@@ -106,14 +106,17 @@ public static class FotosDeLasArmas
             camara.targetTexture = rt;
             camara.aspect = (float)rt.width / rt.height;
             camara.enabled = false;
-            camara.transform.SetPositionAndRotation(new Vector3(0.25f, 1.1f, -2.6f), Quaternion.Euler(22f, 0f, 0f));
+            // Mirando al medio de la fila, desde lejos: desde el 18/10 cada arma tiene su forma y las mas
+            // grandes (la escopeta, el rifle, la de energia) se pisaban con la separacion de antes.
+            var giro = Quaternion.Euler(22f, 0f, 0f);
+            camara.transform.SetPositionAndRotation(new Vector3(-0.05f, -0.22f, 0f) - giro * Vector3.forward * 4.3f, giro);
 
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorArmas.RutaPistola);
             for (int tramo = 0; tramo < ArmaEnLaMano.Armas; tramo++)
             {
                 var p = ((GameObject)PrefabUtility.InstantiatePrefab(prefab, escena)).transform;
                 // El cañon hacia la derecha de la foto, y en fila de arriba abajo.
-                p.SetPositionAndRotation(new Vector3(-0.45f, 0.62f - tramo * 0.27f, 0f), Quaternion.Euler(0f, 90f, 0f));
+                p.SetPositionAndRotation(new Vector3(-0.45f, 0.62f - tramo * 0.42f, 0f), Quaternion.Euler(0f, 90f, 0f));
                 p.localScale = Vector3.one * 0.9f;
                 ArmaEnLaMano.VestirArma(p, tramo, new MaterialPropertyBlock());
                 Disparando(p, camara.transform, tramo, 0.5f, 0.3f);

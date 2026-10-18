@@ -123,16 +123,20 @@ public static class PruebaArmas
         return Mathf.Pow(2f, tramo);
     }
 
-    // La boca en la punta del cañon del tramo puesto.
+    // La boca en la punta del arma del tramo puesto, y esa arma prendida y las otras no.
     static bool BocaEnLaPunta(ArmaEnLaMano mano)
     {
         if (mano.Boca == null) return false;
-        var canon = mano.Boca.parent.Find("Canon");
-        if (canon == null) return false;
-        float punta = canon.localPosition.z + canon.localScale.y + 0.005f;
+        var raiz = mano.Boca.parent;
         int tramo = mano.TramoPuesto;
-        return Mathf.Abs(mano.Boca.localPosition.z - punta) < 1e-3f &&
-               Mathf.Abs(canon.localScale.y * 2f - ArmaEnLaMano.LargoDelCanon[tramo]) < 1e-3f;
+        if (tramo < 0) return false;
+        for (int i = 0; i < ArmaEnLaMano.Armas; i++)
+        {
+            var m = raiz.Find(ArmaEnLaMano.ModelosDeLasArmas[i]);
+            if (m == null || m.gameObject.activeSelf != (i == tramo)) return false;
+        }
+        var punta = raiz.Find(ArmaEnLaMano.ModelosDeLasArmas[tramo]).Find("Punta");
+        return punta != null && (mano.Boca.localPosition - punta.localPosition).sqrMagnitude < 1e-6f;
     }
 
     static void Avanzar()
