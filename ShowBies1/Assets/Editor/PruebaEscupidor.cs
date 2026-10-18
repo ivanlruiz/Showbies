@@ -144,6 +144,8 @@ public static class PruebaEscupidor
                 zombi = EnemyController.Aparecer(prefab, new Vector3(0f, 0f, 10f));
                 if (zombi == null) { Terminar("no aparecio el escupidor"); return; }
                 zombi.multiplicadorVida = 1000f;
+                // Un golpe grande, para que la mitad del charco se distinga en una vida entera (5 por golpe, no 0,5).
+                zombi.multiplicadorDano = 10f;
                 aparicion = zombi.NumeroDeAparicion;
                 escupidor = zombi.GetComponent<ZombiEscupidor>();
                 if (escupidor == null) { Terminar("el prefab no tiene ZombiEscupidor"); return; }
@@ -233,9 +235,9 @@ public static class PruebaEscupidor
                    momentos.Count > 0 && momentos[0] >= escupidor.graciaDelCharco - 0.03f && momentos[0] < escupidor.graciaDelCharco + 0.1f);
                 Ok("pega cada medio segundo: " + golpes + " golpes en 2,1 s (4 o 5)", golpes >= 4 && golpes <= 5);
                 float sacado = vidaAntes - vida.health;
-                float porGolpe = zombi.DanoPorGolpe * escupidor.parteDelGolpe;
+                float porGolpe = zombi.enemyType.daño * zombi.multiplicadorDano * escupidor.parteDelGolpe;
                 Ok("cada golpe es la mitad del de un normal: le saco " + sacado.ToString("0") + " (" + golpes + " x " + porGolpe.ToString("0.00") + ")",
-                   Mathf.Abs(sacado - golpes * porGolpe) <= 1f);
+                   Mathf.Abs(sacado - golpes * porGolpe) < 1f);
                 // Afuera del charco.
                 Poner(control, cuerpo, control.transform.position + Vector3.right * 3f);
                 golpesAntes = AcidoDelEscupidor.GolpesDados;

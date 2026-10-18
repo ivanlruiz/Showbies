@@ -2,7 +2,7 @@ using UnityEngine;
 
 // El escupidor (1.7.5, ZOMBIS.md; lo diseño Argon y a Ivan le gusto de la ronda de ideas del 18/10): artilleria
 // que niega zonas. Camina hasta quedar a 9,5 m del jugador y se planta, afuera de los 7,5 m del auto-apuntado: hay
-// que apuntarle a mano o ir a buscarlo. Cada 3,5 s se frena, infla los sacos de acido de la espalda 0,65 s mientras
+// que apuntarle a mano o ir a buscarlo. Cada 3,5 s se frena, infla los sacos de acido de los hombros 0,65 s mientras
 // marca en el piso un anillo donde esta el jugador, y le tira un globo en arco que deja un charco de acido 4 s
 // (AcidoDelEscupidor). Si el jugador se le acerca a menos de 4,5 m, retrocede despacio. Castiga quedarse quieto.
 //
@@ -13,7 +13,7 @@ using UnityEngine;
 // El bate lo empuja (es liviano) y, si le pega mientras infla los sacos, le corta el escupitajo. Congelado, tarda 5 s
 // entre escupitajo y escupitajo en vez de 3,5.
 //
-// Se lee por los dos sacos amarillos de la espalda, que laten y se inflan antes de tirar, por la piel amarillo acido y
+// Se lee por los dos sacos amarillos de los hombros, que laten y se inflan antes de tirar, por la piel amarillo acido y
 // por ir inclinado hacia adelante. Los sacos los pone ConstructorZombis en el prefab; la inclinacion va aca, en el
 // LateUpdate, sobre el hijo del modelo, como las poses del jefe.
 //
@@ -256,7 +256,9 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
     private void Update()
     {
         if (EstadoActual != Estado.Avisando) return;
-        if (zombi == null || !zombi.Vivo || zombi.Empujado || zombi.Frenado)
+        // Tambien si el jugador murio: la horda festeja (Mover ya no corre) y el anillo quedaba parpadeando sobre el
+        // cuerpo toda la derrota (auditoria del 18/10).
+        if (zombi == null || !zombi.Vivo || zombi.Empujado || zombi.Frenado || DerrotaEnLaPartida.Activa)
         {
             EstadoActual = zombi != null && zombi.Vivo ? Estado.Plantado : Estado.Acercandose;
             proximoEscupitajo = Time.time + cadaCuanto * 0.5f;
@@ -299,6 +301,7 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
             for (int i = 0; i < sacos.Length; i++)
                 if (sacos[i] != null) sacos[i].localScale = escalaDeLosSacos[i] * escala;
 
+        if (anillo != null && anillo.enabled && !vivo) anillo.enabled = false;
         if (anillo != null && anillo.enabled)
         {
             Color c = colorAcido;

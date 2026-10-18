@@ -38,6 +38,7 @@ public static class PruebaChaman
     static readonly List<EnemyController> cercanos = new List<EnemyController>();
     static ZombiChaman chaman;
     static int aparicion, pulsosAntes, cortadosAntes;
+    static bool vioCaminar, avisoCaminando;
     static Vector3 lugar;
 
     static PruebaChaman()
@@ -205,7 +206,7 @@ public static class PruebaChaman
                 }
                 avisoEn = ahora;
                 pulsosAntes = chaman.Pulsos;
-                Ok("con aliados cerca se frena y avisa", zombi.GetComponent<Rigidbody>().linearVelocity.magnitude < 0.2f);
+                Ok("plantado, con aliados cerca, avisa", true);
                 // El que camina: frenado a la mitad por el hielo, para medir el bono.
                 var normal = AssetDatabase.LoadAssetAtPath<GameObject>(RutaNormal);
                 Vector3 lejos = (lugar - control.transform.position);
@@ -387,7 +388,10 @@ public static class PruebaChaman
                     var prefabTanque = AssetDatabase.LoadAssetAtPath<GameObject>(RutaTanque);
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaChaman);
                     tanque = Aliado(prefabTanque, new Vector3(6.5f, 0f, -6f), 1f);
-                    zombi = EnemyController.Aparecer(prefab, new Vector3(10f, 0f, -3f));
+                    // Lejos del tanque, para que pulse caminando hacia el (lo tiene al alcance a mitad de camino).
+                    zombi = EnemyController.Aparecer(prefab, new Vector3(14f, 0f, 0f));
+                    vioCaminar = false;
+                    avisoCaminando = false;
                     if (tanque == null || zombi == null) { Terminar("no aparecieron el tanque o el segundo chaman"); return; }
                     zombi.multiplicadorVida = 1000f;
                     aparicion = zombi.NumeroDeAparicion;
@@ -396,6 +400,12 @@ public static class PruebaChaman
                     return;
                 }
                 Vector3 refugio = ZombiChaman.DetrasDe(tanque.transform.position, control.transform.position, chaman.detrasDelPesado);
+                {
+                    Vector3 v = zombi.GetComponent<Rigidbody>().linearVelocity;
+                    v.y = 0f;
+                    if (chaman.Pulsos == 0 && chaman.EstadoActual != ZombiChaman.Estado.Avisando && v.magnitude > 1f) vioCaminar = true;
+                    if (chaman.Pulsos == 0 && chaman.EstadoActual == ZombiChaman.Estado.Avisando && vioCaminar && v.magnitude < 0.2f) avisoCaminando = true;
+                }
                 bool llego = chaman.EstadoActual == ZombiChaman.Estado.Plantado && Distancia(zombi.transform.position, refugio) < 0.5f;
                 if (!llego)
                 {
@@ -409,6 +419,7 @@ public static class PruebaChaman
                 Ok("con un tanque cerca, se pone detras de el (" + Vector3.Angle(alTanque, alChaman).ToString("0") + " grados, a "
                    + alChaman.magnitude.ToString("0.0") + " m)", Vector3.Angle(alTanque, alChaman) < 10f && alChaman.magnitude > alTanque.magnitude + 1f);
                 Ok("y al tanque lo potencia (camina con la persecucion de siempre)", ZombiChaman.Potenciable(tanque, zombi));
+                Ok("caminando, se frena para pulsar", vioCaminar && avisoCaminando);
                 Terminar(null);
                 return;
             }

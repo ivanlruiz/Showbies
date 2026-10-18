@@ -911,6 +911,7 @@ public class EnemyController : MonoBehaviour
         {
             animador.speed = 1f;
             animador.SetFloat(idPaso, velocidadDeAnimacion);
+            pasoPuesto = velocidadDeAnimacion;
             animador.SetFloat(idRitmo, ritmoDeAndar);
             animador.ResetTrigger(idMorir);
             animador.Play(idAndar, 0, 0f);
@@ -1213,7 +1214,11 @@ public class EnemyController : MonoBehaviour
        // quieto. Antes de todo lo que lo mueve hacia el jugador.
        if (MoverPorElBatazo()) return;
 
-       if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform)) return;
+       if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform))
+       {
+           PasoPorLoQueAnda();
+           return;
+       }
 
        // Si el jugador se le viene encima corriendo, el liviano se corre de costado, mirandolo.
        Vector3 apartado;
@@ -1224,6 +1229,7 @@ public class EnemyController : MonoBehaviour
            if ((alJugador - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(alJugador);
            apartado.y = rb.linearVelocity.y;
            rb.linearVelocity = apartado;
+           PasoPorLoQueAnda();
            return;
        }
 
@@ -1241,6 +1247,25 @@ public class EnemyController : MonoBehaviour
        Vector3 velocidad = transform.forward * (enemyType.velocidad * MultiplicadorDeVelocidad);
        velocidad.y = rb.linearVelocity.y;
        rb.linearVelocity = velocidad;
+       PasoPorLoQueAnda();
+    }
+
+    // Las piernas de los zombis con habilidad (el escupidor, el saltador, el chaman), que se mueven por su cuenta pero
+    // no manejan su Paso como el jefe y el tesoro: al ritmo de lo que avanzan de verdad en este paso de fisica. Asi,
+    // plantados, avisando o agachados no corren en el lugar, y con el hielo no patinan (auditoria del 18/10). Al
+    // jefe, al tesoro y a los de siempre no los toca.
+    private float pasoPuesto = -1f;
+
+    private void PasoPorLoQueAnda()
+    {
+        if (animadores == null || movimientoPropio == null || movimientoPropio is JefePatrones || tesoro != null) return;
+        Vector3 v = rb.linearVelocity;
+        v.y = 0f;
+        float paso = Frenado ? 0f : velocidadDeAnimacion * Mathf.Min(v.magnitude / Mathf.Max(0.01f, enemyType.velocidad), 2f);
+        if (Mathf.Abs(paso - pasoPuesto) < 0.02f) return;
+        pasoPuesto = paso;
+        foreach (var animador in animadores)
+            if (animador != null) animador.SetFloat(idPaso, paso);
     }
 
     private bool estaMuerto;

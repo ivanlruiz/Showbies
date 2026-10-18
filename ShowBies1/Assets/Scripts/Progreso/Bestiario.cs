@@ -1,7 +1,7 @@
 using System;
 
 // El bestiario: una tarjeta por tipo de zombi con tres estrellas, que se ganan matando
-// 100, 1.000 y 10.000 de ese tipo (el jefe: 1, 10 y 50). Cada estrella se cobra una vez
+// 50, 500 y 5.000 de ese tipo (el jefe: 1, 10 y 50; hasta la 1.6.0 eran 100, 1.000 y 10.000). Cada estrella se cobra una vez
 // en el menu (VentanaBestiario). Llenar colecciones funciona sin fecha: explica para
 // que sirve seguir jugando cuando ya no hay misiones.
 //

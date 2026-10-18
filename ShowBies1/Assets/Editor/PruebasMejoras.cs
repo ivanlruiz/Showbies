@@ -6382,6 +6382,24 @@ public static class PruebasMejoras
         inf.Verdadero("zombis nuevos: con su ultima oleada, despues descansa", WaveManager.Elegible(conFin, 20, 0, 0) && !WaveManager.Elegible(conFin, 21, 0, 0));
         var comun = new TipoEnOleada { prefab = prefab, desdeOleada = 1, peso = 1f };
         inf.Verdadero("zombis nuevos: los comunes no miran el tope de especiales", WaveManager.Elegible(comun, 5, 50, 99));
+        // El que va dos veces en la mezcla (descansa un capitulo) cuenta una sola vez para el tope de especiales.
+        var otro = new GameObject("PruebaOtroEspecial");
+        try
+        {
+            var mezcla = new[]
+            {
+                comun,
+                new TipoEnOleada { prefab = prefab, desdeOleada = 15, hastaOleada = 20, peso = 0.15f, especial = true },
+                new TipoEnOleada { prefab = otro, desdeOleada = 12, peso = 0.15f, especial = true },
+                new TipoEnOleada { prefab = prefab, desdeOleada = 31, peso = 0.15f, especial = true },
+            };
+            int especiales = WaveManager.EspecialesVivos(mezcla, p => p == prefab ? 2 : p == otro ? 3 : 50);
+            inf.Igual("zombis nuevos: los especiales vivos cuentan cada prefab una vez, aunque vaya dos veces en la mezcla", 5, especiales);
+        }
+        finally
+        {
+            Object.DestroyImmediate(otro);
+        }
 
         // Lo que decide: lejos se acerca, a 9,5 se planta (con medio metro de margen para no temblar).
         var E = ZombiEscupidor.Estado.Acercandose;
@@ -6499,6 +6517,25 @@ public static class PruebasMejoras
             losDemas &= otro != null && !Disfraces.TienePiezasEnLaCabeza(Disfraces.Cabeza(otro.transform));
         }
         inf.Verdadero("disfraces: los zombis sin piezas propias en la cabeza se siguen disfrazando", losDemas);
+
+        // Las piezas de los especiales (los sacos, los ojos, las crestas, el totem) y las marcas del chaman, con el color
+        // plano que se instancia: con Unlit/Color era una llamada de dibujo por pieza (auditoria del 18/10).
+        bool instanciadas = chaman != null && chaman.materialRubi != null && chaman.materialRubi.shader.name == ConstructorZombis.ShaderPlanoConInstancing;
+        int piezasVistas = 0;
+        foreach (var ruta in new[] { ConstructorZombis.RutaEscupidor, ConstructorZombis.RutaSaltador, ConstructorZombis.RutaChaman })
+        {
+            var especial = AssetDatabase.LoadAssetAtPath<GameObject>(ruta);
+            if (especial == null) { instanciadas = false; continue; }
+            foreach (var r in especial.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                // Ni las cajas de golpe (apagadas) ni la cabeza del modelo, que lleva la piel.
+                if (!r.enabled || r.name.StartsWith(Disfraces.MallaDeLaCabeza)) continue;
+                piezasVistas++;
+                foreach (var m in r.sharedMaterials)
+                    instanciadas &= m != null && m.shader.name == ConstructorZombis.ShaderPlanoConInstancing && m.enableInstancing;
+            }
+        }
+        inf.Verdadero("zombis nuevos: sus piezas se dibujan con el color plano que se instancia (" + piezasVistas + " piezas)", instanciadas && piezasVistas == 9);
 
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
@@ -6720,7 +6757,8 @@ public static class PruebasMejoras
                 double pesos = 0, conXp = 0;
                 foreach (var t in oleadas.tipos)
                 {
-                    if (t == null || t.prefab == null || n < t.desdeOleada) continue;
+                    // Como el juego: con su ultima oleada (los que descansan un capitulo van dos veces en la mezcla).
+                    if (!WaveManager.Elegible(t, n, 0, 0)) continue;
                     var ec = t.prefab.GetComponent<EnemyController>();
                     pesos += t.peso;
                     conXp += t.peso * (ec != null && ec.enemyType != null ? ec.enemyType.experiencia : 1);
@@ -7221,12 +7259,12 @@ public static class PruebasMejoras
 
     // El ritmo: con la experiencia de jugar (los puntos) y una mejor oleada que crece como la
     // raiz de las partidas jugadas (3,3 por la raiz de k: la 10 en la partida 9, la 33 en la
-    // 100), el nivel 10 cae cerca de la partida 10 y el 50 cerca de la 55, que es lo que dice
+    // 100), el nivel 10 cae cerca de la partida 12 y el 50 cerca de la 65 (con los especiales en la mezcla), que es lo que dice
     // NivelJugador. Los puntos de cada oleada salen del WaveManager de WaveMode: su mezcla de
     // tipos, sus pesos, el jefe y los puntos del asset de cada uno.
     static void ProbarRitmoDelNivel(Informe inf)
     {
-        var tipos = new List<float[]>();   // desde que oleada, peso, puntos
+        var tipos = new List<float[]>();   // desde que oleada, peso, puntos, hasta que oleada (0, sin fin)
         int zombisBase = -1, zombisPorOleada = 0, cadaJefe = 0, puntosJefe = 0;
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {
@@ -7238,7 +7276,7 @@ public static class PruebasMejoras
             foreach (var tipo in oleadas.tipos)
             {
                 var zombi = tipo.prefab != null ? tipo.prefab.GetComponent<EnemyController>() : null;
-                if (zombi != null && zombi.enemyType != null) tipos.Add(new float[] { tipo.desdeOleada, tipo.peso, zombi.enemyType.puntos });
+                if (zombi != null && zombi.enemyType != null) tipos.Add(new float[] { tipo.desdeOleada, tipo.peso, zombi.enemyType.puntos, tipo.hastaOleada });
             }
             var jefe = oleadas.jefe != null ? oleadas.jefe.GetComponent<EnemyController>() : null;
             if (jefe != null && jefe.enemyType != null) puntosJefe = jefe.enemyType.puntos;
@@ -7250,7 +7288,7 @@ public static class PruebasMejoras
             double suma = 0, pesos = 0;
             foreach (var t in tipos)
             {
-                if (n < t[0]) continue;
+                if (n < t[0] || (t[3] > 0 && n > t[3])) continue;
                 suma += t[1] * t[2];
                 pesos += t[1];
             }
@@ -7270,7 +7308,7 @@ public static class PruebasMejoras
             if (del50 < 0 && nivel >= 50) del50 = k;
         }
         inf.Verdadero("nivel: el 10 cae cerca de la partida 10 (en la " + del10 + ")", del10 >= 7 && del10 <= 14);
-        inf.Verdadero("nivel: el 50 cae cerca de la partida 55 (en la " + del50 + ")", del50 >= 40 && del50 <= 75);
+        inf.Verdadero("nivel: el 50 cae cerca de la partida 65 (en la " + del50 + ")", del50 >= 40 && del50 <= 75);
     }
 
     // Las familias de logros: doce, con ids distintos y tres metas que crecen, y los textos

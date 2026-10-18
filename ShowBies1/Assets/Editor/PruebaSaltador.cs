@@ -34,7 +34,7 @@ public static class PruebaSaltador
     static EnemyController zombi;
     static ZombiSaltador saltador;
     static int aparicion, golpesAntes, saltosAntes, cortadosAntes, zarpazosAntes;
-    static float vidaAntes, velocidadMaxima;
+    static float vidaAntes, velocidadMaxima, golpeEsperado;
 
     static PruebaSaltador()
     {
@@ -140,6 +140,8 @@ public static class PruebaSaltador
                 zombi = EnemyController.Aparecer(prefab, new Vector3(0f, 0f, 6f));
                 if (zombi == null) { Terminar("no aparecio el saltador"); return; }
                 zombi.multiplicadorVida = 1000f;
+                // Un golpe grande, para que el x1,2 del salto se distinga en una vida entera (12 contra 10).
+                zombi.multiplicadorDano = 10f;
                 aparicion = zombi.NumeroDeAparicion;
                 saltador = zombi.GetComponent<ZombiSaltador>();
                 if (saltador == null) { Terminar("el prefab no tiene ZombiSaltador"); return; }
@@ -172,6 +174,7 @@ public static class PruebaSaltador
                 }
                 golpesAntes = zombi.GolpesDados;
                 vidaAntes = vida.health;
+                golpeEsperado = zombi.enemyType.daño * zombi.multiplicadorDano * saltador.golpeDelSalto;
                 fase = Fase.Saltar;
                 return;
             }
@@ -201,7 +204,7 @@ public static class PruebaSaltador
                 cayoEn = ahora;
                 Ok("salta a 14 m/s (" + velocidadMaxima.ToString("0.0") + ")", Mathf.Abs(velocidadMaxima - saltador.velocidadDelSalto) < 1f);
                 Ok("si el jugador se queda, le pega una vez en el salto", zombi.GolpesDados == golpesAntes + 1);
-                Ok("con 1,2 veces el golpe (le saco " + (vidaAntes - vida.health) + ")", Mathf.Abs((vidaAntes - vida.health) - Mathf.Floor(zombi.DanoPorGolpe * saltador.golpeDelSalto)) <= 1f);
+                Ok("con 1,2 veces el golpe (le saco " + (vidaAntes - vida.health) + ", " + golpeEsperado.ToString("0.0") + ")", Mathf.Abs((vidaAntes - vida.health) - golpeEsperado) < 1f);
                 Ok("al caer se queda quieto", saltador.EstadoActual == ZombiSaltador.Estado.Recuperando);
                 zarpazosAntes = EnemyController.ZarpazosEmpezados;
                 zarpoRecuperando = false;
@@ -227,8 +230,9 @@ public static class PruebaSaltador
                     if (ahora - desde > 12f) { Terminar("no se volvio a agachar"); return; }
                     return;
                 }
-                Ok("no vuelve a saltar antes de la recarga (" + (ahora + saltador.aviso - saltoEn).ToString("0.0") + " s entre saltos, " + saltador.recarga + ")",
-                   ahora + saltador.aviso - saltoEn >= saltador.recarga - 0.05f);
+                // La recarga se cuenta desde que salta: se vuelve a agachar recien a los 5 s del salto anterior.
+                Ok("no vuelve a agacharse antes de la recarga (" + (ahora - saltoEn).ToString("0.0") + " s desde el salto, " + saltador.recarga + ")",
+                   ahora - saltoEn >= saltador.recarga - 0.05f);
                 // El jugador sale de la franja, de costado.
                 Poner(control, cuerpo, control.transform.position + Vector3.Cross(Vector3.up, saltador.Rumbo) * 3f);
                 golpesAntes = zombi.GolpesDados;

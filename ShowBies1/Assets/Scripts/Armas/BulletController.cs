@@ -295,6 +295,10 @@ public class BulletController : MonoBehaviour
             capasQueToca = 0;
             for (int i = 0; i < 32; i++)
                 if (!Physics.GetIgnoreLayerCollision(capaDeLaMascara, i)) capasQueToca |= 1 << i;
+            // Las balas no: en la matriz la capa Bala choca con Bala, y en un cuadro de muchos tiros todas las recien
+            // sacadas siguen en la boca para la fisica (se mueven por el transform). Llenaban el bufer del BoxCast y el
+            // zombi pegado, que la fisica recorre despues de lo estatico, podia quedar afuera (auditoria del 18/10).
+            capasQueToca &= ~(1 << capaDeLaMascara);
         }
         Vector3 escala = transform.lossyScale;
         Vector3 mitad = Vector3.Scale(caja.size, new Vector3(Mathf.Abs(escala.x), Mathf.Abs(escala.y), Mathf.Abs(escala.z))) * 0.5f;
@@ -330,6 +334,14 @@ public class BulletController : MonoBehaviour
         Vector3 hastaLaBoca = transform.position - cuerpo;
         hastaLaBoca.y = 0f;
         float atras = adelante.sqrMagnitude > 1e-6f ? Vector3.Dot(hastaLaBoca, adelante.normalized) : 0f;
+        // La que sale para atras (la carta Hacia atras) nace en la boca, adelante del cuerpo: con un zombi pegado
+        // adelante se gastaba en el, que es justo cuando el jugador esta rodeado. Arranca a la altura del cuerpo, sin
+        // barrer el tramo de adelante (auditoria del 18/10).
+        if (atras < -0.01f)
+        {
+            transform.position -= transform.forward * atras;
+            return;
+        }
         if (!(atras > 0.01f)) return;
         Vector3 boca = transform.position;
         transform.position = boca - transform.forward * atras;

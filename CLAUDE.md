@@ -68,7 +68,7 @@ Assets/Scripts/Idioma/      ← Idioma, Textos, TextoTraducido, SelectorIdioma
 Assets/Scripts/*.cs         ← CanvasHelper, ConfiguracionRendimiento, MainMenu, MenuPerdiste, Plataforma, Puntaje
 Assets/Escenas/             ← Menu, ShowBies1, Perdiste, WaveMode, Tutorial
 Assets/Prefabs/             ← Bullet, Gun, Pistola (la de la mano), Granada, Moneda, power-ups, Jugo/ (Efectos, NumeroFlotante), Particulas/ (BrilloMoneda, Chispas), Personajes/, UI/ (MenuPausa, Tienda, TarjetaMejora, BotonFuria)
-Assets/Zombies/*.asset      ← los seis Enemy (los cinco de siempre y el del tesoro): stats POR TIPO, editables sin recompilar
+Assets/Zombies/*.asset      ← los nueve Enemy (los cinco de siempre, el del tesoro y los tres con habilidad): stats POR TIPO, editables sin recompilar
 Assets/Mejoras/             ← las nueve Mejora (.asset) y Resources/CatalogoMejoras
 Assets/Cartas/              ← las Carta de la partida (.asset) y Resources/CatalogoCartas: los crea ConstructorCartas
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
@@ -324,7 +324,10 @@ highscores guardados de esa época que son inalcanzables con el sistema actual.
    barre desde el cuerpo del que tira hasta la boca** (`BarrerDesde`, desde `GunController.SacarBala` en las balas del
    tiro; las del dron no): con un zombi pegado, la boca del rifle queda del otro lado de él, y a quemarropa no pegaba
    nunca. Hasta el 18/10 no había barrido; ahora todas pegan el 100 % de 0,4 a 5 m, a 30 y a 60 cuadros. Los choques
-   de la física siguen, y lo que ya tocó no cuenta dos veces (`tocados`).
+   de la física siguen, y lo que ya tocó no cuenta dos veces (`tocados`). **El barrido no mira las otras balas** (en la
+   matriz, Bala choca con Bala): en un cuadro de muchos tiros las recién sacadas siguen en la boca para la física y
+   llenaban el búfer del `BoxCast`, que podía dejar afuera al zombi pegado. **La bala de atrás** (la carta Hacia atrás)
+   arranca a la altura del cuerpo y no en la boca: con un zombi pegado adelante se gastaba en él (auditoría del 18/10).
 4. Al vencer el tiempo o al chocar, la bala **se apaga y vuelve al pool**, no se destruye.
 
 **Nunca hagas `Instantiate`/`Destroy` de balas directo.** El pool convierte 500 disparos en 49 objetos.
@@ -706,7 +709,7 @@ balance** (ver El balance de la 1.6.0, abajo).
   - **El disparo doble y hacia atrás salen del mismo tiro**: no gastan cargador ni cuentan en `TirosDisparados`.
   - **El hielo y la quemadura viven en el zombi** (`EnemyController.Congelar` y `Quemar`, con tiempo escalado, de cero
     en cada aparición). El hielo frena la persecución y el `Paso` (no los patrones del jefe ni del tesoro, que se mueven
-    solos) y pinta la piel de celeste con un `MaterialPropertyBlock` (sobrevive al destello sin crear materiales). La
+    solos; a los zombis con habilidad sí, y sus piernas van con lo que avanzan: `EnemyController.PasoPorLoQueAnda`) y pinta la piel de celeste con un `MaterialPropertyBlock` (sobrevive al destello sin crear materiales). La
     quemadura pega en ticks contados (seis de 0,5 s) por `DanoZombi` con `colorDeCarta`: el número naranja
     (`Efectos.GolpeDeCarta`) y sin el destello ni el aplastado.
   - **El escudo** lo para `PlayerHealth.TakeDamage` antes de todo: no cuenta como golpe (la oleada sigue pudiendo salir
@@ -1091,7 +1094,14 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
 - **En la mezcla de WaveMode** cada uno es un `TipoEnOleada` con su tope de vivos (`maxVivos`) y marcado `especial`:
   entre todos, como mucho `WaveManager.MaxEspecialesVivos` (8) a la vez, así de los 35 del teléfono siempre quedan 27
   comunes. `hastaOleada` deja que uno descanse un capítulo (va dos veces en la mezcla). `WaveManager.Elegible` decide,
-  y `EnemyController.VivosDe` cuenta los vivos de un prefab. El modo libre todavía no los saca.
+  y `EnemyController.VivosDe` cuenta los vivos de un prefab. **Para el tope, cada prefab cuenta una vez**
+  (`WaveManager.EspecialesVivos`): sumado por entrada, el que va dos veces contaba doble y el tope real quedaba en 5 o 6
+  (auditoría del 18/10). El modo libre todavía no los saca.
+- **Las piernas van con lo que avanzan** (`EnemyController.PasoPorLoQueAnda`, en cada paso de física): los tres se
+  mueven por su cuenta, y como no manejan su `Paso` como el jefe, plantados, avisando o agachados corrían en el lugar, y
+  con el hielo patinaban (auditoría del 18/10). Al jefe, al tesoro y a los de siempre no los toca.
+- **Sus piezas** (los sacos, los ojos, las crestas, el tótem y las marcas del chamán) **van con `ShowBies/ColorPlano`**,
+  el color plano de las balas, que se instancia: con `Unlit/Color` era una llamada de dibujo por pieza en el teléfono.
 - **Los arman ShowBies > Zombis > Armar el escupidor**, **Armar el saltador** y **Armar el chaman** (`ConstructorZombis`), desde el normal: el Enemy (una sola vez:
   después es balance), la piel (`ShowBies/PielDeZombi` con su color y el borde aclarado), las piezas y el prefab, y los
   suma a la mezcla de WaveMode. No se editan a mano.
@@ -1105,6 +1115,8 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   se frena, infla los sacos 0,65 s y marca en el piso un anillo amarillo donde está el jugador, y tira un globo en arco
   a 11 m/s. **El charco** (`AcidoDelEscupidor`, aparte porque sobrevive al que lo tiró) dura 4 s, da 0,25 s de gracia y
   pega la mitad del golpe cada 0,5 s al que lo pisa, con un borde que marca justo hasta dónde; como mucho 3 en el mapa.
+  Un charco que quedó de la oleada anterior no le quita la perfecta a la siguiente: `WaveManager` toma los golpes del
+  jugador recién después del descanso.
   El globo y el charco no tienen collider (parábola calculada y distancia al jugador, como la granada y las monedas) y se
   reusan. El bate lo empuja y le corta el escupitajo; congelado tarda 5 s entre uno y otro.
 - **ShowBies > Pruebas > Escupidor (play)** (`PruebaEscupidor`): que se plante a 9,5 m, a la vista y sin que el
@@ -1724,7 +1736,7 @@ pinta a la horda, elegido por Ivan), las gemas y las armas (ver TAREAS).
   suma el puntaje. Los logros dan más, de a golpes.
 - **La curva** (`NivelJugador`): pasar del nivel L al siguiente cuesta `100L − 75` (25, 125, 225… 925 el décimo). Una
   partida da más experiencia cuanto más lejos se llega, así que con esta curva se sube más o menos **un nivel por
-  partida** en todo el juego: con el modelo de `Economia`, el 10 cae cerca de la partida 12 y el 50 cerca de la 71 (eran 10 y 55 hasta la
+  partida** en todo el juego: con el modelo de `Economia`, el 10 cae cerca de la partida 12 y el 50 cerca de la 65 con los especiales en la mezcla (71 sin ellos; eran 10 y 55 hasta la
   1.6.0: las oleadas son más cortas y se dejó así). La
   prueba lo mide con la mezcla de zombis, los pesos y los puntos del `WaveManager` de WaveMode.
 - **El premio de cada nivel**: el 15 % de lo que deja una partida (`Economia.MonedasPorPartida`), y el triple cada 5

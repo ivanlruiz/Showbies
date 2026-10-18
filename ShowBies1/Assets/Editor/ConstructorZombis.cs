@@ -58,8 +58,8 @@ public static class ConstructorZombis
 
         var piel = Piel(RutaPielEscupidor, AmarilloAcido);
         if (piel == null) return;
-        var acido = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "AcidoEscupidor", AmarilloAcido);
-        var sacoMaterial = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "SacoEscupidor", ColorDeLosSacos);
+        var acido = PlanoConInstancing("AcidoEscupidor", AmarilloAcido);
+        var sacoMaterial = PlanoConInstancing("SacoEscupidor", ColorDeLosSacos);
         var charco = ConstructorEscenarios.MaterialDeBrillo(CarpetaMateriales, "AcidoCharco", AmarilloAcido, AcidoDelEscupidor.IntensidadDelCharco, 0.35f, 4f);
         var jefe = AssetDatabase.LoadAssetAtPath<GameObject>(RutaJefe);
         var aviso = jefe != null && jefe.GetComponent<JefePatrones>() != null ? jefe.GetComponent<JefePatrones>().materialAviso : null;
@@ -159,7 +159,7 @@ public static class ConstructorZombis
 
         var piel = Piel(RutaPielSaltador, AzulNoche);
         if (piel == null) return;
-        var crema = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "CremaSaltador", CremaDelSaltador);
+        var crema = PlanoConInstancing("CremaSaltador", CremaDelSaltador);
         var jefe = AssetDatabase.LoadAssetAtPath<GameObject>(RutaJefe);
         var aviso = jefe != null && jefe.GetComponent<JefePatrones>() != null ? jefe.GetComponent<JefePatrones>().materialAviso : null;
         var esfera = AssetDatabase.LoadAssetAtPath<Mesh>(ConstructorArmas.RutaEsferaBaja);
@@ -255,8 +255,8 @@ public static class ConstructorZombis
 
         var piel = Piel(RutaPielChaman, HuesoPalido);
         if (piel == null) return;
-        var rubi = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "RubiChaman", Rubi);
-        var madera = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, "MaderaChaman", MaderaDelTotem);
+        var rubi = PlanoConInstancing("RubiChaman", Rubi);
+        var madera = PlanoConInstancing("MaderaChaman", MaderaDelTotem);
         var jefe = AssetDatabase.LoadAssetAtPath<GameObject>(RutaJefe);
         var aviso = jefe != null && jefe.GetComponent<JefePatrones>() != null ? jefe.GetComponent<JefePatrones>().materialAviso : null;
         var cubo = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
@@ -326,6 +326,23 @@ public static class ConstructorZombis
     }
 
     // --- Lo de todos ------------------------------------------------------------------------------
+
+    // Un color plano sin luz, como el de los neones, pero con ShowBies/ColorPlano (el de las balas): Unlit/Color no tiene
+    // variantes de instancing, y las piezas colgadas de los huesos (los sacos, los ojos, las crestas, el totem) y las
+    // marcas del chaman eran una llamada de dibujo cada una, sin batching dinamico en Android (auditoria del 18/10).
+    public const string ShaderPlanoConInstancing = "ShowBies/ColorPlano";
+
+    static Material PlanoConInstancing(string nombre, Color color)
+    {
+        var mat = ConstructorEscenarios.MaterialPlano(CarpetaMateriales, nombre, color);
+        var shader = Shader.Find(ShaderPlanoConInstancing);
+        if (shader == null) { Debug.LogError("ConstructorZombis: falta el shader " + ShaderPlanoConInstancing); return mat; }
+        mat.shader = shader;
+        mat.color = color;
+        mat.enableInstancing = true;
+        EditorUtility.SetDirty(mat);
+        return mat;
+    }
 
     // La piel del normal (ShowBies/PielDeZombi) con otro color, y el borde de luz del mismo color aclarado un 35 % hacia
     // el blanco, como los demas (ConstructorHeroe).

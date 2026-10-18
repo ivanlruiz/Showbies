@@ -48,6 +48,10 @@ arriba ya son esos):
 - **El muro no se mueve** (48 / 59 / 69): tienen el doble de vida en promedio, pero pagan 2-3 de PODER y 2,5-4 veces las
   monedas, así que el oro y las cartas por punto de vida quedan igual; y la explosión del hinchado contra los suyos
   compensa al blindado y al chamán en las oleadas 30 a 60.
+  **Sin simular** (auditoría del 18/10): con el PODER de hoy (28 × 1,12^L) el muro del bajo es la 39, no la 48, así que
+  los tres muros caen desde la 31, donde los especiales son el 11-19 % de lo que sale; por punto de vida dan +16 % de
+  monedas y +7 % de experiencia, pero el bono del chamán y el escupidor fuera del auto-apuntado empujan para el otro
+  lado. Neto en el medio, entre −1,5 y +1 oleada: hay que correr `simulaciones/cartas_1.6.0` con los especiales.
 
 ### 1. El escupidor (Spitter)
 
@@ -162,11 +166,14 @@ Lo que se decidió al hacer el chamán, que Argon no dijo:
 
 ## Lo que hay que resolver en el código (de Claude)
 
-- **El tope por tipo y el de especiales**: hoy `WaveManager.ElegirTipo` sortea por peso sin mirar cuántos hay vivos;
-  `TipoEnOleada` suma un tope y si es especial, y `EnemyController` cuenta los vivos de cada prefab (ya sabe de cuál salió).
-- **El bate**: hoy no empuja a nada que se mueva por su cuenta (`IMovimientoPropio`), para dejar afuera al jefe y al
-  tesoro. Los nuevos se mueven por su cuenta y Argon quiere que se los empuje: la regla pasa a ser explícita (el jefe y el
-  tesoro no).
-- **Cada tipo entra al bestiario** (con las estrellas a 25 / 250 / 2.500) y a la tabla de textos. `NivelJugador.PuntosPorTipo`
+- **Hecho:** el tope por tipo y el de especiales (`TipoEnOleada.maxVivos` y `especial`, `WaveManager.Elegible` y
+  `EspecialesVivos`, `EnemyController.VivosDe`), y el bate que empuja a los que se mueven por su cuenta salvo al jefe y
+  al tesoro (`EnemyController.RecibirBatazo`).
+- **Falta: cada tipo entra al bestiario** (con las estrellas a 25 / 250 / 2.500) y a la tabla de textos. `NivelJugador.PuntosPorTipo`
   no hace falta: es solo para migrar progresos de antes de la v6.
-- **El modo libre** tiene una corrutina por tipo (`GeneradorZombis`): los nuevos van primero en las oleadas.
+- **Falta: el modo libre** tiene una corrutina por tipo (`GeneradorZombis`): los nuevos van primero en las oleadas.
+- **Para el blindado y el hinchado** (de la auditoría del 18/10): un origen del daño en `DanoZombi` (el escudo tiene que
+  saber qué le entra de frente), una persecución con giro limitado reusable (120°/s), su masa por encima de 10 (si no, el
+  bate lo empuja y el chamán no se refugia detrás), y un gancho antes de morir (el hinchado se infla con vida 0 y todavía
+  se lo puede patear). Y sacar a una base común lo que ya repiten los tres hechos (buscar el modelo, el aviso en el piso,
+  quedarse quieto, el corte con el bate y la derrota, la pose), antes de copiarlo dos veces más.

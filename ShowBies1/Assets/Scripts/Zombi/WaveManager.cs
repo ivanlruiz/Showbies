@@ -239,7 +239,6 @@ public class WaveManager : MonoBehaviour
             Progreso.GuardarPoderEnCurso(PoderDeLaPartida.Instantanea());
             // En otro hilo: el fsync en el del juego era un tiron justo con el cartel de la oleada.
             Progreso.GuardarEnSegundoPlano();
-            int golpesAlEmpezar = PlayerHealth.instance != null ? PlayerHealth.instance.GolpesRecibidos : -1;
             int cantidad = zombisBase + zombisPorOleada * OleadaActual;
             bool conTesoro = OleadaActual >= DesdeOleadaTesoro && Random.value < ProbabilidadTesoro;
             bool conJefe = jefe != null && jefeCadaOleadas > 0 && OleadaActual % jefeCadaOleadas == 0;
@@ -247,6 +246,9 @@ public class WaveManager : MonoBehaviour
             zombisDeLaOleada.Clear();
             ActualizarHud();
             yield return Descanso();
+            // Los golpes, recien despues del descanso: un charco de acido de la oleada anterior que pega mientras se lee
+            // el cartel no le tiene que quitar la perfecta a esta (auditoria del 18/10).
+            int golpesAlEmpezar = PlayerHealth.instance != null ? PlayerHealth.instance.GolpesRecibidos : -1;
 
             // El jefe sale solo y el primero de los demas, un rato despues y en otro punto:
             // salian en el mismo cuadro, y una de cada tres o cuatro veces en el mismo punto,
@@ -421,11 +423,30 @@ public class WaveManager : MonoBehaviour
         return true;
     }
 
-    private GameObject ElegirTipo()
+    // Los especiales vivos, contando cada prefab una vez: el que descansa un capitulo va dos veces en la mezcla, y
+    // sumandolo por entrada el tope real quedaba en 5 o 6 en vez de 8 (auditoria del 18/10). 'vivosDe' cuenta los de un
+    // prefab (EnemyController.VivosDe, o lo que diga la prueba).
+    public static int EspecialesVivos(IReadOnlyList<TipoEnOleada> lista, System.Func<GameObject, int> vivosDe)
     {
         int especiales = 0;
-        foreach (var tipo in tipos)
-            if (tipo != null && tipo.especial) especiales += EnemyController.VivosDe(tipo.prefab);
+        if (lista == null) return 0;
+        for (int i = 0; i < lista.Count; i++)
+        {
+            var tipo = lista[i];
+            if (tipo == null || !tipo.especial || tipo.prefab == null) continue;
+            bool repetido = false;
+            for (int j = 0; j < i && !repetido; j++)
+                repetido = lista[j] != null && lista[j].especial && lista[j].prefab == tipo.prefab;
+            if (!repetido) especiales += vivosDe(tipo.prefab);
+        }
+        return especiales;
+    }
+
+    private static readonly System.Func<GameObject, int> vivosDelPrefab = EnemyController.VivosDe;
+
+    private GameObject ElegirTipo()
+    {
+        int especiales = EspecialesVivos(tipos, vivosDelPrefab);
 
         float total = 0f;
         foreach (var tipo in tipos)
