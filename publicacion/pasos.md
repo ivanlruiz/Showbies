@@ -82,11 +82,12 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       segunda sale con "El código de versión 13 ya se ha usado": la primera ya está en la biblioteca, y se agrega con
       "Añadir de la biblioteca" (a veces tarda unos segundos en aparecer ahí). Las notas de un borrador sin guardar se
       pierden al recargar la página: guardar el borrador antes de ir a otra.
-- [ ] **Versión 14 (1.6.0)**, armada el 16/10 a la madrugada (AAB en `Builds/ShowBies.aab`, verificado; la APK de prueba
-      en `Builds/ShowBies.apk`): el arreglo del rumbo de las balas y el PODER 28 × 1,12^L. **Falta que Ivan pruebe la
-      APK** y decida: reemplazar la 13 en la revisión (Producción > Crear nueva versión, el bundle 14 arrastrado o desde
-      la biblioteca, las mismas notas, "Enviar cambios a revisión": la revisión vuelve a empezar) o, si la 13 ya salió,
-      mandarla como actualización.
+- [x] **Versión 13 (1.6.0) publicada el 16/10 a las 3:32.** La 14 no se subió nunca: la reemplazó la 15.
+- [x] **Versión 15 (1.6.1)** enviada a revisión el 18/10/2026 (producción, lanzamiento completo, publicación gestionada
+      apagada), con las notas cortas de actualización de `notas_1.6.1.md`: las armas con diseño propio, los zombis que ya no
+      se suben al jugador, las balas hacia la mira y el PODER más lento. Ivan probó la APK de prueba 15 ("anda bien") y
+      arrastró el AAB; un segundo arrastre salió con "El código de versión 15 ya se ha usado" y se agregó desde la
+      biblioteca. La advertencia de siempre (sin desofuscación); ningún dispositivo deja de ser compatible.
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
