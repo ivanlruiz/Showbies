@@ -42,7 +42,8 @@ public class ZombiBlindado : MonoBehaviour
     [Header("Lo que se ve")]
     public Transform pivote;                       // el escudo entero, hijo del torso
     public Transform placa;
-    public Color colorAmbar = new Color(1f, 0.7f, 0f);
+    public Renderer charco;                        // el ambar del piso: se apaga apenas pierde el escudo, no vuela
+    public Color colorAmbar = new Color(1f, 0.77f, 0f);
 
     public bool Roto { get; private set; }
     public bool GuardiaAbierta { get { return abiertaDesde >= 0f; } }
@@ -147,6 +148,7 @@ public class ZombiBlindado : MonoBehaviour
         Roto = true;
         abiertaDesde = -1f;
         if (zombi != null) zombi.puedeZarpar = true;
+        if (charco != null) charco.enabled = false;
         if (pivote == null) return;
         direccion.y = 0f;
         if (direccion.sqrMagnitude < 1e-4f) direccion = transform.forward;

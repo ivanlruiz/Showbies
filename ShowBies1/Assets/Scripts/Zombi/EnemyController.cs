@@ -1456,6 +1456,12 @@ public class EnemyController : MonoBehaviour
         if (cantidad > 0) Moneda.Soltar(EventoHalloween.CarameloPrefab, transform.position, cantidad, 1);
     }
 
+    private static bool EsUnBrillo(Renderer r)
+    {
+        var m = r.sharedMaterial;
+        return m != null && m.shader != null && m.shader.name == "ShowBies/CharcoDeLuz";
+    }
+
     private void PrepararDestello()
     {
         var todos = GetComponentsInChildren<Renderer>();
@@ -1463,8 +1469,9 @@ public class EnemyController : MonoBehaviour
         foreach (var r in todos)
         {
             // Los normales y rapidos tienen renderers apagados (capsula y cubos
-            // que solo son hitbox): esos no se tocan.
-            if (r.enabled) visibles.Add(r);
+            // que solo son hitbox): esos no se tocan. Tampoco los brillos (el charco del escudo
+            // del blindado): blanco, el aditivo seria un cuadrado opaco en el piso.
+            if (r.enabled && !EsUnBrillo(r)) visibles.Add(r);
         }
 
         renderersVisibles = visibles.ToArray();

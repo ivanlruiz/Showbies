@@ -317,9 +317,18 @@ public static class ConstructorZombis
     const string RutaParticulasBlindado = "Assets/Prefabs/Particulas/ExplosionAzul.prefab";
     const string RutaTanque = "Assets/Prefabs/Personajes/ZombiTanque.prefab";
 
-    public static readonly Color GrisPizarra = new Color(0.29f, 0.322f, 0.365f);       // #4A525D, de Argon
-    public static readonly Color NegroDelEscudo = new Color(0.102f, 0.114f, 0.141f);   // #1A1D24, de Argon
-    public static readonly Color Ambar = new Color(1f, 0.702f, 0f);                    // #FFB300, de Argon
+    // Los colores de las dos vueltas de Argon con las fotos de noche (18/10): con la piel #4A525D y el casco y el escudo
+    // #1A1D24 era el que menos se leia del elenco (contraste 1,5 / 2,2 / 1,6 contra el piso), un agujero cuadrado en el
+    // piso. Primero, mas ambar (la cresta del casco, el marco del escudo y un charco) y el acero claro #4A5A70; con eso,
+    // en la ciudad el acero empataba con el piso mojado, y quedo azul marino oscuro, para que el ambar recorte contra el
+    // escudo y el escudo contra la calle, con la piel mas clara para cuando lo pierde.
+    public static readonly Color PielDelBlindado = new Color(0.58f, 0.659f, 0.745f);    // #94A8BE
+    public static readonly Color BordeDelBlindado = new Color(0.565f, 0.706f, 0.831f);  // #90B4D4, el borde de luz
+    public const float BordeDeLuzDelBlindado = 1.6f * 1.35f;                            // un 35 % mas que los demas
+    public static readonly Color AceroDelEscudo = new Color(0.149f, 0.188f, 0.239f);    // #26303D: el casco y la placa
+    public static readonly Color Ambar = new Color(1f, 0.769f, 0f);                     // #FFC400: visera, cresta, borde y mirilla
+    public static readonly Color AmbarOscuro = new Color(1f, 0.561f, 0f);               // #FF8F00: los costados del escudo
+    public static readonly Color AmbarDelCharco = new Color(1f, 0.702f, 0f);            // #FFB300
     public static readonly Vector3 FormaDelBlindado = new Vector3(1.2f, 1.05f, 1.05f);
     // La ciudad estrena al blindado (21) y sigue en la horda total.
     public static readonly Vector3Int[] TramosDelBlindado = { new Vector3Int(21, 0, 3) };
@@ -328,8 +337,14 @@ public static class ConstructorZombis
     // proporciones de la hoja de Nano Banana (de la barbilla a las canillas, del ancho de los hombros) queda en 50 x 58,
     // con el borde de arriba y la mirilla ambar en la misma proporcion. El casco si es el de Argon: la cabeza mide 33 cm.
     public static readonly Vector3 PlacaDelEscudo = new Vector3(0.5f, 0.58f, 0.06f);
-    public static readonly Vector3 BordeDelEscudo = new Vector3(0.53f, 0.075f, 0.08f);
-    public static readonly Vector3 MirillaDelEscudo = new Vector3(0.33f, 0.09f, 0.075f);
+    public static readonly Vector3 BordeDelEscudo = new Vector3(0.52f, 0.07f, 0.08f);
+    public static readonly Vector3 MirillaDelEscudo = new Vector3(0.36f, 0.08f, 0.07f);
+    public static readonly Vector3 CostadoDelEscudo = new Vector3(0.04f, 0.5f, 0.07f);   // dos, a 24 cm del centro
+    public static readonly Vector3 CrestaDelCasco = new Vector3(0.1f, 0.03f, 0.34f);
+    public static readonly Vector3 ViseraDelCasco = new Vector3(0.38f, 0.06f, 0.05f);
+    // El charco ambar en el piso, delante del escudo: dice para donde para (gira con la guardia) y se apaga al romperse.
+    public static readonly Vector2 CharcoDelEscudo = new Vector2(1.1f, 0.75f);
+    public const float CharcoAdelante = 0.55f;     // de la raiz
     public const float EscudoAdelante = 0.25f;     // del centro del cuerpo a la placa
 
     [MenuItem("ShowBies/Zombis/Armar el blindado")]
@@ -352,14 +367,20 @@ public static class ConstructorZombis
             AssetDatabase.CreateAsset(enemigo, RutaEnemigoBlindado);
         }
 
-        var piel = Piel(RutaPielBlindado, GrisPizarra);
+        var piel = Piel(RutaPielBlindado, PielDelBlindado);
         if (piel == null) return;
-        var negro = PlanoConInstancing("NegroBlindado", NegroDelEscudo);
+        piel.SetColor("_ColorBorde", BordeDelBlindado);
+        piel.SetFloat("_Borde", BordeDeLuzDelBlindado);
+        EditorUtility.SetDirty(piel);
+        var acero = PlanoConInstancing("AceroBlindado", AceroDelEscudo);
         var ambar = PlanoConInstancing("AmbarBlindado", Ambar);
+        var ambarOscuro = PlanoConInstancing("AmbarOscuroBlindado", AmbarOscuro);
+        var luzDelEscudo = ConstructorEscenarios.MaterialDeBrillo(CarpetaMateriales, "CharcoBlindado", AmbarDelCharco, 0.75f, 0.35f, 4.5f);
         var cubo = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        var cuadrado = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
         var tanque = AssetDatabase.LoadAssetAtPath<GameObject>(RutaTanque);
         var cuerpoDelTanque = tanque != null ? tanque.GetComponent<Rigidbody>() : null;
-        if (cubo == null || cuerpoDelTanque == null) { Debug.LogError("ConstructorZombis: falta el cubo o el tanque"); return; }
+        if (cubo == null || cuadrado == null || cuerpoDelTanque == null) { Debug.LogError("ConstructorZombis: falta el cubo, el cuadrado o el tanque"); return; }
 
         var vista = EditorSceneManager.NewPreviewScene();
         try
@@ -384,10 +405,11 @@ public static class ConstructorZombis
             // ambar abajo en el frente: la barra que se lee desde la camara.
             Vector3 casco = new Vector3(caja.size.x * 1.08f, 0.2f, caja.size.z * 1.02f);
             Vector3 centroDelCasco = new Vector3(caja.center.x, caja.max.y + 0.03f - casco.y * 0.5f, caja.center.z);
-            Pieza(cabeza, "Casco", cubo, negro, centroDelCasco, derecho, casco);
+            Pieza(cabeza, "Casco", cubo, acero, centroDelCasco, derecho, casco);
             Pieza(cabeza, "Visera", cubo, ambar,
-                  centroDelCasco + adelante * (casco.z * 0.5f + 0.005f) - arriba * (casco.y * 0.5f - 0.05f), derecho,
-                  new Vector3(casco.x * 1.02f, 0.07f, 0.05f));
+                  centroDelCasco + adelante * (casco.z * 0.5f + 0.005f) - arriba * (casco.y * 0.5f - 0.05f), derecho, ViseraDelCasco);
+            // La cresta sobre el casco, que es lo que mas ve la camara desde arriba: se lee aunque vaya de espaldas.
+            Pieza(cabeza, "Cresta", cubo, ambar, centroDelCasco + arriba * (casco.y * 0.5f + CrestaDelCasco.y * 0.5f), derecho, CrestaDelCasco);
 
             // El escudo: un pivote hijo de la raiz a la altura del pecho, y la placa adelante. La guardia gira el pivote
             // (ZombiBlindado). De la raiz y no del torso: el modelo esta estirado distinto en cada eje, y una pieza que
@@ -399,14 +421,25 @@ public static class ConstructorZombis
             pivote.position = new Vector3(go.transform.position.x, centroDeLaPlaca, go.transform.position.z);
             pivote.rotation = derecho;
             Vector3 centro = pivote.position + adelante * EscudoAdelante;
-            var placa = Pieza(pivote, "Placa", cubo, negro, centro, derecho, PlacaDelEscudo);
+            var placa = Pieza(pivote, "Placa", cubo, acero, centro, derecho, PlacaDelEscudo);
             Pieza(pivote, "Borde", cubo, ambar, centro + arriba * (PlacaDelEscudo.y * 0.5f) + adelante * 0.005f, derecho, BordeDelEscudo);
             Pieza(pivote, "Mirilla", cubo, ambar, centro + arriba * (PlacaDelEscudo.y * 0.2f) + adelante * 0.01f, derecho, MirillaDelEscudo);
+            Vector3 costado = go.transform.right;
+            for (int i = 0; i < 2; i++)
+                Pieza(pivote, i == 0 ? "CostadoIzquierdo" : "CostadoDerecho", cubo, ambarOscuro,
+                      centro + costado * (i == 0 ? -0.24f : 0.24f) - arriba * 0.03f + adelante * 0.005f, derecho, CostadoDelEscudo);
+            // El charco, acostado en el piso (a la altura de los charcos, por encima del cordon de la ciudad).
+            var pies = Hueso(go.transform, "Bip001 Footsteps");
+            float piso = pies != null ? pies.position.y : go.transform.position.y - 0.4f;
+            Vector3 dondeElCharco = new Vector3(go.transform.position.x, piso + JefePatrones.AlturaDelAviso, go.transform.position.z) + adelante * CharcoAdelante;
+            var charco = Pieza(pivote, "Charco", cuadrado, luzDelEscudo, dondeElCharco, derecho * Quaternion.Euler(90f, 0f, 0f),
+                               new Vector3(CharcoDelEscudo.x, CharcoDelEscudo.y, 1f));
 
             var blindado = go.GetComponent<ZombiBlindado>();
             if (blindado == null) blindado = go.AddComponent<ZombiBlindado>();
             blindado.pivote = pivote;
             blindado.placa = placa;
+            blindado.charco = charco.GetComponent<Renderer>();
             blindado.colorAmbar = Ambar;
 
             PrefabUtility.SaveAsPrefabAsset(go, RutaBlindado);

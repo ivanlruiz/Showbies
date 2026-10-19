@@ -6529,9 +6529,20 @@ public static class PruebasMejoras
                     piezasDelEscudo++;
                     sinCollider &= r.GetComponent<Collider>() == null && r.gameObject.layer == Personajes.Capa;
                 }
-            inf.Verdadero("blindado: el escudo (la placa, el borde y la mirilla) cuelga de un pivote de la raiz, sin collider (" + piezasDelEscudo + " piezas)",
-                          blindado.pivote != null && blindado.pivote.parent == prefab.transform && piezasDelEscudo == 3 && sinCollider
+            inf.Verdadero("blindado: el escudo (la placa, el borde, la mirilla, los dos costados y el charco) cuelga de un pivote de la raiz, sin collider ("
+                          + piezasDelEscudo + " piezas)",
+                          blindado.pivote != null && blindado.pivote.parent == prefab.transform && piezasDelEscudo == 6 && sinCollider
                           && blindado.placa != null && blindado.placa.IsChildOf(blindado.pivote));
+            var charcoDelEscudo = blindado.charco;
+            inf.Verdadero("blindado: el charco ambar en el piso, delante del escudo y con el brillo de los faroles",
+                          charcoDelEscudo != null && charcoDelEscudo.transform.IsChildOf(blindado.pivote) && charcoDelEscudo.sharedMaterial != null
+                          && charcoDelEscudo.sharedMaterial.shader.name == "ShowBies/CharcoDeLuz" && charcoDelEscudo.sharedMaterial.enableInstancing
+                          && Vector3.Dot(charcoDelEscudo.transform.position - prefab.transform.position, prefab.transform.forward) > 0.4f
+                          && Mathf.Abs(Vector3.Dot(charcoDelEscudo.transform.forward, Vector3.up)) > 0.99f);
+            bool cresta = false;
+            foreach (var t in prefab.GetComponentsInChildren<Transform>(true))
+                if (t.name == "Cresta" && cabeza != null && t.IsChildOf(cabeza)) cresta = true;
+            inf.Verdadero("blindado: la cresta ambar sobre el casco (lo que ve la camara aunque vaya de espaldas)", cresta);
             Vector3 alaPlaca = blindado.placa != null ? blindado.placa.position - prefab.transform.position : Vector3.zero;
             inf.Verdadero("blindado: la placa va adelante del pecho, a la altura del cuerpo",
                           Vector3.Dot(alaPlaca, prefab.transform.forward) > 0.15f && blindado.placa != null
@@ -6626,7 +6637,7 @@ public static class PruebasMejoras
         var piezasVistas = new StringBuilder();
         // Las de cada uno: los dos sacos, los ojos y las crestas, el totem, y el casco, la visera y el escudo.
         var cuantas = new[] { new KeyValuePair<string, int>(ConstructorZombis.RutaEscupidor, 2), new KeyValuePair<string, int>(ConstructorZombis.RutaSaltador, 4),
-                              new KeyValuePair<string, int>(ConstructorZombis.RutaChaman, 3), new KeyValuePair<string, int>(ConstructorZombis.RutaBlindado, 5) };
+                              new KeyValuePair<string, int>(ConstructorZombis.RutaChaman, 3), new KeyValuePair<string, int>(ConstructorZombis.RutaBlindado, 8) };
         foreach (var par in cuantas)
         {
             var especial = AssetDatabase.LoadAssetAtPath<GameObject>(par.Key);
@@ -6634,8 +6645,14 @@ public static class PruebasMejoras
             int suyas = 0;
             foreach (var r in especial.GetComponentsInChildren<MeshRenderer>(true))
             {
-                // Ni las cajas de golpe (apagadas) ni la cabeza del modelo, que lleva la piel.
+                // Ni las cajas de golpe (apagadas) ni la cabeza del modelo, que lleva la piel, ni los brillos (el charco
+                // del blindado), que van con su shader, tambien instanciado.
                 if (!r.enabled || r.name.StartsWith(Disfraces.MallaDeLaCabeza)) continue;
+                if (r.sharedMaterial != null && r.sharedMaterial.shader.name == "ShowBies/CharcoDeLuz")
+                {
+                    instanciadas &= r.sharedMaterial.enableInstancing;
+                    continue;
+                }
                 suyas++;
                 foreach (var m in r.sharedMaterials)
                     instanciadas &= m != null && m.shader.name == ConstructorZombis.ShaderPlanoConInstancing && m.enableInstancing;

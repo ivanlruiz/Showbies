@@ -53,7 +53,7 @@ public static class PruebaBlindado
     static Fase fase;
     static float desde, abiertaEn, maxGiro, yawAntes, tiempoAntes, vidaAntes, danoDelTiro;
     static double inicio;
-    static bool empezo, terminado, vioCerrada, fotoGuardia, fotoRoto, tiroEnLaGuardia;
+    static bool empezo, terminado, vioCerrada, fotoGuardia, fotoRoto;
     static string error;
     static readonly List<KeyValuePair<string, bool>> oks = new List<KeyValuePair<string, bool>>();
     static EnemyController zombi;
@@ -211,7 +211,8 @@ public static class PruebaBlindado
                 if (blindado == null) { Terminar("el prefab no tiene ZombiBlindado"); return; }
                 Ok("es pesado y lo lleva la persecucion de siempre (no se aparta, el chaman lo potencia y se refugia detras)",
                    zombi.EsPesado && !zombi.SeMuevePorSuCuenta);
-                Ok("con el escudo a la vista y la guardia cerrada", blindado.EscudoALaVista && !blindado.Roto && !blindado.GuardiaAbierta);
+                Ok("con el escudo a la vista, su charco ambar y la guardia cerrada",
+                   blindado.EscudoALaVista && blindado.charco != null && blindado.charco.enabled && !blindado.Roto && !blindado.GuardiaAbierta);
                 maxGiro = 0f;
                 yawAntes = Yaw(zombi.transform);
                 tiempoAntes = ahora;
@@ -364,7 +365,6 @@ public static class PruebaBlindado
                 Congelar(false);
                 vioCerrada = false;
                 abiertaEn = -1f;
-                tiroEnLaGuardia = false;
                 zarpazosAntes = EnemyController.ZarpazosEmpezados;
                 fase = Fase.Guardia;
                 desde = ahora;
@@ -445,7 +445,7 @@ public static class PruebaBlindado
                     return;
                 }
                 Ok("el bate le arranca el escudo y lo frena", blindado.Roto && zombi.Frenado);
-                Ok("y el escudo sale volando (a la vista)", blindado.EscudoALaVista);
+                Ok("y el escudo sale volando (a la vista), con el charco apagado en el acto", blindado.EscudoALaVista && !blindado.charco.enabled);
                 fase = Fase.BateVuela;
                 desde = ahora;
                 return;
@@ -482,7 +482,7 @@ public static class PruebaBlindado
                     if (zombi == null) { Terminar("no aparecio el segundo blindado"); return; }
                     aparicion = zombi.NumeroDeAparicion;
                     blindado = zombi.GetComponent<ZombiBlindado>();
-                    Ok("el que sale del pool vuelve con el escudo", blindado.EscudoALaVista && !blindado.Roto);
+                    Ok("el que sale del pool vuelve con el escudo y su charco", blindado.EscudoALaVista && blindado.charco.enabled && !blindado.Roto);
                     zombi.DanoZombi(1e9f);
                     desde = ahora;
                     return;

@@ -207,6 +207,21 @@ Lo que se decidió al hacer el blindado, que Argon no dijo:
 - **Los tiros del hielo y la quemadura le llegan igual de frente**: el escudo baja el daño, no las cartas (y el hielo es
   lo que lo deja rodear).
 
+Argon aprobó las adaptaciones y, con las fotos de noche (el que menos se leía del elenco: contraste 1,5 / 2,2 / 1,6 contra
+el piso, "un agujero cuadrado en el piso"), le cambió la pinta en dos vueltas:
+
+- **Más ámbar**: una cresta de 10 × 3 × 34 cm sobre el casco (lo que más ve la cámara, aunque vaya de espaldas), el borde
+  de arriba (52 × 7 × 8) y la mirilla (36 × 8 × 7) en #FFC400, dos costados de 4 × 50 × 7 cm en #FF8F00 que cierran el
+  marco del escudo, y la visera de 38 × 6 × 5.
+- **Un charco de luz ámbar** (#FFB300, 110 × 75 cm, 55 cm adelante de la raíz) que gira con la guardia y se apaga al
+  perder el escudo: el piso dice para dónde para y si todavía lo tiene.
+- **El casco y la placa en azul marino oscuro (#26303D) y la piel acero claro (#94A8BE)**, con el borde de luz #90B4D4 un
+  35 % más fuerte. En la primera vuelta fueron acero #4A5A70 y piel #78889C, y en la ciudad el acero empataba con la
+  calle mojada: oscuros, el ámbar recorta contra el escudo y el escudo contra la calle, y sin escudo el cuerpo claro se
+  ve. La ropa (#324154) no se pinta aparte: el modelo tiene una sola textura y Argon prefirió no duplicarla.
+- Contraste medido al final: 2,2 / 2,9 / 1,3. En la ciudad el promedio no sube (la armadura oscura y la piel clara se
+  compensan), pero el promedio no ve el marco ámbar ni el charco, que son lo que lo hacen leer.
+
 ## Lo que decidió Argon después de la auditoría (18/10)
 
 La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a Argon:

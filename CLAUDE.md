@@ -1176,9 +1176,14 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   detrás de un tanque (`Builds/prueba_chaman.txt`, con `chaman_aviso.png` y `chaman_marcas.png`). La prueba de lógica
   mira dónde se planta, el lugar detrás del pesado, el asset, el tótem, sus números, que los demás sigan disfrazándose y
   sus dos tramos en WaveMode.
-- **El blindado** (`ZombiBlindado`, desde la 21, la ciudad, sin fin, peso 0,15, como mucho 3): un antidisturbios gris
-  pizarra, ancho, con un casco negro con la visera ámbar y un escudo negro delante del pecho con el borde de arriba y una
-  mirilla en ámbar: desde la cámara, una barra ámbar gruesa delante de la cabeza. **Toda bala común que le entra de
+- **El blindado** (`ZombiBlindado`, desde la 21, la ciudad, sin fin, peso 0,15, como mucho 3): un antidisturbios de
+  piel acero claro (#94A8BE), ancho, con un casco azul marino oscuro (#26303D) con la visera y una cresta ámbar, y un
+  escudo del mismo azul delante del pecho, enmarcado en ámbar (el borde de arriba, la mirilla y los dos costados), con un
+  charco de luz ámbar en el piso delante (gira con la guardia y se apaga al perder el escudo). Así lo dejó Argon en dos
+  vueltas con las fotos de noche (**Fotos de la horda de noche**): con el casco y el escudo casi negros era un agujero
+  cuadrado en el piso, y en acero claro empataba con la calle mojada de la ciudad; oscuro, el ámbar recorta contra el
+  escudo y el escudo contra la calle. El charco no entra en el destello ni en el hielo (`EnemyController.EsUnBrillo`:
+  blanco, un brillo aditivo sería un cuadrado opaco en el piso). **Toda bala común que le entra de
   frente** (un arco de 90°) **pega el 20 %**, suena a metal (`Efectos.GolpeAlEscudo`, el "tinc" de
   `sonidos/escudo.py`), saca chispas blancas, el número sale gris (y solo si llega a 1) y no lo aplasta. Bala común es
   la pistola, el revólver, los perdigones, el rifle, las de más del disparo doble, la de hacia atrás y los drones; de
