@@ -6471,6 +6471,97 @@ public static class PruebasMejoras
 
         ProbarSaltador(inf);
         ProbarChaman(inf);
+        ProbarBlindado(inf);
+    }
+
+    // El blindado (ZombiBlindado, ZOMBIS.md): el arco del escudo, lo que avanza mientras gira, que balas para, su Enemy,
+    // el prefab (pesado, con el casco, la visera y el escudo colgado de un pivote de la raiz), sus numeros, que no se
+    // disfrace y su tramo en la mezcla de WaveMode. Lo que hace en play lo mira PruebaBlindado.
+    static void ProbarBlindado(Informe inf)
+    {
+        // De frente es que la bala venga de adelante: su rumbo apunta contra el frente.
+        Vector3 norte = Vector3.forward;
+        inf.Verdadero("blindado: el escudo para lo que viene de frente, hasta 45 grados para cada lado",
+                      ZombiBlindado.DeFrente(norte, Vector3.back, 90f)
+                      && ZombiBlindado.DeFrente(norte, Quaternion.Euler(0f, 44f, 0f) * Vector3.back, 90f)
+                      && ZombiBlindado.DeFrente(norte, Quaternion.Euler(0f, -44f, 0f) * Vector3.back, 90f)
+                      && !ZombiBlindado.DeFrente(norte, Quaternion.Euler(0f, 46f, 0f) * Vector3.back, 90f));
+        inf.Verdadero("blindado: no para lo que viene de costado ni por la espalda, ni un rumbo vertical",
+                      !ZombiBlindado.DeFrente(norte, Vector3.right, 90f) && !ZombiBlindado.DeFrente(norte, Vector3.forward, 90f)
+                      && !ZombiBlindado.DeFrente(norte, Vector3.down, 90f));
+        inf.Verdadero("blindado: mientras gira avanza entero de frente y un 35 % de costado o de espaldas",
+                      Mathf.Approximately(EnemyController.AvanceAlGirar(1f), 1f) && Mathf.Approximately(EnemyController.AvanceAlGirar(0f), 0.35f)
+                      && Mathf.Approximately(EnemyController.AvanceAlGirar(-1f), 0.35f) && EnemyController.AvanceAlGirar(0.5f) > 0.6f);
+
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(ConstructorZombis.RutaEnemigoBlindado);
+        if (inf.Verdadero("blindado: esta su Enemy", enemigo != null))
+        {
+            inf.Verdadero("blindado: vida x3,2 del normal, velocidad x0,75, 12 puntos, monedas x3 y 2 de PODER (" + enemigo.hp + ", " + enemigo.velocidad + ", "
+                          + enemigo.puntos + ", " + enemigo.monedasMin + "-" + enemigo.monedasMax + ", " + enemigo.experiencia + ")",
+                          enemigo.hp == 16 && Mathf.Approximately(enemigo.velocidad, 3.75f) && enemigo.puntos == 12 && enemigo.monedasMin == 5
+                          && enemigo.monedasMax == 7 && enemigo.experiencia == 2 && enemigo.daño == 1);
+        }
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaBlindado);
+        var blindado = prefab != null ? prefab.GetComponent<ZombiBlindado>() : null;
+        if (inf.Verdadero("blindado: esta su prefab, con su componente", blindado != null && prefab.GetComponent<EnemyController>().enemyType == enemigo))
+        {
+            var zombi = prefab.GetComponent<EnemyController>();
+            inf.Verdadero("blindado: pesado como el tanque (no se aparta, el bate lo frena, el chaman se refugia detras)",
+                          EnemyController.Ceder(prefab.GetComponent<Rigidbody>().mass) < 0.5f
+                          && Mathf.Approximately(prefab.GetComponent<Rigidbody>().mass, AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Personajes/ZombiTanque.prefab").GetComponent<Rigidbody>().mass));
+            inf.Verdadero("blindado: no se mueve por su cuenta (lo lleva la persecucion, y el chaman lo potencia)",
+                          prefab.GetComponent<IMovimientoPropio>() == null);
+            var cabeza = Disfraces.Cabeza(prefab.transform);
+            bool casco = false, visera = false;
+            foreach (var t in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (cabeza == null || !t.IsChildOf(cabeza)) continue;
+                if (t.name == "Casco") casco = t.GetComponent<Collider>() == null && t.gameObject.layer == Personajes.Capa;
+                if (t.name == "Visera") visera = t.GetComponent<Collider>() == null && t.gameObject.layer == Personajes.Capa;
+            }
+            inf.Verdadero("blindado: el casco y la visera ambar, colgados de la cabeza y sin collider", casco && visera);
+            inf.Verdadero("blindado: en Halloween va sin disfraz (lo que cuelga de su cabeza es el casco)", Disfraces.TienePiezasEnLaCabeza(cabeza));
+            int piezasDelEscudo = 0;
+            bool sinCollider = true;
+            if (blindado.pivote != null)
+                foreach (var r in blindado.pivote.GetComponentsInChildren<Renderer>(true))
+                {
+                    piezasDelEscudo++;
+                    sinCollider &= r.GetComponent<Collider>() == null && r.gameObject.layer == Personajes.Capa;
+                }
+            inf.Verdadero("blindado: el escudo (la placa, el borde y la mirilla) cuelga de un pivote de la raiz, sin collider (" + piezasDelEscudo + " piezas)",
+                          blindado.pivote != null && blindado.pivote.parent == prefab.transform && piezasDelEscudo == 3 && sinCollider
+                          && blindado.placa != null && blindado.placa.IsChildOf(blindado.pivote));
+            Vector3 alaPlaca = blindado.placa != null ? blindado.placa.position - prefab.transform.position : Vector3.zero;
+            inf.Verdadero("blindado: la placa va adelante del pecho, a la altura del cuerpo",
+                          Vector3.Dot(alaPlaca, prefab.transform.forward) > 0.15f && blindado.placa != null
+                          && blindado.placa.position.y < AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaBlindado).transform.position.y + 1.2f);
+            inf.Verdadero("blindado: de frente deja pasar el 20 % en 90 grados, gira a 120 (50 congelado), pega x1,4 y a 1,5 m abre la guardia 0,5 s antes del zarpazo",
+                          Mathf.Approximately(blindado.danoQuePasa, 0.2f) && Mathf.Approximately(blindado.arcoDelEscudo, 90f)
+                          && Mathf.Approximately(blindado.giroPorSegundo, 120f) && Mathf.Approximately(blindado.giroCongelado, 50f)
+                          && Mathf.Approximately(blindado.golpe, 1.4f) && Mathf.Approximately(blindado.distanciaDeLaGuardia, 1.5f)
+                          && blindado.distanciaParaCerrar > blindado.distanciaDeLaGuardia && Mathf.Approximately(blindado.aviso, 0.5f)
+                          && Mathf.Abs(blindado.giroDeLaGuardia) > 60f);
+            // Que para y que no, sobre el prefab (fuera de una partida no hay perforante).
+            Vector3 deFrente = -prefab.transform.forward;
+            inf.Verdadero("blindado: para la bala comun de frente, y no la de energia, la granada, el bate, la quemadura ni la explosiva",
+                          blindado.Para(OrigenDelDano.Bala, deFrente) && !blindado.Para(OrigenDelDano.Bala, -deFrente)
+                          && !blindado.Para(OrigenDelDano.Energia, deFrente) && !blindado.Para(OrigenDelDano.Granada, deFrente)
+                          && !blindado.Para(OrigenDelDano.Bate, deFrente) && !blindado.Para(OrigenDelDano.Quemadura, deFrente)
+                          && !blindado.Para(OrigenDelDano.Explosiva, deFrente) && !blindado.Para(OrigenDelDano.Otro, deFrente));
+            inf.Verdadero("blindado: su golpe, x1,4 del zarpazo comun", zombi != null && Mathf.Approximately(blindado.golpe, 1.4f));
+        }
+
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            var suyos = new List<TipoEnOleada>();
+            if (oleadas != null && oleadas.tipos != null)
+                foreach (var t in oleadas.tipos) if (t != null && t.prefab == prefab) suyos.Add(t);
+            inf.Verdadero("blindado: WaveMode lo saca desde la 21, la ciudad, sin fin (peso 0,15, como mucho 3, especial)",
+                          suyos.Count == 1 && suyos[0].desdeOleada == 21 && suyos[0].hastaOleada == 0 && Mathf.Approximately(suyos[0].peso, 0.15f)
+                          && suyos[0].maxVivos == 3 && suyos[0].especial);
+        });
     }
 
     // El chaman (ZombiChaman, ZOMBIS.md): donde se planta, el lugar detras de un pesado, su Enemy, el prefab con el
@@ -6532,21 +6623,27 @@ public static class PruebasMejoras
         // Las piezas de los especiales (los sacos, los ojos, las crestas, el totem) y las marcas del chaman, con el color
         // plano que se instancia: con Unlit/Color era una llamada de dibujo por pieza (auditoria del 18/10).
         bool instanciadas = chaman != null && chaman.materialRubi != null && chaman.materialRubi.shader.name == ConstructorZombis.ShaderPlanoConInstancing;
-        int piezasVistas = 0;
-        foreach (var ruta in new[] { ConstructorZombis.RutaEscupidor, ConstructorZombis.RutaSaltador, ConstructorZombis.RutaChaman })
+        var piezasVistas = new StringBuilder();
+        // Las de cada uno: los dos sacos, los ojos y las crestas, el totem, y el casco, la visera y el escudo.
+        var cuantas = new[] { new KeyValuePair<string, int>(ConstructorZombis.RutaEscupidor, 2), new KeyValuePair<string, int>(ConstructorZombis.RutaSaltador, 4),
+                              new KeyValuePair<string, int>(ConstructorZombis.RutaChaman, 3), new KeyValuePair<string, int>(ConstructorZombis.RutaBlindado, 5) };
+        foreach (var par in cuantas)
         {
-            var especial = AssetDatabase.LoadAssetAtPath<GameObject>(ruta);
+            var especial = AssetDatabase.LoadAssetAtPath<GameObject>(par.Key);
             if (especial == null) { instanciadas = false; continue; }
+            int suyas = 0;
             foreach (var r in especial.GetComponentsInChildren<MeshRenderer>(true))
             {
                 // Ni las cajas de golpe (apagadas) ni la cabeza del modelo, que lleva la piel.
                 if (!r.enabled || r.name.StartsWith(Disfraces.MallaDeLaCabeza)) continue;
-                piezasVistas++;
+                suyas++;
                 foreach (var m in r.sharedMaterials)
                     instanciadas &= m != null && m.shader.name == ConstructorZombis.ShaderPlanoConInstancing && m.enableInstancing;
             }
+            instanciadas &= suyas == par.Value;
+            piezasVistas.Append(especial.name + " " + suyas + " ");
         }
-        inf.Verdadero("zombis nuevos: sus piezas se dibujan con el color plano que se instancia (" + piezasVistas + " piezas)", instanciadas && piezasVistas == 9);
+        inf.Verdadero("zombis nuevos: sus piezas se dibujan con el color plano que se instancia (" + piezasVistas.ToString().Trim() + ")", instanciadas);
 
         LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
         {

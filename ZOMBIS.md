@@ -179,7 +179,7 @@ Obliga a elegir blanco con el joystick en vez de dispararle siempre al de adelan
 5. **Chamán**: el último, porque mira hasta 4 vecinos cada 4 s.
 
 **Hechos (18/10):** el escupidor, el saltador y el chamán, en el orden de los capítulos que eligió Ivan (los tres del
-cementerio). Siguen el blindado (21) y el hinchado (24).
+cementerio), y el blindado (21). Sigue el hinchado (24).
 
 Lo que se decidió al hacer el chamán, que Argon no dijo:
 
@@ -189,6 +189,23 @@ Lo que se decidió al hacer el chamán, que Argon no dijo:
   el jugador), mientras ese lugar quede entre 5,5 y 9 m del jugador; más cerca, el tanque lo llevaría a sus pies, y ahí
   se queda donde está. El blindado, si es pesado, va a contar solo.
 - **El cristal y las marcas miden 22-24 cm**, no 14: a 40 px un cubo de 14 cm era un punto.
+
+Lo que se decidió al hacer el blindado, que Argon no dijo:
+
+- **El escudo es más chico que el de Argon** (50 × 58 cm, no 75 × 90): este zombi mide un metro y la cabeza 33 cm, y
+  quedó con las proporciones de la hoja de Nano Banana (de la barbilla a las canillas, del ancho de los hombros). El
+  casco sí es el de Argon.
+- **El escudo cuelga de la raíz, no del torso**: el modelo está estirado 1,2 de ancho y 1,05 de fondo, y una pieza que
+  gira colgada de un hueso así se deforma al abrir la guardia. Al morir lo suelta, y se cae.
+- **Mientras gira sigue el camino de siempre**, más lento (un 35 % de costado o de espaldas), en vez de caminar hacia
+  donde mira: con un radio de giro se metería en las esquinas de los edificios, y la persecución con el `Rodeo` ya está
+  probada.
+- **Con la guardia abierta el escudo no para nada**, desde que empieza a abrirse; y con la guardia cerrada no ataca.
+- **Le pega a su escudo y no a él**: el número sale gris (y solo si llega a 1: un "1" por un 0,2 se leería como un golpe
+  comun), con chispas blancas y un "tinc" de metal, sin el destello ni el aplastado.
+- **"¡ESCUDO ROTO!"** sale arriba cuando el bate se lo arranca: el jugador tiene que aprender que esa es la contra.
+- **Los tiros del hielo y la quemadura le llegan igual de frente**: el escudo baja el daño, no las cartas (y el hielo es
+  lo que lo deja rodear).
 
 ## Lo que decidió Argon después de la auditoría (18/10)
 
@@ -210,8 +227,9 @@ La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a
 - **Falta: cada tipo entra al bestiario** (con las estrellas a 25 / 250 / 2.500) y a la tabla de textos. `NivelJugador.PuntosPorTipo`
   no hace falta: es solo para migrar progresos de antes de la v6.
 - **Falta: el modo libre** tiene una corrutina por tipo (`GeneradorZombis`): los nuevos van primero en las oleadas.
-- **Para el blindado y el hinchado** (de la auditoría del 18/10): un origen del daño en `DanoZombi` (el escudo tiene que
-  saber qué le entra de frente), una persecución con giro limitado reusable (120°/s), su masa por encima de 10 (si no, el
-  bate lo empuja y el chamán no se refugia detrás), y un gancho antes de morir (el hinchado se infla con vida 0 y todavía
-  se lo puede patear). Y sacar a una base común lo que ya repiten los tres hechos (buscar el modelo, el aviso en el piso,
-  quedarse quieto, el corte con el bate y la derrota, la pose), antes de copiarlo dos veces más.
+- **Hecho con el blindado:** el origen del daño en `DanoZombi` (`OrigenDelDano`), la persecución con giro limitado
+  (`EnemyController.Perseguir`) y su masa de tanque.
+- **Para el hinchado** (de la auditoría del 18/10): un gancho antes de morir (se infla con vida 0 y todavía se lo puede
+  patear), su explosión como origen del daño (para la cadena) y sacar a una base común lo que ya repiten el escupidor,
+  el saltador y el chamán (buscar el modelo, el aviso en el piso, quedarse quieto, el corte con el bate y la derrota, la
+  pose), antes de copiarlo otra vez. El blindado casi no comparte nada de eso.

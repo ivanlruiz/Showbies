@@ -212,7 +212,7 @@ public class Bate : MonoBehaviour
             hacia.y = 0f;
             hacia = hacia.sqrMagnitude > 1e-4f ? hacia.normalized : frente;
             // El cadaver del que muere sale para alla (DanoZombi); al que queda, lo empuja su peso.
-            zombi.DanoZombi(dano, false, hacia);
+            zombi.DanoZombi(dano, false, hacia, null, OrigenDelDano.Bate);
             if (!zombi.Vivo) continue;
             var reaccion = zombi.RecibirBatazo(hacia, empuje, duracionDelEmpuje, frenadoDelPesado);
             if (reaccion == ReaccionAlBatazo.Empujado) empujados++;

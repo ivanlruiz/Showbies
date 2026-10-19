@@ -149,7 +149,7 @@ public class Granade : MonoBehaviour
                 // Del centro de la explosion hacia afuera: los cadaveres se abren
                 // en abanico en vez de caer todos para el mismo lado.
                 enemyController.DanoZombi(damage * enemyController.multiplicadorVida, false,
-                                          enemyController.transform.position - transform.position);
+                                          enemyController.transform.position - transform.position, null, OrigenDelDano.Granada);
                 // Uno que muere deja de estar Vivo en el acto (el cadaver ya no cuenta).
                 if (vivo && !enemyController.Vivo) muertos++;
             }

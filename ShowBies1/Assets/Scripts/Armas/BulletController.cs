@@ -425,7 +425,9 @@ public class BulletController : MonoBehaviour
 
         // La direccion de la bala, para que el cadaver salga despedido hacia donde
         // iba el tiro y no siempre igual.
-        zombi.DanoZombi(danoAplicado, critico, transform.forward);
+        // La de energia atraviesa el escudo del blindado; las demas son balas comunes.
+        zombi.DanoZombi(danoAplicado, critico, transform.forward, null,
+                        ArmaPuesta == Proyectiles.Energia ? OrigenDelDano.Energia : OrigenDelDano.Bala);
         if (lentitudDelHielo > 0f) zombi.Congelar(lentitudDelHielo, PoderDeLaPartida.DuracionDelHielo);
         if (quemaduraPorSegundo > 0f) zombi.Quemar(quemaduraPorSegundo, PoderDeLaPartida.DuracionDeLaQuemadura);
         if (fraccionDeExplosion > 0f && radioDeExplosion > 0f) Explotar(zombi);
@@ -463,7 +465,8 @@ public class BulletController : MonoBehaviour
             if (zombi == null || !danadosPorLaExplosion.Add(zombi)) continue;
             Vector3 afuera = zombi.transform.position - centro;
             afuera.y = 0f;
-            zombi.DanoZombi(dano, false, afuera.sqrMagnitude > 1e-4f ? afuera.normalized : Vector3.zero, ColorDeLaExplosion);
+            zombi.DanoZombi(dano, false, afuera.sqrMagnitude > 1e-4f ? afuera.normalized : Vector3.zero, ColorDeLaExplosion,
+                            OrigenDelDano.Explosiva);
         }
     }
 

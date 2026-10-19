@@ -346,7 +346,7 @@ public class EnemyController : MonoBehaviour
         get { IniciarVida(); return vidaActual; }
     }
 
-    public float DanoPorGolpe => enemyType.daño * multiplicadorDano * multiplicadorGolpe;
+    public float DanoPorGolpe => enemyType.daño * multiplicadorDano * multiplicadorGolpe * (blindado != null ? blindado.golpe : 1f);
 
     // Lo sube quien quiera un golpe mas fuerte por un rato: el jefe mientras carga
     // (JefePatrones). Vuelve a 1 en cada aparicion.
@@ -816,6 +816,7 @@ public class EnemyController : MonoBehaviour
         Personajes.PonerEnLaCapa(gameObject);
         movimientoPropio = GetComponent<IMovimientoPropio>();
         tesoro = GetComponent<ZombiDelTesoro>();
+        blindado = GetComponent<ZombiBlindado>();
         // La altura de la barra de vida, una vez y en la pose de reposo: medida en el golpe,
         // si el primero que no mataba le entraba al jefe agazapado para el salto o la carga,
         // la barra quedaba hundida en su cabeza, y del pool la heredaban los jefes siguientes
@@ -835,6 +836,10 @@ public class EnemyController : MonoBehaviour
 
     // El zombi del tesoro, si lo es: festeja cuando lo matan (ZombiDelTesoro.AlMorir).
     private ZombiDelTesoro tesoro;
+    // El blindado (ZombiBlindado): su escudo, su giro y su golpe. No se mueve por su cuenta: lo lleva la persecucion de
+    // siempre, con el giro limitado, y por eso el chaman lo potencia.
+    private ZombiBlindado blindado;
+    public ZombiBlindado Blindado { get { return blindado; } }
 
     // Cada aparicion, nueva o salida del pool, arranca de cero. Corre antes de que
     // quien lo hizo aparecer le ponga los multiplicadores.
@@ -1213,7 +1218,11 @@ public class EnemyController : MonoBehaviour
 
        // El batazo (Bate): mientras dura el empujon, va para atras frenando, y el frenado se queda
        // quieto. Antes de todo lo que lo mueve hacia el jugador.
-       if (MoverPorElBatazo()) return;
+       if (MoverPorElBatazo())
+       {
+           PasoPorLoQueAnda();
+           return;
+       }
 
        if (movimientoPropio != null && movimientoPropio.Mover(rb, thePlayer.transform))
        {
@@ -1241,14 +1250,49 @@ public class EnemyController : MonoBehaviour
        // abajo. Ahora cae y lo saca el kill-Z.
        // En la ciudad, rodeando los edificios: los atravesaban (lo dijeron en Discord, 8/10).
        // Y esquivando lo redondo del cementerio.
+       Perseguir(blindado != null ? blindado.GiroPorSegundo : float.PositiveInfinity);
+       PasoPorLoQueAnda();
+    }
+
+    // La persecucion de siempre: hacia el jugador, rodeando los edificios y esquivando lo redondo. "giroPorSegundo"
+    // limita lo que se da vuelta (el blindado: 120 grados por segundo, de Argon): sigue el mismo camino (el Rodeo esta
+    // probado con la fisica, y con un radio de giro se meteria en las esquinas), pero mira para donde puede y, mientras
+    // no mira para donde va, avanza mas lento (AvanceAlGirar). Asi rodearlo rapido deja al jugador a su espalda. Sin
+    // limite, mira derecho al objetivo, como siempre.
+    private void Perseguir(float giroPorSegundo)
+    {
        Vector3 objetivo = Rodeo(transform.position, thePlayer.transform.position, CapitulosDeEscenario.Huellas, radioDelCuerpo);
        objetivo = Esquive(transform.position, objetivo, CapitulosDeEscenario.Redondos, radioDelCuerpo, EsJefe);
        objetivo.y = transform.position.y;
-       if ((objetivo - transform.position).sqrMagnitude > 0.0001f) transform.LookAt(objetivo);
-       Vector3 velocidad = transform.forward * (enemyType.velocidad * MultiplicadorDeVelocidad);
+       Vector3 hacia = objetivo - transform.position;
+       float rapidez = enemyType.velocidad * MultiplicadorDeVelocidad;
+       Vector3 velocidad;
+       if (float.IsPositiveInfinity(giroPorSegundo))
+       {
+           if (hacia.sqrMagnitude > 0.0001f) transform.LookAt(objetivo);
+           velocidad = transform.forward * rapidez;
+       }
+       else if (hacia.sqrMagnitude > 0.0001f)
+       {
+           transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(hacia), giroPorSegundo * Time.fixedDeltaTime);
+           Vector3 rumbo = hacia.normalized;
+           velocidad = rumbo * (rapidez * AvanceAlGirar(Vector3.Dot(transform.forward, rumbo)));
+       }
+       else
+       {
+           velocidad = Vector3.zero;
+       }
        velocidad.y = rb.linearVelocity.y;
        rb.linearVelocity = velocidad;
-       PasoPorLoQueAnda();
+    }
+
+    // Lo que avanza mientras se da vuelta, por el coseno entre para donde mira y para donde va: entero de frente, y un
+    // tercio largo de costado o de espaldas. Estatico para probarlo.
+    public const float AvanceDeEspaldas = 0.35f;
+
+    public static float AvanceAlGirar(float coseno)
+    {
+        return Mathf.Lerp(AvanceDeEspaldas, 1f, Mathf.Clamp01(coseno));
     }
 
     // Las piernas de los zombis con habilidad (el escupidor, el saltador, el chaman), que se mueven por su cuenta pero
@@ -1259,7 +1303,7 @@ public class EnemyController : MonoBehaviour
 
     private void PasoPorLoQueAnda()
     {
-        if (animadores == null || movimientoPropio == null || movimientoPropio is JefePatrones || tesoro != null) return;
+        if (animadores == null || (movimientoPropio == null && blindado == null) || movimientoPropio is JefePatrones || tesoro != null) return;
         Vector3 v = rb.linearVelocity;
         v.y = 0f;
         float paso = Frenado ? 0f : velocidadDeAnimacion * Mathf.Min(v.magnitude / Mathf.Max(0.01f, enemyType.velocidad), 2f);
@@ -1284,7 +1328,11 @@ public class EnemyController : MonoBehaviour
     // "colorDeCarta" es para el daño de una carta que pega sola (la quemadura, la explosion
     // de la explosiva): el numero sale de ese color y sin el destello ni el aplastado, que con
     // quince zombis quemandose serian quince cambios de material por tick.
-    public void DanoZombi(float daño, bool critico = false, Vector3 empuje = default(Vector3), Color? colorDeCarta = null)
+    //
+    // "origen" es de donde sale (OrigenDelDano). Una bala comun que le entra de frente al blindado pega una parte, con
+    // "empuje" como el rumbo del tiro: de donde viene es -empuje (tambien la de los drones y la de hacia atras).
+    public void DanoZombi(float daño, bool critico = false, Vector3 empuje = default(Vector3), Color? colorDeCarta = null,
+                          OrigenDelDano origen = OrigenDelDano.Otro)
     {
         // Dos golpes en el mismo paso de fisica llaman a esto dos veces con la vida
         // ya en cero (los eventos de colision del paso se despachan aunque el zombi
@@ -1298,6 +1346,14 @@ public class EnemyController : MonoBehaviour
         // flotante muestra lo que entro de verdad.
         if (Potenciado) daño *= danoRecibidoPotenciado;
 
+        // El escudo del blindado: de frente, una bala comun pega un 80 % menos, suena a metal y no lo aplasta.
+        bool alEscudo = blindado != null && blindado.Para(origen, empuje);
+        if (alEscudo)
+        {
+            daño *= blindado.danoQuePasa;
+            blindado.ContarBloqueado();
+        }
+
         // Con el jugador muerto nada le pega a un zombi: la partida sigue andando detras
         // de la derrota, y las balas y la granada que quedaron en el aire seguian
         // matando, con puntos, monedas y estadisticas despues de morir.
@@ -1310,14 +1366,16 @@ public class EnemyController : MonoBehaviour
         // El numero flotante va redondeado y nunca en 0: un 5,75 se lee como 6, y
         // una bala que pega tiene que mostrar algo.
         Vector3 numero = transform.position + Vector3.up * (1f + escalaBase.y);
-        if (colorDeCarta.HasValue) Efectos.GolpeDeCarta(numero, Mathf.Max(1, Mathf.RoundToInt(daño)), colorDeCarta.Value);
+        // Al escudo, el numero gris y solo si llega a 1: un "1" por un 0,2 se leeria como un golpe comun.
+        if (alEscudo) Efectos.GolpeAlEscudo(blindado.PuntoDelEscudo, numero, Mathf.RoundToInt(daño));
+        else if (colorDeCarta.HasValue) Efectos.GolpeDeCarta(numero, Mathf.Max(1, Mathf.RoundToInt(daño)), colorDeCarta.Value);
         else Efectos.Golpe(numero, Mathf.Max(1, Mathf.RoundToInt(daño)), critico);
 
         // La barra aparece recien con el primer golpe que no mata.
         if (vidaActual > VidaResidual)
         {
             MostrarBarraDeVida();
-            if (!colorDeCarta.HasValue) GolpeVisual();
+            if (!colorDeCarta.HasValue && !alEscudo) GolpeVisual();
         }
         else
         {
@@ -1538,7 +1596,7 @@ public class EnemyController : MonoBehaviour
         {
             ticksDeQuemadura--;
             proximoTickDeQuemadura += CadaTickDeQuemadura;
-            DanoZombi(quemaduraPorTick, false, Vector3.zero, ColorDeLaQuemadura);
+            DanoZombi(quemaduraPorTick, false, Vector3.zero, ColorDeLaQuemadura, OrigenDelDano.Quemadura);
         }
     }
 
@@ -1589,6 +1647,8 @@ public class EnemyController : MonoBehaviour
             empujonHasta = Time.time + duracion;
             return ReaccionAlBatazo.Empujado;
         }
+        // Al blindado, ademas, le arranca el escudo para siempre (de Argon): el bate es su contra.
+        if (blindado != null) blindado.RomperElEscudo(direccion);
         if (!(frenado > 0f)) return ReaccionAlBatazo.Nada;
         frenadoHasta = Mathf.Max(frenadoHasta, Time.time + frenado);
         pasoFrenado = true;
@@ -1626,7 +1686,7 @@ public class EnemyController : MonoBehaviour
     // (el jefe, el tesoro) maneja su Paso, y el hielo no lo frena.
     private void AjustarPaso()
     {
-        if (animadores == null || movimientoPropio != null) return;
+        if (animadores == null || movimientoPropio != null || blindado != null) return;
         float paso = Frenado ? 0f : velocidadDeAnimacion * MultiplicadorDeVelocidad;
         foreach (var animador in animadores)
             if (animador != null) animador.SetFloat(idPaso, paso);
@@ -2087,3 +2147,8 @@ public class EnemyController : MonoBehaviour
 }
 
 public enum ReaccionAlBatazo { Nada, Empujado, Frenado }
+
+// De donde sale un daño (DanoZombi), para lo que lo trata distinto: el escudo del blindado (ZombiBlindado) para solo las
+// balas comunes, y la de energia, la granada, el bate y las cartas que pegan solas lo atraviesan (de Argon, 18/10).
+// Otro es el de quien no lo dice (el medidor, las pruebas): no lo para nada.
+public enum OrigenDelDano { Otro, Bala, Energia, Explosiva, Granada, Bate, Quemadura }

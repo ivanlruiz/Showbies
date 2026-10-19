@@ -285,6 +285,7 @@ cartel_bono_perfecta	\n<size=45%><color=#FFE14D>PERFECT! +{0} coins</color></siz
 tesoro_aparece	TREASURE ZOMBIE!	¡ZOMBI DEL TESORO!
 tesoro_atrapado	TREASURE!	¡TESORO!
 tesoro_escapo	IT GOT AWAY!	¡SE ESCAPÓ!
+escudo_roto	SHIELD BROKEN!	¡ESCUDO ROTO!
 furia_boton	RAGE	FURIA
 furia_boton_pc	RAGE\n<size=55%>(F)</size>	FURIA\n<size=55%>(F)</size>
 furia_cartel	RAGE!	¡FURIA!

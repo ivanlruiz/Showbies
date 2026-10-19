@@ -629,6 +629,45 @@ public class Efectos : MonoBehaviour
         Sonidos.Tocar(e.explosion, 0.3f, 1.7f, 0.06f, 0.1f, Sonidos.Aparte);
     }
 
+    // El escudo del blindado (ZombiBlindado). Una bala comun que pega de frente: chispas blancas en la placa, un "tinc"
+    // de metal (corto, bajito y separado: con la cadencia alta pegan veinte por segundo) y el numero en gris, solo si
+    // llega a 1. Sin el destello ni el aplastado, que se ven como carne.
+    public static readonly Color ColorDelEscudo = new Color(0.78f, 0.8f, 0.84f);
+    private AudioClip tincDelEscudo, roturaDelEscudo;
+    private bool sonidosDelEscudoBuscados;
+
+    private void BuscarSonidosDelEscudo()
+    {
+        if (sonidosDelEscudoBuscados) return;
+        sonidosDelEscudoBuscados = true;
+        tincDelEscudo = Resources.Load<AudioClip>("Escudo/Tinc");
+        roturaDelEscudo = Resources.Load<AudioClip>("Escudo/Rotura");
+    }
+
+    public static void GolpeAlEscudo(Vector3 enLaPlaca, Vector3 numero, int daño)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.BuscarSonidosDelEscudo();
+        e.Emitir(enLaPlaca, 3, Color.white);
+        if (daño >= 1) e.MostrarNumero(numero, daño, false, ColorDelEscudo);
+        Sonidos.Tocar(e.tincDelEscudo, 0.45f, 1f, 0.12f, 0.06f, Sonidos.Aparte);
+    }
+
+    // El bate le arranca el escudo: el golpe de metal, chispas blancas y ambar, un temblor y "¡ESCUDO ROTO!" arriba (el
+    // jugador tiene que aprender que esa es la contra). La pausa de impacto ya la pone el bate.
+    public static void EscudoRoto(Vector3 punto, Color ambar)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.BuscarSonidosDelEscudo();
+        e.Emitir(punto, 18, Color.white);
+        e.Emitir(punto, 14, ambar);
+        Sonidos.Tocar(e.roturaDelEscudo, 1f, 1f, 0.06f, 0.05f, Sonidos.Aparte);
+        CamaraJugador.Temblar(0.3f);
+        e.MostrarCartel(punto + Vector3.up * alturaDelCartelDeCaja, Textos.De("escudo_roto"), ambar);
+    }
+
     public static void SilbidoDelBate()
     {
         var e = instance;

@@ -4,7 +4,7 @@ using UnityEngine;
 
 // Arma los zombis con habilidad (ZOMBIS.md, de Argon): su Enemy, la piel, las piezas que los distinguen desde arriba y
 // el prefab, que sale del zombi normal (el mismo modelo del pack, sin clips nuevos), y los suma a la mezcla del
-// WaveManager de WaveMode con su oleada, su peso y su tope. Hoy, el escupidor, el saltador y el chaman.
+// WaveManager de WaveMode con su oleada, su peso y su tope. Hoy, el escupidor, el saltador, el chaman y el blindado.
 //
 // El Enemy se crea una sola vez: despues es balance y se toca en el asset, como los otros. Lo demas se rehace cada vez.
 // No se edita a mano: se vuelve a correr ShowBies > Zombis > Armar el escupidor (o el que sea).
@@ -307,6 +307,119 @@ public static class ConstructorZombis
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaChaman);
         SumarALaMezcla(prefab, TramosDelChaman, ChamanPeso, ChamanMaxVivos);
         Debug.Log("ConstructorZombis: el chaman, listo en " + RutaChaman);
+    }
+
+    // --- El blindado -------------------------------------------------------------------------------
+
+    public const string RutaBlindado = "Assets/Prefabs/Personajes/ZombiBlindado.prefab";
+    public const string RutaEnemigoBlindado = "Assets/Zombies/ZombiBlindado.asset";
+    public const string RutaPielBlindado = "Assets/Materiales/ZombiBlindadoPiel.mat";
+    const string RutaParticulasBlindado = "Assets/Prefabs/Particulas/ExplosionAzul.prefab";
+    const string RutaTanque = "Assets/Prefabs/Personajes/ZombiTanque.prefab";
+
+    public static readonly Color GrisPizarra = new Color(0.29f, 0.322f, 0.365f);       // #4A525D, de Argon
+    public static readonly Color NegroDelEscudo = new Color(0.102f, 0.114f, 0.141f);   // #1A1D24, de Argon
+    public static readonly Color Ambar = new Color(1f, 0.702f, 0f);                    // #FFB300, de Argon
+    public static readonly Vector3 FormaDelBlindado = new Vector3(1.2f, 1.05f, 1.05f);
+    // La ciudad estrena al blindado (21) y sigue en la horda total.
+    public static readonly Vector3Int[] TramosDelBlindado = { new Vector3Int(21, 0, 3) };
+    public const float BlindadoPeso = 0.15f;
+    // El escudo, en el mundo. Los 75 x 90 cm de Argon son para un cuerpo de persona, y este zombi mide un metro: con las
+    // proporciones de la hoja de Nano Banana (de la barbilla a las canillas, del ancho de los hombros) queda en 50 x 58,
+    // con el borde de arriba y la mirilla ambar en la misma proporcion. El casco si es el de Argon: la cabeza mide 33 cm.
+    public static readonly Vector3 PlacaDelEscudo = new Vector3(0.5f, 0.58f, 0.06f);
+    public static readonly Vector3 BordeDelEscudo = new Vector3(0.53f, 0.075f, 0.08f);
+    public static readonly Vector3 MirillaDelEscudo = new Vector3(0.33f, 0.09f, 0.075f);
+    public const float EscudoAdelante = 0.25f;     // del centro del cuerpo a la placa
+
+    [MenuItem("ShowBies/Zombis/Armar el blindado")]
+    public static void ArmarBlindado()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogError("ConstructorZombis: no en play"); return; }
+
+        // Del normal: vida x3,2, golpe x1,4 (en el componente), velocidad x0,75, 12 puntos, monedas x3, 2 de PODER.
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(RutaEnemigoBlindado);
+        if (enemigo == null)
+        {
+            enemigo = ScriptableObject.CreateInstance<Enemy>();
+            enemigo.hp = 16;
+            enemigo.daño = 1;
+            enemigo.velocidad = 3.75f;
+            enemigo.puntos = 12;
+            enemigo.monedasMin = 5;
+            enemigo.monedasMax = 7;
+            enemigo.experiencia = 2;
+            AssetDatabase.CreateAsset(enemigo, RutaEnemigoBlindado);
+        }
+
+        var piel = Piel(RutaPielBlindado, GrisPizarra);
+        if (piel == null) return;
+        var negro = PlanoConInstancing("NegroBlindado", NegroDelEscudo);
+        var ambar = PlanoConInstancing("AmbarBlindado", Ambar);
+        var cubo = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        var tanque = AssetDatabase.LoadAssetAtPath<GameObject>(RutaTanque);
+        var cuerpoDelTanque = tanque != null ? tanque.GetComponent<Rigidbody>() : null;
+        if (cubo == null || cuerpoDelTanque == null) { Debug.LogError("ConstructorZombis: falta el cubo o el tanque"); return; }
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var go = DesdeElNormal(vista, "ZombiBlindado", enemigo, piel, RutaParticulasBlindado);
+            if (go == null) return;
+            var modelo = Modelo(go);
+            modelo.localScale = Vector3.Scale(modelo.localScale, FormaDelBlindado);
+            // Pesado como el tanque: no se aparta del jugador, el chaman se refugia detras y el bate lo frena.
+            go.GetComponent<Rigidbody>().mass = cuerpoDelTanque.mass;
+
+            var cabeza = Hueso(go.transform, "Bip001 Head");
+            Renderer dibujoDeLaCabeza = null;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+                if (r.name.StartsWith(Disfraces.MallaDeLaCabeza)) dibujoDeLaCabeza = r;
+            if (cabeza == null || dibujoDeLaCabeza == null) { Debug.LogError("ConstructorZombis: no encontre la cabeza del modelo"); return; }
+            Bounds caja = dibujoDeLaCabeza.bounds;
+            Vector3 adelante = go.transform.forward, arriba = Vector3.up;
+            Quaternion derecho = Quaternion.LookRotation(adelante, arriba);
+
+            // El casco: un cubo que tapa la mitad de arriba de la cabeza (hasta las cejas) y asoma 3 cm, con la visera
+            // ambar abajo en el frente: la barra que se lee desde la camara.
+            Vector3 casco = new Vector3(caja.size.x * 1.08f, 0.2f, caja.size.z * 1.02f);
+            Vector3 centroDelCasco = new Vector3(caja.center.x, caja.max.y + 0.03f - casco.y * 0.5f, caja.center.z);
+            Pieza(cabeza, "Casco", cubo, negro, centroDelCasco, derecho, casco);
+            Pieza(cabeza, "Visera", cubo, ambar,
+                  centroDelCasco + adelante * (casco.z * 0.5f + 0.005f) - arriba * (casco.y * 0.5f - 0.05f), derecho,
+                  new Vector3(casco.x * 1.02f, 0.07f, 0.05f));
+
+            // El escudo: un pivote hijo de la raiz a la altura del pecho, y la placa adelante. La guardia gira el pivote
+            // (ZombiBlindado). De la raiz y no del torso: el modelo esta estirado distinto en cada eje, y una pieza que
+            // gira colgada de un hueso asi se deforma; y la raiz no se balancea al correr.
+            float arribaDeLaPlaca = caja.min.y + 0.07f;
+            float centroDeLaPlaca = arribaDeLaPlaca - PlacaDelEscudo.y * 0.5f;
+            var pivote = new GameObject("Escudo").transform;
+            pivote.SetParent(go.transform, false);
+            pivote.position = new Vector3(go.transform.position.x, centroDeLaPlaca, go.transform.position.z);
+            pivote.rotation = derecho;
+            Vector3 centro = pivote.position + adelante * EscudoAdelante;
+            var placa = Pieza(pivote, "Placa", cubo, negro, centro, derecho, PlacaDelEscudo);
+            Pieza(pivote, "Borde", cubo, ambar, centro + arriba * (PlacaDelEscudo.y * 0.5f) + adelante * 0.005f, derecho, BordeDelEscudo);
+            Pieza(pivote, "Mirilla", cubo, ambar, centro + arriba * (PlacaDelEscudo.y * 0.2f) + adelante * 0.01f, derecho, MirillaDelEscudo);
+
+            var blindado = go.GetComponent<ZombiBlindado>();
+            if (blindado == null) blindado = go.AddComponent<ZombiBlindado>();
+            blindado.pivote = pivote;
+            blindado.placa = placa;
+            blindado.colorAmbar = Ambar;
+
+            PrefabUtility.SaveAsPrefabAsset(go, RutaBlindado);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
+        AssetDatabase.SaveAssets();
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaBlindado);
+        SumarALaMezcla(prefab, TramosDelBlindado, BlindadoPeso);
+        Debug.Log("ConstructorZombis: el blindado, listo en " + RutaBlindado);
     }
 
     // Una pieza colgada de un hueso, puesta en el mundo con el modelo en reposo y con el tamaño en el mundo (sin la escala
