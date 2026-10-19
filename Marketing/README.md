@@ -75,3 +75,7 @@ Nano Banana hace la imagen sin letras, con la mitad izquierda libre (`fondo_*_na
 colores del video (con un halo oscuro detrás) y, en la A, una tira de la onda del tema (ocho segundos desde el golpe,
 leídos del WAV del proyecto de FL Studio). Los comandos de las tres están al principio del script; también saca la
 vista a 168 px de cada una (gitignoreada). La esquina de abajo a la derecha queda para la duración de YouTube.
+
+**Después Ivan pidió que la hiciera Argon entera, sin la palabra KINGBALL** (YouTube ya muestra el título debajo):
+`miniatura_argon.jpg`, de la dirección A, con el logo y la píldora OST dibujados por Nano Banana
+(`argon_entera_nano_banana.png`, a 1024 × 572, llevada a 1280 × 720 con el recorte de `fondo` del script).
