@@ -1032,7 +1032,8 @@ el muro de más y la segunda trababa al bajo nueve partidas en la oleada 1-2. Qu
   `Economia` los copia y la prueba los compara), y el bono de la oleada es de 2n: con ×1,08 y ×1,4, el que pasaba la 10
   juntaba media tienda de un tirón y la partida siguiente llegaba quince oleadas más lejos. **La caja de vida cura el
   35 % de la vida máxima** (era la mitad).
-- **Resultado en la simulación**: el muro en la 48 / 59 / 69 (bajo, medio, alto), con 22-40 minutos de partida ahí. El
+- **Resultado en la simulación**: el muro en la 48 / 59 / 69 (bajo, medio, alto; **con el PODER del 16/10, 39 / 59 / 69**:
+  `resultados_poder.md` y `resultados_especiales.md`), con 22-40 minutos de partida ahí. El
   medio muere en las oleadas 3, 6, 8, 14 y 23 de sus primeras cinco partidas (antes, 9, 29, 49, 56 y 59), llega a la 10 en
   la partida 4 y a la 50 en la 10; el bajo arranca como en la 1.5.2 (2, 2, 2, 2, 3, 5...). De la 10 a la 50 todavía va
   rápido (Argon quería la 50 en la partida 25-35), y se aceptó para probarlo en el teléfono.
@@ -1103,6 +1104,11 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   y `EnemyController.VivosDe` cuenta los vivos de un prefab. **Para el tope, cada prefab cuenta una vez**
   (`WaveManager.EspecialesVivos`): sumado por entrada, el que va dos veces contaba doble y el tope real quedaba en 5 o 6
   (auditoría del 18/10). El modo libre todavía no los saca.
+- **No mueven el muro** (`simulaciones/cartas_1.6.0/resultados_especiales.md`, 18/10, como pidió Argon): con los cinco
+  queda en 39 / 59 / 69, igual que sin ellos. Sus habilidades son el 38-40 % del daño que reciben el bajo y el medio,
+  pero pagan un 16-21 % más de oro por minuto en el muro, y los tres muros son jefes. La regla de Argon (+1 de PODER a
+  los especiales si el bajo cae por debajo de la 35) no salta. Lo que lo podría mover es cuánto se esquivan los avisos
+  (esquivando la mitad, el medio cae a la 54), que el modelo pone a ojo.
 - **Las piernas van con lo que avanzan** (`EnemyController.PasoPorLoQueAnda`, en cada paso de física): los tres se
   mueven por su cuenta, y como no manejan su `Paso` como el jefe, plantados, avisando o agachados corrían en el lugar, y
   con el hielo patinaban (auditoría del 18/10). Al jefe, al tesoro y a los de siempre no los toca.

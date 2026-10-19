@@ -11,6 +11,120 @@ no son confiables y la comparación entre variantes sí**: todas corren con las 
 balas gratis al jugador entre oleadas** y **solo se le tira a lo que se ve en la pantalla**. Los números de abajo son
 los nuevos; los de la primera versión de este archivo quedaron viejos.
 
+## Los zombis con habilidad (18/10)
+
+Argon pidió (`ZOMBIS.md`) correr esto con los cinco especiales ya en el juego (el escupidor, el saltador y el chamán del
+cementerio, el blindado y el hinchado de la ciudad), con una regla: **"si el jugador bajo cae por debajo de la 35, +1 de
+PODER a los cinco especiales"**. Todo en `resultados_especiales.md` (tres corridas, con las mismas semillas).
+
+**Qué variante es el juego de hoy: `poder_28_112`**, la V3 de Argon del 14/10 (`ARGON_V3`: la vida y el golpe ×1,13 y
+×1,09 hasta la 10, ×1,145 y ×1,085 hasta la 30 y ×1,12 y ×1,065 desde la 31; 10 + 2n zombis, uno cada 0,2 s; la moneda
+×1 que crece ×1,03 por oleada y el bono de 2n; un cuarto del cargador por oleada y lleno después de un jefe; el
+automático hasta 7,5 m con 0,25 s para enganchar al siguiente; daño ×1,20, cadencia ×1,15 sin costo de balas, el doble
+al 70 % y el vampiro 3 % cada 20) con el PODER 28 × 1,12^L del 16/10 (`resultados_poder.md`). Está revisado contra el
+`WaveManager` de `WaveMode.unity` y `PoderDeLaPartida.cs`. **Su muro es 39 / 59 / 69**: el 48 / 59 / 69 que dice
+CLAUDE.md es el de `argon_v3`, con el PODER de antes del 16/10 (14 × 1,15^L); el 39 de `ZOMBIS.md` es el bueno. Lo que
+el modelo no tiene del juego de hoy: el desvío de hasta 6° del automático va como su puntería (0,75), y el bate de la
+1.7.0 no se compra (la tienda es la de `curva.py`).
+
+| muro (minutos de una partida ahí) | bajo | medio | alto |
+|---|---|---|---|
+| hoy, sin especiales (`poder_28_112`) | 39 (16,2) | 59 (30,2) | 69 (38,6) |
+| **con los cinco (`especiales`)** | **39** (16,6) | **59** (31,1) | **69** (40,1) |
+| con los cinco y +1 de PODER (`especiales_poder`: 3, 3, 4, 3, 3) | 43 (18,9) | 59 (30,7) | 70 (41,0) |
+| con los cinco, sin sus habilidades (solo sus números) | 42 (18,1) | 59 (31,0) | 69 (39,3) |
+| solo el escupidor / saltador / chamán / blindado / hinchado | 39 / 39 / 39 / 40 / 39 | 59 los cinco | 69 / 69 / 69 / 69 / 70 |
+| con los cinco, esquivando la mitad de sus avisos | 39 (15,7) | 54 (26,7) | 63 (33,8) |
+| con los cinco, esquivando el 90 % | 46 (20,6) | 59 (31,0) | 69 (39,8) |
+| partida en que llega a la 10 / 30 / 50: hoy | 11 / 27 / — | 4 / 7 / 13 | 2 / 3 / 5 |
+| ídem con los cinco | 11 / 25 / — | 4 / 8 / 12 | 2 / 4 / 6 |
+| oro por minuto en el muro: hoy → con los cinco | 1.930 → 2.243 | 2.962 → 3.540 | 3.919 → 4.734 |
+
+- **El muro no se mueve: 39 / 59 / 69.** Con 10 semillas (la tercera corrida), la media de las últimas 20 partidas,
+  semilla por semilla contra hoy, cambia −0,2, 0,0 y 0,0 (con un error de 0,3-0,4). Los tres muros son jefes: el bajo
+  muere en el de la 40, el medio en el de la 60 y el alto en el de la 70 (todas las semillas del medio dan 59), y los
+  especiales no cambian cuánto se le aguanta al jefe.
+- **Lo que cuestan sus habilidades lo devuelve lo que pagan.** Con los cinco, el 38-40 % del daño que recibe el bajo y el
+  medio sale de sus habilidades (el bajo: charco 19 %, salto 7 % y explosión 12 %), pero dejan un 16, 20 y 21 % más de
+  oro por minuto en el muro (un 17, 22 y 27 % más por partida) y algo más de PODER, y la partida dura 0,4-1,5 minutos
+  más. Sin las habilidades (solo sus números) el bajo llega a la 42: las habilidades le cuestan unas 3 oleadas y lo que
+  pagan se las devuelve.
+- **Ninguno solo mueve el muro más de una oleada.** El que más pega es el escupidor (solo, su charco es el 18-24 % del
+  daño que recibe el jugador). En el modelo el chamán potencia a 1,3-1,4 zombis por pulso, la explosión del hinchado mata
+  menos del 1 % de los zombis, y el escudo del blindado para el 1-3 % de las balas comunes que le van: sobre todo porque
+  la carta de perforante, que lo anula para todas las balas, casi siempre ya está en el mazo cuando sale el blindado (en
+  el muro se tiene 1,9-2 veces); además en el muro se tira con la de energía, que lo atraviesa, y pegado tiene la
+  guardia abierta. **Para Argon**: con una sola carta de perforante el blindado es un tanque más.
+- **La regla de Argon no salta**: con los cinco, el bajo queda en la 39 (media de las últimas 20: 41,5; las que terminan
+  antes de la 35, el 2 %, contra el 5 % de hoy). Tampoco esquivando la mitad de los avisos: 39, con media 37,7 y el 18 % de
+  las partidas del muro terminando antes de la 35. **+1 de PODER** (`especiales_poder`) le suma 1,5 oleadas de media al
+  bajo (mediana 43,5 con 10 semillas), 0,5 al medio y 1 al alto: no hace falta por la regla. El muro es, como el 39 de
+  referencia, el de las últimas 20 de 100 partidas, y el bajo todavía sube despacio (llega a la 40 en la partida 43):
+  con más partidas su muro solo puede subir, así que el veredicto es conservador.
+- **Lo que lo puede dar vuelta es cuánto se esquivan los avisos** (el charco, la franja del saltador y el círculo del
+  hinchado), que está puesto a ojo como lo que el perfil le esquiva al jefe (0,6, 0,8 y 0,92). Esquivando la mitad, el
+  medio y el alto pierden 5 y 6 oleadas (54 y 63; con +1 de PODER, 56 y 65), y el bajo, que ya muere en el jefe de la
+  40, no (39). Esquivando el 90 %, el bajo sube a la 46. **Vale la pena mirar en el teléfono cuánto pisa el charco del
+  escupidor el que juega poco**: es el 40-53 % del daño que se recibe si se esquiva la mitad.
+
+**Cómo se modeló** (`jugar_oleada_esp`, que es `jugar_oleada` con lo de los especiales; lo de antes no cambió: las
+variantes viejas dan partida por partida lo mismo: `poder_28_112` reproduce las 15 filas de `resultados_poder.md`, y otras
+ocho variantes viejas, en una corrida corta, las mismas tablas que con el `cartas.py` de antes):
+
+- **La mezcla**: los cinco con sus `.asset` (vida 9, 7, 11, 16 y 13; velocidad 4,75, 5,5, 4,5, 3,75 y 4,25; monedas
+  5-7, 4-6, 7-9, 5-7 y 5-7; PODER 2, 2, 3, 2 y 2) y su lugar en `WaveManager.tipos` de WaveMode, en el orden de la escena:
+  su tramo (el saltador de la 15 a la 20 y desde la 31, el chamán de la 18 a la 20 y desde la 31, el escupidor de la 12 a
+  la 30 con tope 3 y desde la 31 con tope 2, el blindado desde la 21 y el hinchado desde la 24), su tope de vivos y el de
+  8 especiales, contando cada uno una vez (`WaveManager.Elegible`). El tipo se sortea al aparecer, como
+  `WaveManager.ElegirTipo`, con el mismo número al azar que tiraba `curva.sortear_tipo` al empezar la oleada: sin
+  especiales sale exactamente lo mismo (`chequeo_mezcla`), así que la diferencia es de los especiales y no del azar.
+- **Paso a paso desde la 12**: la cuenta de las oleadas fáciles no sabe de charcos ni de escudos. `actual_paso_a_paso`
+  es hoy con esa regla, y da partida por partida lo mismo que `poder_28_112` (con la V3, desde la 12 no hay oleadas
+  fáciles).
+- **Las distancias entre zombis** (el pulso del chamán y la explosión del hinchado): cada zombi ya tenía un rumbo al azar
+  (el de lo que se ve); su lugar en el piso es su distancia (los pegados, a 0,9 m) por ese rumbo. **Es de menos**: en el
+  juego salen de cuatro puntos y llegan en chorros. `especiales_chorros` junta los rumbos en cuatro direcciones de ±15°
+  (solo para estas distancias): el chamán pasa a 1,6-1,8 por pulso y el muro no cambia.
+- **El escupidor**: camina hasta 9,5 m y se planta; desde ahí lo ven la mano y el dron (en el juego rodea al jugador hasta
+  verse), pero el automático no llega (7,5 m) y la escopeta tampoco (7,2). Al final de la oleada (salieron todos y quedan
+  3 o menos, o solo escupidores) se acerca a 6,5 m. Escupe 1 s después de plantarse y cada 3,5 s con el aviso de 0,65
+  adentro; el globo tarda d / 11 s, y el charco pega la mitad de su golpe cada 0,5 s, con 0,25 s de gracia, hasta 8
+  veces: el jugador lo pisa si no esquiva, y sigue pisándolo golpe a golpe con la misma probabilidad (0,67 golpes por
+  escupitajo con 0,6 de esquivar). Cuenta para la perfecta y no gasta el escudo de la carta. No se modelan el tope de 3
+  charcos en el mapa (de más para el jugador), que retroceda si se le acercan, ni el hielo.
+- **El saltador**: a 6 m se agacha 0,6 s (quieto y sin zarpazos), salta 5,6 m (la distancia pasa a |d − 5,6|: pegado,
+  atraviesa al jugador y cae del otro lado), pega 1,2 golpes si no se esquiva (lo para el escudo de la carta, como en el
+  juego), se queda 0,8 s quieto y recarga 5 s desde que salta.
+- **El chamán**: se planta a 7 m (a la vista); pulsa 1,5 s después de aparecer y cada 4 s con el aviso de 0,5 adentro,
+  también acercándose si se lo ve y tiene a quién, y potencia 3 s a los 4 más cercanos a menos de 4,5 m de él: los comunes
+  y el blindado (no el jefe ni los que se mueven por su cuenta), que corren ×1,25 sin pasar de 11 m/s y reciben ×0,75 de
+  todo (balas, granada, explosiva, quemadura y la explosión del hinchado). Se apaga en todos si muere. No se modela que se
+  ponga detrás de un pesado: en 1D, como se le tira al más cercano, ya queda para el final.
+- **El blindado**: con la guardia cerrada, las balas comunes (las del arma de la mano, las del dron, el doble y la de
+  atrás, no la de energía, y ninguna con una carta de perforante) pegan el 20 % de frente; de frente es el 90 % (gira a
+  120°/s mirando al jugador: puesto a ojo), así que entra el 28 %. La guardia se abre a 1,5 m y se cierra a más de 2,3, y
+  el zarpazo (×1,4) sale 0,5 s después de abrirla. La granada, la explosiva, la quemadura y el hinchado lo atraviesan, y
+  la granada lo cuenta como duro. **Sin bate**: su contra no está, pero como la guardia se abre a 1,5 m, en 1D el bate
+  solo le sacaría el escudo entre 1,5 y 2,5 m.
+- **El hinchado**: no tira zarpazos; a 1,6 m o con la vida en 0 se clava 0,75 s (no le entra nada ni le tira nadie) y
+  revienta: al jugador 2 golpes si está a menos de 2,6 m y no esquiva, y a los zombis a menos de 2,6 m el 35 % de su vida
+  máxima (al jefe el 4 %; a los potenciados, ×0,75), con lo que mata pagado entero, el empujón de 2,5 m (la mitad y 0,5 s
+  frenados los pesados; nada al jefe; en 1D, lo que el empujón tiene de alejarse del jugador) y la cadena con los otros
+  hinchados. Su propia muerte paga entero.
+- **Esquivar los avisos** (el charco, la franja y el círculo) es lo que el perfil le esquiva al jefe, o lo que diga
+  `esquiva_especial` (un número para todos, o negativo para multiplicar el del perfil): es lo más a ojo, y lo que más
+  mueve.
+- **Lo que se cuenta** (`diag`): el daño que recibe el jugador por fuente, las muertes por la explosión, los pulsos y los
+  potenciados, los saltos y los escupitajos, y cuánto de las balas que le van a un blindado para el escudo: la tabla "Los
+  zombis con habilidad" de cada corrida. Desde el 18/10 todas las corridas sacan además en qué partida se llega a cada
+  oleada, el muro de cada semilla y la media de las últimas 20 (más fina que la mediana, que se pega a los jefes), y
+  `crudo=archivo.json` deja partida por partida.
+
+**Lo que puede no estar en el juego**: en 1D el escupidor no obliga a moverse ni a meterse en la horda, el charco no
+tapa lugar, el chamán y el hinchado tienen menos vecinos que en un piso de verdad (el uno empeora al jugador y el otro lo
+ayuda), y el bate no existe. Ninguna de las variantes de arriba deja al bajo por debajo de la 35; lo que más pesa es
+esquivar los avisos, y eso se puede medir en el teléfono.
+
 ## La decisión de Gemini (13/10), simulada
 
 Gemini decidió sin simular (`CARTAS.md`, "Lo que decidió Gemini"): oleadas de 10 + 2n, uno cada 0,20 s, cada moneda de
@@ -414,6 +528,15 @@ python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos
 python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 variantes=base,final_1_6_0,final_1_6_0_base salida=resultados_final.md
 ```
 
+Los zombis con habilidad (18/10; 12, 20 y 20 min con 12 procesos), las tres en `resultados_especiales.md` (cada una se
+corrió aparte, con las mismas semillas, y sus tablas se juntaron):
+
+```
+python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 salida=<aparte> variantes=poder_28_112,actual_paso_a_paso,chequeo_mezcla,especiales,especiales_poder,especiales_sin_habilidades
+python cartas.py partidas=100 semillas=5 perfiles=bajo,medio,alto hilos=12 fotos=0 salida=<aparte> variantes=solo_escupidor,solo_saltador,solo_chaman,solo_blindado,solo_hinchado,especiales_esquiva_09,especiales_esquiva_mitad,especiales_chorros,especiales_poder_esquiva_mitad
+python cartas.py partidas=100 semillas=10 perfiles=bajo,medio,alto hilos=12 fotos=0 salida=<aparte> crudo=<aparte>.json variantes=poder_28_112,especiales,especiales_poder,especiales_esquiva_mitad,especiales_poder_esquiva_mitad
+```
+
 - Desde el 13/10 el `modo=curva` saca también **el oro por minuto** (a la partida 10, de la 8 a la 12 y en el muro: las
   monedas de esas partidas sobre sus minutos, con las elecciones) y **los minutos y el oro hasta terminar cada oleada**
   (la mediana de las partidas que la terminan).
@@ -455,7 +578,14 @@ simulación son varios segundos cada una.
 | `gemini_base` | la `gemini` sin el PODER |
 | `gemini_sin_tercero`, `gemini_cadencia_con_costo`, `gemini_moneda_x1`, `gemini_curva_e` | la `gemini` con una pieza cambiada: sin el tercer tramo, con la cadencia gastando balas como hoy, con la moneda ×1, y con la curva de la candidata E (vida ×1,15 y golpe ×1,07 desde la 11) en lugar de los tres tramos |
 | `gemini_t21`, `gemini_t26_fuerte`, `gemini_t31_fuerte`, `gemini_t21_costo` | la `gemini` con el tercer tramo cambiado: desde la 21 (×1,15 y ×1,08), desde la 26 (×1,20 y ×1,10), desde la 31 (×1,25 y ×1,12), y desde la 21 con la cadencia gastando balas |
-| `final_1_6_0`, `final_1_6_0_base` | **lo que cerró Argon y está en el juego**: la `gemini` con el tercer tramo desde la 26 (×1,20 y ×1,10) y la moneda ×1,4; con cartas (equilibrada) y sin |
+| `final_1_6_0`, `final_1_6_0_base` | lo que cerró Argon el 13/10: la `gemini` con el tercer tramo desde la 26 (×1,20 y ×1,10) y la moneda ×1,4; con cartas (equilibrada) y sin |
+| `argon_arranque`, `argon_v2`, `argon_v3` (y sus `_base`, sin cartas) | las tres versiones de Argon del 14/10 (`resultados_arranque*.md`): la tercera, `argon_v3`, es la que pasó al juego |
+| `poder_24_115`, `poder_20_120`, `poder_28_112`, `poder_18_125` | la `argon_v3` con otro costo del PODER (16/10, `resultados_poder.md`). **`poder_28_112` es el juego de hoy** (sin especiales) |
+| `actual_paso_a_paso` | `poder_28_112` jugando paso a paso desde la 12 (da lo mismo, partida por partida): el control de los especiales |
+| `chequeo_mezcla` | con el sorteo de los especiales y ninguno en la mezcla: tiene que dar lo mismo que `actual_paso_a_paso` |
+| `especiales`, `especiales_poder`, `especiales_sin_habilidades` | **el juego de hoy con los cinco especiales** (18/10); con +1 de PODER cada uno (3, 3, 4, 3, 3), y con sus números pero sin habilidades |
+| `solo_escupidor`, `solo_saltador`, `solo_chaman`, `solo_blindado`, `solo_hinchado` | con uno solo de los cinco |
+| `especiales_esquiva_09`, `especiales_esquiva_mitad`, `especiales_poder_esquiva_mitad`, `especiales_chorros` | con los cinco y lo puesto a ojo movido: los avisos esquivados el 90 % o la mitad de lo que se esquiva al jefe (la última, con +1 de PODER), y los zombis en cuatro chorros para las distancias entre ellos |
 
 Las políticas:
 

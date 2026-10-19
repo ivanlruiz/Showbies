@@ -29,6 +29,10 @@
 # sin costo de balas por los tiros de mas y el rifle a cadencia x1. Lo que no las usa da lo mismo
 # que antes con las mismas semillas.
 #
+# Despues (18/10, ZOMBIS.md), los cinco zombis con habilidad (el escupidor, el saltador, el chaman, el blindado y el
+# hinchado) sobre el juego de hoy ('poder_28_112'), en jugar_oleada_esp: el tipo se sortea al aparecer con los topes de
+# WaveManager, y cada uno hace lo suyo (ver el README). Tampoco cambia lo que ya corria.
+#
 # El modelo de base es el de curva.py y se importa de ahi (los zombis, las mejoras, la tienda,
 # los perfiles, el iman y lo que pegan segun la velocidad); lo que cambia es la partida, que se
 # reescribe aca. Como en curva.py: los numeros absolutos no son confiables, la comparacion entre
@@ -38,7 +42,7 @@
 #   modo=curva (las variantes) | xp (la tabla de cartas por oleada) | pesos (cada carta sola, con
 #   las mejoras congeladas) | escopeta (las primeras partidas con y sin ella) | balas (las balas de
 #   las oleadas faciles contra el paso a paso)
-#   partidas=250 semillas=5 perfiles=bajo,medio,alto variantes=todas hilos=12 fotos=1 salida=...
+#   partidas=250 semillas=5 perfiles=bajo,medio,alto variantes=todas hilos=12 fotos=1 salida=... crudo=archivo.json
 # Lo que se corrio y lo que encontro esta en el README.
 import heapq
 import json
@@ -133,6 +137,56 @@ RADIO_BALA = 0.064
 # A distancia 0 el zombi esta pegado: el abanico se mide desde aca (la suma de los radios).
 DISTANCIA_PEGADO = 0.9
 
+# --- Los zombis con habilidad (18/10, ZOMBIS.md) -------------------------------------------------
+# Los .asset de Assets/Zombies y la mezcla de WaveMode.unity (WaveManager.tipos), en el orden de la escena despues de
+# los cuatro comunes de curva.TIPOS, que es el orden del sorteo de WaveManager.ElegirTipo: nombre, vida, golpe,
+# velocidad, monedas min y max, desde, peso, hasta (0: sin fin) y maximo de vivos de ese tipo (maxVivos). El que
+# descansa un capitulo va dos veces, y para los topes cuenta una vez (por nombre, como VivosDe por prefab).
+ESPECIALES = [
+    ('saltador', 7, 1, 5.5, 4, 6, 15, 0.15, 20, 4),
+    ('saltador', 7, 1, 5.5, 4, 6, 31, 0.15, 0, 4),
+    ('chaman', 11, 1, 4.5, 7, 9, 18, 0.10, 20, 2),
+    ('chaman', 11, 1, 4.5, 7, 9, 31, 0.10, 0, 2),
+    ('escupidor', 9, 1, 4.75, 5, 7, 12, 0.15, 30, 3),
+    ('escupidor', 9, 1, 4.75, 5, 7, 31, 0.15, 0, 2),
+    ('blindado', 16, 1, 3.75, 5, 7, 21, 0.15, 0, 3),
+    ('hinchado', 13, 1, 4.25, 5, 7, 24, 0.14, 0, 3),
+]
+NOMBRES_ESPECIALES = ('escupidor', 'saltador', 'chaman', 'blindado', 'hinchado')
+MAX_ESPECIALES_VIVOS = 8                 # WaveManager.MaxEspecialesVivos
+DESDE_ESPECIALES = 12                    # el primero (el escupidor): desde ahi se juega paso a paso
+EXPERIENCIA.update(escupidor=2, saltador=2, chaman=3, blindado=2, hinchado=2)
+# Los cinco son el normal (escala 0,5 en la raiz, la misma capsula) con otras piezas.
+RADIO.update({_t: RADIO['normal'] for _t in NOMBRES_ESPECIALES})
+# El escupidor (ZombiEscupidor, AcidoDelEscupidor): se planta a 9,5 m (6,5 al final de la oleada: salieron todos y
+# quedan 3 o menos, o solo escupidores), escupe 1 s despues de plantarse y cada 3,5 s con el aviso de 0,65 adentro; el
+# globo va a 11 m/s y el charco pega la mitad de su golpe cada 0,5 s, con 0,25 s de gracia y 4 s de vida (8 golpes).
+ESC_PLANTA, ESC_PLANTA_FINAL, ESC_POCOS, ESC_HISTERESIS = 9.5, 6.5, 3, 0.5
+ESC_PRIMERO, ESC_CADA, ESC_AVISO, ESC_VEL_GLOBO = 1.0, 3.5, 0.65, 11.0
+CHARCO_GRACIA, CHARCO_CADA, CHARCO_TICKS, CHARCO_PARTE = 0.25, 0.5, 8, 0.5
+# El saltador (ZombiSaltador): a 6 m se agacha 0,6 s, salta 5,6 m en 0,4 s (pega 1,2 veces su golpe al que no salio
+# de la franja), se queda 0,8 s quieto y recarga 5 s desde que salta.
+SAL_DISTANCIA, SAL_AVISO, SAL_VUELO, SAL_LARGO, SAL_RECUPERA, SAL_RECARGA, SAL_GOLPE = 6.0, 0.6, 0.4, 5.6, 0.8, 5.0, 1.2
+# El chaman (ZombiChaman): se planta a 7 m, pulsa 1,5 s despues de aparecer y cada 4 s con el aviso de 0,5 adentro
+# (tambien acercandose, si se lo ve y hay a quien), y potencia 3 s a los 4 mas cercanos a menos de 4,5 m de el: corren
+# x1,25 sin pasar de 11 m/s y les entra x0,75 de todo. No potencia a los que se mueven por su cuenta (el jefe y los
+# otros especiales, salvo el blindado, que va con la persecucion de siempre).
+CHA_PLANTA, CHA_PRIMERO, CHA_CADA, CHA_AVISO, CHA_RADIO, CHA_ALIADOS, CHA_DURA = 7.0, 1.5, 4.0, 0.5, 4.5, 4, 3.0
+CHA_VEL, CHA_TOPE, CHA_DANO = 1.25, 11.0, 0.75
+POTENCIABLES = ('normal', 'rapido', 'faster', 'tanque', 'blindado')
+# El blindado (ZombiBlindado): la bala comun que le entra de frente pega el 20 %; la guardia se abre a 1,5 m (y se
+# cierra a mas de 2,3), con ella abierta el escudo no para nada, y el zarpazo (x1,4) sale 0,5 s despues de abrirla.
+# Gira a 120 grados/s mirando al jugador: casi todo le entra de frente (BLI_DE_FRENTE, puesto a ojo).
+BLI_PASA, BLI_DE_FRENTE, BLI_GUARDIA, BLI_CIERRA, BLI_AVISO, BLI_GOLPE = 0.2, 0.9, 1.5, 2.3, 0.5, 1.4
+# El hinchado (ZombiHinchado): a 1,6 m del jugador o con la vida en 0 se clava y se infla 0,75 s; revienta y le pega 2
+# golpes al jugador si sigue a menos de 2,6 m, y a los zombis de adentro el 35 % de su vida maxima (al jefe el 4 %), y
+# los empuja 2,5 m (a los pesados la mitad, y los frena 0,5 s; al jefe nada). Lo que mata paga entero, y el tambien.
+HIN_CLAVA, HIN_AVISO, HIN_RADIO, HIN_GOLPE, HIN_PARTE, HIN_JEFE = 1.6, 0.75, 2.6, 2.0, 0.35, 0.04
+HIN_EMPUJON, HIN_FRENA = 2.5, 0.5
+PESADOS = ('tanque', 'blindado')
+# De donde sale el danio (OrigenDelDano): el escudo del blindado solo para las balas comunes.
+BALA, ENERGIA, OTRO = 'bala', 'energia', 'otro'
+
 # --- Lo que se ve (la camara de WaveMode.unity) -------------------------------------------------
 # La camara sigue al jugador a 12 m del piso y 3,9 m al sur, mirando 70 grados hacia abajo, con
 # 60 grados de campo vertical. Lo que se ve de un zombi depende del rumbo por el que viene: al
@@ -144,6 +198,7 @@ DISTANCIA_PEGADO = 0.9
 # margenEnPantalla 0,08 x 0,1).
 CAM_ALTO, CAM_ATRAS, CAM_PITCH, CAM_FOV = 12.0, 3.9, 70.0, 60.0
 ALTURA_DEL_CENTRO = {'normal': 0.5, 'rapido': 0.4, 'faster': 0.3, 'tanque': 1.0, 'jefe': 2.0}
+ALTURA_DEL_CENTRO.update({_t: 0.5 for _t in NOMBRES_ESPECIALES})
 ASPECTO = {'telefono': 20.0 / 9.0, 'pc': 16.0 / 9.0}   # 20:9, el telefono mas comun (2400 x 1080)
 MARGENES = {'auto': (0.03, 0.03), 'ver': (0.0, 0.0), 'jefe': (0.08, 0.1)}
 RUMBOS = 360
@@ -207,9 +262,24 @@ class Zombi:
     __slots__ = ('tipo', 'hp', 'hp_max', 'dano', 'vel', 'mmin', 'mmax', 'd', 'reloj', 'vivo', 'radio',
                  'xp', 'hielo_hasta', 'lentitud', 'quema_ticks', 'quema_tick', 'quema_prox',
                  'ataque', 'ataques', 'r_mano', 'r_auto', 'r_jefe', 'patron_hasta', 'sin_invocar',
-                 'toca_salto')
+                 'toca_salto',
+                 # Los zombis con habilidad (solo los usa jugar_oleada_esp): el rumbo en radianes (para las
+                 # distancias entre zombis), si hace lo suyo, y el estado de cada habilidad.
+                 'rumbo', 'esp', 'plantado', 'prox_accion', 'accion_en', 'inflando', 'reventado', 'guardia',
+                 'buff_hasta', 'buff_de', 'vel_buff')
 
     def __init__(self, tp, mv, md, d, pantalla=None, rumbo=0):
+        self.rumbo = 2 * math.pi * rumbo / RUMBOS
+        self.esp = False
+        self.plantado = False
+        self.prox_accion = 0.0
+        self.accion_en = -1.0
+        self.inflando = -1.0
+        self.reventado = False
+        self.guardia = -1.0
+        self.buff_hasta = -1.0
+        self.buff_de = None
+        self.vel_buff = 1.0
         self.tipo = tp[0]
         self.hp = self.hp_max = tp[1] * mv
         self.dano = tp[2] * md
@@ -458,6 +528,32 @@ class Partida:
         # (con las elecciones de cartas) y las monedas juntadas.
         self.min_por_oleada = []
         self.monedas_por_oleada = []
+        # Los zombis con habilidad (18/10): con 'especiales' (aunque este vacio) la oleada se juega con
+        # jugar_oleada_esp, que sortea el tipo al aparecer; 'habilidades' False los deja como zombis comunes con sus
+        # numeros; 'xp_especiales' le suma eso de PODER a cada uno; 'sin_atajo_desde' juega paso a paso desde esa
+        # oleada (sin la cuenta de las oleadas faciles); 'esquiva_especial' es la probabilidad de salir del charco,
+        # de la franja del saltador y del circulo del hinchado (por defecto, la de esquivar al jefe); 'chorros'
+        # junta los rumbos en cuatro direcciones para las distancias entre zombis.
+        self.esp_on = var.get('especiales') is not None
+        self.mezcla_esp = [e for e in ESPECIALES if e[0] in (var.get('especiales') or ())]
+        self.habilidades = var.get('habilidades', True)
+        self.xp_extra = var.get('xp_especiales', 0)
+        self.sin_atajo_desde = var.get('sin_atajo_desde')
+        esq = var.get('esquiva_especial')
+        if esq is None:
+            esq = perfil['esquiva_jefe']
+        elif esq < 0:
+            esq = perfil['esquiva_jefe'] * -esq
+        self.esquiva_especial = esq
+        self.chorros = bool(var.get('chorros'))
+        self.charcos = []
+        self._explotando = False
+        self.diag = None
+        if self.esp_on or var.get('diag'):
+            self.diag = dict.fromkeys(('zarpazo', 'jefe', 'charco', 'salto', 'explosion', 'muertes',
+                                       'muertes_explosion', 'especiales', 'pulsos', 'potenciados', 'saltos',
+                                       'saltos_pegan', 'escupitajos', 'ticks_charco', 'a_blindados', 'bloqueado',
+                                       'reventones'), 0.0)
 
         self.veces = dict(var.get('fijas', {}))
         self.poder = 0
@@ -612,6 +708,19 @@ class Partida:
     # --- Los golpes --------------------------------------------------------------------------
 
     def matar(self, z):
+        if self.esp_on and z.esp and z.tipo == 'hinchado' and not z.reventado:
+            # Con la vida en cero el hinchado no muere: se clava y se infla, y al reventar muere de verdad
+            # (ZombiHinchado.EmpezarAInflarse). El que ya se inflaba sigue con su cuenta.
+            z.hp = 0.0
+            if z.inflando < 0:
+                self.inflar(z)
+            return
+        if self.diag is not None:
+            self.diag['muertes'] += 1
+            if self._explotando:
+                self.diag['muertes_explosion'] += 1
+            if z.tipo in NOMBRES_ESPECIALES:
+                self.diag['especiales'] += 1
         z.vivo = False
         self.ultima_muerte = self.t
         rng = self.rng
@@ -630,11 +739,21 @@ class Partida:
         if self.pendientes:
             self.resolver_elecciones()
 
-    def pegar(self, z, dano, quema):
-        """BulletController.Pegar: el danio, el hielo, la quemadura y la explosion."""
+    def pegar(self, z, dano, quema, origen=BALA):
+        """BulletController.Pegar: el danio, el hielo, la quemadura y la explosion. Con los especiales devuelve la
+        parte del danio que entro (el bono del chaman y el escudo del blindado); sin ellos, 1."""
         if not z.vivo:
-            return
-        z.hp -= dano
+            return 1.0
+        parte = 1.0
+        if self.esp_on:
+            if z.inflando >= 0:
+                # Al hinchado que se infla no le entra nada.
+                return 0.0
+            entra = self.recibido(z, dano, origen)
+            parte = entra / dano if dano > 0 else 1.0
+            z.hp -= entra
+        else:
+            z.hp -= dano
         if z.hp <= 0.01:
             self.matar(z)
         else:
@@ -658,9 +777,16 @@ class Partida:
             desde, hasta = z.d - r, z.d + r
             for o in self.vivos:
                 if desde <= o.d <= hasta and o is not z and o.vivo and rng.random() < p:
-                    o.hp -= danio
+                    if self.esp_on:
+                        # El area de la explosiva atraviesa el escudo; el bono del chaman la achica.
+                        if o.inflando >= 0:
+                            continue
+                        o.hp -= self.recibido(o, danio, OTRO)
+                    else:
+                        o.hp -= danio
                     if o.hp <= 0.01:
                         self.matar(o)
+        return parte
 
     def reaprovechar(self):
         """La bala que llega a un muerto le pega al mas cercano, a veces (curva.py)."""
@@ -672,7 +798,7 @@ class Partida:
                 z = o
         return z
 
-    def llegar(self, z, dano, n, quema, libres, carta):
+    def llegar(self, z, dano, n, quema, libres, carta, origen=BALA):
         """Llegan juntas las n balas de un paso que iban al mismo blanco (se suman para que la
         simulacion corra: cada efecto se tira una vez con el danio de todas, que en promedio es lo
         mismo). Si el blanco ya murio, pueden pegarle a otro; si lo matan, las que sobran tambien.
@@ -684,15 +810,19 @@ class Partida:
             if z is None:
                 return
         antes = z.hp
-        self.pegar(z, dano, quema)
+        parte = self.pegar(z, dano, quema, origen)
         if libres + carta <= 0:
             if n > 1 and not z.vivo:
                 una = dano / n
-                sobran = n - max(1, math.ceil((antes - 0.01) / una))
+                if self.esp_on and parte > 0:
+                    # Las que sobran se cuentan con lo que entro de verdad (el escudo, el bono).
+                    sobran = n - max(1, math.ceil((antes - 0.01) / (una * parte)))
+                else:
+                    sobran = n - max(1, math.ceil((antes - 0.01) / una))
                 if sobran > 0:
                     otro = self.reaprovechar()
                     if otro is not None:
-                        self.pegar(otro, una * sobran, quema)
+                        self.pegar(otro, una * sobran, quema, origen)
             return
         tocados = [z]
         cerca = self.cerca
@@ -708,10 +838,11 @@ class Partida:
             detras = [o for o in cand if o.d >= z.d]
             o = rng.choice(detras or cand)
             tocados.append(o)
-            self.pegar(o, dano, quema)
+            self.pegar(o, dano, quema, origen)
 
-    def recibir(self, dano):
-        """PlayerHealth.TakeDamage: el escudo para el golpe entero y no cuenta como golpe."""
+    def recibir(self, dano, fuente=None):
+        """PlayerHealth.TakeDamage: el escudo para el golpe entero y no cuenta como golpe. 'fuente' es solo para
+        contar (diag): zarpazo, jefe, salto o explosion."""
         if self.t < self.gracia_hasta:
             return
         if self.escudo and self.t >= self.escudo_listo:
@@ -722,6 +853,228 @@ class Partida:
             return
         self.vida -= dano
         self.golpeado = True
+        if self.diag is not None and fuente is not None:
+            self.diag[fuente] += dano
+
+    def recibir_charco(self, dano):
+        """El charco del escupidor (AcidoDelEscupidor): TakeDamage sin gastar el escudo de la carta; cuenta como golpe
+        para la oleada perfecta."""
+        if self.t < self.gracia_hasta:
+            return
+        self.vida -= dano
+        self.golpeado = True
+        if self.diag is not None:
+            self.diag['charco'] += dano
+            self.diag['ticks_charco'] += 1
+
+    # --- Los zombis con habilidad (18/10) ------------------------------------------------------
+
+    def recibido(self, z, dano, origen):
+        """EnemyController.DanoZombi: lo que le entra a un zombi. El bono del chaman le saca un 25 % a todo; el escudo
+        del blindado, con la guardia cerrada, deja pasar el 20 % de las balas comunes que le entran de frente (no la
+        de energia ni ninguna si hay una carta de perforante)."""
+        if z.buff_hasta > self.t and z.buff_de is not None and z.buff_de.vivo:
+            dano *= CHA_DANO
+        if origen == BALA and z.tipo == 'blindado' and z.esp:
+            if self.diag is not None:
+                self.diag['a_blindados'] += dano
+            if z.guardia < 0 and self.perf_carta == 0:
+                f = BLI_DE_FRENTE * BLI_PASA + (1.0 - BLI_DE_FRENTE)
+                if self.diag is not None:
+                    self.diag['bloqueado'] += dano * (1.0 - f)
+                dano *= f
+        return dano
+
+    def posicion(self, z):
+        """Donde esta en el piso: la distancia en 1D (los pegados, a la suma de los radios) por su rumbo."""
+        r = z.d if z.d > DISTANCIA_PEGADO else DISTANCIA_PEGADO
+        return r * math.sin(z.rumbo), r * math.cos(z.rumbo)
+
+    def elegir_tipo(self, n, u, vivos):
+        """WaveManager.ElegirTipo con el sorteo 'u' ya tirado (el de curva.sortear_tipo, asi sin especiales sale lo
+        mismo): los comunes habilitados y los especiales que pueden salir (WaveManager.Elegible: su tramo, su tope de
+        vivos y el de 8 especiales, contando cada uno una vez)."""
+        cuenta = {}
+        for z in vivos:
+            if z.vivo:
+                cuenta[z.tipo] = cuenta.get(z.tipo, 0) + 1
+        especiales = sum(cuenta.get(t, 0) for t in NOMBRES_ESPECIALES)
+        elegibles = [t for t in curva.TIPOS if n >= t[6]]
+        for e in self.mezcla_esp:
+            if n < e[6] or (e[8] > 0 and n > e[8]):
+                continue
+            if e[9] > 0 and cuenta.get(e[0], 0) >= e[9]:
+                continue
+            if especiales >= MAX_ESPECIALES_VIVOS:
+                continue
+            elegibles.append(e)
+        total = sum(t[7] for t in elegibles)
+        r = u * total
+        for t in elegibles:
+            r -= t[7]
+            if r <= 0:
+                return t
+        return elegibles[-1]
+
+    def nuevo_especial(self, z, t):
+        """Lo de cada especial al aparecer."""
+        z.esp = self.habilidades
+        z.xp += self.xp_extra
+        if z.tipo == 'chaman':
+            z.prox_accion = t + CHA_PRIMERO
+
+    def a_la_vista(self, z):
+        """Se planta solo donde se lo ve (SeVe): si no, rodea al jugador hasta verse. Desde ahi lo ven la mano, el
+        automatico y el dron."""
+        z.r_mano = max(z.r_mano, z.d + 0.5)
+        z.r_auto = max(z.r_auto, z.d + 0.5)
+
+    def aliados(self, ch):
+        """ZombiChaman.JuntarAliados: los potenciables a menos de 4,5 m del chaman, del mas cercano al mas lejano."""
+        cx, cy = self.posicion(ch)
+        cand = []
+        r2 = CHA_RADIO * CHA_RADIO
+        for o in self.vivos:
+            if o is ch or not o.vivo or o.tipo not in POTENCIABLES:
+                continue
+            ox, oy = self.posicion(o)
+            d2 = (ox - cx) ** 2 + (oy - cy) ** 2
+            if d2 <= r2:
+                cand.append((d2, o))
+        cand.sort(key=lambda c: c[0])
+        return [o for _, o in cand[:CHA_ALIADOS]]
+
+    def inflar(self, z):
+        z.inflando = self.t + HIN_AVISO
+        z.accion_en = -1.0
+
+    def mover_especial(self, z, t, final):
+        """Lo que hace cada especial antes de caminar (su Mover). Devuelve si camina este paso como cualquiera."""
+        tipo = z.tipo
+        if tipo == 'blindado':
+            # La guardia: se abre a 1,5 m y se cierra a mas de 2,3. Camina con la persecucion de siempre.
+            if z.guardia < 0 and z.d <= BLI_GUARDIA:
+                z.guardia = t
+            elif z.guardia >= 0 and z.d > BLI_CIERRA:
+                z.guardia = -1.0
+            return True
+        if tipo == 'hinchado':
+            if z.inflando >= 0:
+                return False
+            if z.d <= HIN_CLAVA:
+                self.inflar(z)
+                return False
+            return True
+        if tipo == 'saltador':
+            if z.accion_en >= 0 or t < z.patron_hasta:
+                return False
+            if z.d <= SAL_DISTANCIA and t >= z.prox_accion:
+                # Se agacha; salta al terminar el aviso y se queda quieto, sin zarpazos, hasta recuperarse.
+                z.accion_en = t + SAL_AVISO
+                z.patron_hasta = t + SAL_AVISO + SAL_VUELO + SAL_RECUPERA
+                z.prox_accion = t + SAL_AVISO + SAL_RECARGA
+                return False
+            return True
+        if tipo == 'chaman':
+            if z.accion_en >= 0:
+                return False
+            if t >= z.prox_accion and (z.plantado or z.d <= z.r_auto) and self.aliados(z):
+                # El pulso, acercandose o plantado: se frena donde esta.
+                z.accion_en = t + CHA_AVISO
+                return False
+            antes = z.plantado
+            z.plantado = z.d <= CHA_PLANTA + (ESC_HISTERESIS if antes else 0.0)
+            if z.plantado:
+                if not antes:
+                    self.a_la_vista(z)
+                return False
+            return True
+        if tipo == 'escupidor':
+            if z.accion_en >= 0:
+                return False
+            planta = ESC_PLANTA_FINAL if final else ESC_PLANTA
+            antes = z.plantado
+            z.plantado = z.d <= planta + (ESC_HISTERESIS if antes else 0.0)
+            if not z.plantado:
+                return True
+            if not antes:
+                self.a_la_vista(z)
+                if z.prox_accion < t:
+                    z.prox_accion = t + ESC_PRIMERO
+            if t >= z.prox_accion:
+                # El aviso: el anillo donde esta el jugador; escupe al terminarlo.
+                z.accion_en = t + ESC_AVISO
+                z.prox_accion = t + ESC_CADA
+            return False
+        return True
+
+    def accion(self, z, t):
+        """Lo que pasa al terminar el aviso de cada uno."""
+        z.accion_en = -1.0
+        rng = self.rng
+        diag = self.diag
+        if z.tipo == 'escupidor':
+            # El globo vuela d / 11 s y el charco cae donde estaba el jugador: lo pisa si no se fue (y sigue
+            # pisandolo, golpe a golpe, con la misma probabilidad).
+            diag['escupitajos'] += 1
+            cae = t + z.d / ESC_VEL_GLOBO + CHARCO_GRACIA
+            sigue = 1.0 - self.esquiva_especial
+            k = 0
+            while k < CHARCO_TICKS and rng.random() < sigue:
+                self.charcos.append((cae + k * CHARCO_CADA, z.dano * CHARCO_PARTE))
+                k += 1
+        elif z.tipo == 'saltador':
+            diag['saltos'] += 1
+            if rng.random() >= self.esquiva_especial:
+                diag['saltos_pegan'] += 1
+                self.recibir(z.dano * SAL_GOLPE, 'salto')
+            z.d = abs(z.d - SAL_LARGO)
+        elif z.tipo == 'chaman':
+            z.prox_accion = t + CHA_CADA - CHA_AVISO
+            diag['pulsos'] += 1
+            for o in self.aliados(z):
+                o.buff_hasta = t + CHA_DURA
+                o.buff_de = z
+                o.vel_buff = max(1.0, min(CHA_VEL, CHA_TOPE / o.vel))
+                diag['potenciados'] += 1
+
+    def reventar(self, z, t):
+        """ZombiHinchado.Reventar: al jugador, si sigue en el circulo; a los zombis de adentro, el 35 % de su vida
+        maxima (el bono del chaman lo achica; al jefe el 4 %), con el empujon; y muere el, pagando entero."""
+        z.inflando = -1.0
+        z.reventado = True
+        self.diag['reventones'] += 1
+        if z.d <= HIN_RADIO and self.rng.random() >= self.esquiva_especial:
+            self.recibir(z.dano * HIN_GOLPE, 'explosion')
+        cx, cy = self.posicion(z)
+        r2 = HIN_RADIO * HIN_RADIO
+        self._explotando = True
+        for o in self.vivos:
+            if o is z or not o.vivo or o.inflando >= 0:
+                continue
+            ox, oy = self.posicion(o)
+            dx, dy = ox - cx, oy - cy
+            d2 = dx * dx + dy * dy
+            if d2 > r2:
+                continue
+            o.hp -= self.recibido(o, o.hp_max * (HIN_JEFE if o.tipo == 'jefe' else HIN_PARTE), OTRO)
+            if o.hp <= 0.01:
+                self.matar(o)
+            elif o.tipo != 'jefe' and o.vivo and o.inflando < 0:
+                # El empujon hacia afuera de la explosion: en 1D, lo que tiene de alejarse del jugador.
+                dist = math.sqrt(d2)
+                ro = math.sqrt(ox * ox + oy * oy)
+                if dist > 1e-6 and ro > 1e-6:
+                    radial = (dx * ox + dy * oy) / (dist * ro)
+                else:
+                    radial = 1.0
+                empujon = HIN_EMPUJON
+                if o.tipo in PESADOS:
+                    empujon *= 0.5
+                    o.patron_hasta = max(o.patron_hasta, t + HIN_FRENA)
+                o.d = max(0.0, o.d + empujon * radial)
+        self._explotando = False
+        self.matar(z)
 
     # --- Las cajas, como en curva.py ---------------------------------------------------------
 
@@ -881,7 +1234,12 @@ class Partida:
             jefe = n % 10 == 0
             self.avanzar(DESCANSO)
 
-            facil, _ = (False, None) if jefe else self.facil(n, mv)
+            if jefe or (self.sin_atajo_desde and n >= self.sin_atajo_desde):
+                # Con los especiales, desde la 12 todo paso a paso: el atajo de las oleadas faciles no sabe de
+                # charcos, escudos ni bonos (y su control, 'actual_paso_a_paso', hace lo mismo sin ellos).
+                facil = False
+            else:
+                facil, _ = self.facil(n, mv)
             # El cargador no se llena al terminar la oleada (en el juego solo lo llenan las cajas
             # y el revivir): la facil gasta lo suyo, y si no alcanza se juega paso a paso.
             gasto = 0.0
@@ -920,7 +1278,8 @@ class Partida:
                         self.balas = max(0, int(round(self.balas - gasto / trozos)))
                         self.avanzar(dur / trozos)
             else:
-                if not self.jugar_oleada(n, cantidad, jefe, mv, md):
+                oleada = self.jugar_oleada_esp if self.esp_on else self.jugar_oleada
+                if not oleada(n, cantidad, jefe, mv, md):
                     return self.resultado(n - 1, n)
             if var.get('recarga'):
                 # Candidata: el cargador se llena al terminar cada oleada (hoy no: solo las cajas).
@@ -949,13 +1308,20 @@ class Partida:
                     revivio=self.revivio,
                     sin_balas=self.pasos_sin_balas / max(1, self.pasos_con_blanco),
                     veces=dict(self.veces), poder_por_oleada=self.poder_por_oleada,
-                    min_por_oleada=self.min_por_oleada, monedas_por_oleada=self.monedas_por_oleada)
+                    min_por_oleada=self.min_por_oleada, monedas_por_oleada=self.monedas_por_oleada,
+                    diag=dict(self.diag) if self.diag is not None else None)
 
     def nuevo_zombi(self, tp, mv, md, d):
         """Un zombi con su rumbo al azar, que dice hasta donde se lo ve."""
         if self.pantalla is None:
             return Zombi(tp, mv, md, d)
-        return Zombi(tp, mv, md, d, self.pantalla, self.rng.randrange(RUMBOS))
+        rumbo = self.rng.randrange(RUMBOS)
+        z = Zombi(tp, mv, md, d, self.pantalla, rumbo)
+        if self.chorros:
+            # Solo para las distancias entre zombis (el chaman, el hinchado): los rumbos juntos en cuatro chorros, los
+            # cuatro puntos de aparicion, de +-15 grados. Lo que se ve sigue con el rumbo de siempre.
+            z.rumbo = math.radians(90 * ((rumbo + 45) // 90 % 4) + (rumbo % 31) - 15)
+        return z
 
     def revivir(self):
         """OfertaDeRevivir: una vez por partida, si hay video y el jugador lo acepta (la
@@ -996,7 +1362,7 @@ class Partida:
                     if len(vivos) < self.techo:
                         vivos.append(self.nuevo_zombi(curva.TIPOS[0], mv, md, max(2.0, jefe_z.d)))
             elif self.rng.random() >= perfil['esquiva_jefe']:
-                self.recibir(jefe_z.dano * (1.5 if jefe_z.ataques % 2 == 1 else 2.5))
+                self.recibir(jefe_z.dano * (1.5 if jefe_z.ataques % 2 == 1 else 2.5), 'jefe')
             return
         toca_invocar = furioso and jefe_z.sin_invocar >= 2
         if toca_invocar and len(vivos) < self.techo:
@@ -1011,7 +1377,7 @@ class Partida:
             jefe_z.toca_salto = patron != 'salto'
             jefe_z.sin_invocar += 1
             if self.rng.random() >= perfil['esquiva_jefe']:
-                self.recibir(jefe_z.dano * (1.5 if patron == 'salto' else 2.5))
+                self.recibir(jefe_z.dano * (1.5 if patron == 'salto' else 2.5), 'jefe')
             if patron == 'salto':
                 jefe_z.d = min(jefe_z.d, JEFE_TRAS_EL_SALTO)
             else:
@@ -1178,8 +1544,8 @@ class Partida:
             # Las balas que llegan.
             en_vuelo = self.en_vuelo
             while en_vuelo and en_vuelo[0][0] <= t:
-                _, _, z, dano, n_balas, quema, libres, carta = heapq.heappop(en_vuelo)
-                self.llegar(z, dano, n_balas, quema, libres, carta)
+                _, _, z, dano, n_balas, quema, libres, carta, origen = heapq.heappop(en_vuelo)
+                self.llegar(z, dano, n_balas, quema, libres, carta, origen)
 
             # La granada, como en curva.py, con la recarga de las cartas.
             if self.con_granada and t >= self.granada_lista:
@@ -1216,7 +1582,243 @@ class Partida:
                     v = z.vel * (1 - z.lentitud) if t < z.hielo_hasta else z.vel
                     f = min(1.0, (v / self.vel_jugador) ** 2 + horda_cerca)
                     if rng.random() < perfil['exposicion'] * f:
-                        self.recibir(z.dano)
+                        self.recibir(z.dano, 'jefe' if z.tipo == 'jefe' else 'zarpazo')
+            self.vivos = [z for z in vivos if z.vivo]
+
+            if self.vida <= 0 and not self.revivir():
+                return False
+            self.t += DT
+        return True
+
+    def jugar_oleada_esp(self, n, cantidad, jefe, mv, md):
+        """jugar_oleada con los zombis con habilidad (18/10, ZOMBIS.md). El tipo se sortea al aparecer, con los topes
+        de WaveManager.Elegible y el mismo numero al azar que tiraria curva.sortear_tipo (asi, sin especiales en la
+        mezcla, sale exactamente lo mismo que jugar_oleada), y cada especial hace lo suyo: ver el README."""
+        rng = self.rng
+        perfil = self.perfil
+        techo = self.techo
+        cola = []
+        if jefe:
+            cola.append(curva.JEFE)
+        for _ in range(cantidad):
+            cola.append(rng.random())
+        cola.reverse()
+        self.vivos = []
+        self.en_vuelo = []
+        self.charcos = []
+        prox_aparicion = self.t
+        acumulador = 0.0
+        inicio = self.t
+        jefe_z = None
+        fps = self.fps
+        con_habilidades = bool(self.mezcla_esp) and self.habilidades
+
+        while cola or self.vivos:
+            t = self.t
+            self.cajas_hasta(t)
+            if t - inicio > MAX_SEGUNDOS_OLEADA:
+                return False
+            vivos = self.vivos
+            if cola and t >= prox_aparicion and len(vivos) < techo:
+                tp = cola.pop()
+                if not isinstance(tp, tuple):
+                    tp = self.elegir_tipo(n, tp, vivos)
+                z = self.nuevo_zombi(tp, mv, md, NACEN_A)
+                if z.tipo in NOMBRES_ESPECIALES:
+                    self.nuevo_especial(z, t)
+                vivos.append(z)
+                if tp[0] == 'jefe':
+                    jefe_z = z
+                    z.ataque = t + 3.0
+                    prox_aparicion = t + 1.5
+                else:
+                    prox_aparicion = t + self.aparicion
+
+            # El final de la oleada (WaveManager.FinalDeLaOleada): salieron todos y quedan 3 o menos, o solo
+            # escupidores. El escupidor se acerca entonces a 6,5 m, adentro del automatico.
+            final = False
+            if con_habilidades and not cola:
+                final = len(vivos) <= ESC_POCOS or all(z.tipo == 'escupidor' for z in vivos)
+
+            # Caminan hacia el jugador (con el hielo y el bono del chaman); los especiales, antes, hacen lo suyo.
+            for z in vivos:
+                if z.esp and not self.mover_especial(z, t, final):
+                    continue
+                if z.d > 0 and t >= z.patron_hasta:
+                    v = z.vel * (1 - z.lentitud) if t < z.hielo_hasta else z.vel
+                    if z.buff_hasta > t and z.buff_de is not None and z.buff_de.vivo:
+                        v *= z.vel_buff
+                    z.d = max(0.0, z.d - v * DT)
+
+            if self.con_furia and t >= self.furia_lista and (len(vivos) >= 8 or (jefe_z is not None and jefe_z.vivo)):
+                self.furia_hasta = t + self.dur_furia
+                self.furia_lista = t + 120.0
+            furia = 2.0 if t < self.furia_hasta else 1.0
+
+            # El arma, como en jugar_oleada. Al hinchado que se infla no le tira nadie (revienta solo).
+            manual = (self.paso % 10) < self.ciclo_manual
+            self.paso += 1
+            alcance = self.alcance_arma
+            if manual:
+                en_alcance = [z for z in vivos if z.d <= alcance and z.d <= z.r_mano and z.inflando < 0]
+            else:
+                alcance = min(self.alcance_auto, alcance)
+                en_alcance = [z for z in vivos if z.d <= alcance and z.d <= z.r_auto and z.inflando < 0]
+            self.cerca = en_alcance
+            if en_alcance:
+                self.pasos_con_blanco += 1
+                if self.balas <= 0:
+                    self.pasos_sin_balas += 1
+            pausado = not manual and self.pausa_auto > 0 and t - self.ultima_muerte < self.pausa_auto
+            if en_alcance and self.balas > 0 and not pausado:
+                pot = self.potencia if t < self.potencia_hasta else 1.0
+                sin_techo = self.st['tiros'] * pot * furia * self.m_cad
+                tps = min(TECHO_TIROS, sin_techo)
+                tps_arma = min(TECHO_TIROS, sin_techo * self.cadencia_arma)
+                compensacion = tps / tps_arma
+                if not manual:
+                    tps_arma *= CADENCIA_AUTOMATICA
+                acumulador += tps_arma * DT
+                objetivo = min(en_alcance, key=lambda z: z.d)
+                d_ef = max(objetivo.d, DISTANCIA_PEGADO)
+                punteria = perfil['punteria'] if manual else self.punteria_auto
+                abanico = self.abanico
+                if abanico:
+                    sigma = self.sigma_mano if manual else self.sigma_auto
+                    alfa = math.atan((objetivo.radio + RADIO_BALA) / d_ef)
+                e = 0.0
+                pasa = 1.0 if not fps else self.no_atraviesa(objetivo.tipo, objetivo.vel, self.vel_bala)
+                dano_tiro = self.st['dano'] * furia * self.m_dano * compensacion
+                vel_bala = self.vel_bala
+                n_horda = horda(len(en_alcance))
+                quema_p = self.quema_p
+                paquetes = {}
+                cadencia_gratis = self.cadencia_gratis
+                costo_tiro = 1.0 / self.m_cad
+                while acumulador >= 1 and self.balas > 0:
+                    acumulador -= 1
+                    if cadencia_gratis:
+                        self.deuda_balas += costo_tiro
+                        if self.deuda_balas >= 1.0 - 1e-9:
+                            self.deuda_balas -= 1.0
+                            self.balas -= 1
+                    else:
+                        self.balas -= 1
+                    dano = dano_tiro * (2.0 if (self.crit >= 1.0 or rng.random() < self.crit) else 1.0)
+                    apunto = rng.random() < punteria
+                    if abanico:
+                        e = self.error_angular(sigma, alfa, apunto)
+                    balas = [(angulo, dano * parte) for angulo, parte in self.patron]
+                    balas += [(None, dano)] * self.atras
+                    for angulo, d_bala in balas:
+                        blanco = None
+                        if angulo is not None and (abs(angulo + e) <= alfa if abanico else apunto):
+                            if pasa >= 1.0 or rng.random() < pasa:
+                                blanco = objetivo
+                        if blanco is None:
+                            if rng.random() >= n_horda:
+                                continue
+                            blanco = en_alcance[rng.randrange(len(en_alcance))]
+                        pq = paquetes.get(blanco)
+                        if pq is None:
+                            paquetes[blanco] = pq = [d_bala, 1, 0.0]
+                        else:
+                            pq[0] += d_bala
+                            pq[1] += 1
+                        if quema_p > 0 and rng.random() < quema_p:
+                            pq[2] = max(pq[2], d_bala * 0.1)
+                for blanco, (d_paquete, n_balas, quema) in paquetes.items():
+                    self.lanzar(blanco, d_paquete, vel_bala, n_balas, quema)
+            else:
+                acumulador = 0.0
+
+            if self.drones:
+                for i in range(self.drones):
+                    if t < self.dron_prox[i]:
+                        continue
+                    self.dron_prox[i] = t + 1.0
+                    cerca = [z for z in vivos if z.d <= ALCANCE_DRON and z.d <= z.r_mano and z.inflando < 0]
+                    if not cerca:
+                        continue
+                    blanco = min(cerca, key=lambda z: z.d)
+                    if rng.random() >= PUNTERIA_DEL_DRON or (
+                            fps and rng.random() >= self.no_atraviesa(blanco.tipo, blanco.vel, VEL_DRON)):
+                        if rng.random() >= horda(len(cerca)):
+                            continue
+                        blanco = cerca[rng.randrange(len(cerca))]
+                    d_dron = self.st['dano'] * furia * self.m_dano
+                    quema = d_dron * 0.1 if self.quema_p > 0 and rng.random() < self.quema_p else 0.0
+                    self.lanzar(blanco, d_dron, VEL_DRON, 1, quema, libres=0)
+
+            en_vuelo = self.en_vuelo
+            while en_vuelo and en_vuelo[0][0] <= t:
+                _, _, z, dano, n_balas, quema, libres, carta, origen = heapq.heappop(en_vuelo)
+                self.llegar(z, dano, n_balas, quema, libres, carta, origen)
+
+            # La granada: atraviesa el escudo, el bono del chaman la achica, y el blindado cuenta como duro.
+            if self.con_granada and t >= self.granada_lista:
+                cerca = [z for z in vivos if z.vivo and z.d <= 5]
+                duros = any(z.tipo in ('tanque', 'jefe', 'blindado') and z.d <= 6 for z in cerca)
+                if len(cerca) >= perfil['umbral_granada'] or duros:
+                    self.granada_lista = t + self.recarga_granada
+                    for z in cerca:
+                        if z.vivo and rng.random() < perfil['granada']:
+                            if z.inflando >= 0:
+                                continue
+                            z.hp -= self.recibido(z, 10 * mv, OTRO)
+                            if z.hp <= 0.01:
+                                self.matar(z)
+
+            if (jefe_z is not None and jefe_z.vivo and t >= jefe_z.ataque and t >= jefe_z.patron_hasta
+                    and jefe_z.d <= JEFE_ALCANCE and jefe_z.d <= jefe_z.r_jefe):
+                self.atacar_jefe(jefe_z, t, mv, md, vivos)
+
+            # Los especiales: el escupitajo, el salto y el pulso al terminar su aviso, y el hinchado al terminar de
+            # inflarse; y los charcos que pisa el jugador.
+            if con_habilidades:
+                for z in vivos:
+                    if not z.esp or not z.vivo:
+                        continue
+                    if z.accion_en >= 0 and t >= z.accion_en:
+                        self.accion(z, t)
+                    if z.inflando >= 0 and t >= z.inflando:
+                        self.reventar(z, t)
+                if self.charcos:
+                    quedan = []
+                    for cuando, dano in self.charcos:
+                        if cuando <= t:
+                            self.recibir_charco(dano)
+                        else:
+                            quedan.append((cuando, dano))
+                    self.charcos = quedan
+
+            # La quemadura y los zarpazos. El hinchado no tira zarpazos; el blindado, solo con la guardia abierta
+            # desde hace 0,5 s, y pega 1,4.
+            horda_cerca = 0.6 * (len(vivos) / HORDA_DE_REFERENCIA) ** 1.5
+            for z in vivos:
+                if z.quema_ticks > 0 and z.vivo and t >= z.quema_prox:
+                    z.quema_ticks -= 1
+                    z.quema_prox += 0.5
+                    if z.inflando < 0:
+                        z.hp -= self.recibido(z, z.quema_tick, OTRO)
+                        if z.hp <= 0.01:
+                            self.matar(z)
+                if z.vivo and z.d <= 0 and t >= z.reloj and t >= z.patron_hasta:
+                    golpe = z.dano
+                    if z.esp:
+                        if z.tipo == 'hinchado':
+                            continue
+                        if z.tipo == 'blindado':
+                            if z.guardia < 0 or t - z.guardia < BLI_AVISO:
+                                continue
+                            golpe *= BLI_GOLPE
+                    z.reloj = t + JEFE_ZARPAZO
+                    v = z.vel * (1 - z.lentitud) if t < z.hielo_hasta else z.vel
+                    if z.buff_hasta > t and z.buff_de is not None and z.buff_de.vivo:
+                        v *= z.vel_buff
+                    f = min(1.0, (v / self.vel_jugador) ** 2 + horda_cerca)
+                    if rng.random() < perfil['exposicion'] * f:
+                        self.recibir(golpe, 'jefe' if z.tipo == 'jefe' else 'zarpazo')
             self.vivos = [z for z in vivos if z.vivo]
 
             if self.vida <= 0 and not self.revivir():
@@ -1227,8 +1829,11 @@ class Partida:
     def lanzar(self, blanco, dano, vel, n, quema, libres=None):
         """Las n balas de este paso que van al mismo blanco: llegan cuando cruzan la distancia."""
         self.seq += 1
+        # El origen, para el escudo del blindado: las del arma de energia lo atraviesan; las del dron (libres=0),
+        # no, aunque el jugador tenga la de energia (tiran la bala de la pistola).
+        origen = ENERGIA if libres is None and self.arma == ENERGIA else BALA
         heapq.heappush(self.en_vuelo, (self.t + blanco.d / vel, self.seq, blanco, dano, n, quema,
-                                       self.perf_libres if libres is None else libres, self.perf_carta))
+                                       self.perf_libres if libres is None else libres, self.perf_carta, origen))
 
 
 # --- Las variantes -----------------------------------------------------------------------------
@@ -1378,6 +1983,40 @@ VARIANTES.update({
     'poder_20_120': variante('V3 con el PODER 20 x 1,20^L', **dict(ARGON_V3, primer_costo=20, crece_costo=1.20)),
     'poder_28_112': variante('V3 con el PODER 28 x 1,12^L', **dict(ARGON_V3, primer_costo=28, crece_costo=1.12)),
     'poder_18_125': variante('V3 con el PODER 18 x 1,25^L', **dict(ARGON_V3, primer_costo=18, crece_costo=1.25)),
+})
+# Los zombis con habilidad (18/10, ZOMBIS.md): el juego de hoy (la V3 con el PODER 28 x 1,12^L, 'poder_28_112') con
+# los cinco especiales. Desde la 12 (el primero) se juega todo paso a paso, y 'actual_paso_a_paso' es lo mismo sin
+# especiales: la comparacion justa. Argon (18/10): "si el jugador bajo cae por debajo de la 35, +1 de PODER a los
+# cinco especiales" ('especiales_poder').
+ACTUAL = dict(ARGON_V3, primer_costo=28, crece_costo=1.12)
+CINCO = NOMBRES_ESPECIALES
+CON_ESPECIALES = dict(ACTUAL, sin_atajo_desde=DESDE_ESPECIALES, especiales=CINCO)
+VARIANTES.update({
+    'actual_paso_a_paso': variante('hoy sin especiales, paso a paso desde la 12',
+                                   **dict(ACTUAL, sin_atajo_desde=DESDE_ESPECIALES, diag=True)),
+    'chequeo_mezcla': variante('chequeo: el sorteo al aparecer sin especiales (tiene que dar lo de arriba)',
+                               **dict(CON_ESPECIALES, especiales=())),
+    'especiales': variante('hoy con los cinco especiales', **CON_ESPECIALES),
+    'especiales_poder': variante('con los especiales y +1 de PODER cada uno (3, 3, 4, 3, 3)',
+                                 **dict(CON_ESPECIALES, xp_especiales=1)),
+    'especiales_sin_habilidades': variante('con los especiales sin habilidades (solo sus numeros)',
+                                           **dict(CON_ESPECIALES, habilidades=False)),
+    # De a uno.
+    'solo_escupidor': variante('solo el escupidor', **dict(CON_ESPECIALES, especiales=('escupidor',))),
+    'solo_saltador': variante('solo el saltador', **dict(CON_ESPECIALES, especiales=('saltador',))),
+    'solo_chaman': variante('solo el chaman', **dict(CON_ESPECIALES, especiales=('chaman',))),
+    'solo_blindado': variante('solo el blindado', **dict(CON_ESPECIALES, especiales=('blindado',))),
+    'solo_hinchado': variante('solo el hinchado', **dict(CON_ESPECIALES, especiales=('hinchado',))),
+    # Lo que esta puesto a ojo: cuanto se esquivan el charco, el salto y la explosion (por defecto, lo que se esquiva
+    # al jefe: 0,6, 0,8 y 0,92), y los rumbos parejos (en el juego salen de cuatro puntos, en chorros).
+    'especiales_esquiva_09': variante('con los especiales, esquivando el 90 % de sus avisos',
+                                      **dict(CON_ESPECIALES, esquiva_especial=0.9)),
+    'especiales_esquiva_mitad': variante('con los especiales, esquivando la mitad que al jefe',
+                                         **dict(CON_ESPECIALES, esquiva_especial=-0.5)),
+    'especiales_chorros': variante('con los especiales, los zombis en cuatro chorros',
+                                   **dict(CON_ESPECIALES, chorros=True)),
+    'especiales_poder_esquiva_mitad': variante('con los especiales y +1 de PODER, esquivando la mitad',
+                                               **dict(CON_ESPECIALES, xp_especiales=1, esquiva_especial=-0.5)),
 })
 VARIANTES.update({
     'argon_v2': variante('V2 de Argon (14/10), equilibrada', **ARGON_V2),
@@ -1555,6 +2194,85 @@ def tabla_minutos(res, claves, perfil):
         for o in (10, 30, 50):
             vals = [m for c in camps for m in c['oro'][o]]
             celdas.append(mediana(vals) if len(vals) >= 10 else '—')
+        lineas.append('| %s | %s |' % (VARIANTES[clave]['nombre'], ' | '.join(celdas)))
+    return lineas
+
+
+LLEGADAS = [10, 20, 30, 40, 50, 60]
+
+
+def tabla_llegadas(res, claves, perfil):
+    """La partida en que se completa por primera vez cada oleada (mediana de las semillas)."""
+    lineas = ['', '### Perfil %s' % perfil, '',
+              '| variante | ' + ' | '.join('llega a %d' % m for m in LLEGADAS) + ' |', '|---|' + '---|' * len(LLEGADAS)]
+    for clave in claves:
+        camps = [c for c in res if c['clave'] == clave and c['perfil'] == perfil]
+        if not camps:
+            continue
+        celdas = []
+        for meta in LLEGADAS:
+            vals = [primera_en(c['filas'], meta) for c in camps]
+            ok = [v for v in vals if v is not None]
+            celdas.append('%d' % statistics.median(ok) if len(ok) * 2 >= len(vals) else '—')
+        lineas.append('| %s | %s |' % (VARIANTES[clave]['nombre'], ' | '.join(celdas)))
+    return lineas
+
+
+def tabla_semillas(res, claves, perfil):
+    """El muro de cada semilla (la mediana de sus ultimas 20 partidas), para ver el ruido."""
+    camps0 = [c for c in res if c['perfil'] == perfil]
+    semillas = sorted(set(c['semilla'] for c in camps0))
+    lineas = ['', '### Perfil %s' % perfil, '',
+              '| variante | ' + ' | '.join('semilla %d' % s for s in semillas) + ' | media | todas juntas '
+              '| media de las ultimas 20 | terminan antes de la 35 | mueren en un jefe |',
+              '|---|' + '---|' * (len(semillas) + 5)]
+    for clave in claves:
+        camps = {c['semilla']: c for c in camps0 if c['clave'] == clave}
+        if not camps:
+            continue
+        muros = [statistics.median(f['oleada'] for f in camps[s]['filas'][-20:]) if s in camps else None for s in semillas]
+        celdas = ['%g' % m if m is not None else '—' for m in muros]
+        ok = [m for m in muros if m is not None]
+        celdas.append('%.1f' % statistics.mean(ok))
+        ult = ultimas(list(camps.values()), 20)
+        celdas.append(mediana([f['oleada'] for f in ult]))
+        # Mas fino que la mediana, que se pega a los jefes: la media de las ultimas 20, y cuantas terminan antes de
+        # la 35 (la regla de Argon) o en la oleada de un jefe.
+        celdas.append('%.1f' % statistics.mean(f['oleada'] for f in ult))
+        celdas.append('%.0f %%' % (100.0 * sum(1 for f in ult if f['oleada'] < 35) / len(ult)))
+        celdas.append('%.0f %%' % (100.0 * sum(1 for f in ult if f['murio_en'] and f['murio_en'] % 10 == 0) / len(ult)))
+        lineas.append('| %s | %s |' % (VARIANTES[clave]['nombre'], ' | '.join(celdas)))
+    return lineas
+
+
+def tabla_especiales(res, claves, perfil):
+    """Lo que pasa con los especiales en las ultimas 20 partidas de cada semilla (solo las variantes con diag)."""
+    lineas = ['', '### Perfil %s' % perfil, '',
+              '| variante | danio recibido: zarpazos / jefe / charco / salto / explosion | especiales muertos por partida '
+              '| reventones por partida (muertes por la explosion) | pulsos del chaman por partida (potenciados por pulso) '
+              '| saltos por partida (pegan) | escupitajos por partida (golpes de charco por escupitajo) '
+              '| bala a blindados parada por el escudo |',
+              '|---|---|---|---|---|---|---|---|']
+    for clave in claves:
+        camps = [c for c in res if c['clave'] == clave and c['perfil'] == perfil]
+        ult = [f for f in ultimas(camps, 20) if f.get('diag')]
+        if not ult:
+            continue
+        suma = {}
+        for f in ult:
+            for k, v in f['diag'].items():
+                suma[k] = suma.get(k, 0.0) + v
+        n = len(ult)
+        fuentes = ('zarpazo', 'jefe', 'charco', 'salto', 'explosion')
+        total = sum(suma[k] for k in fuentes)
+        reparto = ' / '.join('%.0f %%' % (100.0 * suma[k] / total) if total > 0 else '—' for k in fuentes)
+        celdas = [reparto, '%.1f' % (suma['especiales'] / n),
+                  '%.1f (%.1f %%)' % (suma['reventones'] / n, 100.0 * suma['muertes_explosion'] / suma['muertes'])
+                  if suma['muertes'] else '—',
+                  '%.1f (%.1f)' % (suma['pulsos'] / n, suma['potenciados'] / suma['pulsos'] if suma['pulsos'] else 0),
+                  '%.1f (%.0f %%)' % (suma['saltos'] / n, 100.0 * suma['saltos_pegan'] / suma['saltos'] if suma['saltos'] else 0),
+                  '%.1f (%.2f)' % (suma['escupitajos'] / n, suma['ticks_charco'] / suma['escupitajos'] if suma['escupitajos'] else 0),
+                  '%.0f %%' % (100.0 * suma['bloqueado'] / suma['a_blindados']) if suma['a_blindados'] else '—']
         lineas.append('| %s | %s |' % (VARIANTES[clave]['nombre'], ' | '.join(celdas)))
     return lineas
 
@@ -1860,6 +2578,14 @@ def main():
     if op.get('fotos', '1') == '1':
         with open(os.path.join(AQUI, 'fotos.json'), 'w', encoding='utf-8') as f:
             json.dump(fotos, f, indent=1, sort_keys=True)
+    if op.get('crudo'):
+        # Partida por partida (la oleada, los minutos, las monedas y donde murio), para mirar otras cuentas sin volver
+        # a correr.
+        crudo = [dict(clave=c['clave'], perfil=c['perfil'], semilla=c['semilla'],
+                      partidas=[[f['oleada'], round(minutos_de(f), 2), round(f['monedas']), f['murio_en']]
+                                for f in c['filas']]) for c in res]
+        with open(op['crudo'], 'w', encoding='utf-8') as f:
+            json.dump(crudo, f)
 
     lineas = ['# Simulacion de las cartas de la 1.6.0', '',
               'partidas %d, semillas %d, perfiles %s, %.0f s' % (partidas, semillas, ','.join(perfiles), time.time() - inicio),
@@ -1889,6 +2615,25 @@ def main():
                                                                        'gemini')], perfiles)
     for perfil in perfiles:
         lineas += tabla_cartas_elegidas(res, claves, perfil)
+    lineas += ['', '## En que partida se llega a cada oleada', '',
+               'La partida en que se completa por primera vez la oleada (mediana de las semillas; "—" si no llega la '
+               'mitad).']
+    for perfil in perfiles:
+        lineas += tabla_llegadas(res, claves, perfil)
+    lineas += ['', '## El muro de cada semilla', '',
+               'La mediana de las ultimas 20 partidas de cada semilla, su media, y la mediana de todas juntas (la del '
+               'muro de arriba); y, de las ultimas 20 de todas, la media, cuantas terminan antes de la 35 y cuantas '
+               'mueren en la oleada de un jefe.']
+    for perfil in perfiles:
+        lineas += tabla_semillas(res, claves, perfil)
+    if any(f.get('diag') for c in res for f in c['filas'][-1:]):
+        lineas += ['', '## Los zombis con habilidad', '',
+                   'En las ultimas 20 partidas de cada semilla: de donde sale el danio que recibe el jugador (el '
+                   'reparto), cuantos especiales se matan, que parte de las muertes es la explosion del hinchado, los '
+                   'pulsos del chaman, los saltos y los escupitajos, y que parte de las balas comunes que van a un '
+                   'blindado para el escudo.']
+        for perfil in perfiles:
+            lineas += tabla_especiales(res, claves, perfil)
     texto = '\n'.join(lineas)
     print(texto)
     with open(salida, 'w', encoding='utf-8') as f:

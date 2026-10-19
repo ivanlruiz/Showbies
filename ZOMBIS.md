@@ -54,6 +54,14 @@ arriba ya son esos):
   lado. Neto en el medio, entre −1,5 y +1 oleada: hay que correr `simulaciones/cartas_1.6.0` con los especiales.
   **Argon (18/10): correrla cuando estén el blindado y el hinchado**, y si el jugador bajo cae por debajo de la 35, darle
   +1 de PODER a los cinco especiales (de 2 a 3, y el chamán de 3 a 4).
+  **Simulado (18/10, `simulaciones/cartas_1.6.0/resultados_especiales.md`): el muro no se mueve, 39 / 59 / 69 con y sin
+  los cinco**, y la regla no salta (el bajo queda en 39, y con el +1 de PODER iría a 43). Sus habilidades son el 38-40 %
+  del daño que reciben el bajo y el medio, pero pagan un 16-21 % más de oro por minuto en el muro, y los tres muros
+  son jefes. De a uno, ninguno mueve el muro más de una oleada; el que más pega es el escupidor (su charco es el
+  18-24 % del daño recibido). **El escudo del blindado casi no frena nada en el modelo** (1-3 % de las balas comunes):
+  una sola perforante lo anula para todas, y en el muro casi siempre está en el mazo. Lo que podría darlo vuelta es
+  cuánto se esquivan los avisos (a ojo, como al jefe: 0,6 / 0,8 / 0,92): esquivando la mitad, el medio cae a la 54 y el
+  alto a la 63.
 
 ### 1. El escupidor (Spitter)
 
