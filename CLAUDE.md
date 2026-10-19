@@ -86,7 +86,7 @@ Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo
 Y **fuera del proyecto de Unity**, en la raíz del repo:
 
 ```
-Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono); cartas/: los íconos de las cartas; grafico_de_funciones/: el de la ficha de Play; clips/: armar_clip.py, que arma los videos para redes con las tomas de GrabarClips
+Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono); cartas/: los íconos de las cartas; grafico_de_funciones/: el de la ficha de Play; clips/: armar_clip.py, que arma los videos para redes con las tomas de GrabarClips; kingball/: la miniatura de YouTube de Kingball (miniatura_kingball.py)
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
