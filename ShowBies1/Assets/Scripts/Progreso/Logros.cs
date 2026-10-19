@@ -71,7 +71,9 @@ public static class Logros
         new Familia(Intocable, () => Progreso.MejorOleadaIntacta, 5, 10, 20),
         new Familia(Constante, () => Progreso.MejorRacha, 3, 7, 30),
         new Familia(Misionero, () => Progreso.MisionesCobradas, 10, 50, 200),
-        new Familia(Coleccionista, () => EstrellasDelBestiario, 5, 10, 15),
+        // 6 / 15 / 30 desde que el bestiario tiene los diez tipos (de Argon, 19/10: eran 5 / 10 / 15 con cinco, y con 30
+        // estrellas el oro salia a la mitad). La moneda ya ganada no se pierde.
+        new Familia(Coleccionista, () => EstrellasDelBestiario, 6, 15, 30),
         new Familia(SinFin, () => Progreso.MejorNivelLibre, 5, 10, 20),
     };
 

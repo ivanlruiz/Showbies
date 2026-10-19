@@ -153,12 +153,21 @@ bestiario_titulo	BESTIARY	BESTIARIO
 bestiario_bajada	Kill zombies to earn stars	Mata zombis para ganar estrellas
 bestiario_siguiente	NEXT {0}	SIGUIENTE {0}
 bestiario_completo	COMPLETE!	¡COMPLETO!
+bestiario_comunes	COMMON	COMUNES
+bestiario_especiales	SPECIALS	ESPECIALES
+bestiario_oleada	WAVE {0}	OLEADA {0}
+bestiario_desconocido	???	???
 aviso_estrella	STAR!	¡ESTRELLA!
 zombi_normal	WALKER	CAMINANTE
 zombi_rapido	RUNNER	CORREDOR
 zombi_faster	SPRINTER	VELOZ
 zombi_tanque	TANK	TANQUE
 zombi_jefe	BOSS	JEFE
+zombi_escupidor	SPITTER	ESCUPIDOR
+zombi_saltador	LEAPER	SALTADOR
+zombi_chaman	SHAMAN	CHAMÁN
+zombi_blindado	SHIELDER	BLINDADO
+zombi_hinchado	BLOATER	HINCHADO
 
 # --- Nivel del jugador y logros (NivelJugador, Logros, VentanaLogros, AvisoDeMisiones, ProximoObjetivo)
 logros_titulo	ACHIEVEMENTS	LOGROS

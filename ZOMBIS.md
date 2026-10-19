@@ -282,13 +282,37 @@ La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a
 - **Hecho:** el tope por tipo y el de especiales (`TipoEnOleada.maxVivos` y `especial`, `WaveManager.Elegible` y
   `EspecialesVivos`, `EnemyController.VivosDe`), y el bate que empuja a los que se mueven por su cuenta salvo al jefe y
   al tesoro (`EnemyController.RecibirBatazo`).
-- **Falta: cada tipo entra al bestiario** (con las estrellas a 25 / 250 / 2.500) y a la tabla de textos. `NivelJugador.PuntosPorTipo`
-  no hace falta: es solo para migrar progresos de antes de la v6.
+- **Hecho: cada tipo entra al bestiario** (con las estrellas a 25 / 250 / 2.500, en la pestaña ESPECIALES, con su retrato y
+  tapado hasta matar al primero; ver abajo) y a la tabla de textos. `NivelJugador.PuntosPorTipo` los tiene igual, porque la
+  prueba compara los puntos de todos los tipos del bestiario con sus assets.
 - **Falta: el modo libre** tiene una corrutina por tipo (`GeneradorZombis`): los nuevos van primero en las oleadas.
 - **Hecho con el blindado:** el origen del daño en `DanoZombi` (`OrigenDelDano`), la persecución con giro limitado
   (`EnemyController.Perseguir`) y su masa de tanque.
 - **Hecho con el hinchado:** el gancho antes de morir (`ZombiHinchado.EmpezarAInflarse`, y el bloque de la muerte
   aparte, `MuerteConPremio`), su explosión como origen del daño y el empujón de la onda (`EnemyController.Despedir`).
 - **Falta:** sacar a una base común lo que repiten el escupidor, el saltador, el chamán y el hinchado (buscar el modelo,
-  el aviso en el piso, quedarse quieto, el corte con el bate y la derrota, la pose). Y correr la simulación
-  (`simulaciones/cartas_1.6.0`) con los cinco, como pidió Argon.
+  el aviso en el piso, quedarse quieto, el corte con el bate y la derrota, la pose). La simulación con los cinco ya
+  está (ver El orden).
+
+## El bestiario y el modo libre (Argon, 19/10)
+
+1. **El bestiario en dos pestañas**, COMUNES y ESPECIALES, con las cinco tarjetas de siempre cada una y un globito de
+   estrellas por cobrar en cada pestaña.
+2. **El que nunca se mató sale tapado**, como adelanto: su silueta, "???", las estrellas apagadas y la oleada en que
+   aparece en lugar de la barra ("OLEADA 18"). Se destapa al matar al primero.
+3. **Sin iniciales**: un retrato de tres cuartos, cabeza y hombros, renderizado del juego, en un disco #141820 con un
+   anillo de 4 u del acento de cada uno: caminante #76FF03, corredor #C6FF00, veloz #00E5FF, tanque #FF3D00, jefe
+   #D500F9; escupidor #D4FF00, saltador #6573FF (índigo claro, que su piel es muy oscura), chamán #FF1744, blindado
+   #FFC400, hinchado #00FF66.
+4. **Los nombres**: ESCUPIDOR / SPITTER, SALTADOR / LEAPER, CHAMÁN / SHAMAN, BLINDADO / SHIELDER, HINCHADO / BLOATER.
+5. **El logro de las estrellas pasa a 6 / 15 / 30** (eran 5 / 10 / 15 con cinco tipos): la plata es el oro de antes y el
+   oro, el bestiario entero.
+6. **En el modo libre, uno nuevo por nivel desde el 2**: escupidor en el 2 (0:45), saltador 3, chamán 4, blindado 5 e
+   hinchado 6 (3:45): muchas partidas casuales duran 4-6 minutos, y uno cada dos niveles dejaba al hinchado para los 7,5.
+   Prueban cada 4 s (con el 6 que propuso Claude perdían casi todos los lugares contra el normal, que prueba cada 0,25),
+   con el arranque de cada uno corrido 0,8 s, y los topes de las oleadas: 3, 4, 2, 3 y 3, y 8 entre todos.
+7. **El escupidor del libre escupe 3 veces plantado a 9,5 m y después se acerca a 6,5**, adentro del auto-apuntado: sin
+   final de oleada, a los dos minutos habría tres clavados en los bordes que el automático no mata nunca, ocupando 3 de
+   los 8 lugares de especiales.
+
+Argon vio las dos pestañas armadas (con un progreso de prueba) y las dio por buenas tal cual.

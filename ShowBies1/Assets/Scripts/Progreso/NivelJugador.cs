@@ -38,6 +38,11 @@ public static class NivelJugador
             case Bestiario.Faster: return 5;
             case Bestiario.Tanque: return 20;
             case Bestiario.Jefe: return 100;
+            case Bestiario.Escupidor: return 8;
+            case Bestiario.Saltador: return 10;
+            case Bestiario.Chaman: return 15;
+            case Bestiario.Blindado: return 12;
+            case Bestiario.Hinchado: return 10;
             default: return 1;
         }
     }

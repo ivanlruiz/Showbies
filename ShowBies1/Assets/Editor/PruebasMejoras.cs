@@ -7349,6 +7349,7 @@ public static class PruebasMejoras
         inf.Cerca("bestiario: premio de la primera del caminante sin oleadas", 50, Bestiario.Premio(Bestiario.Normal, 0, 0), 1e-9);
         inf.Cerca("bestiario: premio de la tercera del caminante con oleada 10", 5800, Bestiario.Premio(Bestiario.Normal, 2, 10), 1e-9);
         ProbarPremiosDelBestiario(inf);
+        ProbarLosEspecialesEnElBestiario(inf);
 
         EmpezarCaso("{\"version\":4,\"monedas\":0,\"estadisticas\":{\"matados\":[{\"id\":\"ZombiNormal\",\"cantidad\":1500},{\"id\":\"ZombiBOSS\",\"cantidad\":1}]}}", null);
         inf.Igual("bestiario: dos normales y un jefe para cobrar", 3, Bestiario.PorCobrar);
@@ -7365,6 +7366,60 @@ public static class PruebasMejoras
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Igual("bestiario: se releen las cobradas", 2, Bestiario.Cobradas(Bestiario.Normal));
         inf.Igual("bestiario: queda el jefe para cobrar", 1, Bestiario.PorCobrar);
+    }
+
+    // Los cinco zombis con habilidad en el bestiario (de Argon, 19/10): sus estrellas a 25 / 250 / 2.500, la pestana de
+    // cada uno, la oleada que dice la tarjeta tapada (la de WaveMode), los retratos y el logro de las estrellas.
+    static void ProbarLosEspecialesEnElBestiario(Informe inf)
+    {
+        inf.Igual("bestiario: diez tipos, cinco comunes", 10, Bestiario.Tipos.Length);
+        bool especiales = true;
+        for (int i = 0; i < Bestiario.Tipos.Length; i++) especiales &= Bestiario.EsEspecial(Bestiario.Tipos[i]) == (i >= Bestiario.Comunes);
+        inf.Verdadero("bestiario: los cinco ultimos son los especiales", especiales && Bestiario.EsEspecial(Bestiario.Hinchado) && !Bestiario.EsEspecial(Bestiario.Jefe));
+        inf.Igual("bestiario: 24 escupidores, ninguna estrella", 0, Bestiario.AlcanzadasCon(Bestiario.Escupidor, 24));
+        inf.Igual("bestiario: 25 escupidores, una", 1, Bestiario.AlcanzadasCon(Bestiario.Escupidor, 25));
+        inf.Igual("bestiario: 2.500 hinchados, las tres", 3, Bestiario.AlcanzadasCon(Bestiario.Hinchado, 2500));
+        inf.Verdadero("bestiario: la primera de un especial paga mas que la del caminante (sueltan mas)",
+                      Bestiario.Premio(Bestiario.Escupidor, 0, 0) > Bestiario.Premio(Bestiario.Normal, 0, 0));
+
+        bool nombres = true;
+        foreach (string tipo in Bestiario.Tipos) nombres &= Bestiario.Nombre(tipo) != tipo && !Bestiario.Nombre(tipo).StartsWith("[");
+        inf.Verdadero("bestiario: cada tipo tiene su nombre en la tabla", nombres);
+        inf.Igual("bestiario: los colores de los anillos, uno por tipo", Bestiario.Tipos.Length, VentanaBestiario.Acentos.Length);
+
+        string sinRetrato = "";
+        foreach (string tipo in Bestiario.Tipos)
+            if (Resources.Load<Sprite>(VentanaBestiario.RutaDelRetrato(tipo)) == null || Resources.Load<Sprite>(VentanaBestiario.RutaDeLaSilueta(tipo)) == null)
+                sinRetrato += " " + tipo;
+        inf.Verdadero("bestiario: cada tipo tiene su retrato y su silueta en Resources (ShowBies > Zombis > Retratos del bestiario)" + sinRetrato, sinRetrato == "");
+
+        // La oleada de la tarjeta tapada es la primera en que WaveMode lo saca (el jefe, cada jefeCadaOleadas).
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            if (!inf.Verdadero("bestiario: WaveMode tiene WaveManager", oleadas != null)) return;
+            string distintas = "";
+            foreach (string tipo in Bestiario.Tipos)
+            {
+                int primera = int.MaxValue;
+                if (tipo == Bestiario.Jefe) primera = oleadas.jefeCadaOleadas;
+                else if (oleadas.tipos != null)
+                    foreach (var t in oleadas.tipos)
+                    {
+                        var enemigo = t != null && t.prefab != null ? t.prefab.GetComponent<EnemyController>() : null;
+                        if (enemigo != null && enemigo.enemyType != null && enemigo.enemyType.name == tipo) primera = Mathf.Min(primera, t.desdeOleada);
+                    }
+                if (primera != Bestiario.OleadaDeAparicion(tipo)) distintas += " " + tipo + " (" + primera + " en WaveMode, " + Bestiario.OleadaDeAparicion(tipo) + " en el Bestiario)";
+            }
+            inf.Verdadero("bestiario: la oleada de cada tipo es la primera en que sale en WaveMode" + distintas, distintas == "");
+        });
+
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":0,\"estadisticas\":{\"matados\":[{\"id\":\"ZombiNormal\",\"cantidad\":60},{\"id\":\"ZombiEscupidor\",\"cantidad\":30}]}}", null);
+        inf.Igual("bestiario: la insignia de los comunes cuenta solo los suyos", 1, Bestiario.PorCobrarEntre(0, Bestiario.Comunes));
+        inf.Igual("bestiario: la de los especiales, solo los suyos", 1, Bestiario.PorCobrarEntre(Bestiario.Comunes, Bestiario.Tipos.Length));
+        inf.Igual("bestiario: el trofeo, las dos", 2, Bestiario.PorCobrar);
+        inf.Verdadero("bestiario: el escupidor ya se vio y el hinchado no (sale tapado)", Bestiario.Visto(Bestiario.Escupidor) && !Bestiario.Visto(Bestiario.Hinchado));
+        inf.Igual("bestiario: el hinchado dice la oleada 24", 24, Bestiario.OleadaDeAparicion(Bestiario.Hinchado));
     }
 
     // Los premios del bestiario salen de lo que dejan las muertes del escalon, no de un
