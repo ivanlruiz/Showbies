@@ -177,7 +177,7 @@ public class CartasEnElJugador : MonoBehaviour
         for (int i = 0; i < vivos.Count; i++)
         {
             var zombi = vivos[i];
-            if (zombi == null || !zombi.Vivo) continue;
+            if (zombi == null || !zombi.ValeTirarle) continue;
             Vector3 d = zombi.transform.position - desde;
             d.y = 0f;
             float d2 = d.sqrMagnitude;

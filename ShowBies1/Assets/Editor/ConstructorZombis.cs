@@ -4,7 +4,8 @@ using UnityEngine;
 
 // Arma los zombis con habilidad (ZOMBIS.md, de Argon): su Enemy, la piel, las piezas que los distinguen desde arriba y
 // el prefab, que sale del zombi normal (el mismo modelo del pack, sin clips nuevos), y los suma a la mezcla del
-// WaveManager de WaveMode con su oleada, su peso y su tope. Hoy, el escupidor, el saltador, el chaman y el blindado.
+// WaveManager de WaveMode con su oleada, su peso y su tope: el escupidor, el saltador, el chaman, el blindado y el
+// hinchado.
 //
 // El Enemy se crea una sola vez: despues es balance y se toca en el asset, como los otros. Lo demas se rehace cada vez.
 // No se edita a mano: se vuelve a correr ShowBies > Zombis > Armar el escupidor (o el que sea).
@@ -453,6 +454,139 @@ public static class ConstructorZombis
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaBlindado);
         SumarALaMezcla(prefab, TramosDelBlindado, BlindadoPeso);
         Debug.Log("ConstructorZombis: el blindado, listo en " + RutaBlindado);
+    }
+
+    // --- El hinchado -------------------------------------------------------------------------------
+
+    public const string RutaHinchado = "Assets/Prefabs/Personajes/ZombiHinchado.prefab";
+    public const string RutaEnemigoHinchado = "Assets/Zombies/ZombiHinchado.asset";
+    public const string RutaPielHinchado = "Assets/Materiales/ZombiHinchadoPiel.mat";
+    const string RutaPanzaHinchado = "Assets/Materiales/ZombiHinchadoPanza.mat";
+    const string RutaParticulasHinchado = "Assets/Prefabs/Particulas/ExplosionVerde.prefab";
+
+    // El plano de Argon (18/10).
+    public static readonly Color MarronOxido = new Color(0.478f, 0.294f, 0.227f);      // #7A4B3A, la piel y la panza
+    public static readonly Color BordeDelHinchado = new Color(0.4f, 1f, 0.6f);          // #66FF99, el borde de luz
+    public static readonly Color Esmeralda = new Color(0f, 1f, 0.4f);                  // #00FF66, el tacho y el charco
+    public static readonly Color GrisHierro = new Color(0.149f, 0.165f, 0.188f);       // #262A30, las tapas del tacho
+    public static readonly Vector3 FormaDelHinchado = new Vector3(1.35f, 1f, 1.35f);
+    // La ciudad estrena al hinchado (24) y sigue en la horda total.
+    public static readonly Vector3Int[] TramosDelHinchado = { new Vector3Int(24, 0, 3) };
+    public const float HinchadoPeso = 0.14f;
+    // El tacho, atravesado de hombro a hombro a la altura de la nuca y detras: el cilindro de Unity mide 2 de alto, asi
+    // que 0,26 son 52 cm. Las tapas, a 24 cm del centro.
+    public static readonly Vector3 TuboDelTacho = new Vector3(0.22f, 0.26f, 0.22f);
+    public static readonly Vector3 TapaDelTacho = new Vector3(0.25f, 0.025f, 0.25f);
+    public const float TachoAtras = 0.18f;
+    public static readonly Vector3 PanzaDelHinchado = new Vector3(0.38f, 0.32f, 0.30f);
+    public const float PanzaArriba = 0.38f;        // de los pies
+    public const float PanzaAdelante = 0.14f;
+    public const float CharcoDelHinchado = 0.95f;
+
+    [MenuItem("ShowBies/Zombis/Armar el hinchado")]
+    public static void ArmarHinchado()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogError("ConstructorZombis: no en play"); return; }
+
+        // Del normal: vida x2,5, la explosion x2 (en el componente), velocidad x0,85, 10 puntos, monedas x3, 2 de PODER.
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(RutaEnemigoHinchado);
+        if (enemigo == null)
+        {
+            enemigo = ScriptableObject.CreateInstance<Enemy>();
+            enemigo.hp = 13;
+            enemigo.daño = 1;
+            enemigo.velocidad = 4.25f;
+            enemigo.puntos = 10;
+            enemigo.monedasMin = 5;
+            enemigo.monedasMax = 7;
+            enemigo.experiencia = 2;
+            AssetDatabase.CreateAsset(enemigo, RutaEnemigoHinchado);
+        }
+
+        var piel = Piel(RutaPielHinchado, MarronOxido);
+        if (piel == null) return;
+        piel.SetColor("_ColorBorde", BordeDelHinchado);
+        EditorUtility.SetDirty(piel);
+        // La panza: la piel sin la textura del pack (en una esfera, el atlas saldria salpicado), con el mismo color, el
+        // brillo y el borde.
+        var panza = AssetDatabase.LoadAssetAtPath<Material>(RutaPanzaHinchado);
+        if (panza == null)
+        {
+            panza = new Material(piel);
+            AssetDatabase.CreateAsset(panza, RutaPanzaHinchado);
+        }
+        panza.shader = piel.shader;
+        panza.CopyPropertiesFromMaterial(piel);
+        panza.mainTexture = null;
+        EditorUtility.SetDirty(panza);
+        var esmeralda = PlanoConInstancing("EsmeraldaHinchado", Esmeralda);
+        var hierro = PlanoConInstancing("HierroHinchado", GrisHierro);
+        var luz = ConstructorEscenarios.MaterialDeBrillo(CarpetaMateriales, "CharcoHinchado", Esmeralda, 0.6f, 0.35f, 4.5f);
+        var jefe = AssetDatabase.LoadAssetAtPath<GameObject>(RutaJefe);
+        var aviso = jefe != null && jefe.GetComponent<JefePatrones>() != null ? jefe.GetComponent<JefePatrones>().materialAviso : null;
+        var cilindro = Resources.GetBuiltinResource<Mesh>("Cylinder.fbx");
+        var cuadrado = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+        var esfera = AssetDatabase.LoadAssetAtPath<Mesh>(ConstructorArmas.RutaEsferaBaja);
+        if (aviso == null || cilindro == null || cuadrado == null || esfera == null)
+        { Debug.LogError("ConstructorZombis: falta la linea del jefe, el cilindro, el cuadrado o la esfera baja"); return; }
+
+        var vista = EditorSceneManager.NewPreviewScene();
+        try
+        {
+            var go = DesdeElNormal(vista, "ZombiHinchado", enemigo, piel, RutaParticulasHinchado);
+            if (go == null) return;
+            var modelo = Modelo(go);
+            modelo.localScale = Vector3.Scale(modelo.localScale, FormaDelHinchado);
+
+            var torso = Hueso(go.transform, "Bip001 Spine");
+            var nuca = Hueso(go.transform, "Bip001 Neck");
+            var pies = Hueso(go.transform, "Bip001 Footsteps");
+            if (torso == null || nuca == null || pies == null) { Debug.LogError("ConstructorZombis: faltan huesos del modelo"); return; }
+            Vector3 raiz = go.transform.position, adelante = go.transform.forward, arriba = Vector3.up, costado = go.transform.right;
+            Quaternion derecho = Quaternion.LookRotation(adelante, arriba);
+            Quaternion acostado = derecho * Quaternion.Euler(0f, 0f, 90f);
+            float piso = pies.position.y;
+
+            // Las piezas cuelgan de un pivote de la raiz (escala pareja) que sigue al torso en cada cuadro (ZombiHinchado):
+            // colgadas del hueso, que esta girado respecto del modelo estirado 1,35 a lo ancho, salian deformadas y con
+            // las medidas cruzadas entre ejes (lo habia avisado Argon).
+            var pivote = new GameObject("Piezas").transform;
+            pivote.SetParent(go.transform, false);
+            pivote.position = torso.position;
+            pivote.rotation = derecho;
+            // El tacho de la espalda, atravesado de hombro a hombro a la altura de la nuca.
+            Vector3 centroDelTacho = new Vector3(raiz.x, nuca.position.y + 0.02f, raiz.z) - adelante * TachoAtras;
+            var tubo = Pieza(pivote, "TuboDelTacho", cilindro, esmeralda, centroDelTacho, acostado, TuboDelTacho);
+            var tapa1 = Pieza(pivote, "TapaIzquierda", cilindro, hierro, centroDelTacho - costado * 0.24f, acostado, TapaDelTacho);
+            var tapa2 = Pieza(pivote, "TapaDerecha", cilindro, hierro, centroDelTacho + costado * 0.24f, acostado, TapaDelTacho);
+            // La panza, adelante: la silueta de hinchado de frente y de perfil.
+            var laPanza = Pieza(pivote, "Panza", esfera, panza,
+                                new Vector3(raiz.x, piso + PanzaArriba, raiz.z) + adelante * PanzaAdelante, derecho, PanzaDelHinchado);
+            // El charco esmeralda bajo los pies, de la raiz: no se bambolea.
+            var charco = Pieza(go.transform, "Charco", cuadrado, luz, new Vector3(raiz.x, piso + JefePatrones.AlturaDelAviso, raiz.z),
+                               derecho * Quaternion.Euler(90f, 0f, 0f), new Vector3(CharcoDelHinchado, CharcoDelHinchado, 1f));
+
+            var hinchado = go.GetComponent<ZombiHinchado>();
+            if (hinchado == null) hinchado = go.AddComponent<ZombiHinchado>();
+            hinchado.piezas = pivote;
+            hinchado.torso = torso;
+            hinchado.tubo = tubo.GetComponent<Renderer>();
+            hinchado.piezasQueSeInflan = new[] { tubo, tapa1, tapa2, laPanza };
+            hinchado.charco = charco.GetComponent<Renderer>();
+            hinchado.materialAviso = aviso;
+            hinchado.verde = Esmeralda;
+
+            PrefabUtility.SaveAsPrefabAsset(go, RutaHinchado);
+        }
+        finally
+        {
+            EditorSceneManager.ClosePreviewScene(vista);
+        }
+        AssetDatabase.SaveAssets();
+
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RutaHinchado);
+        SumarALaMezcla(prefab, TramosDelHinchado, HinchadoPeso);
+        Debug.Log("ConstructorZombis: el hinchado, listo en " + RutaHinchado);
     }
 
     // Una pieza colgada de un hueso, puesta en el mundo con el modelo en reposo y con el tamaño en el mundo (sin la escala

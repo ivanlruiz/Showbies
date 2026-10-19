@@ -179,7 +179,7 @@ Obliga a elegir blanco con el joystick en vez de dispararle siempre al de adelan
 5. **Chamán**: el último, porque mira hasta 4 vecinos cada 4 s.
 
 **Hechos (18/10):** el escupidor, el saltador y el chamán, en el orden de los capítulos que eligió Ivan (los tres del
-cementerio), y el blindado (21). Sigue el hinchado (24).
+cementerio), y el blindado (21) y el hinchado (24): el elenco está completo.
 
 Lo que se decidió al hacer el chamán, que Argon no dijo:
 
@@ -222,6 +222,36 @@ el piso, "un agujero cuadrado en el piso"), le cambió la pinta en dos vueltas:
 - Contraste medido al final: 2,2 / 2,9 / 1,3. En la ciudad el promedio no sube (la armadura oscura y la piel clara se
   compensan), pero el promedio no ve el marco ámbar ni el charco, que son lo que lo hacen leer.
 
+El plano del hinchado (Argon, 18/10, con las cuatro reglas que faltaban):
+
+- **El tacho químico**: un tubo esmeralda #00FF66 de 22 cm de diámetro y 52 de largo, atravesado de hombro a hombro a la
+  altura de la nuca y 18 cm atrás, con dos tapas de hierro #262A30 (25 × 5 cm) en las puntas: desde arriba se lee como
+  un tanque industrial acoplado y no como una píldora suelta. Un charco esmeralda de 95 cm bajo los pies, que se apaga
+  al reventar.
+- **La panza**: la escala (1,35, 1, 1,35) sola lo hace un tanque petiso, así que lleva una esfera de 38 × 32 × 30 cm
+  adelante, del color de la piel (#7A4B3A), con el borde de luz verde pálido #66FF99. Al inflarse, el cuerpo de 1,35 a 1,60
+  de ancho y la panza y el tacho ×1,45.
+- **El bamboleo**: ±9° de lado a lado a 2,8 Hz caminando; quieto al clavarse.
+- **El parpadeo**: el tubo entre #00FF66 y #CCFF00, a 2 Hz caminando (y 5 % más grueso) y a 10 Hz en el aviso.
+- **El aviso**: el borde de 2,6 m al 75 % desde el principio y un disco al 22 % que se llena de 0 a 2,6 m con la cuenta
+  (como el salto del jefe: es un golpe con tiempo exacto, no daño de a poco como el charco del escupidor).
+- **La explosión**: la de la granada en verde, el estruendo a pitch 0,85 con algo húmedo encima, el temblor al 75 % y la
+  pausa de impacto (0,04 s) solo si mata a 3 o más o le pega al jugador.
+- **Las reglas**: su propia muerte paga entero (esquivarlo para que se vuele solo es una forma de matarlo); la onda mueve
+  a los pesados la mitad (1,25 m) y los frena medio segundo, al jefe nada; caminando es liviano (el bate lo empuja 3 m), e
+  inflado es una pelota de bateo (4 m, con el círculo y sin cortarle el reloj); si el jugador muere mientras se infla, se
+  desinfla en 0,2 s y festeja con los demás.
+
+Lo que se decidió al hacerlo, que Argon no dijo:
+
+- **Las piezas cuelgan de un pivote de la raíz que sigue al torso**: lo había avisado Argon, y colgadas del hueso salían
+  deformadas (el hueso está girado respecto del modelo estirado 1,35).
+- **Vida 13** (×2,5 de 5 son 12,5).
+- **El auto-apuntado y los drones no le tiran mientras se infla**: revienta solo, y tirarle era gastar balas.
+- **Si el jugador muere, la cuenta espera** (la oferta de revivir congela el juego, y si revive sigue); recién con la
+  derrota se desinfla.
+- **Sin cadáver**: al reventar se va con las partículas, no se desploma.
+
 ## Lo que decidió Argon después de la auditoría (18/10)
 
 La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a Argon:
@@ -244,7 +274,8 @@ La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a
 - **Falta: el modo libre** tiene una corrutina por tipo (`GeneradorZombis`): los nuevos van primero en las oleadas.
 - **Hecho con el blindado:** el origen del daño en `DanoZombi` (`OrigenDelDano`), la persecución con giro limitado
   (`EnemyController.Perseguir`) y su masa de tanque.
-- **Para el hinchado** (de la auditoría del 18/10): un gancho antes de morir (se infla con vida 0 y todavía se lo puede
-  patear), su explosión como origen del daño (para la cadena) y sacar a una base común lo que ya repiten el escupidor,
-  el saltador y el chamán (buscar el modelo, el aviso en el piso, quedarse quieto, el corte con el bate y la derrota, la
-  pose), antes de copiarlo otra vez. El blindado casi no comparte nada de eso.
+- **Hecho con el hinchado:** el gancho antes de morir (`ZombiHinchado.EmpezarAInflarse`, y el bloque de la muerte
+  aparte, `MuerteConPremio`), su explosión como origen del daño y el empujón de la onda (`EnemyController.Despedir`).
+- **Falta:** sacar a una base común lo que repiten el escupidor, el saltador, el chamán y el hinchado (buscar el modelo,
+  el aviso en el piso, quedarse quieto, el corte con el bate y la derrota, la pose). Y correr la simulación
+  (`simulaciones/cartas_1.6.0`) con los cinco, como pidió Argon.

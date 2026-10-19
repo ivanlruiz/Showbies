@@ -6472,6 +6472,64 @@ public static class PruebasMejoras
         ProbarSaltador(inf);
         ProbarChaman(inf);
         ProbarBlindado(inf);
+        ProbarHinchado(inf);
+    }
+
+    // El hinchado (ZombiHinchado, ZOMBIS.md): lo que le saca la explosion a cada uno, su Enemy, el prefab (liviano, con
+    // el tacho, la panza y el charco en un pivote de la raiz), sus numeros, que se disfrace y su tramo en WaveMode. Lo que
+    // hace en play (clavarse, inflarse, reventar, la cadena y el bate) lo mira PruebaHinchado.
+    static void ProbarHinchado(Informe inf)
+    {
+        inf.Cerca("hinchado: a un zombi le saca el 35 % de su vida maxima", 3.5, ZombiHinchado.DanoDeLaExplosion(10f, false, 0.35f, 0.04f), 1e-5);
+        inf.Cerca("hinchado: al jefe, el 4 %", 40.0, ZombiHinchado.DanoDeLaExplosion(1000f, true, 0.35f, 0.04f), 1e-4);
+
+        var enemigo = AssetDatabase.LoadAssetAtPath<Enemy>(ConstructorZombis.RutaEnemigoHinchado);
+        if (inf.Verdadero("hinchado: esta su Enemy", enemigo != null))
+        {
+            inf.Verdadero("hinchado: vida x2,5 del normal, velocidad x0,85, 10 puntos, monedas x3 y 2 de PODER (" + enemigo.hp + ", " + enemigo.velocidad + ", "
+                          + enemigo.puntos + ", " + enemigo.monedasMin + "-" + enemigo.monedasMax + ", " + enemigo.experiencia + ")",
+                          enemigo.hp == 13 && Mathf.Approximately(enemigo.velocidad, 4.25f) && enemigo.puntos == 10 && enemigo.monedasMin == 5
+                          && enemigo.monedasMax == 7 && enemigo.experiencia == 2 && enemigo.daño == 1);
+        }
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaHinchado);
+        var hinchado = prefab != null ? prefab.GetComponent<ZombiHinchado>() : null;
+        if (inf.Verdadero("hinchado: esta su prefab, con su componente", hinchado != null && prefab.GetComponent<EnemyController>().enemyType == enemigo))
+        {
+            inf.Verdadero("hinchado: liviano (el bate lo empuja 3 m caminando) y se mueve por su cuenta",
+                          EnemyController.Ceder(prefab.GetComponent<Rigidbody>().mass) >= 0.5f && prefab.GetComponent<IMovimientoPropio>() == (IMovimientoPropio)hinchado);
+            bool piezas = hinchado.piezas != null && hinchado.piezas.parent == prefab.transform && hinchado.torso != null
+                          && hinchado.tubo != null && hinchado.piezasQueSeInflan != null && hinchado.piezasQueSeInflan.Length == 4;
+            if (piezas)
+                foreach (var t in hinchado.piezasQueSeInflan)
+                    piezas &= t != null && t.IsChildOf(hinchado.piezas) && t.GetComponent<Collider>() == null && t.gameObject.layer == Personajes.Capa;
+            inf.Verdadero("hinchado: el tacho con sus tapas y la panza, en un pivote de la raiz que sigue al torso, sin collider", piezas);
+            var tubo = hinchado.tubo != null ? hinchado.tubo.transform : null;
+            inf.Verdadero("hinchado: el tacho va detras y atravesado de hombro a hombro",
+                          tubo != null && Vector3.Dot(tubo.position - prefab.transform.position, prefab.transform.forward) < -0.1f
+                          && Mathf.Abs(Vector3.Dot(tubo.up, prefab.transform.right)) > 0.99f);
+            inf.Verdadero("hinchado: el charco esmeralda bajo los pies, de la raiz, con el brillo de los faroles",
+                          hinchado.charco != null && hinchado.charco.transform.parent == prefab.transform && hinchado.charco.sharedMaterial != null
+                          && hinchado.charco.sharedMaterial.shader.name == "ShowBies/CharcoDeLuz" && hinchado.charco.sharedMaterial.enableInstancing);
+            inf.Verdadero("hinchado: con la linea de aviso", hinchado.materialAviso != null);
+            inf.Verdadero("hinchado: se clava a 1,6 m, avisa 0,75 s (1,1 congelado), revienta en 2,6 m: x2 al jugador, 35 % (4 % al jefe), empuja 2,5 m y el bate lo patea 4",
+                          Mathf.Approximately(hinchado.distanciaParaClavarse, 1.6f) && Mathf.Approximately(hinchado.aviso, 0.75f)
+                          && Mathf.Approximately(hinchado.avisoCongelado, 1.1f) && Mathf.Approximately(hinchado.radio, 2.6f)
+                          && Mathf.Approximately(hinchado.golpeAlJugador, 2f) && Mathf.Approximately(hinchado.parteDeLaVida, 0.35f)
+                          && Mathf.Approximately(hinchado.parteDelJefe, 0.04f) && Mathf.Approximately(hinchado.empujon, 2.5f)
+                          && Mathf.Approximately(hinchado.pateada, 4f) && hinchado.distanciaParaClavarse < hinchado.radio);
+            inf.Verdadero("hinchado: en Halloween se disfraza (su cabeza no lleva nada propio)", !Disfraces.TienePiezasEnLaCabeza(Disfraces.Cabeza(prefab.transform)));
+        }
+
+        LeerEscena("Assets/Escenas/WaveMode.unity", escena =>
+        {
+            var oleadas = Buscar<WaveManager>(escena);
+            var suyos = new List<TipoEnOleada>();
+            if (oleadas != null && oleadas.tipos != null)
+                foreach (var t in oleadas.tipos) if (t != null && t.prefab == prefab) suyos.Add(t);
+            inf.Verdadero("hinchado: WaveMode lo saca desde la 24, la ciudad, sin fin (peso 0,14, como mucho 3, especial)",
+                          suyos.Count == 1 && suyos[0].desdeOleada == 24 && suyos[0].hastaOleada == 0 && Mathf.Approximately(suyos[0].peso, 0.14f)
+                          && suyos[0].maxVivos == 3 && suyos[0].especial);
+        });
     }
 
     // El blindado (ZombiBlindado, ZOMBIS.md): el arco del escudo, lo que avanza mientras gira, que balas para, su Enemy,
@@ -6637,7 +6695,8 @@ public static class PruebasMejoras
         var piezasVistas = new StringBuilder();
         // Las de cada uno: los dos sacos, los ojos y las crestas, el totem, y el casco, la visera y el escudo.
         var cuantas = new[] { new KeyValuePair<string, int>(ConstructorZombis.RutaEscupidor, 2), new KeyValuePair<string, int>(ConstructorZombis.RutaSaltador, 4),
-                              new KeyValuePair<string, int>(ConstructorZombis.RutaChaman, 3), new KeyValuePair<string, int>(ConstructorZombis.RutaBlindado, 8) };
+                              new KeyValuePair<string, int>(ConstructorZombis.RutaChaman, 3), new KeyValuePair<string, int>(ConstructorZombis.RutaBlindado, 8),
+                          new KeyValuePair<string, int>(ConstructorZombis.RutaHinchado, 3) };
         foreach (var par in cuantas)
         {
             var especial = AssetDatabase.LoadAssetAtPath<GameObject>(par.Key);
@@ -6653,6 +6712,8 @@ public static class PruebasMejoras
                     instanciadas &= r.sharedMaterial.enableInstancing;
                     continue;
                 }
+                // La panza del hinchado va con la piel (sin la textura): recibe luz, como el cuerpo.
+                if (r.sharedMaterial != null && r.sharedMaterial.shader.name == "ShowBies/PielDeZombi") continue;
                 suyas++;
                 foreach (var m in r.sharedMaterials)
                     instanciadas &= m != null && m.shader.name == ConstructorZombis.ShaderPlanoConInstancing && m.enableInstancing;

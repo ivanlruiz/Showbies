@@ -668,6 +668,31 @@ public class Efectos : MonoBehaviour
         e.MostrarCartel(punto + Vector3.up * alturaDelCartelDeCaja, Textos.De("escudo_roto"), ambar);
     }
 
+    // El hinchado (ZombiHinchado). Al clavarse para inflarse, un glup grave y unas chispas de su verde. Al reventar, la
+    // explosion de la granada en verde (de Argon): el estruendo mas grave con un chapoteo acido encima, el temblor al 75 %,
+    // y la pausa de impacto solo si mato a 3 o mas o le pego al jugador (con dos seguidos no frena el juego por nada).
+    public const float PausaDelHinchado = 0.04f;
+
+    public static void HinchadoSeInfla(Vector3 punto, Color color)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto, 6, color);
+        Sonidos.Tocar(e.caja, 0.55f, 0.5f, 0.08f, 0.08f, Sonidos.Aparte);
+    }
+
+    public static void ExplosionDelHinchado(Vector3 punto, Color verde, Color lima, int muertos, bool alJugador)
+    {
+        var e = instance;
+        if (e == null) return;
+        e.Emitir(punto, e.chispasPorExplosion, verde);
+        e.Emitir(punto, e.chispasPorExplosion / 2, lima);
+        Sonidos.Tocar(e.explosion, 1f, 0.85f, 0.04f, 0.03f, Sonidos.Aparte);
+        Sonidos.Tocar(e.golpe, 0.7f, 0.45f, 0.08f, 0.05f, Sonidos.Aparte);
+        CamaraJugador.Temblar(e.temblorExplosion * 0.75f);
+        if (muertos >= 3 || alJugador) e.PausaDeImpacto(PausaDelHinchado);
+    }
+
     public static void SilbidoDelBate()
     {
         var e = instance;

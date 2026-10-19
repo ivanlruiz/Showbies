@@ -300,14 +300,15 @@ public class PlayerJS : MonoBehaviour
         for (int i = 0; i < vivos.Count; i++)
         {
             var zombi = vivos[i];
-            if (zombi == null || !zombi.Vivo) continue;
+            // Al hinchado que ya se infla no: revienta solo, y tirarle es gastar balas.
+            if (zombi == null || !zombi.ValeTirarle) continue;
             float d2 = DistanciaEnElPiso2(zombi.transform.position, yo);
             if (d2 > alcance2 || d2 >= mejorDistancia2 || !SeVe(zombi.transform.position)) continue;
             mejorDistancia2 = d2;
             mejor = zombi;
         }
 
-        if (blanco != null && blanco != mejor && blanco.Vivo && SeVe(blanco.transform.position))
+        if (blanco != null && blanco != mejor && blanco.ValeTirarle && SeVe(blanco.transform.position))
         {
             float actual2 = DistanciaEnElPiso2(blanco.transform.position, yo);
             if (actual2 <= alcance2 && mejorDistancia2 >= actual2 * VentajaParaCambiar * VentajaParaCambiar) mejor = blanco;

@@ -817,6 +817,7 @@ public class EnemyController : MonoBehaviour
         movimientoPropio = GetComponent<IMovimientoPropio>();
         tesoro = GetComponent<ZombiDelTesoro>();
         blindado = GetComponent<ZombiBlindado>();
+        hinchado = GetComponent<ZombiHinchado>();
         // La altura de la barra de vida, una vez y en la pose de reposo: medida en el golpe,
         // si el primero que no mataba le entraba al jefe agazapado para el salto o la carga,
         // la barra quedaba hundida en su cabeza, y del pool la heredaban los jefes siguientes
@@ -840,6 +841,13 @@ public class EnemyController : MonoBehaviour
     // siempre, con el giro limitado, y por eso el chaman lo potencia.
     private ZombiBlindado blindado;
     public ZombiBlindado Blindado { get { return blindado; } }
+    // El hinchado (ZombiHinchado): con la vida en cero no muere, se infla y revienta.
+    private ZombiHinchado hinchado;
+    public ZombiHinchado Hinchado { get { return hinchado; } }
+
+    // Si vale la pena tirarle (el auto-apuntado y los drones): vivo, y no un hinchado que ya se infla, que no recibe nada
+    // mas y revienta solo.
+    public bool ValeTirarle { get { return Vivo && (hinchado == null || !hinchado.Inflando); } }
 
     // Cada aparicion, nueva o salida del pool, arranca de cero. Corre antes de que
     // quien lo hizo aparecer le ponga los multiplicadores.
@@ -1007,10 +1015,10 @@ public class EnemyController : MonoBehaviour
     // objeto se queda prendido lo que dura el desplome. Si no hay lugar para otro
     // cadaver -o no hay Animator, como los zombis del fondo del menu- se va de
     // golpe, que es como se veia hasta ahora.
-    private void Morir(Vector3 empuje)
+    private void Morir(Vector3 empuje, bool sinCadaver = false)
     {
         int techo = Plataforma.EsMovil ? MaxCadaveresMovil : MaxCadaveres;
-        if (animadores.Length == 0 || cadaveres >= techo || duracionDeLaMuerte <= 0f)
+        if (sinCadaver || animadores.Length == 0 || cadaveres >= techo || duracionDeLaMuerte <= 0f)
         {
             Devolver();
             return;
@@ -1341,6 +1349,9 @@ public class EnemyController : MonoBehaviour
         // Un daño de cero, negativo o NaN no hace nada: no hay numero que mostrar.
         // Uno apagado en el pool tampoco: el que cayo por el kill-Z no llego a morir.
         if (estaMuerto || !enUso || !(daño > 0f)) return;
+        // El hinchado que ya se infla no recibe nada mas: ni la segunda bala del mismo paso ni otra explosion (el
+        // anti-bucle de la cadena, de Argon). Revienta solo.
+        if (hinchado != null && hinchado.Inflando) return;
 
         // El bono del chaman le saca una parte a todo lo que le pega: balas, granada, bate y cartas. El numero
         // flotante muestra lo que entro de verdad.
@@ -1377,39 +1388,63 @@ public class EnemyController : MonoBehaviour
             MostrarBarraDeVida();
             if (!colorDeCarta.HasValue && !alEscudo) GolpeVisual();
         }
+        else if (hinchado != null && hinchado.EmpezarAInflarse())
+        {
+            // Con la vida en cero el hinchado no muere: se clava y se infla, y al reventar muere de verdad
+            // (MorirReventado), con todo lo que paga una muerte.
+            vidaActual = 0f;
+            MostrarBarraDeVida();
+        }
         else
         {
-            estaMuerto = true;
-
-            DejarManchaDeSangre();
-
-            // Sin Instantiate por muerte: la rafaga sale de una copia del prefab en Efectos.
-            Efectos.ParticulasDeMuerte(deathParticles, transform.position);
-
-            // Unico lugar donde se suman puntos. Antes tambien sumaba
-            // BulletController por cada impacto, asi que matar con granada valia
-            // 1 punto y matar a tiros valia cien veces mas.
-            Puntaje.instance.contadorKill += enemyType.puntos;
-            Puntaje.instance.UpdateKillCounterUI();
-            // La experiencia del nivel del jugador son los mismos puntos.
-            NivelJugador.Sumar(enemyType.puntos);
-            // Y la de la partida, la que saca las cartas (PoderDeLaPartida): la de su asset. El
-            // jefe deja ademas la carta dorada para la proxima eleccion.
-            PoderDeLaPartida.Sumar(enemyType.experiencia);
-            if (EsJefe) PoderDeLaPartida.MarcarDorada();
-            if (PoderDeLaPartida.ContarBajaDelVampiro() && PlayerHealth.instance != null)
-                PlayerHealth.instance.CurarPorVampiro(PoderDeLaPartida.CuraDelVampiro);
-            EleccionDeCartas.Chispa(transform.position, enemyType.experiencia);
-
-            SoltarMonedas();
-            SoltarCaramelos();
-            Progreso.ContarMuerte(nombreTipo, EsJefe);
-            Efectos.Muerte(transform.position, enemyType.hp);
-            if (tesoro != null) tesoro.AlMorir();
-
-            // Al final: todo lo de arriba usa su posicion.
-            Morir(empuje);
+            MuerteConPremio(empuje, false);
         }
+    }
+
+    // El hinchado que revienta (ZombiHinchado): muere de verdad, con todo lo que paga una muerte (de Argon: tambien si
+    // se volo solo al lado del jugador), y sin cadaver: revento.
+    public void MorirReventado()
+    {
+        if (estaMuerto || !enUso) return;
+        if (PlayerHealth.instance != null && PlayerHealth.instance.EstaMuerto) return;
+        IniciarVida();
+        vidaActual = 0f;
+        MuerteConPremio(Vector3.zero, true);
+    }
+
+    // El bloque de la muerte: el unico lugar donde un zombi muere de verdad, una vez.
+    private void MuerteConPremio(Vector3 empuje, bool sinCadaver)
+    {
+        estaMuerto = true;
+
+        DejarManchaDeSangre();
+
+        // Sin Instantiate por muerte: la rafaga sale de una copia del prefab en Efectos.
+        Efectos.ParticulasDeMuerte(deathParticles, transform.position);
+
+        // Unico lugar donde se suman puntos. Antes tambien sumaba
+        // BulletController por cada impacto, asi que matar con granada valia
+        // 1 punto y matar a tiros valia cien veces mas.
+        Puntaje.instance.contadorKill += enemyType.puntos;
+        Puntaje.instance.UpdateKillCounterUI();
+        // La experiencia del nivel del jugador son los mismos puntos.
+        NivelJugador.Sumar(enemyType.puntos);
+        // Y la de la partida, la que saca las cartas (PoderDeLaPartida): la de su asset. El
+        // jefe deja ademas la carta dorada para la proxima eleccion.
+        PoderDeLaPartida.Sumar(enemyType.experiencia);
+        if (EsJefe) PoderDeLaPartida.MarcarDorada();
+        if (PoderDeLaPartida.ContarBajaDelVampiro() && PlayerHealth.instance != null)
+            PlayerHealth.instance.CurarPorVampiro(PoderDeLaPartida.CuraDelVampiro);
+        EleccionDeCartas.Chispa(transform.position, enemyType.experiencia);
+
+        SoltarMonedas();
+        SoltarCaramelos();
+        Progreso.ContarMuerte(nombreTipo, EsJefe);
+        Efectos.Muerte(transform.position, enemyType.hp);
+        if (tesoro != null) tesoro.AlMorir();
+
+        // Al final: todo lo de arriba usa su posicion.
+        Morir(empuje, sinCadaver);
     }
 
     // Salen en el mismo bloque que los puntos, y por lo mismo: es el unico lugar
@@ -1647,6 +1682,8 @@ public class EnemyController : MonoBehaviour
         if (Ceder(rb.mass) >= 0.5f)
         {
             direccion.y = 0f;
+            // Al hinchado inflado lo patea mas lejos, sin cortarle la cuenta (de Argon: "pelota de bateo").
+            if (hinchado != null && hinchado.Inflando) distancia = hinchado.pateada;
             if (direccion.sqrMagnitude < 1e-6f || !(distancia > 0f) || !(duracion > 0f)) return ReaccionAlBatazo.Nada;
             // La velocidad baja de a poco hasta cero: recorre la mitad de lo que haria a la de salida.
             empujonDuracion = duracion;
@@ -1661,6 +1698,27 @@ public class EnemyController : MonoBehaviour
         pasoFrenado = true;
         AjustarPaso();
         return ReaccionAlBatazo.Frenado;
+    }
+
+    // La onda del hinchado que revienta (ZombiHinchado): a los livianos los despide "distancia" metros en "duracion"
+    // segundos, frenando, por la fisica, como el bate; a los pesados (el tanque, el blindado), la mitad y despues los
+    // frena "frenado" segundos; al jefe y al tesoro, nada (de Argon). No le rompe el escudo al blindado: eso es del bate.
+    public void Despedir(Vector3 direccion, float distancia, float duracion, float frenado)
+    {
+        if (!enUso || estaMuerto || EsJefe || movimientoPropio is JefePatrones || tesoro != null) return;
+        direccion.y = 0f;
+        if (direccion.sqrMagnitude < 1e-6f || !(distancia > 0f) || !(duracion > 0f)) return;
+        bool pesado = Ceder(rb.mass) < 0.5f;
+        if (pesado) distancia *= 0.5f;
+        CortarZarpazo();
+        empujonDuracion = duracion;
+        empujonVelocidad = direccion.normalized * (2f * distancia / duracion);
+        empujonHasta = Time.time + duracion;
+        if (pesado && frenado > 0f)
+        {
+            frenadoHasta = Mathf.Max(frenadoHasta, Time.time + duracion + frenado);
+            pasoFrenado = true;
+        }
     }
 
     public bool Empujado { get { return enUso && Time.time < empujonHasta; } }
@@ -2158,4 +2216,4 @@ public enum ReaccionAlBatazo { Nada, Empujado, Frenado }
 // De donde sale un daño (DanoZombi), para lo que lo trata distinto: el escudo del blindado (ZombiBlindado) para solo las
 // balas comunes, y la de energia, la granada, el bate y las cartas que pegan solas lo atraviesan (de Argon, 18/10).
 // Otro es el de quien no lo dice (el medidor, las pruebas): no lo para nada.
-public enum OrigenDelDano { Otro, Bala, Energia, Explosiva, Granada, Bate, Quemadura }
+public enum OrigenDelDano { Otro, Bala, Energia, Explosiva, Granada, Bate, Quemadura, Hinchado }
