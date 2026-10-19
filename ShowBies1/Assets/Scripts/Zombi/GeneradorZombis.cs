@@ -31,8 +31,11 @@ public class GeneradorZombis : MonoBehaviour
     // Los cinco con habilidad (ZOMBIS.md, de Argon, 19/10): uno nuevo por nivel desde el 2 (el escupidor en el 2, el
     // saltador en el 3, el chaman en el 4, el blindado en el 5 y el hinchado en el 6: muchas partidas casuales duran 4-6
     // minutos), con su tope de vivos y como mucho WaveManager.MaxEspecialesVivos entre todos. Aca desdeOleada es el
-    // nivel. Prueban cada intervaloEspeciales (con mas, perdian casi todos los lugares contra el normal, que prueba cada
-    // 0,25 s), y cada uno arranca desfaseEspeciales despues del anterior, para que no pidan lugar en el mismo cuadro.
+    // nivel. Prueban cada intervaloEspeciales, y cada uno arranca desfaseEspeciales despues del anterior, para que no
+    // pidan lugar en el mismo cuadro. El que puede salir y encuentra lleno el techo de todos se queda con el proximo
+    // lugar que se libere, antes que los comunes (especialesEsperando): los comunes prueban cada 0,25 s y se llevaban
+    // casi todos, y con el techo lleno el 82 % del tiempo el chaman y el hinchado salian un minuto tarde, o nunca. Y el
+    // ultimo lugar de los especiales es del recien desbloqueado (PuedeSalirEspecial).
     // Los pone ConstructorZombis (ShowBies > Zombis > Poner los especiales en el modo libre).
     [Header("Los zombis con habilidad")]
     public TipoEnOleada[] especiales;
@@ -53,12 +56,18 @@ public class GeneradorZombis : MonoBehaviour
     private void OnEnable()
     {
         Actual = this;
+        especialesEsperando = 0;
     }
 
     private void OnDisable()
     {
         if (Actual == this) Actual = null;
+        // Las corrutinas se cortan al apagarse, y la que estaba esperando lugar no llega a descontarse.
+        especialesEsperando = 0;
     }
+
+    // Los especiales que esperan el proximo lugar libre: mientras haya alguno, los comunes no lo toman.
+    private int especialesEsperando;
 
     // Techo de poblacion. Los cinco generadores corren en paralelo y para siempre,
     // asi que sin esto son ~350 zombis en el primer minuto y sigue creciendo.
@@ -203,8 +212,9 @@ public class GeneradorZombis : MonoBehaviour
         {
             yield return new WaitForSeconds(interval);                   //X                         //Y                     //Z
 
-            // Los lugares que reservo un jefe que esta por invocar cuentan como ocupados.
-            if (EnemyController.ZombisVivos + EnemyController.Reservados >= maxZombisVivos) continue;
+            // Los lugares que reservo un jefe que esta por invocar cuentan como ocupados, y el que se libera es de un
+            // especial si alguno lo esta esperando.
+            if (TechoLleno || especialesEsperando > 0) continue;
 
             // Un jefe por vez: con su corrutina cada 30 s se juntaban varios, y cada uno
             // invoca. El que hay se sigue con su numero de aparicion, que no se reusa.
@@ -228,11 +238,54 @@ public class GeneradorZombis : MonoBehaviour
         while (true)
         {
             yield return espera;
-            if (EnemyController.ZombisVivos + EnemyController.Reservados >= maxZombisVivos) continue;
-            if (!WaveManager.Elegible(tipo, NivelActual, EnemyController.VivosDe(tipo.prefab),
-                                      WaveManager.EspecialesVivos(especiales, EnemyController.VivosDe))) continue;
+            if (!PuedeSalir(tipo)) continue;
+            if (TechoLleno)
+            {
+                // Hasta que muera alguno, mirando en cada cuadro si todavia le toca: el lugar de los especiales lo puede
+                // llenar otro mientras tanto.
+                especialesEsperando++;
+                while (TechoLleno && PuedeSalir(tipo)) yield return null;
+                especialesEsperando--;
+                if (TechoLleno || !PuedeSalir(tipo)) continue;
+            }
             Preparar(EnemyController.Aparecer(tipo.prefab, PosicionLejosDelJugador()), false);
         }
+    }
+
+    private bool TechoLleno
+    {
+        get { return EnemyController.ZombisVivos + EnemyController.Reservados >= maxZombisVivos; }
+    }
+
+    private bool PuedeSalir(TipoEnOleada tipo)
+    {
+        return PuedeSalirEspecial(especiales, tipo, NivelActual, EnemyController.VivosDe);
+    }
+
+    // Si un especial puede salir: las reglas de las oleadas (WaveManager.Elegible) y, ademas, el que ya tiene alguno
+    // vivo no se lleva el ultimo lugar de los especiales mientras haya un desbloqueado sin ninguno. Con los ocho lugares
+    // llenos (los topes suman 15), el que se liberaba lo tomaba el primero que probara, y el blindado salia 19 s despues
+    // de desbloquearse: uno nuevo por nivel (Argon) es que se lo vea en su nivel. Estatico para probarlo sin escena.
+    public static bool PuedeSalirEspecial(IReadOnlyList<TipoEnOleada> lista, TipoEnOleada tipo, int nivel, System.Func<GameObject, int> vivosDe)
+    {
+        if (tipo == null || tipo.prefab == null) return false;
+        int vivosDelTipo = vivosDe(tipo.prefab);
+        int especiales = WaveManager.EspecialesVivos(lista, vivosDe);
+        if (!WaveManager.Elegible(tipo, nivel, vivosDelTipo, especiales)) return false;
+        if (vivosDelTipo == 0 || lista == null) return true;
+        int faltan = 0;
+        for (int i = 0; i < lista.Count; i++)
+        {
+            var otro = lista[i];
+            if (otro == null || otro.prefab == null || !otro.especial || otro.prefab == tipo.prefab) continue;
+            if (!WaveManager.Elegible(otro, nivel, 0, 0) || vivosDe(otro.prefab) > 0) continue;
+            // El que va dos veces en la lista cuenta una.
+            bool contado = false;
+            for (int j = 0; j < i && !contado; j++)
+                contado = lista[j] != null && lista[j].prefab == otro.prefab && lista[j].especial && WaveManager.Elegible(lista[j], nivel, 0, 0);
+            if (!contado) faltan++;
+        }
+        return especiales + faltan < WaveManager.MaxEspecialesVivos;
     }
 
     // Antes de su primer golpe: la vida se calcula con el multiplicador que tenga en ese momento.

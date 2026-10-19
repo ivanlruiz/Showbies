@@ -6515,6 +6515,25 @@ public static class PruebasMejoras
             foreach (var t in lista) salen &= WaveManager.Elegible(t, 6, 0, 0) && !WaveManager.Elegible(t, t.desdeOleada - 1, 0, 0);
             inf.Verdadero("libre: cada uno sale desde su nivel y no antes", salen);
             inf.Verdadero("libre: con 8 especiales vivos no sale ninguno", !WaveManager.Elegible(lista[0], 6, 0, WaveManager.MaxEspecialesVivos));
+
+            // El ultimo lugar de los especiales es del que se desbloqueo y no tiene ninguno vivo.
+            System.Func<int[], System.Func<GameObject, int>> vivos = cuantos => p =>
+            {
+                for (int i = 0; i < lista.Length; i++) if (lista[i].prefab == p) return cuantos[i];
+                return 0;
+            };
+            var llenos = vivos(new[] { 3, 3, 2, 0, 0 });
+            inf.Verdadero("libre: con los 8 lugares llenos no sale ni el que falta",
+                          !GeneradorZombis.PuedeSalirEspecial(lista, lista[3], 6, llenos));
+            var siete = vivos(new[] { 3, 2, 2, 0, 0 });
+            inf.Verdadero("libre: con 7 y dos desbloqueados sin ninguno, el saltador no se lleva el lugar",
+                          !GeneradorZombis.PuedeSalirEspecial(lista, lista[1], 6, siete));
+            inf.Verdadero("libre: el blindado, que no tiene ninguno, si",
+                          GeneradorZombis.PuedeSalirEspecial(lista, lista[3], 6, siete) && GeneradorZombis.PuedeSalirEspecial(lista, lista[4], 6, siete));
+            inf.Verdadero("libre: con 6 y uno sin ninguno, sobra un lugar para los demas",
+                          GeneradorZombis.PuedeSalirEspecial(lista, lista[0], 6, vivos(new[] { 2, 2, 1, 1, 0 })));
+            inf.Verdadero("libre: los que todavia no se desbloquearon no guardan lugar",
+                          GeneradorZombis.PuedeSalirEspecial(lista, lista[1], 4, vivos(new[] { 3, 3, 1, 0, 0 })));
         });
 
         // El escupidor sabe que esta en el libre porque hay un GeneradorZombis prendido: el de WaveMode y el del tutorial

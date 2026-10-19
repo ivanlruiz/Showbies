@@ -310,7 +310,11 @@ La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a
 6. **En el modo libre, uno nuevo por nivel desde el 2**: escupidor en el 2 (0:45), saltador 3, chamán 4, blindado 5 e
    hinchado 6 (3:45): muchas partidas casuales duran 4-6 minutos, y uno cada dos niveles dejaba al hinchado para los 7,5.
    Prueban cada 4 s (con el 6 que propuso Claude perdían casi todos los lugares contra el normal, que prueba cada 0,25),
-   con el arranque de cada uno corrido 0,8 s, y los topes de las oleadas: 3, 4, 2, 3 y 3, y 8 entre todos.
+   con el arranque de cada uno corrido 0,8 s, y los topes de las oleadas: 3, 4, 2, 3 y 3, y 8 entre todos. **Para que
+   cada uno salga en su nivel** (el banco del 19/10 lo midió: con el techo de 35 lleno el 80 % del tiempo, el chamán y el
+   hinchado salían un minuto tarde o nunca, y el blindado 19 s tarde con los ocho lugares ya tomados), el especial que
+   espera lugar le gana a los comunes el próximo que se libera, y el último de los ocho es del desbloqueado que no tiene
+   ninguno. Ahora salen a los 0-7 s de su nivel, y desde el 6 hay 7,8 especiales vivos en promedio (eran 4,4).
 7. **El escupidor del libre escupe 3 veces plantado a 9,5 m y después se acerca a 6,5**, adentro del auto-apuntado: sin
    final de oleada, a los dos minutos habría tres clavados en los bordes que el automático no mata nunca, ocupando 3 de
    los 8 lugares de especiales.
