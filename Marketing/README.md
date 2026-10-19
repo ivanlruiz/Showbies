@@ -61,3 +61,17 @@ Los scripts que arman el tráiler y la versión vertical **no están acá**: dep
 cuadros grabados en el editor, que son cientos de megas y se tiran al terminar. Si hay que
 rehacerlos, se vuelven a grabar: una sesión de play con `Time.captureFramerate` fijo y
 `AudioRenderer` para el sonido, y después ffmpeg junta todo.
+
+## `kingball/` — la miniatura de YouTube de Kingball
+
+Kingball es el tema de Ivan que suena en el menú. Para su video de YouTube (fondo #0b0618, KINGBALL en Arial Bold
+rosa #ff2bd6 con la sombra celeste #00e5ff corrida y la onda del audio) Argon diseñó tres miniaturas de 1280 × 720
+(19/10, `pedidos_argon.md`, con los pedidos para Nano Banana): **A**, el zombi con anteojos de neón y auriculares (la
+que recomienda: a 168 × 94 px, como se ve en el teléfono, es la que más se lee); **B**, el héroe contra la horda sobre
+un ecualizador; **C**, el héroe con un teclado colgado y zombis detrás.
+
+Nano Banana hace la imagen sin letras, con la mitad izquierda libre (`fondo_*_nano_banana.png`), y
+`miniatura_kingball.py` le pone encima el logo del juego, una píldora OST, KINGBALL con la misma letra y los mismos
+colores del video (con un halo oscuro detrás) y, en la A, una tira de la onda del tema (ocho segundos desde el golpe,
+leídos del WAV del proyecto de FL Studio). Los comandos de las tres están al principio del script; también saca la
+vista a 168 px de cada una (gitignoreada). La esquina de abajo a la derecha queda para la duración de YouTube.

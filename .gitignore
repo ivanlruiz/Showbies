@@ -53,3 +53,5 @@ keystore.local
 
 # Vistas previas que genera Marketing/logo.py (el logo del juego si se versiona)
 Marketing/vista_*.png
+# Las vistas a 168 px que saca Marketing/kingball/miniatura_kingball.py
+Marketing/kingball/*_168.png
