@@ -58,8 +58,9 @@ arriba ya son esos):
   los cinco**, y la regla no salta (el bajo queda en 39, y con el +1 de PODER iría a 43). Sus habilidades son el 38-40 %
   del daño que reciben el bajo y el medio, pero pagan un 16-21 % más de oro por minuto en el muro, y los tres muros
   son jefes. De a uno, ninguno mueve el muro más de una oleada; el que más pega es el escupidor (su charco es el
-  18-24 % del daño recibido). **El escudo del blindado casi no frena nada en el modelo** (1-3 % de las balas comunes):
-  una sola perforante lo anula para todas, y en el muro casi siempre está en el mazo. Lo que podría darlo vuelta es
+  18-24 % del daño recibido). **El escudo del blindado casi no frenaba nada en el modelo** (1-3 % de las balas comunes):
+  una sola perforante lo anulaba para todas, y en el muro casi siempre está en el mazo. Argon cambió la regla (ver el
+  blindado): la perforante ya no lo anula, y no se volvió a correr (el blindado queda un poco más duro). Lo que podría darlo vuelta es
   cuánto se esquivan los avisos (a ojo, como al jefe: 0,6 / 0,8 / 0,92): esquivando la mitad, el medio cae a la 54 y el
   alto a la 63.
 
@@ -106,7 +107,11 @@ Se pone adelante de la fila y absorbe las balas comunes: premia el bate, la perf
 - **Qué es "tiro común"** (Argon, después de la auditoría): la pistola, el revólver, los perdigones de la escopeta, el
   rifle, las balas de más del disparo doble, la de hacia atrás y los drones (el ángulo se mide desde donde salió el tiro,
   no desde el jugador). **Ignoran el escudo:** el bate (que además lo rompe), la granada, el arma de energía, la explosión
-  del hinchado, la quemadura, el área de la explosiva y **toda bala si el jugador tiene al menos una perforante**.
+  del hinchado, la quemadura y el área de la explosiva.
+- **La perforante no lo anula** (Argon, 18/10, después de la simulación: con una sola carta lo anulaba para todas las balas,
+  y en la ciudad casi siempre ya salió: el blindado era un tanque pintado de azul). Cada carta suma un 30 % a lo que entra
+  de frente: 20 % sin ninguna, 50 % con una y 80 % con dos (el tope). Y la placa se come una perforación: con una sola, la
+  bala se frena en el escudo y no sigue a los de atrás; con dos, atraviesa al blindado y le queda una para el de atrás.
 - **Es pesado, como el tanque:** no se aparta del jugador, y el chamán se refugia detrás de él.
 - **Aviso:** a 1,5 m abre el brazo del escudo hacia el costado 0,5 s antes del zarpazo, y deja el pecho descubierto.
 - **El bate** (su contra): un batazo le arranca el escudo para siempre (se apaga la placa), lo frena 1 s y lo deja como

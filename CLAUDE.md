@@ -1197,7 +1197,10 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   `sonidos/escudo.py`), saca chispas blancas, el número sale gris (y solo si llega a 1) y no lo aplasta. Bala común es
   la pistola, el revólver, los perdigones, el rifle, las de más del disparo doble, la de hacia atrás y los drones; de
   dónde viene se mide con el rumbo de la bala. **Lo atraviesan la de energía, la granada, el bate, la quemadura, el área
-  de la explosiva, la explosión del hinchado y toda bala si el jugador tiene una perforante** (de Argon). Para eso `DanoZombi` recibe de dónde sale
+  de la explosiva y la explosión del hinchado** (de Argon). **La perforante no lo anula** (Argon, después de la
+  simulación: con una sola carta, que casi siempre está en el mazo cuando sale, era un tanque pintado): cada carta suma un
+  30 % a lo que entra de frente (20, 50 y 80 %, `ZombiBlindado.FraccionDeFrente`), y la placa se come una perforación
+  (`LoAtraviesa`, en `BulletController.Pegar`): con una sola la bala se frena ahí, con dos sigue. Para eso `DanoZombi` recibe de dónde sale
   el daño (`OrigenDelDano`), que dice cada uno que pega: el que no lo dice (`Otro`) no lo para nada. **Gira a 120 °/s**
   (50 congelado; `EnemyController.Perseguir`): sigue el camino de siempre (el `Rodeo` está probado, y con un radio de
   giro se metería en las esquinas), pero mira para donde puede y, mientras no mira para donde va, avanza más lento
@@ -1215,7 +1218,8 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   (`Marketing/zombis/blindado_hoja_nano_banana.png`). En Halloween va sin disfraz (lo que cuelga de su cabeza es el casco).
 - **ShowBies > Pruebas > Blindado (play)** (`PruebaBlindado`): que gire a 120 °/s (50 congelado, y así se lo rodea),
   balas de verdad de frente con la pistola, un perdigón y el rifle al 20 %, a 40° también, y la de energía, a 55° y por
-  la espalda enteras; con una perforante, entera; la granada, el bate, la quemadura y la explosiva enteras; que abra la
+  la espalda enteras; con una perforante el 50 % y la bala frenada en la placa, con dos el 80 % y la bala sigue; la
+  granada, el bate, la quemadura y la explosiva enteras; que abra la
   guardia a 1,5 m, que abierta pase todo y que el zarpazo salga a los 0,5 s pegando ×1,4; que se cierre lejos; el bate
   (frenado, el escudo que vuela y se va, y después todo entero); que del pool vuelva con el escudo y que al morir lo
   suelte (`Builds/prueba_blindado.txt`, con `blindado.png`, `blindado_guardia.png` y `blindado_roto.png`). La prueba de

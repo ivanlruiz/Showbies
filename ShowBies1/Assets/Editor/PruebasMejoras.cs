@@ -6547,6 +6547,11 @@ public static class PruebasMejoras
         inf.Verdadero("blindado: no para lo que viene de costado ni por la espalda, ni un rumbo vertical",
                       !ZombiBlindado.DeFrente(norte, Vector3.right, 90f) && !ZombiBlindado.DeFrente(norte, Vector3.forward, 90f)
                       && !ZombiBlindado.DeFrente(norte, Vector3.down, 90f));
+        inf.Verdadero("blindado: de frente entra el 20 %, el 50 % con una perforante y el 80 % con dos (no mas)",
+                      Mathf.Approximately(ZombiBlindado.FraccionDeFrente(0.2f, 0.3f, 0), 0.2f) && Mathf.Approximately(ZombiBlindado.FraccionDeFrente(0.2f, 0.3f, 1), 0.5f)
+                      && Mathf.Approximately(ZombiBlindado.FraccionDeFrente(0.2f, 0.3f, 2), 0.8f) && Mathf.Approximately(ZombiBlindado.FraccionDeFrente(0.2f, 0.3f, 3), 0.8f));
+        inf.Verdadero("blindado: la placa se come una perforacion: la bala con una sola se frena, con dos sigue",
+                      !ZombiBlindado.LoAtraviesa(0) && !ZombiBlindado.LoAtraviesa(1) && ZombiBlindado.LoAtraviesa(2));
         inf.Verdadero("blindado: mientras gira avanza entero de frente y un 35 % de costado o de espaldas",
                       Mathf.Approximately(EnemyController.AvanceAlGirar(1f), 1f) && Mathf.Approximately(EnemyController.AvanceAlGirar(0f), 0.35f)
                       && Mathf.Approximately(EnemyController.AvanceAlGirar(-1f), 0.35f) && EnemyController.AvanceAlGirar(0.5f) > 0.6f);

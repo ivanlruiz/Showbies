@@ -13,6 +13,10 @@ los nuevos; los de la primera versión de este archivo quedaron viejos.
 
 ## Los zombis con habilidad (18/10)
 
+**Después de esta corrida Argon cambió la regla del escudo** (ver `ZOMBIS.md`): la perforante ya no lo anula, sino que
+cada carta suma un 30 % a lo que entra de frente (20, 50 y 80 %) y la placa se come una perforación. El modelo de abajo
+tiene la regla de antes y no se volvió a correr: con la nueva, el blindado queda un poco más duro.
+
 Argon pidió (`ZOMBIS.md`) correr esto con los cinco especiales ya en el juego (el escupidor, el saltador y el chamán del
 cementerio, el blindado y el hinchado de la ciudad), con una regla: **"si el jugador bajo cae por debajo de la 35, +1 de
 PODER a los cinco especiales"**. Todo en `resultados_especiales.md` (tres corridas, con las mismas semillas).

@@ -1357,11 +1357,12 @@ public class EnemyController : MonoBehaviour
         // flotante muestra lo que entro de verdad.
         if (Potenciado) daño *= danoRecibidoPotenciado;
 
-        // El escudo del blindado: de frente, una bala comun pega un 80 % menos, suena a metal y no lo aplasta.
+        // El escudo del blindado: de frente, una bala comun pega un 80 % menos (menos con la perforante), suena a metal y
+        // no lo aplasta.
         bool alEscudo = blindado != null && blindado.Para(origen, empuje);
         if (alEscudo)
         {
-            daño *= blindado.danoQuePasa;
+            daño *= blindado.DanoQueEntraDeFrente;
             blindado.ContarBloqueado();
         }
 

@@ -425,9 +425,11 @@ public class BulletController : MonoBehaviour
 
         // La direccion de la bala, para que el cadaver salga despedido hacia donde
         // iba el tiro y no siempre igual.
-        // La de energia atraviesa el escudo del blindado; las demas son balas comunes.
-        zombi.DanoZombi(danoAplicado, critico, transform.forward, null,
-                        ArmaPuesta == Proyectiles.Energia ? OrigenDelDano.Energia : OrigenDelDano.Bala);
+        // La de energia atraviesa el escudo del blindado; las demas son balas comunes. La que pega en la placa se come
+        // una perforacion ahi: con una sola, se frena (de Argon).
+        var origen = ArmaPuesta == Proyectiles.Energia ? OrigenDelDano.Energia : OrigenDelDano.Bala;
+        bool enLaPlaca = zombi.Blindado != null && zombi.Vivo && zombi.Blindado.Para(origen, transform.forward);
+        zombi.DanoZombi(danoAplicado, critico, transform.forward, null, origen);
         if (lentitudDelHielo > 0f) zombi.Congelar(lentitudDelHielo, PoderDeLaPartida.DuracionDelHielo);
         if (quemaduraPorSegundo > 0f) zombi.Quemar(quemaduraPorSegundo, PoderDeLaPartida.DuracionDeLaQuemadura);
         if (fraccionDeExplosion > 0f && radioDeExplosion > 0f) Explotar(zombi);
@@ -439,7 +441,7 @@ public class BulletController : MonoBehaviour
             if (caja != null) caja.isTrigger = true;
             return;
         }
-        if (perforacionesRestantes > 0)
+        if (perforacionesRestantes > 0 && (!enLaPlaca || ZombiBlindado.LoAtraviesa(perforacionesRestantes)))
         {
             perforacionesRestantes--;
             danoAplicado *= PoderDeLaPartida.DanoAlPerforar;

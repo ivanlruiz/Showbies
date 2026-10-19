@@ -7,7 +7,10 @@ using UnityEngine;
 //   saca chispas blancas y no lo aplasta (EnemyController.DanoZombi pregunta Para). Bala comun es la pistola, el
 //   revolver, los perdigones de la escopeta, el rifle, las de mas del disparo doble, la de hacia atras y los drones; de
 //   donde viene se mide con el rumbo de la bala. Lo atraviesan la de energia, la granada, el bate, la quemadura, el
-//   area de la explosiva y TODA bala si el jugador tiene una carta de perforante (de Argon, 18/10).
+//   area de la explosiva y la explosion del hinchado (de Argon, 18/10).
+// - La perforante no lo anula (de Argon, despues de la simulacion: con una sola carta, que casi siempre esta en el mazo
+//   cuando sale, el blindado era un tanque pintado): cada carta suma un 30 % a lo que entra de frente (20, 50 y 80 %,
+//   FraccionDeFrente), y la placa se come una perforacion (BulletController: con una sola, la bala se frena ahi).
 // - Gira despacio: 120 grados por segundo, 50 congelado (EnemyController.Perseguir). Rodearlo deja la espalda.
 // - La guardia: a 1,5 m del jugador abre el escudo hacia su izquierda y deja el pecho descubierto (el escudo no para
 //   nada mientras esta abierta), y recien 0,5 s despues puede tirar el zarpazo, que pega 1,4 veces. Con la guardia
@@ -27,6 +30,7 @@ public class ZombiBlindado : MonoBehaviour
 {
     [Header("El escudo (de Argon)")]
     public float danoQuePasa = 0.2f;               // de frente le entra un 80 % menos
+    public float pasaPorPerforante = 0.3f;         // cada carta de perforante, un 30 % mas (hasta dos)
     public float arcoDelEscudo = 90f;
     public float giroPorSegundo = 120f;
     public float giroCongelado = 50f;
@@ -87,8 +91,27 @@ public class ZombiBlindado : MonoBehaviour
     public bool Para(OrigenDelDano origen, Vector3 direccionDelTiro)
     {
         if (origen != OrigenDelDano.Bala || Roto || GuardiaAbierta) return false;
-        if (PoderDeLaPartida.Perforaciones > 0) return false;
         return DeFrente(transform.forward, direccionDelTiro, arcoDelEscudo);
+    }
+
+    // Lo que le entra de frente a una bala comun, con las cartas de perforante del jugador.
+    public float DanoQueEntraDeFrente
+    {
+        get { return FraccionDeFrente(danoQuePasa, pasaPorPerforante, PoderDeLaPartida.Perforaciones); }
+    }
+
+    // El 20 % y un 30 % mas por cada perforante, hasta dos (de Argon): 20, 50 y 80 %. Estatico para probarlo.
+    public static float FraccionDeFrente(float sinCartas, float porPerforante, int perforantes)
+    {
+        return Mathf.Clamp01(sinCartas + porPerforante * Mathf.Clamp(perforantes, 0, 2));
+    }
+
+    // Si una bala con "perforacionesQueLeQuedan" atraviesa el escudo: la placa se come una, y con una sola se frena ahi
+    // (de Argon). Pasar, como atravesar a cualquier zombi, le gasta una perforacion y le baja el daño. Estatico para
+    // probarlo.
+    public static bool LoAtraviesa(int perforacionesQueLeQuedan)
+    {
+        return perforacionesQueLeQuedan >= 2;
     }
 
     // Si un tiro con el rumbo "direccionDelTiro" le entra a "frente" dentro del arco (en grados, entero: 90 son 45 para

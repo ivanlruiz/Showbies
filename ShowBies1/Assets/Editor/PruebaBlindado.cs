@@ -10,7 +10,7 @@ using UnityEngine.EventSystems;
 // auto-apuntado y un blindado que sale a 9 m al este del jugador, mirando al norte, con mucha vida. Mide que se de vuelta
 // a 120 grados por segundo como mucho (50 congelado); que las balas de verdad que le entran de frente (la pistola, un
 // perdigon de la escopeta, el rifle) peguen el 20 %, y la de energia, de costado y por la espalda, enteras; que con una
-// perforante pase todo; que la granada, el bate, la quemadura y la explosiva atraviesen el escudo; que a 1,5 m abra la
+// perforante entre el 50 % y la bala se frene en la placa, y con dos el 80 % y la bala siga; que la granada, el bate, la quemadura y la explosiva atraviesen el escudo; que a 1,5 m abra la
 // guardia, que con la guardia abierta pase todo, y que el zarpazo salga recien 0,5 s despues, pegando x1,4; que el bate
 // lo frene, le arranque el escudo (que sale volando y se va) y lo deje como uno comun; y que al morir suelte el escudo.
 // Saca tres fotos (Builds/blindado.png, blindado_guardia.png y blindado_roto.png) y escribe Builds/prueba_blindado.txt.
@@ -61,6 +61,7 @@ public static class PruebaBlindado
     static BulletController bala;
     static int aparicion, cualTiro, bloqueadosAntes, zarpazosAntes;
     static float esperado;
+    static int perforantes = 1;
 
     static PruebaBlindado()
     {
@@ -100,6 +101,7 @@ public static class PruebaBlindado
             fotoGuardia = false;
             fotoRoto = false;
             esperado = 0f;
+            perforantes = 1;
             error = null;
             oks.Clear();
             fase = Fase.Preparar;
@@ -287,12 +289,13 @@ public static class PruebaBlindado
 
             case Fase.Perforante:
             {
-                // Con una perforante, toda bala atraviesa el escudo (de Argon).
+                // Con perforantes, la placa deja pasar un 30 % mas por carta y se come una perforacion (de Argon): con
+                // una, la bala se frena ahi; con dos, sigue.
                 if (esperado == 0f)
                 {
                     if (ahora - desde < 0.2f) return;
                     var estado = new EstadoPoder { semilla = 7 };
-                    estado.cartas.Add(new CartaElegida { id = PoderDeLaPartida.Perforante, veces = 1 });
+                    estado.cartas.Add(new CartaElegida { id = PoderDeLaPartida.Perforante, veces = perforantes });
                     PoderDeLaPartida.Empezar(estado);
                     vidaAntes = zombi.VidaActual;
                     bloqueadosAntes = blindado.Bloqueados;
@@ -308,12 +311,23 @@ public static class PruebaBlindado
                     return;
                 }
                 float entro = vidaAntes - zombi.VidaActual;
-                Ok("con una perforante, la pistola de frente entra entera (" + entro.ToString("0.00") + " de " + danoDelTiro.ToString("0.00") + ")",
-                   Mathf.Abs(entro - danoDelTiro) < 0.01f && blindado.Bloqueados == bloqueadosAntes);
-                PoderDeLaPartida.Empezar(new EstadoPoder { semilla = 7 });
+                float fraccion = ZombiBlindado.FraccionDeFrente(blindado.danoQuePasa, blindado.pasaPorPerforante, perforantes);
+                bool sigue = bala.gameObject.activeSelf;
+                Ok("con " + perforantes + " perforante" + (perforantes == 1 ? "" : "s") + ", de frente entra el " + Mathf.RoundToInt(fraccion * 100f) + " % ("
+                   + entro.ToString("0.00") + " de " + danoDelTiro.ToString("0.00") + ") y "
+                   + (perforantes == 1 ? "la bala se frena en la placa" : "la bala sigue con una perforacion"),
+                   Mathf.Abs(entro - danoDelTiro * fraccion) < 0.01f && blindado.Bloqueados > bloqueadosAntes
+                   && (perforantes == 1 ? !sigue : sigue && bala.perforacionesRestantes == 1));
                 esperado = 0f;
-                fase = Fase.Origenes;
                 desde = ahora;
+                if (perforantes == 1)
+                {
+                    perforantes = 2;
+                    return;
+                }
+                perforantes = 1;
+                PoderDeLaPartida.Empezar(new EstadoPoder { semilla = 7 });
+                fase = Fase.Origenes;
                 return;
             }
 
