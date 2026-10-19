@@ -697,6 +697,59 @@ public static class ConstructorZombis
         return null;
     }
 
+    // Los cinco con habilidad en el modo libre (de Argon, 19/10): uno nuevo por nivel desde el 2, en el orden de las
+    // oleadas, con los topes de las oleadas. Va en el GeneradorZombis de ShowBies1, y se vuelve a correr si cambia.
+    public const string EscenaLibre = "Assets/Escenas/ShowBies1.unity";
+    public static readonly string[] EspecialesDelLibre = { RutaEscupidor, RutaSaltador, RutaChaman, RutaBlindado, RutaHinchado };
+    public static readonly int[] NivelesDelLibre = { 2, 3, 4, 5, 6 };
+    public static readonly int[] TopesDelLibre = { 3, 4, 2, 3, 3 };
+
+    [MenuItem("ShowBies/Zombis/Poner los especiales en el modo libre")]
+    public static void PonerEnElLibre()
+    {
+        var escena = EditorSceneManager.GetSceneByPath(EscenaLibre);
+        bool abierta = escena.isLoaded;
+        if (abierta && escena.isDirty) { Debug.LogError("ConstructorZombis: ShowBies1 tiene cambios sin guardar; guardala o descartalos y volve a correrlo"); return; }
+        if (!abierta) escena = EditorSceneManager.OpenScene(EscenaLibre, OpenSceneMode.Additive);
+        try
+        {
+            GeneradorZombis generador = null;
+            foreach (var raiz in escena.GetRootGameObjects())
+            {
+                generador = raiz.GetComponentInChildren<GeneradorZombis>(true);
+                if (generador != null) break;
+            }
+            if (generador == null) { Debug.LogError("ConstructorZombis: ShowBies1 no tiene GeneradorZombis"); return; }
+            var so = new SerializedObject(generador);
+            var especiales = so.FindProperty("especiales");
+            especiales.arraySize = 0;
+            for (int i = 0; i < EspecialesDelLibre.Length; i++)
+            {
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(EspecialesDelLibre[i]);
+                if (prefab == null) { Debug.LogError("ConstructorZombis: no esta " + EspecialesDelLibre[i]); return; }
+                especiales.arraySize++;
+                // Todo a mano: el elemento nuevo sale en cero, y con peso 0 WaveManager.Elegible no lo saca nunca.
+                var tipo = especiales.GetArrayElementAtIndex(especiales.arraySize - 1);
+                tipo.FindPropertyRelative("prefab").objectReferenceValue = prefab;
+                tipo.FindPropertyRelative("desdeOleada").intValue = NivelesDelLibre[i];
+                tipo.FindPropertyRelative("hastaOleada").intValue = 0;
+                tipo.FindPropertyRelative("peso").floatValue = 1f;
+                tipo.FindPropertyRelative("maxVivos").intValue = TopesDelLibre[i];
+                tipo.FindPropertyRelative("especial").boolValue = true;
+            }
+            so.FindProperty("intervaloEspeciales").floatValue = 4f;
+            so.FindProperty("desfaseEspeciales").floatValue = 0.8f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorSceneManager.MarkSceneDirty(escena);
+            EditorSceneManager.SaveScene(escena);
+        }
+        finally
+        {
+            if (!abierta) EditorSceneManager.CloseScene(escena, true);
+        }
+        Debug.Log("ConstructorZombis: los especiales quedaron en el modo libre");
+    }
+
     // Lo pone en los tipos del WaveManager de WaveMode, una entrada por tramo de oleadas (x desde, y hasta; 0 sin fin: un
     // tipo que descansa un capitulo va dos veces), sacando las que tenia, y guarda la escena. Se niega si la escena tiene
     // cambios sin guardar: no los guarda por accidente.

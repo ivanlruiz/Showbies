@@ -13,7 +13,8 @@ puntos y suelta monedas; morir guarda el récord y lleva a la pantalla de derrot
 Hay **dos modos**, los dos jugables desde el menú, y un tutorial:
 
 - **Free mode** (`ShowBies1.unity`) — generación continua: cinco corrutinas paralelas, una por tipo de
-  zombi, cada una con su intervalo. Sin final, pero se pone más difícil con el tiempo ("Nivel N" en el HUD).
+  zombi, cada una con su intervalo, y una más por cada zombi con habilidad, que sale desde su nivel. Sin final, pero se
+  pone más difícil con el tiempo ("Nivel N" en el HUD).
 - **Wave mode** (`WaveMode.unity`) — oleadas que terminan al matar a todos sus zombis, cada una más grande
   y con más tipos mezclados, y un jefe cada 10. Mismo mapa que el libre (las calles del centro, `Ciudad`, se sacaron).
 
@@ -832,6 +833,15 @@ consultando `EnemyController.ZombisVivos`:
   cada zombi aparece con vida × `crecimientoVida`^(nivel−1), daño × `crecimientoDano`^(nivel−1) y monedas ×
   `crecimientoMonedas`^(nivel−1) (1,15, 1,07 y 1,05: los que tenían las oleadas antes del parche del 19/9). `textoNivel` muestra "Nivel N" en el
   HUD y, al subir, rebota y suena el jingle del cartel. Sin esto el modo libre era una granja de monedas.
+  **Los zombis con habilidad salen uno por nivel desde el 2** (de Argon, 19/10: el escupidor en el 2, el saltador en el 3,
+  el chamán en el 4, el blindado en el 5 y el hinchado en el 6, a los 3:45: muchas partidas casuales duran 4-6 minutos),
+  cada uno con su corrutina (`especiales`, una lista de `TipoEnOleada` donde `desdeOleada` es el nivel), que prueba cada
+  `intervaloEspeciales` (4 s: con más, el normal, que prueba cada 0,25, se quedaba con casi todos los lugares) y arranca
+  `desfaseEspeciales` (0,8 s) después del anterior, con los topes de las oleadas (3, 4, 2, 3 y 3) y como mucho
+  `WaveManager.MaxEspecialesVivos` entre todos: las reglas son las de las oleadas (`WaveManager.Elegible`), con el nivel
+  en lugar de la oleada. Los pone **ShowBies > Zombis > Poner los especiales en el modo libre**
+  (`ConstructorZombis.PonerEnElLibre`), y la prueba de lógica los lee de la escena. `GeneradorZombis.EnElLibre` dice si
+  hay un modo libre andando (el componente prendido: el de WaveMode y el del tutorial están apagados, y la prueba lo mira).
 - **`WaveManager`** (wave mode) — **una sola** corrutina que corre toda la partida. Cada oleada:
   1. Muestra el cartel "Oleada N" (`cartelOleada`) durante `descansoEntreOleadas` (3 s); si se viene de terminar una,
      primero va "¡OLEADA N SUPERADA!" con su bono (ver Terminar una oleada, abajo), en los mismos 3 s. El HUD
@@ -1103,7 +1113,7 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   comunes. `hastaOleada` deja que uno descanse un capítulo (va dos veces en la mezcla). `WaveManager.Elegible` decide,
   y `EnemyController.VivosDe` cuenta los vivos de un prefab. **Para el tope, cada prefab cuenta una vez**
   (`WaveManager.EspecialesVivos`): sumado por entrada, el que va dos veces contaba doble y el tope real quedaba en 5 o 6
-  (auditoría del 18/10). El modo libre todavía no los saca.
+  (auditoría del 18/10). En el modo libre salen uno por nivel desde el 2 (ver Generación de enemigos).
 - **No mueven el muro** (`simulaciones/cartas_1.6.0/resultados_especiales.md`, 18/10, como pidió Argon): con los cinco
   queda en 39 / 59 / 69, igual que sin ellos. Sus habilidades son el 38-40 % del daño que reciben el bajo y el medio,
   pero pagan un 16-21 % más de oro por minuto en el muro, y los tres muros son jefes. La regla de Argon (+1 de PODER a
@@ -1133,7 +1143,10 @@ cementerio estrena los tres primeros y la ciudad los dos últimos; desde la 31, 
   gasta el escudo ni sacude la cámara**: solo el borde rojo y un chisporroteo corto (`Efectos.DanioDelPiso`, de Argon,
   18/10). **Al final de la oleada se acerca a 6,5 m**, adentro del auto-apuntado (`distanciaAlFinal`): cuando ya
   salieron todos y quedan 3 vivos o menos, o solo escupidores (`WaveManager.FinalDeLaOleada`, una vez por paso de
-  física; en el libre, nunca). Con el automático solo, la oleada no terminaba hasta salir a cazarlo a mano (Argon).
+  física). Con el automático solo, la oleada no terminaba hasta salir a cazarlo a mano (Argon). **En el modo libre**, que
+  no tiene final de oleada, **se acerca después de escupir tres veces** (`escupitajosEnElLibre`,
+  `ZombiEscupidor.DistanciaParaPlantarse`; de Argon, 19/10): si no, a los dos minutos había tres clavados en los bordes,
+  que el automático no mata nunca, ocupando tres de los ocho lugares de los especiales.
   El globo y el charco no tienen collider (parábola calculada y distancia al jugador, como la granada y las monedas) y se
   reusan. El bate lo empuja y le corta el escupitajo; congelado tarda 5 s entre uno y otro.
 - **ShowBies > Pruebas > Escupidor (play)** (`PruebaEscupidor`): que se plante a 9,5 m, a la vista y sin que el

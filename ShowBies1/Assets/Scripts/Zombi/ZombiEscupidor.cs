@@ -13,6 +13,10 @@ using UnityEngine;
 // El bate lo empuja (es liviano) y, si le pega mientras infla los sacos, le corta el escupitajo. Congelado, tarda 5 s
 // entre escupitajo y escupitajo en vez de 3,5.
 //
+// En el modo libre no hay final de oleada que lo acerque: escupe tres veces y despues se planta a 6,5 m, adentro del
+// auto-apuntado (de Argon, 19/10). Si no, a los dos minutos habia tres clavados en los bordes que el automatico no mata
+// nunca, ocupando tres de los ocho lugares de los especiales.
+//
 // Se lee por los dos sacos amarillos de los hombros, que laten y se inflan antes de tirar, por la piel amarillo acido y
 // por ir inclinado hacia adelante. Los sacos los pone ConstructorZombis en el prefab; la inclinacion va aca, en el
 // LateUpdate, sobre el hijo del modelo, como las poses del jefe.
@@ -24,6 +28,7 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
     public float distanciaParaPlantarse = 9.5f;
     public float distanciaAlFinal = 6.5f;        // al final de la oleada: adentro de los 7,5 m del auto-apuntado
     public int pocosAlFinal = 3;                 // vivos de la oleada (ver WaveManager.FinalDeLaOleada)
+    public int escupitajosEnElLibre = 3;         // en el modo libre, despues de estos se acerca a distanciaAlFinal
     public float distanciaParaRetroceder = 4.5f;
     public float velocidadAlRetroceder = 0.6f;   // de la suya
     public float borde = 45f;                    // del centro: las paredes invisibles estan en 49
@@ -73,6 +78,7 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
     private float proximoEscupitajo = -1f;
     private float inclinado;   // de 0 a 1: se suaviza
     private float rodeandoDesde = -1f;
+    private int escupitajosDeEstaAparicion;   // los que tiro desde que aparecio: Escupitajos no vuelve a cero
 
     // Lo que hace a cada distancia, sin contar el escupitajo. Estatico para probarlo sin escena: lejos se acerca (lo
     // lleva la persecucion), cerca retrocede, y en el medio se queda. El medio metro de mas es para que no tiemble entre
@@ -80,6 +86,14 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
     public static Estado QueHacer(float distancia, Estado ahora, float plantarse)
     {
         return SePlanta(distancia, ahora == Estado.Plantado, plantarse) ? Estado.Plantado : Estado.Acercandose;
+    }
+
+    // A que distancia se planta: lejos (9,5 m), salvo al final de la oleada o, en el modo libre, cuando ya escupio sus tres
+    // veces, que se acerca (6,5 m). Estatico para probarlo sin escena.
+    public static float DistanciaParaPlantarse(bool finalDeLaOleada, bool enElLibre, int escupitajos, int antesDeAcercarse,
+                                               float lejos, float cerca)
+    {
+        return finalDeLaOleada || (enElLibre && escupitajos >= antesDeAcercarse) ? cerca : lejos;
     }
 
     // Lo mismo para cualquiera que se planta a una distancia (tambien el chaman).
@@ -111,6 +125,7 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
         EstadoActual = Estado.Acercandose;
         rodeandoDesde = -1f;
         proximoEscupitajo = -1f;
+        escupitajosDeEstaAparicion = 0;
         inclinado = 0f;
         if (anillo != null) anillo.enabled = false;
     }
@@ -141,8 +156,10 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
         }
 
         // Al final de la oleada (ya salieron todos y quedan pocos, o solo escupidores) se acerca al alcance del
-        // auto-apuntado, de Argon (18/10): con el automatico solo, la oleada no terminaba hasta salir a cazarlo a mano.
-        float plantarse = WaveManager.FinalDeLaOleada(pocosAlFinal) ? distanciaAlFinal : distanciaParaPlantarse;
+        // auto-apuntado, de Argon (18/10): con el automatico solo, la oleada no terminaba hasta salir a cazarlo a mano. En
+        // el modo libre, despues de sus tres escupitajos (19/10).
+        float plantarse = DistanciaParaPlantarse(WaveManager.FinalDeLaOleada(pocosAlFinal), GeneradorZombis.EnElLibre,
+                                                 escupitajosDeEstaAparicion, escupitajosEnElLibre, distanciaParaPlantarse, distanciaAlFinal);
         var siguiente = QueHacer(distancia, EstadoActual, plantarse);
         // Desde afuera de la pantalla no se planta: rodea hacia los costados (TopeDelRodeo), y si no, se acerca.
         if (siguiente == Estado.Plantado && !SeVe())
@@ -243,6 +260,7 @@ public class ZombiEscupidor : MonoBehaviour, IMovimientoPropio
         proximoEscupitajo = ahora + Mathf.Max(0.1f, (zombi.Congelado ? cadaCuantoCongelado : cadaCuanto) - aviso);
         if (anillo != null) anillo.enabled = false;
         Escupitajos++;
+        escupitajosDeEstaAparicion++;
         Vector3 boca = transform.position + Vector3.up * (zombi.AlturaDeLaCabeza * 0.8f) + transform.forward * 0.3f;
         var charco = new AcidoDelEscupidor.Charco
         {

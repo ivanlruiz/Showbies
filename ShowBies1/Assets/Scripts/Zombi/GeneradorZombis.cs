@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// El modo libre: una corrutina por cada uno de los cinco zombis de siempre, con su intervalo, y una por cada zombi con
+// habilidad, que sale desde su nivel (ver especiales, abajo). Todos respetan el techo de poblacion.
 public class GeneradorZombis : MonoBehaviour
 {
     [SerializeField]
@@ -25,6 +27,38 @@ public class GeneradorZombis : MonoBehaviour
     public float intervaloZombiBOSS; //30
     [SerializeField]
     public float intervaloZombiFASTER; //2
+
+    // Los cinco con habilidad (ZOMBIS.md, de Argon, 19/10): uno nuevo por nivel desde el 2 (el escupidor en el 2, el
+    // saltador en el 3, el chaman en el 4, el blindado en el 5 y el hinchado en el 6: muchas partidas casuales duran 4-6
+    // minutos), con su tope de vivos y como mucho WaveManager.MaxEspecialesVivos entre todos. Aca desdeOleada es el
+    // nivel. Prueban cada intervaloEspeciales (con mas, perdian casi todos los lugares contra el normal, que prueba cada
+    // 0,25 s), y cada uno arranca desfaseEspeciales despues del anterior, para que no pidan lugar en el mismo cuadro.
+    // Los pone ConstructorZombis (ShowBies > Zombis > Poner los especiales en el modo libre).
+    [Header("Los zombis con habilidad")]
+    public TipoEnOleada[] especiales;
+    public float intervaloEspeciales = 4f;
+    public float desfaseEspeciales = 0.8f;
+
+    // Si hay un modo libre andando: el escupidor se acerca solo despues de escupir (no hay final de oleada). El tutorial
+    // tiene el componente con su objeto apagado, asi que ahi es falso.
+    public static GeneradorZombis Actual { get; private set; }
+    public static bool EnElLibre { get { return Actual != null; } }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ReiniciarEstatico()
+    {
+        Actual = null;
+    }
+
+    private void OnEnable()
+    {
+        Actual = this;
+    }
+
+    private void OnDisable()
+    {
+        if (Actual == this) Actual = null;
+    }
 
     // Techo de poblacion. Los cinco generadores corren en paralelo y para siempre,
     // asi que sin esto son ~350 zombis en el primer minuto y sigue creciendo.
@@ -95,6 +129,9 @@ public class GeneradorZombis : MonoBehaviour
         StartCoroutine(spawnEnemy(intervaloZombiTanque, ZombiTanque));
         StartCoroutine(spawnEnemy(intervaloZombiBOSS, ZombiBOSS));
         StartCoroutine(spawnEnemy(intervaloZombiFASTER, ZombiFASTER));
+        if (especiales != null)
+            for (int i = 0; i < especiales.Length; i++)
+                if (especiales[i] != null && especiales[i].prefab != null) StartCoroutine(SacarEspecial(especiales[i], i * desfaseEspeciales));
     }
 
     private void Update()
@@ -173,22 +210,40 @@ public class GeneradorZombis : MonoBehaviour
             // invoca. El que hay se sigue con su numero de aparicion, que no se reusa.
             if (enemy == ZombiBOSS && EnemyController.SigueVivo(jefeVivo, numeroDelJefe)) continue;
 
-            var enemigo = EnemyController.Aparecer(enemy, PosicionLejosDelJugador());
-            if (enemigo != null)
+            var enemigo = Preparar(EnemyController.Aparecer(enemy, PosicionLejosDelJugador()), enemy == ZombiBOSS);
+            if (enemigo != null && enemigo.EsJefe)
             {
-                // Antes de su primer golpe: la vida se calcula con el multiplicador
-                // que tenga en ese momento.
-                enemigo.multiplicadorVida = MultiplicadorVidaActual;
-                enemigo.multiplicadorDano = MultiplicadorDanoActual;
-                enemigo.multiplicadorMonedas = MultiplicadorMonedasActual;
-                enemigo.monedaPrefab = monedaPrefab;
-                enemigo.EsJefe = enemy == ZombiBOSS;
-                if (enemigo.EsJefe)
-                {
-                    jefeVivo = enemigo;
-                    numeroDelJefe = enemigo.NumeroDeAparicion;
-                }
+                jefeVivo = enemigo;
+                numeroDelJefe = enemigo.NumeroDeAparicion;
             }
         }
+    }
+
+    // Un zombi con habilidad: desde su nivel, con su tope y el de todos los especiales (las mismas reglas que en las
+    // oleadas, WaveManager.Elegible, con el nivel en lugar de la oleada).
+    private IEnumerator SacarEspecial(TipoEnOleada tipo, float desfase)
+    {
+        if (desfase > 0f) yield return new WaitForSeconds(desfase);
+        var espera = new WaitForSeconds(Mathf.Max(0.1f, intervaloEspeciales));
+        while (true)
+        {
+            yield return espera;
+            if (EnemyController.ZombisVivos + EnemyController.Reservados >= maxZombisVivos) continue;
+            if (!WaveManager.Elegible(tipo, NivelActual, EnemyController.VivosDe(tipo.prefab),
+                                      WaveManager.EspecialesVivos(especiales, EnemyController.VivosDe))) continue;
+            Preparar(EnemyController.Aparecer(tipo.prefab, PosicionLejosDelJugador()), false);
+        }
+    }
+
+    // Antes de su primer golpe: la vida se calcula con el multiplicador que tenga en ese momento.
+    private EnemyController Preparar(EnemyController enemigo, bool jefe)
+    {
+        if (enemigo == null) return null;
+        enemigo.multiplicadorVida = MultiplicadorVidaActual;
+        enemigo.multiplicadorDano = MultiplicadorDanoActual;
+        enemigo.multiplicadorMonedas = MultiplicadorMonedasActual;
+        enemigo.monedaPrefab = monedaPrefab;
+        enemigo.EsJefe = jefe;
+        return enemigo;
     }
 }

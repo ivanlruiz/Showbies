@@ -285,7 +285,7 @@ La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a
 - **Hecho: cada tipo entra al bestiario** (con las estrellas a 25 / 250 / 2.500, en la pestaña ESPECIALES, con su retrato y
   tapado hasta matar al primero; ver abajo) y a la tabla de textos. `NivelJugador.PuntosPorTipo` los tiene igual, porque la
   prueba compara los puntos de todos los tipos del bestiario con sus assets.
-- **Falta: el modo libre** tiene una corrutina por tipo (`GeneradorZombis`): los nuevos van primero en las oleadas.
+- **Hecho: el modo libre** (`GeneradorZombis.especiales`, una corrutina por especial, desde su nivel; ver abajo).
 - **Hecho con el blindado:** el origen del daño en `DanoZombi` (`OrigenDelDano`), la persecución con giro limitado
   (`EnemyController.Perseguir`) y su masa de tanque.
 - **Hecho con el hinchado:** el gancho antes de morir (`ZombiHinchado.EmpezarAInflarse`, y el bloque de la muerte

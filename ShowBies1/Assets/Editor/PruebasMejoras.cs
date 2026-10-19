@@ -6473,6 +6473,68 @@ public static class PruebasMejoras
         ProbarChaman(inf);
         ProbarBlindado(inf);
         ProbarHinchado(inf);
+        ProbarEspecialesEnElLibre(inf);
+    }
+
+    // Los cinco con habilidad en el modo libre (de Argon, 19/10): en el GeneradorZombis de ShowBies1, uno por nivel desde
+    // el 2, con los topes de las oleadas, cada 4 s y desfasados 0,8 s; y el escupidor, que ahi se acerca despues de
+    // escupir tres veces.
+    static void ProbarEspecialesEnElLibre(Informe inf)
+    {
+        inf.Cerca("libre: el escupidor se planta a 9,5 m con dos escupitajos", 9.5f, ZombiEscupidor.DistanciaParaPlantarse(false, true, 2, 3, 9.5f, 6.5f), 1e-6);
+        inf.Cerca("libre: con el tercero se acerca a 6,5", 6.5f, ZombiEscupidor.DistanciaParaPlantarse(false, true, 3, 3, 9.5f, 6.5f), 1e-6);
+        inf.Cerca("libre: en las oleadas no se acerca por escupir", 9.5f, ZombiEscupidor.DistanciaParaPlantarse(false, false, 10, 3, 9.5f, 6.5f), 1e-6);
+        inf.Cerca("libre: al final de la oleada se acerca igual que antes", 6.5f, ZombiEscupidor.DistanciaParaPlantarse(true, false, 0, 3, 9.5f, 6.5f), 1e-6);
+        var escupidor = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.RutaEscupidor);
+        inf.Verdadero("libre: el escupidor del prefab escupe 3 veces antes de acercarse",
+                      escupidor != null && escupidor.GetComponent<ZombiEscupidor>().escupitajosEnElLibre == 3);
+
+        LeerEscena(ConstructorZombis.EscenaLibre, escena =>
+        {
+            var generador = Buscar<GeneradorZombis>(escena);
+            if (!inf.Verdadero("libre: ShowBies1 tiene GeneradorZombis", generador != null)) return;
+            var lista = generador.especiales;
+            if (!inf.Igual("libre: los cinco especiales (ShowBies > Zombis > Poner los especiales en el modo libre)",
+                           ConstructorZombis.EspecialesDelLibre.Length, lista != null ? lista.Length : 0)) return;
+            bool bien = true;
+            string detalle = "";
+            for (int i = 0; i < lista.Length; i++)
+            {
+                var t = lista[i];
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ConstructorZombis.EspecialesDelLibre[i]);
+                bool este = t != null && t.prefab == prefab && prefab != null && t.desdeOleada == ConstructorZombis.NivelesDelLibre[i]
+                            && t.hastaOleada == 0 && t.peso > 0f && t.maxVivos == ConstructorZombis.TopesDelLibre[i] && t.especial;
+                if (!este) detalle += " " + i;
+                bien &= este;
+            }
+            inf.Verdadero("libre: escupidor desde el nivel 2, saltador 3, chaman 4, blindado 5 e hinchado 6, con los topes 3/4/2/3/3, con peso y sin fin" + detalle, bien);
+            inf.Verdadero("libre: prueban cada 4 s, desfasados 0,8 s",
+                          Mathf.Approximately(generador.intervaloEspeciales, 4f) && Mathf.Approximately(generador.desfaseEspeciales, 0.8f));
+            // Con la mezcla del libre, en el nivel 6 salen los cinco, y el tope de entre todos es el de las oleadas.
+            bool salen = true;
+            foreach (var t in lista) salen &= WaveManager.Elegible(t, 6, 0, 0) && !WaveManager.Elegible(t, t.desdeOleada - 1, 0, 0);
+            inf.Verdadero("libre: cada uno sale desde su nivel y no antes", salen);
+            inf.Verdadero("libre: con 8 especiales vivos no sale ninguno", !WaveManager.Elegible(lista[0], 6, 0, WaveManager.MaxEspecialesVivos));
+        });
+
+        // El escupidor sabe que esta en el libre porque hay un GeneradorZombis prendido: el de WaveMode y el del tutorial
+        // tienen que seguir apagados, o en las oleadas se acercaria despues de escupir.
+        foreach (var otra in new[] { "Assets/Escenas/WaveMode.unity", "Assets/Escenas/Tutorial.unity" })
+            LeerEscena(otra, escena =>
+            {
+                var generador = Buscar<GeneradorZombis>(escena);
+                inf.Verdadero("libre: el GeneradorZombis de " + System.IO.Path.GetFileNameWithoutExtension(otra) + " esta apagado",
+                              generador == null || !generador.gameObject.activeInHierarchy || !generador.enabled);
+            });
+
+        // Los retratos del bestiario sin el limite de mipmaps del telefono: con el, se veia el de 96 px estirado.
+        bool sinLimite = true;
+        foreach (string tipo in Bestiario.Tipos)
+        {
+            var importador = AssetImporter.GetAtPath(RetratosDelBestiario.Carpeta + "/Retrato_" + tipo + ".png") as TextureImporter;
+            sinLimite &= importador != null && importador.ignoreMipmapLimit && importador.textureType == TextureImporterType.Sprite;
+        }
+        inf.Verdadero("bestiario: los retratos son sprites que no bajan de mipmap en el telefono", sinLimite);
     }
 
     // El hinchado (ZombiHinchado, ZOMBIS.md): lo que le saca la explosion a cada uno, su Enemy, el prefab (liviano, con

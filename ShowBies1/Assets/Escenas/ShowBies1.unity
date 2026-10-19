@@ -1329,6 +1329,39 @@ MonoBehaviour:
   intervaloZombiTanque: 3
   intervaloZombiBOSS: 30
   intervaloZombiFASTER: 2
+  especiales:
+  - prefab: {fileID: 4367927843779111661, guid: ae53d257c07174f46a0c384907088d40, type: 3}
+    desdeOleada: 2
+    hastaOleada: 0
+    peso: 1
+    maxVivos: 3
+    especial: 1
+  - prefab: {fileID: 3140591236830657714, guid: 3c301fee45f7356479abdccedc4e41b6, type: 3}
+    desdeOleada: 3
+    hastaOleada: 0
+    peso: 1
+    maxVivos: 4
+    especial: 1
+  - prefab: {fileID: 6833029750079193178, guid: b09b4993e2418bc46bc221c7de8db052, type: 3}
+    desdeOleada: 4
+    hastaOleada: 0
+    peso: 1
+    maxVivos: 2
+    especial: 1
+  - prefab: {fileID: 5160122531650367471, guid: a57918d90ebe56b4c9a15e3e172c41a3, type: 3}
+    desdeOleada: 5
+    hastaOleada: 0
+    peso: 1
+    maxVivos: 3
+    especial: 1
+  - prefab: {fileID: 8420448170769964380, guid: d396e6a1a39b3a04f93a523ada52feac, type: 3}
+    desdeOleada: 6
+    hastaOleada: 0
+    peso: 1
+    maxVivos: 3
+    especial: 1
+  intervaloEspeciales: 4
+  desfaseEspeciales: 0.8
   maxZombisVivos: 60
   maxZombisVivosMovil: 35
   multiplicadorMonedas: 0.5
@@ -3259,6 +3292,8 @@ MonoBehaviour:
   colorEstrella: {r: 1, g: 0.8, b: 0.2, a: 1}
   colorNivel: {r: 0.4, g: 0.85, b: 1, a: 1}
   colorHalloween: {r: 1, g: 0.55, b: 0.1, a: 1}
+  colorMejora: {r: 1, g: 0.882, b: 0.302, a: 1}
+  colorRecord: {r: 1, g: 0.43, b: 0.85, a: 1}
 --- !u!4 &1585359846
 Transform:
   m_ObjectHideFlags: 0
@@ -3659,6 +3694,11 @@ MonoBehaviour:
   contenido: {fileID: 1548290585}
   relleno: {fileID: 664084306}
   segundos: {fileID: 1587466078}
+  colorBalas: {r: 1, g: 0.78, b: 0.22, a: 1}
+  colorRayo: {r: 0.1, g: 0.9, b: 1, a: 1}
+  multiplicadorDelRayo: 2
+  duracionSalto: 0.35
+  escalaDelSalto: 1.45
 --- !u!1 &1957901703
 GameObject:
   m_ObjectHideFlags: 0
