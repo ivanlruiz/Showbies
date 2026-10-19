@@ -125,7 +125,8 @@ public static class RetratosDelBestiario
         Debug.Log("RetratosDelBestiario: " + escritos.Count / 2 + " retratos en " + Carpeta);
     }
 
-    // Como un sprite de la interfaz, con mipmaps (en la tarjeta se ve a unos 90 px).
+    // Como un sprite de la interfaz, con mipmaps (en la tarjeta se ve a unos 90 px) y sin el limite de mipmaps del
+    // telefono (globalTextureMipmapLimit 1: se veria el de 96 px estirado).
     static void Importar(string ruta)
     {
         AssetDatabase.ImportAsset(ruta, ImportAssetOptions.ForceSynchronousImport);
@@ -137,6 +138,7 @@ public static class RetratosDelBestiario
         importador.alphaIsTransparency = true;
         importador.wrapMode = TextureWrapMode.Clamp;
         importador.maxTextureSize = 256;
+        importador.ignoreMipmapLimit = true;
         importador.SaveAndReimport();
     }
 
