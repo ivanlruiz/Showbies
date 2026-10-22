@@ -6507,9 +6507,10 @@ public static class PruebasMejoras
                 if (!este) detalle += " " + i;
                 bien &= este;
             }
-            inf.Verdadero("libre: escupidor desde el nivel 2, saltador 3, chaman 4, blindado 5 e hinchado 6, con los topes 3/4/2/3/3, con peso y sin fin" + detalle, bien);
-            inf.Verdadero("libre: prueban cada 4 s, desfasados 0,8 s",
-                          Mathf.Approximately(generador.intervaloEspeciales, 4f) && Mathf.Approximately(generador.desfaseEspeciales, 0.8f));
+            inf.Verdadero("libre: escupidor desde el nivel 2, saltador 3, chaman 4, blindado 5 e hinchado 6, con los topes 2/4/2/3/3, con peso y sin fin" + detalle, bien);
+            inf.Verdadero("libre: prueban cada 5,5 s, desfasados 0,8 s",
+                          Mathf.Approximately(generador.intervaloEspeciales, ConstructorZombis.IntervaloDelLibre)
+                          && Mathf.Approximately(ConstructorZombis.IntervaloDelLibre, 5.5f) && Mathf.Approximately(generador.desfaseEspeciales, 0.8f));
             // Con la mezcla del libre, en el nivel 6 salen los cinco, y el tope de entre todos es el de las oleadas.
             bool salen = true;
             foreach (var t in lista) salen &= WaveManager.Elegible(t, 6, 0, 0) && !WaveManager.Elegible(t, t.desdeOleada - 1, 0, 0);
@@ -6531,7 +6532,9 @@ public static class PruebasMejoras
             inf.Verdadero("libre: el blindado, que no tiene ninguno, si",
                           GeneradorZombis.PuedeSalirEspecial(lista, lista[3], 6, siete) && GeneradorZombis.PuedeSalirEspecial(lista, lista[4], 6, siete));
             inf.Verdadero("libre: con 6 y uno sin ninguno, sobra un lugar para los demas",
-                          GeneradorZombis.PuedeSalirEspecial(lista, lista[0], 6, vivos(new[] { 2, 2, 1, 1, 0 })));
+                          GeneradorZombis.PuedeSalirEspecial(lista, lista[1], 6, vivos(new[] { 2, 2, 1, 1, 0 })));
+            inf.Verdadero("libre: con 2 escupidores vivos no sale otro (su tope en el libre)",
+                          !GeneradorZombis.PuedeSalirEspecial(lista, lista[0], 6, vivos(new[] { 2, 0, 0, 0, 0 })));
             inf.Verdadero("libre: los que todavia no se desbloquearon no guardan lugar",
                           GeneradorZombis.PuedeSalirEspecial(lista, lista[1], 4, vivos(new[] { 3, 3, 1, 0, 0 })));
         });

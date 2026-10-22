@@ -1334,7 +1334,7 @@ MonoBehaviour:
     desdeOleada: 2
     hastaOleada: 0
     peso: 1
-    maxVivos: 3
+    maxVivos: 2
     especial: 1
   - prefab: {fileID: 3140591236830657714, guid: 3c301fee45f7356479abdccedc4e41b6, type: 3}
     desdeOleada: 3
@@ -1360,7 +1360,7 @@ MonoBehaviour:
     peso: 1
     maxVivos: 3
     especial: 1
-  intervaloEspeciales: 4
+  intervaloEspeciales: 5.5
   desfaseEspeciales: 0.8
   maxZombisVivos: 60
   maxZombisVivosMovil: 35

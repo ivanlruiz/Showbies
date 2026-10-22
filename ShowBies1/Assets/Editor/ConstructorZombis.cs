@@ -698,11 +698,14 @@ public static class ConstructorZombis
     }
 
     // Los cinco con habilidad en el modo libre (de Argon, 19/10): uno nuevo por nivel desde el 2, en el orden de las
-    // oleadas, con los topes de las oleadas. Va en el GeneradorZombis de ShowBies1, y se vuelve a correr si cambia.
+    // oleadas, con los topes de las oleadas salvo el escupidor, que va con el de la 31 (2), y probando cada 5,5 s (Argon,
+    // 21/10: con 3 escupidores y cada 4 s quedaban 7,8 especiales vivos de 35). Va en el GeneradorZombis de ShowBies1, y
+    // se vuelve a correr si cambia.
     public const string EscenaLibre = "Assets/Escenas/ShowBies1.unity";
     public static readonly string[] EspecialesDelLibre = { RutaEscupidor, RutaSaltador, RutaChaman, RutaBlindado, RutaHinchado };
     public static readonly int[] NivelesDelLibre = { 2, 3, 4, 5, 6 };
-    public static readonly int[] TopesDelLibre = { 3, 4, 2, 3, 3 };
+    public static readonly int[] TopesDelLibre = { 2, 4, 2, 3, 3 };
+    public const float IntervaloDelLibre = 5.5f;
 
     [MenuItem("ShowBies/Zombis/Poner los especiales en el modo libre")]
     public static void PonerEnElLibre()
@@ -737,7 +740,7 @@ public static class ConstructorZombis
                 tipo.FindPropertyRelative("maxVivos").intValue = TopesDelLibre[i];
                 tipo.FindPropertyRelative("especial").boolValue = true;
             }
-            so.FindProperty("intervaloEspeciales").floatValue = 4f;
+            so.FindProperty("intervaloEspeciales").floatValue = IntervaloDelLibre;
             so.FindProperty("desfaseEspeciales").floatValue = 0.8f;
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorSceneManager.MarkSceneDirty(escena);

@@ -314,7 +314,10 @@ La auditoría de los tres primeros dejó preguntas de diseño, y se las llevó a
    cada uno salga en su nivel** (el banco del 19/10 lo midió: con el techo de 35 lleno el 80 % del tiempo, el chamán y el
    hinchado salían un minuto tarde o nunca, y el blindado 19 s tarde con los ocho lugares ya tomados), el especial que
    espera lugar le gana a los comunes el próximo que se libera, y el último de los ocho es del desbloqueado que no tiene
-   ninguno. Ahora salen a los 0-7 s de su nivel, y desde el 6 hay 7,8 especiales vivos en promedio (eran 4,4).
+   ninguno. Ahora salen a los 0-7 s de su nivel, y desde el 6 había 7,8 especiales vivos en promedio (eran 4,4). **El
+   21/10 Argon lo bajó** ("apenas pasado de rosca", sobre todo por 3 escupidores clavados: 3 charcos cada 3,5 s): en el
+   libre prueban cada 5,5 s y el escupidor va con tope 2, como desde la 31. Con el jugador quieto del banco quedan 7,2
+   (2 escupidores); jugando, Argon espera 5-6.
 7. **El escupidor del libre escupe 3 veces plantado a 9,5 m y después se acerca a 6,5**, adentro del auto-apuntado: sin
    final de oleada, a los dos minutos habría tres clavados en los bordes que el automático no mata nunca, ocupando 3 de
    los 8 lugares de especiales.

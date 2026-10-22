@@ -39,7 +39,7 @@ public class GeneradorZombis : MonoBehaviour
     // Los pone ConstructorZombis (ShowBies > Zombis > Poner los especiales en el modo libre).
     [Header("Los zombis con habilidad")]
     public TipoEnOleada[] especiales;
-    public float intervaloEspeciales = 4f;
+    public float intervaloEspeciales = 5.5f;
     public float desfaseEspeciales = 0.8f;
 
     // Si hay un modo libre andando: el escupidor se acerca solo despues de escupir (no hay final de oleada). El tutorial

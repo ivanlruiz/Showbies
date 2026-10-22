@@ -836,8 +836,10 @@ consultando `EnemyController.ZombisVivos`:
   **Los zombis con habilidad salen uno por nivel desde el 2** (de Argon, 19/10: el escupidor en el 2, el saltador en el 3,
   el chamán en el 4, el blindado en el 5 y el hinchado en el 6, a los 3:45: muchas partidas casuales duran 4-6 minutos),
   cada uno con su corrutina (`especiales`, una lista de `TipoEnOleada` donde `desdeOleada` es el nivel), que prueba cada
-  `intervaloEspeciales` (4 s) y arranca `desfaseEspeciales` (0,8 s) después del anterior, con los topes de las oleadas
-  (3, 4, 2, 3 y 3) y como mucho `WaveManager.MaxEspecialesVivos` entre todos: las reglas son las de las oleadas
+  `intervaloEspeciales` (5,5 s; era 4, de Argon, 21/10) y arranca `desfaseEspeciales` (0,8 s) después del anterior, con
+  los topes de las oleadas salvo el escupidor, que va con el de la 31 (2, 4, 2, 3 y 3; con 3 escupidores clavados y cada
+  4 s quedaban 7,8 especiales vivos de 35, "apenas pasado de rosca" para Argon) y como mucho
+  `WaveManager.MaxEspecialesVivos` entre todos: las reglas son las de las oleadas
   (`WaveManager.Elegible`), con el nivel en lugar de la oleada. **El que puede salir y encuentra el techo lleno se queda
   con el próximo lugar que se libere, antes que los comunes** (`especialesEsperando`: los comunes prueban cada 0,25 s y se
   llevaban casi todos; con el techo lleno el 80 % del tiempo, el chamán y el hinchado salían un minuto tarde o nunca), **y
