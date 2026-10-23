@@ -27,6 +27,13 @@ public class MenuPausa : MonoBehaviour
     private GameObject panelReiniciar;
     private TMP_Text avisoReiniciar;
     private int oleadaQueSePierde;
+    // La misma confirmacion sirve para salir cuando eso pierde la partida (WaveManager.SalirPierdeLaPartida): cambian el
+    // titulo, el aviso, el boton de abajo y lo que hace.
+    private TextoTraducido tituloConfirmacion;
+    private TextoTraducido textoDelSi;
+    private Image iconoDelSi;
+    private Sprite iconoReiniciar;
+    private UnityEngine.Events.UnityAction alConfirmar;
 
     // El boton de pausa del telefono va arriba al centro, encima de la primera linea del cartel
     // del capitulo ("CAPITULO 2" quedaba tapada en todas las proporciones: superauditoria del
@@ -78,6 +85,9 @@ public class MenuPausa : MonoBehaviour
         capitulos = FindAnyObjectByType<CapitulosDeEscenario>();
         // Y MEJORAS: solo ahi se puede volver a la partida (el libre no se retoma).
         if (FindAnyObjectByType<WaveManager>() != null) ArmarMejoras();
+        // MENU PRINCIPAL pregunta antes si salir pierde la partida.
+        var botonMenu = panel != null ? (RectTransform)panel.transform.Find("BotonMenu") : null;
+        if (botonMenu != null) Accion(botonMenu, TocarMenu);
     }
 
     // Con MEJORAS el panel lleva un boton mas y todo se aprieta: el titulo sube y los botones
@@ -103,7 +113,7 @@ public class MenuPausa : MonoBehaviour
         var mejoras = (RectTransform)Instantiate(continuar.gameObject, panel.transform).transform;
         mejoras.name = "BotonMejoras";
         mejoras.SetSiblingIndex(continuar.GetSiblingIndex() + 1);
-        Accion(mejoras, IrALaTienda);
+        Accion(mejoras, TocarMejoras);
         // El panel esta apagado: el texto lo escribe el TextoTraducido al prenderse.
         var traducido = mejoras.GetComponentInChildren<TextoTraducido>(true);
         if (traducido != null) traducido.id = "menu_mejoras";
@@ -161,6 +171,19 @@ public class MenuPausa : MonoBehaviour
             comprasDeLaInsignia = CatalogoMejoras.ComprasPosibles();
         }
         ConstructorUI.Latir(insigniaMejoras, numeroMejoras, comprasDeLaInsignia, Time.unscaledTime);
+    }
+
+    // MENU PRINCIPAL y MEJORAS: si salir ahora pierde la partida (la oleada ya se retomo despues de un golpe), preguntan.
+    private void TocarMenu()
+    {
+        if (WaveManager.SalirPierdeLaPartida && AbrirConfirmacionDeSalir(IrAlMenu, "BotonMenu")) return;
+        IrAlMenu();
+    }
+
+    private void TocarMejoras()
+    {
+        if (WaveManager.SalirPierdeLaPartida && AbrirConfirmacionDeSalir(IrALaTienda, "BotonMejoras")) return;
+        IrALaTienda();
     }
 
     private void IrALaTienda()
@@ -255,12 +278,41 @@ public class MenuPausa : MonoBehaviour
         if (panelReiniciar == null) ArmarConfirmacion();
         if (panelReiniciar == null) return false;
         oleadaQueSePierde = oleada;
+        if (tituloConfirmacion != null) tituloConfirmacion.id = "reiniciar_titulo";
+        if (textoDelSi != null) textoDelSi.id = "pausa_reiniciar";
+        if (iconoDelSi != null && iconoReiniciar != null) iconoDelSi.sprite = iconoReiniciar;
+        alConfirmar = ReiniciarYa;
         panel.SetActive(false);
         panelReiniciar.SetActive(true);
         // Despues de prenderla: el aviso es una copia del titulo, y su texto no lo escribe
         // nadie mas.
         if (avisoReiniciar != null) avisoReiniciar.text = Textos.Formato("reiniciar_aviso", oleadaQueSePierde);
         return true;
+    }
+
+    // La de salir: "¿SALIR?", que se pierde el progreso del capitulo, y abajo el boton que se toco (MENU PRINCIPAL o
+    // MEJORAS, con su icono), que sale de verdad.
+    private bool AbrirConfirmacionDeSalir(UnityEngine.Events.UnityAction salir, string boton)
+    {
+        if (panelReiniciar == null) ArmarConfirmacion();
+        if (panelReiniciar == null || tituloConfirmacion == null || textoDelSi == null) return false;
+        tituloConfirmacion.id = "salir_partida_titulo";
+        textoDelSi.id = boton == "BotonMejoras" ? "menu_mejoras" : "pausa_menu";
+        var original = panel.transform.Find(boton);
+        var icono = original != null ? original.Find("Visual/Icono") : null;
+        var imagen = icono != null ? icono.GetComponent<Image>() : null;
+        if (iconoDelSi != null && imagen != null) iconoDelSi.sprite = imagen.sprite;
+        alConfirmar = salir;
+        panel.SetActive(false);
+        panelReiniciar.SetActive(true);
+        if (avisoReiniciar != null) avisoReiniciar.text = Textos.De("salir_partida_aviso");
+        return true;
+    }
+
+    // El boton de abajo de la confirmacion: reiniciar o salir, lo que se pregunto.
+    private void Confirmar()
+    {
+        if (alConfirmar != null) alConfirmar();
     }
 
     public void CerrarConfirmacion()
@@ -298,6 +350,7 @@ public class MenuPausa : MonoBehaviour
         // Los ids se escriben enteros (x.id = "...";) para que la prueba de idiomas los encuentre.
         var traducidoTitulo = copiaTitulo.GetComponent<TextoTraducido>();
         if (traducidoTitulo != null) traducidoTitulo.id = "reiniciar_titulo";
+        tituloConfirmacion = traducidoTitulo;
         // En un renglon: el del titulo de la pausa mide 900 y "¿EMPEZAR DE CERO?" se partia en
         // dos, con el segundo encima del aviso. Si no entra, se achica.
         var textoTitulo = copiaTitulo.GetComponent<TMP_Text>();
@@ -346,7 +399,11 @@ public class MenuPausa : MonoBehaviour
 
         reiniciarSi.name = "BotonReiniciarSi";
         reiniciarSi.anchoredPosition = new Vector2(reiniciarSi.anchoredPosition.x, alturaReiniciar);
-        Accion(reiniciarSi, ReiniciarYa);
+        Accion(reiniciarSi, Confirmar);
+        textoDelSi = reiniciarSi.GetComponentInChildren<TextoTraducido>(true);
+        var iconoSi = reiniciarSi.Find("Visual/Icono");
+        iconoDelSi = iconoSi != null ? iconoSi.GetComponent<Image>() : null;
+        iconoReiniciar = iconoDelSi != null ? iconoDelSi.sprite : null;
     }
 
     // Un evento nuevo y no RemoveAllListeners: ese no saca los que vienen puestos desde el

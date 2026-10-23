@@ -40,15 +40,27 @@ public class WaveManager : MonoBehaviour
         Capitulos.ParaEmpezar = Capitulos.ParaVolver;
     }
 
+    // Si salir ahora (MENU PRINCIPAL o MEJORAS de la pausa) pierde la partida: la oleada ya se retomo despues de un golpe.
+    // La pausa pregunta antes (de Argon, 22/10: nunca borrar una partida por un boton sin avisar).
+    public static bool SalirPierdeLaPartida
+    {
+        get
+        {
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != TiendaMejoras.EscenaOleadas) return false;
+            return Progreso.OleadaEnCurso > 1 && Progreso.RetomasEnCurso >= Progreso.RetomasPorOleada;
+        }
+    }
+
     // La oleada que se pierde si se reinicia ahora, o 0 si no se pierde nada que valga
-    // preguntar: fuera de las oleadas, o en la 1. La mira la pausa antes de REINICIAR.
+    // preguntar: fuera de las oleadas, o en la oleada con que arranca la partida nueva (la 1,
+    // o la del capitulo al que vuelve, Capitulos.ParaVolver). La mira la pausa antes de REINICIAR.
     public static int OleadaQueSePierdeAlReiniciar
     {
         get
         {
             if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != TiendaMejoras.EscenaOleadas) return 0;
             int oleada = Progreso.OleadaEnCurso;
-            return oleada > 1 ? oleada : 0;
+            return oleada > Capitulos.OleadaInicial(Capitulos.ParaVolver) ? oleada : 0;
         }
     }
 
@@ -301,7 +313,9 @@ public class WaveManager : MonoBehaviour
         {
             OleadaActual = guardada - 1;
             golpeHeredado = Progreso.GolpeEnOleadaEnCurso;
-            Progreso.ContarRetoma();
+            // Solo gasta la retoma salir despues de un golpe (de Argon, 22/10): lo que se evita es curarse saliendo al
+            // menu. Sin golpe, ir a la tienda, irse a dormir o que Android cierre la app no cuesta nada.
+            if (golpeHeredado) Progreso.ContarRetoma();
             if (Puntaje.instance != null)
             {
                 Puntaje.instance.contadorKill = Progreso.PuntosEnCurso;

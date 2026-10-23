@@ -69,11 +69,16 @@ public static class Capitulos
         return despues > antes ? despues : 0;
     }
 
-    // El capitulo de la ultima partida (o el que destrabo), con lo que se puede elegir ahora. Es al que vuelven OTRA VEZ,
-    // REINICIAR y el ¡A JUGAR! de la tienda.
+    // El capitulo de la ultima partida (o el que destrabo), con lo que se puede elegir ahora; sin una partida anterior, el
+    // mas alto destrabado (de Argon, 22/10). Es al que vuelven OTRA VEZ, REINICIAR y el ¡A JUGAR! de la tienda.
     public static int ParaVolver
     {
-        get { return Acotar(Progreso.CapituloParaVolver, Progreso.MejorOleada); }
+        get
+        {
+            int mejor = Progreso.MejorOleada;
+            int ultimo = Progreso.CapituloParaVolver;
+            return ultimo > 0 ? Acotar(ultimo, mejor) : Desbloqueados(mejor);
+        }
     }
 
     // Lo toma WaveManager al arrancar una partida nueva, y lo deja sin fijar.

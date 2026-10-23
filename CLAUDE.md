@@ -891,11 +891,16 @@ consultando `EnemyController.ZombisVivos`:
     antes, o la partida que arma un banco con `GuardarOleadaEnCurso(n, puntos)`), la vida llena y las balas de siempre.
   - **El golpe**: el primero de la oleada, pasado el descanso, queda anotado (`MarcarGolpeEnOleadaEnCurso`), y la
     oleada retomada ya no sale perfecta, ni cuenta para INTOCABLE.
-  - **Una sola retoma por oleada** (`Progreso.HayOleadaParaRetomar`, que es lo que miran `WaveManager`, las cartas y el
-    botón OLEADAS): al retomar se gasta (`ContarRetoma`), y la segunda salida en la misma oleada pierde la partida: el
-    botón ya no dice que se sigue y OLEADAS arranca en el principio del capítulo de esa oleada (ver abajo). La
-    oleada siguiente es nueva y se puede retomar otra vez: el que cierra en la 24 para dormir no pierde nada.
-  - El ¡A JUGAR! de MEJORAS de la pausa también es una retoma (sale al menú y vuelve), y la gasta.
+  - **Una sola retoma por oleada, y solo después de un golpe** (`Progreso.HayOleadaParaRetomar`, que es lo que miran
+    `WaveManager`, las cartas y el botón OLEADAS): retomar una oleada con el golpe anotado gasta la retoma
+    (`ContarRetoma`), y salir otra vez en esa oleada pierde la partida: el botón ya no dice que se sigue y OLEADAS
+    arranca en el principio del capítulo de esa oleada (ver abajo). **Sin golpe, salir no cuesta nada** (de Argon,
+    22/10: lo que se evita es curarse saliendo al menú): ir a MEJORAS desde la pausa y volver con ¡A JUGAR!, irse a
+    dormir o que Android cierre la app con una llamada. La oleada siguiente es nueva y se puede retomar otra vez.
+  - **Nunca se pierde la partida por un botón sin avisar** (de Argon, 22/10): con la retoma gastada
+    (`WaveManager.SalirPierdeLaPartida`), MENÚ PRINCIPAL y MEJORAS de la pausa abren la confirmación de REINICIAR con
+    "¿SALIR?", "SI SALES AHORA PERDERÁS EL PROGRESO DE ESTE CAPÍTULO", SEGUIR JUGANDO y, abajo, el botón que se tocó, con
+    su ícono (`MenuPausa.AbrirConfirmacionDeSalir`). Que Android cierre la app ahí sí la pierde.
 
   **Las oleadas se pueden empezar en un capítulo** (1.7.0; lo pidió Ivan el 19/10, "guardar los capítulos, seguir donde
   estabas", y lo diseñó Argon el 21/10; el diseño entero en `PLAN.md`, sección 8): completar la 10 deja empezar en la 11
@@ -908,7 +913,8 @@ consultando `EnemyController.ZombisVivos`:
   veces). El capítulo de la partida queda en el progreso (`Progreso.CapituloParaVolver`, sin subir la versión), y
   completar la 10 o la 20 por primera vez lo pasa al que destrabó (`Capitulos.QueDestraba`): a ese vuelven **OTRA VEZ**
   de la derrota (que dice "OTRA VEZ / DESDE LA OLEADA 11"), **REINICIAR** de la pausa (`OlvidarPartidaSiEsOleadas`) y
-  el **¡A JUGAR!** de la tienda sin partida para retomar. Lo que falta (de Argon, en `PLAN.md`): el selector. Lo prueba
+  el **¡A JUGAR!** de la tienda sin partida para retomar; sin una partida anterior (quien actualiza), el capítulo más
+  alto destrabado (`Capitulos.ParaVolver`, de Argon, 22/10). Lo que falta (de Argon, en `PLAN.md`): el selector. Lo prueba
   **ShowBies > Pruebas > Empezar en un capitulo (play)** (ver Pruebas y medición).
 
   **Las cartas de los capítulos que se saltan, en "tiradas dobles"** (de Argon, 21/10; `PoderDeLaPartida`, la
@@ -1925,7 +1931,7 @@ pinta a la horda, elegido por Ivan), las gemas y las armas (ver TAREAS).
 - **Doce familias de logros con tres monedas** (bronce, plata y oro) en `Logros`: completa la oleada 10/25/50 (la 10 es
   el primer jefe), mata 500/5.000/50.000 zombis, combo x25/x50/x75 (eran 1.000/10.000/100.000 y x100 hasta la 1.6.0), crítico al 30/50/100 %, gana
   10.000/100.000/1.000.000 monedas jugando, mata 5/10/15 con una granada, usa la furia 1/25/100 veces, termina la
-  oleada 5/10/20 sin que te toquen, racha diaria de 3/7/30 días, cobra 10/50/200 misiones, 6/15/30 estrellas del
+  oleada 10/20/30 sin que te toquen (eran 5/10/20: empezando en la 21 el oro salía con una sola oleada; de Argon, 22/10), racha diaria de 3/7/30 días, cobra 10/50/200 misiones, 6/15/30 estrellas del
   bestiario y llega al nivel 5/10/20 del modo libre. **Los ids de las familias se guardan en el JSON: no se renombran.**
 - **Seis récords nuevos en los contadores de por vida** (v6), que solo suben: el mejor combo (`ContadorCombo`), la mejor
   granada (`Granade`: los que dejan de estar `Vivo` en la explosión), la oleada más alta sin un golpe (`WaveManager`
@@ -2817,7 +2823,8 @@ y volvían a entrar). `MenuPausa.ArmarMejoras` lo arma en `Start` si hay `WaveMa
 amarillo de la tienda con `IconoMejoras` (de `Sprites/UI/Resources`), y aprieta el panel: el título sube a 280 y los
 cuatro botones van cada 130 desde 130, así el último queda encima de los volúmenes. Toca: anota `UltimoModo`, guarda y
 abre la tienda en el menú (`TiendaMejoras.AbrirEnMenu`); su ¡A JUGAR! vuelve a la oleada en curso, desde su principio,
-que es la misma vuelta que por MENÚ PRINCIPAL (y gasta la única retoma de esa oleada: ver Generación de enemigos). En el libre no está: esa partida no se retoma. **Lleva la insignia
+que es la misma vuelta que por MENÚ PRINCIPAL (y, si la oleada ya recibió un golpe, gasta su única retoma: ver
+Generación de enemigos). En el libre no está: esa partida no se retoma. **Lleva la insignia
 roja de la tienda** (`MenuPausa.ArmarInsignia`, armada en código: en las escenas de juego no hay un MEJORAS de donde
 copiarla) con cuántas compras alcanzan, latiendo; se recalcula cuando cambia `Progreso.Revision`.
 
@@ -2828,7 +2835,8 @@ copiarla) con cuántas compras alcanzan, latiendo; se recalcula cuando cambia `P
 - `timeScale` y `AudioListener.pause` son globales y cruzan escenas. Los botones del panel los
   restauran antes de cargar otra escena, y `OnDestroy` también, por si la escena se descarga en pausa
   por un camino que no pase por esos botones.
-- **REINICIAR pregunta antes en las oleadas pasada la 1** (`WaveManager.OleadaQueSePierdeAlReiniciar`): borra la
+- **REINICIAR pregunta antes en las oleadas pasada la oleada con que arrancaría la partida nueva** (la 1, o la del
+  capítulo al que vuelve: `WaveManager.OleadaQueSePierdeAlReiniciar`): borra la
   partida guardada, y rehacerla son 13 minutos hasta la 30. `MenuPausa.Reiniciar` cambia el panel por una copia suya
   armada la primera vez que hace falta (`PanelReiniciar`): "¿EMPEZAR DE CERO?", "PERDERÁS TU PARTIDA EN LA OLEADA N",
   SEGUIR JUGANDO (el CONTINUAR verde, latiendo: reanuda) y REINICIAR más abajo (`ReiniciarYa`). El atrás con la
@@ -3375,11 +3383,12 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   (`Builds/noche_cajas_balas.png`) y otra de la confirmación. Escribe `Builds/prueba_reiniciar.txt`.
 - **ShowBies > Pruebas > Salir al menu y retomar (play)** (`PruebaRetomar`, del 22/10): el camino de verdad (MENÚ
   PRINCIPAL de la pausa y WaveMode cargada otra vez), despejando los zombis apenas salen. Una partida de banco en la 5
-  se retoma con sus puntos y sus cartas, con la vida llena y gastando su retoma, y terminada sin golpes sale perfecta; la
-  6 anota la vida y las balas con que empieza, y el golpe pasado el descanso; retomarla devuelve esa vida y esas balas
-  (no las de cuando se salió), hereda el golpe y ya no sale perfecta ni sube INTOCABLE; la 7 se retoma una vez, y
-  después de la segunda salida el botón OLEADAS ya no dice que se sigue y entrar arranca de la 1, sin puntos ni cartas.
-  Escribe `Builds/prueba_retomar.txt`.
+  se retoma con sus puntos y sus cartas, con la vida llena y sin gastar la retoma (no hubo golpe), y terminada sin
+  golpes sale perfecta; la 6 anota la vida y las balas con que empieza, y el golpe pasado el descanso; retomarla devuelve
+  esa vida y esas balas (no las de cuando se salió), gasta la retoma, hereda el golpe y ya no sale perfecta ni sube
+  INTOCABLE; la 7 se retoma sin golpe sin gastar nada, y con un golpe la gasta: MENÚ PRINCIPAL pregunta antes ("¿SALIR?",
+  foto en `Builds/salir_confirmacion.png`), y confirmado, el botón OLEADAS ya no dice que se sigue y entrar arranca de
+  la 1, sin puntos ni cartas. Escribe `Builds/prueba_retomar.txt`.
 - **ShowBies > Pruebas > Empezar en un capitulo (play)** (`PruebaCapitulos`, del 22/10): primero, con la 9 como mejor
   oleada, una partida retomada en la 10 (el jefe y los demás mueren apenas salen) cierra con ¡CAPÍTULO 1 SUPERADO!, el
   punto de control y +250 monedas, deja el capítulo 2 para volver y no cura (foto en `Builds/capitulo_superado.png`);

@@ -9,16 +9,18 @@ using UnityEngine.SceneManagement;
 // con el camino de verdad: MENU PRINCIPAL de la pausa y despues WaveMode cargada como la carga OLEADAS.
 //
 //  1. Una partida guardada en la 5 por un banco (sin vida ni balas anotadas, con PODER 3) se retoma en la 5, con sus
-//     puntos y sus cartas y con la vida llena, y gasta su retoma. Se la deja en 33 de vida y 211 balas y se la termina
-//     sin un golpe: sale perfecta (no habia golpe que heredar).
+//     puntos y sus cartas y con la vida llena, y sin golpe no gasta la retoma (de Argon, 22/10). Se la deja en 33 de vida
+//     y 211 balas y se la termina sin un golpe: sale perfecta (no habia golpe que heredar).
 //  2. La 6 es nueva: anota la vida, la vida maxima, las balas y el cargador con que empieza, sin retomas ni golpe. Se
 //     cambia la vida y las balas (lo que se gasto jugando) y, pasado el descanso, el jugador recibe un golpe: queda
 //     anotado en el progreso.
 //  3. MENU PRINCIPAL: el boton OLEADAS dice que se sigue en la 6. Retomarla devuelve la vida y las balas con que se la
 //     empezo (no las de cuando se salio, ni la vida llena), gasta la retoma y hereda el golpe: terminada sin un golpe
 //     nuevo, ya no sale perfecta, ni sube el logro INTOCABLE.
-//  4. La 7 es nueva otra vez: se puede retomar. Se sale, se retoma (gasta la retoma) y se sale de nuevo: el boton
-//     OLEADAS ya no dice que se sigue, y entrar arranca de la 1, sin puntos ni cartas.
+//  4. La 7 es nueva otra vez: se puede retomar. Se sale sin golpe y se retoma: no gasta la retoma. Un golpe, se sale y
+//     se retoma: la gasta, y ahora MENU PRINCIPAL pregunta antes ("¿SALIR?", que se pierde el progreso del capitulo, foto
+//     en Builds/salir_confirmacion.png). Se confirma: el boton OLEADAS ya no dice que se sigue, y entrar arranca de la 1,
+//     sin puntos ni cartas.
 //
 // Los zombis se despejan apenas salen (cuentan como muertos, sin tocar al jugador), asi las oleadas terminan solas. El
 // progreso y los PlayerPrefs del editor vuelven como estaban al salir de play (RespaldoDelBanco). Escribe
@@ -38,7 +40,7 @@ public static class PruebaRetomar
     const int VidaDejada = 33;
     const int BalasDejadas = 211;
     const double TopePorPaso = 25.0;
-    const double TopeTotal = 180.0;
+    const double TopeTotal = 240.0;
 
     enum Paso
     {
@@ -50,7 +52,12 @@ public static class PruebaRetomar
         RetomaLaSeis,       // la vida y las balas devueltas
         TerminarLaSeis,     // despeja hasta que empieza la 7
         MenuDeLaSiete,
-        RetomaLaSiete,      // gasta la retoma y sale otra vez
+        RetomaLaSiete,      // sin golpe no gasta la retoma
+        GolpeEnLaSiete,     // pasado el descanso, un golpe
+        MarcaEnLaSiete,     // anotado, y MENU PRINCIPAL
+        MenuDeLaSiete2,
+        RetomaLaSiete2,     // ahora si gasta la retoma, y MENU PRINCIPAL pregunta
+        ConfirmarSalir,     // la confirmacion, su foto, y SALIR
         MenuSinRetomar,     // el boton ya no dice que se sigue
         DeCero,             // entrar arranca de la 1
         Listo,
@@ -82,8 +89,11 @@ public static class PruebaRetomar
     static bool golpe7 = true, hay7 = false;
     static string textoMenu7 = "";
     static bool sigue7;
-    static int oleadaRetomada7 = -1, retomas7Al = -1;
+    static int oleadaRetomada7 = -1, retomas7Al = -1, retomas7b = -1;
+    static bool hay7Al, marca7, sigue7b, pierde7, pierdeAntes7 = true, confirmaAlTocar, sigueEnLaEscena;
+    static string tituloConfirmacion = "", avisoConfirmacion = "";
     static string textoSinRetomar = "";
+    static bool fotoConfirmacion;
     static bool sinRetomarBoton, sinRetomarProgreso;
     static int oleadaDeCero = -1, guardadaDeCero = -1, puntosDeCero = -1, poderDeCero = -1, vidaDeCero = -1, vidaMaxDeCero = -1;
 
@@ -136,6 +146,7 @@ public static class PruebaRetomar
             inicio = ahora;
             terminado = false;
             oleadasVistas = null;
+            fotoConfirmacion = false;
             Pasar(Paso.EnLaCinco, ahora);
             return;
         }
@@ -303,7 +314,80 @@ public static class PruebaRetomar
                 if (wm == null) return;
                 oleadaRetomada7 = wm.OleadaActual;
                 retomas7Al = Progreso.RetomasEnCurso;
+                hay7Al = Progreso.HayOleadaParaRetomar;
+                pierdeAntes7 = WaveManager.SalirPierdeLaPartida;
+                Pasar(Paso.GolpeEnLaSiete, ahora);
+                return;
+            }
+
+            case Paso.GolpeEnLaSiete:
+            {
+                var wm = Object.FindAnyObjectByType<WaveManager>();
+                if (wm == null || vida == null || wm.EnDescanso || Espero(ahora, 0.3)) return;
+                vida.TakeDamage(1f);
+                Pasar(Paso.MarcaEnLaSiete, ahora);
+                return;
+            }
+
+            case Paso.MarcaEnLaSiete:
+            {
+                if (Espero(ahora, 0.2)) return;
+                marca7 = Progreso.GolpeEnOleadaEnCurso;
                 SalirAlMenu();
+                Pasar(Paso.MenuDeLaSiete2, ahora);
+                return;
+            }
+
+            case Paso.MenuDeLaSiete2:
+            {
+                string texto = TextoDeOleadas(ahora);
+                if (texto == null) return;
+                sigue7b = texto.Contains(Textos.Formato("modo_oleadas_continuar", OleadaGuardada + 2));
+                SceneManager.LoadScene(TiendaMejoras.EscenaOleadas);
+                Pasar(Paso.RetomaLaSiete2, ahora);
+                return;
+            }
+
+            case Paso.RetomaLaSiete2:
+            {
+                var wm = OleadasListas(ahora);
+                if (wm == null) return;
+                retomas7b = Progreso.RetomasEnCurso;
+                pierde7 = WaveManager.SalirPierdeLaPartida;
+                // MENU PRINCIPAL de verdad: el boton de la pausa.
+                var menu = Object.FindAnyObjectByType<MenuPausa>();
+                if (menu == null) throw new System.Exception("no hay MenuPausa en la escena");
+                menu.Pausar();
+                var boton = menu.panel.transform.Find("BotonMenu");
+                if (boton == null) throw new System.Exception("no hay BotonMenu en la pausa");
+                boton.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+                confirmaAlTocar = menu.ConfirmandoReiniciar;
+                Pasar(Paso.ConfirmarSalir, ahora);
+                return;
+            }
+
+            case Paso.ConfirmarSalir:
+            {
+                if (Espero(ahora, 0.6)) return;
+                var menu = Object.FindAnyObjectByType<MenuPausa>();
+                sigueEnLaEscena = menu != null && SceneManager.GetActiveScene().buildIndex == TiendaMejoras.EscenaOleadas;
+                var panelConfirmacion = menu != null ? menu.panel.transform.parent.Find("PanelReiniciar") : null;
+                if (panelConfirmacion == null) throw new System.Exception("no hay PanelReiniciar");
+                var titulo = panelConfirmacion.Find("Titulo");
+                var aviso = panelConfirmacion.Find("Aviso");
+                tituloConfirmacion = titulo != null ? titulo.GetComponent<TMPro.TMP_Text>().text : "";
+                avisoConfirmacion = aviso != null ? aviso.GetComponent<TMPro.TMP_Text>().text : "";
+                if (!fotoConfirmacion)
+                {
+                    fotoConfirmacion = true;
+                    ScreenCapture.CaptureScreenshot(Path.GetFullPath("../Builds/salir_confirmacion.png"));
+                    pasoDesde = ahora;
+                    return;
+                }
+                if (Espero(ahora, 0.3)) return;
+                var si = panelConfirmacion.Find("BotonReiniciarSi");
+                if (si == null) throw new System.Exception("no hay BotonReiniciarSi");
+                si.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
                 Pasar(Paso.MenuSinRetomar, ahora);
                 return;
             }
@@ -402,7 +486,12 @@ public static class PruebaRetomar
         inf.AppendLine("  terminada: golpes " + golpesAlRetomar6 + " -> " + golpesAlTerminar6 + ", perfecta " + perfecta6 + ", INTOCABLE " + intacta6);
         inf.AppendLine("La 7 al empezar: retomas " + retomas7 + ", golpe " + golpe7 + ", se puede retomar " + hay7);
         inf.AppendLine("Menu: OLEADAS dice \"" + Una(textoMenu7) + "\"");
-        inf.AppendLine("La 7 retomada: oleada " + oleadaRetomada7 + ", retomas " + retomas7Al);
+        inf.AppendLine("La 7 retomada sin golpe: oleada " + oleadaRetomada7 + ", retomas " + retomas7Al + ", se puede retomar " + hay7Al
+                       + ", salir pierde " + pierdeAntes7);
+        inf.AppendLine("Con un golpe (anotado " + marca7 + "), el boton sigue " + sigue7b + "; retomada: retomas " + retomas7b
+                       + ", salir pierde " + pierde7);
+        inf.AppendLine("MENU PRINCIPAL: confirma " + confirmaAlTocar + ", sigue en la escena " + sigueEnLaEscena + ", \"" + tituloConfirmacion
+                       + "\" / \"" + avisoConfirmacion + "\"");
         inf.AppendLine("Menu despues de la segunda salida: OLEADAS dice \"" + Una(textoSinRetomar) + "\", se puede retomar " + !sinRetomarProgreso);
         inf.AppendLine("Entrar de nuevo: oleada " + oleadaDeCero + ", guardada " + guardadaDeCero + ", puntos " + puntosDeCero + ", PODER " + poderDeCero
                        + ", vida " + vidaDeCero + "/" + vidaMaxDeCero);
@@ -416,7 +505,7 @@ public static class PruebaRetomar
             error == null && cuantasExcepciones == 0,
             oleada5 == OleadaGuardada && puntos5 == PuntosGuardados && poder5 == PoderGuardado,
             vida5 == vidaMax5 && vidaMax5 > 0,
-            retomas5 == 1 && !hay5,
+            retomas5 == 0 && hay5,
             perfecta5 && intacta5 >= OleadaGuardada,
             vida6Guardada == vidaAl6 && vidaAl6 == vidaEsperada && vidaMax6Guardada == vidaMaxAl6
                 && balas6Guardadas == balasAl6 && balasAl6 >= BalasDejadas && maxBalas6Guardado == maxBalasAl6,
@@ -428,7 +517,10 @@ public static class PruebaRetomar
             retomas6Al == 1 && !hayRetomada6 && golpeHeredado6,
             golpesAlTerminar6 == golpesAlRetomar6 && !perfecta6 && intacta6 == intacta5,
             retomas7 == 0 && !golpe7 && hay7 && sigue7,
-            oleadaRetomada7 == OleadaGuardada + 2 && retomas7Al == 1,
+            oleadaRetomada7 == OleadaGuardada + 2 && retomas7Al == 0 && hay7Al && !pierdeAntes7,
+            marca7 && sigue7b && retomas7b == 1 && pierde7,
+            confirmaAlTocar && sigueEnLaEscena && tituloConfirmacion == Textos.De("salir_partida_titulo")
+                && avisoConfirmacion == Textos.De("salir_partida_aviso"),
             sinRetomarBoton && sinRetomarProgreso,
             oleadaDeCero == 1 && guardadaDeCero == 1 && puntosDeCero == 0 && poderDeCero == 0 && vidaDeCero == vidaMaxDeCero,
         };
@@ -437,7 +529,7 @@ public static class PruebaRetomar
             "el banco llego hasta el final, sin errores ni excepciones",
             "la partida de un banco se retoma en su oleada, con sus puntos y sus cartas",
             "sin vida anotada, se retoma con la vida llena",
-            "retomar gasta la retoma de la oleada",
+            "sin un golpe, retomar no gasta la retoma",
             "una oleada retomada sin golpe que heredar sale perfecta",
             "la oleada nueva anota la vida, la vida maxima, las balas y el cargador con que empieza",
             "la oleada nueva no tiene retomas ni golpe, y se puede retomar",
@@ -447,7 +539,9 @@ public static class PruebaRetomar
             "retomarla gasta la retoma y hereda el golpe",
             "la oleada retomada con un golpe heredado no sale perfecta, aunque no reciba ninguno nuevo, ni sube INTOCABLE",
             "la oleada siguiente es nueva: sin golpe y se puede retomar, y el boton lo dice",
-            "la siguiente tambien se retoma, y gasta su retoma",
+            "la siguiente se retoma sin golpe y no gasta la retoma",
+            "con un golpe, salir y retomar la gasta, y salir otra vez ya pierde la partida",
+            "MENU PRINCIPAL pregunta antes (¿SALIR?, se pierde el progreso del capitulo) sin salir",
             "despues de la segunda salida, el boton OLEADAS ya no dice que se sigue",
             "y entrar arranca de la 1, sin puntos, sin cartas y con la vida llena",
         };

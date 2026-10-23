@@ -4051,7 +4051,7 @@ public static class PruebasMejoras
 
         // El capitulo para volver, con lo que se puede elegir ahora.
         EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"mejorOleada\":25}", null);
-        inf.Igual("capitulos: un JSON de antes vuelve al 1", 1, Capitulos.ParaVolver);
+        inf.Igual("capitulos: sin una partida anterior, el mas alto destrabado", 3, Capitulos.ParaVolver);
         Progreso.CapituloParaVolver = 3;
         Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
         inf.Igual("capitulos: el de la ultima partida se relee", 3, Capitulos.ParaVolver);

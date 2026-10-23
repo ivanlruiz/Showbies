@@ -305,7 +305,8 @@ public static class Progreso
         get { Cargar(); return datos.puntosEnCurso; }
     }
 
-    // Una sola retoma por oleada: la segunda vez que se sale en la misma oleada la partida se pierde (Argon, 21/10).
+    // Una sola retoma por oleada (Argon, 21/10): la segunda vez que se sale en la misma oleada la partida se pierde. Solo
+    // cuenta la que se hace despues de un golpe (Argon, 22/10: WaveManager la gasta al retomar si el golpe esta anotado).
     public const int RetomasPorOleada = 1;
 
     // Si hay una partida de oleadas para retomar. Todo lo que pregunta eso pasa por aca (las cartas, WaveManager, el
@@ -357,7 +358,7 @@ public static class Progreso
         get { Cargar(); return datos.maxBalasEnCurso; }
     }
 
-    // WaveManager, al retomar: gasta la retoma de esta oleada. Se escribe con el guardado del principio de la oleada,
+    // WaveManager, al retomar despues de un golpe: gasta la retoma de esta oleada. Se escribe con el guardado del principio de la oleada,
     // que viene enseguida (si Android mata la app despues, la retoma ya cuenta).
     public static void ContarRetoma()
     {

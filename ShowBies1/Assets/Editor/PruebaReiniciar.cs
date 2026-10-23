@@ -120,6 +120,8 @@ public static class PruebaReiniciar
         PlayerSettings.runInBackground = true;
         // Una partida de oleadas guardada en la 5: es lo que REINICIAR borraria.
         Progreso.GuardarOleadaEnCurso(OleadaGuardada, 50);
+        // Una partida que empezo en la 1: REINICIAR vuelve ahi (Capitulos.ParaVolver).
+        Progreso.CapituloParaVolver = 1;
         Progreso.Guardar();
         EditorSceneManager.OpenScene(Escena);
         SessionState.SetBool(Clave, true);

@@ -356,8 +356,10 @@ privacidad publicada.
 - **Retomar vuelve opcional la muerte en oleadas** (H04): **arreglado el 22/10**, con las tres partes que decidió Ivan
   el 29/9 y confirmó Argon el 21/10 (el golpe anotado, la vida y las balas del principio de la oleada y una sola
   retoma por oleada; ver CLAUDE.md, Generación de enemigos), probado con la prueba de lógica y el banco nuevo
-  `PruebaRetomar`. Lo que queda: la segunda salida vuelve a la 1, y con los capítulos (1.7.0) tiene que volver al
-  principio del capítulo; y el ¡A JUGAR! de MEJORAS de la pausa también gasta la retoma (preguntado a Argon).
+  `PruebaRetomar`. Con los capítulos (también del 22/10), la segunda salida vuelve al principio del
+  capítulo y no a la 1. Argon lo afinó el 22/10: la retoma solo se gasta si
+  hubo un golpe en la oleada (MEJORAS de la pausa sin golpe no cuesta nada), y con la retoma gastada MENÚ PRINCIPAL y
+  MEJORAS preguntan antes.
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
 Aprobado por el revisor, pero son materiales, prefabs o ajustes del proyecto, y conviene ver el antes y el después con

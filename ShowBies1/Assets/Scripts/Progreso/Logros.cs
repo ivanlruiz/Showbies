@@ -68,7 +68,9 @@ public static class Logros
         new Familia(Millonario, () => Progreso.MonedasGanadasJugando, 10000, 100000, 1000000),
         new Familia(Granadero, () => Progreso.MejorGranada, 5, 10, 15),
         new Familia(Furioso, () => Progreso.FuriasActivadas, 1, 25, 100),
-        new Familia(Intocable, () => Progreso.MejorOleadaIntacta, 5, 10, 20),
+        // Las metas en las oleadas de jefe (de Argon, 22/10: eran 5, 10 y 20, y empezando en la 21 el oro salia con una
+        // sola oleada perfecta). Lo ya ganado no se pierde.
+        new Familia(Intocable, () => Progreso.MejorOleadaIntacta, 10, 20, 30),
         new Familia(Constante, () => Progreso.MejorRacha, 3, 7, 30),
         new Familia(Misionero, () => Progreso.MisionesCobradas, 10, 50, 200),
         // 6 / 15 / 30 desde que el bestiario tiene los diez tipos (de Argon, 19/10: eran 5 / 10 / 15 con cinco, y con 30

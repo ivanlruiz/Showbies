@@ -54,7 +54,8 @@ public static class PruebaCapitulos
         ElegirCarta,        // elige (la dorada, si esta) y vuelve a Preparar; al terminar, muere
         Derrota,            // el texto de OTRA VEZ, y tocarlo
         OtraVez,            // de nuevo en la 11, y REINICIAR
-        Reiniciada,         // de nuevo en la 11, y al menu
+        Reiniciada,         // de nuevo en la 11
+        GolpeEnLaOnce,      // pasado el descanso, un golpe (sin golpe, salir no gasta la retoma), y al menu
         PrimeraRetoma,      // retomada (gasta la retoma), y al menu otra vez
         SegundaSalida,      // la siguiente arranca en la 11, nueva
         Listo,
@@ -86,6 +87,7 @@ public static class PruebaCapitulos
     static bool dejoDeContar;
     static int oleadaOtraVez = -1, oleadaReiniciada = -1, oleadaRetomada = -1, retomasRetomada = -1;
     static int oleadaDespues = -1, retomasDespues = -1;
+    static bool golpeado;
 
     static readonly StringBuilder excepciones = new StringBuilder();
     static int cuantasExcepciones;
@@ -139,6 +141,7 @@ public static class PruebaCapitulos
             terminado = false;
             oleadasVistas = null;
             anterior = null;
+            golpeado = false;
             Pasar(Paso.DiezPrimera, ahora);
             return;
         }
@@ -375,6 +378,22 @@ public static class PruebaCapitulos
                 var wm = OleadasListas(ahora);
                 if (wm == null) return;
                 oleadaReiniciada = wm.OleadaActual;
+                Pasar(Paso.GolpeEnLaOnce, ahora);
+                return;
+            }
+
+            case Paso.GolpeEnLaOnce:
+            {
+                var wm = Object.FindAnyObjectByType<WaveManager>();
+                if (wm == null || vida == null || wm.EnDescanso || Espero(ahora, 0.3)) return;
+                if (!golpeado)
+                {
+                    golpeado = true;
+                    vida.TakeDamage(1f);
+                    pasoDesde = ahora;
+                    return;
+                }
+                if (!Progreso.GolpeEnOleadaEnCurso) return;
                 anterior = wm;
                 SalirAlMenuYVolver();
                 Pasar(Paso.PrimeraRetoma, ahora);
