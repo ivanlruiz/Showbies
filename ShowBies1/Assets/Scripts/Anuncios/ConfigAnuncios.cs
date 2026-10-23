@@ -69,6 +69,9 @@ public class ConfigAnuncios : ScriptableObject
     public int partidasAntesDelPrimerAutomatico = 3;
     [Tooltip("Partidas entre uno y otro: 3 = como mucho uno cada 3 partidas.")]
     public int partidasEntreAutomaticos = 3;
+    [Tooltip("Y además, segundos de sesión desde el último (o desde que se abrió la app): partidas cortas seguidas no "
+        + "traen uno cada minuto. De Argon, 21/10. 0 = sin espera.")]
+    public float segundosEntreAutomaticos = 240f;
 
     [Header("AdMob")]
     [Tooltip("El bloque bonificado de AdMob de cada lugar (ver publicacion/pasos.md). La APK de prueba usa "
@@ -201,5 +204,6 @@ public class ConfigAnuncios : ScriptableObject
         minutosParaAvisoDeDescanso = Mathf.Max(0f, minutosParaAvisoDeDescanso);
         partidasAntesDelPrimerAutomatico = Mathf.Max(0, partidasAntesDelPrimerAutomatico);
         partidasEntreAutomaticos = Mathf.Max(1, partidasEntreAutomaticos);
+        segundosEntreAutomaticos = Mathf.Max(0f, segundosEntreAutomaticos);
     }
 }

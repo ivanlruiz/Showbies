@@ -28,6 +28,14 @@ public static class ServicioAnuncios
     private static float ultimoAnuncioEn = float.NegativeInfinity;   // en tiempo real
     private static bool audioPausadoAntes;
 
+    // El ultimo automatico que se vio, en segundos de sesion (VigiaAplicacion), y de que sesion: el de una sesion vieja
+    // (la app estuvo 20 minutos en segundo plano) no cuenta, y entonces vale lo que lleva la sesion, como al abrir la app.
+    private static float ultimoAutomaticoEn;
+    private static int sesionDelUltimoAutomatico = -1;
+    // El reloj de la prueba de logica, que corre fuera de play (-1 = el de verdad).
+    private static float relojDePruebas = -1f;
+    private static int sesionDePruebas;
+
     private static readonly object candado = new object();
     private static readonly Queue<KeyValuePair<int, ResultadoAnuncio>> avisos = new Queue<KeyValuePair<int, ResultadoAnuncio>>();
 
@@ -51,6 +59,10 @@ public static class ServicioAnuncios
         audioPausadoAntes = false;
         MostrandoAnuncio = false;
         lock (candado) avisos.Clear();
+        ultimoAutomaticoEn = 0f;
+        sesionDelUltimoAutomatico = -1;
+        relojDePruebas = -1f;
+        sesionDePruebas = 0;
     }
 
     public static string NombreDelProveedor
@@ -193,6 +205,33 @@ public static class ServicioAnuncios
         ultimoAnuncioEn = float.NegativeInfinity;
         MostrandoAnuncio = false;
         lock (candado) avisos.Clear();
+        ultimoAutomaticoEn = 0f;
+        sesionDelUltimoAutomatico = -1;
+        relojDePruebas = -1f;
+        sesionDePruebas = 0;
+    }
+
+    // La prueba de logica fija los segundos de sesion y la sesion (segundos < 0 vuelve al reloj de verdad).
+    public static void UsarRelojParaPruebas(float segundosDeSesion, int sesion)
+    {
+        relojDePruebas = segundosDeSesion;
+        sesionDePruebas = sesion;
+    }
+
+    private static float SegundosDeSesion
+    {
+        get { return relojDePruebas >= 0f ? relojDePruebas : VigiaAplicacion.SegundosDeSesion; }
+    }
+
+    private static int Sesion
+    {
+        get { return relojDePruebas >= 0f ? sesionDePruebas : VigiaAplicacion.Sesion; }
+    }
+
+    // Segundos de sesion desde el ultimo automatico que se vio, o desde que empezo la sesion si no hubo ninguno en ella.
+    public static float SegundosDesdeElUltimoAutomatico
+    {
+        get { return Sesion == sesionDelUltimoAutomatico ? SegundosDeSesion - ultimoAutomaticoEn : SegundosDeSesion; }
     }
 
     // La config que rige ahora: la del asset, o la de la prueba si hay una.
@@ -267,14 +306,18 @@ public static class ServicioAnuncios
     // Desde el 6/10, decision de Ivan. No son opt-in ni premian: salen solo al salir de la
     // derrota (MenuPerdiste), y la escena siguiente se carga recien al cerrarlos. Nunca en
     // las primeras partidas, como mucho uno cada tantas partidas y nunca si en esa partida
-    // se miro un video con premio: el que ya miro uno no tiene que comerse otro. No gastan
-    // los topes de los videos, y uno que falla no se "premia": se sigue de largo.
+    // se miro un video con premio: el que ya miro uno no tiene que comerse otro. Y, desde el
+    // 22/10 (de Argon), con al menos unos minutos de sesion desde el ultimo, o desde que se abrio
+    // la app: tres partidas cortas seguidas traian uno cada minuto. No gastan los topes de los
+    // videos, y uno que falla no se "premia": se sigue de largo.
     public static bool PuedeMostrarAutomaticoConDatos(ConfigAnuncios config, bool mostrandoAnuncio, bool proveedorListo,
-                                                      int partidasTerminadas, int partidaDelUltimo, int videosDeLaPartida)
+                                                      int partidasTerminadas, int partidaDelUltimo, int videosDeLaPartida,
+                                                      float segundosDesdeElUltimo)
     {
         if (config == null || !config.automaticos || mostrandoAnuncio || !proveedorListo) return false;
         if (partidasTerminadas < config.partidasAntesDelPrimerAutomatico) return false;
         if (videosDeLaPartida > 0) return false;
+        if (config.segundosEntreAutomaticos > 0f && segundosDesdeElUltimo < config.segundosEntreAutomaticos) return false;
         return partidasTerminadas - partidaDelUltimo >= Mathf.Max(1, config.partidasEntreAutomaticos);
     }
 
@@ -282,7 +325,7 @@ public static class ServicioAnuncios
     {
         return PuedeMostrarAutomaticoConDatos(ConfigEnUso, MostrandoAnuncio, Proveedor.Listo(LugarAnuncio.Automatico),
                                               Progreso.PartidasTerminadas, Progreso.PartidaDelUltimoAutomatico,
-                                              Progreso.VideosVistosDeLaPartida);
+                                              Progreso.VideosVistosDeLaPartida, SegundosDesdeElUltimoAutomatico);
     }
 
     // Muestra el automatico si toca. Devuelve si lo lanzo: entonces 'alTerminar' llega al
@@ -384,7 +427,11 @@ public static class ServicioAnuncios
         if (automatico)
         {
             if (resultado == ResultadoAnuncio.Cerrado || resultado == ResultadoAnuncio.Recompensado)
+            {
                 Progreso.RegistrarAutomatico();
+                ultimoAutomaticoEn = SegundosDeSesion;
+                sesionDelUltimoAutomatico = Sesion;
+            }
             if (premio != null) premio();
             return;
         }

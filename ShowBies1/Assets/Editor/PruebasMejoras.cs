@@ -4554,7 +4554,7 @@ public static class PruebasMejoras
             // El que lo miro y lo cerro no se come el automatico al salir (revision del 9/10).
             inf.Igual("circuito: cerrarlo cuenta como video visto en la partida", 1, Progreso.VideosVistosDeLaPartida);
             inf.Verdadero("circuito: y en esa partida no sale el automatico",
-                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 9, 0, Progreso.VideosVistosDeLaPartida));
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 9, 0, Progreso.VideosVistosDeLaPartida, 9999f));
             inf.Igual("circuito: cerrarlo no premia", 0, premios);
             inf.Igual("circuito: cerrarlo avisa que no hubo premio", 1, cierres);
             inf.Igual("circuito: y no gasta el tope del dia", 0, Progreso.UsosDeHoy(lugar));
@@ -4966,22 +4966,37 @@ public static class PruebasMejoras
             config.partidasAntesDelPrimerAutomatico = 3;
             config.partidasEntreAutomaticos = 3;
             inf.Verdadero("automatico: no en las primeras partidas",
-                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 2, 0, 0));
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 2, 0, 0, 9999f));
             inf.Verdadero("automatico: desde la tercera, si",
-                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 3, 0, 0));
+                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 3, 0, 0, 9999f));
             inf.Verdadero("automatico: no si en esa partida se miro un video con premio",
-                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 3, 0, 1));
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 3, 0, 1, 9999f));
             inf.Verdadero("automatico: despues de uno, no hasta las 3 partidas siguientes",
-                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 5, 3, 0));
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 5, 3, 0, 9999f));
             inf.Verdadero("automatico: a las 3 partidas, otro",
-                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 6, 3, 0));
+                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 6, 3, 0, 9999f));
+            // Y con unos minutos de sesion desde el ultimo, o desde que se abrio la app (de Argon, 21/10).
+            config.segundosEntreAutomaticos = 240f;
+            inf.Verdadero("automatico: a las 3 partidas pero antes de los 240 s, no",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 6, 3, 0, 239f));
+            inf.Verdadero("automatico: a los 240 s, si",
+                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 6, 3, 0, 240f));
+            inf.Verdadero("automatico: el primero tampoco recien abierta la app",
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 3, 0, 0, 30f));
+            config.segundosEntreAutomaticos = 0f;
+            inf.Verdadero("automatico: con 0 s, sin espera",
+                          ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 6, 3, 0, 0f));
+            config.segundosEntreAutomaticos = 240f;
+            var configDelAsset = Resources.Load<ConfigAnuncios>("ConfigAnuncios");
+            inf.Cerca("automatico: el asset espera 240 s", 240.0,
+                      configDelAsset != null ? configDelAsset.segundosEntreAutomaticos : -1.0, 1e-6);
             inf.Verdadero("automatico: no sin anuncio cargado",
-                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, false, 9, 0, 0));
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, false, 9, 0, 0, 9999f));
             inf.Verdadero("automatico: no con otro anuncio en pantalla",
-                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, true, true, 9, 0, 0));
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, true, true, 9, 0, 0, 9999f));
             config.automaticos = false;
             inf.Verdadero("automatico: apagados, nunca",
-                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 9, 0, 0));
+                          !ServicioAnuncios.PuedeMostrarAutomaticoConDatos(config, false, true, 9, 0, 0, 9999f));
             inf.Igual("automatico: apagados, el puente no lo carga", ConfigAnuncios.LugaresConVideo.Length, config.LugaresDeAdMob().Length);
             config.automaticos = true;
             inf.Verdadero("automatico: prendidos, el puente lo carga",
@@ -4990,6 +5005,10 @@ public static class PruebasMejoras
             // --- los automaticos: el circuito, al salir de la derrota --------------------------
             EmpezarConMonedas(0);
             ServicioAnuncios.UsarParaPruebas(admob2, config);
+            // Diez minutos desde que se abrio la app.
+            ServicioAnuncios.UsarRelojParaPruebas(600f, 0);
+            inf.Cerca("automatico: sin ninguno visto, cuenta desde que se abrio la app", 600.0,
+                      ServicioAnuncios.SegundosDesdeElUltimoAutomatico, 1e-6);
             for (int i = 0; i < 3; i++) Progreso.TerminarPartida(60f);
             Progreso.EmpezarPartida();
             int siguio = 0;
@@ -5009,6 +5028,7 @@ public static class PruebasMejoras
             ServicioAnuncios.AtenderAvisos();
             inf.Igual("automatico: al cerrarse se sigue, una vez", 1, siguio);
             inf.Igual("automatico: cuenta para espaciar el siguiente", Progreso.PartidasTerminadas, Progreso.PartidaDelUltimoAutomatico);
+            inf.Cerca("automatico: y el reloj vuelve a cero", 0.0, ServicioAnuncios.SegundosDesdeElUltimoAutomatico, 1e-6);
             inf.Igual("automatico: no gasta los topes de los videos", 0, Progreso.UsosDeHoyEnTotal());
             inf.Verdadero("automatico: queda guardado en el progreso",
                           (LeerSiExiste(Path.Combine(CarpetaProgreso, "progreso.json")) ?? "")
@@ -5017,13 +5037,24 @@ public static class PruebasMejoras
             ServicioAnuncios.AtenderAvisos();
             inf.Verdadero("automatico: el siguiente espera sus partidas", !ServicioAnuncios.PuedeMostrarAutomatico());
             for (int i = 0; i < 3; i++) Progreso.TerminarPartida(60f);
-            inf.Verdadero("automatico: a las 3 partidas vuelve a tocar", ServicioAnuncios.PuedeMostrarAutomatico());
+            ServicioAnuncios.UsarRelojParaPruebas(839f, 0);
+            inf.Verdadero("automatico: a las 3 partidas pero a los 239 s, todavia no", !ServicioAnuncios.PuedeMostrarAutomatico());
+            ServicioAnuncios.UsarRelojParaPruebas(840f, 0);
+            inf.Verdadero("automatico: a las 3 partidas y los 240 s vuelve a tocar", ServicioAnuncios.PuedeMostrarAutomatico());
             ServicioAnuncios.MostrarAutomatico(() => siguio++);
             int marcaAntes = Progreso.PartidaDelUltimoAutomatico;
             puente2.avisar(LugarAnuncio.Automatico, "terminado", "falla");
             ServicioAnuncios.AtenderAvisos();
             inf.Igual("automatico: si falla, igual se sigue", 2, siguio);
             inf.Igual("automatico: y no cuenta", marcaAntes, Progreso.PartidaDelUltimoAutomatico);
+            inf.Cerca("automatico: ni pone el reloj en cero", 240.0, ServicioAnuncios.SegundosDesdeElUltimoAutomatico, 1e-6);
+            // Veinte minutos en segundo plano cortan la sesion: cuenta desde que volvio, como al abrir la app.
+            ServicioAnuncios.UsarRelojParaPruebas(100f, 1);
+            inf.Cerca("automatico: en una sesion nueva cuenta desde que empezo", 100.0,
+                      ServicioAnuncios.SegundosDesdeElUltimoAutomatico, 1e-6);
+            ServicioAnuncios.UsarRelojParaPruebas(900f, 1);
+            inf.Cerca("automatico: aunque pase lo que marcaba la sesion vieja", 900.0,
+                      ServicioAnuncios.SegundosDesdeElUltimoAutomatico, 1e-6);
             inf.Igual("automatico: ni se premia como un video", 0, Progreso.FallasPremiadasHoy);
 
             // --- que proveedor sale -----------------------------------------------------------

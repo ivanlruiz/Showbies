@@ -61,7 +61,9 @@ public class DiagnosticoAnuncios : MonoBehaviour
                 sb.Append(LugarAnuncio.Automatico).Append(": ").Append(admob.EstadoDe(LugarAnuncio.Automatico))
                   .Append(" | partidas desde el ultimo ").Append(Progreso.PartidasTerminadas - Progreso.PartidaDelUltimoAutomatico)
                   .Append('/').Append(cfg.partidasEntreAutomaticos)
-                  .Append(" (el primero desde la ").Append(cfg.partidasAntesDelPrimerAutomatico).Append(")\n");
+                  .Append(" (el primero desde la ").Append(cfg.partidasAntesDelPrimerAutomatico).Append(")")
+                  .Append(" | segundos desde el ultimo ").Append(Mathf.FloorToInt(ServicioAnuncios.SegundosDesdeElUltimoAutomatico))
+                  .Append('/').Append(Mathf.RoundToInt(cfg.segundosEntreAutomaticos)).Append('\n');
             sb.Append("avisos de Java: ").Append(admob.AvisosRecibidos)
               .Append(" | ultimo: ").Append(admob.UltimoAviso).Append('\n');
             if (!string.IsNullOrEmpty(admob.UltimoError)) sb.Append("error: ").Append(admob.UltimoError).Append('\n');

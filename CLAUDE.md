@@ -2176,6 +2176,12 @@ que comparte el mecanismo de los videos: el pedido numerado, la cola y los vigí
 - **Nunca en las primeras partidas**: desde la 3.ª terminada (`partidasAntesDelPrimerAutomatico`).
 - **Como mucho uno cada 3 partidas** (`partidasEntreAutomaticos`), contando desde la partida en que salió el último
   (`Progreso.PartidaDelUltimoAutomatico`, en el JSON sin cambiar la versión).
+- **Y con 240 s de sesión desde el último, o desde que se abrió la app** (`segundosEntreAutomaticos`, desde el 22/10,
+  de Argon: tres partidas cortas seguidas traían uno cada minuto). Se cuenta con `VigiaAplicacion.SegundosDeSesion`,
+  que solo corre con la app delante; si la sesión se corta (20 minutos en segundo plano, `VigiaAplicacion.Sesion`
+  sube) cuenta desde que se volvió, como al abrirla (`ServicioAnuncios.SegundosDesdeElUltimoAutomatico`). Lo anota
+  solo uno que se vio, como la partida. No se guarda: cerrar la app y volver a abrirla también lo reinicia. La caja
+  del diagnóstico de la APK de prueba muestra los segundos que lleva.
 - **Nunca si en esa partida se miró un video con premio**: el que ya miró uno no se come otro, aunque lo haya cerrado
   antes de terminar (`Progreso.VideosVistosDeLaPartida`, que cuenta los premiados y los cerrados; hasta el 9/10 solo
   contaban los premiados).

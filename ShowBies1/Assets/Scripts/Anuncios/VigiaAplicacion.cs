@@ -21,6 +21,9 @@ public class VigiaAplicacion : MonoBehaviour
     // Time.realtimeSinceStartup, que en Android sigue corriendo con la app en recientes:
     // diez minutos de juego repartidos en una tarde daban "llevas mas de una hora".
     public static float SegundosDeSesion { get; private set; }
+    // Cuantas veces volvio a cero la sesion desde que se abrio la app: el reloj de los automaticos
+    // (ServicioAnuncios) sabe asi que lo que anoto es de una sesion vieja.
+    public static int Sesion { get; private set; }
     private const float AusenciaQueCortaLaSesion = 20f * 60f;
     private static float fueraDesde = -1f;
 
@@ -29,6 +32,7 @@ public class VigiaAplicacion : MonoBehaviour
     {
         instancia = null;
         SegundosDeSesion = 0f;
+        Sesion = 0;
         fueraDesde = -1f;
     }
 
@@ -94,7 +98,11 @@ public class VigiaAplicacion : MonoBehaviour
             if (fueraDesde < 0f) fueraDesde = Time.realtimeSinceStartup;
             return;
         }
-        if (fueraDesde >= 0f && Time.realtimeSinceStartup - fueraDesde >= AusenciaQueCortaLaSesion) SegundosDeSesion = 0f;
+        if (fueraDesde >= 0f && Time.realtimeSinceStartup - fueraDesde >= AusenciaQueCortaLaSesion)
+        {
+            SegundosDeSesion = 0f;
+            Sesion++;
+        }
         fueraDesde = -1f;
     }
 
