@@ -88,6 +88,13 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       se suben al jugador, las balas hacia la mira y el PODER más lento. Ivan probó la APK de prueba 15 ("anda bien") y
       arrastró el AAB; un segundo arrastre salió con "El código de versión 15 ya se ha usado" y se agregó desde la
       biblioteca. La advertencia de siempre (sin desofuscación); ningún dispositivo deja de ser compatible.
+- [x] **Versión 15 (1.6.1) publicada el 20/10.**
+- [x] **Versión 16 (1.7.0)** enviada a revisión el 23/10/2026 (producción, lanzamiento completo al 100 %, todos los países,
+      publicación gestionada apagada), con las notas de `notas_1.7.0.md`: los capítulos, los cinco zombis con habilidad, el
+      bate, las balas que ya no atraviesan y menos anuncios seguidos. Ivan arrastró el AAB (47 MB: la herramienta de Chrome
+      no sube más de 10). La advertencia de siempre (sin desofuscación); ningún dispositivo deja de ser compatible; 35,2 MB de
+      descarga. **Chrome entra primero a una cuenta de desarrollador vieja**, cerrada por inactividad en noviembre de 2024:
+      la de ShowBies es la `u/2` (`play.google.com/console/u/2/...`).
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
