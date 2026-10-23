@@ -43,6 +43,24 @@ public static class Capitulos
         return Mathf.Clamp(capitulo, 1, Desbloqueados(mejorOleada));
     }
 
+    // El capitulo que cierra esa oleada con ¡CAPITULO N SUPERADO!: la 10 y la 20, las que destraban uno para empezar.
+    // Las demas, 0 (de Argon: la 30 y las siguientes siguen con la oleada superada de siempre).
+    public static int QueCierra(int oleada)
+    {
+        if (oleada <= 0 || oleada % OleadasPorCapitulo != 0) return 0;
+        int capitulo = oleada / OleadasPorCapitulo;
+        return capitulo < Elegibles ? capitulo : 0;
+    }
+
+    // Lo que paga el punto de control la primera vez en la vida: 250 en la 10 (destraba el 2) y 500 en la 20.
+    public static int PremioDelPuntoDeControl(int capituloDestrabado)
+    {
+        return capituloDestrabado == 2 ? 250 : capituloDestrabado == 3 ? 500 : 0;
+    }
+
+    // Las siguientes veces, cruzar de capitulo cura esta parte de la vida maxima.
+    public const float CuraAlCruzar = 0.5f;
+
     // Si completar esa oleada destraba un capitulo: devuelve cual, o 0.
     public static int QueDestraba(int mejorAntes, int oleadaCompletada)
     {

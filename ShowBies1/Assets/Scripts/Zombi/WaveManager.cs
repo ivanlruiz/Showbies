@@ -254,6 +254,11 @@ public class WaveManager : MonoBehaviour
     private int oleadaMostrada = -1;
     private int totalMostrado = -1;
     private int bonoDeLaOleadaAnterior;
+    // Si la oleada anterior cerro un capitulo (¡CAPITULO N SUPERADO!, Capitulos.QueCierra), y lo que pago su punto de
+    // control la primera vez.
+    private int capituloSuperado;
+    private int premioDelPuntoDeControl;
+    public const float DuracionCapituloSuperado = 2f;
 
     // La partida retomada (Progreso.HayOleadaParaRetomar): su primera oleada no es nueva, y si ya habia recibido un
     // golpe antes de salir no puede salir perfecta.
@@ -417,6 +422,7 @@ public class WaveManager : MonoBehaviour
             int destraba = Capitulos.QueDestraba(Progreso.MejorOleada, OleadaActual);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
             if (destraba > 0) Progreso.CapituloParaVolver = destraba;
+            CerrarCapitulo(destraba);
             if (perfecta) Progreso.RegistrarOleadaIntacta(OleadaActual);
             // Hasta la oleada 5 no hay misiones, ni desafio hasta el nivel 5 (Desbloqueo). Completar
             // la 4 destapa las misiones, y como la marca ya se anoto, esta oleada ya cuenta.
@@ -433,6 +439,24 @@ public class WaveManager : MonoBehaviour
     {
         ActualizarHud();
         AnotarElPrimerGolpe();
+    }
+
+    // ¡CAPITULO N SUPERADO! (de Argon, 21/10), al terminar la 10 o la 20: la primera vez en la vida destraba el punto de
+    // control para empezar ahi y paga; las siguientes, cura la mitad de la vida maxima al cruzar. Antes del guardado de
+    // la oleada siguiente, que se lleva las monedas y la vida.
+    private void CerrarCapitulo(int destraba)
+    {
+        capituloSuperado = Capitulos.QueCierra(OleadaActual);
+        premioDelPuntoDeControl = 0;
+        if (capituloSuperado <= 0) return;
+        if (destraba > 0)
+        {
+            premioDelPuntoDeControl = Capitulos.PremioDelPuntoDeControl(destraba);
+            Progreso.CobrarPremio("punto_de_control", premioDelPuntoDeControl, false, false);
+            return;
+        }
+        var jugador = PlayerHealth.instance;
+        if (jugador != null) jugador.CurarAlCruzarDeCapitulo(Capitulos.CuraAlCruzar);
     }
 
     // El primer golpe de la oleada queda en el progreso: si se sale y se retoma, ya no sale perfecta.
@@ -489,11 +513,16 @@ public class WaveManager : MonoBehaviour
         // retomada, no hay).
         if (cartelOleada != null && bonoDeLaOleadaAnterior > 0)
         {
-            cartelOleada.text = Textos.Formato("cartel_oleada_superada", OleadaActual - 1) + TextoDelBono(bonoDeLaOleadaAnterior, UltimaFuePerfecta);
+            bool capitulo = capituloSuperado > 0;
+            cartelOleada.text = (capitulo ? Textos.Formato("cartel_capitulo_superado", capituloSuperado)
+                                          : Textos.Formato("cartel_oleada_superada", OleadaActual - 1))
+                                + TextoDelBono(bonoDeLaOleadaAnterior, UltimaFuePerfecta)
+                                + (premioDelPuntoDeControl > 0 ? Textos.Formato("cartel_punto_de_control", premioDelPuntoDeControl) : "");
             PrenderElCartel();
             VolarMonedasDelBono(OleadaActual - 1, UltimaFuePerfecta);
             if (UltimaFuePerfecta) Efectos.OleadaPerfecta();
-            float primero = Mathf.Min(DuracionSuperada, resto * 0.6f);
+            if (capitulo) Efectos.CapituloSuperado(premioDelPuntoDeControl > 0);
+            float primero = Mathf.Min(capitulo ? DuracionCapituloSuperado : DuracionSuperada, resto * (capitulo ? 0.7f : 0.6f));
             yield return new WaitForSeconds(primero);
             resto -= primero;
         }

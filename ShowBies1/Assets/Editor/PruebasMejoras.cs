@@ -4041,6 +4041,13 @@ public static class PruebasMejoras
         inf.Igual("capitulos: completar la 20 destraba el 3", 3, Capitulos.QueDestraba(19, 20));
         inf.Igual("capitulos: completar la 26 no destraba nada", 0, Capitulos.QueDestraba(25, 26));
         inf.Igual("capitulos: completar la 6 tampoco", 0, Capitulos.QueDestraba(5, 6));
+        inf.Igual("capitulos: la 10 cierra el capitulo 1", 1, Capitulos.QueCierra(10));
+        inf.Igual("capitulos: la 20 cierra el 2", 2, Capitulos.QueCierra(20));
+        inf.Igual("capitulos: la 30 no cierra ninguno (la oleada superada de siempre)", 0, Capitulos.QueCierra(30));
+        inf.Igual("capitulos: la 9 tampoco", 0, Capitulos.QueCierra(9));
+        inf.Igual("capitulos: el punto de control del 2 paga 250", 250, Capitulos.PremioDelPuntoDeControl(2));
+        inf.Igual("capitulos: el del 3, 500", 500, Capitulos.PremioDelPuntoDeControl(3));
+        inf.Igual("capitulos: sin destrabar, nada", 0, Capitulos.PremioDelPuntoDeControl(0));
 
         // El capitulo para volver, con lo que se puede elegir ahora.
         EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"mejorOleada\":25}", null);

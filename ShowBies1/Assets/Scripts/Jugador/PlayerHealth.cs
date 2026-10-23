@@ -192,6 +192,16 @@ public class PlayerHealth : MonoBehaviour
         if (curo > 0) Efectos.Caja(transform.position + Vector3.up, Textos.Formato("powerup_vida", curo), ColorDelVampiro);
     }
 
+    // Cruzar de capitulo por segunda vez (Capitulos.CuraAlCruzar): una parte de la vida maxima, con su cartel verde.
+    public void CurarAlCruzarDeCapitulo(float fraccion)
+    {
+        if (estaMuerto || !(fraccion > 0f)) return;
+        int antes = health;
+        health = Mathf.Min(maxHealth, health + Mathf.Max(1, Mathf.RoundToInt(maxHealth * fraccion)));
+        int curo = health - antes;
+        if (curo > 0) Efectos.Caja(transform.position + Vector3.up, Textos.Formato("powerup_vida", curo), ColorDeVida(1f));
+    }
+
     // La carta de reserva (Curacion): la vida entera.
     public void CurarEntero()
     {

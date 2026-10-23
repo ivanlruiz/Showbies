@@ -699,14 +699,17 @@ public static class Progreso
     // matando zombis y por el bono de oleada (Moneda.cs y WaveManager.cs); esto es
     // para los premios: el x2 de un video y lo que venga despues. Se separan para
     // que un premio nunca cuente como monedas ganadas jugando.
-    public static void CobrarPremio(string motivo, double cantidad, bool mostrarEnLaPartida)
+    // 'guardarYa' en falso solo para lo que se cobra en plena partida justo antes de un guardado (el punto de control,
+    // que escribe el guardado del principio de la oleada siguiente, en otro hilo): el fsync en el hilo del juego es un
+    // tiron en el teléfono.
+    public static void CobrarPremio(string motivo, double cantidad, bool mostrarEnLaPartida, bool guardarYa = true)
     {
         if (!(cantidad > 0) || double.IsInfinity(cantidad)) return;
         Cargar();
         datos.monedas += cantidad;
         if (mostrarEnLaPartida) MonedasDeLaPartida += cantidad;
         Revision++;
-        Guardar();
+        if (guardarYa) Guardar();
         Debug.Log("Progreso: premio \"" + motivo + "\" de " + cantidad.ToString("0.##") + " monedas");
     }
 
@@ -921,6 +924,15 @@ public static class Progreso
     {
         Cargar();
         datos.monedas = double.IsNaN(monedas) || double.IsInfinity(monedas) ? 0 : Math.Max(0, monedas);
+        Revision++;
+        Guardar();
+    }
+
+    // La mejor oleada, para los bancos que prueban lo que pasa la primera vez que se completa una (los capitulos).
+    public static void DepurarFijarMejorOleada(int oleada)
+    {
+        Cargar();
+        datos.mejorOleada = Math.Max(0, oleada);
         Revision++;
         Guardar();
     }

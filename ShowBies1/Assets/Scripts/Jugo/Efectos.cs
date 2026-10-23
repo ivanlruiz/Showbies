@@ -430,6 +430,23 @@ public class Efectos : MonoBehaviour
         Sonidos.Tocar(e.NotaDeAviso(), e.volumenMonedaDelBono, Sonidos.PitchDe(Mathf.Min(semitonos, 31f)));
     }
 
+    // ¡CAPITULO N SUPERADO! (WaveManager): el festejo doble, chispas doradas alrededor del jugador y un temblor; con el
+    // punto de control recien destrabado, ademas las campanitas de la oleada perfecta. Despues del arpegio de la oleada
+    // superada, que sono al morir el jefe.
+    public static void CapituloSuperado(bool puntoDeControl)
+    {
+        var e = instance;
+        if (e == null || MenuPausa.JuegoCongelado) return;
+        if (PlayerHealth.instance != null)
+            e.Emitir(PlayerHealth.instance.transform.position + Vector3.up, e.chispasPorMuerteGrande * 3, e.colorPerfecta);
+        CamaraJugador.Temblar(e.temblorOleadaSuperada);
+        Festejo();
+        if (!puntoDeControl) return;
+        AudioClip nota = e.NotaDeAviso();
+        for (int i = 0; i < ArpegioPerfecta.Length; i++)
+            Sonidos.Programar(nota, 0.8 + 0.05 * i, e.volumenOleadaSuperada * (i < 3 ? 1f : 0.7f), Sonidos.PitchDe(ArpegioPerfecta[i] + 12f));
+    }
+
     // Un festejo: el arpegio doble, como al abrir el cofre del dia. Lo usa el aviso de
     // NUEVO RECORD (AvisoDeMisiones).
     public static void Festejo()

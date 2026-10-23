@@ -908,9 +908,19 @@ consultando `EnemyController.ZombisVivos`:
   veces). El capítulo de la partida queda en el progreso (`Progreso.CapituloParaVolver`, sin subir la versión), y
   completar la 10 o la 20 por primera vez lo pasa al que destrabó (`Capitulos.QueDestraba`): a ese vuelven **OTRA VEZ**
   de la derrota (que dice "OTRA VEZ / DESDE LA OLEADA 11"), **REINICIAR** de la pausa (`OlvidarPartidaSiEsOleadas`) y
-  el **¡A JUGAR!** de la tienda sin partida para retomar. Lo que falta (de Argon, en `PLAN.md`): el selector, las
-  cartas de arranque ("tiradas dobles") y ¡CAPÍTULO SUPERADO!. Lo prueba **ShowBies > Pruebas > Empezar en un
-  capitulo (play)** (ver Pruebas y medición).
+  el **¡A JUGAR!** de la tienda sin partida para retomar. Lo que falta (de Argon, en `PLAN.md`): el selector y las
+  cartas de arranque ("tiradas dobles"). Lo prueba **ShowBies > Pruebas > Empezar en un capitulo (play)** (ver Pruebas
+  y medición).
+
+  **Terminar la 10 o la 20 es ¡CAPÍTULO N SUPERADO!** (de Argon, 21/10; `Capitulos.QueCierra`): el cartel de la oleada
+  superada dice eso en lugar de "¡OLEADA 10 SUPERADA!", con su bono de siempre, dura 2 s en vez de 1,4 (el descanso
+  sigue en 3) y suena el festejo doble con chispas doradas (`Efectos.CapituloSuperado`). **La primera vez en la vida**
+  (la que destraba el capítulo para empezar, `QueDestraba`) suma, en dorado, "¡PUNTO DE CONTROL DESBLOQUEADO! / +250
+  MONEDAS" (+500 en la 20, `PremioDelPuntoDeControl`, por `CobrarPremio` sin guardar en el acto: lo escribe el guardado
+  de la oleada siguiente, en otro hilo) y las campanitas; **las siguientes, cura la mitad de la vida máxima**
+  (`PlayerHealth.CurarAlCruzarDeCapitulo`, con su cartel verde). Las dos cosas pasan al terminar la oleada, antes del
+  guardado de la siguiente, así una retoma se las lleva. La 30 y las siguientes siguen con la oleada superada de
+  siempre.
 
   La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
   `OleadaActual` y los multiplicadores de la oleada actual.
@@ -3360,7 +3370,10 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   (no las de cuando se salió), hereda el golpe y ya no sale perfecta ni sube INTOCABLE; la 7 se retoma una vez, y
   después de la segunda salida el botón OLEADAS ya no dice que se sigue y entrar arranca de la 1, sin puntos ni cartas.
   Escribe `Builds/prueba_retomar.txt`.
-- **ShowBies > Pruebas > Empezar en un capitulo (play)** (`PruebaCapitulos`, del 22/10): con la 20 completada y el
+- **ShowBies > Pruebas > Empezar en un capitulo (play)** (`PruebaCapitulos`, del 22/10): primero, con la 9 como mejor
+  oleada, una partida retomada en la 10 (el jefe y los demás mueren apenas salen) cierra con ¡CAPÍTULO 1 SUPERADO!, el
+  punto de control y +250 monedas, deja el capítulo 2 para volver y no cura (foto en `Builds/capitulo_superado.png`);
+  otra vez en la 10, sin punto de control y curando la mitad de la vida. Después, con la 20 completada y el
   capítulo 2 pedido, WaveMode arranca en la 11 como una oleada nueva, con el cartel de la 11 y el del cementerio, sin
   puntos, con la vida llena y sin tocar las monedas, y el capítulo queda para volver; la derrota dice "DESDE LA OLEADA
   11" y OTRA VEZ, REINICIAR y la partida que se pierde por salir dos veces arrancan en la 11. Escribe

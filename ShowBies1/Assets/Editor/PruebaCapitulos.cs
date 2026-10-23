@@ -7,6 +7,10 @@ using UnityEngine.SceneManagement;
 
 // Banco de empezar las oleadas desde un capitulo (1.7.0, de Argon, 21/10), en play, con los caminos de verdad:
 //
+//  0. ¡CAPITULO 1 SUPERADO!: con la 9 como mejor oleada, una partida retomada en la 10 (el jefe y los demas, muertos
+//     apenas salen): al terminarla, el cartel del capitulo con el punto de control y +250 monedas, el capitulo 2 queda
+//     para volver y no cura. Otra vez en la 10, ya con la 10 completada: el cartel sin el punto de control, y cura la
+//     mitad de la vida maxima.
 //  1. Con la 20 completada, WaveMode cargada con el capitulo 2 pedido (lo que hacen el selector y OTRA VEZ) arranca en la
 //     11: una oleada nueva (sin retomas, se puede retomar), con el cartel de la 11 y no el de una superada, el cartel del
 //     capitulo del cementerio, sin puntos, con la vida llena y sin tocar las monedas. El capitulo queda para volver.
@@ -29,10 +33,17 @@ public static class PruebaCapitulos
     const int Capitulo = 2;
     const int Inicial = 11;
     const double TopePorPaso = 25.0;
-    const double TopeTotal = 150.0;
+    const double TopeTotal = 220.0;
+    const int VidaDejada = 30;
 
     enum Paso
     {
+        DiezPrimera,        // retomada en la 10, con la 9 como mejor oleada
+        TerminarDiezPrimera,
+        FotoDelCapitulo,    // el cartel, cuando termino de entrar
+        SalirDeLaDiez,
+        DiezSegunda,        // otra vez en la 10, con la 10 completada
+        TerminarDiezSegunda,
         EnLaUno,            // la partida del editor, en la 1: pide el capitulo 2 y recarga
         EnLaOnce,           // lo que hay al empezar en la 11, y muere
         Derrota,            // el texto de OTRA VEZ, y tocarlo
@@ -54,6 +65,9 @@ public static class PruebaCapitulos
     static double vistasDesde;
 
     // Lo medido.
+    static int oleadaDiez1 = -1, oleadaDiez2 = -1, volverDiez1 = -1, vidaDiez1 = -1, vidaDiez2 = -1, vidaMaxDiez = -1;
+    static string cartelDiez1 = "", cartelDiez2 = "";
+    static double monedasDiez1Antes = -1, monedasDiez1 = -1;
     static double monedasAntes = -1;
     static int oleada1 = -1, oleada11 = -1, retomas11 = -1, puntos11 = -1, vida11 = -1, vidaMax11 = -1, volver11 = -1;
     static bool hay11, cartelDeLaOleada, cartelDelCapitulo;
@@ -90,9 +104,10 @@ public static class PruebaCapitulos
         PlayerSettings.runInBackground = true;
         PlayerPrefs.SetInt("AutoApuntar", 0);
         PlayerPrefs.SetInt("UltimoModo", TiendaMejoras.EscenaOleadas);
-        // Sin partida guardada y con los tres capitulos destrabados.
+        // Una partida retomada en la 10, con la 9 como mejor oleada (la 10 todavia no se completo nunca).
         Progreso.OlvidarOleadaEnCurso();
-        Progreso.RegistrarOleadaCompletada(20);
+        Progreso.DepurarFijarMejorOleada(9);
+        Progreso.GuardarOleadaEnCurso(10, 0);
         Progreso.CapituloParaVolver = 0;
         Progreso.Guardar();
         EditorSceneManager.OpenScene(Escena);
@@ -115,7 +130,7 @@ public static class PruebaCapitulos
             terminado = false;
             oleadasVistas = null;
             anterior = null;
-            Pasar(Paso.EnLaUno, ahora);
+            Pasar(Paso.DiezPrimera, ahora);
             return;
         }
         if (ahora - inicio > TopeTotal) { Terminar("se paso del tope total de " + TopeTotal + " s, en el paso " + paso); return; }
@@ -153,6 +168,86 @@ public static class PruebaCapitulos
         var vida = PlayerHealth.instance;
         switch (paso)
         {
+            case Paso.DiezPrimera:
+            {
+                var wm = OleadasListas(ahora);
+                if (wm == null) return;
+                oleadaDiez1 = wm.OleadaActual;
+                monedasDiez1Antes = Progreso.Monedas;
+                vida.health = VidaDejada;
+                Pasar(Paso.TerminarDiezPrimera, ahora);
+                return;
+            }
+
+            case Paso.TerminarDiezPrimera:
+            {
+                var wm = Object.FindAnyObjectByType<WaveManager>();
+                if (wm == null || vida == null) return;
+                if (wm.OleadaActual < 11)
+                {
+                    MatarATodos(vida);
+                    return;
+                }
+                cartelDiez1 = wm.cartelOleada != null ? wm.cartelOleada.text : "";
+                monedasDiez1 = Progreso.Monedas;
+                volverDiez1 = Progreso.CapituloParaVolver;
+                vidaDiez1 = vida.health;
+                Pasar(Paso.FotoDelCapitulo, ahora);
+                return;
+            }
+
+            case Paso.FotoDelCapitulo:
+            {
+                if (Espero(ahora, 0.7)) return;
+                string ruta = Path.GetFullPath("../Builds/capitulo_superado.png");
+                ScreenCapture.CaptureScreenshot(ruta);
+                Pasar(Paso.SalirDeLaDiez, ahora);
+                return;
+            }
+
+            case Paso.SalirDeLaDiez:
+            {
+                // La captura se escribe al final del cuadro.
+                if (Espero(ahora, 0.3)) return;
+                // Otra vez en la 10, ya con la 10 completada.
+                Progreso.GuardarOleadaEnCurso(10, 0);
+                anterior = Object.FindAnyObjectByType<WaveManager>();
+                SceneManager.LoadScene(TiendaMejoras.EscenaOleadas);
+                Pasar(Paso.DiezSegunda, ahora);
+                return;
+            }
+
+            case Paso.DiezSegunda:
+            {
+                var wm = OleadasListas(ahora);
+                if (wm == null) return;
+                oleadaDiez2 = wm.OleadaActual;
+                vidaMaxDiez = vida.maxHealth;
+                vida.health = VidaDejada;
+                Pasar(Paso.TerminarDiezSegunda, ahora);
+                return;
+            }
+
+            case Paso.TerminarDiezSegunda:
+            {
+                var wm = Object.FindAnyObjectByType<WaveManager>();
+                if (wm == null || vida == null) return;
+                if (wm.OleadaActual < 11)
+                {
+                    MatarATodos(vida);
+                    return;
+                }
+                cartelDiez2 = wm.cartelOleada != null ? wm.cartelOleada.text : "";
+                vidaDiez2 = vida.health;
+                // Lo de siempre: sin partida guardada y con los tres capitulos destrabados.
+                Progreso.OlvidarOleadaEnCurso();
+                Progreso.DepurarFijarMejorOleada(20);
+                anterior = wm;
+                SceneManager.LoadScene(TiendaMejoras.EscenaOleadas);
+                Pasar(Paso.EnLaUno, ahora);
+                return;
+            }
+
             case Paso.EnLaUno:
             {
                 var wm = OleadasListas(ahora);
@@ -258,6 +353,15 @@ public static class PruebaCapitulos
         }
     }
 
+    // Los zombis, apenas salen: los comunes se despejan (cuentan como muertos) y el jefe, que no se despeja, muere.
+    static void MatarATodos(PlayerHealth vida)
+    {
+        EnemyController.DespejarAlrededor(vida.transform.position, 500f);
+        var jefes = new System.Collections.Generic.List<EnemyController>(EnemyController.Jefes);
+        foreach (var jefe in jefes)
+            if (jefe != null && jefe.Vivo) jefe.DanoZombi(1e9f);
+    }
+
     // MENU PRINCIPAL de la pausa y, como OLEADAS sin selector, WaveMode otra vez (sin capitulo pedido).
     static void SalirAlMenuYVolver()
     {
@@ -291,6 +395,11 @@ public static class PruebaCapitulos
         inf.AppendLine("Prueba de empezar en un capitulo (WaveMode, con la 20 completada, capitulo " + Capitulo + ")");
         inf.AppendLine();
         if (error != null) inf.AppendLine("ERROR: " + error);
+        inf.AppendLine("La 10 por primera vez: retomada en la " + oleadaDiez1 + ", cartel \"" + cartelDiez1.Replace("\n", " / ")
+                       + "\", monedas " + monedasDiez1Antes.ToString("0.##") + " -> " + monedasDiez1.ToString("0.##")
+                       + ", capitulo para volver " + volverDiez1 + ", vida " + VidaDejada + " -> " + vidaDiez1);
+        inf.AppendLine("La 10 otra vez: retomada en la " + oleadaDiez2 + ", cartel \"" + cartelDiez2.Replace("\n", " / ")
+                       + "\", vida " + VidaDejada + " -> " + vidaDiez2 + " de " + vidaMaxDiez);
         inf.AppendLine("Sin capitulo pedido: oleada " + oleada1);
         inf.AppendLine("Con el capitulo " + Capitulo + ": oleada " + oleada11 + ", retomas " + retomas11 + ", se puede retomar " + hay11
                        + ", puntos " + puntos11 + ", vida " + vida11 + "/" + vidaMax11 + ", capitulo para volver " + volver11
@@ -305,9 +414,16 @@ public static class PruebaCapitulos
         inf.AppendLine();
 
         string desde = Textos.Formato("derrota_desde_la_oleada", Inicial);
+        string superado = Textos.Formato("cartel_capitulo_superado", 1);
+        string puntoDeControl = Textos.Formato("cartel_punto_de_control", 250).Trim();
+        int curada = Mathf.Min(vidaMaxDiez, VidaDejada + Mathf.Max(1, Mathf.RoundToInt(vidaMaxDiez * Capitulos.CuraAlCruzar)));
         bool[] ok =
         {
             error == null && cuantasExcepciones == 0,
+            oleadaDiez1 == 10 && cartelDiez1.StartsWith(superado) && cartelDiez1.Contains(puntoDeControl),
+            monedasDiez1 - monedasDiez1Antes >= 250 - 1e-6 && volverDiez1 == 2 && vidaDiez1 == VidaDejada,
+            oleadaDiez2 == 10 && cartelDiez2.StartsWith(superado) && !cartelDiez2.Contains(puntoDeControl),
+            vidaDiez2 == curada && vidaDiez2 > VidaDejada,
             oleada1 == 1,
             oleada11 == Inicial && retomas11 == 0 && hay11,
             cartelDeLaOleada && cartelDelCapitulo,
@@ -322,6 +438,10 @@ public static class PruebaCapitulos
         string[] que =
         {
             "el banco llego hasta el final, sin errores ni excepciones",
+            "la 10 por primera vez cierra con ¡CAPITULO 1 SUPERADO! y el punto de control",
+            "paga 250 monedas, deja el capitulo 2 para volver y no cura",
+            "la 10 otra vez cierra con el capitulo superado, sin punto de control",
+            "y cura la mitad de la vida maxima",
             "sin capitulo pedido, las oleadas arrancan en la 1",
             "con el capitulo 2 pedido arrancan en la 11, como una oleada nueva",
             "con el cartel de la 11 (no el de una superada) y el del capitulo",

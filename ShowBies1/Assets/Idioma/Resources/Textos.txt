@@ -289,6 +289,8 @@ combo_50	UNSTOPPABLE!	¡IMPARABLE!
 combo_100	LEGENDARY!	¡LEGENDARIO!
 cartel_oleada	Wave {0}	Oleada {0}
 cartel_oleada_superada	Wave {0} cleared!	¡Oleada {0} superada!
+cartel_capitulo_superado	Chapter {0} cleared!	¡Capítulo {0} superado!
+cartel_punto_de_control	\n<size=40%><color=#FFE14D>CHECKPOINT UNLOCKED!\n+{0} coins</color></size>	\n<size=40%><color=#FFE14D>¡PUNTO DE CONTROL DESBLOQUEADO!\n+{0} monedas</color></size>
 cartel_bono	\n<size=45%>+{0} coins</size>	\n<size=45%>+{0} monedas</size>
 cartel_bono_perfecta	\n<size=45%><color=#FFE14D>PERFECT! +{0} coins</color></size>	\n<size=45%><color=#FFE14D>¡PERFECTA! +{0} monedas</color></size>
 tesoro_aparece	TREASURE ZOMBIE!	¡ZOMBI DEL TESORO!
