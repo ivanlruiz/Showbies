@@ -241,6 +241,13 @@ capitulo_titulo	CHAPTER {0}	CAPÍTULO {0}
 escenario_pradera	THE MEADOW	LA PRADERA
 escenario_cementerio	THE GRAVEYARD	EL CEMENTERIO
 escenario_ciudad	THE CITY	LA CIUDAD
+capitulos_titulo	SELECT CHAPTER	ELIGE EL CAPÍTULO
+capitulos_capitulo	CHAPTER {0}	CAPÍTULO {0}
+capitulos_sin_ventajas	NO HEAD START	SIN VENTAJAS
+capitulos_cartas_una_dorada	+{0} STARTING CARDS (1 GOLDEN)	+{0} CARTAS INICIALES (1 DORADA)
+capitulos_cartas_doradas	+{0} STARTING CARDS ({1} GOLDEN)	+{0} CARTAS INICIALES ({1} DORADAS)
+capitulos_bloqueado	COMPLETE WAVE {0}	COMPLETA LA OLEADA {0}
+capitulos_jugar	PLAY!	¡JUGAR!
 
 # --- Tienda
 tienda_titulo	UPGRADES	MEJORAS

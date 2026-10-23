@@ -39,8 +39,11 @@ public class MainMenu : MonoBehaviour
         Application.Quit();
     }
 
+    // OLEADAS: con una partida para retomar, la retoma; sin ella y con la 10 completada, abre el selector de capitulos
+    // (de Argon, 21/10); si no, a la 1.
     public void GameModes()
     {
+        if (SelectorDeCapitulos.AbrirSiHaceFalta()) return;
         SceneManager.LoadScene(3);
     }
 

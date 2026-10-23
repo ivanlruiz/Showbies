@@ -64,6 +64,13 @@ public class BotonAtrasMenu : MonoBehaviour
             return;
         }
 
+        // El selector de capitulos se instala solo en el menu (como la de Halloween): no esta cableado.
+        if (SelectorDeCapitulos.Abierto)
+        {
+            SelectorDeCapitulos.CerrarElAbierto();
+            return;
+        }
+
         if (logros != null && VentanaLogros.Abierta)
         {
             logros.Cerrar();

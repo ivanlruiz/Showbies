@@ -82,12 +82,14 @@ public class CartelDeCobros : MonoBehaviour
         {
             if (!CobrosSolos.Hay || t - cargadoEn < Espera) return;
             if (VentanaRecompensaDiaria.Abierta || VentanaRecompensaDiaria.Ocupada || ServicioAnuncios.ConsentimientoEnPantalla) return;
+            if (SelectorDeCapitulos.Abierto) return;
             Armar(CobrosSolos.Tomar());
             return;
         }
 
         float edad = t - desde;
-        if (cerrandoDesde < 0f && edad >= Duracion) cerrandoDesde = t;
+        // Se va solo a su tiempo, o si se abre el selector de capitulos, que queda debajo de su franja.
+        if (cerrandoDesde < 0f && (edad >= Duracion || SelectorDeCapitulos.Abierto)) cerrandoDesde = t;
         float entrada = CurvasUI.SalidaAtras(Mathf.Clamp01(edad / 0.4f));
         float salida = cerrandoDesde < 0f ? 0f : Mathf.Clamp01((t - cerrandoDesde) / 0.3f);
         cartel.localScale = Vector3.one * entrada * (1f - salida);

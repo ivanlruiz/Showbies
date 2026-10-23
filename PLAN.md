@@ -464,7 +464,14 @@ de la derrota, y contestó el 21/10:
 8. **El modo libre**, de paso: los especiales cada 5,5 s y el escupidor con tope 2 (hecho el 21/10, `a15f478`).
 
 **Hecho el 22/10**: empezar en un capítulo (`Capitulos`, ver CLAUDE.md), OTRA VEZ, REINICIAR y el ¡A JUGAR! de la tienda
-volviendo al capítulo, ¡CAPÍTULO SUPERADO! con el punto de control y las tiradas dobles. **Falta**: el selector.
+volviendo al capítulo, ¡CAPÍTULO SUPERADO! con el punto de control, las tiradas dobles y el selector, con lo que
+contestó Argon ese día (abajo). Falta probarlo en el teléfono.
+
+**Lo que contestó Argon el 22/10** (con lo hecho ese mismo día): INTOCABLE pide la 10, la 20 y la 30 sin golpes; la retoma
+solo se gasta si se sale después de un golpe en la oleada, y con la retoma gastada MENÚ PRINCIPAL y MEJORAS de la pausa
+preguntan antes ("¿SALIR?"); la ciudad en rosa; los retratos del caminante, el escupidor y el blindado; las tiradas
+dobles tal cual, con "+1 CARTA EXTRA AL AZAR" cuando la elegida no entra entera; y el ¡A JUGAR! de la tienda al capítulo
+de la última partida, o al más alto destrabado si no hubo ninguna.
 
 ## Orden propuesto
 
