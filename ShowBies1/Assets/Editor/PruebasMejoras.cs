@@ -3931,6 +3931,91 @@ public static class PruebasMejoras
         }
     }
 
+    // Salir al menu en las oleadas (superauditoria del 29/9, H04; Argon, 21/10): una sola retoma por oleada, la marca
+    // del golpe y la vida y las balas con que se empezo la oleada.
+    static void ProbarRetomar(Informe inf)
+    {
+        inf.Verdadero("retomar: la oleada 1 no se retoma", !Progreso.SePuedeRetomar(1, 0));
+        inf.Verdadero("retomar: la 2 sin retomar, si", Progreso.SePuedeRetomar(2, 0));
+        inf.Verdadero("retomar: una retomada, no", !Progreso.SePuedeRetomar(15, 1));
+        inf.Verdadero("retomar: sin oleada, no", !Progreso.SePuedeRetomar(0, 0));
+
+        // Un JSON de antes: la oleada a medias se retoma una vez, con la vida llena y las balas de siempre.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"oleadaEnCurso\":15,\"puntosEnCurso\":300}", null);
+        inf.Verdadero("retomar: un JSON de antes se retoma", Progreso.HayOleadaParaRetomar);
+        inf.Igual("retomar: un JSON de antes no tiene vida anotada", -1, Progreso.VidaEnCurso);
+        inf.Igual("retomar: ni vida maxima", -1, Progreso.VidaMaximaEnCurso);
+        inf.Igual("retomar: ni balas", -1, Progreso.BalasEnCurso);
+        inf.Igual("retomar: ni cargador", -1, Progreso.MaxBalasEnCurso);
+        inf.Verdadero("retomar: ni golpe", !Progreso.GolpeEnOleadaEnCurso);
+
+        // Una oleada nueva anota todo y se relee del disco.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"monedas\":1}", null);
+        Progreso.GuardarOleadaEnCurso(12, 500, true, 47, 100, 230, 1000);
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Verdadero("retomar: guardada, se retoma", Progreso.HayOleadaParaRetomar);
+        inf.Igual("retomar: la vida", 47, Progreso.VidaEnCurso);
+        inf.Igual("retomar: la vida maxima", 100, Progreso.VidaMaximaEnCurso);
+        inf.Igual("retomar: las balas", 230, Progreso.BalasEnCurso);
+        inf.Igual("retomar: el cargador", 1000, Progreso.MaxBalasEnCurso);
+
+        // El golpe y la retoma se guardan, y retomar la misma oleada no los pisa (ni la vida de cuando se empezo).
+        Progreso.MarcarGolpeEnOleadaEnCurso();
+        Progreso.ContarRetoma();
+        Progreso.GuardarOleadaEnCurso(12, 500, false, 80, 100, 500, 500);
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Verdadero("retomar: con la retoma gastada ya no se retoma", !Progreso.HayOleadaParaRetomar);
+        inf.Igual("retomar: la retoma se relee", 1, Progreso.RetomasEnCurso);
+        inf.Verdadero("retomar: el golpe se relee", Progreso.GolpeEnOleadaEnCurso);
+        inf.Igual("retomar: la oleada retomada conserva su vida", 47, Progreso.VidaEnCurso);
+        inf.Igual("retomar: y sus balas", 230, Progreso.BalasEnCurso);
+
+        // La oleada siguiente es nueva: vuelve a poder retomarse, sin golpe y con lo de ahora.
+        Progreso.GuardarOleadaEnCurso(13, 600, true, 60, 100, 400, 1000);
+        inf.Verdadero("retomar: la siguiente se puede retomar", Progreso.HayOleadaParaRetomar);
+        inf.Verdadero("retomar: la siguiente sin golpe", !Progreso.GolpeEnOleadaEnCurso);
+        inf.Igual("retomar: la siguiente con su vida", 60, Progreso.VidaEnCurso);
+
+        // Olvidarla (morir, reiniciar) lo borra todo.
+        Progreso.MarcarGolpeEnOleadaEnCurso();
+        Progreso.ContarRetoma();
+        Progreso.OlvidarOleadaEnCurso();
+        inf.Verdadero("retomar: olvidada, nada que retomar", !Progreso.HayOleadaParaRetomar);
+        inf.Igual("retomar: olvidada, sin retomas", 0, Progreso.RetomasEnCurso);
+        inf.Verdadero("retomar: olvidada, sin golpe", !Progreso.GolpeEnOleadaEnCurso);
+        inf.Igual("retomar: olvidada, sin vida", -1, Progreso.VidaEnCurso);
+        inf.Igual("retomar: olvidada, sin balas", -1, Progreso.BalasEnCurso);
+
+        // Lo que arman los bancos (la de dos numeros): una oleada nueva sin nada anotado.
+        Progreso.GuardarOleadaEnCurso(11, 0);
+        inf.Verdadero("retomar: la de los bancos se retoma", Progreso.HayOleadaParaRetomar);
+        inf.Igual("retomar: la de los bancos, con la vida llena", -1, Progreso.VidaEnCurso);
+
+        // Basura en el JSON: se normaliza.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"oleadaEnCurso\":9,\"retomasEnCurso\":-4," +
+                    "\"vidaEnCurso\":-7,\"balasEnCurso\":-3,\"maxBalasEnCurso\":-9,\"vidaMaximaEnCurso\":-2}", null);
+        inf.Igual("retomar: retomas negativas valen 0", 0, Progreso.RetomasEnCurso);
+        inf.Igual("retomar: vida negativa vale -1", -1, Progreso.VidaEnCurso);
+        inf.Igual("retomar: balas negativas valen -1", -1, Progreso.BalasEnCurso);
+
+        // La vida con que se retoma: la de cuando se empezo, mas la vida maxima comprada en el medio.
+        inf.Igual("retomar: vida sin anotar, llena", 100, WaveManager.VidaAlRetomar(-1, -1, 100));
+        inf.Igual("retomar: vida 0, llena", 100, WaveManager.VidaAlRetomar(0, 100, 100));
+        inf.Igual("retomar: la vida de cuando se empezo", 40, WaveManager.VidaAlRetomar(40, 100, 100));
+        inf.Igual("retomar: mas la vida maxima comprada", 60, WaveManager.VidaAlRetomar(40, 80, 100));
+        inf.Igual("retomar: sin pasar del maximo", 100, WaveManager.VidaAlRetomar(150, 100, 100));
+        inf.Igual("retomar: con el maximo mas bajo, hasta el maximo", 70, WaveManager.VidaAlRetomar(90, 100, 70));
+        inf.Igual("retomar: sin maximo anotado, la de cuando se empezo", 40, WaveManager.VidaAlRetomar(40, -1, 100));
+
+        // Las balas: las de cuando se empezo, sin pasar del cargador; sin anotar, las de siempre (-1).
+        inf.Igual("retomar: balas sin anotar", -1, WaveManager.BalasAlRetomar(-1, -1, 500));
+        inf.Igual("retomar: las balas de cuando se empezo", 120, WaveManager.BalasAlRetomar(120, 500, 500));
+        inf.Igual("retomar: sin balas, sin balas", 0, WaveManager.BalasAlRetomar(0, 500, 500));
+        inf.Igual("retomar: con el cargador de la caja", 900, WaveManager.BalasAlRetomar(900, 1000, 1000));
+        inf.Igual("retomar: un cargador en 0 no es anotado", -1, WaveManager.BalasAlRetomar(50, 0, 500));
+        inf.Igual("retomar: sin pasar del cargador", 500, WaveManager.BalasAlRetomar(800, 1000, 500));
+    }
+
     // 7. Migracion desde v1, archivos rotos y normalizacion.
     static void ProbarGuardado(Informe inf)
     {
@@ -3947,6 +4032,7 @@ public static class PruebasMejoras
         inf.Igual("oleada en curso: olvidada vale 0", 0, Progreso.OleadaEnCurso);
         inf.Igual("oleada en curso: olvidada sin puntos", 0, Progreso.PuntosEnCurso);
         inf.Verdadero("oleada en curso: existe el archivo", File.Exists(ruta0));
+        ProbarRetomar(inf);
 
         // v1: se lee, se respalda tal cual y se guarda como v2.
         string v1 = "{\"version\":1,\"monedas\":123.5,\"mejorOleada\":7}";

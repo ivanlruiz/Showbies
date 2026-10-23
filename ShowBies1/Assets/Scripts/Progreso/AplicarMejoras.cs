@@ -5,9 +5,10 @@ using UnityEngine;
 // Jugador.prefab, asi lo tienen las tres escenas de juego sin cablear nada por
 // escena.
 //
-// Se aplica una vez, al empezar la partida (Awake, antes de que nadie dispare o
-// reciba dano), y no al comprar: las compras son en el menu, y una mejora que
-// cambiara a mitad de partida mezclaria la vida y la cadencia de dos niveles.
+// Se aplica una vez, al empezar la escena (Awake, antes de que nadie dispare o
+// reciba dano), y no al comprar: las compras son en el menu (tambien las de MEJORAS
+// de la pausa, que sale de la partida y la retoma al volver), y una mejora que
+// cambiara a mitad de la escena mezclaria la vida y la cadencia de dos niveles.
 //
 // Nunca escribe sobre gun.bala: es el prefab de la bala, un asset, y cambiarle
 // el dañoDar lo cambiaria en disco en el editor y para todas las partidas. El

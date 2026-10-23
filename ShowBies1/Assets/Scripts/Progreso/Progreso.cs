@@ -108,6 +108,19 @@ public static class Progreso
         public int oleadaEnCurso;
         public int puntosEnCurso;
 
+        // Lo que hace que salir al menu no sea un revivir gratis (superauditoria del 29/9, H04; lo confirmo Argon el
+        // 21/10): cuantas veces se retomo esta oleada (una sola por oleada), si ya recibio un golpe (retomarla no la
+        // vuelve intacta) y la vida y las balas con que se empezo (retomar no cura ni recarga; la vida maxima, para sumar
+        // lo que se compro en el medio). Se olvidan al empezar cada oleada nueva. -1 = sin anotar (un JSON de antes, o
+        // una partida armada a mano por un banco): se retoma con la vida llena y las balas de siempre. Un JSON sin estos
+        // campos los lee asi, y no cambia la version.
+        public int retomasEnCurso;
+        public bool golpeEnOleadaEnCurso;
+        public int vidaEnCurso = -1;
+        public int vidaMaximaEnCurso = -1;
+        public int balasEnCurso = -1;
+        public int maxBalasEnCurso = -1;
+
         // La recompensa diaria (RecompensaDiaria): el ultimo dia cobrado, aaaammdd, y la
         // racha con la que se cobro. 0 = nunca. Igual que la oleada en curso, un JSON sin
         // estos campos los lee como 0 y no cambia la version.
@@ -276,7 +289,8 @@ public static class Progreso
     }
 
     // Pedido de Ivan: salir en la oleada 15 no te devuelve a la 1. WaveManager guarda
-    // la oleada al empezarla y la retoma desde cero (todos sus zombis, vida llena).
+    // la oleada al empezarla y la retoma desde cero (todos sus zombis), con la vida y las
+    // balas con que se la empezo y una sola vez (HayOleadaParaRetomar).
     // Se olvida al morir y al reiniciar a proposito.
     public static int OleadaEnCurso
     {
@@ -286,6 +300,67 @@ public static class Progreso
     public static int PuntosEnCurso
     {
         get { Cargar(); return datos.puntosEnCurso; }
+    }
+
+    // Una sola retoma por oleada: la segunda vez que se sale en la misma oleada la partida se pierde (Argon, 21/10).
+    public const int RetomasPorOleada = 1;
+
+    // Si hay una partida de oleadas para retomar. Todo lo que pregunta eso pasa por aca (las cartas, WaveManager, el
+    // boton OLEADAS): con la retoma gastada la partida esta pero ya no se retoma, y el que arranca la olvida.
+    public static bool HayOleadaParaRetomar
+    {
+        get { Cargar(); return SePuedeRetomar(datos.oleadaEnCurso, datos.retomasEnCurso); }
+    }
+
+    // La cuenta, sin progreso, para la prueba. La oleada 1 no se retoma: empezarla de cero es lo mismo.
+    public static bool SePuedeRetomar(int oleada, int retomas)
+    {
+        return oleada > 1 && retomas < RetomasPorOleada;
+    }
+
+    public static int RetomasEnCurso
+    {
+        get { Cargar(); return datos.retomasEnCurso; }
+    }
+
+    public static bool GolpeEnOleadaEnCurso
+    {
+        get { Cargar(); return datos.golpeEnOleadaEnCurso; }
+    }
+
+    public static int VidaEnCurso
+    {
+        get { Cargar(); return datos.vidaEnCurso; }
+    }
+
+    public static int VidaMaximaEnCurso
+    {
+        get { Cargar(); return datos.vidaMaximaEnCurso; }
+    }
+
+    public static int BalasEnCurso
+    {
+        get { Cargar(); return datos.balasEnCurso; }
+    }
+
+    public static int MaxBalasEnCurso
+    {
+        get { Cargar(); return datos.maxBalasEnCurso; }
+    }
+
+    // WaveManager, al retomar: gasta la retoma de esta oleada. Se escribe con el guardado del principio de la oleada,
+    // que viene enseguida (si Android mata la app despues, la retoma ya cuenta).
+    public static void ContarRetoma()
+    {
+        Cargar();
+        datos.retomasEnCurso++;
+    }
+
+    // WaveManager, al primer golpe de la oleada (despues del descanso, como la oleada perfecta).
+    public static void MarcarGolpeEnOleadaEnCurso()
+    {
+        Cargar();
+        datos.golpeEnOleadaEnCurso = true;
     }
 
     // Las cartas de la partida en curso: se guardan al empezar cada oleada, con los puntos, y
@@ -302,11 +377,28 @@ public static class Progreso
         datos.poderEnCurso = estado != null ? estado.Copia() : new EstadoPoder();
     }
 
+    // Una oleada nueva, sin la vida ni las balas: la usan los bancos para armar una partida retomada.
     public static void GuardarOleadaEnCurso(int oleada, int puntos)
+    {
+        GuardarOleadaEnCurso(oleada, puntos, true, -1, -1, -1, -1);
+    }
+
+    // Al empezar cada oleada. 'nueva' es falso solo en la que se esta retomando: esa conserva sus retomas, su golpe y la
+    // vida y las balas con que se empezo la primera vez.
+    public static void GuardarOleadaEnCurso(int oleada, int puntos, bool nueva, int vida, int vidaMaxima, int balas, int maxBalas)
     {
         Cargar();
         datos.oleadaEnCurso = Math.Max(0, oleada);
         datos.puntosEnCurso = Math.Max(0, puntos);
+        if (nueva)
+        {
+            datos.retomasEnCurso = 0;
+            datos.golpeEnOleadaEnCurso = false;
+            datos.vidaEnCurso = vida;
+            datos.vidaMaximaEnCurso = vidaMaxima;
+            datos.balasEnCurso = balas;
+            datos.maxBalasEnCurso = maxBalas;
+        }
         Revision++;
     }
 
@@ -314,6 +406,12 @@ public static class Progreso
     {
         Cargar();
         datos.poderEnCurso = new EstadoPoder();
+        datos.retomasEnCurso = 0;
+        datos.golpeEnOleadaEnCurso = false;
+        datos.vidaEnCurso = -1;
+        datos.vidaMaximaEnCurso = -1;
+        datos.balasEnCurso = -1;
+        datos.maxBalasEnCurso = -1;
         if (datos.oleadaEnCurso == 0 && datos.puntosEnCurso == 0) return;
         datos.oleadaEnCurso = 0;
         datos.puntosEnCurso = 0;
@@ -1142,6 +1240,12 @@ public static class Progreso
         if (e.mejorNivelLibre < 0) e.mejorNivelLibre = 0;
         if (e.mejorRacha < 0) e.mejorRacha = 0;
         if (e.misionesCobradas < 0) e.misionesCobradas = 0;
+
+        if (d.retomasEnCurso < 0) d.retomasEnCurso = 0;
+        if (d.vidaEnCurso < -1) d.vidaEnCurso = -1;
+        if (d.vidaMaximaEnCurso < -1) d.vidaMaximaEnCurso = -1;
+        if (d.balasEnCurso < -1) d.balasEnCurso = -1;
+        if (d.maxBalasEnCurso < -1) d.maxBalasEnCurso = -1;
 
         // Las cartas de la partida en curso: PoderDeLaPartida.Empezar vuelve a acotar lo demas.
         if (d.poderEnCurso == null) d.poderEnCurso = new EstadoPoder();

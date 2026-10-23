@@ -234,8 +234,8 @@ public class WaveManager : MonoBehaviour
     // Incluye el botin: es lo que vale cada moneda de un zombi de la oleada actual (y del tesoro).
     public float MultiplicadorMonedasActual => MultiplicadorMonedasEn(OleadaActual) * botin;
 
-    // La mejora de botin se lee una vez al empezar: no se puede comprar en medio
-    // de la partida. El bono de la oleada no la usa.
+    // La mejora de botin se lee una vez al empezar la escena: lo que se compra con MEJORAS de la
+    // pausa entra al volver, que carga la escena de nuevo. El bono de la oleada no la usa.
     private float botin = 1f;
 
     // Un zombi de la oleada con el numero de aparicion con que salio: los zombis se
@@ -253,6 +253,30 @@ public class WaveManager : MonoBehaviour
     private int totalMostrado = -1;
     private int bonoDeLaOleadaAnterior;
 
+    // La partida retomada (Progreso.HayOleadaParaRetomar): su primera oleada no es nueva, y si ya habia recibido un
+    // golpe antes de salir no puede salir perfecta.
+    private bool retomada;
+    private bool golpeHeredado;
+    // Los golpes del jugador al terminar el descanso de la oleada en juego, para anotar el primero (-1 fuera de una).
+    private int golpesAlEmpezarLaOleada = -1;
+    private bool golpeAnotado;
+
+    // La vida y las balas con que se retoma la oleada: las que habia al empezarla la primera vez (salir al menu no cura
+    // ni recarga, superauditoria del 29/9), sin pasar del maximo de ahora. La vida maxima que se compro en el medio
+    // (la pausa tiene MEJORAS) se suma, como la carta de vida, que cura solo lo que suma. Sin anotar, las de arranque:
+    // la vida llena y las balas de siempre (-1).
+    public static int VidaAlRetomar(int guardada, int maximaGuardada, int maxima)
+    {
+        if (guardada <= 0) return maxima;
+        int comprada = maximaGuardada > 0 ? Mathf.Max(0, maxima - maximaGuardada) : 0;
+        return Mathf.Min(guardada + comprada, maxima);
+    }
+
+    public static int BalasAlRetomar(int guardadas, int maximoGuardado, int maximo)
+    {
+        return guardadas >= 0 && maximoGuardado > 0 ? Mathf.Min(guardadas, maximo) : -1;
+    }
+
     private void Start()
     {
         if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
@@ -262,16 +286,24 @@ public class WaveManager : MonoBehaviour
         tesoroPrefab = Resources.Load<GameObject>(RutaTesoro);
 
         // Una partida que quedo a medias sigue en la oleada en que se dejo, desde el
-        // principio de esa oleada y con los puntos que se tenian al empezarla.
+        // principio de esa oleada y con los puntos que se tenian al empezarla. Una sola vez por
+        // oleada: con la retoma gastada, la partida se olvida y esta arranca de cero.
         int guardada = Progreso.OleadaEnCurso;
-        if (guardada > 1)
+        retomada = Progreso.HayOleadaParaRetomar;
+        if (retomada)
         {
             OleadaActual = guardada - 1;
+            golpeHeredado = Progreso.GolpeEnOleadaEnCurso;
+            Progreso.ContarRetoma();
             if (Puntaje.instance != null)
             {
                 Puntaje.instance.contadorKill = Progreso.PuntosEnCurso;
                 Puntaje.instance.UpdateKillCounterUI();
             }
+        }
+        else if (guardada > 1)
+        {
+            Progreso.OlvidarOleadaEnCurso();
         }
         StartCoroutine(Jugar());
     }
@@ -280,10 +312,27 @@ public class WaveManager : MonoBehaviour
     // Update ya salio mal: se arrancaba una nueva en cada frame de la espera.
     private IEnumerator Jugar()
     {
+        // Retomada: un cuadro, para que AplicarMejoras y las cartas de vida terminen de llenar la vida, y despues la vida
+        // y las balas con que se empezo la oleada.
+        if (retomada)
+        {
+            yield return null;
+            DevolverVidaYBalas();
+        }
+        bool primera = true;
         while (true)
         {
             OleadaActual++;
-            Progreso.GuardarOleadaEnCurso(OleadaActual, Puntaje.instance != null ? Puntaje.instance.contadorKill : 0);
+            bool nueva = !(primera && retomada);
+            bool yaGolpeada = !nueva && golpeHeredado;
+            primera = false;
+            var jugadorAlEmpezar = PlayerHealth.instance;
+            var controlAlEmpezar = jugadorAlEmpezar != null ? jugadorAlEmpezar.GetComponent<PlayerController>() : null;
+            Progreso.GuardarOleadaEnCurso(OleadaActual, Puntaje.instance != null ? Puntaje.instance.contadorKill : 0, nueva,
+                                          jugadorAlEmpezar != null ? jugadorAlEmpezar.health : -1,
+                                          jugadorAlEmpezar != null ? jugadorAlEmpezar.maxHealth : -1,
+                                          controlAlEmpezar != null ? controlAlEmpezar.cantBalas : -1,
+                                          controlAlEmpezar != null ? controlAlEmpezar.maxBalas : -1);
             // Las cartas, como estan al empezar la oleada: retomarla las devuelve asi.
             Progreso.GuardarPoderEnCurso(PoderDeLaPartida.Instantanea());
             // En otro hilo: el fsync en el del juego era un tiron justo con el cartel de la oleada.
@@ -298,6 +347,8 @@ public class WaveManager : MonoBehaviour
             // Los golpes, recien despues del descanso: un charco de acido de la oleada anterior que pega mientras se lee
             // el cartel no le tiene que quitar la perfecta a esta (auditoria del 18/10).
             int golpesAlEmpezar = PlayerHealth.instance != null ? PlayerHealth.instance.GolpesRecibidos : -1;
+            golpesAlEmpezarLaOleada = golpesAlEmpezar;
+            golpeAnotado = yaGolpeada;
 
             // El jefe sale solo y el primero de los demas, un rato despues y en otro punto:
             // salian en el mismo cuadro, y una de cada tres o cuatro veces en el mismo punto,
@@ -344,7 +395,9 @@ public class WaveManager : MonoBehaviour
             RecargarAlTerminar(conJefe);
 
             // Sin un solo golpe en toda la oleada: el bono doble y el logro INTOCABLE.
-            bool perfecta = golpesAlEmpezar >= 0 && PlayerHealth.instance != null && PlayerHealth.instance.GolpesRecibidos == golpesAlEmpezar;
+            golpesAlEmpezarLaOleada = -1;
+            bool perfecta = !yaGolpeada && golpesAlEmpezar >= 0 && PlayerHealth.instance != null
+                            && PlayerHealth.instance.GolpesRecibidos == golpesAlEmpezar;
             UltimaFuePerfecta = perfecta;
             bonoDeLaOleadaAnterior = Bono(bonoPorOleada, OleadaActual, perfecta);
             Efectos.OleadaSuperada(dondeQuedabaElUltimo);
@@ -365,6 +418,30 @@ public class WaveManager : MonoBehaviour
     private void Update()
     {
         ActualizarHud();
+        AnotarElPrimerGolpe();
+    }
+
+    // El primer golpe de la oleada queda en el progreso: si se sale y se retoma, ya no sale perfecta.
+    private void AnotarElPrimerGolpe()
+    {
+        if (golpeAnotado || golpesAlEmpezarLaOleada < 0 || PlayerHealth.instance == null) return;
+        if (PlayerHealth.instance.GolpesRecibidos <= golpesAlEmpezarLaOleada) return;
+        golpeAnotado = true;
+        Progreso.MarcarGolpeEnOleadaEnCurso();
+    }
+
+    private void DevolverVidaYBalas()
+    {
+        var jugador = PlayerHealth.instance;
+        if (jugador == null || jugador.EstaMuerto) return;
+        jugador.health = VidaAlRetomar(Progreso.VidaEnCurso, Progreso.VidaMaximaEnCurso, jugador.maxHealth);
+        var control = jugador.GetComponent<PlayerController>();
+        if (control == null) return;
+        int balas = BalasAlRetomar(Progreso.BalasEnCurso, Progreso.MaxBalasEnCurso, Mathf.Max(control.maxBalas, Progreso.MaxBalasEnCurso));
+        if (balas < 0) return;
+        // El cargador de 1.000 de la caja de arma es para siempre: si se tenia, vuelve.
+        control.maxBalas = Mathf.Max(control.maxBalas, Progreso.MaxBalasEnCurso);
+        control.cantBalas = balas;
     }
 
     // Los zombis de la oleada que ya no estan cuentan como muertos, tambien los

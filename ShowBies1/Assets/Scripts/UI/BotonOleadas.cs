@@ -1,9 +1,9 @@
 using UnityEngine;
 using TMPro;
 
-// El boton OLEADAS del panel de modos. Si hay una partida de oleadas a medias
-// (Progreso.OleadaEnCurso), avisa abajo en que oleada se sigue: tocar OLEADAS
-// retoma esa, y el jugador tiene que saberlo antes de tocar.
+// El boton OLEADAS del panel de modos. Si hay una partida de oleadas a medias para retomar
+// (Progreso.HayOleadaParaRetomar: una sola vez por oleada), avisa abajo en que oleada se sigue:
+// tocar OLEADAS retoma esa, y el jugador tiene que saberlo antes de tocar.
 //
 // Como BotonModoLibre, escribe el texto el mismo y apaga el TextoTraducido del
 // hijo mientras muestra el aviso, para que no se pisen al cambiar de idioma.
@@ -36,7 +36,7 @@ public class BotonOleadas : MonoBehaviour
         revisionIdioma = Idioma.Revision;
 
         int oleada = Progreso.OleadaEnCurso;
-        bool sigue = oleada > 1;
+        bool sigue = Progreso.HayOleadaParaRetomar;
         if (traducido != null) traducido.enabled = !sigue;
         if (texto == null) return;
 

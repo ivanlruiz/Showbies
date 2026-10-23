@@ -128,7 +128,7 @@ public class EleccionDeCartas : MonoBehaviour
     {
         Instancia = this;
         bool oleadas = gameObject.scene.buildIndex == TiendaMejoras.EscenaOleadas;
-        bool retomar = oleadas && Progreso.OleadaEnCurso > 1;
+        bool retomar = oleadas && Progreso.HayOleadaParaRetomar;
         PoderDeLaPartida.Empezar(retomar ? Progreso.PoderEnCurso : null);
     }
 
@@ -152,7 +152,8 @@ public class EleccionDeCartas : MonoBehaviour
         texturaAnilloHud = TexturasUI.Anillo(128, 0.12f);
         anilloHud = Sprite.Create(texturaAnilloHud, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
 
-        // Una partida retomada con cartas de vida arranca con el maximo de las cartas.
+        // Una partida retomada con cartas de vida arranca con el maximo de las cartas (la vida con que se empezo la
+        // oleada la devuelve WaveManager un cuadro despues).
         if (PoderDeLaPartida.MultiplicadorVida > 1f && PlayerHealth.instance != null)
             PlayerHealth.instance.AplicarCartasDeVida(false);
         // El anillo del escudo y los drones van en el jugador.

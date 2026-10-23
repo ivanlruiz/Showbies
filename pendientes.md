@@ -43,7 +43,7 @@ del tanque, que venía con H16, queda como está (sección 6).
 | H01: el halo de REINICIAR se lleva toques de CONTINUAR | parcial: todavía no está en Play | media (era alta) | arreglado el 29/9 |
 | H02: la furia arranca lista en cada partida | parcial: adelanta, no multiplica | baja (era media) | 2 |
 | H03: el reloj confiable solo se ancla al cobrar la diaria | confirmado | media | 2 |
-| H04: retomar vuelve opcional la muerte en oleadas | parcial: en monedas no es granja | baja (era media) | 2 |
+| H04: retomar vuelve opcional la muerte en oleadas | parcial: en monedas no es granja | baja (era media) | arreglado el 22/10 |
 | H05: REINICIAR y la R sin confirmación | confirmado | media (baja con H01 arreglado) | arreglado el 29/9 |
 | H06: la tienda compra con un toque de la diaria | confirmado | media | arreglado el 29/9 |
 | H07: el versionCode 5 ya se usó | parcial: ya estaba en TAREAS | baja (era media) | arreglado el 30/9 |
@@ -353,21 +353,11 @@ privacidad publicada.
   `ApagadoOscuro` da un halo casi negro. El icono se busca con `fondo.transform.parent.Find("Icono")`. Al desbloquear,
   devolver los colores leídos en `Awake`. En el banco, el color de la `Sombra`, el del texto y un contraste de 4,5 o
   más. En `SelectorIdioma.Pintar`, `PintarHalo` con el color de cada botón. Corregir "lo pinta gris" en CLAUDE.md.
-- **Retomar vuelve opcional la muerte en oleadas** (baja, era media; H04, parcial). MENÚ no olvida la oleada
-  (`MenuPausa.cs:96-100`) y perder el foco pausa y guarda (`:54-79`): solo morir y REINICIAR la olvidan. Retomar
-  (`WaveManager.cs:104-125`) crea un jugador nuevo: vida llena, `GolpesRecibidos` en 0, 500 balas, el revivir por
-  vídeo disponible otra vez y las mejoras compradas entretanto (`AplicarMejoras.Awake`). En monedas no es granja
-  (×1,2-1,6 por minuto con ~10 s por ciclo, modelo sin medir). INTOCABLE y el bronce y la plata de SUPERVIVIENTE solo
-  se adelantan (~1 partida de monedas); el oro de SUPERVIVIENTE, `MejorOleada` y `HighScore_3` dejan de pedir
-  sobrevivir las oleadas seguidas (hoy son solo locales). Con el proveedor Nulo el golpe que mata olvida la oleada en
-  el mismo cuadro: hay que pausar antes. **Decidido el 29/9: las tres partes**, sin subir la versión: (1) un bool "la
-  oleada en curso ya recibió un golpe", guardado junto a `oleadaEnCurso`, para que retomarla no cuente como intacta;
-  (2) guardar la vida y las balas al empezar cada oleada y retomar con eso, topado al máximo nuevo; (3) una sola
-  retoma por oleada: la segunda vuelve al principio del capítulo, que es lo que hace que morir importe (con las dos
-  primeras solas, reintentar sigue siendo gratis). Ninguna castiga al que cierra en la 24 para dormir, que es el
-  pedido de `d6005e6`. Amplía «Punto de control por capítulo en las oleadas» (el revivir gratis de MENÚ). En la misma
-  tanda, corregir `WaveManager.cs:76-77`, `AplicarMejoras.cs:8-10` y CLAUDE.md ("no se puede comprar en medio de la
-  partida"), que ya son falsos.
+- **Retomar vuelve opcional la muerte en oleadas** (H04): **arreglado el 22/10**, con las tres partes que decidió Ivan
+  el 29/9 y confirmó Argon el 21/10 (el golpe anotado, la vida y las balas del principio de la oleada y una sola
+  retoma por oleada; ver CLAUDE.md, Generación de enemigos), probado con la prueba de lógica y el banco nuevo
+  `PruebaRetomar`. Lo que queda: la segunda salida vuelve a la 1, y con los capítulos (1.7.0) tiene que volver al
+  principio del capítulo; y el ¡A JUGAR! de MEJORAS de la pausa también gasta la retoma (preguntado a Argon).
 ### Rendimiento: hacerlo en Unity y medirlo en el teléfono
 
 Aprobado por el revisor, pero son materiales, prefabs o ajustes del proyecto, y conviene ver el antes y el después con

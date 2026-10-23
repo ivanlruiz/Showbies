@@ -76,7 +76,7 @@ Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los vid
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py), en Resources/Bate, los del bate (sonidos/bate.py), y en Resources/Escudo, los del escudo del blindado (sonidos/escudo.py)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y sus máscaras BrazoDerecho y TorsoYBrazos (la del bate)
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador, PruebaChaman, PruebaBlindado, PruebaHinchado, PruebaEspecialesEnElLibre y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), RetratosDelBestiario (los retratos de las tarjetas del bestiario) y FotosDelBestiario (la ventana en 16:9, 20:9 y 21:9), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador, PruebaChaman, PruebaBlindado, PruebaHinchado, PruebaEspecialesEnElLibre, PruebaRetomar y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), RetratosDelBestiario (los retratos de las tarjetas del bestiario) y FotosDelBestiario (la ventana en 16:9, 20:9 y 21:9), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -876,11 +876,26 @@ consultando `EnemyController.ZombisVivos`:
 
   **La partida de oleadas se retoma** (pedido de Ivan): al empezar cada oleada, `WaveManager` guarda en el progreso la
   oleada y los puntos (`Progreso.GuardarOleadaEnCurso`) y escribe el archivo. Si se sale al menú o se cierra la app,
-  la próxima vez arranca esa oleada desde cero (todos sus zombis, vida llena) con esos puntos, y el botón OLEADAS
+  la próxima vez arranca esa oleada desde cero (todos sus zombis) con esos puntos, y el botón OLEADAS
   del menú avisa "CONTINUE WAVE N" (`BotonOleadas`). **Se olvida al morir** (`PlayerHealth.Terminar`) **y al
   reiniciar** (REINICIAR de la pausa, con `WaveManager.OlvidarPartidaSiEsOleadas`, que pasada la 1 pregunta antes: ver
-  Pausa y botón atrás): las dos cosas empiezan una partida nueva. Salir en mitad de una oleada que se
-  estaba perdiendo la reinicia sin morir: es a propósito.
+  Pausa y botón atrás): las dos cosas empiezan una partida nueva.
+
+  **Salir al menú no es un revivir gratis** (superauditoría del 29/9, H04; lo confirmó Argon el 21/10). Hasta el 22/10
+  retomar volvía con la vida llena, 500 balas y la oleada limpia de golpes, y salir en mitad de una oleada que se
+  estaba perdiendo era reintentarla gratis. Ahora, con tres cosas guardadas junto a la oleada, sin subir la versión:
+  - **La vida y las balas con que se empezó la oleada** (`vidaEnCurso`, `balasEnCurso` y el cargador): retomar
+    devuelve esas, no las de cuando se salió, en el segundo cuadro (después de `AplicarMejoras` y las cartas de vida:
+    `WaveManager.DevolverVidaYBalas`). La vida máxima comprada en el medio se suma, como la carta de vida, que cura
+    solo lo que suma (`VidaAlRetomar`), y el cargador de 1.000 de la caja de arma vuelve. Sin nada anotado (un JSON de
+    antes, o la partida que arma un banco con `GuardarOleadaEnCurso(n, puntos)`), la vida llena y las balas de siempre.
+  - **El golpe**: el primero de la oleada, pasado el descanso, queda anotado (`MarcarGolpeEnOleadaEnCurso`), y la
+    oleada retomada ya no sale perfecta, ni cuenta para INTOCABLE.
+  - **Una sola retoma por oleada** (`Progreso.HayOleadaParaRetomar`, que es lo que miran `WaveManager`, las cartas y el
+    botón OLEADAS): al retomar se gasta (`ContarRetoma`), y la segunda salida en la misma oleada pierde la partida: el
+    botón ya no dice que se sigue y OLEADAS arranca de la 1 (de la 1 del capítulo, cuando estén los capítulos). La
+    oleada siguiente es nueva y se puede retomar otra vez: el que cierra en la 24 para dormir no pierde nada.
+  - El ¡A JUGAR! de MEJORAS de la pausa también es una retoma (sale al menú y vuelve), y la gasta.
 
   La mezcla y el ritmo se configuran en el inspector del `WaveManager` de `WaveMode.unity`. Expone
   `OleadaActual` y los multiplicadores de la oleada actual.
@@ -965,7 +980,8 @@ carga y el salto del jefe no pagaba nada dentro de la partida). Lo decide el mis
 revivir, no cuenta). El bono es `WaveManager.Bono` (× `MultiplicadorPerfecta`, 2), el cartel dice "¡PERFECTA! +N
 MONEDAS" en el dorado de las monedas (`cartel_bono_perfecta`), vuelan el doble de monedas (hasta 20) y
 `Efectos.OleadaPerfecta` suelta chispas doradas alrededor del jugador y unas campanitas que entran cuando termina el
-arpegio de la superada. `Economia` no cuenta el bono, así que los premios que se miden con ella no cambian.
+arpegio de la superada. `Economia` no cuenta el bono, así que los premios que se miden con ella no cambian. Una oleada
+que se retoma después de haber recibido un golpe no sale perfecta (ver la partida que se retoma, arriba).
 
 **Las invocaciones respetan el techo de población.** El generador de cada escena lo fija al empezar
 (`EnemyController.FijarTecho`, 60 o 35 en móvil) y el jefe saca `min(los suyos, maxInvocadosVivos,
@@ -2760,7 +2776,7 @@ y volvían a entrar). `MenuPausa.ArmarMejoras` lo arma en `Start` si hay `WaveMa
 amarillo de la tienda con `IconoMejoras` (de `Sprites/UI/Resources`), y aprieta el panel: el título sube a 280 y los
 cuatro botones van cada 130 desde 130, así el último queda encima de los volúmenes. Toca: anota `UltimoModo`, guarda y
 abre la tienda en el menú (`TiendaMejoras.AbrirEnMenu`); su ¡A JUGAR! vuelve a la oleada en curso, desde su principio,
-que es la misma vuelta que por MENÚ PRINCIPAL. En el libre no está: esa partida no se retoma. **Lleva la insignia
+que es la misma vuelta que por MENÚ PRINCIPAL (y gasta la única retoma de esa oleada: ver Generación de enemigos). En el libre no está: esa partida no se retoma. **Lleva la insignia
 roja de la tienda** (`MenuPausa.ArmarInsignia`, armada en código: en las escenas de juego no hay un MEJORAS de donde
 copiarla) con cuántas compras alcanzan, latiendo; se recalcula cuando cambia `Progreso.Revision`.
 
@@ -3315,6 +3331,13 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   pausa, SEGUIR JUGANDO reanuda, REINICIAR recarga en la 1, y en la 1 ya no pregunta), con el
   título en un renglón; y que el botón de pausa se desvanezca con el cartel del capítulo 2 y vuelva cuando se va. Saca además una foto de noche de las tres cajas y el chorro de balas
   (`Builds/noche_cajas_balas.png`) y otra de la confirmación. Escribe `Builds/prueba_reiniciar.txt`.
+- **ShowBies > Pruebas > Salir al menu y retomar (play)** (`PruebaRetomar`, del 22/10): el camino de verdad (MENÚ
+  PRINCIPAL de la pausa y WaveMode cargada otra vez), despejando los zombis apenas salen. Una partida de banco en la 5
+  se retoma con sus puntos y sus cartas, con la vida llena y gastando su retoma, y terminada sin golpes sale perfecta; la
+  6 anota la vida y las balas con que empieza, y el golpe pasado el descanso; retomarla devuelve esa vida y esas balas
+  (no las de cuando se salió), hereda el golpe y ya no sale perfecta ni sube INTOCABLE; la 7 se retoma una vez, y
+  después de la segunda salida el botón OLEADAS ya no dice que se sigue y entrar arranca de la 1, sin puntos ni cartas.
+  Escribe `Builds/prueba_retomar.txt`.
 - **Los bancos en play devuelven el progreso** (`RespaldoDelBanco`): cada uno guarda al arrancar el progreso real del
   editor, los PlayerPrefs del juego, `runInBackground` y "Teclado y mouse en el editor", y los devuelve al volver a modo
   edición (antes no: al salir de play, Progreso guarda lo que tiene). La copia va a `Library/ShowBies/RespaldoDelBanco`,
