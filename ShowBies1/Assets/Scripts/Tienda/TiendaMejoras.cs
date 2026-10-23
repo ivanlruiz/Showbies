@@ -348,6 +348,9 @@ public class TiendaMejoras : MonoBehaviour
         int modo = PlayerPrefs.GetInt("UltimoModo", EscenaOleadas);
         if (modo != EscenaModoLibre && modo != EscenaOleadas) modo = EscenaOleadas;
         modo = ModoLibre.EscenaPara(modo);
+        // Sin partida para retomar, las oleadas arrancan en el capitulo de la ultima (Capitulos; si hay una para
+        // retomar, WaveManager no lo mira).
+        if (modo == EscenaOleadas) Capitulos.ParaEmpezar = Capitulos.ParaVolver;
 
         Time.timeScale = 1f;
         SceneManager.LoadScene(modo);

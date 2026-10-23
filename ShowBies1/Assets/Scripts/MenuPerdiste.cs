@@ -69,9 +69,34 @@ public class MenuPerdiste : MonoBehaviour
             // Vuelve al modo que se estaba jugando, no siempre al primero.
             // PlayerHealth lo guarda al morir; si no hay nada, a las oleadas. El libre
             // pasa por ModoLibre por si todavia no esta desbloqueado.
-            int modo = PlayerPrefs.GetInt("UltimoModo", TiendaMejoras.EscenaOleadas);
-            SceneManager.LoadScene(ModoLibre.EscenaPara(modo));
+            int escena = EscenaDeOtraVez();
+            // Las oleadas, desde el capitulo de esta partida, o desde el que destrabo (Capitulos).
+            if (escena == TiendaMejoras.EscenaOleadas) Capitulos.ParaEmpezar = Capitulos.ParaVolver;
+            SceneManager.LoadScene(escena);
         });
+    }
+
+    private static int EscenaDeOtraVez()
+    {
+        return ModoLibre.EscenaPara(PlayerPrefs.GetInt("UltimoModo", TiendaMejoras.EscenaOleadas));
+    }
+
+    // OTRA VEZ dice desde que oleada, si no es la 1: "OTRA VEZ / DESDE LA OLEADA 11". Como BotonOleadas, apaga el
+    // TextoTraducido mientras escribe el texto el mismo (la derrota no cambia de idioma).
+    private void Start()
+    {
+        if (EscenaDeOtraVez() != TiendaMejoras.EscenaOleadas) return;
+        int oleada = Capitulos.OleadaInicial(Capitulos.ParaVolver);
+        if (oleada <= 1) return;
+        foreach (GameObject raiz in gameObject.scene.GetRootGameObjects())
+            foreach (var traducido in raiz.GetComponentsInChildren<TextoTraducido>(true))
+            {
+                if (traducido.id != "derrota_otra_vez") continue;
+                var texto = traducido.GetComponent<TMPro.TMP_Text>();
+                if (texto == null) continue;
+                traducido.enabled = false;
+                texto.text = Textos.De("derrota_otra_vez") + "\n<size=62%>" + Textos.Formato("derrota_desde_la_oleada", oleada) + "</size>";
+            }
     }
 
     public void Menu()

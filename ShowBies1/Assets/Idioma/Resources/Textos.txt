@@ -317,6 +317,7 @@ derrota_record_nuevo	<size=55%>NEW BEST!</size>  {0}	<size=55%>¡NUEVO RÉCORD!<
 derrota_monedas	+{0} COINS   <size=70%>TOTAL {1}</size>	+{0} MONEDAS   <size=70%>TOTAL {1}</size>
 derrota_monedas_una	+{0} COIN   <size=70%>TOTAL {1}</size>	+{0} MONEDA   <size=70%>TOTAL {1}</size>
 derrota_otra_vez	PLAY AGAIN	OTRA VEZ
+derrota_desde_la_oleada	FROM WAVE {0}	DESDE LA OLEADA {0}
 derrota_menu	MENU	MENÚ
 aviso_compras_una	You can afford an upgrade!	¡Te llega para una mejora!
 aviso_compras_varias	You can afford {0} upgrades!	¡Te llega para {0} mejoras!

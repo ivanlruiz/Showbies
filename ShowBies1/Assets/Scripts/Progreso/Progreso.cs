@@ -116,6 +116,9 @@ public static class Progreso
         // campos los lee asi, y no cambia la version.
         public int retomasEnCurso;
         public bool golpeEnOleadaEnCurso;
+        // El capitulo de la ultima partida de oleadas, o el que destrabo (Capitulos): a ese vuelven OTRA VEZ, REINICIAR y
+        // el ¡A JUGAR! de la tienda. 0 = ninguno (el 1). No se olvida con la partida.
+        public int capituloParaVolver;
         public int vidaEnCurso = -1;
         public int vidaMaximaEnCurso = -1;
         public int balasEnCurso = -1;
@@ -326,6 +329,12 @@ public static class Progreso
     public static bool GolpeEnOleadaEnCurso
     {
         get { Cargar(); return datos.golpeEnOleadaEnCurso; }
+    }
+
+    public static int CapituloParaVolver
+    {
+        get { Cargar(); return datos.capituloParaVolver; }
+        set { Cargar(); datos.capituloParaVolver = Math.Max(0, value); }
     }
 
     public static int VidaEnCurso
@@ -1242,6 +1251,7 @@ public static class Progreso
         if (e.misionesCobradas < 0) e.misionesCobradas = 0;
 
         if (d.retomasEnCurso < 0) d.retomasEnCurso = 0;
+        if (d.capituloParaVolver < 0) d.capituloParaVolver = 0;
         if (d.vidaEnCurso < -1) d.vidaEnCurso = -1;
         if (d.vidaMaximaEnCurso < -1) d.vidaMaximaEnCurso = -1;
         if (d.balasEnCurso < -1) d.balasEnCurso = -1;

@@ -431,6 +431,41 @@ jugador pega un 20-30 % más con el revólver y el rifle: no tocar los números 
 desde el capítulo; que el cofre reemplace al botón de video cada 10 minutos (lo pidió él el 10/10); que la granada, el
 bate y la furia se destapen por nivel; y que la 1.7.0 crezca de las compras solas (~3 días) a unas dos semanas.
 
+### Empezar desde el capítulo: el diseño de Argon (21/10)
+
+Ivan (19/10): "tipo guardar los capítulos, seguir en donde estabas". Se le mandó a Argon con capturas del panel de modos y
+de la derrota, y contestó el 21/10:
+
+1. **Se elige, preseleccionado en el más alto destrabado.** Con una partida para retomar, OLEADAS la retoma sin
+   preguntar; sin partida y con la 10 completada, abre el selector; si no, entra a la 1. **Solo los capítulos 1, 2 y 3**
+   (oleadas 1, 11 y 21: más adelante serían 17 a 21 cartas antes del primer tiro). Completar la 10 destraba la 11, y la
+   20, la 21.
+2. **La pantalla, en código**: la ventana de carbón neón (1180 × 660, borde celeste), como el bestiario, con tres
+   tarjetas verticales de 320 × 420 separadas 36, y el título ELIGE EL CAPÍTULO / SELECT CHAPTER. CAPÍTULO 1 — LA
+   PRADERA, verde #76FF03: OLEADA 1, SIN VENTAJAS. CAPÍTULO 2 — EL CEMENTERIO, violeta #D500F9: bloqueado, silueta gris
+   #454D5E, candado y COMPLETA LA OLEADA 10; destrabado, OLEADA 11 y la píldora +6 CARTAS INICIALES (1 DORADA).
+   CAPÍTULO 3 — LA CIUDAD, rosa #FF2BD6 o ámbar #FFC400 (preguntado): COMPLETA LA OLEADA 20, u OLEADA 21 y +12 CARTAS
+   INICIALES (2 DORADAS). Cada una con su retrato y ¡JUGAR!.
+3. **Las cartas, en "tiradas dobles"**: en la 11, tres elecciones en ráfaga al pisar el mapa (PREPARACIÓN 1/3, 2/3,
+   3/3), y cada carta elegida suma dos copias (si es de tope 1, esa y una copia de otra al azar: siempre 6 cartas); la
+   tercera es la dorada del jefe de la 10. En la 21, seis (la tercera y la sexta, doradas). Unos 12 s, y el arma salta
+   en vivo antes del primer zombi. El PODER queda en 6 o 12 con la barra en 0.
+4. **Cero monedas al arrancar** (las "que tocarían" abrirían una trampa) y **puntos desde 0**. La mejor oleada y los
+   logros de oleada cuentan normal; la misión de oleadas, solo las jugadas. INTOCABLE: un contador de la partida
+   (preguntado otra vez: hoy el logro es una oleada perfecta de número alto, no varias seguidas).
+5. **Morir**: OTRA VEZ arranca en el capítulo elegido, o en el que se destrabó en esa partida ("OTRA VEZ (OLEADA 11)").
+   **Salir al menú**: se mantiene, con los tres arreglos de la superauditoría del 29/9 (hechos el 22/10, `e224719`).
+6. **¡CAPÍTULO N SUPERADO!** al morir el jefe de la 10 o la 20, en lugar de la oleada superada, grande y con sonido de
+   victoria. La primera vez en la vida, en dorado, ¡PUNTO DE CONTROL DESBLOQUEADO! +250 MONEDAS (en la 10) y +500 (en la
+   20); las siguientes, cura el 50 % de la vida máxima.
+7. **No hace falta simular**: el muro no se mueve (se llega con las mismas cartas y mejoras) y se gana ~25 % más de
+   monedas por minuto real. Hasta la 10, PLAY y OLEADAS entran a la 1. **Intersticial**: cada 3 partidas y al menos
+   240 s desde el último o desde que se abrió la app (hecho el 22/10, `9bcaf7e`).
+8. **El modo libre**, de paso: los especiales cada 5,5 s y el escupidor con tope 2 (hecho el 21/10, `a15f478`).
+
+**Hecho el 22/10**: empezar en un capítulo (`Capitulos`, ver CLAUDE.md), OTRA VEZ, REINICIAR y el ¡A JUGAR! de la tienda
+volviendo al capítulo. **Falta**: el selector, las tiradas dobles y ¡CAPÍTULO SUPERADO!.
+
 ## Orden propuesto
 
 | cuándo | qué | versión |

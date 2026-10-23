@@ -4016,6 +4016,54 @@ public static class PruebasMejoras
         inf.Igual("retomar: sin pasar del cargador", 500, WaveManager.BalasAlRetomar(800, 1000, 500));
     }
 
+    // Empezar las oleadas desde un capitulo (1.7.0, de Argon, 21/10).
+    static void ProbarCapitulos(Informe inf)
+    {
+        inf.Igual("capitulos: el 1 empieza en la 1", 1, Capitulos.OleadaInicial(1));
+        inf.Igual("capitulos: el 2, en la 11", 11, Capitulos.OleadaInicial(2));
+        inf.Igual("capitulos: el 3, en la 21", 21, Capitulos.OleadaInicial(3));
+        inf.Igual("capitulos: la 10 es del 1", 1, Capitulos.CapituloDe(10));
+        inf.Igual("capitulos: la 11 es del 2", 2, Capitulos.CapituloDe(11));
+        inf.Igual("capitulos: la 20 es del 2", 2, Capitulos.CapituloDe(20));
+        inf.Igual("capitulos: la 21 es del 3", 3, Capitulos.CapituloDe(21));
+        inf.Igual("capitulos: la 35 es del 4", 4, Capitulos.CapituloDe(35));
+        inf.Igual("capitulos: sin oleada, el 1", 1, Capitulos.CapituloDe(0));
+        inf.Igual("capitulos: sin oleadas completadas, solo el 1", 1, Capitulos.Desbloqueados(0));
+        inf.Igual("capitulos: con la 9, solo el 1", 1, Capitulos.Desbloqueados(9));
+        inf.Igual("capitulos: la 10 destraba el 2", 2, Capitulos.Desbloqueados(10));
+        inf.Igual("capitulos: con la 19, el 2", 2, Capitulos.Desbloqueados(19));
+        inf.Igual("capitulos: la 20 destraba el 3", 3, Capitulos.Desbloqueados(20));
+        inf.Igual("capitulos: no hay mas de 3", 3, Capitulos.Desbloqueados(60));
+        inf.Igual("capitulos: pedir el 3 con la 12 da el 2", 2, Capitulos.Acotar(3, 12));
+        inf.Igual("capitulos: pedir el 0 da el 1", 1, Capitulos.Acotar(0, 30));
+        inf.Igual("capitulos: completar la 10 por primera vez destraba el 2", 2, Capitulos.QueDestraba(9, 10));
+        inf.Igual("capitulos: completarla otra vez no destraba nada", 0, Capitulos.QueDestraba(10, 10));
+        inf.Igual("capitulos: completar la 20 destraba el 3", 3, Capitulos.QueDestraba(19, 20));
+        inf.Igual("capitulos: completar la 26 no destraba nada", 0, Capitulos.QueDestraba(25, 26));
+        inf.Igual("capitulos: completar la 6 tampoco", 0, Capitulos.QueDestraba(5, 6));
+
+        // El capitulo para volver, con lo que se puede elegir ahora.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"mejorOleada\":25}", null);
+        inf.Igual("capitulos: un JSON de antes vuelve al 1", 1, Capitulos.ParaVolver);
+        Progreso.CapituloParaVolver = 3;
+        Progreso.UsarCarpetaDePruebas(CarpetaProgreso);
+        inf.Igual("capitulos: el de la ultima partida se relee", 3, Capitulos.ParaVolver);
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"mejorOleada\":12,\"capituloParaVolver\":3}", null);
+        inf.Igual("capitulos: sin pasar de lo destrabado", 2, Capitulos.ParaVolver);
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"capituloParaVolver\":-4}", null);
+        inf.Igual("capitulos: uno negativo vale 0", 0, Progreso.CapituloParaVolver);
+
+        // Lo que pide quien carga la escena: se toma una vez, sin pasar de lo destrabado; sin pedir, el 1.
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"mejorOleada\":25}", null);
+        Capitulos.ParaEmpezar = 3;
+        inf.Igual("capitulos: se empieza en el pedido", 3, Capitulos.TomarParaEmpezar());
+        inf.Igual("capitulos: y queda sin pedir", 0, Capitulos.ParaEmpezar);
+        inf.Igual("capitulos: sin pedir, el 1", 1, Capitulos.TomarParaEmpezar());
+        EmpezarCaso("{\"version\":" + Progreso.VersionActual + ",\"mejorOleada\":4}", null);
+        Capitulos.ParaEmpezar = 2;
+        inf.Igual("capitulos: pedir uno sin destrabar da el 1", 1, Capitulos.TomarParaEmpezar());
+    }
+
     // 7. Migracion desde v1, archivos rotos y normalizacion.
     static void ProbarGuardado(Informe inf)
     {
@@ -4033,6 +4081,7 @@ public static class PruebasMejoras
         inf.Igual("oleada en curso: olvidada sin puntos", 0, Progreso.PuntosEnCurso);
         inf.Verdadero("oleada en curso: existe el archivo", File.Exists(ruta0));
         ProbarRetomar(inf);
+        ProbarCapitulos(inf);
 
         // v1: se lee, se respalda tal cual y se guarda como v2.
         string v1 = "{\"version\":1,\"monedas\":123.5,\"mejorOleada\":7}";

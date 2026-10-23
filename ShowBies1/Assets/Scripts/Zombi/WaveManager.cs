@@ -30,12 +30,14 @@ public class TipoEnOleada
 public class WaveManager : MonoBehaviour
 {
     // La partida de oleadas a medias se olvida al morir y al reiniciar: las dos
-    // cosas empiezan una partida nueva. Salir al menu o cerrar la app no.
+    // cosas empiezan una partida nueva. Salir al menu o cerrar la app no. La que
+    // empieza al reiniciar, en el capitulo de esta (Capitulos).
     public static void OlvidarPartidaSiEsOleadas()
     {
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != TiendaMejoras.EscenaOleadas) return;
         Progreso.OlvidarOleadaEnCurso();
         Progreso.Guardar();
+        Capitulos.ParaEmpezar = Capitulos.ParaVolver;
     }
 
     // La oleada que se pierde si se reinicia ahora, o 0 si no se pierde nada que valga
@@ -301,10 +303,19 @@ public class WaveManager : MonoBehaviour
                 Puntaje.instance.UpdateKillCounterUI();
             }
         }
-        else if (guardada > 1)
+        else
         {
-            Progreso.OlvidarOleadaEnCurso();
+            // Una partida nueva, desde el principio de su capitulo (Capitulos): el que pidio quien cargo la escena, o, si
+            // no pidio ninguno y quedo una partida con la retoma gastada (se salio dos veces en la misma oleada), el de
+            // esa oleada. Como la retomada, arranca una antes: el escenario sale ya puesto, sin fundido.
+            int capitulo = Capitulos.ParaEmpezar > 0 || guardada <= 1
+                ? Capitulos.TomarParaEmpezar()
+                : Capitulos.Acotar(Capitulos.CapituloDe(guardada), Progreso.MejorOleada);
+            if (guardada > 1) Progreso.OlvidarOleadaEnCurso();
+            OleadaActual = Capitulos.OleadaInicial(capitulo) - 1;
+            Progreso.CapituloParaVolver = capitulo;
         }
+        Capitulos.ParaEmpezar = 0;
         StartCoroutine(Jugar());
     }
 
@@ -402,7 +413,10 @@ public class WaveManager : MonoBehaviour
             bonoDeLaOleadaAnterior = Bono(bonoPorOleada, OleadaActual, perfecta);
             Efectos.OleadaSuperada(dondeQuedabaElUltimo);
             Progreso.Sumar(bonoDeLaOleadaAnterior);
+            // La 10 y la 20, la primera vez, destraban un capitulo: OTRA VEZ ya va a ese.
+            int destraba = Capitulos.QueDestraba(Progreso.MejorOleada, OleadaActual);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
+            if (destraba > 0) Progreso.CapituloParaVolver = destraba;
             if (perfecta) Progreso.RegistrarOleadaIntacta(OleadaActual);
             // Hasta la oleada 5 no hay misiones, ni desafio hasta el nivel 5 (Desbloqueo). Completar
             // la 4 destapa las misiones, y como la marca ya se anoto, esta oleada ya cuenta.
