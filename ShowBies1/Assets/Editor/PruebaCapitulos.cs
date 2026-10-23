@@ -87,7 +87,7 @@ public static class PruebaCapitulos
     static bool dejoDeContar;
     static int oleadaOtraVez = -1, oleadaReiniciada = -1, oleadaRetomada = -1, retomasRetomada = -1;
     static int oleadaDespues = -1, retomasDespues = -1;
-    static bool golpeado;
+    static bool golpeado, fotoDerrota;
 
     static readonly StringBuilder excepciones = new StringBuilder();
     static int cuantasExcepciones;
@@ -142,6 +142,7 @@ public static class PruebaCapitulos
             oleadasVistas = null;
             anterior = null;
             golpeado = false;
+            fotoDerrota = false;
             Pasar(Paso.DiezPrimera, ahora);
             return;
         }
@@ -347,6 +348,15 @@ public static class PruebaCapitulos
                 if (Espero(ahora, 1.0)) return;
                 var derrota = Object.FindAnyObjectByType<MenuPerdiste>();
                 if (derrota == null) return;
+                // La foto de la derrota con OTRA VEZ / DESDE LA OLEADA 11 (se escribe al final del cuadro).
+                if (!fotoDerrota)
+                {
+                    fotoDerrota = true;
+                    ScreenCapture.CaptureScreenshot(Path.GetFullPath("../Builds/capitulo_derrota.png"));
+                    pasoDesde = ahora;
+                    return;
+                }
+                if (Espero(ahora, 0.4)) return;
                 foreach (var traducido in Object.FindObjectsByType<TextoTraducido>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 {
                     if (traducido.id != "derrota_otra_vez") continue;
