@@ -23,6 +23,8 @@ public class EstadoPoder
     public bool dorada;
     // Las muertes que lleva la carta de vampiro hacia la proxima cura.
     public int bajasDelVampiro;
+    // Las elecciones de la preparacion de un capitulo (las tiradas dobles), mientras dura: 0 = no hay.
+    public int preparacion;
     public List<CartaElegida> cartas = new List<CartaElegida>();
 
     public EstadoPoder Copia()
@@ -264,6 +266,73 @@ public static class PoderDeLaPartida
 
     public static int BajasDelVampiro { get { return estado.bajasDelVampiro; } }
 
+    // --- La preparacion: las tiradas dobles ---------------------------------------------------
+
+    // Empezar en el capitulo 2 o 3 (Capitulos, de Argon, 21/10): en lugar de las cartas que se habrian juntado hasta ahi,
+    // una rafaga de elecciones al pisar el mapa (PREPARACION 1/3...), cada una de dos copias: 3 en la 11 y 6 en la 21.
+    // Cada tercera es la dorada del jefe que se salto, y vale dos como las demas: siempre 6 o 12 cartas. El PODER queda en
+    // el doble de las elecciones, con la barra en 0, asi la carta siguiente cuesta lo mismo que en una partida corrida.
+    public const int EleccionesPorCapitulo = 3;
+    public const int CopiasEnLaPreparacion = 2;
+
+    public static int EleccionesDePreparacion(int capitulo)
+    {
+        return Math.Max(0, capitulo - 1) * EleccionesPorCapitulo;
+    }
+
+    // WaveManager, al empezar una partida en un capitulo. Antes del guardado de la primera oleada: retomarla vuelve a
+    // ofrecer las mismas elecciones.
+    public static void EmpezarPreparacion(int capitulo)
+    {
+        int elecciones = EleccionesDePreparacion(capitulo);
+        if (!Activo || elecciones <= 0) return;
+        estado.poder = elecciones * CopiasEnLaPreparacion;
+        estado.experiencia = 0;
+        estado.pendientes = elecciones;
+        estado.preparacion = elecciones;
+        estado.dorada = false;
+        Revision++;
+    }
+
+    public static bool EnPreparacion
+    {
+        get { return Activo && estado.preparacion > 0 && estado.pendientes > 0; }
+    }
+
+    // La eleccion de la preparacion que toca (de 1 a TotalDePreparacion), o 0 fuera de ella.
+    public static int EleccionDePreparacion
+    {
+        get { return EnPreparacion ? estado.preparacion - estado.pendientes + 1 : 0; }
+    }
+
+    public static int TotalDePreparacion { get { return estado.preparacion; } }
+
+    // La tercera y la sexta son las doradas de los jefes de la 10 y la 20.
+    public static bool PreparacionConDorada(int eleccion)
+    {
+        return eleccion > 0 && eleccion % EleccionesPorCapitulo == 0;
+    }
+
+    // Cuantas copias suma la eleccion que se esta haciendo: dos en la preparacion, dos la dorada y una las demas.
+    public static int CopiasDeLaEleccion(bool dorada)
+    {
+        return EnPreparacion ? CopiasEnLaPreparacion : dorada ? 2 : 1;
+    }
+
+    // La copia que no entro en la elegida (la de tope 1, o la que estaba a una del tope) va a otra al azar entre las que
+    // se pueden, con la semilla de la partida y la eleccion: retomar da la misma. Sin ninguna, nada. Pura, para probarla.
+    public static string CartaDeRelleno(IList<Carta> cartas, Func<Carta, bool> disponible, string elegida, int semilla, int eleccion)
+    {
+        var candidatas = new List<string>();
+        if (cartas != null)
+            foreach (var c in cartas)
+                if (c != null && c.id != elegida && disponible(c) && !candidatas.Contains(c.id)) candidatas.Add(c.id);
+        if (candidatas.Count == 0) return null;
+        candidatas.Sort(StringComparer.Ordinal);
+        var rng = new System.Random(unchecked(semilla * 19349663 ^ (eleccion + 101) * 83492791));
+        return candidatas[rng.Next(candidatas.Count)];
+    }
+
     // Si la carta puede salir ahora: no llego a su tope y tiene lo que necesita comprado.
     public static bool Disponible(Carta carta, int vecesQueTiene, bool conGranada, bool conFuria)
     {
@@ -298,38 +367,66 @@ public static class PoderDeLaPartida
         return elegidas;
     }
 
-    // Las tres de la eleccion pendiente, con lo comprado de verdad.
+    // Las tres de la eleccion pendiente, con lo comprado de verdad. En la preparacion, la dorada es la de cada tercera.
     public static List<string> Ofrecer(out int dorada)
     {
         var catalogo = CatalogoCartas.Instancia;
-        bool conGranada = CatalogoMejoras.GranadaDesbloqueada;
-        bool conFuria = Progreso.Nivel("furia") > 0;
         int eligiendo = Math.Max(0, estado.poder - estado.pendientes);
-        return Sortear(catalogo != null ? catalogo.cartas : null,
-                       c => Disponible(c, Veces(c != null ? c.id : null), conGranada, conFuria),
-                       estado.semilla, eligiendo, out dorada, estado.dorada);
+        bool conDorada = EnPreparacion ? PreparacionConDorada(EleccionDePreparacion) : estado.dorada;
+        return Sortear(catalogo != null ? catalogo.cartas : null, DisponibleAhora, estado.semilla, eligiendo, out dorada, conDorada);
+    }
+
+    // Si la carta puede salir ahora, con lo comprado de verdad.
+    private static bool DisponibleAhora(Carta c)
+    {
+        return Disponible(c, Veces(c != null ? c.id : null), CatalogoMejoras.GranadaDesbloqueada, Progreso.Nivel("furia") > 0);
     }
 
     // Elige una de las que se ofrecieron: la suma (la dorada vale dos veces, sin pasar del tope)
     // y gasta una eleccion. Devuelve cuantas veces se sumaron.
     public static int Elegir(string id, bool esDorada)
     {
+        string relleno;
+        return Elegir(id, esDorada, out relleno);
+    }
+
+    // En la preparacion, cada eleccion vale dos copias, y la que no entra en la elegida va a otra al azar ('relleno', o
+    // null): asi siempre suma dos.
+    public static int Elegir(string id, bool esDorada, out string relleno)
+    {
+        relleno = null;
         if (!Activo || string.IsNullOrEmpty(id) || estado.pendientes <= 0) return 0;
+        bool preparando = EnPreparacion;
+        int eleccion = EleccionDePreparacion;
+        int copias = CopiasDeLaEleccion(esDorada);
         estado.pendientes--;
-        if (esDorada) estado.dorada = false;
+        if (esDorada && !preparando) estado.dorada = false;
         int sumadas = 0;
         if (id != Curacion)
         {
-            var catalogo = CatalogoCartas.Instancia;
-            var carta = catalogo != null ? catalogo.Buscar(id) : null;
-            int tope = carta != null && carta.tope > 0 ? carta.tope : int.MaxValue;
-            int antes = Veces(id);
-            int despues = Math.Min(tope, antes + (esDorada ? 2 : 1));
-            sumadas = despues - antes;
-            if (despues > 0) veces[id] = despues;
+            sumadas = Sumar(id, copias);
+            if (preparando && sumadas < copias)
+            {
+                var catalogo = CatalogoCartas.Instancia;
+                relleno = CartaDeRelleno(catalogo != null ? catalogo.cartas : null, DisponibleAhora, id, estado.semilla, eleccion);
+                if (relleno != null && Sumar(relleno, copias - sumadas) <= 0) relleno = null;
+            }
         }
+        if (preparando && estado.pendientes == 0) estado.preparacion = 0;
         Revision++;
         return sumadas;
+    }
+
+    // Suma copias de una carta sin pasar de su tope; devuelve cuantas entraron.
+    private static int Sumar(string id, int copias)
+    {
+        var catalogo = CatalogoCartas.Instancia;
+        var carta = catalogo != null ? catalogo.Buscar(id) : null;
+        int tope = carta != null && carta.tope > 0 ? carta.tope : int.MaxValue;
+        int antes = Veces(id);
+        int despues = Math.Min(tope, antes + copias);
+        if (despues > 0) veces[id] = despues;
+        return despues - antes;
     }
 
     // Las cartas que se tienen, en el orden en que se eligieron por primera vez: el HUD.

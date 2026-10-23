@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEditor;
@@ -14,6 +15,9 @@ using UnityEngine.SceneManagement;
 //  1. Con la 20 completada, WaveMode cargada con el capitulo 2 pedido (lo que hacen el selector y OTRA VEZ) arranca en la
 //     11: una oleada nueva (sin retomas, se puede retomar), con el cartel de la 11 y no el de una superada, el cartel del
 //     capitulo del cementerio, sin puntos, con la vida llena y sin tocar las monedas. El capitulo queda para volver.
+//     Y la preparacion (las tiradas dobles): el PODER en 6 con tres elecciones pendientes, que se abren con el juego
+//     congelado y "PREPARACION 1/3", "2/3" y "3/3" (la tercera, con la dorada); elegidas, suman 6 cartas y el juego
+//     sigue. Foto de la primera en Builds/capitulo_preparacion.png.
 //  2. La derrota: OTRA VEZ dice "DESDE LA OLEADA 11", y tocarlo arranca de nuevo en la 11.
 //  3. REINICIAR de la pausa tambien vuelve a la 11.
 //  4. Salir dos veces en la misma oleada pierde la partida, pero la siguiente arranca en el principio de ese capitulo,
@@ -45,7 +49,9 @@ public static class PruebaCapitulos
         DiezSegunda,        // otra vez en la 10, con la 10 completada
         TerminarDiezSegunda,
         EnLaUno,            // la partida del editor, en la 1: pide el capitulo 2 y recarga
-        EnLaOnce,           // lo que hay al empezar en la 11, y muere
+        EnLaOnce,           // lo que hay al empezar en la 11
+        Preparar,           // abre la eleccion pendiente de la preparacion
+        ElegirCarta,        // elige (la dorada, si esta) y vuelve a Preparar; al terminar, muere
         Derrota,            // el texto de OTRA VEZ, y tocarlo
         OtraVez,            // de nuevo en la 11, y REINICIAR
         Reiniciada,         // de nuevo en la 11, y al menu
@@ -73,6 +79,9 @@ public static class PruebaCapitulos
     static bool hay11, cartelDeLaOleada, cartelDelCapitulo;
     static string cartel11 = "";
     static double monedas11 = -1;
+    static int prepPoder = -1, prepPendientes = -1, prepEleccion = 0, prepCartas = -1, prepPendientesDespues = -1;
+    static bool prepEn, prepCongelada = true, prepDoradaBien = true, prepSigue, prepFoto;
+    static readonly List<string> prepTitulos = new List<string>();
     static string textoOtraVez = "";
     static bool dejoDeContar;
     static int oleadaOtraVez = -1, oleadaReiniciada = -1, oleadaRetomada = -1, retomasRetomada = -1;
@@ -280,9 +289,53 @@ public static class PruebaCapitulos
                                    && !cartel11.Contains(Textos.Formato("cartel_oleada_superada", Inicial - 1));
                 var escenario = Object.FindAnyObjectByType<CapitulosDeEscenario>();
                 cartelDelCapitulo = escenario != null && escenario.CartelEnPantalla;
-                // Muere: sin oferta de revivir (en el editor no hay videos), la derrota encima.
-                vida.TakeDamage(100000f);
-                Pasar(Paso.Derrota, ahora);
+                // La preparacion: en el banco no se abre sola (SinCartasAutomaticas), se abre a mano.
+                prepPoder = PoderDeLaPartida.Poder;
+                prepPendientes = PoderDeLaPartida.Pendientes;
+                prepEn = PoderDeLaPartida.EnPreparacion;
+                Pasar(Paso.Preparar, ahora);
+                return;
+            }
+
+            case Paso.Preparar:
+            {
+                if (EleccionDeCartas.Activa || Espero(ahora, 0.6)) return;
+                if (PoderDeLaPartida.Pendientes <= 0)
+                {
+                    prepPendientesDespues = PoderDeLaPartida.Pendientes;
+                    prepCartas = 0;
+                    foreach (var par in PoderDeLaPartida.Elegidas) prepCartas += par.Value;
+                    prepSigue = Time.timeScale > 0.99f && !PoderDeLaPartida.EnPreparacion;
+                    // Muere: sin oferta de revivir (en el editor no hay videos), la derrota encima.
+                    vida.TakeDamage(100000f);
+                    Pasar(Paso.Derrota, ahora);
+                    return;
+                }
+                var eleccion = EleccionDeCartas.Instancia;
+                if (eleccion == null || !eleccion.AbrirAMano()) return;
+                prepEleccion++;
+                Pasar(Paso.ElegirCarta, ahora);
+                return;
+            }
+
+            case Paso.ElegirCarta:
+            {
+                if (Espero(ahora, EleccionDeCartas.SinElegirAlAbrir + 0.4f)) return;
+                var cartas = CartasEnPantalla();
+                if (cartas.Count == 0) return;
+                if (prepEleccion == 1 && !prepFoto)
+                {
+                    prepFoto = true;
+                    ScreenCapture.CaptureScreenshot(Path.GetFullPath("../Builds/capitulo_preparacion.png"));
+                    return;
+                }
+                var titulo = TituloDeLaEleccion();
+                prepTitulos.Add(titulo != null ? titulo.text : "");
+                prepCongelada &= Time.timeScale < 0.01f;
+                var dorada = cartas.Find(b => b.transform.Find("Dorada") != null);
+                prepDoradaBien &= (dorada != null) == PoderDeLaPartida.PreparacionConDorada(prepEleccion);
+                (dorada != null ? dorada : cartas[0]).onClick.Invoke();
+                Pasar(Paso.Preparar, ahora);
                 return;
             }
 
@@ -353,6 +406,26 @@ public static class PruebaCapitulos
         }
     }
 
+    // Las cartas de la eleccion en pantalla (los botones Carta_*).
+    static List<UnityEngine.UI.Button> CartasEnPantalla()
+    {
+        var lista = new List<UnityEngine.UI.Button>();
+        foreach (var b in Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None))
+            if (b.name.StartsWith("Carta_") && b.gameObject.activeInHierarchy) lista.Add(b);
+        return lista;
+    }
+
+    static TMPro.TMP_Text TituloDeLaEleccion()
+    {
+        foreach (var c in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+        {
+            if (c.name != "EleccionDeCartas") continue;
+            var t = c.transform.Find("Panel/Titulo");
+            if (t != null) return t.GetComponent<TMPro.TMP_Text>();
+        }
+        return null;
+    }
+
     // Los zombis, apenas salen: los comunes se despejan (cuentan como muertos) y el jefe, que no se despeja, muere.
     static void MatarATodos(PlayerHealth vida)
     {
@@ -405,6 +478,9 @@ public static class PruebaCapitulos
                        + ", puntos " + puntos11 + ", vida " + vida11 + "/" + vidaMax11 + ", capitulo para volver " + volver11
                        + ", monedas " + monedasAntes.ToString("0.##") + " -> " + monedas11.ToString("0.##"));
         inf.AppendLine("  cartel de la oleada \"" + cartel11.Replace("\n", " / ") + "\"; cartel del capitulo " + cartelDelCapitulo);
+        inf.AppendLine("Preparacion: PODER " + prepPoder + ", pendientes " + prepPendientes + " (en preparacion " + prepEn + "); titulos \""
+                       + string.Join("\", \"", prepTitulos) + "\"; congelada " + prepCongelada + ", la dorada en la tercera " + prepDoradaBien
+                       + "; al terminar " + prepCartas + " cartas, pendientes " + prepPendientesDespues + ", sigue " + prepSigue);
         inf.AppendLine("Derrota: OTRA VEZ dice \"" + textoOtraVez.Replace("\n", " / ") + "\" (traduccion apagada " + dejoDeContar + ")");
         inf.AppendLine("OTRA VEZ: oleada " + oleadaOtraVez + "; REINICIAR: oleada " + oleadaReiniciada);
         inf.AppendLine("Retomada: oleada " + oleadaRetomada + ", retomas " + retomasRetomada + "; despues de la segunda salida: oleada "
@@ -429,6 +505,11 @@ public static class PruebaCapitulos
             cartelDeLaOleada && cartelDelCapitulo,
             puntos11 == 0 && vida11 == vidaMax11 && vidaMax11 > 0 && System.Math.Abs(monedas11 - monedasAntes) < 1e-6,
             volver11 == Capitulo,
+            prepEn && prepPoder == 6 && prepPendientes == 3,
+            prepTitulos.Count == 3 && prepTitulos[0] == Textos.Formato("poder_preparacion", 1, 3)
+                && prepTitulos[1] == Textos.Formato("poder_preparacion", 2, 3) && prepTitulos[2] == Textos.Formato("poder_preparacion", 3, 3)
+                && prepCongelada && prepDoradaBien,
+            prepCartas == 6 && prepPendientesDespues == 0 && prepSigue,
             textoOtraVez.StartsWith(Textos.De("derrota_otra_vez")) && textoOtraVez.Contains(desde) && dejoDeContar,
             oleadaOtraVez == Inicial,
             oleadaReiniciada == Inicial,
@@ -447,6 +528,9 @@ public static class PruebaCapitulos
             "con el cartel de la 11 (no el de una superada) y el del capitulo",
             "sin puntos, con la vida llena y sin tocar las monedas",
             "el capitulo queda para volver",
+            "la preparacion: PODER 6 con tres elecciones pendientes",
+            "PREPARACION 1/3, 2/3 y 3/3 con el juego congelado, la dorada en la tercera",
+            "elegidas, suman 6 cartas y el juego sigue",
             "OTRA VEZ dice desde que oleada",
             "OTRA VEZ arranca en la 11",
             "REINICIAR tambien",

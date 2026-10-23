@@ -105,6 +105,7 @@ public class EleccionDeCartas : MonoBehaviour
     private GameObject lienzoEleccion;
     private RectTransform panel;
     private TMP_Text titulo;
+    private TMP_Text subtitulo;
     private readonly List<Tarjeta> tarjetas = new List<Tarjeta>();
     private float abiertaEn;
     private float cerrandoDesde = -1f;
@@ -446,10 +447,16 @@ public class EleccionDeCartas : MonoBehaviour
             t.aparece = EntradaPorCarta * i;
             tarjetas.Add(t);
         }
-        // Con la dorada, el titulo dice por que salio (de Gemini, 12/10), en el amarillo de la dorada.
+        // Con la dorada, el titulo dice por que salio (de Gemini, 12/10), en el amarillo de la dorada. En la preparacion
+        // de un capitulo, cual de cuantas, y que cada carta vale doble (de Argon, 21/10).
         int eligiendo = PoderDeLaPartida.Poder - PoderDeLaPartida.Pendientes + 1;
-        titulo.text = dorada >= 0 ? Textos.De("carta_bono_jefe") : Textos.Formato("poder_titulo", eligiendo);
+        bool preparando = PoderDeLaPartida.EnPreparacion;
+        if (preparando)
+            titulo.text = Textos.Formato("poder_preparacion", PoderDeLaPartida.EleccionDePreparacion, PoderDeLaPartida.TotalDePreparacion);
+        else
+            titulo.text = dorada >= 0 ? Textos.De("carta_bono_jefe") : Textos.Formato("poder_titulo", eligiendo);
         titulo.color = dorada >= 0 ? ConstructorUI.Amarillo : ConstructorUI.TituloNeon;
+        if (subtitulo != null) subtitulo.text = Textos.De(preparando ? "poder_preparacion_elige" : "poder_elige");
 
         lienzoEleccion.SetActive(true);
         Activa = true;
@@ -473,9 +480,9 @@ public class EleccionDeCartas : MonoBehaviour
         var neon = MaterialDelTituloDeLaPausa();
         if (neon != null) titulo.fontSharedMaterial = neon;
         else if (materialContorno != null) titulo.fontSharedMaterial = materialContorno;
-        var sub = ConstructorUI.Texto(panel, "Elige", Textos.De("poder_elige"), 40f, new Color(0.75f, 0.82f, 0.95f),
-                                      new Vector2(0f, 262f), new Vector2(1000f, 60f), fuente);
-        if (materialContorno != null) sub.fontSharedMaterial = materialContorno;
+        subtitulo = ConstructorUI.Texto(panel, "Elige", Textos.De("poder_elige"), 40f, new Color(0.75f, 0.82f, 0.95f),
+                                        new Vector2(0f, 262f), new Vector2(1000f, 60f), fuente);
+        if (materialContorno != null) subtitulo.fontSharedMaterial = materialContorno;
         lienzoEleccion.SetActive(false);
     }
 
@@ -533,9 +540,14 @@ public class EleccionDeCartas : MonoBehaviour
         if (carta != null && carta.tope > 0)
         {
             int ya = PoderDeLaPartida.Veces(id);
-            int despues = Mathf.Min(carta.tope, ya + (dorada ? 2 : 1));
+            int copias = PoderDeLaPartida.CopiasDeLaEleccion(dorada);
+            int despues = Mathf.Min(carta.tope, ya + copias);
             ConstructorUI.Texto(t.raiz, "Veces", despues + "/" + carta.tope, 34f, color,
                                 new Vector2(0f, -200f), new Vector2(200f, 44f), fuente);
+            // En la preparacion, lo que no entra va a otra carta al azar, y la tarjeta lo dice (de Argon, 22/10).
+            if (PoderDeLaPartida.EnPreparacion && ya + copias > carta.tope)
+                ConstructorUI.Texto(t.raiz, "Extra", Textos.De("carta_extra_al_azar"), 26f, ConstructorUI.Celeste,
+                                    new Vector2(0f, -234f), new Vector2(TamCarta.x - 40f, 34f), fuente);
         }
         if (dorada)
         {
@@ -610,13 +622,22 @@ public class EleccionDeCartas : MonoBehaviour
     {
         if (!Activa || cerrandoDesde >= 0f || t == null) return;
         if (Time.unscaledTime - abiertaEn < SinElegirAlAbrir) return;
-        int sumadas = PoderDeLaPartida.Elegir(t.id, t.dorada);
+        string relleno;
+        int sumadas = PoderDeLaPartida.Elegir(t.id, t.dorada, out relleno);
         var jugador = PlayerHealth.instance;
         if (jugador != null)
         {
-            // La de vida cura solo lo que suma (14/10, de Argon).
-            if (t.id == PoderDeLaPartida.Vida && sumadas > 0) jugador.AplicarCartasDeVida(true);
+            // La de vida cura solo lo que suma (14/10, de Argon). Tambien si fue el relleno de la preparacion.
+            if ((t.id == PoderDeLaPartida.Vida && sumadas > 0) || relleno == PoderDeLaPartida.Vida) jugador.AplicarCartasDeVida(true);
             else if (t.id == PoderDeLaPartida.Curacion) jugador.CurarEntero();
+            // La copia de mas, arriba del jugador, del color de su carta.
+            if (relleno != null)
+            {
+                var catalogo = CatalogoCartas.Instancia;
+                var extra = catalogo != null ? catalogo.Buscar(relleno) : null;
+                Efectos.Caja(jugador.transform.position + Vector3.up, Textos.Formato("carta_extra_elegida", Textos.De("carta_" + relleno + "_nombre")),
+                             extra != null ? extra.color : ConstructorUI.Celeste);
+            }
         }
         elegida = t;
         cerrandoDesde = Time.unscaledTime;

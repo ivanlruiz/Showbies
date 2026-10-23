@@ -38,6 +38,10 @@ aviso_misiones_detalle	Three goals a day, with rewards: find them in the menu	Tr
 poder_barra	POWER {0}	PODER {0}
 poder_titulo	POWER {0}!	¡PODER {0}!
 poder_elige	CHOOSE A CARD	ELIGE UNA CARTA
+poder_preparacion	WARM-UP {0}/{1}	PREPARACIÓN {0}/{1}
+poder_preparacion_elige	EACH CARD COUNTS TWICE	CADA CARTA VALE DOBLE
+carta_extra_al_azar	+1 EXTRA RANDOM CARD	+1 CARTA EXTRA AL AZAR
+carta_extra_elegida	+1 {0}	+1 {0}
 carta_dorada	x2	x2
 carta_bono_jefe	BOSS BONUS!	¡BONO DE JEFE!
 carta_dano_nombre	DAMAGE	DAÑO

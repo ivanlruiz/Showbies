@@ -7156,12 +7156,106 @@ public static class PruebasMejoras
     // con la partida en curso. Deja todo neutro al terminar.
     static void ProbarCartas(Informe inf)
     {
-        try { ProbarCartasAdentro(inf); }
+        try
+        {
+            ProbarCartasAdentro(inf);
+            ProbarPreparacion(inf);
+        }
         finally
         {
             PoderDeLaPartida.Terminar();
             PoderDeLaPartida.SinCartasAutomaticas = false;
         }
+    }
+
+    // La preparacion de un capitulo: las tiradas dobles (de Argon, 21/10).
+    static void ProbarPreparacion(Informe inf)
+    {
+        inf.Igual("preparacion: el capitulo 1 no tiene", 0, PoderDeLaPartida.EleccionesDePreparacion(1));
+        inf.Igual("preparacion: el 2, tres elecciones", 3, PoderDeLaPartida.EleccionesDePreparacion(2));
+        inf.Igual("preparacion: el 3, seis", 6, PoderDeLaPartida.EleccionesDePreparacion(3));
+        inf.Verdadero("preparacion: la tercera y la sexta son doradas",
+                      PoderDeLaPartida.PreparacionConDorada(3) && PoderDeLaPartida.PreparacionConDorada(6));
+        inf.Verdadero("preparacion: las demas no", !PoderDeLaPartida.PreparacionConDorada(1)
+                      && !PoderDeLaPartida.PreparacionConDorada(2) && !PoderDeLaPartida.PreparacionConDorada(4));
+
+        foreach (int capitulo in new[] { 2, 3 })
+        {
+            int elecciones = PoderDeLaPartida.EleccionesDePreparacion(capitulo);
+            string pre = "preparacion del capitulo " + capitulo + ": ";
+            var finales = new List<string>();
+            for (int vuelta = 0; vuelta < 2; vuelta++)
+            {
+                PoderDeLaPartida.Empezar(new EstadoPoder { semilla = 4242 });
+                PoderDeLaPartida.EmpezarPreparacion(capitulo);
+                if (vuelta == 0)
+                {
+                    inf.Igual(pre + "el PODER queda en el doble de las elecciones", elecciones * 2, PoderDeLaPartida.Poder);
+                    inf.Igual(pre + "con la barra en 0", 0, PoderDeLaPartida.Experiencia);
+                    inf.Igual(pre + "y todas pendientes", elecciones, PoderDeLaPartida.Pendientes);
+                    inf.Verdadero(pre + "empieza en la 1", PoderDeLaPartida.EnPreparacion && PoderDeLaPartida.EleccionDePreparacion == 1);
+                }
+                var guardada = PoderDeLaPartida.Instantanea();
+                int primeraDorada;
+                string primeraOferta = string.Join(",", PoderDeLaPartida.Ofrecer(out primeraDorada));
+                bool doradasBien = true;
+                for (int i = 1; i <= elecciones; i++)
+                {
+                    int dorada;
+                    var ids = PoderDeLaPartida.Ofrecer(out dorada);
+                    doradasBien &= (dorada >= 0) == PoderDeLaPartida.PreparacionConDorada(i);
+                    PoderDeLaPartida.Elegir(ids[dorada >= 0 ? dorada : 0], dorada >= 0);
+                }
+                int total = 0;
+                var final = new StringBuilder();
+                foreach (var par in PoderDeLaPartida.Elegidas)
+                {
+                    total += par.Value;
+                    final.Append(par.Key).Append('=').Append(par.Value).Append(' ');
+                }
+                finales.Add(final.ToString());
+                if (vuelta > 0) continue;
+                inf.Verdadero(pre + "la dorada sale cada tercera", doradasBien);
+                inf.Igual(pre + "cada eleccion suma dos copias", elecciones * 2, total);
+                inf.Igual(pre + "al terminar no queda ninguna", 0, PoderDeLaPartida.Pendientes);
+                inf.Verdadero(pre + "y ya no es la preparacion", !PoderDeLaPartida.EnPreparacion && PoderDeLaPartida.TotalDePreparacion == 0);
+                inf.Verdadero(pre + "sin una dorada pendiente", !PoderDeLaPartida.DoradaPendiente);
+                inf.Igual(pre + "el PODER sigue en el doble", elecciones * 2, PoderDeLaPartida.Poder);
+                // Lo guardado al empezar la oleada (antes de elegir) vuelve a ofrecer lo mismo al retomar.
+                PoderDeLaPartida.Empezar(guardada);
+                int dorada2;
+                inf.Igual(pre + "retomada, ofrece lo mismo", primeraOferta, string.Join(",", PoderDeLaPartida.Ofrecer(out dorada2)));
+                inf.Verdadero(pre + "retomada, sigue en la preparacion", PoderDeLaPartida.EnPreparacion && PoderDeLaPartida.EleccionDePreparacion == 1);
+            }
+            inf.Igual(pre + "con la misma semilla sale lo mismo", finales[0], finales[1]);
+        }
+
+        // La de tope 1: esa, y la otra copia en otra carta al azar.
+        PoderDeLaPartida.Empezar(new EstadoPoder { semilla = 77 });
+        PoderDeLaPartida.EmpezarPreparacion(2);
+        string relleno;
+        int sumadas = PoderDeLaPartida.Elegir(PoderDeLaPartida.Escudo, false, out relleno);
+        inf.Igual("preparacion: el escudo (tope 1) entra una vez", 1, sumadas);
+        inf.Verdadero("preparacion: y la otra copia va a otra carta",
+                      relleno != null && relleno != PoderDeLaPartida.Escudo && PoderDeLaPartida.Veces(relleno) == 1);
+        int conRelleno = 0;
+        foreach (var par in PoderDeLaPartida.Elegidas) conRelleno += par.Value;
+        inf.Igual("preparacion: igual suma dos", 2, conRelleno);
+        // Fuera de la preparacion, la de siempre: una copia, sin relleno.
+        PoderDeLaPartida.Empezar(new EstadoPoder { semilla = 77, poder = 1, pendientes = 1 });
+        int sueltas = PoderDeLaPartida.Elegir(PoderDeLaPartida.Escudo, false, out relleno);
+        inf.Verdadero("preparacion: fuera de ella, una copia y sin relleno", sueltas == 1 && relleno == null);
+        // El relleno, puro: sin candidatas, nada; con la misma semilla, la misma.
+        inf.Verdadero("preparacion: sin otra carta posible, sin relleno",
+                      PoderDeLaPartida.CartaDeRelleno(new List<Carta>(), c => true, "dano", 1, 1) == null);
+        var catalogo = CatalogoCartas.Instancia;
+        var cartas = catalogo != null ? catalogo.cartas : null;
+        inf.Igual("preparacion: el relleno no cambia con la misma semilla",
+                  PoderDeLaPartida.CartaDeRelleno(cartas, c => true, "escudo", 9, 2),
+                  PoderDeLaPartida.CartaDeRelleno(cartas, c => true, "escudo", 9, 2));
+        inf.Verdadero("preparacion: el relleno nunca es la elegida",
+                      PoderDeLaPartida.CartaDeRelleno(cartas, c => true, "escudo", 9, 2) != "escudo");
+        PoderDeLaPartida.Terminar();
     }
 
     static void ProbarCartasAdentro(Informe inf)

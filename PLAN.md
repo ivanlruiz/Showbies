@@ -464,7 +464,7 @@ de la derrota, y contestó el 21/10:
 8. **El modo libre**, de paso: los especiales cada 5,5 s y el escupidor con tope 2 (hecho el 21/10, `a15f478`).
 
 **Hecho el 22/10**: empezar en un capítulo (`Capitulos`, ver CLAUDE.md), OTRA VEZ, REINICIAR y el ¡A JUGAR! de la tienda
-volviendo al capítulo, y ¡CAPÍTULO SUPERADO! con el punto de control. **Falta**: el selector y las tiradas dobles.
+volviendo al capítulo, ¡CAPÍTULO SUPERADO! con el punto de control y las tiradas dobles. **Falta**: el selector.
 
 ## Orden propuesto
 

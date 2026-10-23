@@ -319,6 +319,8 @@ public class WaveManager : MonoBehaviour
             if (guardada > 1) Progreso.OlvidarOleadaEnCurso();
             OleadaActual = Capitulos.OleadaInicial(capitulo) - 1;
             Progreso.CapituloParaVolver = capitulo;
+            // Las cartas de los capitulos que se salto, en una rafaga al empezar (las tiradas dobles).
+            PoderDeLaPartida.EmpezarPreparacion(capitulo);
         }
         Capitulos.ParaEmpezar = 0;
         StartCoroutine(Jugar());

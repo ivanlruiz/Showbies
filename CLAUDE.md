@@ -908,9 +908,19 @@ consultando `EnemyController.ZombisVivos`:
   veces). El capítulo de la partida queda en el progreso (`Progreso.CapituloParaVolver`, sin subir la versión), y
   completar la 10 o la 20 por primera vez lo pasa al que destrabó (`Capitulos.QueDestraba`): a ese vuelven **OTRA VEZ**
   de la derrota (que dice "OTRA VEZ / DESDE LA OLEADA 11"), **REINICIAR** de la pausa (`OlvidarPartidaSiEsOleadas`) y
-  el **¡A JUGAR!** de la tienda sin partida para retomar. Lo que falta (de Argon, en `PLAN.md`): el selector y las
-  cartas de arranque ("tiradas dobles"). Lo prueba **ShowBies > Pruebas > Empezar en un capitulo (play)** (ver Pruebas
-  y medición).
+  el **¡A JUGAR!** de la tienda sin partida para retomar. Lo que falta (de Argon, en `PLAN.md`): el selector. Lo prueba
+  **ShowBies > Pruebas > Empezar en un capitulo (play)** (ver Pruebas y medición).
+
+  **Las cartas de los capítulos que se saltan, en "tiradas dobles"** (de Argon, 21/10; `PoderDeLaPartida`, la
+  preparación): empezar en la 11 deja el PODER en 6 con la barra en 0 y tres elecciones pendientes, y en la 21, en 12
+  con seis (`EmpezarPreparacion`, desde `WaveManager.Start`, antes del guardado de la primera oleada: retomarla vuelve a
+  ofrecer lo mismo). Se abren en ráfaga al pisar el mapa, con el juego congelado, como cualquier elección, con
+  "PREPARACIÓN 1/3" y "CADA CARTA VALE DOBLE" (`EleccionDePreparacion`, `TotalDePreparacion`). **Cada elegida suma dos
+  copias**, también la tercera y la sexta, que salen doradas (las de los jefes de la 10 y la 20,
+  `PreparacionConDorada`): siempre 6 o 12 cartas. La que no entra entera (tope 1, o a una del tope) va al tope y la
+  copia que sobra a otra al azar (`CartaDeRelleno`, con la semilla de la partida y la elección: retomar da la misma); la
+  tarjeta lo avisa ("+1 CARTA EXTRA AL AZAR") y al elegirla sale "+1 VAMPIRISMO" arriba del jugador. En los bancos no se
+  abren solas (`SinCartasAutomaticas`). El arma salta en vivo con las cartas de daño antes del primer zombi.
 
   **Terminar la 10 o la 20 es ¡CAPÍTULO N SUPERADO!** (de Argon, 21/10; `Capitulos.QueCierra`): el cartel de la oleada
   superada dice eso en lugar de "¡OLEADA 10 SUPERADA!", con su bono de siempre, dura 2 s en vez de 1,4 (el descanso
@@ -3376,8 +3386,9 @@ versionCode) en `Builds/build_result.txt` (raíz del repo, gitignoreada) y sirve
   otra vez en la 10, sin punto de control y curando la mitad de la vida. Después, con la 20 completada y el
   capítulo 2 pedido, WaveMode arranca en la 11 como una oleada nueva, con el cartel de la 11 y el del cementerio, sin
   puntos, con la vida llena y sin tocar las monedas, y el capítulo queda para volver; la derrota dice "DESDE LA OLEADA
-  11" y OTRA VEZ, REINICIAR y la partida que se pierde por salir dos veces arrancan en la 11. Escribe
-  `Builds/prueba_capitulos.txt`.
+  11" y OTRA VEZ, REINICIAR y la partida que se pierde por salir dos veces arrancan en la 11. En la 11, además, la
+  preparación: el PODER en 6 con tres elecciones, "PREPARACIÓN 1/3" a "3/3" con el juego congelado y la dorada en la
+  tercera, y al terminar 6 cartas (foto en `Builds/capitulo_preparacion.png`). Escribe `Builds/prueba_capitulos.txt`.
 - **Los bancos en play devuelven el progreso** (`RespaldoDelBanco`): cada uno guarda al arrancar el progreso real del
   editor, los PlayerPrefs del juego, `runInBackground` y "Teclado y mouse en el editor", y los devuelve al volver a modo
   edición (antes no: al salir de play, Progreso guarda lo que tiene). La copia va a `Library/ShowBies/RespaldoDelBanco`,
