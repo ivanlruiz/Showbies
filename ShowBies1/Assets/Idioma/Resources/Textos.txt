@@ -413,3 +413,16 @@ notif_pedido_titulo	DON'T MISS YOUR LOOT!	¡NO PIERDAS TU BOTÍN!
 notif_pedido_texto	Want a heads-up when your streak is about to reset or an event is ending? Zero spam, promise!	¿Te avisamos cuando tu racha esté a punto de cortarse o un evento vaya a terminar? ¡Cero spam, prometido!
 notif_pedido_si	SURE!	¡SÍ, AVÍSAME!
 notif_pedido_no	NOT NOW	AHORA NO
+opciones_novedades	PATCH NOTES	NOVEDADES
+novedades_titulo	WHAT'S NEW!	¡NOVEDADES!
+novedades_version	UPDATE {0}	VERSIÓN {0}
+novedades_1_titulo	CHAPTER CHECKPOINTS!	¡PUNTOS DE CONTROL!
+novedades_1_texto	Beat wave 10 or 20 to start future runs there with bonus cards!	¡Supera la oleada 10 o la 20 y empieza ahí con cartas extra!
+novedades_2_titulo	5 DEADLY NEW ZOMBIES	5 ZOMBIS CON HABILIDADES
+novedades_2_texto	Watch out for Shielders, Bloaters and Leapers in both modes!	¡Cuidado con el blindado, el hinchado y el saltador!
+novedades_3_titulo	THE BAT & 15 NEW STARS	EL BATE Y 15 ESTRELLAS
+novedades_3_texto	Smash riot shields, kick Bloaters away and earn bestiary stars!	¡Rompe escudos, patea hinchados y gana estrellas del bestiario!
+novedades_4_titulo	STREAK ALERTS	AVISOS DE RACHA
+novedades_4_texto	Optional reminders so you never lose your streak, and fewer ads!	Avisos opcionales para no perder tu racha, ¡y menos anuncios!
+novedades_discord	DISCORD	DISCORD
+novedades_jugar	LET'S PLAY!	¡A JUGAR!

@@ -32,6 +32,12 @@ public class BotonAtrasMenu : MonoBehaviour
 
     public void Atras()
     {
+        // Las novedades de una version nueva: el atras es ¡A JUGAR!.
+        if (VentanaNovedades.Abierta)
+        {
+            VentanaNovedades.CerrarLaAbierta();
+            return;
+        }
         // La que pide el permiso de las notificaciones: el atras es AHORA NO.
         if (PedidoDeNotificaciones.Abierto)
         {

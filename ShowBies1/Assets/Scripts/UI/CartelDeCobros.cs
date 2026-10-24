@@ -81,7 +81,7 @@ public class CartelDeCobros : MonoBehaviour
         if (cartel == null)
         {
             if (!CobrosSolos.Hay || t - cargadoEn < Espera) return;
-            if (VentanaRecompensaDiaria.Abierta || VentanaRecompensaDiaria.Ocupada || ServicioAnuncios.ConsentimientoEnPantalla) return;
+            if (VentanaNovedades.Ocupada || VentanaRecompensaDiaria.Abierta || VentanaRecompensaDiaria.Ocupada || ServicioAnuncios.ConsentimientoEnPantalla) return;
             if (SelectorDeCapitulos.Abierto) return;
             Armar(CobrosSolos.Tomar());
             return;

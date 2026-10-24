@@ -8311,6 +8311,12 @@ public static class PruebasMejoras
                       && !Notificaciones.CorrespondePedir(0, EstadoDelPermiso.Bloqueado, true, true, true, true, 5));
         inf.Verdadero("notificaciones: ni si las apago en OPCIONES",
                       !Notificaciones.CorrespondePedir(0, EstadoDelPermiso.SinPedir, false, true, true, true, 5));
+
+        // Las novedades de la version (VentanaNovedades): una vez por version, y nunca al que no jugo.
+        inf.Verdadero("novedades: salen con una version nueva", VentanaNovedades.HayQueMostrar("1.7.0", "1.7.1", true));
+        inf.Verdadero("novedades: y con ninguna vista (venia de antes de la 1.7.1)", VentanaNovedades.HayQueMostrar("", "1.7.1", true));
+        inf.Verdadero("novedades: no dos veces la misma", !VentanaNovedades.HayQueMostrar("1.7.1", "1.7.1", true));
+        inf.Verdadero("novedades: al que nunca jugo, no", !VentanaNovedades.HayQueMostrar("", "1.7.1", false));
     }
 
     // "Tipo HH:mm numero | ...", para comparar un plan entero de una.

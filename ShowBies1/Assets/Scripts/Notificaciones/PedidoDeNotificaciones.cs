@@ -7,8 +7,9 @@ using UnityEngine.UI;
 // frio, en EE. UU. "el 75 % toca Don't allow por reflejo", y Android no deja volver a mostrar su cartel despues de dos
 // rechazos). "¡NO PIERDAS TU BOTIN!", que se avisa y "cero spam", y dos botones: ¡SI, AVISAME! (verde, late) recien ahi
 // llama al dialogo del sistema; AHORA NO cierra sin gastarlo. Sale en el menu tranquilo, en la fila de PedidoDeResena
-// (despues del consentimiento de los anuncios y antes de la reseña), cuando Notificaciones.CorrespondePedirAhora: la
-// primera vez al llegar a la oleada 5 o al cobrar la primera diaria, y una segunda si dijo que no.
+// (despues del consentimiento de los anuncios y antes de la reseña), al volver de jugar (nunca al abrir la app en frio)
+// y cuando Notificaciones.CorrespondePedirAhora: la primera vez al llegar a la oleada 5 o al cobrar la primera diaria, y
+// una segunda si dijo que no.
 //
 // No esta en la escena: se instala al cargar el menu sobre ConfirmarSalir y copia su ventana ya armada (el mismo esquema:
 // titulo, aviso, un boton verde y uno de vidrio). El atras de Android es AHORA NO (BotonAtrasMenu).
@@ -17,6 +18,9 @@ public class PedidoDeNotificaciones : MonoBehaviour
     private const float DuracionRebote = 0.3f;
 
     private static PedidoDeNotificaciones instancia;
+    // Solo al volver de jugar, nunca al abrir la app en frio (Argon): la escena que se cargo antes del menu.
+    private static int escenaAnterior = -1;
+    private static bool volvioDeJugar;
 
     private ConfirmarSalir confirmarSalir;
     private GameObject panel;
@@ -32,6 +36,8 @@ public class PedidoDeNotificaciones : MonoBehaviour
     private static void ResetearEstadoCompartido()
     {
         instancia = null;
+        escenaAnterior = -1;
+        volvioDeJugar = false;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -43,7 +49,11 @@ public class PedidoDeNotificaciones : MonoBehaviour
 
     private static void AlCargar(Scene escena, LoadSceneMode modo)
     {
+        int anterior = escenaAnterior;
+        escenaAnterior = escena.buildIndex;
         if (escena.buildIndex != 0) return;
+        // Una partida, la derrota o el tutorial: cualquier escena que no sea el menu.
+        volvioDeJugar = anterior > 0;
         var salir = FindAnyObjectByType<ConfirmarSalir>(FindObjectsInactive.Include);
         if (salir == null) return;
         instancia = salir.gameObject.AddComponent<PedidoDeNotificaciones>();
@@ -58,7 +68,7 @@ public class PedidoDeNotificaciones : MonoBehaviour
     // La llama PedidoDeResena con el menu tranquilo. Devuelve si la abrio (y entonces la reseña espera otra visita).
     public static bool PedirSiCorresponde()
     {
-        if (instancia == null || !Notificaciones.CorrespondePedirAhora) return false;
+        if (instancia == null || !volvioDeJugar || !Notificaciones.CorrespondePedirAhora) return false;
         if (!instancia.Abrir()) return false;
         Notificaciones.AnotarPedido();
         return true;

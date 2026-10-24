@@ -243,7 +243,8 @@ public class VentanaRecompensaDiaria : MonoBehaviour
 
     private void Update()
     {
-        if (pendiente && (tienda == null || !tienda.Abierta))
+        // Despues de las novedades de una version nueva (VentanaNovedades), que van primero.
+        if (pendiente && (tienda == null || !tienda.Abierta) && !VentanaNovedades.Ocupada)
         {
             pendiente = false;
             Abrir();

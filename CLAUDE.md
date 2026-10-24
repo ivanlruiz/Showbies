@@ -52,7 +52,7 @@ Assets/Scripts/Armas/       ← GunController, BulletController, Proyectiles (lo
 Assets/Scripts/Jugador/     ← PlayerController, PlayerHealth, PlayerJS (móvil), JoystickDinamico (el joystick que aparece bajo el pulgar), Transitions, Furia, Bate (el golpe cuerpo a cuerpo), AspectoDelHeroe (la remera blanca, el aura y su sombra)
 Assets/Scripts/Zombi/       ← EnemyController, Enemy (ScriptableObject), GeneradorZombis, WaveManager, BarraDeVida, Escalado, ManchaDeSangre, JefePatrones, IMovimientoPropio, ZombiDelTesoro, ZombiEscupidor (y su AcidoDelEscupidor), ZombiSaltador, ZombiChaman, ZombiBlindado, ZombiHinchado
 Assets/Scripts/Camara/      ← CamaraJugador
-Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde, BotonBate, SelectorDeCapitulos
+Assets/Scripts/UI/          ← ConditionalShow, Score, highscoretext, ContadorFps, IndicadorMejoraCadencia, IndicadorRecargaGranada, JoystickGranada, MenuPausa, BotonAtrasMenu, ContadorMonedas, TextoMonedasPartida, FormatoNumeros, ContadorCombo, VinetaDanio, AparecerConRebote, BotonJugoso, CurvasUI, TexturasUI, MedidorBalance, BotonFuria, ConfirmarSalir, CursorMira, BotonModoLibre, BotonOleadas, FondoMenu, MonedasDelFondo, TituloEnLaNiebla, IconoDeBoton, OpcionesSonido, SliderVolumen, VolumenEnPausa, VentanaRecompensaDiaria, VentanaMisiones, AvisoDeMisiones, VentanaBestiario, VentanaLogros, BotonDiscord, BarraDelJefe, ConstructorUI, Tema, PintarConTema, Interruptor, DerrotaEnLaPartida, CartelDeCobros, FlechasDelBorde, BotonBate, SelectorDeCapitulos, VentanaNovedades
 Assets/Scripts/PowerUps/    ← PowerUp (el spawner), PickupCaducidad, AspectoDeCaja (como se ve una caja), Moneda (las que sueltan los zombis)
 Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un JSON), Mejora, CatalogoMejoras, AplicarMejoras, ModoLibre, RecompensaDiaria, RelojConfiable, MisionesDiarias, DesafioSemanal, CobrosSolos, Bestiario, Economia, NivelJugador, Logros, Desbloqueo, Capitulos (empezar las oleadas en la 11 o la 21)
 Assets/Scripts/Cartas/      ← PoderDeLaPartida (el PODER y las cartas de la partida), EleccionDeCartas (la barra, las chispas y la elección), CartasEnElJugador (el anillo del escudo y los drones), Carta, CatalogoCartas
@@ -2366,6 +2366,27 @@ actualizaciones).** Solo en Android,
 decidido en runtime; en el editor loguea "se pediría". **En el mismo momento tranquilo, y antes, va el cartel de
 consentimiento de los anuncios** cuando hace falta (ver AdMob); si sale, la reseña queda para otra visita.
 
+## ¿Qué hay de nuevo?
+
+Pedido de Ivan (24/10: que cada actualización llegue a la gente; también se anuncia en Discord) y diseño de Argon.
+`VentanaNovedades` (`Assets/Scripts/UI/`): la primera vez que alguien que ya jugaba entra al menú con una versión nueva,
+una ventana de carbón neón de 980 × 620 con "¡NOVEDADES!", la versión en una píldora celeste, **cuatro novedades fijas, sin
+scroll** (cada una con su disco, un retrato del bestiario o el cofre, con el anillo de su color, el título en amarillo y una
+línea), DISCORD (el violeta de Discord: abre la invitación) y ¡A JUGAR! (late; tocar afuera, pasados 0,8 s, es lo mismo).
+Entra con el fondo oscureciéndose, la ventana de 0,8 a 1 con rebote y las filas en cascada desde la izquierda.
+
+- **A quién**: al que nunca terminó una partida no le sale nunca (todo el juego es nuevo): se anota la versión en silencio
+  (`PlayerPrefs["NovedadesVistas"]`). El que se salteó versiones ve la última, que junta lo grande de las anteriores.
+- **Las novedades son las filas `novedades_1` a `novedades_4` de la tabla**: se cambian ahí con cada versión (Argon: vender lo
+  que el jugador gana, nunca lo que pierde, como "las balas ya no atraviesan").
+- **Va primera en el menú** (Argon: "como mucho, novedades y la diaria, y a jugar"): mientras está `Ocupada` esperan la
+  recompensa diaria, el cartel de los premios cobrados solos, la tienda que se abre sola y el aviso de actualización; y en la
+  visita en que salió (`SalioEnEstaVisita`) `PedidoDeResena` no pide ni el permiso de las notificaciones ni la reseña.
+- **Se vuelve a abrir desde NOVEDADES en OPCIONES**, un botón de vidrio siempre presente (encima de PRIVACIDAD). El atrás de
+  Android la cierra.
+- No está en la escena: se instala al cargar el menú en el canvas "Main Menu", como el selector de capítulos, y toma del
+  bestiario la fuente y la píldora, de las misiones el cofre y el sonido, y de `BotonDiscord` su ícono.
+
 ## Notificaciones locales
 
 Pedido de Ivan (24/10: que el jugador vuelva, y que se entere de cada versión) y diseño de Argon (24/10, pensando en el
@@ -2400,7 +2421,8 @@ jugador de Norteamérica, "que tiene tolerancia cero al spam"). Son **locales**,
 - **`PedidoDeNotificaciones`** es la ventana propia antes del diálogo de Android 13+ ("¡NO PIERDAS TU BOTÍN!", ¡SÍ,
   AVÍSAME! verde y AHORA NO): pedido en frío, "el 75 % toca Don't allow por reflejo", y Android no vuelve a mostrar su
   cartel después de dos rechazos. Sale en el menú tranquilo, en la fila de `PedidoDeResena` (después del consentimiento de
-  los anuncios y antes de la reseña, que queda para otra visita), la primera vez al llegar a la oleada 5 o al cobrar la
+  los anuncios y antes de la reseña, que queda para otra visita), solo al volver de jugar (nunca al abrir la app en frío)
+  y no en la visita de las novedades; la primera vez al llegar a la oleada 5 o al cobrar la
   primera diaria, y una segunda (si dijo AHORA NO) en el nivel 5 o con una racha de 2 (`Notificaciones.CorrespondePedir`).
   Nunca con el permiso dado o bloqueado, ni con las notificaciones apagadas en OPCIONES. No está en la escena: se instala
   al cargar el menú sobre `ConfirmarSalir` y copia su ventana ya armada (`ConfirmarSalir.CopiarVentana`, el mismo esquema).
@@ -2787,6 +2809,7 @@ progreso):
 | `"JoysticksDinamicos"` | el interruptor JOYSTICKS DINÁMICOS de OPCIONES (solo en el teléfono), 1 o 0 | `JoystickDinamico.Activos`, al empezar cada partida; sin nada guardado, prendido |
 | `"Notificaciones"` | el interruptor NOTIFICACIONES de OPCIONES (solo en el teléfono), o ¡SÍ, AVÍSAME! de la ventana del permiso, 1 o 0 | `Notificaciones.Preferidas`; sin nada guardado, prendidas (salen si además Android las deja) |
 | `"NotificacionesPedidas"` | `PedidoDeNotificaciones`, cada vez que muestra la ventana propia del permiso | `Notificaciones.CorrespondePedir` (como mucho dos) |
+| `"NovedadesVistas"` | `VentanaNovedades`, la versión cuyas novedades ya se mostraron (o, al que nunca jugó, la que tenía al abrir el menú) | `VentanaNovedades`; distinta de `Application.version` y con alguna partida terminada, salen |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.

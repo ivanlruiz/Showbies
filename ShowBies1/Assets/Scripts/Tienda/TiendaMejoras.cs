@@ -428,7 +428,7 @@ public class TiendaMejoras : MonoBehaviour
 
     private void Update()
     {
-        if (abrirAlLlegar && !VentanaRecompensaDiaria.Ocupada)
+        if (abrirAlLlegar && !VentanaRecompensaDiaria.Ocupada && !VentanaNovedades.Ocupada)
         {
             abrirAlLlegar = false;
             Abrir();

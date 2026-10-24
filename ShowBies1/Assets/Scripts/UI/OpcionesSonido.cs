@@ -8,8 +8,9 @@ using UnityEngine.UI;
 // (ver Tema), y el interruptor de los FPS ocupa su lugar. Con anuncios de AdMob suma
 // PRIVACIDAD, para cambiar el consentimiento de Europa, solo cuando UMP lo pide, y el
 // interruptor del SOMBRERO DE CALABAZA, solo si ya se gano (EventoHalloween), y en el
-// telefono AUTO-APUNTAR (PlayerJS, desde el 10/10) y JOYSTICKS DINAMICOS (JoystickDinamico,
-// desde el 12/10), que en PC no hacen nada. No tiene
+// telefono AUTO-APUNTAR (PlayerJS, desde el 10/10), JOYSTICKS DINAMICOS (JoystickDinamico,
+// desde el 12/10) y NOTIFICACIONES (Notificaciones, desde la 1.7.1), que en PC no hacen
+// nada, y siempre NOVEDADES, que vuelve a abrir las de la version (VentanaNovedades). No tiene
 // objetos propios en la escena: al arrancar copia el globo y la ventana del idioma
 // (SelectorIdioma) y los adapta, asi se ven igual sin mantener dos copias a mano. El
 // engranaje queda a la derecha del globo.
@@ -40,6 +41,7 @@ public class OpcionesSonido : MonoBehaviour
     private const float YVolver = -255f;
     private const float DePrivacidadAlFps = 135f;
     private const float CrecidaConPrivacidad = 130f;
+    private const float CrecidaConNovedades = 130f;
     private const float DelSombreroAlFps = 120f;
     private const float DelAutoAlFps = 120f;
     private const float DeLosJoysticksAlAuto = 120f;
@@ -53,6 +55,7 @@ public class OpcionesSonido : MonoBehaviour
     private RectTransform controlFps;
     private RectTransform botonVolver;
     private RectTransform botonPrivacidad;
+    private RectTransform botonNovedades;
     private RectTransform controlSombrero;
     private RectTransform controlAuto;
     private RectTransform controlJoysticks;
@@ -200,6 +203,7 @@ public class OpcionesSonido : MonoBehaviour
                                                   () => Notificaciones.Activas, Notificaciones.Fijar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
 
         CrearPrivacidad(fuente, pildora, sonidoClick);
+        botonNovedades = CrearBotonDeVidrio("BotonNovedades", "opciones_novedades", AbrirNovedades, fuente, pildora, sonidoClick);
         Acomodar(false, false, false);
     }
 
@@ -209,7 +213,23 @@ public class OpcionesSonido : MonoBehaviour
     // abrirla. Es un boton de vidrio como VOLVER, y toma de el el color, el tamanio y la letra.
     private void CrearPrivacidad(TMP_FontAsset fuente, Sprite pildora, AudioClip sonidoClick)
     {
-        if (botonVolver == null) return;
+        botonPrivacidad = CrearBotonDeVidrio("BotonPrivacidad", "opciones_privacidad", ServicioAnuncios.MostrarPrivacidad,
+                                             fuente, pildora, sonidoClick);
+    }
+
+    // NOVEDADES: vuelve a abrir la ventana de las novedades de la version (VentanaNovedades), para el que la cerro apurado
+    // o quiere entrar al Discord mas tarde (Argon, 24/10).
+    private void AbrirNovedades()
+    {
+        Cerrar();
+        VentanaNovedades.AbrirLaUltima();
+    }
+
+    // Un boton de vidrio como VOLVER, que toma de el el color, el tamanio y la letra.
+    private RectTransform CrearBotonDeVidrio(string nombre, string id, UnityEngine.Events.UnityAction alTocar,
+                                             TMP_FontAsset fuente, Sprite pildora, AudioClip sonidoClick)
+    {
+        if (botonVolver == null) return null;
         var fondoVolver = botonVolver.Find("Visual/Fondo");
         var imgVolver = fondoVolver != null ? fondoVolver.GetComponent<Image>() : null;
         var textoVolver = botonVolver.GetComponentInChildren<TMP_Text>(true);
@@ -218,9 +238,9 @@ public class OpcionesSonido : MonoBehaviour
         float tamanioTexto = textoVolver != null ? textoVolver.fontSize : 50f;
         if (pildora == null && imgVolver != null) pildora = imgVolver.sprite;
 
-        var boton = ConstructorUI.Boton(ventana, "BotonPrivacidad", Vector2.zero, botonVolver.sizeDelta, color, colorDelTexto,
+        var boton = ConstructorUI.Boton(ventana, nombre, Vector2.zero, botonVolver.sizeDelta, color, colorDelTexto,
                                         null, "", tamanioTexto, fuente, pildora, sonidoClick);
-        boton.onClick.AddListener(ServicioAnuncios.MostrarPrivacidad);
+        boton.onClick.AddListener(alTocar);
         // Apagado mientras se le pone el id: TextoTraducido escribe en OnEnable, y sin id
         // mostraria "[]". Asi tambien cambia con el idioma, como los otros controles.
         var texto = boton.GetComponentInChildren<TMP_Text>(true);
@@ -228,22 +248,23 @@ public class OpcionesSonido : MonoBehaviour
         {
             texto.gameObject.SetActive(false);
             var traducido = texto.gameObject.AddComponent<TextoTraducido>();
-            traducido.id = "opciones_privacidad";
+            traducido.id = id;
             texto.gameObject.SetActive(true);
         }
-        botonPrivacidad = (RectTransform)boton.transform;
+        return (RectTransform)boton.transform;
     }
 
     // Sin los que pueden faltar, los tres controles de siempre; con cada uno, la ventana crece y
     // todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: los tres del telefono (AUTO-APUNTAR,
-    // JOYSTICKS DINAMICOS y NOTIFICACIONES), el SOMBRERO y abajo PRIVACIDAD.
+    // JOYSTICKS DINAMICOS y NOTIFICACIONES), el SOMBRERO, NOVEDADES y abajo PRIVACIDAD.
     private void Acomodar(bool conPrivacidad, bool conSombrero, bool conAuto)
     {
         int cual = (conPrivacidad ? 1 : 0) + (conSombrero ? 2 : 0) + (conAuto ? 4 : 0);
         if (cual == acomodada || ventana == null) return;
         acomodada = cual;
 
-        float crecida = (conPrivacidad ? CrecidaConPrivacidad : 0f) + (conSombrero ? DelSombreroAlFps : 0f)
+        float crecida = (botonNovedades != null ? CrecidaConNovedades : 0f)
+                        + (conPrivacidad ? CrecidaConPrivacidad : 0f) + (conSombrero ? DelSombreroAlFps : 0f)
                         + (conAuto ? DelAutoAlFps + DeLosJoysticksAlAuto + DeLasNotificacionesALosJoysticks : 0f);
         float subir = crecida * 0.5f;
         ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana + crecida);
@@ -277,9 +298,15 @@ public class OpcionesSonido : MonoBehaviour
             Poner(controlSombrero, y);
             controlSombrero.gameObject.SetActive(conSombrero);
         }
+        // NOVEDADES siempre, y PRIVACIDAD debajo, si hace falta.
+        if (botonNovedades != null)
+        {
+            y -= DePrivacidadAlFps;
+            Poner(botonNovedades, y);
+        }
         if (botonPrivacidad != null)
         {
-            Poner(botonPrivacidad, y - DePrivacidadAlFps);
+            Poner(botonPrivacidad, botonNovedades != null ? y - CrecidaConNovedades : y - DePrivacidadAlFps);
             botonPrivacidad.gameObject.SetActive(conPrivacidad);
         }
     }

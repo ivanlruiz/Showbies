@@ -166,7 +166,7 @@ public class AvisoDeActualizacion : MonoBehaviour
     // mientras se va y los otros carteles que se instalan solos.
     private bool MenuTranquilo()
     {
-        return !VentanaRecompensaDiaria.Abierta && !VentanaRecompensaDiaria.Ocupada && !VentanaMisiones.Abierta
+        return !VentanaNovedades.Ocupada && !VentanaRecompensaDiaria.Abierta && !VentanaRecompensaDiaria.Ocupada && !VentanaMisiones.Abierta
                && !VentanaBestiario.Abierta && !VentanaLogros.Abierta
                && (atras.tienda == null || !atras.tienda.Abierta)
                && (atras.confirmarSalir == null || !atras.confirmarSalir.Abierta)

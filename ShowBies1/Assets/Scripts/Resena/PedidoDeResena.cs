@@ -103,7 +103,7 @@ public class PedidoDeResena : MonoBehaviour
 
         // Con todo cerrado de verdad: hasta el 24/9 no miraba el idioma, las opciones ni el
         // panel de modos, y la hoja de Play podia salir mientras se arrastraba el volumen.
-        bool tranquilo = !VentanaRecompensaDiaria.Abierta && !VentanaMisiones.Abierta && !VentanaBestiario.Abierta
+        bool tranquilo = !VentanaNovedades.Ocupada && !VentanaRecompensaDiaria.Abierta && !VentanaMisiones.Abierta && !VentanaBestiario.Abierta
                          && !VentanaLogros.Abierta && (tienda == null || !tienda.Abierta)
                          && (confirmarSalir == null || !confirmarSalir.Abierta)
                          && (selectorIdioma == null || !selectorIdioma.Abierto)
@@ -127,6 +127,10 @@ public class PedidoDeResena : MonoBehaviour
         // terminada, si UMP dice que hace falta. Sin el, ahi no hay videos. Si sale, la reseña
         // queda para otra visita: dos ventanas seguidas son demasiado.
         if (ServicioAnuncios.PedirConsentimientoSiHaceFalta()) return;
+
+        // En la visita en que salieron las novedades de una version nueva, nada mas (Argon: "como mucho, novedades y
+        // la diaria, y a jugar").
+        if (VentanaNovedades.SalioEnEstaVisita) return;
 
         // Despues del consentimiento, la ventana propia que pide el permiso de las notificaciones; si sale, la reseña
         // queda para otra visita, como con el consentimiento.
