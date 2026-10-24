@@ -3,7 +3,30 @@
 Lo que no es el juego pero lo muestra: el logo y las piezas para la ficha de Play, YouTube
 y TikTok. Vive fuera de `ShowBies1/` a propósito, para que Unity no lo importe.
 
-## `logo.py` — el logo de ShowBies
+## `logo_toxico/` — el logo de ShowBies (desde el 23/10)
+
+El logo es **"Tóxico Arcade"**: SHOW en crema con dos agujeros de bala y BIES en verde tóxico, con ojos adentro de la B,
+sobre un bloque oscuro con un borde de neón que va del rosa al celeste. Lo diseñó Argon y lo dibujó Nano Banana (Gemini)
+el 23/10, después de que a Ivan no le gustaran ni el dorado de abajo ni dos pruebas de neón; Ivan lo eligió entre dos.
+
+- `original_nano_banana.jpg`: lo que bajó de Gemini a tamaño completo (2752 × 1536), sobre el fondo liso `#0b0618`.
+  Trae en las esquinas un fantasma casi invisible de la captura que se le pasó de referencia.
+- `recortar_logo.py`: lo deja con transparencia en `ShowBies1/Assets/Sprites/UI/LogoShowBies.png`, a 1721 × 532
+  como el de antes (el quad del menú no cambia), y escribe `vista_sobre_blanco.png` para revisar el recorte.
+
+```bash
+cd Marketing/logo_toxico
+python recortar_logo.py
+```
+
+El recorte no es por color: el bloque oscuro de detrás de las letras es casi del color del fondo y quedaría agujereado.
+Lo que se aparta mucho del fondo (letras y borde de neón) es sólido, junto con todo lo que ese borde encierra; afuera, el
+resplandor sale de cuánto se aparta del fondo, con el color despremultiplicado para que no ensucie el cielo del menú, y
+lejos del logo no queda nada (así se va el fantasma).
+
+## `logo.py` — el logo dorado de antes
+
+**No lo corras sin querer**: escribe `LogoShowBies.png` y pisa el logo de ahora. Queda por si se quiere volver al dorado.
 
 El logo está **dibujado en código**, no es una imagen hecha a mano: se corre el script y
 sale. Así se le cambia el arco, el grosor del contorno o los colores tocando un parámetro,

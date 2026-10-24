@@ -80,13 +80,13 @@ Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noc
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
-Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (lo genera Marketing/logo.py) y en Resources/ los brillos de neón, los iconos del evento (IconoCalabaza, IconoCaramelo) y los de los botones armados en código (IconoMejoras, IconoActualizar, IconoReiniciar), y en Resources/Retratos los del bestiario (los saca RetratosDelBestiario)
+Assets/Sprites/UI/          ← los dibujos de la interfaz, LogoShowBies.png (el logo "Tóxico Arcade": lo recorta Marketing/logo_toxico/recortar_logo.py) y en Resources/ los brillos de neón, los iconos del evento (IconoCalabaza, IconoCaramelo) y los de los botones armados en código (IconoMejoras, IconoActualizar, IconoReiniciar), y en Resources/Retratos los del bestiario (los saca RetratosDelBestiario)
 ```
 
 Y **fuera del proyecto de Unity**, en la raíz del repo:
 
 ```
-Marketing/                  ← logo.py: el logo del juego dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono); cartas/: los íconos de las cartas; grafico_de_funciones/: el de la ficha de Play; clips/: armar_clip.py, que arma los videos para redes con las tomas de GrabarClips; kingball/: la miniatura de YouTube de Kingball (miniatura_kingball.py)
+Marketing/                  ← logo_toxico/: el logo del juego (el original de Nano Banana y recortar_logo.py, que lo deja con transparencia); logo.py: el logo dorado de antes, dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono); cartas/: los íconos de las cartas; grafico_de_funciones/: el de la ficha de Play; clips/: armar_clip.py, que arma los videos para redes con las tomas de GrabarClips; kingball/: la miniatura de YouTube de Kingball (miniatura_kingball.py)
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
