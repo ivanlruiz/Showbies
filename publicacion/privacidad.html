@@ -20,20 +20,23 @@
 <body>
 
 <h1>Privacy Policy — ShowBies</h1>
-<p class="fecha">Last updated: 6 October 2026</p>
+<p class="fecha">Last updated: 24 October 2026</p>
 
 <p>
   ShowBies is developed by <strong>j'ntr</strong>. This policy explains what the game does with
-  your information. The short version: <strong>the game itself does not collect personal information</strong>, but
-  it shows ads through <strong>Google AdMob</strong>, and Google collects some information from your device to show
-  and measure those ads. You can limit that, as explained below.
+  your information. The short version: <strong>the game never asks for your personal information</strong>, but it
+  shows ads through <strong>Google AdMob</strong> and uses <strong>Google Analytics for Firebase</strong> to learn how
+  the game is played, and Google collects some information from your device for that. You can limit that, as
+  explained below.
 </p>
 
 <h2>Information we collect</h2>
 <p>
-  We (the developer) do not collect, store or receive any personal information. There are no accounts, no
-  sign-ups and no forms, and the game never asks for your name, email, phone number or location. From AdMob we
-  only receive aggregated reports (for example, how many ads were shown in total), never data about you.
+  There are no accounts, no sign-ups and no forms, and the game never asks for your name, email, phone number or
+  location. From AdMob we only receive aggregated reports (for example, how many ads were shown in total), and from
+  Firebase we receive statistics about how the game is played (for example, how many players reached wave 10, or
+  which zombie defeated them) linked to a random identifier of your installation, never to your name or account.
+  We use them only to improve the game.
 </p>
 
 <h2>Advertising (Google AdMob)</h2>
@@ -103,7 +106,8 @@
 <h2>Internet access</h2>
 <p>
   ShowBies does not need an internet connection to play. The internet is only used to load ads and Google's
-  consent message; without a connection, the game works the same and no ads are shown.
+  consent message, to send the game statistics described below and to receive notifications about new versions;
+  without a connection, the game works the same and no ads are shown.
 </p>
 <p>
   The menu also has a Discord button, which opens our community server in the Discord app or in your browser.
@@ -113,9 +117,33 @@
 
 <h2>Analytics</h2>
 <p>
-  ShowBies includes no analytics or crash-reporting SDKs of its own. Google's advertising SDK collects
-  ad-related diagnostic information, as described above. Google Play itself may collect aggregate installation
-  and crash statistics under its own policies, which we do not control.
+  ShowBies uses <strong>Google Analytics for Firebase</strong> to understand how the game is played and where
+  players get stuck, so we can balance it and fix it. It collects:
+</p>
+<ul>
+  <li><strong>Game events</strong>, such as starting a game, completing a wave, dying (with the wave and the zombie
+    that dealt the last hit), buying an upgrade, choosing a card and watching a rewarded video.</li>
+  <li><strong>App and device information</strong>, such as the app version, device model, operating system,
+    language, session length and approximate country (estimated from the IP address).</li>
+  <li><strong>A random app instance identifier</strong> that Firebase creates for your installation, so it can count
+    players and returning players. It is not linked to your name or your Google account.</li>
+</ul>
+<p>
+  This data is sent to Google, which processes it on our behalf under the
+  <a href="https://firebase.google.com/support/privacy">Firebase privacy and security terms</a>, and is kept for a
+  limited time before it is deleted. We have turned off the options that share it with other Google products. In the
+  European Economic Area, the United Kingdom and Switzerland, statistics are only collected after you have answered
+  Google's consent message. Google Play itself may also collect aggregate installation and crash statistics under its
+  own policies, which we do not control.
+</p>
+
+<h2>Notifications</h2>
+<p>
+  If you allow notifications, the game can remind you about your daily reward, a streak about to reset, an
+  unfinished run or an event about to end. These reminders are scheduled on your device and send nothing anywhere.
+  The game can also receive notifications about new versions and events through <strong>Firebase Cloud
+  Messaging</strong>, which uses a random token that identifies your installation (not you). You can turn
+  notifications off at any time under <strong>OPTIONS → NOTIFICATIONS</strong> or in your phone's settings.
 </p>
 
 <h2>Children</h2>
@@ -136,20 +164,22 @@
 
 <section class="es">
   <h1>Política de privacidad — ShowBies</h1>
-  <p class="fecha">Última actualización: 6 de octubre de 2026</p>
+  <p class="fecha">Última actualización: 24 de octubre de 2026</p>
 
   <p>
     ShowBies está desarrollado por <strong>j'ntr</strong>. Esta política explica qué hace el juego con tu
-    información. En resumen: <strong>el juego en sí no recopila información personal</strong>, pero muestra anuncios
-    de <strong>Google AdMob</strong>, y Google recopila cierta información de tu dispositivo para mostrarlos y
-    medirlos. Puedes limitarlo, como se explica más abajo.
+    información. En resumen: <strong>el juego nunca te pide información personal</strong>, pero muestra anuncios de
+    <strong>Google AdMob</strong> y usa <strong>Google Analytics para Firebase</strong> para saber cómo se juega, y
+    Google recopila cierta información de tu dispositivo para eso. Puedes limitarlo, como se explica más abajo.
   </p>
 
   <h2>Información que recopilamos</h2>
   <p>
-    Nosotros (el desarrollador) no recopilamos, guardamos ni recibimos información personal. No hay cuentas ni
-    registros, y el juego nunca te pide nombre, correo, teléfono ni ubicación. De AdMob solo recibimos informes
-    agregados (por ejemplo, cuántos anuncios se mostraron en total), nunca datos sobre ti.
+    No hay cuentas ni registros, y el juego nunca te pide nombre, correo, teléfono ni ubicación. De AdMob solo
+    recibimos informes agregados (por ejemplo, cuántos anuncios se mostraron en total), y de Firebase recibimos
+    estadísticas de cómo se juega (por ejemplo, cuántos jugadores llegaron a la oleada 10, o qué zombi los derrotó)
+    asociadas a un identificador aleatorio de tu instalación, nunca a tu nombre ni a tu cuenta. Solo las usamos para
+    mejorar el juego.
   </p>
 
   <h2>Publicidad (Google AdMob)</h2>
@@ -224,7 +254,8 @@
   <h2>Acceso a internet</h2>
   <p>
     ShowBies no necesita conexión a internet para jugarse. Internet solo se usa para cargar los anuncios y el
-    mensaje de consentimiento de Google; sin conexión, el juego funciona igual y no se muestran anuncios.
+    mensaje de consentimiento de Google, para enviar las estadísticas de juego que se describen más abajo y para
+    recibir avisos de versiones nuevas; sin conexión, el juego funciona igual y no se muestran anuncios.
   </p>
   <p>
     El menú también tiene un botón de Discord, que abre el servidor de la comunidad en la app de Discord o en tu
@@ -234,9 +265,34 @@
 
   <h2>Analíticas</h2>
   <p>
-    ShowBies no incluye SDK propios de analíticas ni de informes de errores. El SDK de publicidad de Google
-    recopila información de diagnóstico relacionada con los anuncios, como se explica más arriba. Google Play puede
-    recopilar estadísticas agregadas de instalación y errores según sus propias políticas, que no controlamos.
+    ShowBies usa <strong>Google Analytics para Firebase</strong> para entender cómo se juega y dónde se traban los
+    jugadores, y así equilibrarlo y arreglarlo. Recopila:
+  </p>
+  <ul>
+    <li><strong>Eventos del juego</strong>, como empezar una partida, completar una oleada, morir (con la oleada y el
+      zombi que dio el último golpe), comprar una mejora, elegir una carta y ver un vídeo con recompensa.</li>
+    <li><strong>Información de la app y del dispositivo</strong>, como la versión de la app, el modelo del
+      dispositivo, el sistema operativo, el idioma, la duración de la sesión y el país aproximado (estimado a partir de
+      la dirección IP).</li>
+    <li><strong>Un identificador aleatorio de la instalación</strong> que crea Firebase, para contar jugadores y los
+      que vuelven. No está asociado a tu nombre ni a tu cuenta de Google.</li>
+  </ul>
+  <p>
+    Estos datos se envían a Google, que los trata en nuestro nombre según los
+    <a href="https://firebase.google.com/support/privacy">términos de privacidad y seguridad de Firebase</a>, y se
+    guardan por un tiempo limitado antes de borrarse. Desactivamos las opciones que los comparten con otros productos
+    de Google. En el Espacio Económico Europeo, el Reino Unido y Suiza, las estadísticas solo se recopilan después de
+    que respondas al mensaje de consentimiento de Google. Google Play también puede recopilar estadísticas agregadas
+    de instalación y errores según sus propias políticas, que no controlamos.
+  </p>
+
+  <h2>Notificaciones</h2>
+  <p>
+    Si permites las notificaciones, el juego puede recordarte tu recompensa diaria, una racha a punto de cortarse,
+    una partida a medias o un evento que termina. Esos recordatorios se programan en tu dispositivo y no envían nada a
+    ningún lado. El juego también puede recibir avisos de versiones nuevas y eventos a través de <strong>Firebase
+    Cloud Messaging</strong>, que usa un token aleatorio que identifica tu instalación (no a ti). Puedes desactivar las
+    notificaciones cuando quieras en <strong>OPCIONES → NOTIFICACIONES</strong> o en los ajustes del teléfono.
   </p>
 
   <h2>Menores</h2>
