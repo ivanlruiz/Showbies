@@ -150,6 +150,7 @@ public class SelectorDeCapitulos : MonoBehaviour
     public void Jugar(int capitulo)
     {
         Capitulos.ParaEmpezar = capitulo;
+        Analitica.CapituloElegido(capitulo);
         Cerrar();
         SceneManager.LoadScene(TiendaMejoras.EscenaOleadas);
     }

@@ -185,6 +185,7 @@ public class TutorialManager : MonoBehaviour
                 textoInstruccion.transform.parent.gameObject.SetActive(false);
                 PlayerPrefs.SetInt("TutorialCompletado", 1);
                 PlayerPrefs.Save();
+                Analitica.TutorialCompletado();
                 panelFinal.SetActive(true);
                 break;
         }

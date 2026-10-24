@@ -55,7 +55,9 @@ public class VigiaAplicacion : MonoBehaviour
         // anuncios (ver ServicioAnuncios.Arrancar). Despues de crear el vigia: si una red
         // de verdad fallara al arrancar, guardar el progreso tiene que seguir andando.
         ServicioAnuncios.Arrancar();
-        // El jugador abrio el juego: lo que quedo programado de la ausencia ya no hace falta.
+        // El jugador abrio el juego: lo que quedo programado de la ausencia ya no hace falta. Y los canales de las
+        // notificaciones, antes de que llegue una push (NotificacionesAndroid.Preparar).
+        NotificacionesAndroid.Preparar();
         Notificaciones.AlVolver();
     }
 
@@ -77,6 +79,10 @@ public class VigiaAplicacion : MonoBehaviour
     private void Update()
     {
         ServicioAnuncios.AtenderAvisos();
+        // La analitica se prende cuando el consentimiento lo deja, y anota lo que contesto el dialogo del permiso.
+        Analitica.Revisar();
+        string permiso = NotificacionesAndroid.ResultadoDelPedido();
+        if (permiso != null) Analitica.PermisoDeNotificaciones(permiso);
         // Con tope: el primer cuadro despues de volver no se come la ausencia.
         SegundosDeSesion += Mathf.Min(Time.unscaledDeltaTime, 0.1f);
     }

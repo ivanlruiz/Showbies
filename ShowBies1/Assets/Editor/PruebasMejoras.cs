@@ -8317,6 +8317,19 @@ public static class PruebasMejoras
         inf.Verdadero("novedades: y con ninguna vista (venia de antes de la 1.7.1)", VentanaNovedades.HayQueMostrar("", "1.7.1", true));
         inf.Verdadero("novedades: no dos veces la misma", !VentanaNovedades.HayQueMostrar("1.7.1", "1.7.1", true));
         inf.Verdadero("novedades: al que nunca jugo, no", !VentanaNovedades.HayQueMostrar("", "1.7.1", false));
+
+        // Firebase (FirebaseEnElBuild): el json tiene las dos apps, y cada build escribe la suya.
+        if (File.Exists(FirebaseEnElBuild.RutaDelJson))
+        {
+            string json = File.ReadAllText(FirebaseEnElBuild.RutaDelJson), error;
+            string play = FirebaseEnElBuild.ValoresXml(json, "com.ivanruiz.showbies", out error);
+            string prueba = FirebaseEnElBuild.ValoresXml(json, "com.ivanruiz.showbies.prueba", out error);
+            inf.Verdadero("firebase: el json tiene la app de Play", play != null && play.Contains("google_app_id"));
+            inf.Verdadero("firebase: y la de prueba, con otro id", prueba != null && prueba != play);
+            inf.Verdadero("firebase: un paquete que no esta, falla", FirebaseEnElBuild.ValoresXml(json, "com.otra.app", out error) == null);
+            inf.Verdadero("firebase: el AAB no tiene problemas", FirebaseEnElBuild.Problema("com.ivanruiz.showbies") == null);
+        }
+        else inf.Verdadero("firebase: falta " + FirebaseEnElBuild.RutaDelJson, false);
     }
 
     // "Tipo HH:mm numero | ...", para comparar un plan entero de una.

@@ -426,3 +426,5 @@ novedades_4_titulo	STREAK ALERTS	AVISOS DE RACHA
 novedades_4_texto	Optional reminders so you never lose your streak, and fewer ads!	Avisos opcionales para no perder tu racha, ¡y menos anuncios!
 novedades_discord	DISCORD	DISCORD
 novedades_jugar	LET'S PLAY!	¡A JUGAR!
+notif_canal_novedades	Game Updates	Novedades del juego
+notif_canal_novedades_descripcion	New versions, events and news about ShowBies	Versiones nuevas, eventos y noticias de ShowBies

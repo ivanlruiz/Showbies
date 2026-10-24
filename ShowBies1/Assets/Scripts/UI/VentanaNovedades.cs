@@ -141,6 +141,7 @@ public class VentanaNovedades : MonoBehaviour
         PlayerPrefs.SetString(ClaveVersionVista, Application.version);
         PlayerPrefs.Save();
         SalioEnEstaVisita = true;
+        Analitica.NovedadesVistas(Application.version);
         Abrir();
     }
 

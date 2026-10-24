@@ -664,7 +664,7 @@ public class JefePatrones : MonoBehaviour, IMovimientoPropio
             hacia.y = 0f;
             if (hacia.magnitude <= radioGolpe + MargenDelJugador)
             {
-                jugador.TakeDamage(zombi.DanoPorGolpe * golpeDelPiso);
+                jugador.TakeDamage(zombi.DanoPorGolpe * golpeDelPiso, false, zombi.NombreDelTipo + "_salto");
                 var control = jugador.GetComponent<PlayerController>();
                 Vector3 afuera = hacia.sqrMagnitude > 0.01f ? hacia.normalized : transform.forward;
                 // Si el golpe lo mato, se desploma donde esta.

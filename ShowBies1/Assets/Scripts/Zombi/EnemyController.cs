@@ -372,6 +372,12 @@ public class EnemyController : MonoBehaviour
     // saber si llego a chocarlo, sin meterse en como pega un zombi.
     public int GolpesDados { get; private set; }
 
+    // El tipo de zombi, para la analitica (el nombre del asset Enemy, que no se renombra: ver Progreso.ContarMuerte).
+    public string NombreDelTipo
+    {
+        get { return enemyType != null ? enemyType.name : name; }
+    }
+
     // Hace aparecer un zombi de ese prefab: uno apagado del pool si hay, o uno
     // nuevo. Quien lo llama le pone despues los multiplicadores, como antes con
     // Instantiate: la vida se calcula perezosa, con los que tenga en el primer golpe.
@@ -1922,7 +1928,7 @@ public class EnemyController : MonoBehaviour
         if (golpeaAlChocar)
         {
             GolpesDados++;
-            PlayerHealth.instance.TakeDamage(DanoPorGolpe);
+            PlayerHealth.instance.TakeDamage(DanoPorGolpe, false, NombreDelTipo);
             return;
         }
 
@@ -1982,7 +1988,7 @@ public class EnemyController : MonoBehaviour
 
         GolpesDados++;
         ZarpazosQuePegaron++;
-        PlayerHealth.instance.TakeDamage(danoDelGolpe);
+        PlayerHealth.instance.TakeDamage(danoDelGolpe, false, NombreDelTipo);
     }
 
     // En el piso: la altura no cuenta, que el jugador y el zombi tienen el pivote en

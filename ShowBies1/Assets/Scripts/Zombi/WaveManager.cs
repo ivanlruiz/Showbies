@@ -337,6 +337,7 @@ public class WaveManager : MonoBehaviour
             PoderDeLaPartida.EmpezarPreparacion(capitulo);
         }
         Capitulos.ParaEmpezar = 0;
+        Analitica.PartidaEmpezada("oleadas", OleadaActual + 1, Capitulos.CapituloDe(OleadaActual + 1), retomada);
         StartCoroutine(Jugar());
     }
 
@@ -437,6 +438,7 @@ public class WaveManager : MonoBehaviour
             // La 10 y la 20, la primera vez, destraban un capitulo: OTRA VEZ ya va a ese.
             int destraba = Capitulos.QueDestraba(Progreso.MejorOleada, OleadaActual);
             Progreso.RegistrarOleadaCompletada(OleadaActual);
+            Analitica.OleadaCompletada(OleadaActual, perfecta);
             if (destraba > 0) Progreso.CapituloParaVolver = destraba;
             CerrarCapitulo(destraba);
             if (perfecta) Progreso.RegistrarOleadaIntacta(OleadaActual);

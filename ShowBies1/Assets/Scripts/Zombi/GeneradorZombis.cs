@@ -132,6 +132,7 @@ public class GeneradorZombis : MonoBehaviour
     {
         if (Plataforma.EsMovil) maxZombisVivos = maxZombisVivosMovil;
         EnemyController.FijarTecho(maxZombisVivos);
+        Analitica.PartidaEmpezada("libre", 1, 0, false);
 
         StartCoroutine(spawnEnemy(intervaloZombi, Zombi));
         StartCoroutine(spawnEnemy(intervaloZombiRapido, ZombiRapido));

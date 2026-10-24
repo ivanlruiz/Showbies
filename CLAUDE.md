@@ -58,10 +58,11 @@ Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un
 Assets/Scripts/Cartas/      ← PoderDeLaPartida (el PODER y las cartas de la partida), EleccionDeCartas (la barra, las chispas y la elección), CartasEnElJugador (el anillo del escudo y los drones), Carta, CatalogoCartas
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
+Assets/Scripts/Analitica/   ← Analitica (los eventos de Firebase Analytics, por JNI)
 Assets/Scripts/Notificaciones/ ← PlanDeNotificaciones (qué avisos y cuándo), Notificaciones (las programa al irse), NotificacionesAndroid (el paquete) y PedidoDeNotificaciones (la ventana que pide el permiso)
 Assets/Scripts/Actualizacion/ ← ActualizacionDePlay (la actualización flexible de Play, por JNI) y AvisoDeActualizacion (el cartel del menú)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, DiagnosticoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
-Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña y las actualizaciones) y ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle)
+Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña y las actualizaciones), ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle) y ShowBiesFirebase.androidlib (Analytics y Cloud Messaging)
 Assets/Scripts/Jugo/        ← Efectos (golpes, muertes, explosiones, música), Sonidos, NumeroFlotante, FiltroBlancoYNegro, GrisDePocaVida, Volumen, FuenteConVolumen
 Assets/Scripts/Escenario/   ← CapitulosDeEscenario (los capítulos de las oleadas: la pradera, el cementerio y la ciudad, de noche), DecoradoFijo (la pradera del libre y del tutorial), Personajes (la capa que alumbra la luz de relleno), SombrasFalsas (las del teléfono)
 Assets/Scripts/Tutorial/    ← TutorialManager, PrimeraVez, GuiaPrimeraPartida
@@ -78,7 +79,7 @@ Assets/Notificaciones/      ← los dos dibujos de las notificaciones (el chico 
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py), en Resources/Bate, los del bate (sonidos/bate.py), y en Resources/Escudo, los del escudo del blindado (sonidos/escudo.py)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y sus máscaras BrazoDerecho y TorsoYBrazos (la del bate)
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador, PruebaChaman, PruebaBlindado, PruebaHinchado, PruebaEspecialesEnElLibre, PruebaRetomar, PruebaCapitulos, PruebaSelectorDeCapitulos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), RetratosDelBestiario (los retratos de las tarjetas del bestiario) y FotosDelBestiario (la ventana en 16:9, 20:9 y 21:9), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorNotificaciones (configura el paquete de notificaciones), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador, PruebaChaman, PruebaBlindado, PruebaHinchado, PruebaEspecialesEnElLibre, PruebaRetomar, PruebaCapitulos, PruebaSelectorDeCapitulos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), RetratosDelBestiario (los retratos de las tarjetas del bestiario) y FotosDelBestiario (la ventana en 16:9, 20:9 y 21:9), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorNotificaciones (configura el paquete de notificaciones), FirebaseEnElBuild (los recursos de Firebase al armar), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -89,6 +90,7 @@ Y **fuera del proyecto de Unity**, en la raíz del repo:
 
 ```
 Marketing/                  ← logo_toxico/: el logo del juego (el original de Nano Banana y recortar_logo.py, que lo deja con transparencia); logo.py: el logo dorado de antes, dibujado en código, y su README; iconos/: el ícono de la app (ver El ícono); cartas/: los íconos de las cartas; grafico_de_funciones/: el de la ficha de Play; clips/: armar_clip.py, que arma los videos para redes con las tomas de GrabarClips; kingball/: la miniatura de YouTube de Kingball (miniatura_kingball.py)
+ShowBies1/Firebase/         ← google-services.json, del proyecto showbies de Firebase (lo lee FirebaseEnElBuild)
 auditorias/29-9/            ← la superauditoría del 29/9: informe.md (cada hallazgo con su veredicto) y unicos.md
 pendientes.md               ← lo que dejaron las auditorías: por verificar, verificado, para decidir y descartado
 CARTAS.md                   ← el diseño de las cartas de la partida (1 de 3 entre oleadas, como Archero), para la 1.6.0
@@ -2365,6 +2367,42 @@ Unity 6. **Si se actualiza Unity, hay que volver a copiar su `mainTemplate.gradl
 actualizaciones).** Solo en Android,
 decidido en runtime; en el editor loguea "se pediría". **En el mismo momento tranquilo, y antes, va el cartel de
 consentimiento de los anuncios** cuando hace falta (ver AdMob); si sale, la reseña queda para otra visita.
+
+## Analítica y avisos de versión (Firebase)
+
+Pedido de Ivan (24/10, después del informe y de Argon: sin datos no se sabe en qué oleada ni contra qué zombi se va la gente,
+y Play Console no ve adentro del juego; y que cada versión le llegue a la gente). **Firebase**, proyecto `showbies` en la
+cuenta de Ivan (ruizivanleandro@gmail.com, la de Play Console), plan Spark, gratis: **Analytics** para los eventos y
+**Cloud Messaging** para mandar desde la consola una notificación a todos con cada versión. Registradas las dos apps, la de
+Play y la `.prueba`.
+
+- **Sin el SDK de Unity ni el EDM4U ni el plugin de Gradle de google-services**, como AdMob: las librerías van en
+  `Plugins/Android/ShowBiesFirebase.androidlib` (la BoM 35.1.0, `firebase-analytics` y `firebase-messaging`), y lo que el
+  plugin de google-services escribiría (`google_app_id`, el número del proyecto, la clave) lo escribe
+  **`FirebaseEnElBuild`** (`IPostGenerateGradleAndroidProject`) en el proyecto de Gradle, sacado de
+  `ShowBies1/Firebase/google-services.json` con el paquete que se está armando (la APK de prueba cambia el paquete
+  mientras dura). `Assets/` no se toca. **El json está versionado a propósito**: Google lo documenta como no secreto (la clave
+  solo sirve para ese paquete); no hay que rotarlo. Las builds se niegan a salir si el json no tiene la app del paquete
+  (`ConstructorAndroid`), y la prueba de lógica lo mira.
+- **Arranca apagado** (`firebase_analytics_collection_enabled` y `firebase_messaging_auto_init_enabled` en falso en el
+  manifiesto) y lo prende `Analitica.Revisar` (desde `VigiaAplicacion`) cuando el consentimiento de los anuncios deja pedir
+  (`ServicioAnuncios.ConsentimientoResuelto`: el SDK de AdMob arrancó; fuera de Europa en el acto, en Europa después del
+  cartel). Lo de antes no se manda.
+- **`Analitica`** (`Assets/Scripts/Analitica/`) manda los eventos por JNI, todos ahí, con nombres en español y ninguno por
+  cuadro ni por bala: `partida_empezada` (modo, oleada inicial, capítulo, retomada), `oleada_completada` (oleada,
+  perfecta), `muerte` (modo, oleada o nivel, segundos, puntos y **causa**: el zombi del último golpe, que ahora pasa
+  `TakeDamage`, como `ZombiEscupidor_acido`, `ZombiBOSS_salto`, `ZombiHinchado_explosion` o `caida`), `compra_mejora`,
+  `carta_elegida`, `capitulo_elegido`, `tutorial_completado`, `video` (lugar y resultado, también el automático),
+  `notif_permiso` (la ventana propia y el diálogo de Android) y `novedades_vistas`. En el editor solo los escribe en la
+  consola (`MostrarEnElEditor`).
+- **Las push** (Cloud Messaging) llegan con el juego cerrado en el canal "Novedades del juego" (`showbies_novedades`, que
+  `NotificacionesAndroid.Preparar` registra al abrir la app, antes de que llegue la primera) con el dibujo chico de las
+  locales. Se mandan desde la consola de Firebase (Messaging, campaña a la app de Play). Necesitan el mismo permiso de
+  Android 13+ que las locales.
+- **Para ver los eventos en el momento** (sin esperar el día que tarda el informe), con el teléfono enchufado:
+  `adb shell setprop debug.firebase.analytics.app com.ivanruiz.showbies.prueba`, y en la consola, Analytics > DebugView.
+- **Pendiente**: actualizar la política de privacidad (`privacidad.html`) y la sección "Seguridad de los datos" de Play
+  (interacciones con la app, diagnóstico e identificadores del dispositivo), antes de subir la versión con esto.
 
 ## ¿Qué hay de nuevo?
 

@@ -64,6 +64,7 @@ public class PlayerHealth : MonoBehaviour
             // siempre.
             health = 0;
             estaMuerto = true;
+            UltimaCausa = "caida";
             Terminar();
             return;
         }
@@ -237,7 +238,9 @@ public class PlayerHealth : MonoBehaviour
     // 'delPiso' es el daño de un charco (el acido del escupidor, de Argon, 18/10): cuenta como golpe para la perfecta y el
     // logro INTOCABLE, pero no gasta el escudo de la carta (es para salvarse de un golpe de verdad, no para quemarse
     // rozando un charco) ni sacude la camara.
-    public void TakeDamage(float amount, bool delPiso = false)
+    // 'causa' es el que pega (el nombre del Enemy, con lo que lo distingue: "ZombiEscupidor_acido"): la analitica de la
+    // muerte dice que zombi dio el ultimo golpe.
+    public void TakeDamage(float amount, bool delPiso = false, string causa = null)
     {
         // Varios zombis pegando en el mismo paso de fisica llamaban a esto varias
         // veces con la vida ya en cero, y el bloque de muerte corria de nuevo.
@@ -256,6 +259,7 @@ public class PlayerHealth : MonoBehaviour
 
         int dano = AcumularDano(ref danoPendiente, amount);
         if (dano <= 0) return;
+        UltimaCausa = causa;
 
         // Sin bajar de cero: el golpe que mata suele sacar mas de lo que quedaba (la
         // carga del jefe pega x2,5), y con la oferta de revivir la partida no termina:
@@ -287,6 +291,9 @@ public class PlayerHealth : MonoBehaviour
         Terminar();
     }
 
+    // El que dio el ultimo golpe que saco vida (TakeDamage), para la analitica de la muerte; "caida" si se cayo del mapa.
+    public string UltimaCausa { get; private set; }
+
     // La muerte de verdad: guarda el récord, cierra la partida y muestra la derrota.
     public void Terminar()
     {
@@ -308,6 +315,7 @@ public class PlayerHealth : MonoBehaviour
         // Sin Save() esto queda sólo en memoria hasta que el juego cierre bien.
         PlayerPrefs.Save();
         Progreso.TerminarPartida(SegundosDePartida);
+        ContarLaMuerte(modo);
         if (modo == TiendaMejoras.EscenaOleadas) Progreso.OlvidarOleadaEnCurso();
         Progreso.Guardar();
 
@@ -319,6 +327,21 @@ public class PlayerHealth : MonoBehaviour
         // quieto, hasta que se sale de la derrota.
         QuedarseQuieto();
         DerrotaEnLaPartida.Mostrar();
+    }
+
+    // La analitica: en que oleada (o nivel del libre), cuanto duro y que la mato.
+    private void ContarLaMuerte(int modo)
+    {
+        bool oleadas = modo == TiendaMejoras.EscenaOleadas;
+        int nivel = 0;
+        if (oleadas)
+        {
+            var olas = FindAnyObjectByType<WaveManager>();
+            if (olas != null) nivel = olas.OleadaActual;
+        }
+        else if (GeneradorZombis.Actual != null) nivel = GeneradorZombis.Actual.NivelActual;
+        Analitica.Muerte(oleadas ? "oleadas" : "libre", nivel, Mathf.RoundToInt(SegundosDePartida),
+                         Puntaje.instance != null ? Puntaje.instance.contadorKill : 0, UltimaCausa);
     }
 
     // Muerto en un mundo que sigue andando: sin control, sin arma y sin que la horda lo

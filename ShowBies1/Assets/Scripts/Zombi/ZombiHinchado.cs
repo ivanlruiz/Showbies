@@ -222,7 +222,7 @@ public class ZombiHinchado : MonoBehaviour, IMovimientoPropio
             d.y = 0f;
             if (d.magnitude <= radio)
             {
-                vida.TakeDamage(zombi.enemyType.daño * zombi.multiplicadorDano * golpeAlJugador);
+                vida.TakeDamage(zombi.enemyType.daño * zombi.multiplicadorDano * golpeAlJugador, false, "ZombiHinchado_explosion");
                 alJugador = true;
             }
         }

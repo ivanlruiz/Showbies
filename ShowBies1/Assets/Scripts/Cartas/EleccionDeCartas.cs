@@ -624,6 +624,7 @@ public class EleccionDeCartas : MonoBehaviour
         if (Time.unscaledTime - abiertaEn < SinElegirAlAbrir) return;
         string relleno;
         int sumadas = PoderDeLaPartida.Elegir(t.id, t.dorada, out relleno);
+        Analitica.CartaElegida(t.id, PoderDeLaPartida.Poder, t.dorada);
         var jugador = PlayerHealth.instance;
         if (jugador != null)
         {

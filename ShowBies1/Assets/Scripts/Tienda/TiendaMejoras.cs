@@ -600,6 +600,7 @@ public class TiendaMejoras : MonoBehaviour
         switch (resultado)
         {
             case ResultadoCompra.Comprada:
+                Analitica.CompraMejora(mejora.id, nivel + 1);
                 FestejarCompra(tarjeta, mejora, nivel, precio);
                 break;
 

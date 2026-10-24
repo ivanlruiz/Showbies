@@ -429,6 +429,14 @@ public static class ConstructorAndroid
             return;
         }
 
+        // Firebase (FirebaseEnElBuild): el json tiene que tener la app del paquete que se arma, el de Play o el .prueba.
+        string problemaDeFirebase = FirebaseEnElBuild.Problema(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android));
+        if (problemaDeFirebase != null)
+        {
+            Fallar(problemaDeFirebase);
+            return;
+        }
+
         try
         {
             BuildReport reporte = BuildPipeline.BuildPlayer(

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Firebase arranca apagado: la analitica y el token de las notificaciones push recien se prenden cuando el
+     consentimiento de los anuncios esta resuelto (fuera de Europa, en el acto; en Europa, despues del cartel). Lo prende
+     Analitica.Revisar. Las notificaciones que llegan con el juego cerrado usan el dibujo chico de las locales
+     (icono_chico, lo registra ConstructorNotificaciones) y su propio canal, "Novedades del juego", que registra
+     NotificacionesAndroid al abrir la app. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false"/>
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false"/>
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon"
+                   android:resource="@drawable/icono_chico"/>
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id"
+                   android:value="showbies_novedades"/>
+    </application>
+</manifest>

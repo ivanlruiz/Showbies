@@ -140,6 +140,13 @@ public static class ServicioAnuncios
         get { IConsentimientoAnuncios c = Consentimiento; return c != null && c.PrivacidadRequerida; }
     }
 
+    // Si el consentimiento ya deja pedir anuncios: el SDK de AdMob arranca recien ahi (fuera de Europa en el acto, en
+    // Europa despues del cartel). La analitica de Firebase espera lo mismo para prenderse (Analitica.Revisar).
+    public static bool ConsentimientoResuelto
+    {
+        get { var admob = proveedor as ProveedorAdMob; return admob != null && admob.SdkListo; }
+    }
+
     // El cartel de UMP esta pedido o en pantalla: el menu no saca otra ventana encima.
     public static bool ConsentimientoEnPantalla
     {
@@ -404,6 +411,18 @@ public static class ServicioAnuncios
         }
     }
 
+    // Para la analitica: como termino un video o el automatico.
+    private static string NombreDelResultado(ResultadoAnuncio resultado)
+    {
+        switch (resultado)
+        {
+            case ResultadoAnuncio.Recompensado: return "premiado";
+            case ResultadoAnuncio.Cerrado: return "cerrado";
+            case ResultadoAnuncio.FallaAlMostrar: return "falla";
+            default: return "no_disponible";
+        }
+    }
+
     private static void Resolver(int token, ResultadoAnuncio resultado)
     {
         // De una solicitud vieja, o la segunda vez que avisan de la misma.
@@ -424,6 +443,7 @@ public static class ServicioAnuncios
 
         // El automatico no premia ni gasta los topes de los videos: si se vio, cuenta para
         // espaciar el siguiente, y en cualquier caso se sigue a donde se iba.
+        Analitica.Video(automatico ? LugarAnuncio.Automatico : lugar, NombreDelResultado(resultado));
         if (automatico)
         {
             if (resultado == ResultadoAnuncio.Cerrado || resultado == ResultadoAnuncio.Recompensado)

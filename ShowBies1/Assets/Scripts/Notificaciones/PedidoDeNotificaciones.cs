@@ -80,9 +80,10 @@ public class PedidoDeNotificaciones : MonoBehaviour
         return instancia != null && instancia.Abrir();
     }
 
+    // El atras de Android: es AHORA NO.
     public static void CerrarElAbierto()
     {
-        if (instancia != null) instancia.Cerrar();
+        if (instancia != null && Abierto) instancia.AhoraNo();
     }
 
     private bool Abrir()
@@ -103,9 +104,16 @@ public class PedidoDeNotificaciones : MonoBehaviour
 
     private void Si()
     {
+        Analitica.PermisoDeNotificaciones("si");
         Cerrar();
         // Prende la preferencia y, como no hay permiso, pide el del sistema.
         Notificaciones.Fijar(true);
+    }
+
+    private void AhoraNo()
+    {
+        Analitica.PermisoDeNotificaciones("ahora_no");
+        Cerrar();
     }
 
     private void Armar()
@@ -134,7 +142,7 @@ public class PedidoDeNotificaciones : MonoBehaviour
         }
 
         Conectar("BotonSeguir", Si);
-        Conectar("BotonSalir", Cerrar);
+        Conectar("BotonSalir", AhoraNo);
     }
 
     private void Conectar(string nombre, UnityEngine.Events.UnityAction alTocar)

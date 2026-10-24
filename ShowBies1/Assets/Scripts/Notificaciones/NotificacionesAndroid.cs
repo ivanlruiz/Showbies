@@ -13,6 +13,7 @@ public enum EstadoDelPermiso { SinPedir, Pidiendo, Concedido, Negado, Bloqueado 
 public static class NotificacionesAndroid
 {
     public const string Canal = "showbies_rewards";
+    public const string CanalNovedades = "showbies_novedades";
     // Los dibujos los registra ConstructorNotificaciones en la configuracion del paquete (Project Settings).
     public const string IconoChico = "icono_chico";
     public const string IconoGrande = "icono_grande";
@@ -36,6 +37,12 @@ public static class NotificacionesAndroid
         get { return Application.platform == RuntimePlatform.Android; }
     }
 
+    // Al abrir la app (VigiaAplicacion): los canales tienen que estar antes de que llegue una push.
+    public static void Preparar()
+    {
+        Iniciar();
+    }
+
     private static bool Iniciar()
     {
         if (!Disponible) return false;
@@ -49,6 +56,15 @@ public static class NotificacionesAndroid
                 Id = Canal,
                 Name = Textos.De("notif_canal"),
                 Description = Textos.De("notif_canal_descripcion"),
+                Importance = Importance.Default,
+            });
+            // El de las push de Firebase (las versiones nuevas): el manifiesto de ShowBiesFirebase lo nombra, y tiene que
+            // existir antes de que llegue la primera, o Android las pone en uno suyo, "Otros".
+            AndroidNotificationCenter.RegisterNotificationChannel(new AndroidNotificationChannel
+            {
+                Id = CanalNovedades,
+                Name = Textos.De("notif_canal_novedades"),
+                Description = Textos.De("notif_canal_novedades_descripcion"),
                 Importance = Importance.Default,
             });
             iniciado = true;
@@ -98,6 +114,20 @@ public static class NotificacionesAndroid
         {
             Debug.LogWarning("NotificacionesAndroid: no se pudo pedir el permiso: " + e.Message);
         }
+#endif
+    }
+
+    // Lo que contesto el dialogo del sistema, una sola vez: "concedido" o "negado"; null si no hay nada nuevo. Lo mira
+    // VigiaAplicacion para la analitica.
+    public static string ResultadoDelPedido()
+    {
+#if UNITY_ANDROID
+        if (pedido == null || pedido.Status == PermissionStatus.RequestPending) return null;
+        string resultado = pedido.Status == PermissionStatus.Allowed ? "concedido" : "negado";
+        pedido = null;
+        return resultado;
+#else
+        return null;
 #endif
     }
 

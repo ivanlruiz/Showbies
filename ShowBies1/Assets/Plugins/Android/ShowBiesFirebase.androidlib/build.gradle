@@ -1,0 +1,35 @@
+// La libreria Android de Firebase (1.7.1): Analytics (en que oleada y contra que zombi abandona la gente) y Cloud
+// Messaging (un aviso a todos los jugadores con cada version, que se manda desde la consola de Firebase). Como la de los
+// anuncios, sin el plugin de Unity ni el EDM4U ni el plugin de Gradle de google-services: lo que ese plugin escribe
+// (google_app_id y compania, sacados de Firebase/google-services.json) lo escribe FirebaseEnElBuild al generar el
+// proyecto de Gradle, con el paquete que se esta armando (el de Play o el .prueba). Lo de C# es Analitica (JNI).
+apply plugin: 'com.android.library'
+
+dependencies {
+    // La lista de materiales fija versiones que andan juntas (la que pedia la consola el 24/10).
+    implementation platform('com.google.firebase:firebase-bom:35.1.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-messaging'
+}
+
+android {
+    namespace "com.ivanruiz.showbies.firebase"
+    compileSdk getProperty("unity.compileSdkVersion") as int
+    buildToolsVersion getProperty("unity.buildToolsVersion")
+
+    compileOptions {
+        sourceCompatibility JavaVersion.valueOf(getProperty("unity.javaCompatabilityVersion"))
+        targetCompatibility JavaVersion.valueOf(getProperty("unity.javaCompatabilityVersion"))
+    }
+
+    defaultConfig {
+        minSdk getProperty("unity.minSdkVersion") as int
+        targetSdk getProperty("unity.targetSdkVersion") as int
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
