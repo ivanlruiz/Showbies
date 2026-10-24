@@ -95,6 +95,10 @@ La app **ShowBies** (`com.ivanruiz.showbies`) está creada como borrador en la c
       no sube más de 10). La advertencia de siempre (sin desofuscación); ningún dispositivo deja de ser compatible; 35,2 MB de
       descarga. **Chrome entra primero a una cuenta de desarrollador vieja**, cerrada por inactividad en noviembre de 2024:
       la de ShowBies es la `u/2` (`play.google.com/console/u/2/...`).
+- [x] **Política de privacidad con Firebase** (24/10, para la 1.7.1): publicada en `showbies-privacidad` (Analytics para
+      Firebase, Cloud Messaging y los recordatorios locales). **Seguridad de los datos**: los tipos ya estaban (por AdMob)
+      con "Análisis"; se sumó "Comunicaciones del desarrollador" a los IDs del dispositivo (el token de push). Guardado
+      sin enviar: va a revisión con la 1.7.1, desde el Resumen de publicación.
 
 En la consola, cuando la ventana es angosta, el botón **Guardar** de los formularios de dos pasos queda escondido
 en el menú ⋮ de abajo a la derecha.
