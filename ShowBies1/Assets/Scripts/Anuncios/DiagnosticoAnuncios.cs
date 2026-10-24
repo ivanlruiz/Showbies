@@ -7,7 +7,8 @@ using UnityEngine.SceneManagement;
 // el telefono a la PC. Muestra si AdMob arranco, que dijo el consentimiento, como quedo el
 // video de cada lugar (con el codigo de error si no cargo), cuantos avisos llegaron de Java
 // y los topes que miran las ofertas. Y, en un renglon, como va la actualizacion de mentira
-// (ActualizacionDePlay), que en la APK de prueba recorre el camino de JNI de verdad.
+// (ActualizacionDePlay), que en la APK de prueba recorre el camino de JNI de verdad. Y las
+// notificaciones: el permiso, lo que se programo la ultima vez y un boton para una de prueba.
 //
 // La crea VigiaAplicacion; en el AAB y en el editor no existe. No es para el jugador: por
 // eso va en IMGUI, sin la fuente del juego y sin pasar por la tabla de textos.
@@ -41,6 +42,12 @@ public class DiagnosticoAnuncios : MonoBehaviour
         // IMGUI cuenta desde arriba; el area segura, desde abajo.
         float y = Screen.height - segura.yMin - alto - 10f;
         GUI.Box(new Rect(segura.xMin + 10f, y, ancho, alto), texto, estilo);
+
+        // Una notificacion de prueba a los 10 s de salir del juego, para no esperar un dia (Notificaciones).
+        float altoBoton = estilo.fontSize * 2.4f;
+        string etiqueta = Notificaciones.PruebaPendiente ? "SALI DEL JUEGO: LLEGA A LOS 10 S" : "NOTIFICACION DE PRUEBA";
+        if (GUI.Button(new Rect(segura.xMin + 10f, y - altoBoton - 6f, ancho * 0.6f, altoBoton), etiqueta))
+            Notificaciones.ProbarAlIrse();
     }
 
     private static string Armar()
@@ -70,6 +77,13 @@ public class DiagnosticoAnuncios : MonoBehaviour
         }
         if (!string.IsNullOrEmpty(PuenteAdMobAndroid.UltimoFallo))
             sb.Append("fallo JNI: ").Append(PuenteAdMobAndroid.UltimoFallo).Append('\n');
+
+        sb.Append("notificaciones: permiso ").Append(NotificacionesAndroid.Permiso)
+          .Append(" | preferidas ").Append(Notificaciones.Preferidas ? "si" : "no")
+          .Append(" | pedidas ").Append(Notificaciones.VecesPedidas).Append('\n');
+        var plan = Notificaciones.UltimoPlan;
+        if (plan != null && plan.Count > 0)
+            sb.Append("programadas la ultima vez: ").Append(string.Join(", ", plan)).Append('\n');
 
         sb.Append("actualizacion: ").Append(ActualizacionDePlay.Estado);
         if (ActualizacionDePlay.Estado == EstadoActualizacion.Descargando)

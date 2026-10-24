@@ -108,6 +108,13 @@ public static class PruebasMejoras
             return ok;
         }
 
+        // Fecha y hora al minuto (las notificaciones).
+        public bool Igual(string caso, DateTime esperado, DateTime obtenido)
+        {
+            return Igual(caso, esperado.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+                         obtenido.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture));
+        }
+
         // Con NaN la resta da NaN y la comparacion falso: cuenta como falla.
         public bool Cerca(string caso, double esperado, double obtenido, double tolerancia)
         {
@@ -8158,6 +8165,7 @@ public static class PruebasMejoras
         // Era 440 hasta que la suma de zombis se corrigio (23/9).
         inf.Cerca("diaria: monto con mejor oleada 10", 400, RecompensaDiaria.Monto(3, 10), 1e-9);
         ProbarMontosDeLaDiaria(inf);
+        ProbarNotificaciones(inf);
 
         EmpezarCaso("{\"version\":3,\"monedas\":10,\"mejorOleada\":5}", null);
         inf.Igual("diaria: sin campos, dia 0", 0, Progreso.DiaUltimaRecompensa);
@@ -8186,6 +8194,131 @@ public static class PruebasMejoras
     // La diaria paga con la misma vara que las misiones y el bestiario: un monto fijo
     // servia en la oleada 5, regalaba en la 1 y era calderilla en la 40, justo cuando mas
     // hace falta la razon para volver. Los montos viejos quedaron como piso del arranque.
+    // Las notificaciones locales (1.7.1, de Argon): el plan con un reloj inyectado, sin Android.
+    static void ProbarNotificaciones(Informe inf)
+    {
+        var miercoles = new DateTime(2026, 10, 21, 15, 0, 0);   // el 24/10/2026 es sabado
+        inf.Igual("notificaciones: a las 23:30 pasa a las 12:30 del otro dia", new DateTime(2026, 10, 22, 12, 30, 0),
+                  PlanDeNotificaciones.FueraDelSilencio(new DateTime(2026, 10, 21, 23, 30, 0)));
+        inf.Igual("notificaciones: a las 22 en punto, tambien", new DateTime(2026, 10, 22, 12, 30, 0),
+                  PlanDeNotificaciones.FueraDelSilencio(new DateTime(2026, 10, 21, 22, 0, 0)));
+        inf.Igual("notificaciones: a las 3, a las 12:30 de ese dia", new DateTime(2026, 10, 21, 12, 30, 0),
+                  PlanDeNotificaciones.FueraDelSilencio(new DateTime(2026, 10, 21, 3, 0, 0)));
+        inf.Igual("notificaciones: a las 10 no se mueve", new DateTime(2026, 10, 21, 10, 0, 0),
+                  PlanDeNotificaciones.FueraDelSilencio(new DateTime(2026, 10, 21, 10, 0, 0)));
+        inf.Igual("notificaciones: el sabado a las 19 desde un miercoles", new DateTime(2026, 10, 24, 19, 0, 0),
+                  PlanDeNotificaciones.ProximoSabado(miercoles));
+        inf.Igual("notificaciones: el sabado a las 20 ya es el de la semana que viene", new DateTime(2026, 10, 31, 19, 0, 0),
+                  PlanDeNotificaciones.ProximoSabado(new DateTime(2026, 10, 24, 20, 0, 0)));
+
+        // Partida a medias: a las 4 h, y la diaria al otro dia a la misma hora.
+        var plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar
+        {
+            ahora = miercoles, hayPartida = true, oleadaEnCurso = 7, diariaHabilitada = true,
+            diaUltimaDiaria = 20261021, racha = 1,
+        });
+        inf.Igual("notificaciones: partida y diaria", "Partida 19:00 7 | Diaria 15:00 2", Resumen(plan));
+        // Sin partida que se pueda retomar (la 1, o la retoma gastada), no hay aviso de partida.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = miercoles, hayPartida = false, oleadaEnCurso = 7, diariaHabilitada = true });
+        inf.Verdadero("notificaciones: sin retoma no hay aviso de partida", !plan.Exists(a => a.tipo == TipoDeAviso.Partida));
+        // Irse a las 23 con partida: las 3 de la manana pasan al mediodia.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = new DateTime(2026, 10, 21, 23, 0, 0), hayPartida = true, oleadaEnCurso = 4, diariaHabilitada = true, todo = true });
+        inf.Igual("notificaciones: la partida de madrugada sale a las 12:30", new DateTime(2026, 10, 22, 12, 30, 0), plan[0].cuando);
+
+        // La racha: cobro hoy con 3 dias seguidos -> mañana a las 20 avisa del dia 4, y la diaria de mañana se cae (uno por dia).
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = miercoles, diariaHabilitada = true, todo = true, diaUltimaDiaria = 20261021, racha = 3 });
+        inf.Igual("notificaciones: la racha gana a la diaria el mismo dia", "Racha 20:00 4", Resumen(plan));
+        inf.Igual("notificaciones: la racha avisa el dia siguiente al cobro", new DateTime(2026, 10, 22, 20, 0, 0), plan[0].cuando);
+        // Cobro ayer y no hoy: la racha se corta esta noche, avisa hoy a las 20.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = miercoles, diariaHabilitada = true, todo = true, diaUltimaDiaria = 20261020, racha = 2 });
+        inf.Igual("notificaciones: la racha de hoy avisa hoy", new DateTime(2026, 10, 21, 20, 0, 0), plan[0].cuando);
+        // Irse a las 19:45: faltan menos de 30 min para las 20, no se avisa; y la diaria de mañana ya arranca del dia 1.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = new DateTime(2026, 10, 21, 19, 45, 0), diariaHabilitada = true, todo = true, diaUltimaDiaria = 20261020, racha = 2 });
+        inf.Igual("notificaciones: sin media hora no avisa la racha", "Diaria 19:45 1", Resumen(plan));
+        // Racha ya cortada: nada que salvar.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = miercoles, diariaHabilitada = true, todo = true, diaUltimaDiaria = 20261018, racha = 5 });
+        inf.Verdadero("notificaciones: la racha cortada no avisa", !plan.Exists(a => a.tipo == TipoDeAviso.Racha));
+        // Una racha de 1 no se avisa.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = miercoles, diariaHabilitada = true, todo = true, diaUltimaDiaria = 20261021, racha = 1 });
+        inf.Verdadero("notificaciones: la racha de 1 no avisa", !plan.Exists(a => a.tipo == TipoDeAviso.Racha));
+
+        // El desafio semanal: el sabado a las 19, con 18 h sin abrir.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = miercoles, diariaHabilitada = true, todo = true, semanalPendiente = true });
+        inf.Igual("notificaciones: diaria y semanal", "Diaria 15:00 1 | Semanal 19:00 0", Resumen(plan));
+        inf.Igual("notificaciones: el semanal el sabado", (long)DayOfWeek.Saturday, (long)plan[1].cuando.DayOfWeek);
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = new DateTime(2026, 10, 24, 10, 0, 0), diariaHabilitada = true, todo = true, semanalPendiente = true });
+        inf.Igual("notificaciones: irse el sabado a la mañana no avisa ese sabado", new DateTime(2026, 10, 31, 19, 0, 0),
+                  plan.Find(a => a.tipo == TipoDeAviso.Semanal).cuando);
+
+        // El evento: dos dias antes del final a las 18:30 (el 7/11 de 2026 es sabado: gana al semanal).
+        var finDeHalloween = new DateTime(2026, 11, 9);
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = new DateTime(2026, 11, 2, 15, 0, 0), diariaHabilitada = true, todo = true, semanalPendiente = true, finDelEvento = finDeHalloween });
+        inf.Igual("notificaciones: el evento gana al semanal el mismo sabado", new DateTime(2026, 11, 7, 18, 30, 0),
+                  plan.Find(a => a.tipo == TipoDeAviso.Evento).cuando);
+        inf.Verdadero("notificaciones: y el semanal de ese dia se cae", !plan.Exists(a => a.tipo == TipoDeAviso.Semanal));
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = new DateTime(2026, 11, 8, 15, 0, 0), diariaHabilitada = true, todo = true, finDelEvento = finDeHalloween });
+        inf.Verdadero("notificaciones: pasado el aviso del evento, no se repite", !plan.Exists(a => a.tipo == TipoDeAviso.Evento));
+
+        // El que recien empieza (sin diaria ni nivel 5): a las 24 h y a las 72 h, y nada mas.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar { ahora = miercoles });
+        inf.Igual("notificaciones: el nuevo, a las 24 y a las 72 h", "Vuelta 15:00 0 | Vuelta 15:00 0", Resumen(plan));
+        inf.Igual("notificaciones: la segunda vuelta a los 3 dias", new DateTime(2026, 10, 24, 15, 0, 0), plan[1].cuando);
+
+        // Como mucho tres por ausencia, uno por dia (salvo el de la partida) y nada fuera del horizonte.
+        plan = PlanDeNotificaciones.Planear(new EstadoParaAvisar
+        {
+            ahora = new DateTime(2026, 11, 2, 15, 0, 0), hayPartida = true, oleadaEnCurso = 12, diariaHabilitada = true,
+            diaUltimaDiaria = 20261102, racha = 4, semanalPendiente = true, finDelEvento = finDeHalloween,
+        });
+        inf.Verdadero("notificaciones: no mas de tres", plan.Count <= PlanDeNotificaciones.MaximoPorAusencia);
+        bool unoPorDia = true;
+        for (int i = 0; i < plan.Count; i++)
+            for (int j = i + 1; j < plan.Count; j++)
+                if (plan[i].tipo != TipoDeAviso.Partida && plan[j].tipo != TipoDeAviso.Partida
+                    && Math.Abs((plan[i].cuando - plan[j].cuando).TotalHours) < PlanDeNotificaciones.HorasEntreAvisos) unoPorDia = false;
+        inf.Verdadero("notificaciones: uno por dia", unoPorDia);
+        bool fueraDelSilencio = plan.TrueForAll(a => a.cuando.Hour >= PlanDeNotificaciones.SilencioHasta && a.cuando.Hour < PlanDeNotificaciones.SilencioDesde);
+        inf.Verdadero("notificaciones: ninguna entre las 22 y las 10", fueraDelSilencio);
+
+        // Los textos: todos existen en los dos idiomas y llevan el numero donde va.
+        foreach (TipoDeAviso tipo in Enum.GetValues(typeof(TipoDeAviso)))
+            for (int dia = 0; dia < 4; dia++)
+            {
+                var aviso = new Aviso { tipo = tipo, cuando = miercoles.AddDays(dia), numero = 9 };
+                string titulo = Notificaciones.Titulo(aviso), texto = Notificaciones.Texto(aviso);
+                inf.Verdadero("notificaciones: texto de " + tipo + " (variante " + dia + ")",
+                              !titulo.StartsWith("[") && !texto.StartsWith("[") && titulo.Length <= 40 && texto.Length <= 110);
+            }
+        var partida = new Aviso { tipo = TipoDeAviso.Partida, cuando = miercoles, numero = 9 };
+        inf.Verdadero("notificaciones: la de la partida dice la oleada", Notificaciones.Titulo(partida).Contains("9"));
+
+        // Cuando se pide el permiso con la ventana propia.
+        inf.Verdadero("notificaciones: se pide al llegar a la oleada 5",
+                      Notificaciones.CorrespondePedir(0, EstadoDelPermiso.SinPedir, true, true, false, false, 0));
+        inf.Verdadero("notificaciones: o al cobrar la primera diaria",
+                      Notificaciones.CorrespondePedir(0, EstadoDelPermiso.SinPedir, true, false, true, false, 0));
+        inf.Verdadero("notificaciones: no antes",
+                      !Notificaciones.CorrespondePedir(0, EstadoDelPermiso.SinPedir, true, false, false, false, 0));
+        inf.Verdadero("notificaciones: la segunda vez espera al nivel 5",
+                      !Notificaciones.CorrespondePedir(1, EstadoDelPermiso.SinPedir, true, true, true, false, 1)
+                      && Notificaciones.CorrespondePedir(1, EstadoDelPermiso.SinPedir, true, true, true, true, 1));
+        inf.Verdadero("notificaciones: o a una racha de 2",
+                      Notificaciones.CorrespondePedir(1, EstadoDelPermiso.Negado, true, true, true, false, 2));
+        inf.Verdadero("notificaciones: no una tercera",
+                      !Notificaciones.CorrespondePedir(2, EstadoDelPermiso.SinPedir, true, true, true, true, 5));
+        inf.Verdadero("notificaciones: ni con el permiso dado o bloqueado",
+                      !Notificaciones.CorrespondePedir(0, EstadoDelPermiso.Concedido, true, true, true, true, 5)
+                      && !Notificaciones.CorrespondePedir(0, EstadoDelPermiso.Bloqueado, true, true, true, true, 5));
+        inf.Verdadero("notificaciones: ni si las apago en OPCIONES",
+                      !Notificaciones.CorrespondePedir(0, EstadoDelPermiso.SinPedir, false, true, true, true, 5));
+    }
+
+    // "Tipo HH:mm numero | ...", para comparar un plan entero de una.
+    static string Resumen(List<Aviso> plan)
+    {
+        return string.Join(" | ", plan.ConvertAll(a => a.tipo + " " + a.cuando.ToString("HH:mm") + " " + a.numero));
+    }
+
     static void ProbarMontosDeLaDiaria(Informe inf)
     {
         // En el arranque manda el piso: el primer dia sigue comprando la primera mejora.

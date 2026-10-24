@@ -9,6 +9,8 @@ using UnityEngine;
 // 2. Guarda el progreso cuando la app pierde el foco en CUALQUIER escena. Hasta
 //    ahora eso lo hacia MenuPausa, que no esta ni en el menu ni en la derrota: si
 //    Android mataba la app ahi, se perdia lo ultimo.
+// 3. Programa las notificaciones locales al irse la app y las cancela al volver
+//    (Notificaciones), por la misma razon: tiene que pasar en cualquier escena.
 //
 // Se instala solo al cargar la primera escena, sin ponerlo en ninguna: lo mismo que
 // hace MedidorBalance.
@@ -53,6 +55,8 @@ public class VigiaAplicacion : MonoBehaviour
         // anuncios (ver ServicioAnuncios.Arrancar). Despues de crear el vigia: si una red
         // de verdad fallara al arrancar, guardar el progreso tiene que seguir andando.
         ServicioAnuncios.Arrancar();
+        // El jugador abrio el juego: lo que quedo programado de la ausencia ya no hace falta.
+        Notificaciones.AlVolver();
     }
 
     private void Awake()
@@ -81,6 +85,9 @@ public class VigiaAplicacion : MonoBehaviour
     {
         if (pausada) Progreso.Guardar();
         Ausencia(pausada);
+        // Las notificaciones locales: se programan al irse y se cancelan al volver (ver Notificaciones).
+        if (pausada) Notificaciones.AlIrse();
+        else Notificaciones.AlVolver();
     }
 
     private void OnApplicationFocus(bool conFoco)
@@ -109,5 +116,6 @@ public class VigiaAplicacion : MonoBehaviour
     private void OnApplicationQuit()
     {
         Progreso.Guardar();
+        Notificaciones.AlIrse();
     }
 }

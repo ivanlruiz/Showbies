@@ -128,6 +128,10 @@ public class PedidoDeResena : MonoBehaviour
         // queda para otra visita: dos ventanas seguidas son demasiado.
         if (ServicioAnuncios.PedirConsentimientoSiHaceFalta()) return;
 
+        // Despues del consentimiento, la ventana propia que pide el permiso de las notificaciones; si sale, la reseña
+        // queda para otra visita, como con el consentimiento.
+        if (PedidoDeNotificaciones.PedirSiCorresponde()) return;
+
         // Con una version nueva para avisar (AvisoDeActualizacion, que sale un segundo despues),
         // tampoco: la hoja de Play y el cartel saldrian a la vez.
         if (AvisoDeActualizacion.Pendiente) return;

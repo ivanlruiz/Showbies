@@ -43,6 +43,7 @@ public class OpcionesSonido : MonoBehaviour
     private const float DelSombreroAlFps = 120f;
     private const float DelAutoAlFps = 120f;
     private const float DeLosJoysticksAlAuto = 120f;
+    private const float DeLasNotificacionesALosJoysticks = 120f;
 
     private GameObject panel;
     private RectTransform ventana;
@@ -55,6 +56,7 @@ public class OpcionesSonido : MonoBehaviour
     private RectTransform controlSombrero;
     private RectTransform controlAuto;
     private RectTransform controlJoysticks;
+    private RectTransform controlNotificaciones;
     private int acomodada = -1;   // -1 sin acomodar; si no, 1 con PRIVACIDAD + 2 con el SOMBRERO + 4 con los del telefono
     private Texture2D texturaEngranaje;
     private Texture2D texturaPerilla;
@@ -192,6 +194,10 @@ public class OpcionesSonido : MonoBehaviour
         // joysticks esperan fijos en sus rincones, como hasta el 12/10.
         controlJoysticks = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_joysticks_dinamicos", Vector2.zero, AnchoControl, fuente,
                                              () => JoystickDinamico.Activos, JoystickDinamico.Fijar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
+        // NOTIFICACIONES: tambien del telefono, debajo de los joysticks. Muestra si el jugador las quiere y Android las
+        // deja salir; prenderlo sin permiso lo pide, o abre los ajustes del juego (Notificaciones.Fijar).
+        controlNotificaciones = RectDe(SeguirElTema(Interruptor.Crear(ventana, "opciones_notificaciones", Vector2.zero, AnchoControl, fuente,
+                                                  () => Notificaciones.Activas, Notificaciones.Fijar, pildora, spritePerilla, sonidoClick, colorDelTexto)));
 
         CrearPrivacidad(fuente, pildora, sonidoClick);
         Acomodar(false, false, false);
@@ -229,8 +235,8 @@ public class OpcionesSonido : MonoBehaviour
     }
 
     // Sin los que pueden faltar, los tres controles de siempre; con cada uno, la ventana crece y
-    // todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: los dos del telefono (AUTO-APUNTAR
-    // y JOYSTICKS DINAMICOS), el SOMBRERO y abajo PRIVACIDAD.
+    // todo sube para hacerle lugar entre MOSTRAR FPS y VOLVER: los tres del telefono (AUTO-APUNTAR,
+    // JOYSTICKS DINAMICOS y NOTIFICACIONES), el SOMBRERO y abajo PRIVACIDAD.
     private void Acomodar(bool conPrivacidad, bool conSombrero, bool conAuto)
     {
         int cual = (conPrivacidad ? 1 : 0) + (conSombrero ? 2 : 0) + (conAuto ? 4 : 0);
@@ -238,7 +244,7 @@ public class OpcionesSonido : MonoBehaviour
         acomodada = cual;
 
         float crecida = (conPrivacidad ? CrecidaConPrivacidad : 0f) + (conSombrero ? DelSombreroAlFps : 0f)
-                        + (conAuto ? DelAutoAlFps + DeLosJoysticksAlAuto : 0f);
+                        + (conAuto ? DelAutoAlFps + DeLosJoysticksAlAuto + DeLasNotificacionesALosJoysticks : 0f);
         float subir = crecida * 0.5f;
         ventana.sizeDelta = new Vector2(ventana.sizeDelta.x, AltoVentana + crecida);
         Poner(titulo, YTitulo + subir);
@@ -259,6 +265,12 @@ public class OpcionesSonido : MonoBehaviour
             Poner(controlJoysticks, y);
             controlJoysticks.gameObject.SetActive(conAuto);
         }
+        if (controlNotificaciones != null)
+        {
+            if (conAuto) y -= DeLasNotificacionesALosJoysticks;
+            Poner(controlNotificaciones, y);
+            controlNotificaciones.gameObject.SetActive(conAuto);
+        }
         if (controlSombrero != null)
         {
             if (conSombrero) y -= DelSombreroAlFps;
@@ -272,7 +284,7 @@ public class OpcionesSonido : MonoBehaviour
         }
     }
 
-    // Con todos los controles de mas mide 1.130 de alto, mas el halo: en 20:9 el canvas del menu
+    // Con todos los controles de mas mide 1.250 de alto, mas el halo: en 20:9 el canvas del menu
     // mide 864 y en 21:9, 823. Como las ventanas de las misiones, se achica lo justo.
     private float EscalaQueEntra()
     {

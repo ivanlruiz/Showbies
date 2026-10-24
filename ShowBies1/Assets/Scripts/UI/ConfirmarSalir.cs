@@ -147,6 +147,20 @@ public class ConfirmarSalir : MonoBehaviour
         return boton.GetComponentInChildren<TextoTraducido>(true);
     }
 
+    // Una copia apagada de esta ventana ya armada, para otra con el mismo esquema (titulo, aviso, un boton verde y uno
+    // de vidrio): la que pide el permiso de las notificaciones (PedidoDeNotificaciones). Los botones de la copia
+    // vienen sin lo que hacen (lo de AddListener no se copia), y la ventana de adentro sale en `ventanaDeLaCopia`.
+    public GameObject CopiarVentana(string nombre, out RectTransform ventanaDeLaCopia)
+    {
+        ventanaDeLaCopia = null;
+        if (panel == null || ventana == null) return null;
+        var copia = Instantiate(panel, panel.transform.parent);
+        copia.name = nombre;
+        copia.SetActive(false);
+        ventanaDeLaCopia = (RectTransform)copia.transform.Find(Ruta(ventana, panel.transform));
+        return copia;
+    }
+
     // Devuelve si la abrio: si no se pudo armar, quien la pide cierra el juego como antes.
     public bool Abrir()
     {

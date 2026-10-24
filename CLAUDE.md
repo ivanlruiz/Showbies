@@ -58,6 +58,7 @@ Assets/Scripts/Progreso/    ← Progreso (monedas, mejor oleada y niveles, en un
 Assets/Scripts/Cartas/      ← PoderDeLaPartida (el PODER y las cartas de la partida), EleccionDeCartas (la barra, las chispas y la elección), CartasEnElJugador (el anillo del escudo y los drones), Carta, CatalogoCartas
 Assets/Scripts/Tienda/      ← TiendaMejoras, TarjetaMejora, BotonMejoras, EfectosUI, GuiaPrimeraCompra
 Assets/Scripts/Resena/      ← PedidoDeResena (la reseña de Google Play)
+Assets/Scripts/Notificaciones/ ← PlanDeNotificaciones (qué avisos y cuándo), Notificaciones (las programa al irse), NotificacionesAndroid (el paquete) y PedidoDeNotificaciones (la ventana que pide el permiso)
 Assets/Scripts/Actualizacion/ ← ActualizacionDePlay (la actualización flexible de Play, por JNI) y AvisoDeActualizacion (el cartel del menú)
 Assets/Scripts/Anuncios/    ← ServicioAnuncios, ConfigAnuncios, IProveedorAnuncios, ProveedorFalso, ProveedorNulo, ProveedorAdMob, PuenteAdMobAndroid, IConsentimientoAnuncios, DiagnosticoAnuncios, LugarAnuncio, OfertaDeDuplicar, VigiaAplicacion, OfertaDeRevivir
 Assets/Plugins/Android/     ← mainTemplate.gradle (con la reseña y las actualizaciones) y ShowBiesAnuncios.androidlib (AdMob: PuenteAnuncios.java, su manifiesto y su build.gradle)
@@ -73,10 +74,11 @@ Assets/Zombies/*.asset      ← los once Enemy (los cinco de siempre, el del tes
 Assets/Mejoras/             ← las nueve Mejora (.asset) y Resources/CatalogoMejoras
 Assets/Cartas/              ← las Carta de la partida (.asset) y Resources/CatalogoCartas: los crea ConstructorCartas
 Assets/Anuncios/            ← Resources/ConfigAnuncios: los numeros de los videos con recompensa
+Assets/Notificaciones/      ← los dos dibujos de las notificaciones (el chico y el grande): los registra ConstructorNotificaciones
 Assets/Idioma/              ← Resources/Textos.txt: todos los textos del juego, en ingles y espaniol
 Assets/otros/               ← los audios: Kingball.ogg (la música del menú desde el 12/10: un tema de Ivan, hecho en FL Studio; en streaming y a su volumen de siempre, el del master de Ivan: bajado al de la de antes se oía muy bajo; MainMenu.mp3 quedó sin uso), shot.mp3, pop.mp3 (cajas), pedo.mp3 y los sintetizados provisorios (moneda, golpe, muerte, explosion, danio, cartel y musica, en .wav); en Resources/Disparos, los de las armas de la mano (los arma sonidos/disparos.py), en Resources/Bate, los del bate (sonidos/bate.py), y en Resources/Escudo, los del escudo del blindado (sonidos/escudo.py)
 Assets/Animaciones/         ← Zombi.controller: el Animator Controller de los cinco zombis (correr, atacar, morir); Jugador.controller y sus máscaras BrazoDerecho y TorsoYBrazos (la del bate)
-Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador, PruebaChaman, PruebaBlindado, PruebaHinchado, PruebaEspecialesEnElLibre, PruebaRetomar, PruebaCapitulos, PruebaSelectorDeCapitulos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), RetratosDelBestiario (los retratos de las tarjetas del bestiario) y FotosDelBestiario (la ventana en 16:9, 20:9 y 21:9), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
+Assets/Editor/              ← ConstructorEscenarios (arma los decorados de noche con su neón y pone la noche en las escenas), ConstructorAnimaciones (arma los controllers de los zombis y del jugador), ConstructorArmas (arma la pistola), ConstructorTienda (viste la tienda de carbón neón), ConstructorNeon (viste de neón lo que está en las escenas), ConstructorAndroid (builds de Android), PruebasMejoras, PruebaGolpeAnimado, PruebaMuerteAnimada, PruebaDerrota, PruebaDisparo, PruebaTienda, PruebaDiaria, PruebaModoLibre, PruebaTutorial, PruebaMenuYTienda, PruebaReiniciar, PruebaArrastre, PruebaParedes, PruebaCajas, PruebaFinDeOleada, PruebaCobrosSolos, PruebaFlechas, PruebaTesoro, PruebaAutoApuntar, PruebaJoystickDinamico, PruebaCartas, PruebaCartasDeReglas, PruebaArmas, PruebaImpactos, PruebaBate, PruebaEscupidor, PruebaSaltador, PruebaChaman, PruebaBlindado, PruebaHinchado, PruebaEspecialesEnElLibre, PruebaRetomar, PruebaCapitulos, PruebaSelectorDeCapitulos y FotosDeLaFicha (bancos en play, que devuelven el progreso con RespaldoDelBanco), EscenasSinGuardar (que nada cierre escenas con cambios sin guardar), FotosDeLosFaroles (los faroles de noche con la calidad del teléfono), FotosDeLaHorda (el contraste de cada zombi contra el piso de noche), GrabarAnimaciones, GrabarDisparo, GrabarJefe (graba los patrones del jefe), GrabarClips (los clips verticales para redes, ShowBies > Clips: renderiza la cámara a 1080 × 1920 con el tiempo fijo, con la cámara del juego en vertical, y graba el sonido con AudioRenderer; con el editor abierto y al frente, o en -batchmode con el editor cerrado; ver `publicacion/clips.md`), HerramientasProgreso, ControlesEnElEditor, IdiomaEnElEditor y ActualizacionEnElEditor (menú ShowBies), PlaySinFoco (entrar en play sin traer Unity al frente), ConstructorHalloween (arma las calabazas, los disfraces, el sombrero y el caramelo), FotosDeHalloween y FotosDeHalloweenVentanas, ReferenciasDeArte (los personajes en hojas de modelo para hacer arte con IA), ConstructorPowerUps (arma los dibujos de las cajas) y FotosDeLasCajas, FotosDeLasBalas (los tramos de la bala de noche), FotosDeLasArmas (las cinco armas de la mano), ConstructorTesoro (arma el zombi del tesoro), ConstructorZombis (arma los zombis con habilidad), RetratosDelBestiario (los retratos de las tarjetas del bestiario) y FotosDelBestiario (la ventana en 16:9, 20:9 y 21:9), ConstructorCartas (crea las cartas de la partida y su catálogo), ConstructorNotificaciones (configura el paquete de notificaciones), ConstructorHeroe (la remera blanca, el aura, la sombra falsa y el borde de los zombis) y MaquetasDelHeroe (las maquetas con que se eligieron)
 Assets/Halloween/           ← Resources/Halloween (las calabazas, los disfraces, el sombrero y el caramelo), Materiales y EsferaBaja: lo arma ConstructorHalloween
 Assets/PowerUps/            ← Materiales de los dibujos de las cajas: los arma ConstructorPowerUps
 Assets/Shaders/             ← Destello (el golpe al zombi), BlancoYNegro (el revivir), LogoEnLaNiebla (el titulo del menú), CharcoDeLuz (el piso bajo los faroles de noche), Fogonazo (la boca de la pistola), PielDeZombi (la piel de los zombis, con brillo propio y borde de luz), SombraFalsa (el disco bajo los personajes en el teléfono)
@@ -2364,6 +2366,56 @@ actualizaciones).** Solo en Android,
 decidido en runtime; en el editor loguea "se pediría". **En el mismo momento tranquilo, y antes, va el cartel de
 consentimiento de los anuncios** cuando hace falta (ver AdMob); si sale, la reseña queda para otra visita.
 
+## Notificaciones locales
+
+Pedido de Ivan (24/10: que el jugador vuelva, y que se entere de cada versión) y diseño de Argon (24/10, pensando en el
+jugador de Norteamérica, "que tiene tolerancia cero al spam"). Son **locales**, sin servidor: el paquete
+`com.unity.mobile.notifications` (2.4.3, sin el EDM4U ni dependencias de Maven) las programa en el teléfono. Todo en
+`Assets/Scripts/Notificaciones/`:
+
+- **`PlanDeNotificaciones`** es la cuenta pura (sin Android): con el estado del juego y la hora del teléfono decide qué
+  avisos salen y cuándo. La prueba de lógica la recorre con el reloj inyectado.
+  - **Partida**: la oleada a medias se puede retomar (`Progreso.HayOleadaParaRetomar`, no `OleadaEnCurso`: con la retoma
+    gastada no se retoma), 4 h después de irse.
+  - **Diaria**: 24 h después, a la hora en que jugó, desde la primera partida terminada (cuando aparece la recompensa
+    diaria), con el día de la racha que cobraría (`RecompensaDiaria.RachaParaHoy`). **Vuelta**: lo mismo para el que
+    todavía no la tiene, y otra a las 72 h para el que no llegó al nivel 5, sin partida a medias.
+  - **Racha** (de 2 días o más): se corta a la medianoche del día siguiente al último cobro (no a las 44 h de la sesión,
+    como decía el diseño), así que avisa ese día a las 20.
+  - **Semanal**: el desafío (desde el nivel 5) sin cumplir, el sábado a las 19, con 18 h sin abrir el juego.
+  - **Evento**: dos días antes del final (el 7/11 de Halloween) a las 18:30, si todavía falta el sombrero. Sale de las
+    fechas del evento (`EventoHalloween.Fin`), no de un día fijo.
+  - **Reglas**: nada entre las 22 y las 10 (pasa a las 12:30), uno cada 24 h como mucho (por prioridad: evento, racha,
+    semanal, diaria, vuelta; la de la partida va aparte), nada a menos de media hora ni a más de 8 días, y **no más de
+    tres por ausencia**: el que ignora tres no recibe más hasta que vuelva. **Ninguna pide mirar un anuncio** (Argon: "en
+    EE. UU. destruye la percepción de calidad").
+- **`Notificaciones`** es el pegamento: al irse la app arma el estado con el progreso y programa el plan; al volver cancela
+  todo (las programadas y las de la barra). Lo llama `VigiaAplicacion` (`OnApplicationPause`, al cerrar y al abrir), en
+  cualquier escena. Los textos (`notif_*` en la tabla, con variantes que se eligen por el día) se arman al programarlas,
+  en el idioma de ese momento. Los títulos llevan un emoji; la fuente del juego no los tiene, pero no pasan por TMP.
+- **`NotificacionesAndroid`** es lo único que habla con el paquete. Su ensamblado existe solo en Android y en el editor,
+  así que lo de adentro va con `#if UNITY_ANDROID`: es una clase estática sin campos serializados, y la trampa del `#if`
+  (que borra el cableado de las escenas) no aplica. Fuera del teléfono no hace nada. El canal es `showbies_rewards`
+  ("Recompensas y eventos").
+- **`PedidoDeNotificaciones`** es la ventana propia antes del diálogo de Android 13+ ("¡NO PIERDAS TU BOTÍN!", ¡SÍ,
+  AVÍSAME! verde y AHORA NO): pedido en frío, "el 75 % toca Don't allow por reflejo", y Android no vuelve a mostrar su
+  cartel después de dos rechazos. Sale en el menú tranquilo, en la fila de `PedidoDeResena` (después del consentimiento de
+  los anuncios y antes de la reseña, que queda para otra visita), la primera vez al llegar a la oleada 5 o al cobrar la
+  primera diaria, y una segunda (si dijo AHORA NO) en el nivel 5 o con una racha de 2 (`Notificaciones.CorrespondePedir`).
+  Nunca con el permiso dado o bloqueado, ni con las notificaciones apagadas en OPCIONES. No está en la escena: se instala
+  al cargar el menú sobre `ConfirmarSalir` y copia su ventana ya armada (`ConfirmarSalir.CopiarVentana`, el mismo esquema).
+  El atrás de Android es AHORA NO.
+- **NOTIFICACIONES en OPCIONES** (solo en el teléfono, debajo de JOYSTICKS DINÁMICOS): prendido si el jugador las quiere y
+  Android las deja salir; prenderlo sin permiso lo pide, o abre los ajustes del juego si Android ya no deja pedirlo.
+- **La configuración del paquete** (`ProjectSettings/NotificationsSettings.asset`) la deja **ShowBies > Notificaciones >
+  Configurar el paquete** (`ConstructorNotificaciones`): sin alarmas exactas (la política de Play prohíbe declarar su
+  permiso si no hacen falta), que se reprogramen al reiniciar el teléfono (`RECEIVE_BOOT_COMPLETED`) y los dos dibujos de
+  `Assets/Notificaciones/`: el chico, el cofre en blanco sobre transparente (si no, Android muestra un cuadrado), y el
+  grande, el ícono del juego.
+- **Para probarlas sin esperar un día**: la caja del diagnóstico de la APK de prueba dice el permiso y lo que se programó
+  la última vez, y tiene un botón NOTIFICACIÓN DE PRUEBA: al salir del juego llega una a los 10 s (irse cancela lo
+  programado antes, por eso se programa al irse).
+
 ## Actualizaciones dentro del juego
 
 Pedido de Ivan (9/10): que el juego avise cuando hay una versión nueva. Hasta ahí el jugador se enteraba si Play
@@ -2706,7 +2758,7 @@ uno cada 0,2 s como mucho, por `Sonidos.TocarUI`: en la pausa también suena), a
   responden sin componente.
 - **La ventana del menú no tiene objetos propios**: `OpcionesSonido` copia al arrancar el globo y la ventana del idioma
   (`SelectorIdioma`) y cambia los botones de idioma por los dos volúmenes y el interruptor MOSTRAR FPS (`ContadorFps`,
-  pedido de Ivan el 6/10), más AUTO-APUNTADO en el teléfono (ver Móvil), el SOMBRERO DE CALABAZA si se ganó (ver Evento de Halloween) y PRIVACIDAD cuando UMP lo
+  pedido de Ivan el 6/10), más AUTO-APUNTADO, JOYSTICKS DINÁMICOS y NOTIFICACIONES en el teléfono (ver Móvil y Notificaciones locales), el SOMBRERO DE CALABAZA si se ganó (ver Evento de Halloween) y PRIVACIDAD cuando UMP lo
   pide (ver AdMob): la ventana crece al abrirse, todo sube (`OpcionesSonido.Acomodar`) y, si no entra en la pantalla,
   se achica (`EscalaQueEntra`, como las ventanas de las misiones). Se llama OPCIONES y no SONIDO porque tuvo el modo oscuro, que se fue con el neón (ver Tema:
   carbón neón); la clase conserva el nombre de antes. `VolumenEnPausa` (raíz del prefab `MenuPausa`)
@@ -2733,6 +2785,8 @@ progreso):
 | `"SombreroCalabaza"` | el interruptor SOMBRERO DE CALABAZA de OPCIONES, 1 o 0 | `EventoHalloween.SombreroPuesto`; sin nada guardado, puesto |
 | `"AutoApuntar"` | el interruptor AUTO-APUNTADO de OPCIONES (solo en el teléfono), 1 o 0 | `PlayerJS.AutoApuntar`; sin nada guardado, prendido |
 | `"JoysticksDinamicos"` | el interruptor JOYSTICKS DINÁMICOS de OPCIONES (solo en el teléfono), 1 o 0 | `JoystickDinamico.Activos`, al empezar cada partida; sin nada guardado, prendido |
+| `"Notificaciones"` | el interruptor NOTIFICACIONES de OPCIONES (solo en el teléfono), o ¡SÍ, AVÍSAME! de la ventana del permiso, 1 o 0 | `Notificaciones.Preferidas`; sin nada guardado, prendidas (salen si además Android las deja) |
+| `"NotificacionesPedidas"` | `PedidoDeNotificaciones`, cada vez que muestra la ventana propia del permiso | `Notificaciones.CorrespondePedir` (como mucho dos) |
 
 Hay **un récord por modo** (`HighScore_1` el libre, `HighScore_3` las oleadas), y la clave la arma
 `PlayerHealth.ClaveRecord`. La clave vieja `"HighScore"`, que compartían los dos modos, quedó sin uso.

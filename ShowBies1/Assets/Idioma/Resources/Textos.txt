@@ -382,3 +382,34 @@ halloween_sombrero_puesto	YOU WEAR THE PUMPKIN HAT! (TURN IT OFF IN OPTIONS)	¡L
 halloween_aviso	HALLOWEEN PRIZE!	¡PREMIO DE HALLOWEEN!
 halloween_aviso_monedas	+{0} COINS WAITING IN THE MENU	+{0} MONEDAS TE ESPERAN EN EL MENÚ
 halloween_aviso_sombrero	PUMPKIN HAT! CLAIM IT IN THE MENU	¡SOMBRERO DE CALABAZA! RECÓGELO EN EL MENÚ
+opciones_notificaciones	NOTIFICATIONS	NOTIFICACIONES
+notif_canal	Daily Rewards & Events	Recompensas y eventos
+notif_canal_descripcion	Your daily reward, your streak, unfinished runs and events about to end	Tu recompensa diaria, tu racha, las partidas a medias y los eventos que terminan
+notif_partida_titulo_1	🧟 Wave {0} Is Waiting!	🧟 ¡La oleada {0} te espera!
+notif_partida_texto_1	Your arsenal is loaded and ready. Jump back in and finish the run!	Tus armas y tus cartas siguen listas. ¡Entra y termina la partida!
+notif_partida_titulo_2	🔥 Unfinished Business on Wave {0}	🔥 Asuntos pendientes en la oleada {0}
+notif_partida_texto_2	The horde thinks you backed down. Get back in there and prove them wrong!	La horda cree que huiste. ¡Vuelve y demuéstrales que no!
+notif_diaria_titulo_1	🎁 Day {0} Reward Ready!	🎁 ¡Premio del día {0} listo!
+notif_diaria_texto_1	Your daily coins are waiting. Come claim your loot!	Tus monedas del día te esperan. ¡Ven a cobrarlas!
+notif_diaria_titulo_2	💰 Free Coins Waiting	💰 Monedas gratis esperándote
+notif_diaria_texto_2	Claim today's coins and power up for the next run!	Cobra las monedas de hoy y mejórate para la próxima partida.
+notif_diaria_titulo_3	⚡ The Horde Is Back	⚡ La horda ha vuelto
+notif_diaria_texto_3	New day, new coins. Hop in and claim your daily reward!	Día nuevo, monedas nuevas. ¡Entra y cobra tu recompensa diaria!
+notif_vuelta_titulo_1	🧟 Ready for Round Two?	🧟 ¿Listo para la revancha?
+notif_vuelta_texto_1	The night horde is swarming. Jump in and beat your best wave!	La horda nocturna te acecha. ¡Entra y supera tu mejor oleada!
+notif_vuelta_titulo_2	💀 The Zombies Are Back	💀 Los zombis han vuelto
+notif_vuelta_texto_2	They won't stop themselves. Your upgrades are waiting in the shop!	No se van a frenar solos. ¡Tus mejoras te esperan en la tienda!
+notif_racha_titulo_1	⚠️ Don't Lose Your Streak!	⚠️ ¡No pierdas tu racha!
+notif_racha_texto_1	Just a few hours left to claim your Day {0} reward before it resets to Day 1.	Quedan pocas horas para cobrar el premio del día {0} antes de que vuelva al día 1.
+notif_racha_titulo_2	⏳ Streak Resetting Soon!	⏳ ¡Tu racha está a punto de cortarse!
+notif_racha_texto_2	Pop in for a few seconds and grab your Day {0} bonus before midnight!	Entra un momento y cobra el premio del día {0} antes de medianoche.
+notif_semanal_titulo_1	🏆 Weekend Zombie Hunt!	🏆 ¡Cacería de fin de semana!
+notif_semanal_texto_1	The Weekly Challenge wraps up tomorrow night. Go claim that big coin payout!	El desafío semanal termina mañana por la noche. ¡Entra y llévate el premio gordo!
+notif_semanal_titulo_2	💀 Last Call for Weekly Rewards!	💀 ¡Últimas horas del desafío semanal!
+notif_semanal_texto_2	The weekly reset is coming. Finish the challenge before time runs out!	Mañana se reinicia el desafío. ¡Complétalo antes de que se acabe el tiempo!
+notif_halloween_titulo_1	🎃 Halloween Ends in 2 Days!	🎃 ¡Halloween termina en 2 días!
+notif_halloween_texto_1	Grab your last candy and unlock the Pumpkin Hat before it's gone!	¡Junta los últimos caramelos y consigue el sombrero de calabaza antes de que se acabe!
+notif_pedido_titulo	DON'T MISS YOUR LOOT!	¡NO PIERDAS TU BOTÍN!
+notif_pedido_texto	Want a heads-up when your streak is about to reset or an event is ending? Zero spam, promise!	¿Te avisamos cuando tu racha esté a punto de cortarse o un evento vaya a terminar? ¡Cero spam, prometido!
+notif_pedido_si	SURE!	¡SÍ, AVÍSAME!
+notif_pedido_no	NOT NOW	AHORA NO

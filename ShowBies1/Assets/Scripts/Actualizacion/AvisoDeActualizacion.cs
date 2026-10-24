@@ -173,7 +173,7 @@ public class AvisoDeActualizacion : MonoBehaviour
                && (atras.selectorIdioma == null || !atras.selectorIdioma.Abierto)
                && (atras.opcionesSonido == null || !atras.opcionesSonido.Abierto)
                && (atras.menuModos == null || !atras.menuModos.activeSelf)
-               && !VentanaHalloween.Abierta && !CartelDeCobros.Abierto
+               && !VentanaHalloween.Abierta && !CartelDeCobros.Abierto && !PedidoDeNotificaciones.Abierto
                && !ServicioAnuncios.ConsentimientoEnPantalla;
     }
 

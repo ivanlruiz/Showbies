@@ -32,6 +32,12 @@ public class BotonAtrasMenu : MonoBehaviour
 
     public void Atras()
     {
+        // La que pide el permiso de las notificaciones: el atras es AHORA NO.
+        if (PedidoDeNotificaciones.Abierto)
+        {
+            PedidoDeNotificaciones.CerrarElAbierto();
+            return;
+        }
         // La recompensa diaria tapa todo: el atras la cierra sin cobrar.
         if (recompensaDiaria != null && VentanaRecompensaDiaria.Abierta)
         {
